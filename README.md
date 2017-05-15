@@ -1,9 +1,9 @@
-## Set up
+## Set up (do this once)
 
 1. Start and activate virtual environment
 ```
 $ virtualenv meerkathi-venv
-$ source meerkathi-venv/activate
+$ source meerkathi-venv/bin/activate
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 
@@ -16,9 +16,15 @@ pip install git+https://github.com/SpheMakh/Stimela
 ```
 stimela build
 ```
+## Running the pipeline (Assuming you've done steps above)
 
-4. Finally move into pipeline folder and get started
+1. Navigate to MeerKATHI virtual environment, and activate it
+```
+$ cd <MeerKATHI virtual environment>
+$ source bin/activate
+```
+2. Move into pipeline folder and execute pipeline
 ```
 $ cd pipeline
-$ stimela run meerkath-pipeline.py
+$ stimela run meerkathi-pipeline.py
 ```

@@ -7,7 +7,7 @@ MSDIR = 'msdir'
 h5file = '2017/04/06/1491463063.h5'
 msname = '1491463063.ms'
 prefix = 'meerkathi-1491463063'
-aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat.rfis"
+aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
 
 
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
@@ -48,8 +48,8 @@ recipe.add('cab/casa_flagdata','flagmw',
 
 recipe.add('cab/autoflagger', 'aoflag_1',
     {
-         "vis"          :    msname,
-         "coulmn"       :    "DATA",
+         "msname"          :    msname,
+         "column"       :    "DATA",
          "strategy"     :   aoflag_strat1,
     },
     input=INPUT,
@@ -58,9 +58,9 @@ recipe.add('cab/autoflagger', 'aoflag_1',
 
 
 recipe.run([
-    'h5toms',
-    'get_obsinfo',
+#    'h5toms',
+#    'get_obsinfo',
     'flagmw',
-    'aoflag1',
+    'aoflag_1',
 ])
 

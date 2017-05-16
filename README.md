@@ -1,5 +1,10 @@
 ## Set up (do this once)
-
+0. Clone this repository
+Use https and your github credentials, then go to the pipeline folder 'meerkathi'.
+```
+github clone https://github.com/SpheMakh/meerkathi.git
+cd meerkathi
+```
 1. Start and activate virtual environment
 ```
 $ virtualenv meerkathi-venv
@@ -23,7 +28,12 @@ stimela build
 $ cd <MeerKATHI virtual environment>
 $ source bin/activate
 ```
+or
+```
+$ source <MeerKATHI virtual environment>/bin/activate
+```
 2. Move into pipeline folder and execute pipeline
+Assume that we are in the meerkathi local clone of the repository.
 ```
 $ cd pipeline
 $ stimela run meerkathi-pipeline.py

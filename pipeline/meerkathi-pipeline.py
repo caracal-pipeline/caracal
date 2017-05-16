@@ -34,7 +34,7 @@ recipe.add('cab/casa_listobs', 'obsinfo',
 
 
 recipe.run([
-#    'h5toms',
+    'h5toms',
     'get_obsinfo',
 ])
 

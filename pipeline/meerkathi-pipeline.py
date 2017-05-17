@@ -5,9 +5,10 @@ OUTPUT = 'output'
 MSDIR = 'msdir'
 
 h5file = '2017/04/06/1491463063.h5'
-msname = '1491463063.ms'
-prefix = 'meerkathi-1491463063'
+msname = '1491480644.ms'
+prefix = 'meerkathi-1491480644'
 aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
+channelsout=10
 
 
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
@@ -57,10 +58,46 @@ recipe.add('cab/autoflagger', 'aoflag_1',
     label='aoflag_1::Aoflagger flagging pass 1')
 
 
+recipe.add('cab/wsclean', 'wsclean_dirty',
+    {
+         "msname"         :    msname,
+         "prefix"         :    prefix,
+         "nomfsweighting" :    True,
+         "npix"           :    256,
+         "cellsize"       :    20,
+         "channelsout"    :    channelsout,
+         "channelrange"   :    [61,70],
+         "field"          :    3,
+         "column"         :    "DATA",
+         "niter"          :    0,
+         "weight"         :    "briggs 2"
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='wsclean_dirty::Make a WSCLEAN dirty image for each channel')
+
+
+imagelist=["%s-%04d-dirty.fits:output"%(prefix,jj) for jj in range(channelsout)]
+
+recipe.add('cab/fitstool', 'stack_channels',
+    {
+         "stack"      :   True,
+         "image"      :   imagelist,
+         "fits-axis"  :   "FREQ",
+         "output"     :   "blabla.fits"
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='stack_channels::Stack individual channels made by WSClean')
+
+
+
 recipe.run([
 #    'h5toms',
 #    'get_obsinfo',
-    'flagmw',
-    'aoflag_1',
+#    'flagmw',
+#    'aoflag_1',
+#     'wsclean_dirty',
+     'stack_channels',
 ])
 

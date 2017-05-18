@@ -23,6 +23,9 @@ INPUT = 'input'
 OUTPUT = 'output'
 MSDIR = 'msdir'
 
+
+
+
 dataids = ['2017/04/06/1491463063', '2017/04/06/1491480644']
 
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
@@ -44,9 +47,11 @@ if REMOVE_MS:
 
 # Fields
 target = '3'
-# bpcal = ?
-# gcal = ?
+bpcal = '0'
+gcal = '2'
 
+# Reference Antenna
+REFANT = 'm006'
 
 # Flagging strategies
 aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
@@ -132,12 +137,202 @@ recipe.add('cab/autoflagger', 'aoflag_1',
     output=OUTPUT,
     label='aoflag_1:: Aoflagger flagging pass 1')
 
+#Setjansky
+
+for i, msname in enumerate(msnames):
+    recipe.add('cab/casa_setjy','setjansky_{:d}'.format(i),
+       {
+          "vis"         :  msname,
+          "field"       :  bpcal,
+          "standard"    :  "Perley-Taylor 99",
+          "usescratch"  :  False,
+          "scalebychan" :  True,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='setjansky_{0:d}:: Set jansky'.format(i,msname))
+
+#Delay calibration
+
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_gaincal','delay_calibration_{:d}'.format(i),
+       {
+         "vis"          :  msname,
+         "caltable"     :  prefix+".K0",
+         "field"        :  bpcal,
+         "refant"       :  REFANT,
+         "solint"       :  "inf",
+         "gaintype"     :  "K",
+         "minsnr"    :   5,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='delay_calibration_{:d}:: Delay calibration'.format(i,msname))
+
+#Bandpass
+
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_bandpass','bandpass_calibration_{:d}'.format(i),
+       {
+         "vis"          :  msname,
+         "caltable"     :  prefix+".B0",
+         "field"        :  bpcal,
+         "refant"       :  REFANT,
+         "solint"       :  "inf",
+         "bandtype"     :  "B",
+         "gaintable"    :  [prefix+".K0:output"],
+         "fillgaps"     :  26,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='bandpass_calibration_{:d}:: Bandpass calibration'.format(i,msname)) 
+
+#Gain calibration for Bandpass field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_gaincal','gain_calibration_bp_{:d}'.format(i),
+       {
+         "vis"          :  msname,
+         "caltable"     :  prefix+".G0:output",
+         "field"        :  bpcal,
+         "refant"       :  REFANT,
+         "solint"       :  "inf",
+         "gaintype"     :  "G",
+         "calmode"   :   'ap',
+         "minsnr"    :   5,
+         "gaintable"  :  [prefix+".B0:output",prefix+".K0:output"],
+         "interp"     :  ['nearest','nearest']
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='gain_calibration_bp_{:d}:: Gain calibration'.format(i,msname))
+
+#Gain calibration for Gaincal field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_gaincal','gain_calibration_g_{:d}'.format(i),
+       {
+         "vis"          :  msname,
+         "caltable"     :  prefix+".G0:output",
+         "field"        :  gcal,
+         "refant"       :  REFANT,
+         "solint"       :  "inf",
+         "gaintype"     :  "G",
+         "calmode"   :   'ap',
+         "minsnr"    :   5,
+         "gaintable"  :  [prefix+".B0:output",prefix+".K0:output"],
+         "interp"     :  ['linear','linear'],
+         "append"    :   True,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='gain_calibration_g_{:d}:: Gain calibration'.format(i,msname))
+#Flux scale transfer
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_fluxscale','fluxscale_{:d}'.format(i),
+       {
+         "vis"           :  msname,
+        "caltable"      :   prefix+".G0:output",
+        "fluxtable"     :   prefix+".F0:output",
+        "reference"     :   [bpcal],
+        "transfer"      :   [gcal],
+       },
+       input=INPUT,       
+       output=OUTPUT,
+       label='fluxscale_{:d}:: Flux scale transfer'.format(i,msname))
+
+#Apply calibration tables to Bandpass field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_applycal','applycal_bp_{:d}'.format(i),
+       {
+        "vis"      :    msname,
+        "field"     :   bpcal,
+        "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
+        "gainfield" :   ['','','',bpcal],
+        "interp"    :   ['','','nearest','nearest'],
+        "calwt"     :   [False],
+        "parang"    :   False,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='applycal_bp_{:d}:: Apply calibration to bandpass field'.format(i,msname))
+
+#Apply calibration tables to Gaincal field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_applycal','applycal_g_{:d}'.format(i),
+       {
+        "vis"      :    msname,
+        "field"     :   bpcal,
+        "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
+        "gainfield" :   ['','','',gcal],
+        "interp"    :   ['linear','linear','nearest'],
+        "calwt"     :   [False],
+        "parang"    :   False,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='applycal_g_{:d}:: Apply calibration to gaincal field'.format(i,msname))
+
+#Apply calibration table to Target Field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_applycal','applycal_tar_{:d}'.format(i),
+       {
+        "vis"      :    msname,
+        "field"     :   bpcal,
+        "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
+        "gainfield" :   ['','','',gcal],
+        "interp"    :   ['linear','linear','nearest'],
+        "calwt"     :   [False],
+        "parang"    :   False,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='applycal_tar_{:d}:: Apply calibration to gaincal field'.format(i,msname))
+
+#Plot bandpass
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_plotcal','plot_bandpass_{:d}'.format(i),
+       {
+        "caltable"  :   prefix+".B0:output",
+        "xaxis"     :   'chan',
+        "yaxis"     :   'amp',
+        "field"     :    bpcal,
+        "subplot"   :   221,
+        "figfile"   :   prefix+'-B0-amp.png',
+        "showgui"   :   False,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='plot_bandpass_{:d}:: Plot bandpass'.format(i,msname))
+#Plot corrected phase vs amplitude for bandpass field
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+      recipe.add('cab/casa_plotms','plot_phaseamp_bp_{:d}'.format(i),
+       {
+        "vis"           :   msname,
+        "field"         :   bpcal,
+        "timerange"     :   '',
+        "antenna"       :   '',
+        "xaxis"         :   'phase',
+        "xdatacolumn"   :   'corrected',
+        "yaxis"         :   'amp',
+        "ydatacolumn"   :   'corrected',
+        "coloraxis"     :   'corr',
+        "plotfile"      :   prefix+'-bandpass-corrected-ampvsphase.png',
+        "overwrite"     :   True,
+
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='plot_phaseamp_{:d}:: Plot phase vs amplitude for bandpass'.format(i,msname))
+
+
+
+
+
 
 imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(PREFIX, jj) for jj in range(nchan)]
 
 recipe.add('cab/wsclean', 'wsclean_dirty',
     {
-         "msname"         :    msname,
+         "msname"         :    msnames,
          "prefix"         :    PREFIX,
          "nomfsweighting" :    True,
          "npix"           :    npix,
@@ -145,7 +340,7 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
          "channelsout"    :    nchan,
          "channelrange"   :    [61,70],
          "field"          :    target,
-         "column"         :    "DATA",
+#         "column"         :    "DATA",
          "niter"          :    0,
          "weight"         :    '{0:s} {1:d}'.format(weight, robust),
     },
@@ -180,7 +375,18 @@ recipe.run(
     ['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))] +
     ['data2corrdata_{:d}'.format(d) for d in range(len(msnames))] +
     ['flagmw_{:d}'.format(d) for d in range(len(msnames))] +
-    [ 'aoflag_1',
-     'wsclean_dirty',
-     'stack_channels',
-])
+    [ 'aoflag_1']+
+    ['setjansky_{:d}'.format(d) for d in range(len(msnames))]+
+    ['delay_calibration_{:d}'.format(d) for d in range(len(msnames))]+
+    ['bandpass_calibration_{:d}'.format(d) for d in range(len(msnames))] +
+    ['gain_calibration_bp_{:d}'.format(d) for d in range(len(msnames))] +
+    ['gain_calibration_g_{:d}'.format(d) for d in range(len(msnames))] +
+    ['fluxscale_{:d}'.format(d) for d in range(len(msnames))] +
+    ['applycal_bp_{:d}'.format(d) for d in range(len(msnames))] +
+    ['applycal_g_{:d}'.format(d) for d in range(len(msnames))] +
+    ['applycal_tar_{:d}'.format(d) for d in range(len(msnames))]+ 
+    ['plot_bandpass_{:d}'.format(d) for d in range(len(msnames))]+
+    ['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]+
+    ['wsclean_dirty'],
+     'stack_channels',]
+)

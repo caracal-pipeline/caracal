@@ -45,6 +45,16 @@ REMOVE_MS = REMOVE_MS.lower() in ['yes', 'true', '1']
 if REMOVE_MS:
     os.system('rm -fr {0:s}/{1:s}'.format(MSDIR, msname))
 
+# Run UVCONTSUB?
+RUN_UVCONTSUB = 'no'
+
+# Image continuum-subtracted files if UVCONTSUB is run
+RUN_UVCONTSUB = RUN_UVCONTSUB.lower() in ['yes', 'true', '1']
+if RUN_UVCONTSUB:
+    msnames_wsc = ['{:s}.ms.contsub'.format(os.path.basename(dataid)) for dataid in dataids]
+else:
+    msnames_wsc = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+
 # Fields
 target = '3'
 bpcal = '0'
@@ -57,9 +67,10 @@ REFANT = 'm006'
 aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
 
 # Imaging settings
-npix = 256
-cell = 20
-nchan = 10
+npix   = 256
+cell   = 20
+nchan  = 300
+chan1  = 1
 weight = 'briggs'
 robust = 2
 
@@ -75,6 +86,8 @@ for i, (h5file,msname) in enumerate(zip(h5files, msnames)):
             "no-auto"       :    False,
             "output-ms"     :    msname,
             "full-pol"      :    True,
+            "tar"           :    True,
+            "model-data"    :    True,
         },
         input='/var/kat/archive2/data/MeerKATAR1/telescope_products',
         output=MSDIR,
@@ -103,6 +116,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         output=OUTPUT,
         label='get_obsinfo_{0:d}:: Get observation information ms={1:s}'.format(i, msname))
 
+# Flag Milky Way HI channels
 
 for i, msname in enumerate(msnames):
     recipe.add('cab/casa_flagdata','flagmw_{:d}'.format(i),
@@ -115,6 +129,9 @@ for i, msname in enumerate(msnames):
         output=OUTPUT,
         label='flagmw_{0:d}::Flag out channels with emission from Milky Way'.format(i, msname))
 
+# Add corrected data
+
+for i, msname in enumerate(msnames):
     recipe.add('cab/msutils', 'data2corrdata{:d}'.format(i),
         {
             "msname"          :   msname,
@@ -126,6 +143,23 @@ for i, msname in enumerate(msnames):
         output=OUTPUT,
         label='data2corrdata_{0:d}:: Copy DATA to CORRECTED_DATA column ms={1:s}'.format(i, msname))
 
+# Add model data 
+
+for i, msname in enumerate(msnames):
+    recipe.add('cab/msutils', 'data2modeldata{:d}'.format(i),
+        {
+            "msname"          :   msname,
+            "command"         :   'copycol',
+            "fromcol"         :   'DATA',
+            "tocol"           :   'MODEL_DATA',
+        },
+        input=INPUT,
+        output=OUTPUT,
+        label='data2modeldata_{0:d}:: Copy DATA to MODEL_DATA column ms={1:s}'.format(i, msname))
+
+
+
+# Flag with AOflagger
 
 recipe.add('cab/autoflagger', 'aoflag_1',
     {
@@ -225,6 +259,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        input=INPUT,
        output=OUTPUT,
        label='gain_calibration_g_{:d}:: Gain calibration'.format(i,msname))
+
 #Flux scale transfer
 for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_fluxscale','fluxscale_{:d}'.format(i),
@@ -260,7 +295,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_applycal','applycal_g_{:d}'.format(i),
        {
         "vis"      :    msname,
-        "field"     :   bpcal,
+        "field"     :   gcal,
         "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
         "gainfield" :   ['','','',gcal],
         "interp"    :   ['linear','linear','nearest'],
@@ -276,7 +311,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_applycal','applycal_tar_{:d}'.format(i),
        {
         "vis"      :    msname,
-        "field"     :   bpcal,
+        "field"     :   target,
         "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
         "gainfield" :   ['','','',gcal],
         "interp"    :   ['linear','linear','nearest'],
@@ -302,6 +337,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        input=INPUT,
        output=OUTPUT,
        label='plot_bandpass_{:d}:: Plot bandpass'.format(i,msname))
+
 #Plot corrected phase vs amplitude for bandpass field
 for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
       recipe.add('cab/casa_plotms','plot_phaseamp_bp_{:d}'.format(i),
@@ -323,22 +359,32 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        output=OUTPUT,
        label='plot_phaseamp_{:d}:: Plot phase vs amplitude for bandpass'.format(i,msname))
 
+# Subtract the continuum in the UV plane
 
+for i, msname in enumerate(msnames):
+    recipe.add('cab/casa_uvcontsub','uvcontsub_{:d}'.format(i),
+       {
+          "msname"         :    msname,
+          "field"          :    target,
+          "fitorder"       :    1,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='uvcontsub_{0:d}:: Subtract continuum in the UV plane'.format(i,msname))
 
-
-
+# Make dirty channels
 
 imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(PREFIX, jj) for jj in range(nchan)]
 
 recipe.add('cab/wsclean', 'wsclean_dirty',
     {
-         "msname"         :    msnames,
+         "msname"         :    msnames_wsc,
          "prefix"         :    PREFIX,
          "nomfsweighting" :    True,
          "npix"           :    npix,
          "cellsize"       :    cell,
          "channelsout"    :    nchan,
-         "channelrange"   :    [61,70],
+         "channelrange"   :    [chan1,chan1+nchan-1],
          "field"          :    target,
 #         "column"         :    "DATA",
          "niter"          :    0,
@@ -348,6 +394,7 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
     output=OUTPUT,
     label='wsclean_dirty:: Make a WSCLEAN dirty image for each channel')
 
+# Stack dirty channels into cube
 
 recipe.add('cab/fitstool', 'stack_channels',
     {
@@ -369,24 +416,32 @@ for i,msname in enumerate(msnames):
     else:
         h5toms.append('h5toms_{:d}'.format(i))
 
+# Fill in the uvcontsub list only if requested
+if RUN_UVCONTSUB:
+    uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
+else: uvcontsub = []
+
+# Run it!
 recipe.run(
-     h5toms +
-    ['fix_uvw_{:d}'.format(d) for d in range(len(msnames))] +
-    ['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))] +
-    ['data2corrdata_{:d}'.format(d) for d in range(len(msnames))] +
-    ['flagmw_{:d}'.format(d) for d in range(len(msnames))] +
-    [ 'aoflag_1']+
-    ['setjansky_{:d}'.format(d) for d in range(len(msnames))]+
-    ['delay_calibration_{:d}'.format(d) for d in range(len(msnames))]+
-    ['bandpass_calibration_{:d}'.format(d) for d in range(len(msnames))] +
-    ['gain_calibration_bp_{:d}'.format(d) for d in range(len(msnames))] +
-    ['gain_calibration_g_{:d}'.format(d) for d in range(len(msnames))] +
-    ['fluxscale_{:d}'.format(d) for d in range(len(msnames))] +
-    ['applycal_bp_{:d}'.format(d) for d in range(len(msnames))] +
-    ['applycal_g_{:d}'.format(d) for d in range(len(msnames))] +
-    ['applycal_tar_{:d}'.format(d) for d in range(len(msnames))]+ 
-    ['plot_bandpass_{:d}'.format(d) for d in range(len(msnames))]+
-    ['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]+
-    ['wsclean_dirty'],
-     'stack_channels',]
+     h5toms
+#    +['fix_uvw_{:d}'.format(d) for d in range(len(msnames))]
+#    +['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))]
+#    +['data2corrdata_{:d}'.format(d) for d in range(len(msnames))]
+#    +['data2modeldata_{:d}'.format(d) for d in range(len(msnames))]
+#    +['flagmw_{:d}'.format(d) for d in range(len(msnames))]
+#    +[ 'aoflag_1']
+#    +['setjansky_{:d}'.format(d) for d in range(len(msnames))]
+#    +['delay_calibration_{:d}'.format(d) for d in range(len(msnames))]
+#    +['bandpass_calibration_{:d}'.format(d) for d in range(len(msnames))]
+#    +['gain_calibration_bp_{:d}'.format(d) for d in range(len(msnames))]
+#    +['gain_calibration_g_{:d}'.format(d) for d in range(len(msnames))]
+#    +['fluxscale_{:d}'.format(d) for d in range(len(msnames))]
+#    +['applycal_bp_{:d}'.format(d) for d in range(len(msnames))]
+#    +['applycal_g_{:d}'.format(d) for d in range(len(msnames))]
+#    +['applycal_tar_{:d}'.format(d) for d in range(len(msnames))]
+#    +['plot_bandpass_{:d}'.format(d) for d in range(len(msnames))]
+#    +['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]
+    +uvcontsub
+    +['wsclean_dirty']
+    +['stack_channels']
 )

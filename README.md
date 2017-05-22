@@ -2,7 +2,7 @@
 0. Clone this repository
 Use https and your github credentials, then go to the pipeline folder 'meerkathi'.
 ```
-github clone https://github.com/SpheMakh/meerkathi.git
+git clone https://github.com/SpheMakh/meerkathi.git
 cd meerkathi
 ```
 1. Start and activate virtual environment

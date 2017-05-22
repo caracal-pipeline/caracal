@@ -56,9 +56,9 @@ else:
     msnames_wsc = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 
 # Fields
-target = '3'
-bpcal = '0'
-gcal = '2'
+target = 'IC5264'
+bpcal = 'PKS1934-638'
+gcal = 'ATCA2259-375'
 
 # Reference Antenna
 REFANT = 'm006'
@@ -115,6 +115,20 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         input=INPUT,
         output=OUTPUT,
         label='get_obsinfo_{0:d}:: Get observation information ms={1:s}'.format(i, msname))
+
+#Flag autocorrelations
+for i, msname in enumerate(msnames):
+    recipe.add('cab/casa_flagdata','flagautocorr_{:d}'.format(i),
+        {
+            "vis"           :   msname,
+            "mode"          :   'manual',
+            "autocorr"      :   True,
+        },
+        input=INPUT,
+        output=OUTPUT,
+        label='flagautocorr_{0:d}::Flag out channels with emission from Milky Way'.format(i, msname))
+
+
 
 # Flag Milky Way HI channels
 
@@ -204,7 +218,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        label='delay_calibration_{:d}:: Delay calibration'.format(i,msname))
 
 #Bandpass
-
+#Set "Combine" to 'scan' for getting combining all scans for BP soln.
 for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_bandpass','bandpass_calibration_{:d}'.format(i),
        {
@@ -213,6 +227,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "field"        :  bpcal,
          "refant"       :  REFANT,
          "solint"       :  "inf",
+         "combine"      :  "",                             
          "bandtype"     :  "B",
          "gaintable"    :  [prefix+".K0:output"],
          "fillgaps"     :  26,
@@ -338,12 +353,33 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        output=OUTPUT,
        label='plot_bandpass_{:d}:: Plot bandpass'.format(i,msname))
 
+#Plot gains
+for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+    recipe.add('cab/casa_plotcal','plot_gaincal_{:d}'.format(i),
+       {
+        "caltable"  :   prefix+".B0:output",
+        "xaxis"     :   'time',
+        "yaxis"     :   'amp',
+        "field"     :    bpcal,
+        "subplot"   :   221,
+        "figfile"   :   prefix+'-G0-amp.png',
+        "showgui"   :   False,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='plot_gaincal_{:d}:: Plot gaincal'.format(i,msname))
+
+
+
+
+
 #Plot corrected phase vs amplitude for bandpass field
 for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
       recipe.add('cab/casa_plotms','plot_phaseamp_bp_{:d}'.format(i),
        {
         "vis"           :   msname,
         "field"         :   bpcal,
+        "correlation"   :   'RR,LL',
         "timerange"     :   '',
         "antenna"       :   '',
         "xaxis"         :   'phase',
@@ -358,6 +394,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
        input=INPUT,
        output=OUTPUT,
        label='plot_phaseamp_{:d}:: Plot phase vs amplitude for bandpass'.format(i,msname))
+
 
 # Subtract the continuum in the UV plane
 
@@ -384,7 +421,7 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
          "npix"           :    npix,
          "cellsize"       :    cell,
          "channelsout"    :    nchan,
-         "channelrange"   :    [chan1,chan1+nchan-1],
+         "channelrange"   :    [chan1,chan1+nchan],
          "field"          :    target,
 #         "column"         :    "DATA",
          "niter"          :    0,
@@ -424,23 +461,25 @@ else: uvcontsub = []
 # Run it!
 recipe.run(
      h5toms
-#    +['fix_uvw_{:d}'.format(d) for d in range(len(msnames))]
-#    +['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))]
-#    +['data2corrdata_{:d}'.format(d) for d in range(len(msnames))]
-#    +['data2modeldata_{:d}'.format(d) for d in range(len(msnames))]
-#    +['flagmw_{:d}'.format(d) for d in range(len(msnames))]
-#    +[ 'aoflag_1']
-#    +['setjansky_{:d}'.format(d) for d in range(len(msnames))]
-#    +['delay_calibration_{:d}'.format(d) for d in range(len(msnames))]
-#    +['bandpass_calibration_{:d}'.format(d) for d in range(len(msnames))]
-#    +['gain_calibration_bp_{:d}'.format(d) for d in range(len(msnames))]
-#    +['gain_calibration_g_{:d}'.format(d) for d in range(len(msnames))]
-#    +['fluxscale_{:d}'.format(d) for d in range(len(msnames))]
-#    +['applycal_bp_{:d}'.format(d) for d in range(len(msnames))]
-#    +['applycal_g_{:d}'.format(d) for d in range(len(msnames))]
-#    +['applycal_tar_{:d}'.format(d) for d in range(len(msnames))]
-#    +['plot_bandpass_{:d}'.format(d) for d in range(len(msnames))]
-#    +['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]
+    +['fix_uvw_{:d}'.format(d) for d in range(len(msnames))]
+    +['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))]
+    +['data2corrdata_{:d}'.format(d) for d in range(len(msnames))]
+    +['data2modeldata_{:d}'.format(d) for d in range(len(msnames))]
+    +['flagautocorr_{:d}'.format(d) for d in range(len(msnames))]
+    +['flagmw_{:d}'.format(d) for d in range(len(msnames))]
+    +[ 'aoflag_1']
+    +['setjansky_{:d}'.format(d) for d in range(len(msnames))]
+    +['delay_calibration_{:d}'.format(d) for d in range(len(msnames))]
+    +['bandpass_calibration_{:d}'.format(d) for d in range(len(msnames))]
+    +['gain_calibration_bp_{:d}'.format(d) for d in range(len(msnames))]
+    +['gain_calibration_g_{:d}'.format(d) for d in range(len(msnames))]
+    +['fluxscale_{:d}'.format(d) for d in range(len(msnames))]
+    +['applycal_bp_{:d}'.format(d) for d in range(len(msnames))]
+    +['applycal_g_{:d}'.format(d) for d in range(len(msnames))]
+    +['applycal_tar_{:d}'.format(d) for d in range(len(msnames))]
+    +['plot_bandpass_{:d}'.format(d) for d in range(len(msnames))]
+    +['plot_gaincal_{:d}'.format(d) for d in range(len(msnames))]
+    +['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]
     +uvcontsub
     +['wsclean_dirty']
     +['stack_channels']

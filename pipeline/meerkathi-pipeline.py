@@ -46,14 +46,16 @@ if REMOVE_MS:
     os.system('rm -fr {0:s}/{1:s}'.format(MSDIR, msname))
 
 # Run UVCONTSUB?
-RUN_UVCONTSUB = 'no'
+RUN_UVCONTSUB = 'yes'
+
+# Use result of previous UVCONTSUB?
+USE_UVCONTSUB = 'no'
 
 # Image continuum-subtracted files if UVCONTSUB is run
 RUN_UVCONTSUB = RUN_UVCONTSUB.lower() in ['yes', 'true', '1']
-if RUN_UVCONTSUB:
-    msnames_wsc = ['{:s}.ms.contsub'.format(os.path.basename(dataid)) for dataid in dataids]
-else:
-    msnames_wsc = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+USE_UVCONTSUB = USE_UVCONTSUB.lower() in ['yes', 'true', '1']
+if RUN_UVCONTSUB or USE_UVCONTSUB: msnames_wsc = [ff+'.contsub' for ff in msnames]
+else: msnames_wsc = msnames
 
 # Fields
 target = 'IC5264'
@@ -68,8 +70,8 @@ aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
 
 # Imaging settings
 npix   = 256
-cell   = 20
-nchan  = 300
+cell   = 25
+nchan  = 1000
 chan1  = 1
 weight = 'briggs'
 robust = 2
@@ -409,10 +411,32 @@ for i, msname in enumerate(msnames):
        output=OUTPUT,
        label='uvcontsub_{0:d}:: Subtract continuum in the UV plane'.format(i,msname))
 
-# Make dirty channels
-
-imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(PREFIX, jj) for jj in range(nchan)]
-
+# Make cube with CASA CLEAN
+recipe.add('cab/casa_clean', 'casa_clean',
+    {
+         "msname"         :    msnames_wsc,
+         "prefix"         :    PREFIX,
+#         "field"          :    target,
+#         "column"         :    "CORRECTED_DATA",
+         "mode"           :    'channel',
+         "nchan"          :    nchan,
+         "start"          :    chan1,
+         "interpolation"  :    'nearest',
+         "niter"          :    100,
+         "psfmode"        :    'hogbom',
+         "threshold"      :    '9mJy',
+         "npix"           :    npix,
+         "cellsize"       :    cell,
+         "weight"         :    weight,
+         "robust"         :    robust,
+#         "wprojplanes"    :    1,
+         "port2fits"      :    True,
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='casa_clean:: Make a dirty cube with CASA CLEAN'.format(i,msname))
+    
+# Make dirty channels with WSClean
 recipe.add('cab/wsclean', 'wsclean_dirty',
     {
          "msname"         :    msnames_wsc,
@@ -422,17 +446,18 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
          "cellsize"       :    cell,
          "channelsout"    :    nchan,
          "channelrange"   :    [chan1,chan1+nchan],
-         "field"          :    target,
+#         "field"          :    target,
 #         "column"         :    "DATA",
          "niter"          :    0,
          "weight"         :    '{0:s} {1:d}'.format(weight, robust),
+#         "nwlayers"       :    1,
     },
     input=INPUT,
     output=OUTPUT,
     label='wsclean_dirty:: Make a WSCLEAN dirty image for each channel')
 
 # Stack dirty channels into cube
-
+imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(PREFIX, jj) for jj in range(nchan)]
 recipe.add('cab/fitstool', 'stack_channels',
     {
          "stack"      :   True,
@@ -444,6 +469,28 @@ recipe.add('cab/fitstool', 'stack_channels',
     output=OUTPUT,
     label='stack_channels:: Stack individual channels made by WSClean')
 
+# Run SoFiA on stacked cube
+recipe.add('cab/sofia', 'sofia',
+    {
+#    USE THIS FOR THE WSCLEAN DIRTY CUBE
+#    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(PREFIX),
+#    USE THIS FOR THE CASA CLEAN CUBE
+    "import.inFile"     :   '{:s}.image.fits:output'.format(PREFIX),       # CASA CLEAN cube
+    "steps.doMerge"     :   False,
+    "steps.doMom0"      :   True,
+    "steps.doMom1"      :   False,
+    "steps.doParameterise"  :   False,
+    "steps.doReliability"   :   False,
+    "steps.doWriteCat"      :   False,
+    "steps.doWriteMask"     :   True,
+    "steps.doFlag"          :   True,
+    "flag.regions"          :   [[0,255,0,255,911,962],],
+    "SCfind.threshold"      :   4
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='sofia:: Make SoFiA mask and images')
+
 
 # If MS exists and REMOVE_MS==False, then h5toms step should not be added to recipe
 h5toms = []
@@ -454,8 +501,7 @@ for i,msname in enumerate(msnames):
         h5toms.append('h5toms_{:d}'.format(i))
 
 # Fill in the uvcontsub list only if requested
-if RUN_UVCONTSUB:
-    uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
+if RUN_UVCONTSUB: uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
 else: uvcontsub = []
 
 # Run it!
@@ -481,6 +527,9 @@ recipe.run(
     +['plot_gaincal_{:d}'.format(d) for d in range(len(msnames))]
     +['plot_phaseamp_{:d}'.format(d) for d in range(len(msnames))]
     +uvcontsub
-    +['wsclean_dirty']
-    +['stack_channels']
+    +['casa_clean']
+#    +['wsclean_dirty']
+#    +['stack_channels']
+    +['sofia']
+
 )

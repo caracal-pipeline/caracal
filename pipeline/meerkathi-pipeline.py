@@ -84,7 +84,7 @@ for i, (h5file,msname) in enumerate(zip(h5files, msnames)):
     recipe.add('cab/h5toms', 'h5toms_{:d}'.format(i),
         {
             "hdf5files"       :    h5file,
-            "channel-range" :    "'20873,21639'",
+            "channel-range" :    "'20673,21673'",
             "no-auto"       :    False,
             "output-ms"     :    msname,
             "full-pol"      :    True,
@@ -139,11 +139,11 @@ for i, msname in enumerate(msnames):
         {
             "vis"           :   msname,
             "mode"          :   'manual',
-            "spw"           :   "0:725~750",
+            "spw"           :   "*:1419.8~1421.3MHz",
         },
         input=INPUT,
         output=OUTPUT,
-        label='flagmw_{0:d}::Flag out channels with emission from Milky Way'.format(i, msname))
+        label='flagmw_{0:d}::Flag out channels with HI emission from Milky Way'.format(i, msname))
 
 # Add corrected data
 

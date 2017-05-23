@@ -66,7 +66,7 @@ gcal = 'ATCA2259-375'
 # Calibration settings
 REFANT       = 'm006'
 REFANT_DELAY = 'm042'
-UVRANGE      = '>80m'
+UVRANGE      = '>50m'
 MINNRBL      = 4
 MINSNR       = 3
 

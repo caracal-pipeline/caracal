@@ -149,7 +149,7 @@ for i, msname in enumerate(msnames):
         },
         input=INPUT,
         output=OUTPUT,
-        label='flagmw_{0:d}::Flag out channels with emission from Milky Way'.format(i, msname))
+        label='flagmw_{0:d}::Flag out channels with HI emission from Milky Way'.format(i, msname))
 
 # Add corrected data
 

@@ -27,6 +27,7 @@ MSDIR = 'msdir'
 
 
 dataids = ['2017/04/06/1491463063', '2017/04/06/1491480644']
+#dataids = ['2017/04/06/1491463063',]
 
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
@@ -62,8 +63,12 @@ target = 'IC5264'
 bpcal = 'PKS1934-638'
 gcal = 'ATCA2259-375'
 
-# Reference Antenna
-REFANT = 'm006'
+# Calibration settings
+REFANT       = 'm006'
+REFANT_DELAY = 'm042'
+UVRANGE      = '>80m'
+MINNRBL      = 4
+MINSNR       = 3
 
 # Flagging strategies
 aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
@@ -84,7 +89,7 @@ for i, (h5file,msname) in enumerate(zip(h5files, msnames)):
     recipe.add('cab/h5toms', 'h5toms_{:d}'.format(i),
         {
             "hdf5files"       :    h5file,
-            "channel-range" :    "'20873,21639'",
+            "channel-range" :    "'20673,21673'",
             "no-auto"       :    False,
             "output-ms"     :    msname,
             "full-pol"      :    True,
@@ -112,7 +117,8 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_listobs', 'obsinfo_{:d}'.format(i), 
         {
             "vis"    	:    msname,
-            "listfile"      :    prefix+'-listobs.txt'
+            "listfile"      :    prefix+'-listobs.txt',
+            "overwrite" :  True,
         },
         input=INPUT,
         output=OUTPUT,
@@ -139,7 +145,7 @@ for i, msname in enumerate(msnames):
         {
             "vis"           :   msname,
             "mode"          :   'manual',
-            "spw"           :   "0:725~750",
+            "spw"           :   "*:1419.8~1421.3MHz",
         },
         input=INPUT,
         output=OUTPUT,
@@ -210,10 +216,10 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "vis"          :  msname,
          "caltable"     :  prefix+".K0",
          "field"        :  bpcal,
-         "refant"       :  REFANT,
+         "refant"       :  REFANT_DELAY,
          "solint"       :  "inf",
          "gaintype"     :  "K",
-         "minsnr"    :   5,
+         "uvrange"      :  UVRANGE,
        },
        input=INPUT,
        output=OUTPUT,
@@ -232,7 +238,10 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "combine"      :  "",                             
          "bandtype"     :  "B",
          "gaintable"    :  [prefix+".K0:output"],
-         "fillgaps"     :  26,
+         "fillgaps"     :  70,
+         "uvrange"      :  UVRANGE,
+         "minsnr"       :  MINSNR,
+         "minblperant"  :  MINNRBL,
        },
        input=INPUT,
        output=OUTPUT,
@@ -248,10 +257,12 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "refant"       :  REFANT,
          "solint"       :  "inf",
          "gaintype"     :  "G",
-         "calmode"   :   'ap',
-         "minsnr"    :   5,
-         "gaintable"  :  [prefix+".B0:output",prefix+".K0:output"],
-         "interp"     :  ['nearest','nearest']
+         "calmode"      :   'ap',
+         "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
+         "interp"       :  ['nearest','nearest'],
+         "uvrange"      :  UVRANGE,
+         "minsnr"       :  MINSNR,
+         "minblperant"  :  MINNRBL,
        },
        input=INPUT,
        output=OUTPUT,
@@ -267,11 +278,14 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "refant"       :  REFANT,
          "solint"       :  "inf",
          "gaintype"     :  "G",
-         "calmode"   :   'ap',
-         "minsnr"    :   5,
-         "gaintable"  :  [prefix+".B0:output",prefix+".K0:output"],
-         "interp"     :  ['linear','linear'],
-         "append"    :   True,
+         "calmode"      :  'ap',
+         "minsnr"       :  5,
+         "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
+         "interp"       :  ['linear','linear'],
+         "append"       :  True,
+         "uvrange"      :  UVRANGE,
+         "minsnr"       :  MINSNR,
+         "minblperant"  :  MINNRBL,
        },
        input=INPUT,
        output=OUTPUT,
@@ -302,6 +316,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         "interp"    :   ['','','nearest','nearest'],
         "calwt"     :   [False],
         "parang"    :   False,
+#        "applymode" :   'trial',
        },
        input=INPUT,
        output=OUTPUT,
@@ -509,8 +524,8 @@ recipe.run(
      h5toms
     +['fix_uvw_{:d}'.format(d) for d in range(len(msnames))]
     +['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))]
-    +['data2corrdata_{:d}'.format(d) for d in range(len(msnames))]
-    +['data2modeldata_{:d}'.format(d) for d in range(len(msnames))]
+#    +['data2corrdata_{:d}'.format(d) for d in range(len(msnames))]
+#    +['data2modeldata_{:d}'.format(d) for d in range(len(msnames))]
     +['flagautocorr_{:d}'.format(d) for d in range(len(msnames))]
     +['flagmw_{:d}'.format(d) for d in range(len(msnames))]
     +[ 'aoflag_1']
@@ -531,5 +546,4 @@ recipe.run(
 #    +['wsclean_dirty']
 #    +['stack_channels']
     +['sofia']
-
 )

@@ -83,7 +83,7 @@ cell   = float(pars['cell'])
 nchan  = int(pars['nchan'])
 chan1  = int(pars['chan1'])
 weight = pars['weight']
-robust = pars['robust']
+robust = float(pars['robust'])
 
 
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
@@ -244,8 +244,8 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "gaintable"    :  [prefix+".K0:output"],
          "fillgaps"     :  70,
          "uvrange"      :  pars['uvrange'],
-         "minsnr"       :  pars['minsnr'],
-         "minblperant"  :  pars['minnrbl'],
+         "minsnr"       :  float(pars['minsnr']),
+         "minblperant"  :  int(pars['minnrbl']),
        },
        input=INPUT,
        output=OUTPUT,
@@ -265,8 +265,8 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
          "interp"       :  ['nearest','nearest'],
          "uvrange"      :  pars['uvrange'],
-         "minsnr"       :  pars['minsnr'],
-         "minblperant"  :  pars['minnrbl'],
+         "minsnr"       :  float(pars['minsnr']),
+         "minblperant"  :  int(pars['minnrbl']),
        },
        input=INPUT,
        output=OUTPUT,
@@ -288,8 +288,8 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "interp"       :  ['linear','linear'],
          "append"       :  True,
          "uvrange"      :  pars['uvrange'],
-         "minsnr"       :  pars['minsnr'],
-         "minblperant"  :  pars['minnrbl'],
+         "minsnr"       :  float(pars['minsnr']),
+         "minblperant"  :  int(pars['minnrbl']),
        },
        input=INPUT,
        output=OUTPUT,

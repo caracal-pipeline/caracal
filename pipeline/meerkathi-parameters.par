@@ -1,0 +1,53 @@
+########################################################################
+# Parameter file for meerkathi-pipepine.py
+# 
+# this is a commented line
+# you can use quotes but you don't have to
+# parameters requiring a boolean value have a capitalised name
+# you can give booleans as true,1,yes,false,0,no (case insensitive)
+# paramter names and non-boolean parameter values are case sensitive
+# you can leave blank lines
+# spaces do not matter
+# do not add comments at the end of a line which sets a parameter value
+# go have a coffee
+########################################################################
+
+### DATA ###
+#dataids       = 2017/04/06/1491463063
+dataids        = 2017/04/06/1491463063,2017/04/06/1491480644
+combprefix     = meerkathi-combined-data
+target         = IC5264
+bpcal          = PKS1934-638
+gcal           = ATCA2259-375
+###
+
+
+### SWITCH ON/OFF PIPELINE STEPS ###
+REMOVE_MS      = no
+RUN_UVCONTSUB  = yes
+###
+
+
+### CALIBRATION SETTINGS ###
+refant         = m006
+refant_delay   = m042
+uvrange        = >50m
+minnrbl        = 4
+minsnr         = 3
+###
+
+
+### FLAGGING SETTINGS ###
+aoflag_strat1  = aoflagger_strategies/firstpass_HI_strat2.rfis
+mw_hi_channels = *:1419.8~1421.3MHz
+###
+
+
+### HI IMAGING ###
+npix           = 256
+cell           = 25
+nchan          = 1000
+chan1          = 1
+weight         = briggs
+robust         = 2
+###

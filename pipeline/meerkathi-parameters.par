@@ -25,6 +25,7 @@ gcal           = ATCA2259-375
 ### SWITCH ON/OFF PIPELINE STEPS ###
 REMOVE_MS      = no
 RUN_UVCONTSUB  = yes
+USE_UVCONTSUB  = yes
 ###
 
 

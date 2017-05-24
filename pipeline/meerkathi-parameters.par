@@ -12,39 +12,99 @@
 # go have a coffee
 ########################################################################
 
-### DATA ###
-#dataids       = 2017/04/06/1491463063
-dataids        = 2017/04/06/1491463063,2017/04/06/1491480644
-combprefix     = meerkathi-combined-data
-target         = IC5264
-bpcal          = PKS1934-638
-gcal           = ATCA2259-375
-###
 
+
+#####################
+### UBER SWITCHES ###
+#####################
 
 ### SWITCH ON/OFF PIPELINE STEPS ###
-REMOVE_MS      = no
-RUN_UVCONTSUB  = yes
-USE_UVCONTSUB  = yes
+RUN_PREPMS     = no
+RUN_FLAGGING   = no
+RUN_1GC        = yes
+RUN_2GC        = no
+RUN_CONTSUB    = no
+RUN_HI_IMAGING = no
 ###
 
 
-### CALIBRATION SETTINGS ###
+
+#######################
+### UNTER SWITCHES  ###
+#######################
+
+### PREPMS ###
+REMOVE_MS      = no
+FIX_UVW        = no
+WRITE_LISTOBS  = yes
+ADD_COLUMNS    = no
+###
+
+### FLAGGING ###
+FLAG_AUTOCORR  = yes
+FLAG_MWHI      = no
+AOFLAG         = no
+###
+
+### 1GC ###
+DELAY_CAL      = no
+SET_MODEL      = yes
+BP_CAL         = no
+G_CAL          = no
+TRANSF_FLUX    = no
+APPLY_CAL      = no
+MAKE_PLOTS     = no
+###
+
+### 2GC ###
+### 
+
+### CONTSUB ###
+MODEL_CONTSUB  = no
+UV_CONTSUB     = yes
+###
+
+### HI_IMAGING ###
+MAKE_CUBE      = yes
+MAKE_IMAGE     = no
+###
+
+
+
+#########################
+### DETAILED SETTINGS ###
+#########################
+
+### PREPMS ###
+dataids        = 2017/04/06/1491463063,2017/04/06/1491480644
+channel_range  = 20701,21700
+###
+
+### FLAGGING ###
+aoflag_strat1  = aoflagger_strategies/firstpass_HI_strat2.rfis
+mw_hi_channels = *:1419.8~1421.3MHz
+###
+
+### 1GC ###
 refant         = m006
 refant_delay   = m042
 uvrange        = >50m
 minnrbl        = 4
 minsnr         = 3
+# below set applymode to either 'trial' or 'calflag'
+applymode      = calflag
 ###
 
-
-### FLAGGING SETTINGS ###
-aoflag_strat1  = aoflagger_strategies/firstpass_HI_strat2.rfis
-mw_hi_channels = *:1419.8~1421.3MHz
+### 2GC ###
 ###
 
+### CONTSUB ###
+###
 
-### HI IMAGING ###
+### HI_IMAGING ###
+USE_UVCONTSUB  = yes
+# below set the imager to either 'casa' or 'wsclean'
+hiimager       = casa
 npix           = 256
 cell           = 25
 nchan          = 1000
@@ -52,3 +112,12 @@ chan1          = 1
 weight         = briggs
 robust         = 2
 ###
+
+### MISCELLANEOUS ###
+combprefix     = meerkathi-combined-data
+target         = IC5264
+bpcal          = PKS1934-638
+gcal           = ATCA2259-375
+###
+
+

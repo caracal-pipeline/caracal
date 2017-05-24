@@ -1,7 +1,7 @@
 import stimela
 import os
 import sys
-
+#import byo
 
 ##### TODO 
 #   :: The recipe is already getting a bit long. Maybe we should make 
@@ -17,25 +17,35 @@ import sys
 #       2. Make catalog from final cube
 #####
 
-
 # I/O setup
 INPUT = 'input'
 OUTPUT = 'output'
 MSDIR = 'msdir'
 
+f=open('meerkathi-parameters.par')
+pars=f.readlines()
+pars=[jj.strip().replace(' ','') for jj in pars]
+jj=0
+while jj<len(pars):
+    if not len(pars[jj]): del(pars[jj])
+    elif pars[jj][0]=='#': del(pars[jj])
+    else: jj+=1
+pars=[jj.replace("'","").replace('"','').split('=') for jj in pars]
+pars={jj[0]:jj[1] for jj in pars}
+f.close()
 
+print pars
+exit()
 
-
-dataids = ['2017/04/06/1491463063', '2017/04/06/1491480644']
-#dataids = ['2017/04/06/1491463063',]
+dataids = pars['dataids'].split(',')
 
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
-PREFIX = 'meerkathi-combined-data'
+combprefix = pars['combprefix']
 
 # If MS exists, remove it before running 
-REMOVE_MS = 'no'
+REMOVE_MS = pars['REMOVE_MS']
 
 # This changes the value of variables to whatever was set through the 
 # '-g/--globals' option in the 'stimela run' command
@@ -47,10 +57,11 @@ if REMOVE_MS:
     os.system('rm -fr {0:s}/{1:s}'.format(MSDIR, msname))
 
 # Run UVCONTSUB?
-RUN_UVCONTSUB = 'yes'
+RUN_UVCONTSUB = pars['RUN_UVCONTSUB']
+
 
 # Use result of previous UVCONTSUB?
-USE_UVCONTSUB = 'no'
+USE_UVCONTSUB = pars['USE_UVCONTSUB']
 
 # Image continuum-subtracted files if UVCONTSUB is run
 RUN_UVCONTSUB = RUN_UVCONTSUB.lower() in ['yes', 'true', '1']
@@ -59,27 +70,21 @@ if RUN_UVCONTSUB or USE_UVCONTSUB: msnames_wsc = [ff+'.contsub' for ff in msname
 else: msnames_wsc = msnames
 
 # Fields
-target = 'IC5264'
-bpcal = 'PKS1934-638'
-gcal = 'ATCA2259-375'
-
-# Calibration settings
-REFANT       = 'm006'
-REFANT_DELAY = 'm042'
-UVRANGE      = '>50m'
-MINNRBL      = 4
-MINSNR       = 3
+target=pars['target']
+bpcal=pars['bpcal']
+gcal=pars['gcal']
 
 # Flagging strategies
-aoflag_strat1 = "aoflagger_strategies/firstpass_HI_strat2.rfis"
+aoflag_strat1=pars['aoflag_strat1']
+mw_hi_channels=pars['mw_hi_channels']
 
 # Imaging settings
-npix   = 256
-cell   = 25
-nchan  = 1000
-chan1  = 1
-weight = 'briggs'
-robust = 2
+npix   = pars['npix']
+cell   = pars['cell']
+nchan  = pars['nchan']
+chan1  = pars['chan1']
+weight = pars['weight']
+robust = pars['robust']
 
 
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
@@ -112,7 +117,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         output=OUTPUT,
         label='fix_uvw_{0:d}:: Fix UVW coordinates for ms={1:s}'.format(i, msname))
 
-
+# List obs
 for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
     recipe.add('cab/casa_listobs', 'obsinfo_{:d}'.format(i), 
         {
@@ -145,7 +150,7 @@ for i, msname in enumerate(msnames):
         {
             "vis"           :   msname,
             "mode"          :   'manual',
-            "spw"           :   "*:1419.8~1421.3MHz",
+            "spw"           :   mw_hi_channels,
         },
         input=INPUT,
         output=OUTPUT,
@@ -216,10 +221,10 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "vis"          :  msname,
          "caltable"     :  prefix+".K0",
          "field"        :  bpcal,
-         "refant"       :  REFANT_DELAY,
+         "refant"       :  pars['refant_delay'],
          "solint"       :  "inf",
          "gaintype"     :  "K",
-         "uvrange"      :  UVRANGE,
+         "uvrange"      :  pars['uvrange'],
        },
        input=INPUT,
        output=OUTPUT,
@@ -233,15 +238,15 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "vis"          :  msname,
          "caltable"     :  prefix+".B0",
          "field"        :  bpcal,
-         "refant"       :  REFANT,
+         "refant"       :  pars['refant'],
          "solint"       :  "inf",
          "combine"      :  "",                             
          "bandtype"     :  "B",
          "gaintable"    :  [prefix+".K0:output"],
          "fillgaps"     :  70,
-         "uvrange"      :  UVRANGE,
-         "minsnr"       :  MINSNR,
-         "minblperant"  :  MINNRBL,
+         "uvrange"      :  pars['uvrange'],
+         "minsnr"       :  pars['minsnr'],
+         "minblperant"  :  pars['minnrbl'],
        },
        input=INPUT,
        output=OUTPUT,
@@ -254,15 +259,15 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "vis"          :  msname,
          "caltable"     :  prefix+".G0:output",
          "field"        :  bpcal,
-         "refant"       :  REFANT,
+         "refant"       :  pars['refant'],
          "solint"       :  "inf",
          "gaintype"     :  "G",
          "calmode"      :   'ap',
          "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
          "interp"       :  ['nearest','nearest'],
-         "uvrange"      :  UVRANGE,
-         "minsnr"       :  MINSNR,
-         "minblperant"  :  MINNRBL,
+         "uvrange"      :  pars['uvrange'],
+         "minsnr"       :  pars['minsnr'],
+         "minblperant"  :  pars['minnrbl'],
        },
        input=INPUT,
        output=OUTPUT,
@@ -275,7 +280,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "vis"          :  msname,
          "caltable"     :  prefix+".G0:output",
          "field"        :  gcal,
-         "refant"       :  REFANT,
+         "refant"       :  pars['refant'],
          "solint"       :  "inf",
          "gaintype"     :  "G",
          "calmode"      :  'ap',
@@ -283,9 +288,9 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
          "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
          "interp"       :  ['linear','linear'],
          "append"       :  True,
-         "uvrange"      :  UVRANGE,
-         "minsnr"       :  MINSNR,
-         "minblperant"  :  MINNRBL,
+         "uvrange"      :  pars['uvrange'],
+         "minsnr"       :  pars['minsnr'],
+         "minblperant"  :  pars['minnrbl'],
        },
        input=INPUT,
        output=OUTPUT,
@@ -333,6 +338,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         "interp"    :   ['linear','linear','nearest'],
         "calwt"     :   [False],
         "parang"    :   False,
+#        "applymode" :   'trial',
        },
        input=INPUT,
        output=OUTPUT,
@@ -349,6 +355,7 @@ for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
         "interp"    :   ['linear','linear','nearest'],
         "calwt"     :   [False],
         "parang"    :   False,
+#        "applymode" :   'trial',
        },
        input=INPUT,
        output=OUTPUT,
@@ -430,7 +437,7 @@ for i, msname in enumerate(msnames):
 recipe.add('cab/casa_clean', 'casa_clean',
     {
          "msname"         :    msnames_wsc,
-         "prefix"         :    PREFIX,
+         "prefix"         :    combprefix,
 #         "field"          :    target,
 #         "column"         :    "CORRECTED_DATA",
          "mode"           :    'channel',
@@ -455,7 +462,7 @@ recipe.add('cab/casa_clean', 'casa_clean',
 recipe.add('cab/wsclean', 'wsclean_dirty',
     {
          "msname"         :    msnames_wsc,
-         "prefix"         :    PREFIX,
+         "prefix"         :    combprefix,
          "nomfsweighting" :    True,
          "npix"           :    npix,
          "cellsize"       :    cell,
@@ -472,13 +479,13 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
     label='wsclean_dirty:: Make a WSCLEAN dirty image for each channel')
 
 # Stack dirty channels into cube
-imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(PREFIX, jj) for jj in range(nchan)]
+imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(combprefix, jj) for jj in range(nchan)]
 recipe.add('cab/fitstool', 'stack_channels',
     {
          "stack"      :   True,
          "image"      :   imagelist,
          "fits-axis"  :   'FREQ',
-         "output"     :   '{:s}-cube.dirty.fits'.format(PREFIX),
+         "output"     :   '{:s}-cube.dirty.fits'.format(combprefix),
     },
     input=INPUT,
     output=OUTPUT,
@@ -488,9 +495,9 @@ recipe.add('cab/fitstool', 'stack_channels',
 recipe.add('cab/sofia', 'sofia',
     {
 #    USE THIS FOR THE WSCLEAN DIRTY CUBE
-#    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(PREFIX),
+#    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(combprefix),
 #    USE THIS FOR THE CASA CLEAN CUBE
-    "import.inFile"     :   '{:s}.image.fits:output'.format(PREFIX),       # CASA CLEAN cube
+    "import.inFile"     :   '{:s}.image.fits:output'.format(combprefix),       # CASA CLEAN cube
     "steps.doMerge"     :   False,
     "steps.doMom0"      :   True,
     "steps.doMom1"      :   False,
@@ -518,6 +525,7 @@ for i,msname in enumerate(msnames):
 # Fill in the uvcontsub list only if requested
 if RUN_UVCONTSUB: uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
 else: uvcontsub = []
+
 
 # Run it!
 recipe.run(
@@ -547,3 +555,22 @@ recipe.run(
 #    +['stack_channels']
     +['sofia']
 )
+
+print
+print '###########################'
+print '### Start BYO functions ###'
+print '###########################'
+print
+
+#spectrum=byo.get_spec(msnames,msdir=MSDIR)
+#print spectrum.shape
+
+print 
+print '#########################'
+print '### End BYO functions ###'
+print '#########################'
+print
+
+#recipe.run(
+#    ['get_obsinfo_{:d}'.format(d) for d in range(len(msnames))]
+#)

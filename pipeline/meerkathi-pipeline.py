@@ -17,12 +17,22 @@ import sys
 #       2. Make catalog from final cube
 #####
 
-# I/O setup
+
+
+#################
+### I/O SETUP ###
+#################
+
 INPUT = 'input'
 OUTPUT = 'output'
 MSDIR = 'msdir'
 
-# Read parameter file
+
+
+###########################
+### READ PARAMETER FILE ###
+###########################
+
 f=open('meerkathi-parameters.par')
 pars=f.readlines()
 pars=[jj.strip().replace(' ','') for jj in pars]
@@ -36,28 +46,28 @@ pars={jj[0]:jj[1] for jj in pars}
 f.close()
 
 
-# Set file names
+
+######################
+### SET FILE NAMES ###
+######################
+
 dataids = pars['dataids'].split(',')
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+contsub_msnames = ['{:s}_split.ms.contsub'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
 combprefix = pars['combprefix']
+
+
+
+############################################
+### PRELIMINARY STEPS (TO BE CLEANED UP) ###
+############################################
 
 # This changes the value of variables to whatever was set through the 
 # '-g/--globals' option in the 'stimela run' command
 stimela.register_globals()
-
-# Run UVCONTSUB?
-UV_CONTSUB = pars['UV_CONTSUB']
-
-# Use result of previous UVCONTSUB?
-USE_UVCONTSUB = pars['USE_UVCONTSUB']
-
-# Image continuum-subtracted files if UVCONTSUB is run
-UV_CONTSUB = UV_CONTSUB.lower() in ['yes', 'true', '1']
-USE_UVCONTSUB = USE_UVCONTSUB.lower() in ['yes', 'true', '1']
-if UV_CONTSUB or USE_UVCONTSUB: msnames_wsc = [ff+'.contsub' for ff in msnames]
-else: msnames_wsc = msnames
 
 # Fields
 target=pars['target']
@@ -72,10 +82,8 @@ chan1  = int(pars['chan1'])
 weight = pars['weight']
 robust = float(pars['robust'])
 
-
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
 steps2run=[]
-
 
 #print
 #print '###########################'
@@ -91,6 +99,7 @@ steps2run=[]
 #print '### End BYO functions ###'
 #print '#########################'
 #print
+
 
 
 ##################
@@ -511,10 +520,27 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 ##############################
 
 # This will:
+# - split and time average the target
 # - make a continuum image and selfcalibrate the gain phases
 
 if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
+
     kshitij_add_something = True
+
+    # Split and time average the target
+    for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
+        recipe.add('cab/casa_split','split_avtime_{:d}'.format(i),
+           {
+             "msname"          :   msname,
+             "output-msname"   :   split_msname, 
+             "datacolumn"      :   "CORRECTED",
+             "field"           :   target,
+             "timebin"         :   "32s",
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='split_avtime_{:d}:: Split and time average the target'.format(i))
+        steps2run.append('split_avtime_{:d}'.format(i))
 
 
 
@@ -529,11 +555,11 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
 if pars['RUN_CONTSUB'].lower() in ['yes', 'true', '1']:
     # Subtract the continuum in the UV plane
     if pars['UV_CONTSUB'].lower() in ['yes', 'true', '1']:
-        for i, msname in enumerate(msnames):
+        for i, msname in enumerate(split_msnames):
             recipe.add('cab/casa_uvcontsub','uvcontsub_{:d}'.format(i),
                {
                  "msname"         :    msname,
-                 "field"          :    target,
+#                 "field"          :    target,
                  "fitorder"       :    1,
                },
                input=INPUT,
@@ -559,7 +585,7 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
     if pars['MAKE_CUBE'].lower() in ['yes', 'true', '1'] and pars['hiimager']=='casa':
         recipe.add('cab/casa_clean', 'casa_clean',
             {
-                 "msname"         :    msnames_wsc,
+                 "msname"         :    contsub_msnames,
                  "prefix"         :    combprefix,
 #                 "field"          :    target,
 #                 "column"         :    "CORRECTED_DATA",
@@ -579,14 +605,14 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
             },
             input=INPUT,
             output=OUTPUT,
-            label='casa_clean:: Make a dirty cube with CASA CLEAN'.format(i,msname))
+            label='casa_clean:: Make a dirty cube with CASA CLEAN')
         steps2run.append('casa_clean')
     
     # Make dirty cube with WSCLEAN
     elif pars['MAKE_CUBE'].lower() in ['yes', 'true', '1'] and pars['hiimager']=='wsclean':
         recipe.add('cab/wsclean', 'wsclean_dirty',
             {
-                 "msname"         :    msnames_wsc,
+                 "msname"         :    contsub_msnames,
                  "prefix"         :    combprefix,
                  "nomfsweighting" :    True,
                  "npix"           :    npix,
@@ -648,17 +674,17 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
 ### RUN RECIPE ###
 ##################
 
-if len(steps2run):
+if not len(steps2run):
     print
+    print '###################################'
+    print '### STIMELA has got nothing to run!'
+    print '###################################'
+    print 
+else:
+    print 
     print '#########################################'
     print '### STIMELA will run the following steps:'
     print '###',steps2run
     print '#########################################'
     print
     recipe.run(steps2run)
-else:
-    print
-    print '###################################'
-    print '### STIMELA has got nothing to run!'
-    print '###################################'
-    print

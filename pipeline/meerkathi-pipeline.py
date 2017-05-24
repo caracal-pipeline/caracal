@@ -22,6 +22,7 @@ INPUT = 'input'
 OUTPUT = 'output'
 MSDIR = 'msdir'
 
+# Read parameter file
 f=open('meerkathi-parameters.par')
 pars=f.readlines()
 pars=[jj.strip().replace(' ','') for jj in pars]
@@ -34,11 +35,9 @@ pars=[jj.replace("'","").replace('"','').split('=') for jj in pars]
 pars={jj[0]:jj[1] for jj in pars}
 f.close()
 
-print pars
-exit()
 
+# Set file names
 dataids = pars['dataids'].split(',')
-
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
@@ -79,10 +78,10 @@ aoflag_strat1=pars['aoflag_strat1']
 mw_hi_channels=pars['mw_hi_channels']
 
 # Imaging settings
-npix   = pars['npix']
-cell   = pars['cell']
-nchan  = pars['nchan']
-chan1  = pars['chan1']
+npix   = int(pars['npix'])
+cell   = float(pars['cell'])
+nchan  = int(pars['nchan'])
+chan1  = int(pars['chan1'])
 weight = pars['weight']
 robust = pars['robust']
 
@@ -471,7 +470,7 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
 #         "field"          :    target,
 #         "column"         :    "DATA",
          "niter"          :    0,
-         "weight"         :    '{0:s} {1:d}'.format(weight, robust),
+         "weight"         :    '{0:s} {1:s}'.format(weight, robust),
 #         "nwlayers"       :    1,
     },
     input=INPUT,
@@ -526,6 +525,7 @@ for i,msname in enumerate(msnames):
 if RUN_UVCONTSUB: uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
 else: uvcontsub = []
 
+sys.exit()
 
 # Run it!
 recipe.run(

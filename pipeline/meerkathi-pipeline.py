@@ -470,7 +470,7 @@ recipe.add('cab/wsclean', 'wsclean_dirty',
 #         "field"          :    target,
 #         "column"         :    "DATA",
          "niter"          :    0,
-         "weight"         :    '{0:s} {1:s}'.format(weight, robust),
+         "weight"         :    '{0:s} {1:f}'.format(weight, robust),
 #         "nwlayers"       :    1,
     },
     input=INPUT,
@@ -524,8 +524,6 @@ for i,msname in enumerate(msnames):
 # Fill in the uvcontsub list only if requested
 if RUN_UVCONTSUB: uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
 else: uvcontsub = []
-
-sys.exit()
 
 # Run it!
 recipe.run(

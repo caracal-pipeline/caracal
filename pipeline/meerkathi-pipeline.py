@@ -40,7 +40,9 @@ jj=0
 while jj<len(pars):
     if not len(pars[jj]): del(pars[jj])
     elif pars[jj][0]=='#': del(pars[jj])
-    else: jj+=1
+    else:
+        if pars[jj][-1]==';': pars[jj]=pars[jj][:-1]
+        jj+=1
 pars=[jj.replace("'","").replace('"','').split('=') for jj in pars]
 pars={jj[0]:jj[1] for jj in pars}
 f.close()
@@ -55,7 +57,6 @@ dataids = pars['dataids'].split(',')
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in dataids]
-contsub_msnames = ['{:s}_split.ms.contsub'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
 combprefix = pars['combprefix']
 
@@ -74,16 +75,30 @@ target=pars['target']
 bpcal=pars['bpcal']
 gcal=pars['gcal']
 
-# Imaging settings
-npix   = int(pars['npix'])
-cell   = float(pars['cell'])
-nchan  = int(pars['nchan'])
-chan1  = int(pars['chan1'])
-weight = pars['weight']
-robust = float(pars['robust'])
-
+# Initialise recipe
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
 steps2run=[]
+
+# Check that the MS has been or will be split if any of 2GC, CONTSUB or HI_IMAGING are switched on
+if pars['RUN_2GC'].lower() in ['yes', 'true', '1'] or pars['RUN_CONTSUB'].lower() in ['yes', 'true', '1'] or pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
+    split_error,missing_files=False,[]
+    for split_msname in split_msnames:
+        if not os.path.exists('{0:s}/{1:s}'.format(MSDIR, split_msname)):
+            if not pars['RUN_1GC'].lower() in ['yes', 'true', '1'] or (pars['RUN_1GC'].lower() in ['yes', 'true', '1'] and not pars['SPLIT_AND_TAV'].lower() in ['yes', 'true', '1']):
+                split_error=True
+                missing_files.append('{0:s}/{1:s}'.format(MSDIR, split_msname))
+    if split_error==True:
+        print 
+        print '#############'
+        print '# FATAL ERROR'
+        print '#   You have requested to run at least one of the modules: 2GC, CONTSUB, HI_IMAGING.'
+        print '#   These modules work on .MS files containing only the target (optionally time-averaged)'
+        print '#   Unfortunately, the following such files do not exist:'
+        for ff in missing_files: print '#    ',ff
+        print '#   To create them please switch on the 1GC module and, within it, the SPLIT_AND_TAV task.'
+        sys.exit()
+
+
 
 #print
 #print '###########################'
@@ -275,6 +290,7 @@ if pars['RUN_FLAGGING'].lower() in ['yes', 'true', '1']:
 # - calibrate the gains using the phase calibrator (optional)
 # - transfer the flux scale (optional)
 # - apply the calibration to all fields (optional)
+# - split the target and time average (optional)
 # - make diagnostic plots (optional)
 
 if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
@@ -399,7 +415,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                label='fluxscale_{:d}:: Flux scale transfer'.format(i,msname))
             steps2run.append('fluxscale_{:d}'.format(i,msname))
 
-    #Apply calibration tables to all fields
+    # Apply calibration tables to all fields
     if pars['APPLY_CAL'].lower() in ['yes', 'true', '1']:
         # to Bandpass field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
@@ -455,9 +471,25 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                label='applycal_tar_{:d}:: Apply calibration to gaincal field'.format(i,msname))
             steps2run.append('applycal_tar_{:d}'.format(i,msname))
 
+    # Split and time average the target
+    if pars['SPLIT_AND_TAV'].lower() in ['yes', 'true', '1']:
+        for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
+            recipe.add('cab/casa_split','split_avtime_{:d}'.format(i),
+               {
+                 "msname"          :   msname,
+                 "output-msname"   :   split_msname,
+                 "datacolumn"      :   "CORRECTED",
+                 "field"           :   target,
+                 "timebin"         :   pars['timebin'],
+                },
+                input=INPUT,
+                output=OUTPUT,
+                label='split_avtime_{:d}:: Split and time average the target'.format(i))
+            steps2run.append('split_avtime_{:d}'.format(i))
+
     # Make plots
     if pars['MAKE_PLOTS'].lower() in ['yes', 'true', '1']:
-        #Plot bandpass
+        # Plot bandpass
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
             recipe.add('cab/casa_plotcal','plot_bandpass_{:d}'.format(i),
                {
@@ -474,7 +506,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                label='plot_bandpass_{:d}:: Plot bandpass'.format(i,msname))
             steps2run.append('plot_bandpass_{:d}'.format(i,msname))
 
-        #Plot gains
+        # Plot gains
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
             recipe.add('cab/casa_plotcal','plot_gaincal_{:d}'.format(i),
                {
@@ -491,7 +523,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                label='plot_gaincal_{:d}:: Plot gaincal'.format(i,msname))
             steps2run.append('plot_gaincal_{:d}'.format(i,msname))
 
-        #Plot corrected phase vs amplitude for bandpass field
+        # Plot corrected phase vs amplitude for bandpass field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
             recipe.add('cab/casa_plotms','plot_phaseamp_bp_{:d}'.format(i),
                {
@@ -524,23 +556,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 # - make a continuum image and selfcalibrate the gain phases
 
 if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
-
     kshitij_add_something = True
-
-    # Split and time average the target
-    for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
-        recipe.add('cab/casa_split','split_avtime_{:d}'.format(i),
-           {
-             "msname"          :   msname,
-             "output-msname"   :   split_msname, 
-             "datacolumn"      :   "CORRECTED",
-             "field"           :   target,
-             "timebin"         :   "32s",
-            },
-            input=INPUT,
-            output=OUTPUT,
-            label='split_avtime_{:d}:: Split and time average the target'.format(i))
-        steps2run.append('split_avtime_{:d}'.format(i))
 
 
 
@@ -577,15 +593,25 @@ if pars['RUN_CONTSUB'].lower() in ['yes', 'true', '1']:
 # - make an HI cube (optional)
 # - run SoFiA and make an HI image (optional)
 
-if pars['UV_CONTSUB'].lower() in ['yes', 'true', '1'] or pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: msnames_wsc = [ff+'.contsub' for ff in msnames]
-else: msnames_wsc = msnames
+# Imaging settings
+npix   = int(pars['npix'])
+cell   = float(pars['cell'])
+nchan  = int(pars['nchan'])
+chan1  = int(pars['chan1'])
+weight = pars['weight']
+robust = float(pars['robust'])
+sf_threshold = float(pars['sf_threshold'])
+sf_flagregion=[map(int,jj.split(',')) for jj in pars['sf_flagregion'].split(';')]
+
+if pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: msnames_cube = [ff+'.contsub' for ff in split_msnames]
+else: msnames_cube = split_msnames
 
 if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
     # Make cube with CASA CLEAN
     if pars['MAKE_CUBE'].lower() in ['yes', 'true', '1'] and pars['hiimager']=='casa':
         recipe.add('cab/casa_clean', 'casa_clean',
             {
-                 "msname"         :    contsub_msnames,
+                 "msname"         :    msnames_cube,
                  "prefix"         :    combprefix,
 #                 "field"          :    target,
 #                 "column"         :    "CORRECTED_DATA",
@@ -612,7 +638,7 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
     elif pars['MAKE_CUBE'].lower() in ['yes', 'true', '1'] and pars['hiimager']=='wsclean':
         recipe.add('cab/wsclean', 'wsclean_dirty',
             {
-                 "msname"         :    contsub_msnames,
+                 "msname"         :    msnames_cube,
                  "prefix"         :    combprefix,
                  "nomfsweighting" :    True,
                  "npix"           :    npix,
@@ -660,8 +686,8 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
             "steps.doWriteCat"      :   False,
             "steps.doWriteMask"     :   True,
             "steps.doFlag"          :   True,
-            "flag.regions"          :   [[0,255,0,255,911,962],],
-            "SCfind.threshold"      :   4
+            "flag.regions"          :   sf_flagregion,
+            "SCfind.threshold"      :   sf_threshold
             },
             input=INPUT,
             output=OUTPUT,

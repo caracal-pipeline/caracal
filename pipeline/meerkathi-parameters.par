@@ -6,6 +6,8 @@
 # parameters requiring a boolean value have a capitalised name
 # you can give booleans as true,1,yes,false,0,no (case insensitive)
 # paramter names and non-boolean parameter values are case sensitive
+# for list-type par values just give the entries separated by commas
+# for list-of-lists additional separation by semi-colon
 # you can leave blank lines
 # spaces do not matter
 # do not add comments at the end of a line which sets a parameter value
@@ -21,10 +23,10 @@
 ### SWITCH ON/OFF PIPELINE STEPS ###
 RUN_PREPMS     = no
 RUN_FLAGGING   = no
-RUN_1GC        = yes
+RUN_1GC        = no
 RUN_2GC        = no
 RUN_CONTSUB    = no
-RUN_HI_IMAGING = no
+RUN_HI_IMAGING = yes
 ###
 
 
@@ -54,6 +56,7 @@ G_CAL          = no
 TRANSF_FLUX    = no
 APPLY_CAL      = no
 MAKE_PLOTS     = no
+SPLIT_AND_TAV  = no
 ###
 
 ### 2GC ###
@@ -61,12 +64,12 @@ MAKE_PLOTS     = no
 
 ### CONTSUB ###
 MODEL_CONTSUB  = no
-UV_CONTSUB     = yes
+UV_CONTSUB     = no
 ###
 
 ### HI_IMAGING ###
-MAKE_CUBE      = yes
-MAKE_IMAGE     = no
+MAKE_CUBE      = no
+MAKE_IMAGE     = yes
 ###
 
 
@@ -93,6 +96,7 @@ minnrbl        = 4
 minsnr         = 3
 # below set applymode to either 'trial' or 'calflag'
 applymode      = calflag
+timebin        = 32s
 ###
 
 ### 2GC ###
@@ -111,13 +115,13 @@ nchan          = 1000
 chan1          = 1
 weight         = briggs
 robust         = 2
+sf_flagregion  = 0,255,0,255,881,937;
+sf_threshold   = 4
 ###
 
 ### MISCELLANEOUS ###
-combprefix     = meerkathi-combined-data
+combprefix     = meerkathi-combined-data-24may
 target         = IC5264
 bpcal          = PKS1934-638
 gcal           = ATCA2259-375
 ###
-
-

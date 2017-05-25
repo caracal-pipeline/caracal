@@ -15,6 +15,7 @@ dataids = ['2017/04/06/1491463063', '2017/04/06/1491480644']
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+fin_msnames = ['{:s}_fin.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
 PREFIX = 'meerkathi-combined-data'
 
@@ -60,7 +61,7 @@ npix = 1180
 
 recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
 
-#Split the MS to have only the target field and average the data.
+#Split the MS to have only the target field and average the data in time and frequency.
 for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
 
     recipe.add('cab/casa_split', 'splitandavg_{:d}'.format(i),
@@ -69,14 +70,15 @@ for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
            "output-msname"   :   split_msname, 
            "datacolumn"      :   "CORRECTED",
            "field"           :   target,
-           "timebin"         :   "32s"
+           "timebin"         :   "32s",
+           "width"           :    40,
        },
        input = INPUT,
        output= MSDIR,
        label='splitandavg_{:d}:: Split and average MSs'.format(i))
 
 
-
+   
    # Add corrected data
 
     recipe.add('cab/msutils', 'data2corrdata2{:d}'.format(i),
@@ -103,6 +105,52 @@ for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
        input = INPUT,
        output= MSDIR,
        label = 'prepms_{:d}:: Add flagsets'.format(i))
+
+#Make a "final MS"
+for i, (msname, fin_msname) in enumerate(zip(msnames, fin_msnames)):
+
+    recipe.add('cab/casa_split', 'splitandavg_fin_{:d}'.format(i),
+       {
+           "msname"          :   msname,
+           "output-msname"   :   fin_msname,
+           "datacolumn"      :   "CORRECTED",
+           "field"           :   target,
+           "timebin"         :   "32s"
+       },
+       input = INPUT,
+       output= MSDIR,
+       label='splitandavg_fin_{:d}:: Split and average MSs'.format(i))
+
+
+
+   # Add corrected data
+
+    recipe.add('cab/msutils', 'data2corrdata2_fin_{:d}'.format(i),
+        {
+            "msname"          :   fin_msname,
+            "command"         :   'copycol',
+            "fromcol"         :   'DATA',
+            "tocol"           :   'CORRECTED_DATA',
+        },
+        input=INPUT,
+        output=OUTPUT,
+        label='data2corrdata2_fin_{:d}:: Copy DATA to CORRECTED_DATA column'.format(i))
+
+
+
+
+
+
+    recipe.add('cab/msutils', 'prepms_fin_{:d}'.format(i),
+       {
+          "msname"          :  fin_msname,
+          'command'         : 'prep',
+       },
+       input = INPUT,
+       output= MSDIR,
+       label = 'prepms_fin_{:d}:: Add flagsets'.format(i))
+
+
 
 
 recipe.add('cab/wsclean', 'cont_dirty_image1',
@@ -164,7 +212,7 @@ recipe.add('cab/pybdsm', 'init_model',
         "image"          :   PREFIX+'cont_1-image.fits:output',
         "outfile"        :   '%s.fits:output'%(lsmprefix),
         "thresh_pix"        :  25,
-        "thresh_isl"        :  15,
+        "thresh_isl"        :  5,
         "clobber"           :  True,
         "port2tigger"       :  True,
    },
@@ -300,7 +348,7 @@ recipe.add("cab/tigger_convert", "stitch_lsms", {
 #Remove earlier flags from selfcal
 for i, (split_msname) in enumerate(zip(split_msnames)):
      recipe.add("cab/flagms", 'unflag_selfcalflags_{:d}'.format(i), {
-              "msname"             : split_msnames,
+              "msname"             : split_msname,
               "unflag"             : "FLAG0",
     },
           input=INPUT, output=OUTPUT,
@@ -321,6 +369,7 @@ for i, (split_msname) in enumerate(zip(split_msnames)):
             "Gjones-matrix-type" : "GainDiagPhase",
             "make-plots"         : True,
             "tile-size"          : 512,
+            "Gjones-gain-table"  : "final_table.cp"
         },
        input=INPUT,
        output=OUTPUT,
@@ -341,12 +390,109 @@ recipe.add('cab/wsclean', 'cont_image4',
          "npix"           :    npix,
          "cellsize"       :    cell,
          "niter"          :    10000000,
-         "fitsmask"       :    mask2,
+#         "fitsmask"       :    mask2,
          "weight"         :    '{0:s} {1:f}'.format(weight, robust),
     },
     input=INPUT,
     output=OUTPUT,
     label='cont_image4:: Make a combined continuum image of 2nd roun selfcaled data')
+
+
+
+#Transfer the gains to the final ms
+for i, (fin_msname) in enumerate(zip(fin_msnames)):
+    recipe.add('cab/calibrator', 'transfer_calib_{:d}'.format(i),
+        {
+            "skymodel"     :  lsm2,
+            "msname"       :  fin_msname,
+            "threads"      :  16,
+            "column"       :  "DATA",
+            "output-data"  :  "CORR_RES",
+            "output-column":  "CORRECTED_DATA",
+            "Gjones-solution-intervals" : [2, 0],
+            "Gjones"       : True,
+        #    "Gjones-apply-only" : True,
+            "make-plots"         : True,
+        #    "Gjones-gain-table"  : "final_table.cp:output",
+            "Gjones-matrix-type" : "GainDiagPhase",
+            "tile-size"          : 512,
+
+        },
+        input=INPUT,
+        output=OUTPUT,
+        label='transfer_calib_{:d}:: Selfcal transfer'.format(i))
+
+#Image the residuals again
+recipe.add('cab/wsclean', 'cont_image5',
+    {
+         "msname"         :    fin_msnames,
+         "prefix"         :    PREFIX+"cont_5",
+         #"nomfsweighting" :    False,
+         "mgain"          :    0.8,
+         "column"         :    "CORRECTED_DATA",
+         "auto-threshold" :    1,
+         "trim"           :    trim,
+         "stokes"         :    "I",
+         "npix"           :    npix,
+         "cellsize"       :    cell,
+         "niter"          :    10000000,
+#         "fitsmask"       :    mask2,
+         "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='cont_image5:: Make a combined continuum image of non-freq avg data')
+
+
+
+
+
+
+
+
+
+
+
+# Subtract the continuum in the UV plane
+
+for i, msname in enumerate(fin_msnames):
+    recipe.add('cab/casa_uvcontsub','uvcontsub_{:d}'.format(i),
+       {
+          "msname"         :    fin_msname,
+          "fitorder"       :    1,
+       },
+       input=INPUT,
+       output=OUTPUT,
+       label='uvcontsub_{:d}:: Subtract continuum in the UV plane'.format(i))
+
+# Make cube with CASA CLEAN
+recipe.add('cab/casa_clean', 'casa_dirty_cube',
+    {
+         "msname"         :    fin_msnames,
+         "prefix"         :    PREFIX,
+#         "field"          :    target,
+#         "column"         :    "CORRECTED_DATA",
+         "mode"           :    'channel',
+         "nchan"          :    1000,
+         "start"          :     1,
+         "interpolation"  :    'nearest',
+         "niter"          :    100,
+         "psfmode"        :    'hogbom',
+         "threshold"      :    '9mJy',
+         "npix"           :    256,
+         "cellsize"       :    25,
+         "weight"         :    "briggs",
+         "robust"         :    2,
+#         "wprojplanes"    :    1,
+         "port2fits"      :    True,
+    },
+    input=INPUT,
+    output=OUTPUT,
+    label='casa_dirty_cube:: Make a dirty cube with CASA CLEAN')
+
+
+
+
 
 
 
@@ -360,19 +506,26 @@ recipe.run(
    ['splitandavg_{:d}'.format(d) for d in range(len(msnames))]
   +['data2corrdata2_{:d}'.format(d) for d in range(len(split_msnames))]
   +['prepms_{:d}'.format(d) for d in range(len(split_msnames))]
+  +['splitandavg_fin_{:d}'.format(d) for d in range(len(msnames))]
+  +['data2corrdata2_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
+  +['prepms_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
   +['cont_dirty_image1']
   +['cleanmask1']
   +['cont_image1']
-  +['init_model']
+  + ['init_model']
   +['backup_initial_flags_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['selfcal1_{:d}'.format(d) for d in range(len(split_msnames))]
-  ['cont_image2']
+  + ['selfcal1_{:d}'.format(d) for d in range(len(split_msnames))]
+  +['cont_image2']
   +['cleanmask2']
   +['cont_image3']
   +['second_model']
-  + ['stitch_lsms']
-  +['unflag_selfcalflags_{:d}'.format(d) for d in range(len(split_msnames))]
+  +['stitch_lsms']
+  + ['unflag_selfcalflags_{:d}'.format(d) for d in range(len(split_msnames))]
   +['selfcal2_{:d}'.format(d) for d in range(len(split_msnames))]
   +['cont_image4']
+  + ['transfer_calib_{:d}'.format(d) for d in range(len(fin_msnames))]
+  +['cont_image5']
+  +['uvcontsub_{:d}'.format(d) for d in range(len(fin_msnames))]
+  +['casa_dirty_cube']
 )
 

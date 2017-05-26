@@ -626,7 +626,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
             steps2run.append('cont_dirty_image')
 
             mask1 = combprefix+"mask1.fits:output"
-            dirtyimage1 = combprefix+"cont_dirty_1-dirty.fits:output"
+            dirtyimage1 = combprefix+"_cont_dirty_1-dirty.fits:output"
             recipe.add('cab/cleanmask', 'cleanmask1',
                {
                  "image"           :  dirtyimage1,

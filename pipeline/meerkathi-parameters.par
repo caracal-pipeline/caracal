@@ -16,9 +16,9 @@
 
 
 
-#####################
-### UBER SWITCHES ###
-#####################
+####################
+### ÜBERSCHALTER ###
+####################
 
 ### SWITCH ON/OFF PIPELINE STEPS ###
 RUN_PREPMS     = no
@@ -31,9 +31,9 @@ RUN_HI_IMAGING = yes
 
 
 
-#######################
-### UNTER SWITCHES  ###
-#######################
+######################
+### UNTERSCHALTER  ###
+######################
 
 ### PREPMS ###
 REMOVE_MS      = no

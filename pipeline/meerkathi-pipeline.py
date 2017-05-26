@@ -564,7 +564,6 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                  "msname"          :   split_msname,
                  "output-msname"   :   cal_msname,
                  "datacolumn"      :   "DATA",
-                 "timebin"         :   pars['timebin'],
                  "width"           :   pars['width']
                 },
                 input=INPUT,
@@ -600,9 +599,9 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
             recipe.add('cab/wsclean', 'cont_dirty_image1',
                { 
                  "msname"         :    cal_msnames,
-                 "prefix"         :    PREFIX+"_cont_dirty_1",
+                 "prefix"         :    combprefix+"_cont_dirty_1",
                  "nomfsweighting" :    False,
-                 "trim"           :    trim,
+                 "trim"           :    pars['trim'],
                  "column"         :    "DATA",
                  "mgain"          :    0.8,
                  "auto-threshold" :    10,
@@ -617,8 +616,8 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                label='cont_dirty_image1:: Make a combined continuum image')
             steps2run.append('cont_dirty_image')
 
-            mask1 = PREFIX+"mask1.fits:output"
-            dirtyimage1 = PREFIX+"cont_dirty_1-dirty.fits:output"
+            mask1 = combprefix+"mask1.fits:output"
+            dirtyimage1 = combprefix+"cont_dirty_1-dirty.fits:output"
             recipe.add('cab/cleanmask', 'cleanmask1',
                {
                  "image"           :  dirtyimage1,
@@ -635,7 +634,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
             recipe.add('cab/wsclean', 'cont_image1',
                {
                  "msname"         :    cal_msnames,
-                 "prefix"         :    PREFIX+"cont_1",
+                 "prefix"         :    combprefix+"cont_1",
                  "nomfsweighting" :    False,
                  "column"         :   "DATA",
                  "mgain"          :    0.8,
@@ -650,13 +649,13 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                },
                input=INPUT,
                output=OUTPUT,
-               label='cont_image1 :: Make continuum image 1'
+               label='cont_image1 :: Make continuum image 1')
             steps2run.append('cont_image1') 
             
-            lsmprefix=PREFIX+'-LSM0'
+            lsmprefix=combprefix+'-LSM0'
             recipe.add('cab/pybdsm', 'init_model',
                {
-                 "image"          :   PREFIX+'cont_1-image.fits:output',
+                 "image"          :   combprefix+'cont_1-image.fits:output',
                  "outfile"        :   '%s.fits:output'%(lsmprefix),
                  "thresh_pix"        :  25,
                  "thresh_isl"        :  5,
@@ -716,7 +715,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         recipe.add('cab/wsclean', 'cont_image2',
             {
               "msname"         :    cal_msnames,
-              "prefix"         :    PREFIX+"cont_2",
+              "prefix"         :    combprefix+"cont_2",
               "nomfsweighting" :    False,
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
@@ -734,8 +733,8 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         steps2run.append('cont_image_2')
         
     if pars['APPEND_TO_LSM0'].lower() in ['yes', 'true', '1']:
-        mask2 = PREFIX+"mask2.fits:output"
-        image2 = PREFIX+"cont_2-image.fits:output"
+        mask2 = combprefix+"mask2.fits:output"
+        image2 = combprefix+"cont_2-image.fits:output"
         # Make a new cleanmask
         recipe.add('cab/cleanmask', 'cleanmask2',
             {
@@ -754,7 +753,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         recipe.add('cab/wsclean', 'cont_image3',
             {
               "msname"         :    cal_msnames,
-              "prefix"         :    PREFIX+"cont_3",
+              "prefix"         :    combprefix+"cont_3",
               "nomfsweighting" :    False,
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
@@ -773,10 +772,10 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         steps2run.append('cont_image3')
         
         #Make a new model from the residual image    
-        lsmprefix1=PREFIX+'-LSM1'
+        lsmprefix1=combprefix+'-LSM1'
         recipe.add('cab/pybdsm', 'second_model',
             {
-              "image"          :   PREFIX+'cont_3-image.fits:output',
+              "image"          :   combprefix+'cont_3-image.fits:output',
               "outfile"        :   '%s.fits:output'%(lsmprefix1),
               "thresh_pix"        :  10,
               "thresh_isl"        :  5,
@@ -790,7 +789,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
 
         #Append the original LSM and the new LSM, "complete-r sky"
         lsm1=lsmprefix1+".lsm.html:output"
-        lsm2=PREFIX+'-LSM2.lsm.html:output'
+        lsm2=combprefix+'-LSM2.lsm.html:output'
         recipe.add("cab/tigger_convert", "stitch_lsms", 
             {
                "input-skymodel" :   lsm,
@@ -830,7 +829,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         recipe.add('cab/wsclean', 'cont_image4',
             {
               "msname"         :    cal_msnames,
-              "prefix"         :    PREFIX+"cont_4",
+              "prefix"         :    combprefix+"cont_4",
               "nomfsweighting" :    False,
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
@@ -875,7 +874,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         recipe.add('cab/wsclean', 'cont_image5',
             {
               "msname"         :    split_msnames,
-              "prefix"         :    PREFIX+"cont_5",
+              "prefix"         :    combprefix+"cont_5",
               "nomfsweighting" :    False,
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
@@ -1046,4 +1045,4 @@ else:
     print '###',steps2run
     print '#########################################'
     print
-    recipe.run(steps2run)
+#    recipe.run(steps2run)

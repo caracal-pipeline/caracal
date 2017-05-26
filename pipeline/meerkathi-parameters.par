@@ -60,6 +60,12 @@ SPLIT_AND_TAV  = no
 ###
 
 ### 2GC ###
+PREPARE_CONT_MS  = yes
+MAKE_INTI_MODEL  = no
+RUN_SELFCAL_1    = no
+APPEND_TO_LSM0   = no
+RUN_SELFCAL_2    = no
+SELFCAL_FINAL    = no
 ### 
 
 ### CONTSUB ###
@@ -100,6 +106,13 @@ timebin        = 32s
 ###
 
 ### 2GC ###
+width = 40
+# Imaging options for Continuum
+trim = 1024
+npix_cont = 1180
+cell_cont = 5
+weight_cont = briggs
+robust_cont = -1.5
 ###
 
 ### CONTSUB ###

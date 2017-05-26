@@ -57,6 +57,7 @@ dataids = pars['dataids'].split(',')
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
 msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in dataids]
+cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in dataids]
 prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in dataids]
 combprefix = pars['combprefix']
 
@@ -556,8 +557,340 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 # - make a continuum image and selfcalibrate the gain phases
 
 if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
-    kshitij_add_something = True
+    if pars['PREPARE_CONT_MS'].lower() in ['yes', 'true', '1']:
+        for i, (split_msname, cal_msname) in enumerate(zip(split_msnames, cal_msnames)):
+            recipe.add('cab/casa_split','split_avtimefreq_{:d}'.format(i),
+               {
+                 "msname"          :   split_msname,
+                 "output-msname"   :   cal_msname,
+                 "datacolumn"      :   "DATA",
+                 "timebin"         :   pars['timebin'],
+                 "width"           :   pars['width']
+                },
+                input=INPUT,
+                output=OUTPUT,
+                label='split_avtimefreq_{:d}:: Split and time average the target'.format(i))
+            steps2run.append('split_avtimefreq_{:d}'.format(i))
+     
+        for i, (cal_msname) in enumerate(zip(cal_msnames)):
+            recipe.add('cab/msutils', 'copydata2corrdata_{:d}'.format(i),
+               {
+                  "msname"          :   cal_msname,
+                 "command"         :   'copycol',
+                 "fromcol"         :   'DATA',
+                 "tocol"           :   'CORRECTED_DATA',
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='copydata2corrdata_{:d}:: Copy DATA to CORRECTED_DATA column'.format(i))
+            steps2run.append('copydata2corrdata_{:d}'.format(i))
+         
+        for i, (cal_msname) in enumerate(zip(cal_msnames)):
+            recipe.add('cab/msutils', 'prepms_2gc_{:d}'.format(i),
+               {
+                 "msname"          :  split_msname,
+                 "command"         : 'prep',
+               },
+               input = INPUT,
+               output= MSDIR,
+               label = 'prepms_2gc_{:d}:: Add flagsets'.format(i))
+      
+    if pars['MAKE_INTI_MODEL'].lower() in ['yes', 'true', '1']:
+            #Make a dirty image to create mask
+            recipe.add('cab/wsclean', 'cont_dirty_image1',
+               { 
+                 "msname"         :    cal_msnames,
+                 "prefix"         :    PREFIX+"_cont_dirty_1",
+                 "nomfsweighting" :    False,
+                 "trim"           :    trim,
+                 "column"         :    "DATA",
+                 "mgain"          :    0.8,
+                 "auto-threshold" :    10,
+                 "stokes"         :    "I",
+                 "npix"           :    npix_cont,
+                 "cellsize"       :    cell_cont,
+                 "niter"          :    0,
+                 "weight"         :    '{0:s} {1:f}'.format(weight_cont, robust_cont),
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='cont_dirty_image1:: Make a combined continuum image')
+            steps2run.append('cont_dirty_image')
 
+            mask1 = PREFIX+"mask1.fits:output"
+            dirtyimage1 = PREFIX+"cont_dirty_1-dirty.fits:output"
+            recipe.add('cab/cleanmask', 'cleanmask1',
+               {
+                 "image"           :  dirtyimage1,
+                 "output"          :  mask1,
+                 "dilate"          :  False,
+                 "sigma"           :  5,
+                 "no-negative"     :  True,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='cleanmask1:: Make a cleanmask from the dirty image')
+            steps2run.append('cleanmask1') 
+              
+            recipe.add('cab/wsclean', 'cont_image1',
+               {
+                 "msname"         :    cal_msnames,
+                 "prefix"         :    PREFIX+"cont_1",
+                 "nomfsweighting" :    False,
+                 "column"         :   "DATA",
+                 "mgain"          :    0.8,
+                 "auto-threshold" :    1,
+                 "trim"           :    trim,
+                 "stokes"         :    "I",
+                 "npix"           :    npix_cont,
+                 "cellsize"       :    cell_cont,
+                 "niter"          :    10000000,
+                 "fitsmask"       :    mask1,
+                 "weight"         :    '{0:s} {1:f}'.format(weight_cont, robust_cont),
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='cont_image1 :: Make continuum image 1'
+            steps2run.append('cont_image1') 
+            
+            lsmprefix=PREFIX+'-LSM0'
+            recipe.add('cab/pybdsm', 'init_model',
+               {
+                 "image"          :   PREFIX+'cont_1-image.fits:output',
+                 "outfile"        :   '%s.fits:output'%(lsmprefix),
+                 "thresh_pix"        :  25,
+                 "thresh_isl"        :  5,
+                 "clobber"           :  True,
+                 "port2tigger"       :  True,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='init_model::make initial model')
+            steps2run.append('init_model') 
+             
+            lsm=lsmprefix+".lsm.html:output"
+
+
+    if pars['RUN_SELFCAL_1'].lower() in ['yes', 'true', '1']:
+        for i, (cal_msname) in enumerate(zip(cal_msnames)):
+            #Unflag prvious selfcal flags, if any.
+            recipe.add("cab/flagms", 'unflag_selfcalflags_{:d}'.format(i), 
+               {
+                 "msname"             : cal_msname,
+                 "unflag"             : "FLAG0",
+               },
+               input=INPUT, output=OUTPUT,
+               label="unflag_selfcalflags_{:d}:: Unflag phase selfcal flags".format(i))
+            steps2run.append('unflag_selfcalflags_{:d}'.format(i))
+          
+           #Backup other flags
+            recipe.add("cab/flagms", "backup_initial_flags_{:d}".format(i),
+               {
+                 "msname"        :  cal_msname,
+                 "flagged-any"   : "legacy+L",
+                 "flag"          : "legacy",
+               },
+               input=INPUT, output=OUTPUT,
+               label="backup_initial_flags_{:d}:: Backup initial flags".format(i)) 
+            steps2run.append('backup_initial_flags_{:d}'.format(i))  
+           #Run 1st selfcal round, output corrected residuals 
+            recipe.add('cab/calibrator','selfcal1_{:d}'.format(i),
+               {
+                 "skymodel"     :  lsm,
+                 "msname"       :  cal_msname,
+                 "threads"      :  16,
+                 "column"       :  "DATA",
+                 "output-data"  : "CORR_RES",
+                 "output-column": "CORRECTED_DATA",
+                 "Gjones"       : True,
+                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones-matrix-type" : "GainDiagPhase",
+                 "make-plots"         : True,
+                 "tile-size"          : 512,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='selfcal1_{:d}:: First selfcal'.format(i))
+            steps2run.append('selfcal1_{:d}'.format(i)) 
+        #Image the corrected residuals       
+        recipe.add('cab/wsclean', 'cont_image2',
+            {
+              "msname"         :    cal_msnames,
+              "prefix"         :    PREFIX+"cont_2",
+              "nomfsweighting" :    False,
+              "mgain"          :    0.8,
+              "column"         :    "CORRECTED_DATA",
+              "auto-threshold" :    10,
+              "trim"           :    trim,
+              "stokes"         :    "I",
+              "npix"           :    npix_cont,
+              "cellsize"       :    cell_cont,
+              "niter"          :    10000000,
+              "weight"         :    '{0:s} {1:f}'.format(weight_cont, robust_cont),
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='cont_image2:: Make a combined continuum image of selfcaled data')
+        steps2run.append('cont_image_2')
+        
+    if pars['APPEND_TO_LSM0'].lower() in ['yes', 'true', '1']:
+        mask2 = PREFIX+"mask2.fits:output"
+        image2 = PREFIX+"cont_2-image.fits:output"
+        # Make a new cleanmask
+        recipe.add('cab/cleanmask', 'cleanmask2',
+            {
+              "image"           :  image2,
+              "output"          :  mask2,
+              "dilate"          :  False,
+              "sigma"           :  5,
+              "no-negative"     :  True,
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='cleanmask2:: Make a cleanmask from the dirty image')
+        steps2run.append('cleanmask2')
+
+        # Make new continuum image 
+        recipe.add('cab/wsclean', 'cont_image3',
+            {
+              "msname"         :    cal_msnames,
+              "prefix"         :    PREFIX+"cont_3",
+              "nomfsweighting" :    False,
+              "mgain"          :    0.8,
+              "column"         :    "CORRECTED_DATA",
+              "auto-threshold" :    1,
+              "trim"           :    trim,
+              "stokes"         :    "I",
+              "npix"           :    npix,
+              "cellsize"       :    cell,
+              "niter"          :    10000000,
+              "fitsmask"       :    mask2,
+              "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='cont_image3:: Make a combined continuum image of selfcaled data')
+        steps2run.append('cont_image3')
+        
+        #Make a new model from the residual image    
+        lsmprefix1=PREFIX+'-LSM1'
+        recipe.add('cab/pybdsm', 'second_model',
+            {
+              "image"          :   PREFIX+'cont_3-image.fits:output',
+              "outfile"        :   '%s.fits:output'%(lsmprefix1),
+              "thresh_pix"        :  10,
+              "thresh_isl"        :  5,
+              "clobber"           :  True,
+              "port2tigger"       :  True,
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='second_model::make new model')
+        steps2run.append('second_model')                  
+
+        #Append the original LSM and the new LSM, "complete-r sky"
+        lsm1=lsmprefix1+".lsm.html:output"
+        lsm2=PREFIX+'-LSM2.lsm.html:output'
+        recipe.add("cab/tigger_convert", "stitch_lsms", 
+            {
+               "input-skymodel" :   lsm,
+               "output-skymodel" :  lsm2,
+               "force"           :  True,            #Overwrite the existing model, don't want repeated appends.  
+               "append" :  lsm1,
+            },
+            input=INPUT, output=OUTPUT,
+            label="stitch_lsms::Create master lsm file")
+        steps2run.append('stitch_lsms')      
+       
+    if pars['RUN_SELFCAL_2'].lower() in ['yes', 'true', '1']:
+        
+        #Selfcal run 2 with the updated sky model
+        for i, (split_msname) in enumerate(zip(split_msnames)):
+            recipe.add('cab/calibrator','selfcal2_{:d}'.format(i),
+               {
+                 "skymodel"     :  lsm2,
+                 "msname"       :  cal_msname,
+                 "threads"      :  16,
+                 "column"       :  "DATA",
+                 "output-data"  : "CORR_RES",
+                 "output-column": "CORRECTED_DATA",
+                 "Gjones"       : True,
+                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones-matrix-type" : "GainDiagPhase",
+                 "make-plots"         : True,
+                 "tile-size"          : 512,
+                 "Gjones-gain-table"  : "final_table.cp"
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='selfcal2_{:d}:: Second selfcal'.format(i))
+            steps2run.append('selfcal2_{:d}'.format(i))
+       
+        #Image the residuals again
+        recipe.add('cab/wsclean', 'cont_image4',
+            {
+              "msname"         :    cal_msnames,
+              "prefix"         :    PREFIX+"cont_4",
+              "nomfsweighting" :    False,
+              "mgain"          :    0.8,
+              "column"         :    "CORRECTED_DATA",
+              "auto-threshold" :    1,
+              "trim"           :    trim,
+              "stokes"         :    "I",
+              "npix"           :    npix_cont,
+              "cellsize"       :    cell_cont,
+              "niter"          :    10000000,
+              "fitsmask"       :    mask2,
+              "weight"         :    '{0:s} {1:f}'.format(weight_cont, robust_cont),
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='cont_image4:: Make a combined continuum image of 2nd round selfcaled data')
+        steps2run.append('cont_image4')
+                  
+    if pars['SELFCAL_FINAL'].lower() in ['yes', 'true', '1']:
+        #Do selfcal with the 'final' skymodel and the time-averaged only data. If we need to 'apply' previous gains, uncomment the parameters
+        for i, (split_msname) in enumerate(zip(split_msnames)):
+            recipe.add('cab/calibrator', 'final_selfcal_{:d}'.format(i),
+               {
+                 "skymodel"     :  lsm2,
+                 "msname"       :  split_msname,
+                 "threads"      :  16,
+                 "column"       :  "DATA",
+                 "output-data"  :  "CORR_RES",
+                 "output-column":  "CORRECTED_DATA",
+                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones"       : True,
+            #    "Gjones-apply-only" : True,
+                 "make-plots"         : True,
+            #    "Gjones-gain-table"  : "final_table.cp:output",
+                 "Gjones-matrix-type" : "GainDiagPhase",
+                 "tile-size"          : 512,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='final_selfcal_{:d}:: Selfcal t-avg data with complete skymodel'.format(i))
+            steps2run.append('final_selfcal_{:d}'.format(i))
+        #Image the residuals again
+        recipe.add('cab/wsclean', 'cont_image5',
+            {
+              "msname"         :    split_msnames,
+              "prefix"         :    PREFIX+"cont_5",
+              "nomfsweighting" :    False,
+              "mgain"          :    0.8,
+              "column"         :    "CORRECTED_DATA",
+              "auto-threshold" :    1,
+              "trim"           :    trim,
+              "stokes"         :    "I",
+              "npix"           :    npix,
+              "cellsize"       :    cell,
+              "niter"          :    10000000,
+              "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='cont_image5:: Make a combined continuum image of t-avg data residuals')
+        steps2run.append('cont_image5')
 
 
 #############################

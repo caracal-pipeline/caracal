@@ -193,14 +193,15 @@ recipe.add('cab/wsclean', 'cont_image1',
          "nomfsweighting" :    False,
          "column"         :   "DATA",
          "mgain"          :    0.8,
-         "auto-threshold" :    1,
-         "trim"           :   trim,
+         "auto-threshold" :    5,
+         "trim"           :   256,
          "stokes"         :    "I",
-         "npix"           :    npix,
-         "cellsize"       :    cell,
+         "npix"           :    300,
+         "cellsize"       :    25,
          "niter"          :    10000000,
-         "fitsmask"       :    mask1,
-         "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+ #        "fitsmask"       :    mask1,
+#         "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+         "weight"         :     "natural"
     },
     input=INPUT,
     output=OUTPUT,
@@ -503,29 +504,29 @@ recipe.add('cab/casa_clean', 'casa_dirty_cube',
 
 # Run it!
 recipe.run(
-   ['splitandavg_{:d}'.format(d) for d in range(len(msnames))]
-  +['data2corrdata2_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['prepms_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['splitandavg_fin_{:d}'.format(d) for d in range(len(msnames))]
-  +['data2corrdata2_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
-  +['prepms_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
-  +['cont_dirty_image1']
-  +['cleanmask1']
-  +['cont_image1']
-  + ['init_model']
-  +['backup_initial_flags_{:d}'.format(d) for d in range(len(split_msnames))]
-  + ['selfcal1_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['cont_image2']
-  +['cleanmask2']
-  +['cont_image3']
-  +['second_model']
-  +['stitch_lsms']
-  + ['unflag_selfcalflags_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['selfcal2_{:d}'.format(d) for d in range(len(split_msnames))]
-  +['cont_image4']
-  + ['transfer_calib_{:d}'.format(d) for d in range(len(fin_msnames))]
-  +['cont_image5']
-  +['uvcontsub_{:d}'.format(d) for d in range(len(fin_msnames))]
-  +['casa_dirty_cube']
+#   ['splitandavg_{:d}'.format(d) for d in range(len(msnames))]
+#  +['data2corrdata2_{:d}'.format(d) for d in range(len(split_msnames))]
+#  +['prepms_{:d}'.format(d) for d in range(len(split_msnames))]
+#  +['splitandavg_fin_{:d}'.format(d) for d in range(len(msnames))]
+#  +['data2corrdata2_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
+#  +['prepms_fin_{:d}'.format(d) for d in range(len(fin_msnames))]
+#  +['cont_dirty_image1']
+#  +['cleanmask1']
+  ['cont_image1']
+#  + ['init_model']
+#  +['backup_initial_flags_{:d}'.format(d) for d in range(len(split_msnames))]
+#  + ['selfcal1_{:d}'.format(d) for d in range(len(split_msnames))]
+#  +['cont_image2']
+#  +['cleanmask2']
+#  +['cont_image3']
+#  +['second_model']
+#  +['stitch_lsms']
+#  + ['unflag_selfcalflags_{:d}'.format(d) for d in range(len(split_msnames))]
+#  +['selfcal2_{:d}'.format(d) for d in range(len(split_msnames))]
+#  +['cont_image4']
+#  + ['transfer_calib_{:d}'.format(d) for d in range(len(fin_msnames))]
+#  +['cont_image5']
+#  +['uvcontsub_{:d}'.format(d) for d in range(len(fin_msnames))]
+#  +['casa_dirty_cube']
 )
 

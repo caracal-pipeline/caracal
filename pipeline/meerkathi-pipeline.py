@@ -556,20 +556,29 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 # - split and time average the target
 # - make a continuum image and selfcalibrate the gain phases
 
+npix_cont   = int(pars['npix_cont'])
+cell_cont   = int(pars['cell_cont'])
+trim        = int(pars['trim'])
+robust_cont = float(pars['robust_cont'])
+
+robust      = float(pars['robust'])
+npix        = int(pars['npix'])
+cell        = float(pars['cell'])
+
 if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
     if pars['PREPARE_CONT_MS'].lower() in ['yes', 'true', '1']:
         for i, (split_msname, cal_msname) in enumerate(zip(split_msnames, cal_msnames)):
-            recipe.add('cab/casa_split','split_avtimefreq_{:d}'.format(i),
+            recipe.add('cab/casa_split','split_avfreq_{:d}'.format(i),
                {
                  "msname"          :   split_msname,
                  "output-msname"   :   cal_msname,
                  "datacolumn"      :   "DATA",
-                 "width"           :   pars['width']
+                 "width"           :   int(pars['width'])
                 },
                 input=INPUT,
                 output=OUTPUT,
-                label='split_avtimefreq_{:d}:: Split and time average the target'.format(i))
-            steps2run.append('split_avtimefreq_{:d}'.format(i))
+                label='split_avfreq_{:d}:: Split and time average the target'.format(i))
+            steps2run.append('split_avfreq_{:d}'.format(i))
      
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/msutils', 'copydata2corrdata_{:d}'.format(i),
@@ -596,24 +605,24 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
       
     if pars['MAKE_INTI_MODEL'].lower() in ['yes', 'true', '1']:
             #Make a dirty image to create mask
-            recipe.add('cab/wsclean', 'cont_dirty_image1',
+            recipe.add('cab/wsclean', 'cont_dirty_image',
                { 
                  "msname"         :    cal_msnames,
                  "prefix"         :    combprefix+"_cont_dirty_1",
                  "nomfsweighting" :    False,
-                 "trim"           :    pars['trim'],
+                 "trim"           :    trim,
                  "column"         :    "DATA",
                  "mgain"          :    0.8,
                  "auto-threshold" :    10,
                  "stokes"         :    "I",
-                 "npix"           :    pars['npix_cont'],
-                 "cellsize"       :    pars['cell_cont'],
+                 "npix"           :    npix_cont,
+                 "cellsize"       :    cell_cont,
                  "niter"          :    0,
-                 "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], pars['robust_cont']),
+                 "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], robust_cont),
                },
                input=INPUT,
                output=OUTPUT,
-               label='cont_dirty_image1:: Make a combined continuum image')
+               label='cont_dirty_image:: Make a combined continuum image')
             steps2run.append('cont_dirty_image')
 
             mask1 = combprefix+"mask1.fits:output"
@@ -639,17 +648,17 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                  "column"         :   "DATA",
                  "mgain"          :    0.8,
                  "auto-threshold" :    1,
-                 "trim"           :    pars['trim'],
+                 "trim"           :    trim,
                  "stokes"         :    "I",
-                 "npix"           :    pars['npix_cont'],
-                 "cellsize"       :    pars['cell_cont'],
+                 "npix"           :    npix_cont,
+                 "cellsize"       :    cell_cont,
                  "niter"          :    10000000,
                  "fitsmask"       :    mask1,
-                 "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], pars['robust_cont']),
+                 "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], robust_cont),
                },
                input=INPUT,
                output=OUTPUT,
-               label='cont_image1 :: Make continuum image 1')
+               label='cont_image1:: Make continuum image 1')
             steps2run.append('cont_image1') 
             
             lsmprefix=combprefix+'-LSM0'
@@ -720,17 +729,17 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
               "auto-threshold" :    10,
-              "trim"           :    pars['trim'],
+              "trim"           :    trim,
               "stokes"         :    "I",
-              "npix"           :    pars['npix_cont'],
-              "cellsize"       :    pars['cell_cont'],
+              "npix"           :    npix_cont,
+              "cellsize"       :    cell_cont,
               "niter"          :    10000000,
-              "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], pars['robust_cont']),
+              "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], robust_cont),
             },
             input=INPUT,
             output=OUTPUT,
             label='cont_image2:: Make a combined continuum image of selfcaled data')
-        steps2run.append('cont_image_2')
+        steps2run.append('cont_image2')
         
     if pars['APPEND_TO_LSM0'].lower() in ['yes', 'true', '1']:
         mask2 = combprefix+"mask2.fits:output"
@@ -758,13 +767,13 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
               "auto-threshold" :    1,
-              "trim"           :    pars['trim'],
+              "trim"           :    trim,
               "stokes"         :    "I",
-              "npix"           :    pars['npix_cont'],
-              "cellsize"       :    pars['cell_cont'],
+              "npix"           :    npix_cont,
+              "cellsize"       :    cell_cont,
               "niter"          :    10000000,
               "fitsmask"       :    mask2,
-              "weight"         :    '{0:s} {1:f}'.format(pars['weight'], pars['robust']),
+              "weight"         :    '{0:s} {1:f}'.format(pars['weight'], robust_cont),
             },
             input=INPUT,
             output=OUTPUT,
@@ -834,13 +843,13 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
               "auto-threshold" :    1,
-              "trim"           :    pars['trim'],
+              "trim"           :    trim,
               "stokes"         :    "I",
-              "npix"           :    pars['npix_cont'],
-              "cellsize"       :    pars['cell_cont'],
+              "npix"           :    npix_cont,
+              "cellsize"       :    cell_cont,
               "niter"          :    10000000,
               "fitsmask"       :    mask2,
-              "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], pars['robust_cont']),
+              "weight"         :    '{0:s} {1:f}'.format(pars['weight_cont'], robust_cont),
             },
             input=INPUT,
             output=OUTPUT,
@@ -880,10 +889,10 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
               "column"         :    "CORRECTED_DATA",
               "auto-threshold" :    1,
               "stokes"         :    "I",
-              "npix"           :    pars['npix'],
-              "cellsize"       :    pars['cell'],
+              "npix"           :    npix,
+              "cellsize"       :    cell,
               "niter"          :    10000000,
-              "weight"         :    '{0:s} {1:f}'.format(pars['weight'], pars['robust']),
+              "weight"         :    '{0:s} {1:f}'.format(pars['weight'], robust),
             },
             input=INPUT,
             output=OUTPUT,
@@ -1044,4 +1053,4 @@ else:
     print '###',steps2run
     print '#########################################'
     print
-#    recipe.run(steps2run)
+    recipe.run(steps2run)

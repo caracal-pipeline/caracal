@@ -17,7 +17,7 @@
 
 
 ####################
-### ÜBERSCHALTER ###
+### UBERSCHALTER ###
 ####################
 
 ### SWITCH ON/OFF PIPELINE STEPS ###
@@ -61,11 +61,11 @@ SPLIT_AND_TAV  = no
 
 ### 2GC ###
 PREPARE_CONT_MS  = yes
-MAKE_INTI_MODEL  = no
-RUN_SELFCAL_1    = no
-APPEND_TO_LSM0   = no
-RUN_SELFCAL_2    = no
-SELFCAL_FINAL    = no
+MAKE_INTI_MODEL  = yes
+RUN_SELFCAL_1    = yes
+APPEND_TO_LSM0   = yes
+RUN_SELFCAL_2    = yes
+SELFCAL_FINAL    = yes
 ### 
 
 ### CONTSUB ###
@@ -130,10 +130,17 @@ weight         = briggs
 robust         = 2
 sf_flagregion  = 0,255,0,255,881,937;
 sf_threshold   = 4
+sf_merge       = yes
+sf_mergeX      = 2
+sf_mergeY      = 2
+sf_mergeZ      = 3
+sf_minSizeX    = 3
+sf_minSizeY    = 3
+sf_minSizeZ    = 5
 ###
 
 ### MISCELLANEOUS ###
-combprefix     = meerkathi-combined-data-24may
+combprefix     = meerkathi-combined-data-30mayB
 target         = IC5264
 bpcal          = PKS1934-638
 gcal           = ATCA2259-375

@@ -347,6 +347,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "uvrange"      :  pars['uvrange'],
                  "minsnr"       :  float(pars['minsnr']),
                  "minblperant"  :  int(pars['minnrbl']),
+                 "solnorm"      :  True,
                },
                input=INPUT,
                output=OUTPUT,
@@ -386,7 +387,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "refant"       :  pars['refant'],
                  "solint"       :  "inf",
                  "gaintype"     :  "G",
-                 "calmode"      :  'ap',
+                 "calmode"      :  'p',
                  "minsnr"       :  5,
                  "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
                  "interp"       :  ['linear','linear'],
@@ -942,6 +943,14 @@ weight = pars['weight']
 robust = float(pars['robust'])
 sf_threshold = float(pars['sf_threshold'])
 sf_flagregion=[map(int,jj.split(',')) for jj in pars['sf_flagregion'].split(';')]
+sf_merge=pars['sf_merge'].lower() in ['yes','true','1']
+sf_mergeX=int(pars['sf_mergeX'])
+sf_mergeY=int(pars['sf_mergeY'])
+sf_mergeZ=int(pars['sf_mergeZ'])
+sf_minSizeX=int(pars['sf_minSizeX'])
+sf_minSizeY=int(pars['sf_minSizeY'])
+sf_minSizeZ=int(pars['sf_minSizeZ'])
+
 
 if pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: msnames_cube = [ff+'.contsub' for ff in split_msnames]
 else: msnames_cube = split_msnames
@@ -1018,7 +1027,7 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
         #    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(combprefix),
         #    USE THIS FOR THE CASA CLEAN CUBE
             "import.inFile"         :   '{:s}.image.fits:output'.format(combprefix),       # CASA CLEAN cube
-            "steps.doMerge"         :   False,
+            "steps.doMerge"         :   sf_merge,
             "steps.doMom0"          :   True,
             "steps.doMom1"          :   False,
             "steps.doParameterise"  :   False,
@@ -1027,7 +1036,13 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
             "steps.doWriteMask"     :   True,
             "steps.doFlag"          :   True,
             "flag.regions"          :   sf_flagregion,
-            "SCfind.threshold"      :   sf_threshold
+            "SCfind.threshold"      :   sf_threshold,
+            "merge.radiusX"         :   sf_mergeX,
+            "merge.radiusY"         :   sf_mergeY,
+            "merge.radiusZ"         :   sf_mergeZ,
+            "merge.minSizeX"        :   sf_minSizeX,
+            "merge.minSizeY"        :   sf_minSizeY,
+            "merge.minSizeZ"        :   sf_minSizeZ,
             },
             input=INPUT,
             output=OUTPUT,

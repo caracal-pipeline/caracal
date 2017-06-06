@@ -502,7 +502,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                 "field"     :   target,
                 "gaintable" :   gaintablelist,
                 "gainfield" :   gainfieldlist,
-                "interp"    :   ['linear','linear','linear'],
+                "interp"    :   interplist,
                 "calwt"     :   [False],
                 "parang"    :   False,
                 "applymode" :   pars['applymode'],

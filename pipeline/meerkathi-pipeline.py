@@ -3,20 +3,6 @@ import os
 import sys
 #import byo
 
-##### TODO 
-#   :: The recipe is already getting a bit long. Maybe we should make 
-#  different recipes for different stages of the reduction:
-#       1. Data acquisitions and preliminaries ( h5toms, fixvis, etc.)		: Done
-#       2. Precal Flagging 							: Done
-#       3. 1GC Calibration (Bandpass, Gain/Phase calibration)			: TBD
-#       4. SelfCal (Source finding, Calibration, Cleaning; continuum)		: TBD
-#       5. Continuum Subtraction + Making final cube				: TBD
-# 
-#   :: Add SoFiA to stimela (TBD)
-#       1. Use it to create multi-channel clean masks 
-#       2. Make catalog from final cube
-#####
-
 
 
 #################
@@ -292,7 +278,7 @@ if pars['RUN_FLAGGING'].lower() in ['yes', 'true', '1']:
 # - transfer the flux scale (optional)
 # - apply the calibration to all fields (optional)
 # - split the target and time average (optional)
-# - make diagnostic plots (optional)
+# - make several calibration diagnostic plots (optional)
 
 if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
     #Delay calibration
@@ -340,14 +326,14 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "field"        :  bpcal,
                  "refant"       :  pars['refant'],
                  "solint"       :  "inf",
-                 "combine"      :  "",                             
+                 "combine"      :  pars['combine'],
                  "bandtype"     :  "B",
                  "gaintable"    :  [prefix+".K0:output"],
                  "fillgaps"     :  70,
                  "uvrange"      :  pars['uvrange'],
                  "minsnr"       :  float(pars['minsnr']),
                  "minblperant"  :  int(pars['minnrbl']),
-                 "solnorm"      :  True,
+                 "solnorm"      :  pars['solnorm'].lower() in ['yes', 'true', '1'] ,
                },
                input=INPUT,
                output=OUTPUT,
@@ -363,6 +349,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "field"        :  bpcal,
                  "refant"       :  pars['refant'],
                  "solint"       :  "inf",
+                 "combine"      :  pars['combine'],
                  "gaintype"     :  "G",
                  "calmode"      :   'ap',
                  "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
@@ -370,6 +357,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "uvrange"      :  pars['uvrange'],
                  "minsnr"       :  float(pars['minsnr']),
                  "minblperant"  :  int(pars['minnrbl']),
+                 "append"       :  False
                },
                input=INPUT,
                output=OUTPUT,
@@ -387,7 +375,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "refant"       :  pars['refant'],
                  "solint"       :  "inf",
                  "gaintype"     :  "G",
-                 "calmode"      :  'p',
+                 "calmode"      :  'ap',
                  "minsnr"       :  5,
                  "gaintable"    :  [prefix+".B0:output",prefix+".K0:output"],
                  "interp"       :  ['linear','linear'],
@@ -421,13 +409,30 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
     if pars['APPLY_CAL'].lower() in ['yes', 'true', '1']:
         # to Bandpass field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            gaintablelist,gainfieldlist,interplist=[],[],[]
+            if   pars['apply_delay'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".K0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('nearest')
+            if   pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".B0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('nearest')
+            if   pars['apply_gains'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".F0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('nearest')
+            elif pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".G0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('nearest')
             recipe.add('cab/casa_applycal','applycal_bp_{:d}'.format(i),
                {
                 "vis"       :    msname,
                 "field"     :   bpcal,
-                "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
-                "gainfield" :   ['','','',bpcal],
-                "interp"    :   ['','','nearest','nearest'],
+                "gaintable" :   gaintablelist,
+                "gainfield" :   gainfieldlist,
+                "interp"    :   interplist,
                 "calwt"     :   [False],
                 "parang"    :   False,
                 "applymode" :   pars['applymode'],
@@ -439,13 +444,30 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 
         # to Gaincal field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            gaintablelist,gainfieldlist,interplist=[],[],[]
+            if   pars['apply_delay'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".K0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
+            if   pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".B0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
+            if   pars['apply_gains'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".F0:output")
+                gainfieldlist.append(gcal)
+                interplist.append('nearest')
+            elif pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".G0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
             recipe.add('cab/casa_applycal','applycal_g_{:d}'.format(i),
                {
                 "vis"       :    msname,
                 "field"     :   gcal,
-                "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
-                "gainfield" :   ['','','',gcal],
-                "interp"    :   ['linear','linear','nearest'],
+                "gaintable" :   gaintablelist,
+                "gainfield" :   gainfieldlist,
+                "interp"    :   interplist,
                 "calwt"     :   [False],
                 "parang"    :   False,
                 "applymode" :   pars['applymode'],
@@ -457,13 +479,30 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 
         # to Target Field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            gaintablelist,gainfieldlist,interplist=[],[],[]
+            if   pars['apply_delay'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".K0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
+            if   pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".B0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
+            if   pars['apply_gains'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".F0:output")
+                gainfieldlist.append(gcal)
+                interplist.append('linear')
+            elif pars['apply_bpass'].lower() in ['yes', 'true', '1']:
+                gaintablelist.append(prefix+".G0:output")
+                gainfieldlist.append(bpcal)
+                interplist.append('linear')
             recipe.add('cab/casa_applycal','applycal_tar_{:d}'.format(i),
                {
                 "vis"       :    msname,
                 "field"     :   target,
-                "gaintable" :   [prefix+".K0:output", prefix+".B0:output", prefix+".F0:output"],
-                "gainfield" :   ['','','',gcal],
-                "interp"    :   ['linear','linear','nearest'],
+                "gaintable" :   gaintablelist,
+                "gainfield" :   gainfieldlist,
+                "interp"    :   ['linear','linear','linear'],
                 "calwt"     :   [False],
                 "parang"    :   False,
                 "applymode" :   pars['applymode'],
@@ -491,61 +530,142 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 
     # Make plots
     if pars['MAKE_PLOTS'].lower() in ['yes', 'true', '1']:
-        # Plot bandpass
+        # Plot bandpass amplitude
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
-            recipe.add('cab/casa_plotcal','plot_bandpass_{:d}'.format(i),
+            recipe.add('cab/casa_plotcal','plot_bandpassA_{:d}'.format(i),
                {
                 "caltable"  :   prefix+".B0:output",
                 "xaxis"     :   'chan',
                 "yaxis"     :   'amp',
-                "field"     :    bpcal,
-                "subplot"   :   221,
+                "field"     :   bpcal,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   ',',
                 "figfile"   :   prefix+'-B0-amp.png',
                 "showgui"   :   False,
                },
                input=INPUT,
                output=OUTPUT,
-               label='plot_bandpass_{:d}:: Plot bandpass'.format(i,msname))
-            steps2run.append('plot_bandpass_{:d}'.format(i,msname))
+               label='plot_bandpassA_{:d}:: Plot bandpass amplitude'.format(i,msname))
+            steps2run.append('plot_bandpassA_{:d}'.format(i,msname))
 
-        # Plot gains
+        # Plot bandpass phase
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
-            recipe.add('cab/casa_plotcal','plot_gaincal_{:d}'.format(i),
+            recipe.add('cab/casa_plotcal','plot_bandpassP_{:d}'.format(i),
                {
                 "caltable"  :   prefix+".B0:output",
+                "xaxis"     :   'chan',
+                "yaxis"     :   'phase',
+                "field"     :   bpcal,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   ',',
+                "figfile"   :   prefix+'-B0-phase.png',
+                "showgui"   :   False,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='plot_bandpassP_{:d}:: Plot bandpass phase'.format(i,msname))
+            steps2run.append('plot_bandpassP_{:d}'.format(i,msname))
+
+        # Plot gain phase vs time
+        for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            recipe.add('cab/casa_plotcal','plot_gaincalP_{:d}'.format(i),
+               {
+                "caltable"  :   prefix+".F0:output",
+                "xaxis"     :   'time',
+                "yaxis"     :   'phase',
+                "field"     :    bpcal,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   'o',
+                "figfile"   :   prefix+'-F0-phase.png',
+                "showgui"   :   False,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='plot_gaincalP_{:d}:: Plot gaincal phase'.format(i,msname))
+            steps2run.append('plot_gaincalP_{:d}'.format(i,msname))
+
+        # Plot pre-fluxcal gain phase vs time
+        for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            recipe.add('cab/casa_plotcal','plot_gaincalPG_{:d}'.format(i),
+               {
+                "caltable"  :   prefix+".G0:output",
+                "xaxis"     :   'time',
+                "yaxis"     :   'phase',
+                "field"     :    bpcal,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   'o',
+                "figfile"   :   prefix+'-G0-phase.png',
+                "showgui"   :   False,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='plot_gaincalPG_{:d}:: Plot gaincal phase'.format(i,msname))
+            steps2run.append('plot_gaincalPG_{:d}'.format(i,msname))
+
+        # Plot gain amplitude vs time
+        for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            recipe.add('cab/casa_plotcal','plot_gaincalA_{:d}'.format(i),
+               {
+                "caltable"  :   prefix+".F0:output",
                 "xaxis"     :   'time',
                 "yaxis"     :   'amp',
                 "field"     :    bpcal,
-                "subplot"   :   221,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   'o',
+                "figfile"   :   prefix+'-F0-amp.png',
+                "showgui"   :   False,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               label='plot_gaincalA_{:d}:: Plot gaincal amplitude'.format(i,msname))
+            steps2run.append('plot_gaincalA_{:d}'.format(i,msname))
+
+        # Plot pre-fluxcal gain amplitude vs time
+        for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
+            recipe.add('cab/casa_plotcal','plot_gaincalAG_{:d}'.format(i),
+               {
+                "caltable"  :   prefix+".G0:output",
+                "xaxis"     :   'time',
+                "yaxis"     :   'amp',
+                "field"     :    bpcal,
+                "iteration" :   'antenna',
+                "subplot"   :   441,
+                "plotsymbol":   'o',
                 "figfile"   :   prefix+'-G0-amp.png',
                 "showgui"   :   False,
                },
                input=INPUT,
                output=OUTPUT,
-               label='plot_gaincal_{:d}:: Plot gaincal'.format(i,msname))
-            steps2run.append('plot_gaincal_{:d}'.format(i,msname))
+               label='plot_gaincalAG_{:d}:: Plot gaincal amplitude'.format(i,msname))
+            steps2run.append('plot_gaincalAG_{:d}'.format(i,msname))
 
-        # Plot corrected phase vs amplitude for bandpass field
+        # Plot corrected real vs imag for bandpass field
         for i, (msname, prefix) in enumerate(zip(msnames, prefixes)):
-            recipe.add('cab/casa_plotms','plot_phaseamp_bp_{:d}'.format(i),
+            recipe.add('cab/casa_plotms','plot_realimag_bp_{:d}'.format(i),
                {
                 "vis"           :   msname,
                 "field"         :   bpcal,
-                "correlation"   :   'RR,LL',
+                "correlation"   :   'XX,YY',
                 "timerange"     :   '',
                 "antenna"       :   '',
-                "xaxis"         :   'phase',
+                "xaxis"         :   'imag',
                 "xdatacolumn"   :   'corrected',
-                "yaxis"         :   'amp',
+                "yaxis"         :   'real',
                 "ydatacolumn"   :   'corrected',
                 "coloraxis"     :   'corr',
-                "plotfile"      :   prefix+'-bandpass-corrected-ampvsphase.png',
+                "plotfile"      :   prefix+'-bpcal-reim.png',
+                 "uvrange"      :   pars['uvrange'],
                 "overwrite"     :   True,
                },
                input=INPUT,
                output=OUTPUT,
-               label='plot_phaseamp_{:d}:: Plot phase vs amplitude for bandpass'.format(i,msname))
-            steps2run.append('plot_phaseamp_{:d}'.format(i,msname))
+               label='plot_realimag_{:d}:: Plot imag vs real for bandpass calibrator'.format(i,msname))
+            steps2run.append('plot_realimag_{:d}'.format(i,msname))
 
 
 
@@ -1068,4 +1188,5 @@ else:
     print '###',steps2run
     print '#########################################'
     print
-    recipe.run(steps2run)
+    if pars['DRY_RUN'].lower() in ['no', 'false', '0']:
+        recipe.run(steps2run)

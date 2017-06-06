@@ -23,10 +23,11 @@
 ### SWITCH ON/OFF PIPELINE STEPS ###
 RUN_PREPMS     = no
 RUN_FLAGGING   = no
-RUN_1GC        = no
+RUN_1GC        = yes
 RUN_2GC        = no
 RUN_CONTSUB    = no
-RUN_HI_IMAGING = yes
+RUN_HI_IMAGING = no
+DRY_RUN        = no
 ###
 
 
@@ -37,26 +38,26 @@ RUN_HI_IMAGING = yes
 
 ### PREPMS ###
 REMOVE_MS      = no
-FIX_UVW        = no
-WRITE_LISTOBS  = yes
+FIX_UVW        = yes
+WRITE_LISTOBS  = no
 ADD_COLUMNS    = no
 ###
 
 ### FLAGGING ###
 FLAG_AUTOCORR  = yes
-FLAG_MWHI      = no
-AOFLAG         = no
+FLAG_MWHI      = yes
+AOFLAG         = yes
 ###
 
 ### 1GC ###
-DELAY_CAL      = no
+DELAY_CAL      = yes
 SET_MODEL      = yes
-BP_CAL         = no
-G_CAL          = no
-TRANSF_FLUX    = no
-APPLY_CAL      = no
-MAKE_PLOTS     = no
-SPLIT_AND_TAV  = no
+BP_CAL         = yes
+G_CAL          = yes
+TRANSF_FLUX    = yes
+APPLY_CAL      = yes
+MAKE_PLOTS     = yes
+SPLIT_AND_TAV  = yes
 ###
 
 ### 2GC ###
@@ -70,11 +71,11 @@ SELFCAL_FINAL    = yes
 
 ### CONTSUB ###
 MODEL_CONTSUB  = no
-UV_CONTSUB     = no
+UV_CONTSUB     = yes
 ###
 
 ### HI_IMAGING ###
-MAKE_CUBE      = no
+MAKE_CUBE      = yes
 MAKE_IMAGE     = yes
 ###
 
@@ -100,8 +101,13 @@ refant_delay   = m042
 uvrange        = >50m
 minnrbl        = 4
 minsnr         = 3
+combine        = 
+solnorm        = yes
 # below set applymode to either 'trial' or 'calflag'
 applymode      = calflag
+apply_delay    = yes
+apply_bpass    = yes
+apply_gains    = yes
 timebin        = 32s
 ###
 
@@ -140,7 +146,7 @@ sf_minSizeZ    = 5
 ###
 
 ### MISCELLANEOUS ###
-combprefix     = meerkathi-combined-data-30mayB
+combprefix     = meerkathi-comb-01jun
 target         = IC5264
 bpcal          = PKS1934-638
 gcal           = ATCA2259-375

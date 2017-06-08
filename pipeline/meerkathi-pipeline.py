@@ -522,6 +522,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
                  "datacolumn"      :   "CORRECTED",
                  "field"           :   target,
                  "timebin"         :   pars['timebin'],
+                 "keepflags"       :   True,
                 },
                 input=INPUT,
                 output=OUTPUT,
@@ -717,7 +718,8 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/msutils', 'prepms_2gc_{:d}'.format(i),
                {
-                 "msname"          :  split_msname,
+#                 "msname"          :  split_msname,
+                 "msname"          :  cal_msname,
                  "command"         : 'prep',
                },
                input = INPUT,
@@ -934,7 +936,8 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
     if pars['RUN_SELFCAL_2'].lower() in ['yes', 'true', '1']:
         
         #Selfcal run 2 with the updated sky model
-        for i, (split_msname) in enumerate(zip(split_msnames)):
+        #for i, (split_msname) in enumerate(zip(split_msnames)):
+        for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/calibrator','selfcal2_{:d}'.format(i),
                {
                  "skymodel"     :  lsm2,

@@ -7,9 +7,6 @@ INPUT = 'input'
 OUTPUT = 'output'
 MSDIR = 'msdir'
 
-
-
-
 dataids = ['2017/04/06/1491463063', '2017/04/06/1491480644']
 
 h5files = ['{:s}.h5'.format(dataid) for dataid in dataids]
@@ -58,7 +55,7 @@ weight = 'briggs'
 robust = -1.5
 npix = 1180
 
-recipe = stimela.Recipe('MeerKATHI pipeline', ms_dir=MSDIR)
+recipe = stimela.Recipe('MeerKATHI 2GC pipeline', ms_dir=MSDIR)
 
 #Split the MS to have only the target field and average the data.
 for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
@@ -84,40 +81,6 @@ for i, (msname, split_msname) in enumerate(zip(msnames, split_msnames)):
        output= MSDIR,
        label = 'prepms_{:d}:: Add flagsets'.format(i))
 
-
-recipe.add('cab/wsclean', 'cont_dirty_image1',
-    {
-         "msname"         :    split_msnames,
-         "prefix"         :    PREFIX+"_cont_dirty_1",
-         "nomfsweighting" :    False,
-         "trim"           :   trim,
-         "column"         :   "DATA", 
-         "mgain"          :    0.8,
-         "auto-threshold" :    10,
-         "stokes"         :    "I",
-         "npix"           :    npix,
-         "cellsize"       :    cell,
-         "niter"          :    0,
-         "weight"         :    '{0:s} {1:f}'.format(weight, robust),
-    },
-    input=INPUT,
-    output=OUTPUT,
-    label='cont_dirty_image1:: Make a combined continuum image')
-
-mask1 = PREFIX+"mask1.fits:output"
-dirtyimage1 = PREFIX+"cont_dirty_1-dirty.fits:output"
-recipe.add('cab/cleanmask', 'cleanmask1',
-    {
-        "image"           :  dirtyimage1,
-        "output"          :  mask1,
-        "dilate"          :  False,
-        "sigma"           :  5,
-        "no-negative"     :  True,
-    },
-    input=INPUT,
-    output=OUTPUT,
-    label='cleanmask1:: Make a cleanmask from the dirty image')
-
 recipe.add('cab/wsclean', 'cont_image1',
     {
          "msname"         :    split_msnames,
@@ -126,12 +89,16 @@ recipe.add('cab/wsclean', 'cont_image1',
          "column"         :   "DATA",
          "mgain"          :    0.8,
          "auto-threshold" :    1,
-         "trim"           :   trim,
+         "auto-mask"      :    5,
+         "rms-background" :    True,
+         "trim"           :    trim,
          "stokes"         :    "I",
          "npix"           :    npix,
          "cellsize"       :    cell,
+         "channelsout"    :    4,
+         "joinchannels"	  :    True,
+         "fit-spectral-pol":   True,
          "niter"          :    10000000,
-         "fitsmask"       :    mask1,
          "weight"         :    '{0:s} {1:f}'.format(weight, robust),
     },
     input=INPUT,
@@ -141,8 +108,8 @@ recipe.add('cab/wsclean', 'cont_image1',
 lsmprefix=PREFIX+'-LSM0'
 recipe.add('cab/pybdsm', 'init_model',
    {
-        "image"          :   PREFIX+'cont_1-image.fits:output',
-        "outfile"        :   '%s.fits:output'%(lsmprefix),
+        "image"             :   PREFIX+'cont_1-MFS-image.fits:output',
+        "outfile"           :   '%s.fits:output'%(lsmprefix),
         "thresh_pix"        :  25,
         "thresh_isl"        :  15,
         "port2tigger"       :  True,
@@ -153,23 +120,7 @@ recipe.add('cab/pybdsm', 'init_model',
 lsm=lsmprefix+".lsm.html:output"
 
 
-#Backup flags
-
-for i, (split_msname) in enumerate(zip(split_msnames)):
-    recipe.add("cab/flagms", "backup_initial_flags_{:d}".format(i), 
-        {
-            "msname"        :  split_msname,
-            "flagged-any"   : "legacy+L",
-            "flag"          : "legacy",
-        },
-        input=INPUT, output=OUTPUT,
-        label="backup_initial_flags_{:d}:: Backup selfcal flags".format(i))
-
-
-
-
-
-#First Selfcal !
+#First Selfcal
 for i, (split_msname) in enumerate(zip(split_msnames)):
     recipe.add('cab/calibrator','selfcal1_{:d}'.format(i),
         {
@@ -179,8 +130,15 @@ for i, (split_msname) in enumerate(zip(split_msnames)):
             "column"       :  "DATA",
             "output-data"  : "CORR_RES",
             "Gjones"       : True,
-            "Gjones-solution-intervals" : [2, 0],
-            "Gjones-matrix-type" : "GainDiagPhase",
+            "Gjones-solution-intervals" : [2, 10],
+            "Gjones-matrix-type" : 'GainDiagPhase',
+            "read-flags-from-ms" : True,
+            "read-legacy-flags"  : True,
+            "read-flagsets"      : '-stefcal', # ignore any existing stefcal flags
+            "write-flags-ms"     : True,
+            "write-flagset"      : 'stefcal',
+            "write-flagset-policy": 'replace',
+            "label"		 : 'cal1',
             "make-plots"         : True,
             "tile-size"          : 512,
         },
@@ -194,9 +152,11 @@ recipe.add('cab/wsclean', 'cont_image2',
          "msname"         :    split_msnames,
          "prefix"         :    PREFIX+"cont_2",
          "nomfsweighting" :    False,
-         "mgain"          :    0.8,
+         "mgain"          :    0.9,
          "column"         :    "CORRECTED_DATA",
-         "auto-threshold" :    10,
+         "auto-threshold" :    1,
+         "auto-mask"      :    5,
+         "rms-background" :    True,
          "trim"           :    trim,
          "stokes"         :    "I",
          "npix"           :    npix,
@@ -208,24 +168,14 @@ recipe.add('cab/wsclean', 'cont_image2',
     output=OUTPUT,
     label='cont_image2:: Make a combined continuum image of selfcaled data')
 
- 
-
-
-# Fill in the uvcontsub list only if requested
-#if RUN_UVCONTSUB:
-#    uvcontsub=['uvcontsub_{:d}'.format(d) for d in range(len(msnames))]
-#else: uvcontsub = []
 
 # Run it!
 recipe.run(
    ['splitandavg_{:d}'.format(d) for d in range(len(msnames))]
   +['prepms_{:d}'.format(d) for d in range(len(split_msnames))]
-   ['cont_dirty_image1']
-  ['cleanmask1']
   +['cont_image1']
   +['init_model']
   +['backup_initial_flags_{:d}'.format(d) for d in range(len(split_msnames))]
   +['selfcal1_{:d}'.format(d) for d in range(len(split_msnames))]
-#  ['cont_image2']
+  +['cont_image2']
 )
-

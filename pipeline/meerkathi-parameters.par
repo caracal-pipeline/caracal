@@ -1,0 +1,153 @@
+########################################################################
+# Parameter file for meerkathi-pipepine.py
+# 
+# this is a commented line
+# you can use quotes but you don't have to
+# parameters requiring a boolean value have a capitalised name
+# you can give booleans as true,1,yes,false,0,no (case insensitive)
+# paramter names and non-boolean parameter values are case sensitive
+# for list-type par values just give the entries separated by commas
+# for list-of-lists additional separation by semi-colon
+# you can leave blank lines
+# spaces do not matter
+# do not add comments at the end of a line which sets a parameter value
+# go have a coffee
+########################################################################
+
+
+
+####################
+### UBERSCHALTER ###
+####################
+
+### SWITCH ON/OFF PIPELINE STEPS ###
+RUN_PREPMS     = yes
+RUN_FLAGGING   = yes
+RUN_1GC        = yes
+RUN_2GC        = yes
+RUN_CONTSUB    = yes
+RUN_HI_IMAGING = yes
+DRY_RUN        = no
+###
+
+
+
+######################
+### UNTERSCHALTER  ###
+######################
+
+### PREPMS ###
+REMOVE_MS      = no
+FIX_UVW        = yes
+WRITE_LISTOBS  = yes
+ADD_COLUMNS    = yes
+###
+
+### FLAGGING ###
+FLAG_AUTOCORR  = yes
+FLAG_MWHI      = yes
+AOFLAG         = yes
+###
+
+### 1GC ###
+DELAY_CAL      = yes
+SET_MODEL      = yes
+BP_CAL         = yes
+G_CAL          = yes
+TRANSF_FLUX    = yes
+APPLY_CAL      = yes
+MAKE_PLOTS     = yes
+SPLIT_AND_TAV  = yes
+###
+
+### 2GC ###
+PREPARE_CONT_MS  = yes
+MAKE_INTI_MODEL  = yes
+RUN_SELFCAL_1    = yes
+APPEND_TO_LSM0   = yes
+RUN_SELFCAL_2    = yes
+SELFCAL_FINAL    = yes
+### 
+
+### CONTSUB ###
+MODEL_CONTSUB  = no
+UV_CONTSUB     = yes
+###
+
+### HI_IMAGING ###
+MAKE_CUBE      = yes
+MAKE_IMAGE     = yes
+###
+
+
+
+#########################
+### DETAILED SETTINGS ###
+#########################
+
+### PREPMS ###
+dataids        = 2017/04/06/1491463063,2017/04/06/1491480644
+channel_range  = 20701,21700
+###
+
+### FLAGGING ###
+aoflag_strat1  = aoflagger_strategies/firstpass_HI_strat2.rfis
+mw_hi_channels = *:1419.8~1421.3MHz
+###
+
+### 1GC ###
+refant         = m006
+refant_delay   = m042
+uvrange        = >50m
+minnrbl        = 4
+minsnr         = 3
+combine        = 
+solnorm        = yes
+# below set applymode to either 'trial' or 'calflag'
+applymode      = calflag
+apply_delay    = yes
+apply_bpass    = yes
+apply_gains    = yes
+timebin        = 32s
+###
+
+### 2GC ###
+width = 40
+# Imaging options for Continuum
+trim = 1024
+npix_cont = 1180
+cell_cont = 5
+weight_cont = briggs
+robust_cont = -1.5
+###
+
+### CONTSUB ###
+###
+
+### HI_IMAGING ###
+USE_UVCONTSUB  = yes
+# below set the imager to either 'casa' or 'wsclean'
+hiimager       = casa
+npix           = 256
+cell           = 25
+nchan          = 1000
+chan1          = 1
+weight         = briggs
+robust         = 2
+sf_flagregion  = 0,255,0,255,881,937;
+sf_threshold   = 4
+sf_merge       = yes
+sf_mergeX      = 2
+sf_mergeY      = 2
+sf_mergeZ      = 3
+sf_minSizeX    = 3
+sf_minSizeY    = 3
+sf_minSizeZ    = 5
+###
+
+### MISCELLANEOUS ###
+combprefix     = meerkathi-comb-01jun
+target         = IC5264
+bpcal          = PKS1934-638
+gcal           = ATCA2259-375
+###

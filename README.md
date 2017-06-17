@@ -9,6 +9,7 @@ cd meerkathi
 ```
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
+$ [install anything you want]
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 

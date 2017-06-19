@@ -20,14 +20,70 @@
 ### UBERSCHALTER ###
 ####################
 
+
+# General pipeline information. data IDs, prefixes for output
+general:
+  dataids: [2017/04/06/1491463063,2017/04/06/1491480644]
+  prefix: meerkathi-pipeline
+
+# Pipeline switches  
+switches:
+  get_data: true
+  first_gen_cal: true
+  second_gen: true
+  contsub: true
+  hi_imaging: true
+  hi_catalog: true
+
+
+fields: 
+  bpcal: 0
+  gaincal: 1
+  target: 2
+
+### Data acquisition and preliminaries
+get_data:
+   hf5toms: true
+   fixvis: true
+   flag_auto_corr: true
+   flag_milky_way: true
+   save_obsinfo: true
+
+### First generation calibration
+first_gen_cal:
+  aoflagger: 
+    strategy: 
+    column: DATA
+
+
+### Second generation calibration
+second_gen_cal:
+  split_target:
+    enable: true
+    timebin: 32s
+    width: 10
+    keepflags: true
+  solution_intervals: [10,32],
+  enable_beam: false
+  flagset: stefcal
+  flag_on_gain_amplitude:
+    low: 0.5
+    high: 
+  
+  
+
+  
+
+
 ### SWITCH ON/OFF PIPELINE STEPS ###
-RUN_PREPMS     = yes
-RUN_FLAGGING   = yes
-RUN_1GC        = yes
-RUN_2GC        = yes
-RUN_CONTSUB    = yes
-RUN_HI_IMAGING = yes
-DRY_RUN        = no
+general:
+  RUN_PREPMS: true
+  RUN_FLAGGING: true
+  RUN_1GC: true
+  RUN_2GC: true
+  RUN_CONTSUB: false
+  RUN_HI_IMAGING: true
+  DRY_RUN: false
 ###
 
 
@@ -37,46 +93,54 @@ DRY_RUN        = no
 ######################
 
 ### PREPMS ###
-REMOVE_MS      = no
-FIX_UVW        = yes
-WRITE_LISTOBS  = yes
-ADD_COLUMNS    = yes
+prepare_data:
+  REMOVE_MS: false
+  FIX_UVW: true
+  WRITE_LISTOBS: true
+  ADD_COLUMNS: false
 ###
 
 ### FLAGGING ###
-FLAG_AUTOCORR  = yes
-FLAG_MWHI      = yes
-AOFLAG         = yes
+flagging:
+  FLAG_AUTOCORR: true
+  FLAG_MWHI: true
+  AOFLAG: true
+  aoflag_strat1: aoflagger_strategies/firstpass_HI_strat2.rfis
+  mw_hi_channels: '*:1419.8~1421.3MHz'
 ###
 
 ### 1GC ###
-DELAY_CAL      = yes
-SET_MODEL      = yes
-BP_CAL         = yes
-G_CAL          = yes
-TRANSF_FLUX    = yes
-APPLY_CAL      = yes
-MAKE_PLOTS     = yes
-SPLIT_AND_TAV  = yes
+first_gen_cal:
+  DELAY_CAL: true
+  SET_MODEL: true  
+  BP_CAL: true
+  G_CAL: true
+  TRANSF_FLUX: true
+  APPLY_CAL: true
+  MAKE_PLOTS: true
+  SPLIT_AND_TAV: true
 ###
 
 ### 2GC ###
-PREPARE_CONT_MS  = yes
-MAKE_INTI_MODEL  = yes
-RUN_SELFCAL_1    = yes
-APPEND_TO_LSM0   = yes
-RUN_SELFCAL_2    = yes
-SELFCAL_FINAL    = yes
+second_gen_cal:
+  PREPARE_CONT_MS: true
+  MAKE_INTI_MODEL: true
+  RUN_SELFCAL_1: true
+  APPEND_TO_LSM0: true
+  RUN_SELFCAL_2: true
+  SELFCAL_FINAL: true
 ### 
 
 ### CONTSUB ###
-MODEL_CONTSUB  = no
-UV_CONTSUB     = yes
+contsub:
+  MODEL_CONTSUB: yes
+  UV_CONTSUB: yes
 ###
 
 ### HI_IMAGING ###
-MAKE_CUBE      = yes
-MAKE_IMAGE     = yes
+hi_imaging:
+  MAKE_CUBE: true
+  MAKE_IMAGE: true
 ###
 
 
@@ -86,13 +150,12 @@ MAKE_IMAGE     = yes
 #########################
 
 ### PREPMS ###
-dataids        = 2017/04/06/1491463063,2017/04/06/1491480644
-channel_range  = 20701,21700
+get_data:
+  dataids: [2017/04/06/1491463063,2017/04/06/1491480644]
+  channel_range: [20701,21700]
 ###
 
 ### FLAGGING ###
-aoflag_strat1  = aoflagger_strategies/firstpass_HI_strat2.rfis
-mw_hi_channels = *:1419.8~1421.3MHz
 ###
 
 ### 1GC ###
@@ -114,6 +177,7 @@ timebin        = 32s
 ### 2GC ###
 width = 40
 # Imaging options for Continuum
+
 trim = 1024
 npix_cont = 1180
 cell_cont = 5

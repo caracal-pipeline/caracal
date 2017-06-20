@@ -24,194 +24,76 @@
 # General pipeline information. data IDs, prefixes for output
 general:
   dataids: [2017/04/06/1491463063,2017/04/06/1491480644]
-  prefix: meerkathi-pipeline
+  data_paths: [/home/makhathini/devel/meerkathi/pipeline/input]
+  prefix: [meerkathi-pipeline]
+  msdir: msdir
+  input: input
+  output: output
+  bpcal: [0]
+  gcal: [1]
+  target: [2]
+  reference_antenna: [m006]
 
-# Pipeline switches  
-switches:
-  get_data: true
-  first_gen_cal: true
-  second_gen: true
-  contsub: true
-  hi_imaging: true
-  hi_catalog: true
 
-
-fields: 
-  bpcal: 0
-  gaincal: 1
-  target: 2
-
-### Data acquisition and preliminaries
+# Get data to be reduced
+# and peform some basic operations to get it ready for reduction
 get_data:
-   hf5toms: true
-   fixvis: true
-   flag_auto_corr: true
-   flag_milky_way: true
-   save_obsinfo: true
-
-### First generation calibration
-first_gen_cal:
-  aoflagger: 
-    strategy: 
-    column: DATA
-
-
-### Second generation calibration
-second_gen_cal:
-  split_target:
+  h5toms:
     enable: true
-    timebin: 32s
-    width: 10
-    keepflags: true
-  solution_intervals: [10,32],
-  enable_beam: false
-  flagset: stefcal
-  flag_on_gain_amplitude:
-    low: 0.5
-    high: 
-  
-  
+    channelrange: [20701,21700]
+  fixvis:
+    enable: true
+  obsinfo:
+    enable: true
+  prep:
+    enable: true
+    add_imaging_cols: true
 
-  
+# Pre-calibration flagging
+pre_cal_flagging:
+  flag_autocorr:
+    enable: true
+  flag_milkyway:
+    enable: true
+  autoflag:
+    enable: true
+    strategy: aoflagger_strategies/firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
 
-
-### SWITCH ON/OFF PIPELINE STEPS ###
-general:
-  RUN_PREPMS: true
-  RUN_FLAGGING: true
-  RUN_1GC: true
-  RUN_2GC: true
-  RUN_CONTSUB: false
-  RUN_HI_IMAGING: true
-  DRY_RUN: false
-###
-
-
-
-######################
-### UNTERSCHALTER  ###
-######################
-
-### PREPMS ###
-prepare_data:
-  REMOVE_MS: false
-  FIX_UVW: true
-  WRITE_LISTOBS: true
-  ADD_COLUMNS: false
-###
-
-### FLAGGING ###
-flagging:
-  FLAG_AUTOCORR: true
-  FLAG_MWHI: true
-  AOFLAG: true
-  aoflag_strat1: aoflagger_strategies/firstpass_HI_strat2.rfis
-  mw_hi_channels: '*:1419.8~1421.3MHz'
-###
-
-### 1GC ###
+# First generation calibration
 first_gen_cal:
-  DELAY_CAL: true
-  SET_MODEL: true  
-  BP_CAL: true
-  G_CAL: true
-  TRANSF_FLUX: true
-  APPLY_CAL: true
-  MAKE_PLOTS: true
-  SPLIT_AND_TAV: true
-###
-
-### 2GC ###
-second_gen_cal:
-  PREPARE_CONT_MS: true
-  MAKE_INTI_MODEL: true
-  RUN_SELFCAL_1: true
-  APPEND_TO_LSM0: true
-  RUN_SELFCAL_2: true
-  SELFCAL_FINAL: true
-### 
-
-### CONTSUB ###
-contsub:
-  MODEL_CONTSUB: yes
-  UV_CONTSUB: yes
-###
-
-### HI_IMAGING ###
-hi_imaging:
-  MAKE_CUBE: true
-  MAKE_IMAGE: true
-###
-
-
-
-#########################
-### DETAILED SETTINGS ###
-#########################
-
-### PREPMS ###
-get_data:
-  dataids: [2017/04/06/1491463063,2017/04/06/1491480644]
-  channel_range: [20701,21700]
-###
-
-### FLAGGING ###
-###
-
-### 1GC ###
-refant         = m006
-refant_delay   = m042
-uvrange        = >50m
-minnrbl        = 4
-minsnr         = 3
-combine        = 
-solnorm        = yes
-# below set applymode to either 'trial' or 'calflag'
-applymode      = calflag
-apply_delay    = yes
-apply_bpass    = yes
-apply_gains    = yes
-timebin        = 32s
-###
-
-### 2GC ###
-width = 40
-# Imaging options for Continuum
-
-trim = 1024
-npix_cont = 1180
-cell_cont = 5
-weight_cont = briggs
-robust_cont = -1.5
-###
-
-### CONTSUB ###
-###
-
-### HI_IMAGING ###
-USE_UVCONTSUB  = yes
-# below set the imager to either 'casa' or 'wsclean'
-hiimager       = casa
-npix           = 256
-cell           = 25
-nchan          = 1000
-chan1          = 1
-weight         = briggs
-robust         = 2
-sf_flagregion  = 0,255,0,255,881,937;
-sf_threshold   = 4
-sf_merge       = yes
-sf_mergeX      = 2
-sf_mergeY      = 2
-sf_mergeZ      = 3
-sf_minSizeX    = 3
-sf_minSizeY    = 3
-sf_minSizeZ    = 5
-###
-
-### MISCELLANEOUS ###
-combprefix     = meerkathi-comb-01jun
-target         = IC5264
-bpcal          = PKS1934-638
-gcal           = ATCA2259-375
-###
+  uvrange: ">50"
+  set_model:
+    enable: true
+    standard: "Perley-Taylor 99"
+  delay_cal:
+    enable: true
+    refant: m042
+    uvrange: ">50"
+  bp_cal:
+    enable: true
+  gain_cal_bp:
+    enable: true
+    combine: ""
+    minrbl: 4
+    minsnr: 3
+    solnorm: true
+  gain_cal_gain:
+    enable: true
+    combine: ""
+    minrbl: 4
+    minsnr: 3
+    solnorm: true
+  transfer_fluxscale:
+    enable: true
+  apply_delay_cal:
+    enable: true
+    applymode: calflag
+  apply_bp_cal:
+    enable: true
+    applymode: calflag
+  apply_gain_cal_bp:
+    enable: true
+    applymode: calflag
+  apply_transfer_fluxscale:
+    enable: true
+    applymode: calflag

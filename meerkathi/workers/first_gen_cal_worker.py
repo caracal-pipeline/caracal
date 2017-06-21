@@ -1,14 +1,13 @@
 import sys
 import os
 
-NAME = "First generation (cross) calibration"
+NAME = "First generation -CROSS- calibration"
 
 # Rules for interpolation mode to use when applying calibration solutions
-applycal_inpterp_rules = {
+applycal_interp_rules = {
    'bpcal'    :  {
                   'delay_cal'    : 'nearest', 
                   'gain_cal_bp'  : 'nearest', 
-                  'gain_cal_gain': 'linear',
                   'transfer_fluxscale': 'linear',
                  },
    'gcal'     :  {
@@ -19,7 +18,6 @@ applycal_inpterp_rules = {
    'target'   :  {
                   'delay_cal'    : 'linear', 
                   'gain_cal_bp'  : 'linear', 
-                  'gain_cal_gain': 'linear',
                   'transfer_fluxscale': 'linear',
                  },
 }
@@ -27,19 +25,20 @@ applycal_inpterp_rules = {
 table_suffix = {
     "delay_cal"             : 'K0',
     "bp_cal"                : 'B0', 
-    "gain_cal"              : 'G0', 
+    "gain_cal_gain"         : 'G0', 
+    "gain_cal_bp"           : 'G0', 
     "transfer_fluxscale"    : 'F0', 
 }
 
 def worker(pipeline, recipe, config):
-
+    steps = []
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
         bpcal = pipeline.bpcal[i]
         gcal = pipeline.gcal[i]
         target = pipeline.target[i]
-        refant = pipeline.refants[i]
+        refant = pipeline.refant[i]
  
         # Set model
         if config['set_model']['enable']:
@@ -68,7 +67,7 @@ def worker(pipeline, recipe, config):
                  "refant"       : config['delay_cal']['refant'],
                  "solint"       : "inf",
                  "gaintype"     : "K",
-                 "uvrange"      : config['delay_cal']['uvrange'],
+                 "uvrange"      : config['uvrange'],
                },
                input=pipeline.input,
                output=pipeline.output,
@@ -89,7 +88,7 @@ def worker(pipeline, recipe, config):
                  "bandtype"     : "B",
                  "gaintable"    : [prefix+'.K0:output'],
                  "fillgaps"     : 70,
-                 "uvrange"      : config['bp_cal']['uvrange'],
+                 "uvrange"      : config['uvrange'],
                  "minsnr"       : config['bp_cal']['minsnr'],
                  "minblperant"  : config['bp_cal']['minnrbl'],
                  "solnorm"      : config['bp_cal']['solnorm'],
@@ -114,7 +113,7 @@ def worker(pipeline, recipe, config):
                  "calmode"      : 'ap',
                  "gaintable"    : [prefix+".B0:output",prefix+".K0:output"],
                  "interp"       : ['nearest','nearest'],
-                 "uvrange"      : config['gain_cal_bp']['uvrange'],
+                 "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_bp']['minsnr'],
                  "minblperant"  : config['gain_cal_bp']['minnrbl'],
                  "append"       : False,
@@ -140,7 +139,7 @@ def worker(pipeline, recipe, config):
                  "gaintable"    : [prefix+".B0:output",prefix+".K0:output"],
                  "interp"       : ['linear','linear'],
                  "append"       : True,
-                 "uvrange"      : config['gain_cal_gain']'uvrange'],
+                 "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_gain']['minsnr'],
                  "minblperant"  : config['gain_cal_gain']['minnrbl'],
                },
@@ -149,12 +148,12 @@ def worker(pipeline, recipe, config):
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
             steps.append(step)
 
-        #Flux scale transfer
+        # Flux scale transfer
         if config['transfer_fluxscale']['enable']:
             step = 'transfer_fluxscale_{0:d}'.format(i)
             recipe.add('cab/casa_fluxscale', step,
                {
-                 "vis"          : msname,
+                "vis"          : msname,
                 "caltable"      : prefix+".G0:output",
                 "fluxtable"     : prefix+".F0:output",
                 "reference"     : [bpcal],
@@ -165,11 +164,12 @@ def worker(pipeline, recipe, config):
                label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
             steps.append(step)
 
-        for field in [getattr(pipeline, f) for f in 'bpcal','gcal','target']
+        for ft, field in [(f, locals()[f]) for f in ['bpcal','gcal','target'] ]:
+            field = field[0]
             gaintablelist,gainfieldlist,interplist = [],[],[]
-            for applyme in ['delay_cal', 'bp_cal', 'gain_cal_bp', 'transfer_fluxscale']:
+            for applyme in applycal_interp_rules[ft].keys():
                suffix = table_suffix[applyme]
-               interp = applycal_interp_rules[field][applyme]
+               interp = applycal_interp_rules[ft][applyme]
                if config['apply_'+applyme]['enable']:
                    gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
                    gainfieldlist.append(field)
@@ -185,18 +185,17 @@ def worker(pipeline, recipe, config):
                 "interp"    : interplist,
                 "calwt"     : [False],
                 "parang"    : False,
-                "applymode" : config[applyme]['applymode'],
+                "applymode" : config['apply_'+applyme]['applymode'],
                },
                input=pipeline.input,
                output=pipeline.output,
-               label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+               label='{0:s}:: Apply calibration to field={1:d}, ms={2:s}'.format(step, field, msname))
             steps.append(step)
 
         # Make plots
         if config['make_plots']['enable']:
             # Plot bandpass amplitude
             if config['make_plots']['bandpass']:
-                suffix = config['bp_cal']['table_suffix']
                 for plot in 'amp','phase':
                     step = 'plot_bandpass_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
@@ -218,8 +217,6 @@ def worker(pipeline, recipe, config):
 
             # Plot gain phase vs time
             if config['make_plots']['fluxscale']:
-                suffix = config['transfer_fluxscale']['table_suffix']
-                field = config['transfer_fluxscale']['field']
                 for plot in 'amp','phase':
                     step = 'plot_fluxscale_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
@@ -227,7 +224,7 @@ def worker(pipeline, recipe, config):
                         "caltable"  : prefix+".F0:output",
                         "xaxis"     : 'time',
                         "yaxis"     : plot,
-                        "field"     : field,
+                        "field"     : bpcal,
                         "iteration" : 'antenna',
                         "subplot"   : 441,
                         "plotsymbol": 'o',
@@ -241,15 +238,14 @@ def worker(pipeline, recipe, config):
 
           # Plot gain phase vs time
             if config['make_plots']['gain_cal']:
-                field = config['gain_cal']['field']
                 for plot in 'amp','phase':
                     step = 'plot_gain_cal_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
                        {
-                        "caltable"  : prefix+"G:output",
+                        "caltable"  : prefix+"G0:output",
                         "xaxis"     : 'time',
                         "yaxis"     : plot,
-                        "field"     : field,
+                        "field"     : gcal,
                         "iteration" : 'antenna',
                         "subplot"   : 441,
                         "plotsymbol": 'o',
@@ -277,7 +273,7 @@ def worker(pipeline, recipe, config):
                     "ydatacolumn"   : 'corrected',
                     "coloraxis"     : 'corr',
                     "plotfile"      : prefix+'-bpcal-reim.png',
-                    "uvrange"       : config['bp_cal']['uvrange'],
+                    "uvrange"       : config['uvrange'],
                     "overwrite"     : True,
                    },
                    input=pipeline.input,

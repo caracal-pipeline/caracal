@@ -11,6 +11,7 @@ def worker(pipeline, recipe, config):
         msname = pipeline.msnames[i]
         h5file = pipeline.h5files[i]
         prefix = pipeline.prefixes[i]
+        data_path = pipeline.data_path[i]
         if config['h5toms']['enable']:
             step = 'h5toms_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
@@ -18,15 +19,15 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/h5toms', step,
                 {
-                    "hd5files"      : [h5file],
+                    "hdf5files"      : [h5file],
                     "output-ms"     : msname,
                     "no-auto"       : False,
                     "tar"           : True,
                     "model-data"    : True,
-                    "channel-range" : config['h5toms']['channelrange'],
+                    "channel-range" : config['h5toms']['channel_range'],
                     "full-pol"      : True,
                 },
-                input=pipeline.input,
+                input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
             steps.append(step)
@@ -41,11 +42,11 @@ def worker(pipeline, recipe, config):
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
+                label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
             steps.append(step)
 
         if config['obsinfo']['enable']:
-            step = 'listobs_{:s}'.format(i)
+            step = 'listobs_{:d}'.format(i)
             recipe.add('cab/casa_listobs', step,
                 {
                   "vis"         : msname,

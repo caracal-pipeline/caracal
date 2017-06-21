@@ -23,8 +23,9 @@
 
 # General pipeline information. data IDs, prefixes for output
 general:
-  dataids: [2017/04/06/1491463063,2017/04/06/1491480644]
-  data_paths: [/home/makhathini/devel/meerkathi/pipeline/input]
+  dataids: ["1491463063","1491480644"]
+  data_paths: [/var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06,
+              /var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06]
   prefix: [meerkathi-pipeline]
   msdir: msdir
   input: input
@@ -38,29 +39,36 @@ general:
 # Get data to be reduced
 # and peform some basic operations to get it ready for reduction
 get_data:
+  enable: true
+  order: 1
   h5toms:
     enable: true
-    channelrange: [20701,21700]
+    channel_range: "20701,21700"
   fixvis:
     enable: true
   obsinfo:
     enable: true
-  prep:
+  prepms:
     enable: true
     add_imaging_cols: true
 
 # Pre-calibration flagging
-pre_cal_flagging:
+precal_flagging:
+  enable: false
+  order: 2
   flag_autocorr:
     enable: true
   flag_milkyway:
     enable: true
+    channels: "*:1419.8~1421.3MHz"
   autoflag:
     enable: true
     strategy: aoflagger_strategies/firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
 
 # First generation calibration
 first_gen_cal:
+  enable: false
+  order: 3
   uvrange: ">50"
   set_model:
     enable: true
@@ -68,19 +76,22 @@ first_gen_cal:
   delay_cal:
     enable: true
     refant: m042
-    uvrange: ">50"
   bp_cal:
     enable: true
+    combine: ""
+    minnrbl: 4
+    minsnr: 3
+    solnorm: true
   gain_cal_bp:
     enable: true
     combine: ""
-    minrbl: 4
+    minnrbl: 4
     minsnr: 3
     solnorm: true
   gain_cal_gain:
     enable: true
     combine: ""
-    minrbl: 4
+    minnrbl: 4
     minsnr: 3
     solnorm: true
   transfer_fluxscale:
@@ -97,3 +108,9 @@ first_gen_cal:
   apply_transfer_fluxscale:
     enable: true
     applymode: calflag
+  make_plots:
+    enable: true
+    bandpass: true
+    fluxscale: true
+    gain_cal: true
+    bandpass_reim: true

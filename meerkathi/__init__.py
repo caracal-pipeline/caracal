@@ -3,12 +3,13 @@ import sys
 import os
 import stimela
 import yaml
+import glob
 
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 
 
 class MeerKATHI(object):
-    def __init__(self, config, workers_directory):
+    def __init__(self, config, workers_directory, stimela_build=None):
         
         with open(config) as _conf:
             self.config = yaml.load(_conf)
@@ -16,13 +17,21 @@ class MeerKATHI(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.data_path = self.config['general']['data_paths']
 
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
         self.wkrs_pckg = os.path.basename(self.workers_directory)
         wkrs = __import__(self.wkrs_pckg)
-        self.workers = wkrs.RUN_ORDER
+        workers = glob.glob('{:s}/*_worker.py'.format(self.workers_directory))
+        workers = [ os.path.basename(a).split('.py')[0] for a in workers]
+        # Order workers
+        self.workers = range(len(workers))
+        for worker in workers:
+            j = self.config[worker.split('_worker')[0]]['order']
+            self.workers[j-1] = worker
+        
         self.dataids = self.config['general']['dataids']
         self.nobs = len(self.dataids)
 
@@ -50,25 +59,34 @@ class MeerKATHI(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataids]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataids]
         self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataids]
-
+        
+        self.stimela_build = stimela_build
         self.recipes = {}
+        # Workers to skip
+        self.skip = [] 
 
     def define_workers(self):
-        for _worker in self.workers:
+        for i, _worker in enumerate(self.workers):
             worker = __import__(_worker)
             name = worker.NAME
+            config = self.config[_worker.split('_worker')[0]]
+            if config['enable'] is False:
+                self.skip.append(_worker)
+                continue
             # Define stimela recipe instance for worker
-            recipe =  stimela.Recipe(name, ms_dir=self.msdir)
+            # Also change logger name to avoid duplication of logging info
+            recipe = stimela.Recipe(name, ms_dir=self.msdir, 
+                               loggername='STIMELA-{:d}'.format(i), 
+                               build_label=self.stimela_build)
             # Get recipe steps
             # 1st get correct section of config file
-            config = self.config[_worker.split('_worker')[0]]
-            print config
             steps = worker.worker(self, recipe, config)
             self.recipes[_worker] = (recipe, steps)
 
     def run_workers(self):
         for worker in self.workers:
-            self.recipes[worker][0].run(self.recipes[worker][1])
+            if worker not in self.skip:
+                self.recipes[worker][0].run(self.recipes[worker][1])
 
 
 def main(argv):
@@ -87,6 +105,9 @@ Options set on the command line will overwrite options in the --pipeline-configu
 
     add('-md', '--msdir',
         help='Pipeline MS directory. All MSs, for a given pipeline run, should/will be placed here')
+
+    add('-bl', '--stimela-build', 
+        help='Label of stimela build to use')
 
     add('-wd', '--workers-directory', default='{:s}/workers'.format(pckgdir),
         help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
@@ -114,7 +135,8 @@ Options set on the command line will overwrite options in the --pipeline-configu
 
     args = parser.parse_args(argv)
 
-    pipeline = MeerKATHI(args.pipeline_configuration, args.workers_directory)
+    pipeline = MeerKATHI(args.pipeline_configuration,
+                  args.workers_directory, stimela_build=args.stimela_build)
 
     for item in 'input msdir output'.split():
         value = getattr(args, item, None)
@@ -131,8 +153,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
         value = getattr(args, item, None)
         if value and len(value)==1:
             value = value*nobs
-        setattr(pipeline, item, value)
+            setattr(pipeline, item, value)
 
     pipeline.define_workers()
-
-main(sys.argv[1:])
+    pipeline.run_workers()

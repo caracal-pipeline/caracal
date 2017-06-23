@@ -22,8 +22,6 @@ class MeerKATHI(object):
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
-        self.wkrs_pckg = os.path.basename(self.workers_directory)
-        wkrs = __import__(self.wkrs_pckg)
         workers = glob.glob('{:s}/*_worker.py'.format(self.workers_directory))
         workers = [ os.path.basename(a).split('.py')[0] for a in workers]
         # Order workers

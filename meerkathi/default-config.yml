@@ -1,39 +1,18 @@
-########################################################################
-# Parameter file for meerkathi-pipepine.py
-# 
-# this is a commented line
-# you can use quotes but you don't have to
-# parameters requiring a boolean value have a capitalised name
-# you can give booleans as true,1,yes,false,0,no (case insensitive)
-# paramter names and non-boolean parameter values are case sensitive
-# for list-type par values just give the entries separated by commas
-# for list-of-lists additional separation by semi-colon
-# you can leave blank lines
-# spaces do not matter
-# do not add comments at the end of a line which sets a parameter value
-# go have a coffee
-########################################################################
+## Default meerkathi pipeline configuration
 
-
-
-####################
-### UBERSCHALTER ###
-####################
-
-
-# General pipeline information. data IDs, prefixes for output
+# General pipeline information, data IDs, prefixes for output
 general:
-  dataids: ["1491463063","1491480644"]
-  data_paths: [/var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06,
-              /var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06]
+  dataids: ["1491463063","1491480644"] # change me!
+  data_paths: [/var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06, # change me!
+              /var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06]  # change me!
   prefix: [meerkathi-pipeline]
   msdir: msdir
   input: input
   output: output
-  bpcal: [0]
-  gcal: [1]
-  target: [2]
-  reference_antenna: [m006]
+  bpcal: [0]  # change me!
+  gcal: [1]   # change me!
+  target: [2] # change me!
+  reference_antenna: [m006] # change me!
 
 
 # Get data to be reduced

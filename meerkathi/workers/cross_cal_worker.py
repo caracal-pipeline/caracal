@@ -1,7 +1,7 @@
 import sys
 import os
 
-NAME = "First generation -CROSS- calibration"
+NAME = "Cross calibration"
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
@@ -35,9 +35,10 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
-        bpcal = pipeline.bpcal[i]
-        gcal = pipeline.gcal[i]
-        target = pipeline.target[i]
+        bpcal = str(pipeline.bpcal[i])
+        gcal = str(pipeline.gcal[i])
+        fcal = str(pipeline.fcal[i])
+        target = str(pipeline.target[i])
         refant = pipeline.refant[i]
  
         # Set model
@@ -46,7 +47,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/casa_setjy', step,
                {
                   "vis"         : msname,
-                  "field"       : bpcal,
+                  "field"       : fcal,
                   "standard"    : config['set_model']['standard'],
                   "usescratch"  : False,
                   "scalebychan" : True,
@@ -165,7 +166,6 @@ def worker(pipeline, recipe, config):
             steps.append(step)
 
         for ft, field in [(f, locals()[f]) for f in ['bpcal','gcal','target'] ]:
-            field = field[0]
             gaintablelist,gainfieldlist,interplist = [],[],[]
             for applyme in applycal_interp_rules[ft].keys():
                suffix = table_suffix[applyme]
@@ -175,22 +175,23 @@ def worker(pipeline, recipe, config):
                    gainfieldlist.append(field)
                    interplist.append(interp)
 
-            step = 'apply_{0:s}_{1:d}'.format(applyme, i)
-            recipe.add('cab/casa_applycal', step,
-               {
-                "vis"       : msname,
-                "field"     : field,
-                "gaintable" : gaintablelist,
-                "gainfield" : gainfieldlist,
-                "interp"    : interplist,
-                "calwt"     : [False],
-                "parang"    : False,
-                "applymode" : config['apply_'+applyme]['applymode'],
-               },
-               input=pipeline.input,
-               output=pipeline.output,
-               label='{0:s}:: Apply calibration to field={1:d}, ms={2:s}'.format(step, field, msname))
-            steps.append(step)
+            if config['apply_'+applyme]['enable']:
+                step = 'apply_{0:s}_{1:d}'.format(applyme, i)
+                recipe.add('cab/casa_applycal', step,
+                   {
+                    "vis"       : msname,
+                    "field"     : field,
+                    "gaintable" : gaintablelist,
+                    "gainfield" : gainfieldlist,
+                    "interp"    : interplist,
+                    "calwt"     : [False],
+                    "parang"    : False,
+                    "applymode" : config['apply_'+applyme]['applymode'],
+                   },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+                steps.append(step)
 
         # Make plots
         if config['make_plots']['enable']:
@@ -242,7 +243,7 @@ def worker(pipeline, recipe, config):
                     step = 'plot_gain_cal_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
                        {
-                        "caltable"  : prefix+"G0:output",
+                        "caltable"  : prefix+".G0:output",
                         "xaxis"     : 'time',
                         "yaxis"     : plot,
                         "field"     : gcal,
@@ -273,8 +274,9 @@ def worker(pipeline, recipe, config):
                     "ydatacolumn"   : 'corrected',
                     "coloraxis"     : 'corr',
                     "plotfile"      : prefix+'-bpcal-reim.png',
-                    "uvrange"       : config['uvrange'],
                     "overwrite"     : True,
+                    "uvrange"       : config['uvrange'],
+                    "showgui"       : False,
                    },
                    input=pipeline.input,
                    output=pipeline.output,

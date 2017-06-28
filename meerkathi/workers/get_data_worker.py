@@ -1,7 +1,7 @@
 import os
 import sys
 
-NAME = "Data acquisition and preparation"
+NAME = "Convert data from hdf5 to MS format"
 
 def worker(pipeline, recipe, config):
     steps = []
@@ -10,7 +10,6 @@ def worker(pipeline, recipe, config):
 
         msname = pipeline.msnames[i]
         h5file = pipeline.h5files[i]
-        prefix = pipeline.prefixes[i]
         data_path = pipeline.data_path[i]
         if config['h5toms']['enable']:
             step = 'h5toms_{:d}'.format(i)
@@ -31,19 +30,6 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
             steps.append(step)
-        
-        if config['fixvis']['enable']:
-            step = 'fixvis_{:d}'.format(i)
-            recipe.add('cab/casa_fixvis', step,
-                {
-                    "vis"        : msname,
-                    "reuse"      : False,
-                    "outputvis"  : msname,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
-            steps.append(step)
 
         if config['obsinfo']['enable']:
             step = 'listobs_{:d}'.format(i)
@@ -58,30 +44,4 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
             steps.append(step)
             
-            if config['prepms']['enable']:
-                step = 'prepms_{:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                    {
-                      "msname"  : msname,
-                      "command" : 'prep' ,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, msname))
-                steps.append(step)
-                if config['prepms']['add_imaging_cols']: 
-                    for column in ['MODEL_DATA', 'CORRECTED_DATA']:
-                        step = 'add_imaging_{0:d}_{1:s}'.format(i, column)
-                        recipe.add('cab/msutils', step,
-                            {
-                              "msname"   : msname,
-                              "command"  : 'copycol', 
-                              "tocol"    : column,
-                              "fromcol"  : 'DATA',
-                            },
-                            input=pipeline.input,
-                            output=pipeline.output,
-                            label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
-                        steps.append(step)
-
     return steps

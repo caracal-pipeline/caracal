@@ -33,17 +33,18 @@ class MeerKATHI(object):
         self.dataids = self.config['general']['dataids']
         self.nobs = len(self.dataids)
 
+        self.fcal = self.config['general']['fcal']
         self.bpcal = self.config['general']['bpcal']
         self.gcal = self.config['general']['gcal']
         self.target = self.config['general']['target']
         self.refant = self.config['general']['reference_antenna']
 
-        for item in 'bpcal gcal target refant'.split():
+        for item in 'fcal bpcal gcal target refant'.split():
             value = getattr(self, item, None)
             # First ensure that value is set is a list
             if value is None:
                 raise RuntimeError('Parameter \'{:s}\' under general section has not been set'.format(item))
-            elif hasattr(value, '__iter__'):
+            elif not hasattr(value, '__iter__'):
                 value = [value]
             # Duplicate value if its not a list
             if value and len(value)==1:
@@ -122,10 +123,13 @@ Options set on the command line will overwrite options in the --pipeline-configu
     add('-ra', '--reference-antenna', action='append',
         help='Reference antenna. Can be specified multiple times if reference antenna is different for different --dataid(s)')
 
-    add('-bc', '--bandpass-cal', action='append', type=int,
+    add('-fc', '--fcal', action='append', type=int,
+        help='Field ID of Flux calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
+
+    add('-bc', '--bpcal', action='append', type=int,
         help='Field ID of Bandpass calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
     
-    add('-gc', '--gain-cal', action='append', type=int,
+    add('-gc', '--gcal', action='append', type=int,
         help='Field ID of gain calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
  
     add('-t', '--target', action='append', type=int,
@@ -147,7 +151,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
             dataids = yaml.load(_conf)['general']['dataids']
 
     nobs = len(dataids)
-    for item in 'data_path prefix reference_antenna bandpass_cal gain_cal target'.split():
+    for item in 'data_path prefix reference_antenna fcal bpcal gcal target'.split():
         value = getattr(args, item, None)
         if value and len(value)==1:
             value = value*nobs

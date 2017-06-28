@@ -705,7 +705,7 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/msutils', 'copydata2corrdata_{:d}'.format(i),
                {
-                  "msname"          :   cal_msname,
+                 "msname"          :   cal_msname,
                  "command"         :   'copycol',
                  "fromcol"         :   'DATA',
                  "tocol"           :   'CORRECTED_DATA',
@@ -718,13 +718,13 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/msutils', 'prepms_2gc_{:d}'.format(i),
                {
-#                 "msname"          :  split_msname,
                  "msname"          :  cal_msname,
                  "command"         : 'prep',
                },
                input = INPUT,
                output= MSDIR,
                label = 'prepms_2gc_{:d}:: Add flagsets'.format(i))
+            steps2run.append('prepms_2gc_{:d}'.format(i))
       
     if pars['MAKE_INTI_MODEL'].lower() in ['yes', 'true', '1']:
             #Make a dirty image to create mask
@@ -804,26 +804,6 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
 
     if pars['RUN_SELFCAL_1'].lower() in ['yes', 'true', '1']:
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
-            #Unflag prvious selfcal flags, if any.
-            recipe.add("cab/flagms", 'unflag_selfcalflags_{:d}'.format(i), 
-               {
-                 "msname"             : cal_msname,
-                 "unflag"             : "FLAG0",
-               },
-               input=INPUT, output=OUTPUT,
-               label="unflag_selfcalflags_{:d}:: Unflag phase selfcal flags".format(i))
-            steps2run.append('unflag_selfcalflags_{:d}'.format(i))
-          
-           #Backup other flags
-            recipe.add("cab/flagms", "backup_initial_flags_{:d}".format(i),
-               {
-                 "msname"        :  cal_msname,
-                 "flagged-any"   : "legacy+L",
-                 "flag"          : "legacy",
-               },
-               input=INPUT, output=OUTPUT,
-               label="backup_initial_flags_{:d}:: Backup initial flags".format(i)) 
-            steps2run.append('backup_initial_flags_{:d}'.format(i))  
            #Run 1st selfcal round, output corrected residuals 
             recipe.add('cab/calibrator','selfcal1_{:d}'.format(i),
                {
@@ -834,8 +814,16 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                  "output-data"  : "CORR_RES",
                  "output-column": "CORRECTED_DATA",
                  "Gjones"       : True,
-                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones-solution-intervals" : [2, 10],
                  "Gjones-matrix-type" : "GainDiagPhase",
+                 "read-flags-from-ms" :	True,
+                 "read-flagsets"      : "-stefcal",
+                 "write-flagset"      : "stefcal",
+                 "write-flagset-policy" : "replace",
+                 "Gjones-ampl-clipping" :  True,
+                 "Gjones-ampl-clipping-low" : 0.5,
+                 "Gjones-ampl-clipping-high": 1.5,
+                 "label"              : "cal1",
                  "make-plots"         : True,
                  "tile-size"          : 512,
                },
@@ -848,7 +836,6 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
             {
               "msname"         :    cal_msnames,
               "prefix"         :    combprefix+"cont_2",
-              "nomfsweighting" :    False,
               "mgain"          :    0.8,
               "column"         :    "CORRECTED_DATA",
               "auto-threshold" :    10,
@@ -947,11 +934,19 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                  "output-data"  : "CORR_RES",
                  "output-column": "CORRECTED_DATA",
                  "Gjones"       : True,
-                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones-solution-intervals" : [2, 10],
                  "Gjones-matrix-type" : "GainDiagPhase",
+                 "read-flags-from-ms" :	True,
+                 "read-flagsets"      : "-stefcal",
+                 "write-flagset"      : "stefcal",
+                 "write-flagset-policy" : "replace",
+                 "Gjones-ampl-clipping" :  True,
+                 "Gjones-ampl-clipping-low" : 0.5,
+                 "Gjones-ampl-clipping-high": 1.5,
+                 "label"              : "cal2",
                  "make-plots"         : True,
                  "tile-size"          : 512,
-                 "Gjones-gain-table"  : "final_table.cp"
+                 "Gjones-gain-table"  : "final_table.cp",
                },
                input=INPUT,
                output=OUTPUT,
@@ -991,12 +986,18 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                  "column"       :  "DATA",
                  "output-data"  :  "CORR_RES",
                  "output-column":  "CORRECTED_DATA",
-                 "Gjones-solution-intervals" : [2, 0],
+                 "Gjones-solution-intervals" : [2, 10],
                  "Gjones"       : True,
-            #    "Gjones-apply-only" : True,
                  "make-plots"         : True,
-            #    "Gjones-gain-table"  : "final_table.cp:output",
                  "Gjones-matrix-type" : "GainDiagPhase",
+                 "read-flags-from-ms" :	True,
+                 "read-flagsets"      : "-stefcal",
+                 "write-flagset"      : "stefcal",
+                 "write-flagset-policy" : "replace",
+                 "Gjones-ampl-clipping" :  True,
+                 "Gjones-ampl-clipping-low" : 0.5,
+                 "Gjones-ampl-clipping-high": 1.5,
+                 "label"              : "cal2",
                  "tile-size"          : 512,
                },
                input=INPUT,
@@ -1192,4 +1193,4 @@ else:
     print '#########################################'
     print
     if pars['DRY_RUN'].lower() in ['no', 'false', '0']:
-        recipe.run(steps2run)
+        recipe.run(steps2run, resume=False)

@@ -21,12 +21,12 @@
 ####################
 
 ### SWITCH ON/OFF PIPELINE STEPS ###
-RUN_PREPMS     = no
-RUN_FLAGGING   = no
+RUN_PREPMS     = yes
+RUN_FLAGGING   = yes
 RUN_1GC        = yes
-RUN_2GC        = no
-RUN_CONTSUB    = no
-RUN_HI_IMAGING = no
+RUN_2GC        = yes
+RUN_CONTSUB    = yes
+RUN_HI_IMAGING = yes
 DRY_RUN        = no
 ###
 
@@ -39,8 +39,8 @@ DRY_RUN        = no
 ### PREPMS ###
 REMOVE_MS      = no
 FIX_UVW        = yes
-WRITE_LISTOBS  = no
-ADD_COLUMNS    = no
+WRITE_LISTOBS  = yes
+ADD_COLUMNS    = yes
 ###
 
 ### FLAGGING ###

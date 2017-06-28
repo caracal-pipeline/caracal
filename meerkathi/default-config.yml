@@ -1,0 +1,173 @@
+## Default meerkathi pipeline configuration
+
+# General pipeline information, data IDs, prefixes for output
+general:
+  dataids: ["1491463063","1491480644"] # change me!
+  data_paths: [/var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06, # change me!
+              /var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06]  # change me!
+  prefix: [meerkathi-pipeline]
+  msdir: msdir
+  input: input
+  output: output
+  fcal: [1] # change me!
+  bpcal: [1]   # change me!
+  gcal: [2]    # change me!
+  target: [3]  # change me!
+  reference_antenna: [m006] # change me!
+
+
+# Get data to be reduced
+get_data:
+  enable: false
+  order: 1
+  h5toms:
+    enable: true
+    channel_range: "20701,21700"
+  obsinfo:
+    enable: true
+
+
+# Peform some basic operations to get it ready for reduction
+prepare_data:
+  enable: false
+  order: 2
+  fixvis:
+    enable: true
+  prepms:
+    enable: true
+    add_imaging_cols: true
+
+# Pre-calibration flagging
+precal_flagging:
+  enable: false
+  order: 3
+  flag_autocorr:
+    enable: true
+  flag_milkyway:
+    enable: true
+    channels: "*:1419.8~1421.3MHz"
+  autoflag:
+    enable: true
+    strategy: aoflagger_strategies/firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+
+# First generation calibration
+cross_cal:
+  enable: false
+  order: 4
+  uvrange: ">50"
+  set_model:
+    enable: true
+    standard: "Perley-Taylor 99"
+  delay_cal:
+    enable: true
+    refant: m042
+  bp_cal:
+    enable: true
+    combine: ""
+    minnrbl: 4
+    minsnr: 3
+    solnorm: true
+  gain_cal_bp:
+    enable: true
+    combine: ""
+    minnrbl: 4
+    minsnr: 3
+    solnorm: true
+  gain_cal_gain:
+    enable: true
+    combine: ""
+    minnrbl: 4
+    minsnr: 3
+    solnorm: true
+  transfer_fluxscale:
+    enable: true
+  apply_delay_cal:
+    enable: true
+    applymode: calflag
+  apply_bp_cal:
+    enable: true
+    applymode: calflag
+  apply_gain_cal_bp:
+    enable: true
+    applymode: calflag
+  apply_transfer_fluxscale:
+    enable: true
+    applymode: calflag
+  make_plots:
+    enable: true
+    bandpass: true
+    fluxscale: true
+    gain_cal: true
+    bandpass_reim: true
+
+# Split target data
+split_target:
+  enable: true
+  order: 5
+  split_target:
+    enable: true
+    time_average: 32s
+    freq_average: 1
+    label: corr
+    msprep: true
+
+
+# Self calibration
+self_cal:
+  enable: false
+  order: 6
+  primary_beam: false
+  # Imaging settings
+  img_npix: 1180
+  img_trim: 1024
+  img_cell: 5
+  img_weight: briggs
+  img_robust: -1.5
+  img_niter: 1000000
+  img_autothreshold: 3
+  img_automask: 5
+  img_cleanborder: 0
+  img_facets: 11
+  img_chans: 3
+  # Calibration settings
+  cal_Gsols: [2, 80] 
+  cal_DDsols: [60, 500],
+  cal_flag_ampl: [0.5, 1.5]
+  # Source finding settings
+  sf_peak_thresh: 10
+  sf_island_thresh: 8 
+  image_1:
+    enable: true
+    peak_based_mask_on_dirty: 0.5  # make a dirty image first, then mask based on peak on dirty image
+    make_cube: image
+  extract_sources_1:
+    enable: true
+    spi: true
+    detection_image: true # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
+  calibrate_1:
+    enable: true
+    output_data: CORR_DATA
+    gain_matrix_type: GainDiagPhase
+  image_2:
+    enable: true
+    make_cube: image
+    mask: true # mask will be based on previous image
+  extract_sources_2:
+    enable: true
+    spi: true
+    detection_image: true
+    append_prev: false
+  calibrate_2:
+    enable: true
+    output_data: CORR_RES
+    gain_matrix_type: GainDiagPhase
+    add_vis_model: false
+  image_3:
+    enable: true
+    make_cube: image,model
+    auto_mask: 5
+    auto_threshold: 0.5
+  calibrate_3:
+    enable: true
+    gain_matrix_type: Gain2x2
+    add_vis_model: true

@@ -23,7 +23,7 @@ def worker(pipeline, recipe, config):
                     "timebin"       : config['split_target']['time_average'],
                     "width"         : config['split_target']['freq_average'],
                     "datacolumn"    : 'corrected',
-                    "field"         : target,
+                    "field"         : str(target),
                     "keepflags"     : True,
                 },
                 input=pipeline.input,

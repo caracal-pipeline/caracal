@@ -40,6 +40,7 @@ def worker(pipeline, recipe, config):
         fcal = str(pipeline.fcal[i])
         target = str(pipeline.target[i])
         refant = pipeline.refant[i]
+        prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
  
         # Set model
         if config['set_model']['enable']:
@@ -66,7 +67,7 @@ def worker(pipeline, recipe, config):
                  "caltable"     : prefix+".K0",
                  "field"        : bpcal,
                  "refant"       : config['delay_cal']['refant'],
-                 "solint"       : "inf",
+                 "solint"       : config['delay_cal']['solint'],
                  "gaintype"     : "K",
                  "uvrange"      : config['uvrange'],
                },
@@ -84,7 +85,7 @@ def worker(pipeline, recipe, config):
                  "caltable"     : prefix+'.B0',
                  "field"        : bpcal,
                  "refant"       : refant,
-                 "solint"       : "inf",
+                 "solint"       : config['bp_cal']['solint'],
                  "combine"      : config['bp_cal']['combine'],
                  "bandtype"     : "B",
                  "gaintable"    : [prefix+'.K0:output'],

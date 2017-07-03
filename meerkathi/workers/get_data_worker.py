@@ -10,6 +10,7 @@ def worker(pipeline, recipe, config):
 
         msname = pipeline.msnames[i]
         h5file = pipeline.h5files[i]
+        prefix = pipeline.prefixes[i]
         data_path = pipeline.data_path[i]
         if config['h5toms']['enable']:
             step = 'h5toms_{:d}'.format(i)

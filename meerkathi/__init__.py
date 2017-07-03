@@ -25,10 +25,7 @@ class MeerKATHI(object):
         workers = glob.glob('{:s}/*_worker.py'.format(self.workers_directory))
         workers = [ os.path.basename(a).split('.py')[0] for a in workers]
         # Order workers
-        self.workers = range(len(workers))
-        for worker in workers:
-            j = self.config[worker.split('_worker')[0]]['order']
-            self.workers[j-1] = worker
+        self.workers = sorted(workers, key=self.__worker_order)
         
         self.dataids = self.config['general']['dataids']
         self.nobs = len(self.dataids)
@@ -63,6 +60,10 @@ class MeerKATHI(object):
         self.recipes = {}
         # Workers to skip
         self.skip = [] 
+
+    def __worker_order(self, worker):
+            return self.config[worker.split('_worker')[0]]['order']
+
 
     def define_workers(self):
         for i, _worker in enumerate(self.workers):

@@ -3,8 +3,7 @@
 # General pipeline information, data IDs, prefixes for output
 general:
   dataids: ["1491463063","1491480644"] # change me!
-  data_paths: [/var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06, # change me!
-              /var/kat/archive2/data/MeerKATAR1/telescope_products/2017/04/06]  # change me!
+  data_paths: [input]  # change me!
   prefix: [meerkathi-pipeline]
   msdir: msdir
   input: input
@@ -13,7 +12,7 @@ general:
   bpcal: [1]   # change me!
   gcal: [2]    # change me!
   target: [3]  # change me!
-  reference_antenna: [m006] # change me!
+  reference_antenna: [m000] # change me!
 
 
 # Get data to be reduced

@@ -675,7 +675,7 @@ if pars['RUN_1GC'].lower() in ['yes', 'true', '1']:
 ##############################
 
 # This will:
-# - split and time average the target
+# - frequency average the target (optional)
 # - make a continuum image and selfcalibrate the gain phases
 
 npix_cont   = int(pars['npix_cont'])

@@ -688,9 +688,11 @@ npix        = int(pars['npix'])
 cell        = float(pars['cell'])
 
 if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
+
+    # Prepare MS files for image+selfcal loop
     if pars['PREPARE_CONT_MS'].lower() in ['yes', 'true', '1']:
         for i, (split_msname, cal_msname) in enumerate(zip(split_msnames, cal_msnames)):
-            recipe.add('cab/casa_split','split_avfreq_{:d}'.format(i),
+            recipe.add('cab/casa_split','freqav_{:d}'.format(i),
                {
                  "msname"          :   split_msname,
                  "output-msname"   :   cal_msname,
@@ -699,8 +701,8 @@ if pars['RUN_2GC'].lower() in ['yes', 'true', '1']:
                 },
                 input=INPUT,
                 output=OUTPUT,
-                label='split_avfreq_{:d}:: Split and time average the target'.format(i))
-            steps2run.append('split_avfreq_{:d}'.format(i))
+                label='freqav_{:d}:: Frequency average the target'.format(i))
+            steps2run.append('freqav_{:d}'.format(i))
      
         for i, (cal_msname) in enumerate(zip(cal_msnames)):
             recipe.add('cab/msutils', 'copydata2corrdata_{:d}'.format(i),

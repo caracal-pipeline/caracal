@@ -21,12 +21,12 @@
 ####################
 
 ### SWITCH ON/OFF PIPELINE STEPS ###
-RUN_PREPMS     = yes
-RUN_FLAGGING   = yes
-RUN_1GC        = yes
+RUN_PREPMS     = no
+RUN_FLAGGING   = no
+RUN_1GC        = no
 RUN_2GC        = yes
-RUN_CONTSUB    = yes
-RUN_HI_IMAGING = yes
+RUN_CONTSUB    = no
+RUN_HI_IMAGING = no
 DRY_RUN        = no
 ###
 
@@ -39,8 +39,8 @@ DRY_RUN        = no
 ### PREPMS ###
 REMOVE_MS      = no
 FIX_UVW        = yes
-WRITE_LISTOBS  = yes
-ADD_COLUMNS    = yes
+WRITE_LISTOBS  = no
+ADD_COLUMNS    = no
 ###
 
 ### FLAGGING ###
@@ -50,23 +50,20 @@ AOFLAG         = yes
 ###
 
 ### 1GC ###
-DELAY_CAL      = yes
-SET_MODEL      = yes
-BP_CAL         = yes
-G_CAL          = yes
-TRANSF_FLUX    = yes
-APPLY_CAL      = yes
-MAKE_PLOTS     = yes
+DELAY_CAL      = no
+SET_MODEL      = no
+BP_CAL         = no
+G_CAL          = no
+TRANSF_FLUX    = no
+APPLY_CAL      = no
+MAKE_PLOTS     = no
 SPLIT_AND_TAV  = yes
 ###
 
 ### 2GC ###
 PREPARE_CONT_MS  = yes
-MAKE_INTI_MODEL  = yes
-RUN_SELFCAL_1    = yes
-APPEND_TO_LSM0   = yes
-RUN_SELFCAL_2    = yes
-SELFCAL_FINAL    = yes
+SELFCAL_CONT_MS  = yes
+SELFCAL_LINE_MS  = yes
 ### 
 
 ### CONTSUB ###
@@ -112,13 +109,13 @@ timebin        = 32s
 ###
 
 ### 2GC ###
-width = 40
-# Imaging options for Continuum
-trim = 1024
-npix_cont = 1180
-cell_cont = 5
-weight_cont = briggs
-robust_cont = -1.5
+width          = 40
+nr_selfcal_iter= 3
+trim           = 1300
+npix_cont      = 1500
+cell_cont      = 5
+weight_cont    = briggs
+robust_cont    = -1.5
 ###
 
 ### CONTSUB ###
@@ -146,7 +143,7 @@ sf_minSizeZ    = 5
 ###
 
 ### MISCELLANEOUS ###
-combprefix     = meerkathi-comb-01jun
+combprefix     = meerkathi-comb-04jul
 target         = IC5264
 bpcal          = PKS1934-638
 gcal           = ATCA2259-375

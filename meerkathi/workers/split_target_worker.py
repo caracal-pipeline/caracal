@@ -31,4 +31,16 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
             steps.append(step)
             
+        if config['prepms']['enable']:
+            step = 'prepms_{:d}'.format(i)
+            recipe.add('cab/msutils', step,
+                {
+                  "msname"  : msname,
+                  "command" : 'prep' ,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, msname))
+            steps.append(step)
+            
     return steps

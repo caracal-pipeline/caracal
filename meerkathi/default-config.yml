@@ -2,9 +2,9 @@
 
 # General pipeline information, data IDs, prefixes for output
 general:
-  dataids: ["1491463063","1491480644"] # change me!
-  data_paths: [input]  # change me!
-  prefix: [meerkathi-pipeline]
+  dataids: ["1498145355"] # change me!
+  data_paths: [input] # change me!
+  prefix: meerkathi-pipeline
   msdir: msdir
   input: input
   output: output
@@ -12,113 +12,126 @@ general:
   bpcal: [1]   # change me!
   gcal: [2]    # change me!
   target: [3]  # change me!
-  reference_antenna: [m000] # change me!
+  nchans: 1000
+  reference_antenna: [m006] # change me!
 
 
 # Get data to be reduced
 get_data:
-  enable: false
+  enable: yes
   order: 1
   h5toms:
-    enable: true
+    enable: tes
     channel_range: "20701,21700"
   obsinfo:
-    enable: true
+    enable: yes
 
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:
-  enable: false
+  enable: yes
   order: 2
   fixvis:
-    enable: true
+    enable: yes
   prepms:
-    enable: true
-    add_imaging_cols: true
+    enable: yes
+    add_imaging_cols: yes
 
 # Pre-calibration flagging
 precal_flagging:
-  enable: false
+  enable: yes
   order: 3
   flag_autocorr:
-    enable: true
+    enable: yes
   flag_milkyway:
-    enable: true
+    enable: yes
     channels: "*:1419.8~1421.3MHz"
+  flag_antennas:
+    enable: no
+    antennas: ''
+  static_mask:
+    enable: no
+    mask: ''
   autoflag:
-    enable: true
+    enable: yes
     strategy: aoflagger_strategies/firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
 
 # First generation calibration
 cross_cal:
-  enable: false
+  enable: yes
   order: 4
-  uvrange: ">50"
+  uvrange: ">100"
+  label: 1gc1
   set_model:
-    enable: true
+    enable: yes
     standard: "Perley-Taylor 99"
   delay_cal:
-    enable: true
+    enable: yes
     refant: m042
+    solint: 24s
   bp_cal:
-    enable: true
+    enable: yes
     combine: ""
     minnrbl: 4
     minsnr: 3
-    solnorm: true
+    solnorm: no
+    solint: ""
   gain_cal_bp:
-    enable: true
+    enable: yes
     combine: ""
     minnrbl: 4
     minsnr: 3
-    solnorm: true
+    solnorm: no
   gain_cal_gain:
-    enable: true
+    enable: yes
     combine: ""
     minnrbl: 4
     minsnr: 3
-    solnorm: true
+    solnorm: yes
   transfer_fluxscale:
-    enable: true
+    enable: yes
   apply_delay_cal:
-    enable: true
+    enable: yes
     applymode: calflag
   apply_bp_cal:
-    enable: true
+    enable: yes
     applymode: calflag
   apply_gain_cal_bp:
-    enable: true
+    enable: no
     applymode: calflag
   apply_transfer_fluxscale:
-    enable: true
+    enable: yes
     applymode: calflag
   make_plots:
-    enable: true
-    bandpass: true
-    fluxscale: true
-    gain_cal: true
-    bandpass_reim: true
+    enable: yes
+    bandpass: yes
+    fluxscale: yes
+    gain_cal: no
+    bandpass_reim: yes
 
 # Split target data
 split_target:
-  enable: true
+  enable: yes
   order: 5
   split_target:
-    enable: true
+    enable: yes
     time_average: 32s
     freq_average: 1
     label: corr
-    msprep: true
+  prepms:
+    enable: yes
 
 
 # Self calibration
 self_cal:
-  enable: false
+  enable: yes
+  label: corr
   order: 6
-  primary_beam: false
+  primary_beam: no
   # Imaging settings
   img_npix: 1180
   img_trim: 1024
+  img_mgain: 0.9
   img_cell: 5
   img_weight: briggs
   img_robust: -1.5
@@ -127,46 +140,91 @@ self_cal:
   img_automask: 5
   img_cleanborder: 0
   img_facets: 11
-  img_chans: 3
+  img_nchans: 3
+  img_column: CORRECTED_DATA
   # Calibration settings
   cal_Gsols: [2, 80] 
-  cal_DDsols: [60, 500],
+  cal_DDsols: [60, 500]
   cal_flag_ampl: [0.5, 1.5]
+  cal_gain_amplitude_clip_low: 0.5 
+  cal_gain_amplitude_clip_high: 1.5 
   # Source finding settings
-  sf_peak_thresh: 10
-  sf_island_thresh: 8 
+  sf_thresh_pix: 10
+  sf_thresh_isl: 8 
   image_1:
-    enable: true
+    enable: yes
     peak_based_mask_on_dirty: 0.5  # make a dirty image first, then mask based on peak on dirty image
     make_cube: image
+    column: DATA
   extract_sources_1:
-    enable: true
-    spi: true
-    detection_image: true # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
+    enable: yes
+    spi: yes
+    detection_image: yes # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
   calibrate_1:
-    enable: true
+    enable: yes
     output_data: CORR_DATA
     gain_matrix_type: GainDiagPhase
   image_2:
-    enable: true
+    enable: yes
     make_cube: image
-    mask: true # mask will be based on previous image
+    mask: yes # mask will be based on previous image
+    automask: 10
+    autothreshold: 1
   extract_sources_2:
-    enable: true
-    spi: true
-    detection_image: true
-    append_prev: false
+    enable: yes
+    spi: no
+    detection_image: yes
+    append_prev: no
   calibrate_2:
-    enable: true
+    enable: yes
     output_data: CORR_RES
-    gain_matrix_type: GainDiagPhase
-    add_vis_model: false
+    gain_matrix_type: GainDiag
+    add_vis_model: no
   image_3:
-    enable: true
+    enable: yes
+    make_cube: image,model
+    auto_mask: 8
+    auto_threshold: 1
+  extract_sources_3:
+    enable: yes
+    spi: yes
+    detection_image: yes
+    append_prev: yes
+    thresh_pix: 10
+    thresh_isl: 5
+  calibrate_3:
+    enable: yes
+    output_data: CORR_RES
+    gain_matrix_type: GainDiag
+    add_vis_model: no
+  image_4:
+    enable: yes
     make_cube: image,model
     auto_mask: 5
     auto_threshold: 0.5
-  calibrate_3:
-    enable: true
-    gain_matrix_type: Gain2x2
-    add_vis_model: true
+
+image_HI:
+  enable: true
+  order: 7
+  label: corr
+  uvcontsub: 
+    enable: no
+    fitorder: 1
+  image:
+    enable: no
+    use_contsub: true
+    npix: 700
+    trim: 512
+    mgain: 0.9
+    cell: 20
+    weight: briggs
+    robust: 2
+    niter: 1000000
+    autothreshold: 3
+    automask: 5
+    cleanborder: 0
+    facets: 11
+  make_cube:
+    enable: yes
+  sofia:
+    enable: false

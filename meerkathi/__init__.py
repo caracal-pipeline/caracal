@@ -9,7 +9,7 @@ pckgdir = os.path.dirname(os.path.abspath(__file__))
 
 
 class MeerKATHI(object):
-    def __init__(self, config, workers_directory, stimela_build=None):
+    def __init__(self, config, workers_directory, stimela_build=None, prefix=None):
         
         with open(config) as _conf:
             self.config = yaml.load(_conf)
@@ -35,6 +35,8 @@ class MeerKATHI(object):
         self.gcal = self.config['general']['gcal']
         self.target = self.config['general']['target']
         self.refant = self.config['general']['reference_antenna']
+        self.refant = self.config['general']['reference_antenna']
+        self.nchans = self.config['general']['nchans']
 
         for item in 'fcal bpcal gcal target refant'.split():
             value = getattr(self, item, None)
@@ -47,7 +49,7 @@ class MeerKATHI(object):
             if value and len(value)==1:
                 setattr(self, item, value*self.nobs)
 
-        self.prefix = self.config['general']['prefix']
+        self.prefix = prefix or self.config['general']['prefix']
         self.dataids = self.config['general']['dataids']
 
         self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataids]
@@ -118,7 +120,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
     add('-di', '--dataid', action='append',
         help='Data ID of hdf5 file to be reduced. May be specified muliple times. Must be used in combination with --data-path')
 
-    add('-p', '--prefix', default='meerkathi-pipeline',
+    add('-p', '--prefix',
         help='Prefix for pipeline output products')
 
     add('-ra', '--reference-antenna', action='append',
@@ -139,7 +141,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
     args = parser.parse_args(argv)
 
     pipeline = MeerKATHI(args.pipeline_configuration,
-                  args.workers_directory, stimela_build=args.stimela_build)
+                  args.workers_directory, stimela_build=args.stimela_build, prefix=args.prefix)
 
     for item in 'input msdir output'.split():
         value = getattr(args, item, None)
@@ -152,7 +154,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
             dataids = yaml.load(_conf)['general']['dataids']
 
     nobs = len(dataids)
-    for item in 'data_path prefix reference_antenna fcal bpcal gcal target'.split():
+    for item in 'data_path reference_antenna fcal bpcal gcal target'.split():
         value = getattr(args, item, None)
         if value and len(value)==1:
             value = value*nobs

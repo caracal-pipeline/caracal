@@ -2,8 +2,8 @@
 
 # General pipeline information, data IDs, prefixes for output
 general:
-  dataids: ["1498145355"] # change me!
-  data_paths: [input] # change me!
+  dataid: ["1498145355"] # change me!
+  data_path: [input] # change me!
   prefix: meerkathi-pipeline
   msdir: msdir
   input: input

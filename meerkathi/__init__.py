@@ -9,15 +9,19 @@ pckgdir = os.path.dirname(os.path.abspath(__file__))
 
 
 class MeerKATHI(object):
-    def __init__(self, config, workers_directory, stimela_build=None, prefix=None):
+    def __init__(self, config, workers_directory, 
+            stimela_build=None, prefix=None, 
+            add_all_first=False):
         
         with open(config) as _conf:
             self.config = yaml.load(_conf)
-        
+
+        self.add_all_first = add_all_first
+
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
-        self.data_path = self.config['general']['data_paths']
+        self.data_path = self.config['general']['data_path']
 
         self.workers_directory = workers_directory
         # Add workers to packages
@@ -38,8 +42,8 @@ class MeerKATHI(object):
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
         
-        self.dataids = self.config['general']['dataids']
-        self.nobs = len(self.dataids)
+        self.dataid = self.config['general']['dataid']
+        self.nobs = len(self.dataid)
 
         self.fcal = self.config['general']['fcal']
         self.bpcal = self.config['general']['bpcal']
@@ -60,18 +64,19 @@ class MeerKATHI(object):
                 setattr(self, item, value*self.nobs)
 
         self.prefix = prefix or self.config['general']['prefix']
-        self.dataids = self.config['general']['dataids']
-
-        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataids]
-        self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataids]
-        self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataids]
-        self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataids]
-        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataids]
-        
         self.stimela_build = stimela_build
         self.recipes = {}
         # Workers to skip
         self.skip = [] 
+
+        self._init_names()
+
+    def _init_names(self):
+        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
+        self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
 
     def enable_task(self, config, task):
         a = config.get(task, False)
@@ -80,7 +85,7 @@ class MeerKATHI(object):
         else:
             False
 
-    def define_workers(self):
+    def run_workers(self):
         for _name, _worker, i in self.workers:
             try:
                 worker = __import__(_worker)
@@ -99,13 +104,19 @@ class MeerKATHI(object):
             # Get recipe steps
             # 1st get correct section of config file
             worker.worker(self, recipe, config)
-            self.recipes[_worker] = recipe
+            # Save worker recipes for later execution
+            # execute each worker after adding its steps
+            if self.add_all_first:
+                self.recipes[_worker] = recipe
+            else:
+                recipe.run()
 
-    def run_workers(self):
-        for worker in self.workers:
-            if worker not in self.skip:
-                #self.recipes[worker].run()
-                pass
+        # Execute all workers if they saved for later execution
+        if not self.add_all_first:
+            for worker in self.workers:
+                if worker not in self.skip:
+                    self.recipes[worker[1]].run()
+
 
 
 def main(argv):
@@ -118,6 +129,9 @@ Options set on the command line will overwrite options in the --pipeline-configu
 
     add('-pc', '--pipeline-configuration', 
         help='Pipeline configuarion file (YAML/JSON format)')
+    
+    add('-aaf', '--add-all-first', action='store_true',
+        help='Add steps from all workers to pipeline before exucting. Default is execute each workers as they are encountered.')
 
     add('-id', '--input', 
         help='Pipeline input directory')
@@ -165,7 +179,8 @@ Options set on the command line will overwrite options in the --pipeline-configu
         return
 
     pipeline = MeerKATHI(args.pipeline_configuration,
-                  args.workers_directory, stimela_build=args.stimela_build, prefix=args.prefix)
+                  args.workers_directory, stimela_build=args.stimela_build, 
+                  add_all_first=args.add_all_first, prefix=args.prefix)
 
     for item in 'input msdir output'.split():
         value = getattr(args, item, None)
@@ -175,7 +190,9 @@ Options set on the command line will overwrite options in the --pipeline-configu
     dataids = args.dataid
     if dataids is None:
         with open(args.pipeline_configuration) as _conf:
-            dataids = yaml.load(_conf)['general']['dataids']
+            dataids = yaml.load(_conf)['general']['dataid']
+    else:
+        pipeline.dataid = dataids
 
     nobs = len(dataids)
     for item in 'data_path reference_antenna fcal bpcal gcal target'.split():
@@ -183,6 +200,6 @@ Options set on the command line will overwrite options in the --pipeline-configu
         if value and len(value)==1:
             value = value*nobs
             setattr(pipeline, item, value)
-
-    pipeline.define_workers()
+    
+    pipeline._init_names()
     pipeline.run_workers()

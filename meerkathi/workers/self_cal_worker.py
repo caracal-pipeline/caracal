@@ -18,7 +18,7 @@ def worker(pipeline, recipe, config):
     thresh_isl = config['sf_thresh_pix']
     column = config['img_column']
 
-    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataids]
+    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
     if pipeline.enable_task(config, 'image_1'):

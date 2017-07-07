@@ -3,7 +3,7 @@ import sys
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
-    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataids]
+    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
     if pipeline.enable_task(config, 'uvcontsub'):
@@ -20,7 +20,7 @@ def worker(pipeline, recipe, config):
             
     if pipeline.enable_task(config, 'image'):
         if config['image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataids]
+            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
 
         step = 'image_HI'
         recipe.add('cab/wsclean', step,

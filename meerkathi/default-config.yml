@@ -21,7 +21,7 @@ get_data:
   enable: yes
   order: 1
   h5toms:
-    enable: tes
+    enable: yes
     channel_range: "20701,21700"
   obsinfo:
     enable: yes

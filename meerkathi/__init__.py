@@ -22,10 +22,21 @@ class MeerKATHI(object):
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
-        workers = glob.glob('{:s}/*_worker.py'.format(self.workers_directory))
-        workers = [ os.path.basename(a).split('.py')[0] for a in workers]
-        # Order workers
-        self.workers = sorted(workers, key=self.__worker_order)
+        self.workers = []
+
+        for i, (name,opts) in enumerate(self.config.iteritems()):
+            if name.find('general')>=0:
+                continue
+            order = opts.get('order', i+1)
+
+            if name.find('-'):
+                worker = name.split('-')[0] + '_worker'
+            else: 
+                worker = name + '_worker'
+
+            self.workers.append((name, worker, order))
+
+        self.workers = sorted(self.workers, key=lambda a: a[2])
         
         self.dataids = self.config['general']['dataids']
         self.nobs = len(self.dataids)
@@ -34,7 +45,6 @@ class MeerKATHI(object):
         self.bpcal = self.config['general']['bpcal']
         self.gcal = self.config['general']['gcal']
         self.target = self.config['general']['target']
-        self.refant = self.config['general']['reference_antenna']
         self.refant = self.config['general']['reference_antenna']
         self.nchans = self.config['general']['nchans']
 
@@ -63,38 +73,48 @@ class MeerKATHI(object):
         # Workers to skip
         self.skip = [] 
 
-    def __worker_order(self, worker):
-            return self.config[worker.split('_worker')[0]]['order']
-
+    def enable_task(self, config, task):
+        a = config.get(task, False)
+        if a:
+            return a['enable']
+        else:
+            False
 
     def define_workers(self):
-        for i, _worker in enumerate(self.workers):
-            worker = __import__(_worker)
-            name = worker.NAME
+        for _name, _worker, i in self.workers:
+            try:
+                worker = __import__(_worker)
+            except ImportError:
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory)) 
+
             config = self.config[_worker.split('_worker')[0]]
             if config['enable'] is False:
                 self.skip.append(_worker)
                 continue
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
-            recipe = stimela.Recipe(name, ms_dir=self.msdir, 
+            recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir, 
                                loggername='STIMELA-{:d}'.format(i), 
                                build_label=self.stimela_build)
             # Get recipe steps
             # 1st get correct section of config file
-            steps = worker.worker(self, recipe, config)
-            self.recipes[_worker] = (recipe, steps)
+            worker.worker(self, recipe, config)
+            self.recipes[_worker] = recipe
 
     def run_workers(self):
         for worker in self.workers:
             if worker not in self.skip:
-                self.recipes[worker][0].run(self.recipes[worker][1])
+                #self.recipes[worker].run()
+                pass
 
 
 def main(argv):
     parser = ArgumentParser(description='MeerKAT HI pipeline : https://github.com/sphemakh/meerkathi \n \
 Options set on the command line will overwrite options in the --pipeline-configuration file')
     add = parser.add_argument
+
+    add('-gd', '--get-default',
+        help='Name file where the configuration should be saved')
 
     add('-pc', '--pipeline-configuration', 
         help='Pipeline configuarion file (YAML/JSON format)')
@@ -139,6 +159,10 @@ Options set on the command line will overwrite options in the --pipeline-configu
         help='Field ID of target field. Can be specified multiple times if different for different --dataid(s)')
 
     args = parser.parse_args(argv)
+
+    if args.get_default:
+        os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
+        return
 
     pipeline = MeerKATHI(args.pipeline_configuration,
                   args.workers_directory, stimela_build=args.stimela_build, prefix=args.prefix)

@@ -21,9 +21,7 @@ def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataids]
     prefix = pipeline.prefix
 
-    steps = []
-
-    if config['image_1']['enable']:
+    if pipeline.enable_task(config, 'image_1'):
         if config['image_1']['peak_based_mask_on_dirty']:
             step = 'image_1_dirty'
             recipe.add('cab/wsclean', step,
@@ -40,7 +38,6 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make dirty image to create clean mask'.format(step))
-            steps.append(step)
 
             step = 'mask_1'
             mask = prefix+'_1-mask.fits:output'
@@ -53,7 +50,6 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make peak based mask from dirty image'.format(step))
-            steps.append(step)
 
             step = 'image_1'
             recipe.add('cab/wsclean', step,
@@ -74,9 +70,8 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Image with clean peak-based mask from dirty image'.format(step))
-            steps.append(step)
  
-    if config['extract_sources_1']['enable']:
+    if pipeline.enable_task(config, 'extract_sources_1'):
         if config['extract_sources_1']['detection_image']:
             step = 'detection_image_1'
             detection_image = prefix + '-detection_image_1.fits:output'
@@ -90,7 +85,6 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make convolved model'.format(step))
-            steps.append(step)
         else:
             detection_image = None
            
@@ -109,9 +103,8 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Extract sources'.format(step))
-        steps.append(step)
 
-    if config['calibrate_1']['enable']:
+    if pipeline.enable_task(config, 'calibrate_1'):
         for i,msname in enumerate(mslist):
             step = 'calibrate_1_{:d}'.format(i)
             recipe.add('cab/calibrator', step,
@@ -139,32 +132,29 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
-            steps.append(step)
-
         
-    if config['image_2']['enable']:
-            step = 'image_2'
-            recipe.add('cab/wsclean', step,
-                  {                   
-                      "msname"    : mslist,
-                      "column"    : config['image_2'].get('column', column),
-                      "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config['image_2'].get('npix', npix),
-                      "trim"      : config['image_2'].get('trim', trim),
-                      "scale"     : config['image_2'].get('cell', cell),
-                      "prefix"    : prefix+'_2',
-                      "niter"     : config['image_2'].get('niter', niter),
-                      "mgain"     : config['image_2'].get('mgain', mgain),
-                      "channelsout"   : nchans,
-                      "auto-threshold": config['image_2'].get('autothreshold', auto_thresh),
-                      "auto-mask"  :   config['image_2'].get('automask', auto_mask),
-                  },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{:s}:: Make image after first round of calibration'.format(step))
-            steps.append(step)
+    if pipeline.enable_task(config, 'image_2'):
+        step = 'image_2'
+        recipe.add('cab/wsclean', step,
+              {                   
+                  "msname"    : mslist,
+                  "column"    : config['image_2'].get('column', column),
+                  "weight"    : 'briggs {}'.format(config.get('robust', robust)),
+                  "npix"      : config['image_2'].get('npix', npix),
+                  "trim"      : config['image_2'].get('trim', trim),
+                  "scale"     : config['image_2'].get('cell', cell),
+                  "prefix"    : prefix+'_2',
+                  "niter"     : config['image_2'].get('niter', niter),
+                  "mgain"     : config['image_2'].get('mgain', mgain),
+                  "channelsout"   : nchans,
+                  "auto-threshold": config['image_2'].get('autothreshold', auto_thresh),
+                  "auto-mask"  :   config['image_2'].get('automask', auto_mask),
+              },
+        input=pipeline.input,
+        output=pipeline.output,
+        label='{:s}:: Make image after first round of calibration'.format(step))
 
-    if config['extract_sources_2']['enable']:
+    if pipeline.enable_task(config, 'extract_sources_2'):
         if config['extract_sources_2']['detection_image']:
             step = 'detection_image_2'
             detection_image = prefix + '-detection_image_2.fits:output'
@@ -178,7 +168,6 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make convolved model'.format(step))
-            steps.append(step)
         else:
             detection_image = None
            
@@ -197,9 +186,8 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Extract sources'.format(step))
-        steps.append(step)
 
-    if config['calibrate_2']['enable']:
+    if pipeline.enable_task(config, 'calibrate_2'):
         for i,msname in enumerate(mslist):
             step = 'calibrate_2_{:d}'.format(i)
             recipe.add('cab/calibrator', step,
@@ -227,10 +215,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
-            steps.append(step)
 
 
-    if config['image_3']['enable']:
+    if pipeline.enable_task(config, 'image_3'):
             step = 'image_3'
             recipe.add('cab/wsclean', step,
                   {                   
@@ -250,9 +237,8 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make image after first round of calibration'.format(step))
-            steps.append(step)
 
-    if config['extract_sources_3']['enable']:
+    if pipeline.enable_task(config, 'extract_sources_3'):
         if config['extract_sources_3']['detection_image']:
             step = 'detection_image_3'
             detection_image = prefix + '-detection_image_3.fits:output'
@@ -266,7 +252,6 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make convolved model'.format(step))
-            steps.append(step)
         else:
             detection_image = None
            
@@ -285,7 +270,6 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Extract sources'.format(step))
-        steps.append(step)
         
         if config['extract_sources_3']['append_prev']:
             step = 'append_model_3'
@@ -301,9 +285,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Combined models'.format(step))
-            steps.append(step)
 
-    if config['calibrate_3']['enable']:
+    if pipeline.enable_task(config, 'calibrate_3'):
         for i,msname in enumerate(mslist):
             step = 'calibrate_3_{:d}'.format(i)
             recipe.add('cab/calibrator', step,
@@ -332,9 +315,8 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-    if config['image_4']['enable']:
+    if pipeline.enable_task(config, 'image_4'):
             step = 'image_4'
             recipe.add('cab/wsclean', step,
                   {                   
@@ -355,6 +337,3 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make image after first round of calibration'.format(step))
-            steps.append(step)
-
-    return steps

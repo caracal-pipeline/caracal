@@ -38,7 +38,7 @@ prepare_data:
     add_imaging_cols: yes
 
 # Pre-calibration flagging
-precal_flagging:
+flagging:
   enable: yes
   order: 3
   flag_autocorr:

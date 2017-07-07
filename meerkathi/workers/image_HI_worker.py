@@ -3,24 +3,22 @@ import sys
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
-    steps = []
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataids]
     prefix = pipeline.prefix
 
-    if config['uvcontsub']['enable']:
+    if pipeline.enable_task(config, 'uvcontsub'):
         for i, msname in enumerate(mslist):
             step = 'contsub_{:d}'.format(i)
             recipe.add('cab/casa_uvcontsub', step, 
                 {
                     "msname"    : msname,
-                    "fitorder"  : config['uvcontsub']['fitorder']
+                    "fitorder"  : config['uvcontsub'].get('fitorder', 1)
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Subtract continuum'.format(step))
-            steps.append(step)
             
-    if config['image']['enable']:
+    if pipeline.enable_task(config, 'image'):
         if config['image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataids]
 
@@ -41,9 +39,8 @@ def worker(pipeline, recipe, config):
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Image HI'.format(step))
-        steps.append(step)
 
-    if config['make_cube']['enable']:
+    if pipeline.enable_task(config, 'make_cube'):
         step = 'make_cube'
         recipe.add('cab/fitstool', step,
             {    
@@ -55,6 +52,3 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Make cube from wsclean channel images'.format(step))
-        steps.append(step)
-
-    return steps

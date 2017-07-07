@@ -31,7 +31,6 @@ table_suffix = {
 }
 
 def worker(pipeline, recipe, config):
-    steps = []
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
@@ -43,7 +42,7 @@ def worker(pipeline, recipe, config):
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
  
         # Set model
-        if config['set_model']['enable']:
+        if pipeline.enable_task(config, 'set_model'):
             step = 'set_model_cal_{0:d}'.format(i)
             recipe.add('cab/casa_setjy', step,
                {
@@ -56,10 +55,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
-            steps.append(step)
            
         # Delay calibration
-        if config['delay_cal']['enable']:
+        if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
             recipe.add('cab/casa_gaincal', step,
                {
@@ -74,10 +72,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Delay calibration ms={1:s}'.format(step, msname))
-            steps.append(step)
  
         # Set "Combine" to 'scan' for getting combining all scans for BP soln.
-        if config['bp_cal']['enable']:
+        if pipeline.enable_task(config, 'bp_cal'):
             step = 'bp_cal_{0:d}'.format(i)
             recipe.add('cab/casa_bandpass', step,
                {
@@ -98,10 +95,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Bandpass calibration ms={1:s}'.format(step, msname))
-            steps.append(step)
 
         # Gain calibration for Bandpass field
-        if config['gain_cal_bp']['enable']:
+        if pipeline.enable_task(config, 'gain_cal_bp'):
             step = 'gain_cal_bp_{0:d}'.format(i)
             recipe.add('cab/casa_gaincal', step,
                {
@@ -123,10 +119,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Gain calibration for bandpass ms={1:s}'.format(step, msname))
-            steps.append(step)
 
         # Gain calibration for Gaincal field
-        if config['gain_cal_gain']['enable']:
+        if pipeline.enable_task(config, 'gain_cal_gain'):
             step = 'gain_cal_gain_{0:d}'.format(i)
             recipe.add('cab/casa_gaincal', step,
                {
@@ -148,10 +143,9 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
-            steps.append(step)
 
         # Flux scale transfer
-        if config['transfer_fluxscale']['enable']:
+        if pipeline.enable_task(config, 'transfer_fluxscale'):
             step = 'transfer_fluxscale_{0:d}'.format(i)
             recipe.add('cab/casa_fluxscale', step,
                {
@@ -164,19 +158,18 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
-            steps.append(step)
 
         for ft, field in [(f, locals()[f]) for f in ['bpcal','gcal','target'] ]:
             gaintablelist,gainfieldlist,interplist = [],[],[]
             for applyme in applycal_interp_rules[ft].keys():
                suffix = table_suffix[applyme]
                interp = applycal_interp_rules[ft][applyme]
-               if config['apply_'+applyme]['enable']:
+               if pipeline.enable_task(config, 'apply_'+applyme):
                    gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
                    gainfieldlist.append(field)
                    interplist.append(interp)
 
-            if config['apply_'+applyme]['enable']:
+            if pipeline.enable_task(config, 'apply_'+applyme):
                 step = 'apply_{0:s}_{1:d}'.format(applyme, i)
                 recipe.add('cab/casa_applycal', step,
                    {
@@ -192,12 +185,11 @@ def worker(pipeline, recipe, config):
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
-                steps.append(step)
 
         # Make plots
-        if config['make_plots']['enable']:
+        if pipeline.enable_task(config, 'make_plots'):
             # Plot bandpass amplitude
-            if config['make_plots']['bandpass']:
+            if config['make_plots'].get('bandpass', False):
                 for plot in 'amp','phase':
                     step = 'plot_bandpass_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
@@ -215,10 +207,9 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Plot bandpass amplitude ms={1:s}'.format(step, msname))
-                    steps.append(step)
 
             # Plot gain phase vs time
-            if config['make_plots']['fluxscale']:
+            if config['make_plots'].get('fluxscale', False):
                 for plot in 'amp','phase':
                     step = 'plot_fluxscale_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
@@ -236,10 +227,9 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
-                    steps.append(step)
 
           # Plot gain phase vs time
-            if config['make_plots']['gain_cal']:
+            if config['make_plots'].get('gain_cal', False):
                 for plot in 'amp','phase':
                     step = 'plot_gain_cal_{0:s}_{1:d}'.format(plot, i)
                     recipe.add('cab/casa_plotcal', step,
@@ -257,10 +247,9 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
-                    steps.append(step)
 
             # Plot corrected real vs imag for bandpass field
-            if config['make_plots']['bandpass_reim']:
+            if config['make_plots'].get('bandpass_reim', False):
                 step = 'plot_bp_reim_{0:d}'.format(i)
                 recipe.add('cab/casa_plotms', step,
                    {
@@ -282,6 +271,3 @@ def worker(pipeline, recipe, config):
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Plot imag vs real for bandpass calibrator ms={1:s}'.format(step, msname))
-                steps.append(step)
-
-    return steps

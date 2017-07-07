@@ -4,14 +4,13 @@ import sys
 NAME = 'Split and average target data'
 
 def worker(pipeline, recipe, config):
-    steps = []
 
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         target = pipeline.target[i]
         tms = '{0:s}-{1:s}.ms'.format(msname[:-3], config['split_target']['label']),
 
-        if config['split_target']['enable']:
+        if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, tms))
@@ -29,9 +28,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
-            steps.append(step)
             
-        if config['prepms']['enable']:
+        if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
                 {
@@ -41,6 +39,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, msname))
-            steps.append(step)
-            
-    return steps

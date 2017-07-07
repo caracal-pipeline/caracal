@@ -1,11 +1,10 @@
 NAME = 'Pre-calibration flagging'
 
 def worker(pipeline, recipe, config):
-    steps = []
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
-        
-        if config['flag_autocorr']['enable']:
+
+        if pipeline.enable_task(config, 'flag_autocorr'):
             step = 'flag_autocorr_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata', step,
                 {
@@ -16,9 +15,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-        if config['flag_milkyway']['enable']:
+        if pipeline.enable_task(config, 'flag_milkyway'):
             step = 'flag_milkyway_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata','flagmw_{:d}'.format(i),
                 {
@@ -29,9 +27,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}::Flag out channels with HI emission from Milky Way ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-        if config['flag_antennas']['enable']:
+        if pipeline.enable_task(config, 'flag_antennas'):
             step = 'flag_antennas_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata', step,
                 {
@@ -42,23 +39,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Flagging bad antennas ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-        if config['flag_autocorr']['enable']:
-            step = 'flag_autocorr_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata', step,
-                {
-                  "vis"         : msname,
-                  "mode"        : 'manual',
-                  "autocorr"    : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Flagging auto-correations ms={1:s}'.format(step, msname))
-            steps.append(step)
-
-
-        if config['static_mask']['enable']:
+        if pipeline.enable_task(config, 'static_mask'):
             step = 'static_mask_{0:d}'.format(i)
             recipe.add('cab/rfimasker', step, 
                 {
@@ -70,9 +52,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Apply static mask ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-        if config['autoflag']['enable']:
+        if pipeline.enable_task(config, 'autoflag'):
             step = 'autoflag_{0:d}'.format(i)
             recipe.add('cab/autoflagger', step,
                 {
@@ -84,6 +65,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
-            steps.append(step)
-
-    return steps

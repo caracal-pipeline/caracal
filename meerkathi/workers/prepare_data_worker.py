@@ -4,14 +4,13 @@ import sys
 NAME = "Prepare data for calibration"
 
 def worker(pipeline, recipe, config):
-    steps = []
 
     for i in range(pipeline.nobs):
 
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
         
-        if config['fixvis']['enable']:
+        if pipeline.enable_task(config, 'fixvis'):
             step = 'fixvis_{:d}'.format(i)
             recipe.add('cab/casa_fixvis', step,
                 {
@@ -22,10 +21,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-            
-        if config['prepms']['enable']:
+        if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
                 {
@@ -35,6 +32,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, msname))
-            steps.append(step)
-
-    return steps

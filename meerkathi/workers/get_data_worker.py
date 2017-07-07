@@ -4,7 +4,6 @@ import sys
 NAME = "Convert data from hdf5 to MS format"
 
 def worker(pipeline, recipe, config):
-    steps = []
 
     for i in range(pipeline.nobs):
 
@@ -12,7 +11,7 @@ def worker(pipeline, recipe, config):
         h5file = pipeline.h5files[i]
         prefix = pipeline.prefixes[i]
         data_path = pipeline.data_path[i]
-        if config['h5toms']['enable']:
+        if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
@@ -30,9 +29,8 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
-            steps.append(step)
 
-        if config['obsinfo']['enable']:
+        if pipeline.enable_task(config, 'obsinfo'):
             step = 'listobs_{:d}'.format(i)
             recipe.add('cab/casa_listobs', step,
                 {
@@ -43,6 +41,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
-            steps.append(step)
-            
-    return steps

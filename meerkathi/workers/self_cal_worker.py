@@ -3,6 +3,7 @@ import sys
 
 NAME = 'Self calibration loop'
 
+
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
     trim = config['img_trim']
@@ -17,234 +18,67 @@ def worker(pipeline, recipe, config):
     thresh_pix = config['sf_thresh_isl']
     thresh_isl = config['sf_thresh_pix']
     column = config['img_column']
+    joinchannels = config['img_joinchannels']
+    fit_spectral_pol = config['img_fit_spectral_pol']
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
-    if pipeline.enable_task(config, 'image_1'):
-        if config['image_1']['peak_based_mask_on_dirty']:
-            step = 'image_1_dirty'
+    # Define image() extract_sources() calibrate()
+    # functions for conviency
+
+    def image(num):
+        key = 'image_{}'.format(num)
+        if config[key].get('peak_based_mask_on_dirty', False):
+            step = 'image_{}_dirty'.format(num)
             recipe.add('cab/wsclean', step,
                   {                   
                       "msname"    : mslist,
-                      "column"    : config['image_1'].get('column', column),
+                      "column"    : config[key].get('column', column),
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config['image_1'].get('npix', npix),
-                      "trim"      : config['image_1'].get('trim', trim),
-                      "scale"     : config['image_1'].get('cell', cell),
+                      "npix"      : config[key].get('npix', npix),
+                      "trim"      : config[key].get('trim', trim),
+                      "scale"     : config[key].get('cell', cell),
                       "channelsout"   : nchans,
-                      "prefix"    : prefix+'_1',
+                      "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                   },
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make dirty image to create clean mask'.format(step))
 
-            step = 'mask_1'
-            mask = prefix+'_1-mask.fits:output'
-            recipe.add('cab/cleanmask', step,
-                  {                   
-                      "image"    : prefix+'_1-MFS-dirty.fits:output',
-                      "output"   : mask,
-                      "peak-fraction"    : config['image_1']['peak_based_mask_on_dirty'],
-                  },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{:s}:: Make peak based mask from dirty image'.format(step))
 
-            step = 'image_1'
+        if pipeline.enable_task(config, key):
+            step = 'image_{}'.format(num)
             recipe.add('cab/wsclean', step,
                   {                   
                       "msname"    : mslist,
-                      "column"    : config['image_1'].get('column', column),
+                      "column"    : config[key].get('column', column),
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config['image_1'].get('npix', npix),
-                      "trim"      : config['image_1'].get('trim', trim),
-                      "scale"     : config['image_1'].get('cell', cell),
-                      "prefix"    : prefix+'_1',
-                      "niter"     : config['image_1'].get('niter', niter),
-                      "mgain"     : config['image_1'].get('mgain', mgain),
-                      "channelsout"   : nchans,
-                      "auto-threshold": config['image_1'].get('autothreshold', auto_thresh),
-                      "fitsmask"  : mask,
-                  },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{:s}:: Image with clean peak-based mask from dirty image'.format(step))
- 
-    if pipeline.enable_task(config, 'extract_sources_1'):
-        if config['extract_sources_1']['detection_image']:
-            step = 'detection_image_1'
-            detection_image = prefix + '-detection_image_1.fits:output'
-            recipe.add('cab/fitstool', step,
-                {                   
-                    "image"    : [prefix+'_1-MFS-{:s}.fits:output'.format(im) for im in ('image','residual')],
-                    "output"   : detection_image,
-                    "diff"     : True,
-                    "force"    : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make convolved model'.format(step))
-        else:
-            detection_image = None
-           
-        step = 'extract_1'
-        calmodel = prefix+'_1-pybdsm'
-        recipe.add('cab/pybdsm', step,
-            {                   
-                "image"    : prefix+'_1-MFS-image.fits:output',
-                "thresh_pix"   : config['extract_sources_1'].get('thresh_pix', thresh_pix),
-                "thresh_isl"   : config['extract_sources_1'].get('thresh_isl', thresh_isl),
-                "outfile"  : '{:s}.fits:output'.format(calmodel),
-                "blank_limit": 1e-9,
-                "port2tigger": True,
-                "detection_image": detection_image,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{0:s}:: Extract sources'.format(step))
-
-    if pipeline.enable_task(config, 'calibrate_1'):
-        for i,msname in enumerate(mslist):
-            step = 'calibrate_1_{:d}'.format(i)
-            recipe.add('cab/calibrator', step,
-               {
-                 "skymodel"     :  '{:s}_1-pybdsm.lsm.html:output'.format(prefix),
-                 "msname"       :  msname,
-                 "threads"      :  16,
-                 "column"       :  "DATA",
-                 "output-data"  : config['calibrate_1']['output_data'],
-                 "output-column": "CORRECTED_DATA",
-                 "Gjones"       : True,
-                 "Gjones-solution-intervals" : config['cal_Gsols'],
-                 "Gjones-matrix-type" : config['calibrate_1']['gain_matrix_type'],
-                 "read-flags-from-ms" :	True,
-                 "read-flagsets"      : "-stefcal",
-                 "write-flagset"      : "stefcal",
-                 "write-flagset-policy" : "replace",
-                 "Gjones-ampl-clipping" :  True,
-                 "Gjones-ampl-clipping-low" : config['cal_gain_amplitude_clip_low'],
-                 "Gjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
-                 "label"              : "cal1",
-                 "make-plots"         : True,
-                 "tile-size"          : 512,
-               },
-               input=pipeline.input,
-               output=pipeline.output,
-               label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
-        
-    if pipeline.enable_task(config, 'image_2'):
-        step = 'image_2'
-        recipe.add('cab/wsclean', step,
-              {                   
-                  "msname"    : mslist,
-                  "column"    : config['image_2'].get('column', column),
-                  "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                  "npix"      : config['image_2'].get('npix', npix),
-                  "trim"      : config['image_2'].get('trim', trim),
-                  "scale"     : config['image_2'].get('cell', cell),
-                  "prefix"    : prefix+'_2',
-                  "niter"     : config['image_2'].get('niter', niter),
-                  "mgain"     : config['image_2'].get('mgain', mgain),
-                  "channelsout"   : nchans,
-                  "auto-threshold": config['image_2'].get('autothreshold', auto_thresh),
-                  "auto-mask"  :   config['image_2'].get('automask', auto_mask),
-              },
-        input=pipeline.input,
-        output=pipeline.output,
-        label='{:s}:: Make image after first round of calibration'.format(step))
-
-    if pipeline.enable_task(config, 'extract_sources_2'):
-        if config['extract_sources_2']['detection_image']:
-            step = 'detection_image_2'
-            detection_image = prefix + '-detection_image_2.fits:output'
-            recipe.add('cab/fitstool', step,
-                {                   
-                    "image"    : [prefix+'_2-MFS-{:s}.fits:output'.format(im) for im in ('image','residual')],
-                    "output"   : detection_image,
-                    "diff"     : True,
-                    "force"    : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make convolved model'.format(step))
-        else:
-            detection_image = None
-           
-        step = 'extract_2'
-        calmodel = prefix+'_2-pybdsm'
-        recipe.add('cab/pybdsm', step,
-            {                   
-                "image"    : prefix+'_2-MFS-image.fits:output',
-                "thresh_pix"   : config['extract_sources_2'].get('thresh_pix', thresh_pix),
-                "thresh_isl"   : config['extract_sources_2'].get('thresh_isl', thresh_isl),
-                "outfile"  : '{:s}.fits:output'.format(calmodel),
-                "blank_limit": 1e-9,
-                "port2tigger": True,
-                "detection_image": detection_image,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{0:s}:: Extract sources'.format(step))
-
-    if pipeline.enable_task(config, 'calibrate_2'):
-        for i,msname in enumerate(mslist):
-            step = 'calibrate_2_{:d}'.format(i)
-            recipe.add('cab/calibrator', step,
-               {
-                 "skymodel"     :  '{:s}_2-pybdsm.lsm.html:output'.format(prefix),
-                 "msname"       :  msname,
-                 "threads"      :  16,
-                 "column"       :  "DATA",
-                 "output-data"  : config['calibrate_2']['output_data'],
-                 "output-column": "CORRECTED_DATA",
-                 "Gjones"       : True,
-                 "Gjones-solution-intervals" : config['cal_Gsols'],
-                 "Gjones-matrix-type" : config['calibrate_2']['gain_matrix_type'],
-                 "read-flags-from-ms" :	True,
-                 "read-flagsets"      : "-stefcal",
-                 "write-flagset"      : "stefcal",
-                 "write-flagset-policy" : "replace",
-                 "Gjones-ampl-clipping" :  True,
-                 "Gjones-ampl-clipping-low" : config['cal_gain_amplitude_clip_low'],
-                 "Gjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
-                 "label"              : "cal2",
-                 "make-plots"         : True,
-                 "tile-size"          : 512,
-               },
-               input=pipeline.input,
-               output=pipeline.output,
-               label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
-
-
-    if pipeline.enable_task(config, 'image_3'):
-            step = 'image_3'
-            recipe.add('cab/wsclean', step,
-                  {                   
-                      "msname"    : mslist,
-                      "column"    : config['image_3'].get('column', column),
-                      "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config['image_3'].get('npix', npix),
-                      "trim"      : config['image_3'].get('trim', trim),
-                      "scale"     : config['image_3'].get('cell', cell),
-                      "prefix"    : prefix+'_3',
-                      "niter"     : config['image_3'].get('niter', niter),
-                      "mgain"     : config['image_3'].get('mgain', mgain),
-                      "channelsout"   : nchans,
-                      "auto-threshold": config['image_3'].get('autothreshold', auto_thresh),
-                      "auto-mask"  :   config['image_3'].get('automask', auto_mask),
+                      "npix"      : config[key].get('npix', npix),
+                      "trim"      : config[key].get('trim', trim),
+                      "scale"     : config[key].get('cell', cell),
+                      "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
+                      "niter"     : config[key].get('niter', niter),
+                      "mgain"     : config[key].get('mgain', mgain),
+                      "channelsout"     : nchans,
+                      "joinchannels"    : config[key].get('joinchannels', joinchannels),
+                      "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
+                      "auto-threshold": config[key].get('autothreshold', auto_thresh),
+                      "auto-mask"  :   config[key].get('automask', auto_mask),
                   },
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make image after first round of calibration'.format(step))
 
-    if pipeline.enable_task(config, 'extract_sources_3'):
-        if config['extract_sources_3']['detection_image']:
-            step = 'detection_image_3'
-            detection_image = prefix + '-detection_image_3.fits:output'
+
+    def extract_sources(num):
+        key = 'extract_sources_{0:d}'.format(num)
+        if config[key].get('detection_image', False):
+            step = 'detection_image_{0:d}'.format(num)
+            detection_image = prefix + '-detection_image_{0:d}.fits:output'.format(num)
             recipe.add('cab/fitstool', step,
                 {                   
-                    "image"    : [prefix+'_3-MFS-{:s}.fits:output'.format(im) for im in ('image','residual')],
+                    "image"    : [prefix+'_{0:d}-MFS-{1:s}.fits:output'.format(num, im) for im in ('image','residual')],
                     "output"   : detection_image,
                     "diff"     : True,
                     "force"    : True,
@@ -254,31 +88,64 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Make convolved model'.format(step))
         else:
             detection_image = None
-           
-        step = 'extract_3'
-        calmodel = prefix+'_3-pybdsm'
+
+        spi_do = config[key].get('spi', False) 
+        if spi_do:
+            step = 'get_beams_{0:d}'.format(num)
+            # Get beam information from individual
+            # FITS images
+
+            im = '{0:s}_{1:d}-cube.fits:output'.format(prefix, num)
+            step = 'makecube_{0:d}'.format(num)
+            images = ['{0:s}_{1:d}-{2:04d}-image.fits:output'.format(prefix, num, i) for i in range(nchans)]
+            recipe.add('cab/fitstool', step,
+                {                   
+                    "image"     : images,
+                    "output"    : im,
+                    "stack"     : True,
+                    "fits-axis" : 'FREQ',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make convolved model'.format(step))
+        else:
+            im = '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num)
+
+        step = 'extract_{0:d}'.format(num)
+        calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
+
         recipe.add('cab/pybdsm', step,
             {                   
-                "image"    : prefix+'_3-MFS-image.fits:output',
-                "thresh_pix"   : config['extract_sources_3'].get('thresh_pix', thresh_pix),
-                "thresh_isl"   : config['extract_sources_3'].get('thresh_isl', thresh_isl),
-                "outfile"  : '{:s}.fits:output'.format(calmodel),
-                "blank_limit": 1e-9,
-                "port2tigger": True,
+                "image"         : im,
+                "thresh_pix"    : config[key].get('thresh_pix', thresh_pix),
+                "thresh_isl"    : config[key].get('thresh_isl', thresh_isl),
+                "outfile"       : '{:s}.fits:output'.format(calmodel),
+                "blank_limit"   : 1e-9,
+                "port2tigger"   : True,
+                "multi_chan_beam": spi_do,
+                "spectralindex_do": spi_do,
                 "detection_image": detection_image,
             },
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Extract sources'.format(step))
-        
-        if config['extract_sources_3']['append_prev']:
-            step = 'append_model_3'
-            combined = prefix+'_3-pybdsm-combined'
+
+    def calibrate(num):
+        key = 'calibrate_{0:d}'.format(num)
+        model = config[key].get('model', num)
+
+        if isinstance(model, str) and len(model.split('+'))==2:
+            combine = True
+            mm = model.split('+')
+            models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
+            calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
+
+            step = 'combine_models_{0:s}_{1:s}'.format(*mm)
             recipe.add('cab/tigger_convert', step,
                 {                   
-                    "input-skymodel"    : prefix+'_2-pybdsm.lsm.html:output',
-                    "append"  : prefix+'_3-pybdsm.lsm.html:output',
-                    "output-skymodel"   : combined+'.lsm.html',
+                    "input-skymodel"    : models[0],
+                    "append"    : models[1],
+                    "output-skymodel"   : calmodel,
                     "rename"  : True,
                     "force"   : True,
                 },
@@ -286,29 +153,32 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Combined models'.format(step))
 
-    if pipeline.enable_task(config, 'calibrate_3'):
+        else:
+            model = int(model)
+            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+        
         for i,msname in enumerate(mslist):
-            step = 'calibrate_3_{:d}'.format(i)
+            step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
-                 "skymodel"     :  '{0:s}_3-pybdsm{1:s}.lsm.html:output'.format(prefix, 
-                                   '-combined' if config['extract_sources_3']['append_prev'] else ''),
+                 "skymodel"     :  calmodel,
+                 "add-vis-model":  config[key].get('add_vis_model', False),
                  "msname"       :  msname,
                  "threads"      :  16,
                  "column"       :  "DATA",
-                 "output-data"  : config['calibrate_3']['output_data'],
+                 "output-data"  : config[key].get('output_data', 'CORR_RES'),
                  "output-column": "CORRECTED_DATA",
                  "Gjones"       : True,
-                 "Gjones-solution-intervals" : config['cal_Gsols'],
-                 "Gjones-matrix-type" : config['calibrate_3']['gain_matrix_type'],
+                 "Gjones-solution-intervals" : config.get('cal_Gsols', [1, 1]),
+                 "Gjones-matrix-type" : config[key].get('gain_matrix_type', 'GainDiagPhase'),
                  "read-flags-from-ms" :	True,
                  "read-flagsets"      : "-stefcal",
                  "write-flagset"      : "stefcal",
                  "write-flagset-policy" : "replace",
                  "Gjones-ampl-clipping" :  True,
-                 "Gjones-ampl-clipping-low" : config['cal_gain_amplitude_clip_low'],
-                 "Gjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
-                 "label"              : "cal3",
+                 "Gjones-ampl-clipping-low" : config.get('cal_gain_amplitude_clip_low', 0.5),
+                 "Gjones-ampl-clipping-high": config.get('cal_gain_amplitude_clip_high', 1.5),
+                 "label"              : 'cal{0:d}'.format(num),
                  "make-plots"         : True,
                  "tile-size"          : 512,
                },
@@ -316,24 +186,39 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
 
+    # selfcal loop
+    if pipeline.enable_task(config, 'image_1'):
+        image(1)
+    
+    if pipeline.enable_task(config, 'extract_sources_1'):
+        extract_sources(1)
+
+    if pipeline.enable_task(config, 'calibrate_1'):
+        calibrate(1)
+        
+    if pipeline.enable_task(config, 'image_2'):
+        image(2)
+
+    if pipeline.enable_task(config, 'extract_sources_2'):
+        extract_sources(2)
+
+    if pipeline.enable_task(config, 'calibrate_2'):
+        calibrate(2)
+
+    if pipeline.enable_task(config, 'image_3'):
+        image(3)
+
+    if pipeline.enable_task(config, 'extract_sources_3'):
+        extract_sources(3)
+
+    if pipeline.enable_task(config, 'calibrate_3'):
+        calibrate(3)
+
     if pipeline.enable_task(config, 'image_4'):
-            step = 'image_4'
-            recipe.add('cab/wsclean', step,
-                  {                   
-                      "msname"    : mslist,
-                      "column"    : config['image_4'].get('column', column),
-                      "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config['image_4'].get('npix', npix),
-                      "trim"      : config['image_4'].get('trim', trim),
-                      "scale"     : config['image_4'].get('cell', cell),
-                      "prefix"    : prefix+'_4',
-                      "niter"     : config['image_4'].get('niter', niter),
-                      "mgain"     : config['image_4'].get('mgain', mgain),
-                      "channelsout"     : nchans,
-                      "joinchannels"    : True,    
-                      "auto-threshold": config['image_4'].get('autothreshold', auto_thresh),
-                      "auto-mask"  :   config['image_4'].get('automask', auto_mask),
-                  },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{:s}:: Make image after first round of calibration'.format(step))
+        image(4)
+
+    if pipeline.enable_task(config, 'calibrate_4'):
+        calibrate(4)
+
+    if pipeline.enable_task(config, 'image_5'):
+        image(5)

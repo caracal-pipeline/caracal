@@ -112,11 +112,10 @@ class MeerKATHI(object):
                 recipe.run()
 
         # Execute all workers if they saved for later execution
-        if not self.add_all_first:
+        if self.add_all_first:
             for worker in self.workers:
                 if worker not in self.skip:
                     self.recipes[worker[1]].run()
-
 
 
 def main(argv):

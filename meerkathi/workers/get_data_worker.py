@@ -9,8 +9,12 @@ def worker(pipeline, recipe, config):
 
         msname = pipeline.msnames[i]
         h5file = pipeline.h5files[i]
-        prefix = pipeline.prefixes[i]
-        data_path = pipeline.data_path[i]
+        prefix = pipeline.prefix
+        if isinstance(pipeline.data_path, list):
+            data_path = pipeline.data_path[i]
+        else:
+            data_path = pipeline.data_path
+            
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):

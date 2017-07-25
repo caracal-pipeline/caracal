@@ -21,7 +21,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'image'):
         if config['image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
-
+	
         step = 'image_HI'
         recipe.add('cab/wsclean', step,
               {                       
@@ -35,7 +35,7 @@ def worker(pipeline, recipe, config):
                   "mgain"     : config['image'].get('mgain', 0.90),
                   "channelsout"     : config['image'].get('nchans', pipeline.nchans),
                   "auto-threshold"  : config['image'].get('autothreshold', 5),
-                  #"auto-mask"  :   config['image'].get('automask', 3),
+                  #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
                   "channelrange" : config['image'].get('channelrange', [0,pipeline.nchans]),
               },  
         input=pipeline.input,

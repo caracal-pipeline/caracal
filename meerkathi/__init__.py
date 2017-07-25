@@ -21,6 +21,7 @@ class MeerKATHI(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.data_url = self.config['general']['data_url']
         self.data_path = self.config['general']['data_path']
 
         self.workers_directory = workers_directory
@@ -150,6 +151,9 @@ Options set on the command line will overwrite options in the --pipeline-configu
     add('-dp', '--data-path', action='append',
         help='Path where data can be found. This is where the file <dataid>.h5 should be located. Can be specified multiple times if --dataid(s) have different locations')
 
+    add('-du', '--data-url', action='append',
+        help='URL where data can be found. This is where the file <dataid>.h5 should be located. Can be specified multiple times if --dataid(s) have different locations')
+
     add('-di', '--dataid', action='append',
         help='Data ID of hdf5 file to be reduced. May be specified muliple times. Must be used in combination with --data-path')
 
@@ -194,7 +198,7 @@ Options set on the command line will overwrite options in the --pipeline-configu
         pipeline.dataid = dataids
 
     nobs = len(dataids)
-    for item in 'data_path reference_antenna fcal bpcal gcal target'.split():
+    for item in 'data_path data_url reference_antenna fcal bpcal gcal target'.split():
         value = getattr(args, item, None)
         if value and len(value)==1:
             value = value*nobs

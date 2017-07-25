@@ -32,7 +32,6 @@ table_suffix = {
 
 def worker(pipeline, recipe, config):
 
-
     for i in range(pipeline.nobs):
         # Check if field was specified as known key, else return the 
         # same value. 
@@ -59,6 +58,7 @@ def worker(pipeline, recipe, config):
                   "vis"         : msname,
                   "field"       : field,
                   "standard"    : config['set_model'].get('standard', 'Perley-Butler 2010'),
+                  "fluxdensity" : [1,0,0,0],
                   "usescratch"  : False,
                   "scalebychan" : True,
                },
@@ -301,28 +301,28 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
 
-            # Plot corrected real vs imag for bandpass field
-            if pipeline.enable_task(config, 'plot_data'):
-                if config['plot_data'].get('bandpass_reim', False):
-                    step = 'plot_bp_reim_{0:d}'.format(i)
-                    field = config['plot_data'].get('field', 'bpcal')
-                    recipe.add('cab/casa_plotms', step,
-                       {
-                        "vis"           : msname,
-                        "field"         : field,
-                        "correlation"   : 'XX,YY',
-                        "timerange"     : '',
-                        "antenna"       : '',
-                        "xaxis"         : 'imag',
-                        "xdatacolumn"   : 'corrected',
-                        "yaxis"         : 'real',
-                        "ydatacolumn"   : 'corrected',
-                        "coloraxis"     : 'corr',
-                        "plotfile"      : prefix+'-bpcal-reim.png',
-                        "overwrite"     : True,
-                        "uvrange"       : config.get('uvrange', ''),
-                        "showgui"       : False,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot imag vs real for bandpass calibrator ms={1:s}'.format(step, msname))
+        # Plot corrected real vs imag for bandpass field
+        if pipeline.enable_task(config, 'plot_data'):
+            if config['plot_data'].get('bandpass_reim', False):
+                step = 'plot_bp_reim_{0:d}'.format(i)
+                field = config['plot_data'].get('field', 'bpcal')
+                recipe.add('cab/casa_plotms', step,
+                   {
+                    "vis"           : msname,
+                    "field"         : field,
+                    "correlation"   : 'XX,YY',
+                    "timerange"     : '',
+                    "antenna"       : '',
+                    "xaxis"         : 'imag',
+                    "xdatacolumn"   : 'corrected',
+                    "yaxis"         : 'real',
+                    "ydatacolumn"   : 'corrected',
+                    "coloraxis"     : 'corr',
+                    "plotfile"      : prefix+'-bpcal-reim.png',
+                    "overwrite"     : True,
+                    "uvrange"       : config.get('uvrange', ''),
+                    "showgui"       : False,
+                   },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{0:s}:: Plot imag vs real for bandpass calibrator ms={1:s}'.format(step, msname))

@@ -14,6 +14,27 @@ def worker(pipeline, recipe, config):
             data_path = pipeline.data_path[i]
         else:
             data_path = pipeline.data_path
+
+        if isinstance(pipeline.data_url, list):
+            data_url = pipeline.data_url[i]
+        else:
+            data_url = pipeline.data_url
+
+
+        if pipeline.enable_task(config, 'download'):
+            step = 'download_{:d}'.format(i)
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.data_path, h5file)) \
+                and not config['download'].get('reset', False):
+                print('File already exists, and reset is not enabled. Will not download.')
+            else:
+                os.system('rm -rf {0:s}/{1:s}'.format(pipeline.data_path, h5file))
+                recipe.add('cab/curl', step, {
+                    "url"   : data_url,
+                    "output": h5file,
+                },
+                input=pipeline.input,
+                output=data_path,
+                label='{0:s}:: Downloading data'.format(step))
             
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
@@ -22,7 +43,7 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/h5toms', step,
                 {
-                    "hdf5files"      : [h5file],
+                    "hdf5files"     : [h5file],
                     "output-ms"     : msname,
                     "no-auto"       : False,
                     "tar"           : True,

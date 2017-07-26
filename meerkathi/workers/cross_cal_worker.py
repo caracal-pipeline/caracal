@@ -58,7 +58,6 @@ def worker(pipeline, recipe, config):
                   "vis"         : msname,
                   "field"       : field,
                   "standard"    : config['set_model'].get('standard', 'Perley-Butler 2010'),
-                  "fluxdensity" : [1,0,0,0],
                   "usescratch"  : False,
                   "scalebychan" : True,
                },

@@ -13,7 +13,7 @@ general:
   bpcal: [PKS1934-638]   # change me!
   gcal: [ATCA2259-375]    # change me!
   target: [IC5264]  # change me!
-  nchans: 100
+  nchans: 1000
   reference_antenna: [m006] # change me!
 
 
@@ -47,9 +47,9 @@ flagging:
   order: 3
   flag_autocorr:
     enable: yes
-  flag_milkyway:
+  flag_spw:
     enable: no
-    channels: "*:1419.8~1421.3MHz"
+    channels: "*:1419.8~1421.3MHz" # flag milkyway channels
   flag_antennas:
     enable: no
     antennas: ''
@@ -64,7 +64,7 @@ flagging:
 cross_cal:
   enable: yes
   order: 4
-  uvrange: ">100"
+  uvrange: ">50"
   label: 1gc1
   set_model:
     enable: yes

@@ -16,17 +16,17 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
 
-        if pipeline.enable_task(config, 'flag_milkyway'):
-            step = 'flag_milkyway_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata','flagmw_{:d}'.format(i),
+        if pipeline.enable_task(config, 'flag_spw'):
+            step = 'flag_spw_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
                 {
                   "vis"     : msname,
                   "mode"    : 'manual',
-                  "spw"     : config['flag_milkyway']['channels'],
+                  "spw"     : config['flag_spw']['channels'],
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}::Flag out channels with HI emission from Milky Way ms={1:s}'.format(step, msname))
+                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_antennas'):
             step = 'flag_antennas_{0:d}'.format(i)

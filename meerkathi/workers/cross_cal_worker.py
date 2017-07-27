@@ -280,7 +280,7 @@ def worker(pipeline, recipe, config):
             applied = []
             for applyme in applycal_interp_rules[ft].keys():
                 if pipeline.enable_task(config, 'apply_'+applyme):
-                   field = get_field(config['apply_'+applyme].get('field', 'fcal'))
+                   field = get_field(config['apply_'+applyme].get('field', ft))
                    applied.append(field)
                    if field in applied:
                        continue

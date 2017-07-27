@@ -7,18 +7,21 @@ NAME = "Cross calibration"
 applycal_interp_rules = {
    'bpcal'    :  {
                   'delay_cal'      : 'nearest', 
-                  'gain_cal_gain'  : 'nearest', 
+                  'bp_cal'         : 'nearest', 
                   'transfer_fluxscale': 'linear',
+                  'gain_cal_gain'  : 'linear',
                  },
    'gcal'     :  {
                   'delay_cal'      : 'linear', 
                   'bp_cal'         : 'linear', 
                   'transfer_fluxscale': 'nearest',
+                  'gain_cal_gain'  : 'linear',
                  },
    'target'   :  {
                   'delay_cal'      : 'linear', 
-                  'gain_cal_gain'  : 'linear', 
+                  'bp_cal'         : 'linear', 
                   'transfer_fluxscale': 'linear',
+                  'gain_cal_gain'  : 'linear',
                  },
 }
 
@@ -274,12 +277,17 @@ def worker(pipeline, recipe, config):
         for ft in ['bpcal','gcal','target']:
             gaintablelist,gainfieldlist,interplist = [],[],[]
             no_table_to_apply = True
+            applied = []
             for applyme in applycal_interp_rules[ft].keys():
                 if pipeline.enable_task(config, 'apply_'+applyme):
-                   continue
+                   field = get_field(config['apply_'+applyme].get('field', 'fcal'))
+                   applied.append(field)
+                   if field in applied:
+                       continue
+                else:
+                    continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
-                field = get_field(config['apply_'+applyme].get('field', 'fcal'))
 
                 gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
                 gainfieldlist.append(field)

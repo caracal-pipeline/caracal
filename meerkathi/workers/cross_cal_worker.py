@@ -6,18 +6,18 @@ NAME = "Cross calibration"
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
    'bpcal'    :  {
-                  'delay_cal'    : 'nearest', 
-                  'gain_cal_bp'  : 'nearest', 
+                  'delay_cal'      : 'nearest', 
+                  'gain_cal_gain'  : 'nearest', 
                   'transfer_fluxscale': 'linear',
                  },
    'gcal'     :  {
-                  'delay_cal'    : 'linear', 
-                  'gain_cal_bp'  : 'linear', 
+                  'delay_cal'      : 'linear', 
+                  'bp_cal'         : 'linear', 
                   'transfer_fluxscale': 'nearest',
                  },
    'target'   :  {
-                  'delay_cal'    : 'linear', 
-                  'gain_cal_bp'  : 'linear', 
+                  'delay_cal'      : 'linear', 
+                  'gain_cal_gain'  : 'linear', 
                   'transfer_fluxscale': 'linear',
                  },
 }
@@ -26,7 +26,7 @@ table_suffix = {
     "delay_cal"             : 'K0',
     "bp_cal"                : 'B0', 
     "gain_cal_gain"         : 'G0', 
-    "gain_cal_bp"           : 'G0', 
+    "gain_cal_flux"         : 'G0', 
     "transfer_fluxscale"    : 'F0', 
 }
 
@@ -273,32 +273,37 @@ def worker(pipeline, recipe, config):
 
         for ft in ['bpcal','gcal','target']:
             gaintablelist,gainfieldlist,interplist = [],[],[]
+            no_table_to_apply = True
             for applyme in applycal_interp_rules[ft].keys():
+                if pipeline.enable_task(config, 'apply_'+applyme):
+                   continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
+                field = get_field(config['apply_'+applyme].get('field', 'fcal'))
 
-                if pipeline.enable_task(config, 'apply_'+applyme):
-                    field = config['apply_'+applyme].get('field', ft)
-                    gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
-                    gainfieldlist.append(field)
-                    interplist.append(interp)
+                gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
+                gainfieldlist.append(field)
+                interplist.append(interp)
+                no_table_to_apply = False
 
-            if pipeline.enable_task(config, 'apply_'+applyme):
-                step = 'apply_{0:s}_{1:d}'.format(applyme, i)
-                recipe.add('cab/casa_applycal', step,
-                   {
-                    "vis"       : msname,
-                    "field"     : field,
-                    "gaintable" : gaintablelist,
-                    "gainfield" : gainfieldlist,
-                    "interp"    : interplist,
-                    "calwt"     : [False],
-                    "parang"    : False,
-                    "applymode" : config['apply_'+applyme]['applymode'],
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+            if no_table_to_apply:
+                continue
+
+            step = 'apply_{0:s}_{1:d}'.format(applyme, i)
+            recipe.add('cab/casa_applycal', step,
+               {
+                "vis"       : msname,
+                "field"     : field,
+                "gaintable" : gaintablelist,
+                "gainfield" : gainfieldlist,
+                "interp"    : interplist,
+                "calwt"     : [False],
+                "parang"    : False,
+                "applymode" : config['apply_'+applyme]['applymode'],
+               },
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
 
         # Plot corrected real vs imag for bandpass field
         if pipeline.enable_task(config, 'plot_data'):

@@ -2,6 +2,8 @@ import stimela
 import os
 import sys
 import glob
+sys.path.append('.')
+import scripts.sunblocker as sunblocker
 #import byo
 
 
@@ -1039,14 +1041,12 @@ if pars['RUN_CONTSUB'].lower() in ['yes', 'true', '1']:
             steps2run.append('uvcontsub_{0:d}'.format(i,msname))
 
 
-
-##################
-### HI IMAGING ###
-##################
+#################################################
+### Common to HI IMAGING_PRESB and HI IMAGING ###
+#################################################
 
 # This will:
-# - make an HI cube (optional)
-# - run SoFiA and make an HI image (optional)
+# - make an HI cube
 
 # Imaging settings
 npix   = int(pars['npix'])
@@ -1055,6 +1055,7 @@ nchan  = int(pars['nchan'])
 chan1  = int(pars['chan1'])
 weight = pars['weight']
 robust = float(pars['robust'])
+restfreq = pars['restfreq']
 sf_threshold = float(pars['sf_threshold'])
 sf_flagregion=[map(int,jj.split(',')) for jj in pars['sf_flagregion'].split(';')]
 sf_merge=pars['sf_merge'].lower() in ['yes','true','1']
@@ -1068,6 +1069,148 @@ sf_minSizeZ=int(pars['sf_minSizeZ'])
 
 if pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: msnames_cube = [ff+'.contsub' for ff in split_msnames]
 else: msnames_cube = split_msnames
+
+########################
+### HI IMAGING_PRESB ###
+########################
+
+if pars['RUN_HI_IMAGING_PRESB'].lower() in ['yes', 'true', '1']:
+    prefix_presb = combprefix+'_presb'
+    # Make cube with CASA CLEAN
+    if pars['hiimager']=='casa':
+        recipe.add('cab/casa_clean', 'casa_clean_presb',
+            {
+                 "msname"         :    msnames_cube,
+                 "prefix"         :    prefix_presb,
+#                 "field"          :    target,
+#                 "column"         :    "CORRECTED_DATA",
+                 "mode"           :    'channel',
+                 "nchan"          :    nchan,
+                 "start"          :    chan1,
+                 "interpolation"  :    'nearest',
+                 "niter"          :    100,
+                 "psfmode"        :    'hogbom',
+                 "threshold"      :    '9mJy',
+                 "npix"           :    npix,
+                 "cellsize"       :    cell,
+                 "weight"         :    weight,
+                 "robust"         :    robust,
+#                 "wprojplanes"    :    1,
+                 "port2fits"      :    True,
+                 "restfreq"       :    restfreq
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='casa_clean_presb:: Make a dirty cube with CASA CLEAN before sunblock')
+        steps2run.append('casa_clean_presb')
+    
+    # Make dirty cube with WSCLEAN
+    elif pars['hiimager']=='wsclean':
+        recipe.add('cab/wsclean', 'wsclean_dirty_presb',
+            {
+                 "msname"         :    msnames_cube,
+                 "prefix"         :    prefix_presb,
+                 "nomfsweighting" :    True,
+                 "npix"           :    npix,
+                 "cellsize"       :    cell,
+                 "channelsout"    :    nchan,
+                 "channelrange"   :    [chan1,chan1+nchan],
+#                 "field"          :    target,
+#                 "column"         :    "DATA",
+                 "niter"          :    0,
+                 "weight"         :    '{0:s} {1:f}'.format(weight, robust),
+#                 "nwlayers"       :    1,
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='wsclean_dirty_presb:: Make a WSCLEAN dirty image for each channel before sunblock')
+        steps2run.append('wsclean_dirty_presb') 
+
+        # Stack dirty channels into cube
+        imagelist = ['{0:s}-{1:04d}-dirty.fits:output'.format(prefix_presb, jj) for jj in range(nchan)]
+        recipe.add('cab/fitstool', 'stack_channels_presb',
+            {
+                 "stack"      :   True,
+                 "image"      :   imagelist,
+                 "fits-axis"  :   'FREQ',
+                 "output"     :   '{:s}-cube.dirty.fits'.format(prefix_presb),
+            },
+            input=INPUT,
+            output=OUTPUT,
+            label='stack_channels_presb:: Stack individual channels made by WSClean before sunblock')
+        steps2run.append('stack_channels_presb') 
+
+################
+### SUNBLOCK ###
+################
+
+# This will:
+# Remove visibilities created by a remote, strong source
+# CAUTION: Ideally this is run on line-free channels, which is currently not being done
+
+if pars['RUN_SUNBLOCK'].lower() in ['yes', 'true', '1']:
+    if pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: 
+        pass
+    else: 
+        print '### Warning: ###'
+        print 'Using sunblocker on continuum data.'
+        print 'This will likely fail.'
+        print 'Use USE_UVCONTSUB = 1.'
+        print 'Unless you are sure that the continuum has been subtracted.'
+
+    # Run sunblocker on all visibilities at once
+    recipe.add(sunblocker.Sunblocker().phazer, 'sunblocker',
+        {
+            'inset'      : ['{0:s}/{1:s}'.format(MSDIR, n) for n in msnames_cube],
+            'outset'     : ['{0:s}/{1:s}'.format(MSDIR, n) for n in msnames_cube],
+            # channels : a, 
+            'imsize'     : npix, 
+            'cell'       : cell, 
+            'pol'        : 'i', 
+            'threshold'  : 4., 
+            'mode'       : 'all', 
+            'radrange'   : 0, 
+            'angle'      : 0, 
+            'showdir'    : OUTPUT,
+            'show'       : 'sunblock.pdf', 
+            'verb'       : True, 
+            'dryrun'     : False,
+        },
+        input=INPUT,
+        output=OUTPUT,
+        label='sunblocker:: Block out the sun')
+    steps2run.append('sunblocker')
+
+##################
+### HI IMAGING ###
+##################
+
+# This will:
+# - make an HI cube (optional)
+# - run SoFiA and make an HI image (optional)
+
+# The following has already been done above
+# Imaging settings
+#npix   = int(pars['npix'])
+#cell   = float(pars['cell'])
+#nchan  = int(pars['nchan'])
+#chan1  = int(pars['chan1'])
+#weight = pars['weight']
+#robust = float(pars['robust'])
+#restfreq = pars['restfreq']
+#sf_threshold = float(pars['sf_threshold'])
+#sf_flagregion=[map(int,jj.split(',')) for jj in pars['sf_flagregion'].split(';')]
+#sf_merge=pars['sf_merge'].lower() in ['yes','true','1']
+#sf_mergeX=int(pars['sf_mergeX'])
+#sf_mergeY=int(pars['sf_mergeY'])
+#sf_mergeZ=int(pars['sf_mergeZ'])
+#sf_minSizeX=int(pars['sf_minSizeX'])
+#sf_minSizeY=int(pars['sf_minSizeY'])
+#sf_minSizeZ=int(pars['sf_minSizeZ'])
+
+
+#if pars['USE_UVCONTSUB'].lower() in ['yes', 'true', '1']: msnames_cube = [ff+'.contsub' for ff in split_msnames]
+#else: msnames_cube = split_msnames
 
 if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
     # Make cube with CASA CLEAN
@@ -1091,6 +1234,7 @@ if pars['RUN_HI_IMAGING'].lower() in ['yes', 'true', '1']:
                  "robust"         :    robust,
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
+                 "restfreq"       :    restfreq
             },
             input=INPUT,
             output=OUTPUT,

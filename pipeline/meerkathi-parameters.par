@@ -24,9 +24,11 @@
 RUN_PREPMS     = no
 RUN_FLAGGING   = no
 RUN_1GC        = no
-RUN_2GC        = yes
-RUN_CONTSUB    = no
-RUN_HI_IMAGING = no
+RUN_2GC        = no
+RUN_CONTSUB    = yes
+RUN_HI_IMAGING_PRESB = yes
+RUN_SUNBLOCK   = yes
+RUN_HI_IMAGING = yes
 DRY_RUN        = no
 ###
 
@@ -71,9 +73,15 @@ MODEL_CONTSUB  = no
 UV_CONTSUB     = yes
 ###
 
+### HI_IMAGING_PRESB ###
+###
+
+### SUNBLOCK ###
+###
+
 ### HI_IMAGING ###
 MAKE_CUBE      = yes
-MAKE_IMAGE     = yes
+MAKE_IMAGE     = no
 ###
 
 
@@ -121,6 +129,12 @@ robust_cont    = -1.5
 ### CONTSUB ###
 ###
 
+### HI_IMAGING_PRESB ###
+### Uses parameters from HI_IMAGING and combprefix (will change into combprefix+'_presb'
+
+### SUNBLOCK ###
+###
+
 ### HI_IMAGING ###
 USE_UVCONTSUB  = yes
 # below set the imager to either 'casa' or 'wsclean'
@@ -131,6 +145,7 @@ nchan          = 1000
 chan1          = 1
 weight         = briggs
 robust         = 2
+restfreq       = '1.420405752GHz'
 sf_flagregion  = 0,255,0,255,881,937;
 sf_threshold   = 4
 sf_merge       = yes

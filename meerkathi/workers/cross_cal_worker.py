@@ -33,6 +33,8 @@ table_suffix = {
     "transfer_fluxscale"    : 'F0', 
 }
 
+
+
 def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
@@ -45,6 +47,14 @@ def worker(pipeline, recipe, config):
                 name = field
             return str(name)
 
+        def flag_gains(cal, opts):
+            step = '{0:s}_{1:d}'.format(cal, i)
+            opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
+            opts["datacolumn"] = 'CPARAM'
+            recipe.add('cab/casa_flagdata', step, opts,
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flagging gains'.format(step))
 
         msname = pipeline.msnames[i]
         refant = pipeline.refant[i]
@@ -105,7 +115,6 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
- 
         # Set "Combine" to 'scan' for getting combining all scans for BP soln.
         if pipeline.enable_task(config, 'bp_cal'):
             field = get_field(config['bp_cal'].get('field', 'bpcal'))
@@ -130,6 +139,9 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label='{0:s}:: Bandpass calibration ms={1:s}'.format(step, msname))
 
+            if config['bp_cal'].get('flag', False):
+                flag_gains('bp_cal', config['bp_cal']['flag'])
+
             if config['bp_cal'].get('plot', True):
                  for plot in 'amp','phase':
                     step = 'plot_bandpass_{0:s}_{1:d}'.format(plot, i)
@@ -148,7 +160,6 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0:output"))
-
 
         # Gain calibration for Flux calibrator field
         if pipeline.enable_task(config, 'gain_cal_flux'):
@@ -193,6 +204,10 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
+            if config['gain_cal_flux'].get('flag', False):
+                flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
+
+
         # Gain calibration for Gaincal field
         if pipeline.enable_task(config, 'gain_cal_gain'):
             step = 'gain_cal_gain_{0:d}'.format(i)
@@ -217,6 +232,10 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
+
+            if config['gain_cal_gain'].get('flag', False):
+                flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
+
 
             if config['gain_cal_gain'].get('plot', True):
                 for plot in 'amp','phase':
@@ -274,29 +293,27 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
 
+        applied = []
         for ft in ['bpcal','gcal','target']:
             gaintablelist,gainfieldlist,interplist = [],[],[]
             no_table_to_apply = True
-            applied = []
+            field = getattr(pipeline, ft)[i]
             for applyme in applycal_interp_rules[ft].keys():
-                if pipeline.enable_task(config, 'apply_'+applyme):
-                   field = get_field(config['apply_'+applyme].get('field', 'fcal'))
-                   applied.append(field)
-                   if field in applied:
-                       continue
-                else:
+                if not pipeline.enable_task(config, 'apply_'+applyme):
                     continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
-
+                
+                gainfield = get_field(config['apply_'+applyme].get('field', ft))
                 gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
-                gainfieldlist.append(field)
+                gainfieldlist.append(gainfield)
                 interplist.append(interp)
                 no_table_to_apply = False
 
-            if no_table_to_apply:
+            if no_table_to_apply or field in applied:
                 continue
-
+            
+            applied.append(field)
             step = 'apply_{0:s}_{1:d}'.format(applyme, i)
             recipe.add('cab/casa_applycal', step,
                {

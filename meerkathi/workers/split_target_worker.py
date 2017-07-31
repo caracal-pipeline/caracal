@@ -8,12 +8,15 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         target = pipeline.target[i]
-        tms = '{0:s}-{1:s}.ms'.format(msname[:-3], config['split_target']['label']),
+        tms = '{0:s}-{1:s}.ms'.format(msname[:-3], config['split_target']['label'])
+        flagv = tms + '.flagversions'
 
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)):
-                os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, tms))
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
+                   os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
+
+                os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
 
             recipe.add('cab/casa_split', step,
                 {

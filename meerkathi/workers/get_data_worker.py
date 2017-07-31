@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 NAME = "Convert data from hdf5 to MS format"
 
@@ -54,6 +55,18 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
+
+        if pipeline.enable_task(config, 'untar'):
+            step = 'untar_{:d}'.format(i)
+            # Function to untar Ms from .tar file
+            def untar():
+                mspath = os.path.abspath(pipeline.msdir)
+                subprocess.check_call(['tar', 'xvf', 
+                    '{0:s}/{1:s}'.format(mspath, msname+'.tar'),
+                    '-C', mspath])
+            # add function to recipe
+            recipe.add(untar, step, {}, 
+                label='{0:s}:: Get Ms from tarbal ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'obsinfo'):
             step = 'listobs_{:d}'.format(i)

@@ -10,6 +10,8 @@ except ImportError as e:
 requirements = [
 'ruamel.yaml==0.15.22',
 'stimela==0.3.0',
+'numpy==1.13.1',
+'scipy==0.19.1'
 ]
 
 PACKAGE_NAME = 'meerkathi'

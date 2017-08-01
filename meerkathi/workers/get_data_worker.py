@@ -26,7 +26,7 @@ def worker(pipeline, recipe, config):
             step = 'download_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.data_path, h5file)) \
                 and not config['download'].get('reset', False):
-                meerkathi.log('File already exists, and reset is not enabled. Will attempt to resume')
+                meerkathi.log.warn('File already exists, and reset is not enabled. Will attempt to resume')
                 recipe.add('cab/curl', step, {
                     "url"   : data_url,
                     "output": h5file,

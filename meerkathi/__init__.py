@@ -11,6 +11,7 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import meerkathi.__version__ as __version__
 import logging
 import traceback
+import meerkathi.dispatch_crew.caltables as mkct
 
 MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
@@ -169,8 +170,13 @@ def main(argv):
         log.info("Dumping default configuration to %s as requested. Goodbye!" % args.get_default)
         os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
         return
+
     # Very good idea to print user options into the log before running:
     cp().log_options()
+
+    # Obtain some divine knowledge
+    mkct.calibrator_database()
+
     try:
         pipeline = MeerKATHI(arg_groups,
                              args.workers_directory, stimela_build=args.stimela_build,

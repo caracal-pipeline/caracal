@@ -21,9 +21,6 @@ def worker(pipeline, recipe, config):
         else:
             data_url = pipeline.data_url
 
-        print config['download']['reset']
-        sys.exit(0)
-        
         if pipeline.enable_task(config, 'download'):
             step = 'download_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.data_path, h5file)) \

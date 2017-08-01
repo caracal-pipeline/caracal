@@ -1,2 +1,2 @@
 stimela
-pyyaml
+ruamel.yaml

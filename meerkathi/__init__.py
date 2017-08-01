@@ -1,20 +1,46 @@
-from  argparse import ArgumentParser
+# -*- coding: utf-8 -*-
+
 import sys
 import os
-import stimela
-import yaml
-import glob
 
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 
+import stimela
+import glob
+from meerkathi.dispatch_crew.config_parser import config_parser as cp
+import meerkathi.__version__ as __version__
+import logging
+import traceback
+
+MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
+
+def create_logger():
+    """ Create a console logger """
+    log = logging.getLogger(__name__)
+    cfmt = logging.Formatter(('%(name)s - %(asctime)s %(levelname)s - %(message)s'))
+    log.setLevel(logging.DEBUG)
+    filehandler = logging.FileHandler(MEERKATHI_LOG)
+    filehandler.setFormatter(cfmt)
+    log.addHandler(filehandler)
+    log.setLevel(logging.INFO)
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(cfmt)
+
+    log.addHandler(console)
+
+    return log
+
+# Create the log object
+log = create_logger()
 
 class MeerKATHI(object):
     def __init__(self, config, workers_directory, 
             stimela_build=None, prefix=None, 
             add_all_first=False):
-        
-        with open(config) as _conf:
-            self.config = yaml.load(_conf)
+
+        self.config = config
 
         self.add_all_first = add_all_first
 
@@ -23,7 +49,7 @@ class MeerKATHI(object):
         self.output = self.config['general']['output']
         self.data_url = self.config['general']['data_url']
         self.data_path = self.config['general']['data_path']
-
+        self.download_mode = self.config['general']['download_mode']
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
@@ -36,13 +62,12 @@ class MeerKATHI(object):
 
             if name.find('-'):
                 worker = name.split('-')[0] + '_worker'
-            else: 
+            else:
                 worker = name + '_worker'
 
             self.workers.append((name, worker, order))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
-        
         self.dataid = self.config['general']['dataid']
         self.nobs = len(self.dataid)
 
@@ -68,7 +93,7 @@ class MeerKATHI(object):
         self.stimela_build = stimela_build
         self.recipes = {}
         # Workers to skip
-        self.skip = [] 
+        self.skip = []
 
         self._init_names()
 
@@ -87,6 +112,7 @@ class MeerKATHI(object):
             False
 
     def run_workers(self):
+        """ Runs the  workers """
         for _name, _worker, i in self.workers:
             try:
                 worker = __import__(_worker)
@@ -107,9 +133,12 @@ class MeerKATHI(object):
             worker.worker(self, recipe, config)
             # Save worker recipes for later execution
             # execute each worker after adding its steps
+
             if self.add_all_first:
+                log.info("Adding worker %s before running" % _worker)
                 self.recipes[_worker] = recipe
             else:
+                log.info("Running worker %s" % _worker)
                 recipe.run()
 
         # Execute all workers if they saved for later execution
@@ -120,89 +149,55 @@ class MeerKATHI(object):
 
 
 def main(argv):
-    parser = ArgumentParser(description='MeerKAT HI pipeline : https://github.com/sphemakh/meerkathi \n \
-Options set on the command line will overwrite options in the --pipeline-configuration file')
-    add = parser.add_argument
+    log.info("")
 
-    add('-gd', '--get-default',
-        help='Name file where the configuration should be saved')
-
-    add('-pc', '--pipeline-configuration', 
-        help='Pipeline configuarion file (YAML/JSON format)')
-    
-    add('-aaf', '--add-all-first', action='store_true',
-        help='Add steps from all workers to pipeline before exucting. Default is execute each workers as they are encountered.')
-
-    add('-id', '--input', 
-        help='Pipeline input directory')
-
-    add('-od', '--output', 
-        help='Pipeline output directory')
-
-    add('-md', '--msdir',
-        help='Pipeline MS directory. All MSs, for a given pipeline run, should/will be placed here')
-
-    add('-bl', '--stimela-build', 
-        help='Label of stimela build to use')
-
-    add('-wd', '--workers-directory', default='{:s}/workers'.format(pckgdir),
-        help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
-
-    add('-dp', '--data-path', action='append',
-        help='Path where data can be found. This is where the file <dataid>.h5 should be located. Can be specified multiple times if --dataid(s) have different locations')
-
-    add('-du', '--data-url', action='append',
-        help='URL where data can be found. This is where the file <dataid>.h5 should be located. Can be specified multiple times if --dataid(s) have different locations')
-
-    add('-di', '--dataid', action='append',
-        help='Data ID of hdf5 file to be reduced. May be specified muliple times. Must be used in combination with --data-path')
-
-    add('-p', '--prefix',
-        help='Prefix for pipeline output products')
-
-    add('-ra', '--reference-antenna', action='append',
-        help='Reference antenna. Can be specified multiple times if reference antenna is different for different --dataid(s)')
-
-    add('-fc', '--fcal', action='append', type=int,
-        help='Field ID of Flux calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
-
-    add('-bc', '--bpcal', action='append', type=int,
-        help='Field ID of Bandpass calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
-    
-    add('-gc', '--gcal', action='append', type=int,
-        help='Field ID of gain calibrator source/field. Can be specified multiple times if different for different --dataid(s)')
- 
-    add('-t', '--target', action='append', type=int,
-        help='Field ID of target field. Can be specified multiple times if different for different --dataid(s)')
-
-    args = parser.parse_args(argv)
-
+    log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
+    log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
+    log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
+    log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
+    log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
+    log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
+    log.info("")
+    # parse config file and set up command line argument override parser
+    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.version)))
+    log.info("A logfile will be dumped here: %s" % MEERKATHI_LOG)
+    log.info("")
+    args = cp(argv).args
+    arg_groups = cp(argv).arg_groups
+    # User requests default config => dump and exit
     if args.get_default:
+        log.info("Dumping default configuration to %s as requested. Goodbye!" % args.get_default)
         os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
         return
+    # Very good idea to print user options into the log before running:
+    cp().log_options()
+    try:
+        pipeline = MeerKATHI(arg_groups,
+                             args.workers_directory, stimela_build=args.stimela_build,
+                             add_all_first=args.add_all_first, prefix=args.general_prefix)
 
-    pipeline = MeerKATHI(args.pipeline_configuration,
-                  args.workers_directory, stimela_build=args.stimela_build, 
-                  add_all_first=args.add_all_first, prefix=args.prefix)
+        for item in 'input msdir output'.split():
+            value = getattr(arg_groups["general"], item, None)
+            if value:
+                setattr(pipeline, item, value)
 
-    for item in 'input msdir output'.split():
-        value = getattr(args, item, None)
-        if value:
-            setattr(pipeline, item, value)
+        dataids = args.general_dataid
+        if dataids is None:
+            dataids = arg_groups['general']['dataid']
+        else:
+            pipeline.dataid = dataids
 
-    dataids = args.dataid
-    if dataids is None:
-        with open(args.pipeline_configuration) as _conf:
-            dataids = yaml.load(_conf)['general']['dataid']
-    else:
-        pipeline.dataid = dataids
+        nobs = len(dataids)
+        for item in 'data_path data_url reference_antenna fcal bpcal gcal target'.split():
+            value = getattr(arg_groups["general"], item, None)
+            if value and len(value)==1:
+                value = value*nobs
+                setattr(pipeline, item, value)
 
-    nobs = len(dataids)
-    for item in 'data_path data_url reference_antenna fcal bpcal gcal target'.split():
-        value = getattr(args, item, None)
-        if value and len(value)==1:
-            value = value*nobs
-            setattr(pipeline, item, value)
-    
-    pipeline._init_names()
-    pipeline.run_workers()
+        pipeline._init_names()
+        pipeline.run_workers()
+    except:
+        log.error("Whoops... there has explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
+        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.version)))
+        tb = traceback.format_exc()
+        log.error(tb)

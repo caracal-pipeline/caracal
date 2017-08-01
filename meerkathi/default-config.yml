@@ -197,7 +197,7 @@ self_cal:
     peak_based_mask_on_dirty: 0.5  # make a dirty image first, then mask based on peak on dirty image
     column: DATA
   extract_sources_1:
-    enable: no
+    enable: yes
     spi: yes
     detection_image: yes # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
   calibrate_1:

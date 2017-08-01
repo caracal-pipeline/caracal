@@ -335,7 +335,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'plot_data'):
             if config['plot_data'].get('bandpass_reim', False):
                 step = 'plot_bp_reim_{0:d}'.format(i)
-                field = config['plot_data'].get('field', 'bpcal')
+                field = get_field(config['plot_data'].get('field', 'bpcal'))
                 recipe.add('cab/casa_plotms', step,
                    {
                     "vis"           : msname,

@@ -159,7 +159,7 @@ def main(argv):
     log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
     log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.version)))
+    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.__version__)))
     log.info("A logfile will be dumped here: %s" % MEERKATHI_LOG)
     log.info("")
     args = cp(argv).args

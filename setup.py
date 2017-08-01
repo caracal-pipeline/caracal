@@ -7,7 +7,7 @@ try:
 except ImportError as e:
   from distutils.core import setup
 
-from meerkathi_misc import version
+from meerkathi import __version__
 requirements = []
 
 with open('{0:s}/requirements.txt'.format(os.path.dirname(__file__))) as rstd:
@@ -15,7 +15,7 @@ with open('{0:s}/requirements.txt'.format(os.path.dirname(__file__))) as rstd:
         requirements.append(line.strip())
 
 setup(name = "meerkathi",
-    version = version.version,
+    version = __version__.version,
     description = "MeerKAT end-to-end data reduction pipeline for spectral line data",
     author = "MeerKATHI peeps",
     author_email = "sphemakh@gmail.com",

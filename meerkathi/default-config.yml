@@ -3,6 +3,7 @@
 # General pipeline information, data IDs, prefixes for output
 general:
   dataid: "1484694604" # change me!
+  download_mode: MeerKAT # MeerKAT or manual
   data_url: http://kat-archive.kat.ac.za/archive2/data/MeerKATAR1/telescope_products/2017/01/17/1484694604.h5
   data_path: input/data # change me!
   prefix: meerkathi-pipeline

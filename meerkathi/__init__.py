@@ -198,6 +198,6 @@ def main(argv):
         pipeline.run_workers()
     except:
         log.error("Whoops... there has explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
-        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.version)))
+        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
         tb = traceback.format_exc()
         log.error(tb)

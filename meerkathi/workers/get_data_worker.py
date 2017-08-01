@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import meerkathi
 
 NAME = "Convert data from hdf5 to MS format"
 
@@ -26,7 +27,15 @@ def worker(pipeline, recipe, config):
             step = 'download_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.data_path, h5file)) \
                 and not config['download'].get('reset', False):
-                print('File already exists, and reset is not enabled. Will not download.')
+                meerkathi.log('File already exists, and reset is not enabled. Will attempt to resume')
+                recipe.add('cab/curl', step, {
+                    "url"   : data_url,
+                    "output": h5file,
+                    "continue-at": "-"
+                },
+                input=pipeline.input,
+                output=data_path,
+                label='{0:s}:: Downloading data'.format(step))
             else:
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.data_path, h5file))
                 recipe.add('cab/curl', step, {

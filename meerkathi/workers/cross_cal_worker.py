@@ -59,6 +59,7 @@ def worker(pipeline, recipe, config):
         msname = pipeline.msnames[i]
         refant = pipeline.refant[i]
         prefix = pipeline.prefixes[i]
+        dataid = pipeline.dataid[i]
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
  
         # Set model
@@ -312,9 +313,9 @@ def worker(pipeline, recipe, config):
 
             if no_table_to_apply or field in applied:
                 continue
-            
+
             applied.append(field)
-            step = 'apply_{0:s}_{1:d}'.format(applyme, i)
+            step = 'apply_{0:s}_{1:s}_{2:d}'.format(ft, dataid, i)
             recipe.add('cab/casa_applycal', step,
                {
                 "vis"       : msname,
@@ -334,7 +335,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'plot_data'):
             if config['plot_data'].get('bandpass_reim', False):
                 step = 'plot_bp_reim_{0:d}'.format(i)
-                field = config['plot_data'].get('field', 'bpcal')
+                field = get_field(config['plot_data'].get('field', 'bpcal'))
                 recipe.add('cab/casa_plotms', step,
                    {
                     "vis"           : msname,

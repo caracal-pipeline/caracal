@@ -160,7 +160,7 @@ def main(argv):
     log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
     log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.version)))
+    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.__version__)))
     log.info("A logfile will be dumped here: %s" % MEERKATHI_LOG)
     log.info("")
     args = cp(argv).args
@@ -204,6 +204,6 @@ def main(argv):
         pipeline.run_workers()
     except:
         log.error("Whoops... there has explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
-        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.version)))
+        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
         tb = traceback.format_exc()
         log.error(tb)

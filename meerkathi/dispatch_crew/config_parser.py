@@ -58,6 +58,7 @@ class config_parser:
                                          "All rights reserved.",
                                          add_help=add_help)
         add = parser.add_argument
+        add("-v","--version", action='version',version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__.__version__))
         add('-c', '--config',
             type=lambda a: is_valid_file(parser, a),
             help='Pipeline configuration file (YAML/JSON format)')
@@ -143,11 +144,11 @@ class config_parser:
         if args.config:
             meerkathi.log.info("Loading defaults from user configuration '{}'".format(args.config))
             with open(args.config, 'r') as f:
-                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
         else:
             meerkathi.log.info("Loading defaults from installation configuration '{}'".format(DEFAULT_CONFIG))
             with open(DEFAULT_CONFIG, 'r') as f:
-                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
         parser = cls.__primary_parser(add_help=True)
         groups = _subparser_tree(file_config, parser=parser)
         args, remainder = parser.parse_known_args(args_bak)

@@ -1,4 +1,7 @@
 import sys
+import warnings
+    
+   
 
 
 NAME = 'Make HI Cube'
@@ -6,8 +9,9 @@ def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
-    if pipeline.enable_task(config, 'uvcontsub'):
-        for i, msname in enumerate(mslist):
+    for i, msname in enumerate(mslist):
+        if pipeline.enable_task(config, 'uvcontsub'):
+            prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
             step = 'contsub_{:d}'.format(i)
             recipe.add('cab/casa_uvcontsub', step, 
                 {
@@ -17,6 +21,35 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Subtract continuum'.format(step))
+
+        if pipeline.enable_task(config, 'sunblocker'):
+
+            try:
+                from sunblocker.sunblocker import Sunblocker
+                if config['sunblocker']['use_contsub']:
+                    msname = msname+'.contsub'
+                step = 'sunblocker_{0:d}'.format(i)
+                recipe.add(Sunblocker().phazer, step, 
+                    {
+                        "inset"     : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
+                        "outset"    : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
+                        "imsize"    : config['image'].get('npix', 300),
+                        "cell"      : config['image'].get('cell', 20),
+                        "pol"       : 'i',
+                        "threshold" : config['sunblocker'].get('threshold', 4),
+                        "mode"      : 'all',
+                        "radrange"  : 0,
+                        "angle"     : 0,
+                        "showdir"   : pipeline.output,
+                        "show"      : prefix + '.sublocker.pdf',
+                        "verb"      : True,
+                        "dryrun"    : False,
+                    },
+                    label='{0:s}:: Block out sun'.format(step))
+
+            except ImportError:
+                warnings.warn('Sunblocker program not found. Will skip sublocking step')
+
             
     if pipeline.enable_task(config, 'image'):
         if config['image']['use_contsub']:

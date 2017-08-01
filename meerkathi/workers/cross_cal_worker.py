@@ -59,6 +59,7 @@ def worker(pipeline, recipe, config):
         msname = pipeline.msnames[i]
         refant = pipeline.refant[i]
         prefix = pipeline.prefixes[i]
+        dataid = pipeline.dataid[i]
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
  
         # Set model
@@ -312,9 +313,9 @@ def worker(pipeline, recipe, config):
 
             if no_table_to_apply or field in applied:
                 continue
-            
+
             applied.append(field)
-            step = 'apply_{0:s}_{1:d}'.format(applyme, i)
+            step = 'apply_{0:s}_{1:s}_{2:d}'.format(ft, dataid, i)
             recipe.add('cab/casa_applycal', step,
                {
                 "vis"       : msname,

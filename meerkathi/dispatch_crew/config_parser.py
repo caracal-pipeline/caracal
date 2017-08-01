@@ -162,8 +162,8 @@ class config_parser:
         """ Prints argument tree to the logger for prosterity to behold """
         meerkathi.log.info("Pipeline configuration as follows:")
         def _tree_print(branch, indent="\t"):
-            dicts = { k: v for k, v in branch.iteritems() if isinstance(v, dict) }
-            other = { k: v for k, v in branch.iteritems() if not isinstance(v, dict) }
+            dicts = OrderedDict( [(k, v) for k, v in branch.iteritems() if isinstance(v, dict)] )
+            other = OrderedDict( [(k, v) for k, v in branch.iteritems() if not isinstance(v, dict)] )
 
             def _printval(k, v):
                 if isinstance(v, dict):
@@ -179,5 +179,6 @@ class config_parser:
 
             for k, v in other.iteritems(): _printval(k, v)
             for k, v in dicts.iteritems(): _printval(k, v)
-
-        _tree_print(cls.__GROUPS)
+        ordered_groups = OrderedDict(sorted(cls.__GROUPS.items(),
+                                             key=lambda p: p[1].get("order",0)))
+        _tree_print(ordered_groups)

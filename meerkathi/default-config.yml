@@ -2,14 +2,14 @@
 
 # General pipeline information, data IDs, prefixes for output
 general:
-  dataid: "1484694604" # change me!
+  dataid: ["1491463063"] # change me!
+  data_url: http://kat-archive.kat.ac.za/archive2/data/MeerKATAR1/telescope_products/2017/04/06/1491463063.h5
   download_mode: MeerKAT # MeerKAT or manual
-  data_url: http://kat-archive.kat.ac.za/archive2/data/MeerKATAR1/telescope_products/2017/01/17/1484694604.h5
   data_path: input/data # change me!
   prefix: meerkathi-pipeline
   msdir: msdir
   input: input
-  output: output-all
+  output: output
   fcal:  [PKS1934-638] # change me!
   bpcal: [PKS1934-638]   # change me!
   gcal: [ATCA2259-375]    # change me!
@@ -26,11 +26,12 @@ get_data:
     enable: yes
     reset: no
   h5toms:
+    enable: no
+    channel_range: 20701,21700
+  untar:
     enable: yes
-    channel_range: 1024,2049
   obsinfo:
     enable: yes
-
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:
@@ -39,7 +40,7 @@ prepare_data:
   fixvis:
     enable: yes
   prepms:
-    enable: yes
+    enable: no
     add_imaging_cols: no
 
 # Pre-calibration flagging
@@ -50,13 +51,13 @@ flagging:
     enable: yes
   flag_spw:
     enable: no
-    channels: "*:1419.8~1421.3MHz" # flag milkyway channels
+    channels: "*:1419.8~1421.3MHz"
   flag_antennas:
     enable: no
-    antennas: ''
+    antennas: null
   static_mask:
     enable: no
-    mask: ''
+    mask: null
   autoflag:
     enable: yes
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
@@ -73,8 +74,7 @@ cross_cal:
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes
-    refant: m042
-    solint: inf
+    solint: 32s
     field: bpcal
     plot: yes
   bp_cal:
@@ -85,6 +85,13 @@ cross_cal:
     minsnr: 3
     solnorm: yes
     solint: ""
+    flag:
+      mode: rflag
+      winsize: 1
+      chanbin: 100
+      ntime: 5
+      freqdevscale: 2
+      timedevscale: 2
     plot: yes
   gain_cal_flux:
     enable: yes
@@ -93,6 +100,13 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     solnorm: yes
+    flag:
+      mode: rflag
+      winsize: 10
+      chanbin: 1
+      ntime: 5
+      freqdevscale: 2
+      timedevscale: 2
     plot: no
   gain_cal_gain:
     enable: yes
@@ -101,7 +115,14 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     solnorm: yes
-    plot: no
+    flag:
+      mode: rflag
+      winsize: 10
+      chanbin: 1
+      ntime: 5
+      freqdevscale: 2
+      timedevscale: 2
+    plot: yes
   transfer_fluxscale:
     enable: yes
     reference: fcal 
@@ -115,13 +136,17 @@ cross_cal:
     enable: yes
     field: bpcal
     applymode: calflag
+  apply_gain_cal_gain:
+    enable: yes
+    field: gcal
+    applymode: calflag
   apply_transfer_fluxscale:
     enable: yes
     field: gcal
     applymode: calflag
   plot_data:
-    enable: yes
-    bandpass_reim: true
+    enable: no
+    bandpass_reim: yes
     field: bpcal
 
 # Split target data
@@ -130,12 +155,11 @@ split_target:
   order: 5
   split_target:
     enable: yes
-
     time_average: 32s
     freq_average: 1
     label: corr
   prepms:
-    enable: yes
+    enable: no
 
 # Self calibration
 self_cal:
@@ -160,7 +184,7 @@ self_cal:
   img_fit_spectral_pol: 1
   img_column: CORRECTED_DATA
   # Calibration settings
-  cal_Gsols: [2, 80] 
+  cal_Gsols: [1, 90] 
   cal_DDsols: [60, 500]
   cal_flag_ampl: [0.5, 1.5]
   cal_gain_amplitude_clip_low: 0.5 
@@ -173,7 +197,7 @@ self_cal:
     peak_based_mask_on_dirty: 0.5  # make a dirty image first, then mask based on peak on dirty image
     column: DATA
   extract_sources_1:
-    enable: yes
+    enable: no
     spi: yes
     detection_image: yes # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
   calibrate_1:

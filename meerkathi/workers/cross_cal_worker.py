@@ -172,7 +172,7 @@ def worker(pipeline, recipe, config):
                  "caltable"     : prefix+".G0:output",
                  "field"        : field,
                  "refant"       : refant,
-                 "solint"       : "inf",
+                 "solint"       : config['gain_cal_flux'].get('solint', 'inf'),
                  "combine"      : config['gain_cal_flux'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
@@ -219,10 +219,10 @@ def worker(pipeline, recipe, config):
                  "caltable"     : prefix+".G0:output",
                  "field"        : field,
                  "refant"       : refant,
-                 "solint"       : "inf",
+                 "solint"       : config['gain_cal_gain'].get('solint', 'inf'),
+                 "combine"      : config['gain_cal_gain'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
-                 "minsnr"       : 5,
                  "gaintable"    : [prefix+".B0:output",prefix+".K0:output"],
                  "interp"       : ['linear','linear'],
                  "uvrange"      : config['uvrange'],
@@ -356,3 +356,27 @@ def worker(pipeline, recipe, config):
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Plot imag vs real for bandpass calibrator ms={1:s}'.format(step, msname))
+
+            if config['plot_data'].get('bandpass_ap', False):
+                step = 'plot_bp_ap_{0:d}'.format(i)
+                field = get_field(config['plot_data'].get('field', 'bpcal'))
+                recipe.add('cab/casa_plotms', step,
+                   {
+                    "vis"           : msname,
+                    "field"         : field,
+                    "correlation"   : 'XX,YY',
+                    "timerange"     : '',
+                    "antenna"       : '',
+                    "xaxis"         : 'phase',
+                    "xdatacolumn"   : 'corrected',
+                    "yaxis"         : 'amp',
+                    "ydatacolumn"   : 'corrected',
+                    "coloraxis"     : 'baseline',
+                    "plotfile"      : prefix+'-bpcal-ap.png',
+                    "overwrite"     : True,
+                    "uvrange"       : config.get('uvrange', ''),
+                    "showgui"       : False,
+                   },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{0:s}:: Plot amp vs phase for bandpass calibrator ms={1:s}'.format(step, msname))

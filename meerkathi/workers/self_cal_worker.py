@@ -15,6 +15,7 @@ def worker(pipeline, recipe, config):
     auto_mask = config['img_automask']
     robust = config['img_robust']
     nchans = config['img_nchans']
+    pol = config['img_pol']
     thresh_pix = config['sf_thresh_isl']
     thresh_isl = config['sf_thresh_pix']
     column = config['img_column']
@@ -39,6 +40,7 @@ def worker(pipeline, recipe, config):
                       "npix"      : config[key].get('npix', npix),
                       "trim"      : config[key].get('trim', trim),
                       "scale"     : config[key].get('cell', cell),
+                      "pol"       : config[key].get('pol', pol),
                       "channelsout"   : nchans,
                       "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                   },
@@ -60,6 +62,7 @@ def worker(pipeline, recipe, config):
                       "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                       "niter"     : config[key].get('niter', niter),
                       "mgain"     : config[key].get('mgain', mgain),
+                      "pol"       : config[key].get('pol', pol),
                       "channelsout"     : nchans,
                       "joinchannels"    : config[key].get('joinchannels', joinchannels),
                       "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),

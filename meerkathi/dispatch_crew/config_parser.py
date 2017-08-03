@@ -73,6 +73,10 @@ class config_parser:
             help='Label of stimela build to use',
             default=None)
 
+        add('-pcs', '--print-calibrator-standard',
+            help='Prints auxilary calibrator standard into the log',
+            action='store_true')
+
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
             help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
 
@@ -131,10 +135,18 @@ class config_parser:
                         parser.set_defaults(**{option_name: default})
                         groups[opt] = getattr(args, option_name)
                     else:
-                        parser.add_argument("--%s" % option_name,
-                                            type=type(default),
-                                            default=default,
-                                            nargs="?")
+                        if isinstance(default, list):
+                            parser.add_argument("--%s" % option_name,
+                                                type=str,
+                                                default=default,
+                                                nargs="?",
+                                                action='append')
+                        else:
+                            parser.add_argument("--%s" % option_name,
+                                                type=type(default),
+                                                default=default,
+                                                nargs="?")
+
                         groups[opt] = default
             return groups
 
@@ -161,7 +173,7 @@ class config_parser:
     @classmethod
     def log_options(cls):
         """ Prints argument tree to the logger for prosterity to behold """
-        meerkathi.log.info("Pipeline configuration as follows:")
+        meerkathi.log.info("".join(["".ljust(25,"#"), " PIPELINE CONFIGURATION ", "".ljust(25,"#")]))
         def _tree_print(branch, indent="\t"):
             dicts = OrderedDict( [(k, v) for k, v in branch.iteritems() if isinstance(v, dict)] )
             other = OrderedDict( [(k, v) for k, v in branch.iteritems() if not isinstance(v, dict)] )
@@ -183,3 +195,4 @@ class config_parser:
         ordered_groups = OrderedDict(sorted(cls.__GROUPS.items(),
                                              key=lambda p: p[1].get("order",0)))
         _tree_print(ordered_groups)
+        meerkathi.log.info("".join(["".ljust(25,"#"), " END OF CONFIGURATION ", "".ljust(25,"#")]))

@@ -48,9 +48,7 @@ class MeerKATHI(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
-        self.data_url = self.config['general']['data_url']
         self.data_path = self.config['general']['data_path']
-        self.download_mode = self.config['general']['download_mode']
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
@@ -69,15 +67,32 @@ class MeerKATHI(object):
             self.workers.append((name, worker, order))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
-        self.dataid = self.config['general']['dataid']
-        self.nobs = len(self.dataid)
 
         self.fcal = self.config['general']['fcal']
         self.bpcal = self.config['general']['bpcal']
         self.gcal = self.config['general']['gcal']
         self.target = self.config['general']['target']
         self.refant = self.config['general']['reference_antenna']
-        self.nchans = self.config['general']['nchans']
+
+        self.prefix = prefix or self.config['general']['prefix']
+        self.stimela_build = stimela_build
+        self.recipes = {}
+        # Workers to skip
+        self.skip = []
+        # Initialize empty lists for ddids, leave this up to get data worker to define
+        self.init_names([])
+
+    def init_names(self, dataid):
+        """ iniitalize names to be used throughout the pipeline and associated 
+            general fields that must be propagated
+        """
+        self.dataid = dataid
+        self.nobs = len(self.dataid)
+        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
+        self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'fcal bpcal gcal target refant'.split():
             value = getattr(self, item, None)
@@ -90,20 +105,16 @@ class MeerKATHI(object):
             if value and len(value)==1:
                 setattr(self, item, value*self.nobs)
 
-        self.prefix = prefix or self.config['general']['prefix']
-        self.stimela_build = stimela_build
-        self.recipes = {}
-        # Workers to skip
-        self.skip = []
+        for item in 'input msdir output'.split():
+            value = getattr(self, item, None)
+            if value:
+                setattr(self, item, value)
 
-        self._init_names()
-
-    def _init_names(self):
-        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
-        self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        for item in 'data_path reference_antenna fcal bpcal gcal target'.split():
+            value = getattr(self, item, None)
+            if value and len(value)==1:
+                value = value*nobs
+                setattr(self, item, value)
 
     def enable_task(self, config, task):
         a = config.get(task, False)
@@ -118,7 +129,7 @@ class MeerKATHI(object):
             try:
                 worker = __import__(_worker)
             except ImportError:
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory)) 
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
             config = self.config[_worker.split('_worker')[0]]
             if config['enable'] is False:
@@ -175,35 +186,26 @@ def main(argv):
     cp().log_options()
 
     # Obtain some divine knowledge
-    mkct.calibrator_database()
+    cdb = mkct.calibrator_database()
+
+    if args.print_calibrator_standard:
+        meerkathi.log.info("Found the following reference calibrators (in CASA format):")
+        meerkathi.log.info(cdb)
 
     try:
         pipeline = MeerKATHI(arg_groups,
                              args.workers_directory, stimela_build=args.stimela_build,
                              add_all_first=args.add_all_first, prefix=args.general_prefix)
 
-        for item in 'input msdir output'.split():
-            value = getattr(arg_groups["general"], item, None)
-            if value:
-                setattr(pipeline, item, value)
-
-        dataids = args.general_dataid
-        if dataids is None:
-            dataids = arg_groups['general']['dataid']
-        else:
-            pipeline.dataid = dataids
-
-        nobs = len(dataids)
-        for item in 'data_path data_url reference_antenna fcal bpcal gcal target'.split():
-            value = getattr(arg_groups["general"], item, None)
-            if value and len(value)==1:
-                value = value*nobs
-                setattr(pipeline, item, value)
-
-        pipeline._init_names()
         pipeline.run_workers()
+    except SystemExit as e:
+        if e.code != 0:
+            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol %d shutdown. This is likely a bug, please report." % e.code)
+            log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
+        else:
+            log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
     except:
-        log.error("Whoops... there has explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
+        log.error("Whoops... big explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
         log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
         tb = traceback.format_exc()
         log.error(tb)

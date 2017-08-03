@@ -28,6 +28,18 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
+        if pipeline.enable_task(config, 'flag_scan'):
+            step = 'flag_scan_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
+                {
+                  "vis"     : msname,
+                  "mode"    : 'manual',
+                  "scan"    : config['flag_scan']['scans'],
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+
         if pipeline.enable_task(config, 'flag_antennas'):
             step = 'flag_antennas_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata', step,

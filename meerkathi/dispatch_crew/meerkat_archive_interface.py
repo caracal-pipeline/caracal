@@ -150,8 +150,8 @@ def query_metadatas(input_dir,
                 meerkathi.log.info("Observation metadata exists locally at '{}'. "
                                     "Reusing it.".format(metadata_path))
 
-                results = itertools.chain(results, load_observation_metadata(input_dir,
-                                                                             metadata_filename))
+                results = itertools.chain(results, [load_observation_metadata(input_dir,
+                                                                             metadata_filename)])
             else:
                 # Nope, need to download it from the server
                 results = itertools.chain(results, __intent_filter(solr_url,

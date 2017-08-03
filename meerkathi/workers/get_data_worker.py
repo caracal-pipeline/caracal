@@ -4,6 +4,7 @@ import subprocess
 import itertools
 import meerkathi
 import meerkathi.dispatch_crew.meerkat_archive_interface as mai
+import stimela.dismissable as sdm
 
 NAME = "Get convert and extract data"
 
@@ -27,7 +28,7 @@ def worker(pipeline, recipe, config):
                                                            required_minimum_duration=0))
             for m in mdata:
                 bn = os.path.splitext(os.path.basename(m["Filename"]))[0]
-                mai.dump_observation_metadata(pipeline.input,
+                mai.dump_observation_metadata(pipeline.data_path,
                                               bn + '.json',
                                               m)
             pipeline.init_names(config["dataid"])
@@ -150,7 +151,7 @@ def worker(pipeline, recipe, config):
                     "no-auto"       : False,
                     "tar"           : True,
                     "model-data"    : True,
-                    "channel-range" : config['h5toms']['channel_range'],
+                    "channel-range" : sdm.dismissable(config['h5toms']['channel_range']),
                     "full-pol"      : True,
                 },
                 input=data_path,

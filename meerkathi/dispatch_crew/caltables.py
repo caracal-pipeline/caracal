@@ -23,8 +23,5 @@ def calibrator_database():
 
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
 
-    meerkathi.log.info("Found the following reference calibrators (in CASA format):")
-    meerkathi.log.info(__CALIBRATOR_DB)
-
     return __CALIBRATOR_DB
 

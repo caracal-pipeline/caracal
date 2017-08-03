@@ -2,9 +2,6 @@
 
 # General pipeline information, data IDs, prefixes for output
 general:
-  dataid: ["1491463063"] # change me!
-  data_url: http://kat-archive.kat.ac.za/archive2/data/MeerKATAR1/telescope_products/2017/04/06/1491463063.h5
-  download_mode: MeerKAT # MeerKAT or manual
   data_path: input/data # change me!
   prefix: meerkathi-pipeline
   msdir: msdir
@@ -14,22 +11,32 @@ general:
   bpcal: [PKS1934-638]   # change me!
   gcal: [ATCA2259-375]    # change me!
   target: [IC5264]  # change me!
-  nchans: 1000
   reference_antenna: [m006] # change me!
 
 
 # Get data to be reduced
 get_data:
+  dataid: [] # change me if need be... you can always just image the newest observations as well
   enable: yes
   order: 1
+  meerkat_query_available:
+    enable: yes
+    poll_mode: 'poll' # 'override' or 'poll' to specify manual product name through dataid or poll to find suitable products in archive
+    query_url: 'http://192.168.1.50:8983/solr/kat_core' #if manual you can specify your url to, say, NRAO ftp server-hosted file here
+    required_intents: ['gaincal','bpcal','target'] #these better be here for imaging, otherwise manual intervention is required
+    product_type_name: 'MeerKATAR1TelescopeProduct'
+    minimum_observation_duration: 2 #hours
+    product_num_channels: 32768
+    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]' 
   download:
+    download_mode: meerkat # meerkat or manual (case insensitive)
+    data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
     enable: yes
     reset: no
+    untar: yes
   h5toms:
-    enable: no
-    channel_range: 20701,21700
-  untar:
     enable: yes
+    channel_range: null
   obsinfo:
     enable: yes
 

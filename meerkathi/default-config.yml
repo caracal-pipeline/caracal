@@ -7,18 +7,12 @@ general:
   msdir: msdir
   input: input
   output: output
-  fcal:  [PKS1934-638] # change me!
-  bpcal: [PKS1934-638]   # change me!
-  gcal: [ATCA2259-375]    # change me!
-  target: [IC5264]  # change me!
-  reference_antenna: [m006] # change me!
-
 
 # Get data to be reduced
 get_data:
   dataid: [] # change me if need be... you can always just image the newest observations as well
   enable: yes
-  order: 1
+  order: 0
   meerkat_query_available:
     enable: yes
     poll_mode: 'poll' # 'override' or 'poll' to specify manual product name through dataid or poll to find suitable products in archive
@@ -39,6 +33,16 @@ get_data:
     channel_range: null
   obsinfo:
     enable: yes
+    include_json: yes
+
+# Setup some basic observation information
+observation_config:
+  enable: yes
+  order: 1
+  fcal: auto
+  bpcal: auto
+  gcal: auto
+  reference_antenna: ['m006']
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:

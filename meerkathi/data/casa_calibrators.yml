@@ -1,0 +1,61 @@
+# CASA Calibrators. CASA 4.7.1
+
+standards:
+  1: Perley-Butler 2010
+  2: Perley-Butler 2013
+  3: Perley-Taylor 99
+  4: Perley-Taylor
+  5: Perley 90
+  6: Baars
+  7: Scaife-Heald 2012
+  8: Stevens-Reynolds 2016
+
+models:
+  sr1:
+    3C: 3C48
+    B1950: 0134+329
+    J2000: 0137+331
+    ALT: J0137+3309
+    standards: 1,2,3,4,5,6,7
+  scr2:
+    3C: 3C123
+    B1950: 0433+295
+    J2000: 0437+296
+    ALT: J0437+2940
+    standards: 2
+  src3:
+    3C: 3C138
+    B1950: 0518+165
+    J2000: 0521+166
+    ALT:  J0521+1638
+    standards: 1,2,3,4,5,6
+  src4:
+    3C: 3C147
+    B1950: 0538+498
+    J2000: 0542+498
+    ALT:  J0542+4951
+    standards: 1,2,3,4,5,6,7
+  src5:
+    3C: 3C196
+    B1950: 0809+483
+    J2000: 0813+482
+    ALT: J0813+4813
+    standards: 1,2,7
+  src6:
+    3C: 3C286
+    B1950: 1409+524
+    J2000: 1411+522
+    ALT: J1411+5212
+    standards: 1,2,3,4,5,6,7
+  src7:
+    3C: ""
+    B1950: 1934-638
+    J2000: ""
+    ALT: J1939-6342
+    standards: 1,3,4,5,6,8
+  src8:
+    3C: 3C380
+    B1950: 1828+487
+    J2000: 1829+487
+    ALT: J1829+4845
+    standards: 7

@@ -1,5 +1,7 @@
 import sys
 import os
+import meerkathi.dispatch_crew.utils as utils
+import yaml
 
 NAME = "Cross calibration"
 
@@ -34,7 +36,6 @@ table_suffix = {
 }
 
 
-
 def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
@@ -57,24 +58,43 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Flagging gains'.format(step))
 
         msname = pipeline.msnames[i]
-        refant = pipeline.refant[i]
+        refant = pipeline.reference_antenna[i]
         prefix = pipeline.prefixes[i]
         dataid = pipeline.dataid[i]
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
  
         # Set model
         field = get_field(config['set_model'].get('field', 'fcal'))
         if pipeline.enable_task(config, 'set_model'):
-            
-            step = 'set_model_cal_{0:d}'.format(i)
-            recipe.add('cab/casa_setjy', step,
-               {
+            # First check if field is in CASA database
+            standard = utils.find_in_casa_calibrators(msinfo, field)
+            if standard:
+                opts = {
                   "vis"         : msname,
                   "field"       : field,
-                  "standard"    : config['set_model'].get('standard', 'Perley-Butler 2010'),
+                  "standard"    : standard,
                   "usescratch"  : False,
                   "scalebychan" : True,
-               },
+               }
+            else:
+                model = utils.find_in_native_calibrators(msinfo, field)
+                if model == False:
+                    raise RuntimeError('Flux calibrator field "{0:s}" not found in our databases'.format(field))
+                opts = {
+                  "vis"         : msname,
+                  "field"       : field,
+                  "standard"    : "manual",
+                  "fluxdensity" : model['I'],
+                  "reffreq"     : opts['ref'],
+                  "spix"        : [model[a] for a in 'abcd'],
+                  "scalebychan" : True,
+                  "usescratch"  : False,
+                }
+           
+            step = 'set_model_cal_{0:d}'.format(i)
+            recipe.add('cab/casa_setjy', step,
+               opts,
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
@@ -89,7 +109,7 @@ def worker(pipeline, recipe, config):
                  "vis"          : msname,
                  "caltable"     : prefix+".K0",
                  "field"        : field,
-                 "refant"       : config['delay_cal'].get('refant', refant),
+                 "refant"       : refant,
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),

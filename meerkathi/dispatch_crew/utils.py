@@ -1,6 +1,10 @@
 import ruamel.yaml
 import math
 import numpy
+import yaml
+import meerkathi
+import meerkathi.dispatch_crew.caltables as mkct 
+import re
 
 def angular_dist_pos_angle (ra1, dec1, ra2, dec2):
   	"""Computes the angular distance between the two points on a sphere, and
@@ -101,7 +105,7 @@ def observed_longest(msinfo, bpcals):
       Automatically select bandpass calibrator
     """
     with open(msinfo, 'r') as f:
-        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+        info = yaml.load(f)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -119,9 +123,87 @@ def observed_longest(msinfo, bpcals):
     for bpcal in bpcals:
         idx = index(bpcal)
         bpcal = str(ids[idx])
-        total_time = numpy.sum(info['SCAN'][bpcal])
+        total_time = numpy.sum(info['SCAN'][bpcal].values())
         if total_time > most_time:
             most_time = total_time
             field = names[idx]
 
     return field
+
+def field_observation_length(msinfo, field):
+    with open(msinfo, 'r') as f:
+        info = yaml.load(f)
+    
+    names = info['FIELD']['NAME']
+    ids = info['FIELD']['SOURCE_ID']
+    
+    def index(field):
+        if isinstance(field, str):
+            idx = names.index(field)
+        elif isinstance(field, int):
+            idx = ids.index(field)
+        return idx
+    field = str(ids[index(field)])
+
+    return  numpy.sum(info['SCAN'][field].values())
+
+
+def find_in_native_calibrators(msinfo, field):
+    """Check if field is in the South Calibrators database. 
+       Return model if it is. Else, return False. 
+    """
+
+    db = mkct.calibrator_database()
+    if field not in db.db.keys():
+        return False
+
+    with open(msinfo, 'r') as stdr:
+        info = yaml.load(stdr)
+
+    ref = info['SPW']['REF_FREQUENCY'][0] # Centre frequency of first channel
+    bw = info['SPW']['TOTAL_BANDWIDTH'][0]
+    nchan = info['SPW']['NUM_CHAN'][0]
+    
+    src = db.db[field]
+    aghz = src["a_ghz"]
+    bghz = src["b_ghz"]
+    cghz = src["c_ghz"]
+    dghz = src["d_ghz"]
+
+    I, a, b, c, d = db.convert_pb_to_casaspi(
+            ref / 1e9,
+            ref / 1e9 + bw / 1e9,
+            ref / 1e9,
+            aghz, bghz, cghz, dghz)
+
+    return dict(I=I, a=a, b=b, c=c, d=d, ref='{0:f}GHz'.format(ref/1e9))
+
+
+def find_in_casa_calibrators(msinfo, field):
+    """Check if field is in the CASA NRAO Calibrators database. 
+       Return model if it is. Else, return False. 
+    """
+   
+    with open(meerkathi.pckgdir +'/data/casa_calibrators.yml') as stdr:
+        db = yaml.load(stdr)
+    
+    found = False
+    for src in db['models'].values():
+        if field == src['3C']:
+            found = True
+            standards = src['standards']
+            break
+        else:
+            _field = re.findall(r'\d+', field)
+            if len(_field) == 2:
+                for name in [src[d] for d in ['B1950', 'J2000', 'ALT']]:
+                    _name = re.findall(r'\d+', name)
+                    if ''.join(_field) == ''.join(_name) or ''.join(_field[:-1]) == ''.join(_name[:-1]):
+                        found = True
+                        standards = src['standards']
+                        break
+    if found:
+        standard = standards.split(',')[0]
+        return db['standards'][int(standard)]
+    else:
+        return False

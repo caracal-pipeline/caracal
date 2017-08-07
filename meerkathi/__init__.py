@@ -68,12 +68,6 @@ class MeerKATHI(object):
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
 
-        self.fcal = self.config['general']['fcal']
-        self.bpcal = self.config['general']['bpcal']
-        self.gcal = self.config['general']['gcal']
-        self.target = self.config['general']['target']
-        self.refant = self.config['general']['reference_antenna']
-
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
         self.recipes = {}
@@ -93,17 +87,6 @@ class MeerKATHI(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
-
-        for item in 'fcal bpcal gcal target refant'.split():
-            value = getattr(self, item, None)
-            # First ensure that value is set is a list
-            if value is None:
-                raise RuntimeError('Parameter \'{:s}\' under general section has not been set'.format(item))
-            elif not hasattr(value, '__iter__'):
-                value = [value]
-            # Duplicate value if its not a list
-            if value and len(value)==1:
-                setattr(self, item, value*self.nobs)
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)

@@ -1,7 +1,5 @@
 import sys
 import warnings
-    
-   
 
 
 NAME = 'Make HI Cube'

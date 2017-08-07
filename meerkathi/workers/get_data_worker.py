@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
         msname = pipeline.msnames[i]
         h5file = pipeline.h5files[i]
         basename = os.path.splitext(os.path.basename(h5file))[0]
-        prefix = pipeline.prefix
+        prefix = pipeline.prefixes[i]
         if isinstance(pipeline.data_path, list):
             data_path = pipeline.data_path[i]
         else:
@@ -169,3 +169,14 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+
+            if config['obsinfo'].get('include_json', True):
+                 recipe.add('cab/msutils', step,
+                    {
+                      "msname"      : msname,
+                      "command"     : 'summary',
+                      "outfile"     : prefix+'-obsinfo.json',
+                    },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))

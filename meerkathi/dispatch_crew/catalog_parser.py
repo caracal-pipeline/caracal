@@ -89,7 +89,7 @@ class catalog_parser:
 
                 if cmd == "add":
                     # parse sources (spectra in MHz)
-                    name = valset.group("name")
+                    name = valset.group("name").strip()
                     epoch = int(valset.group("epoch"))
                     ra = valset.group("ra")
                     valset_ra = re.match(r"^(?P<h>[+\-]?[0-9]+)h"

@@ -206,6 +206,7 @@ self_cal:
   img_joinchannels: yes
   img_fit_spectral_pol: 1
   img_column: CORRECTED_DATA
+  img_pol: I
   # Calibration settings
   cal_Gsols: [1, 90] 
   cal_DDsols: [60, 500]

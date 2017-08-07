@@ -165,18 +165,17 @@ def find_in_native_calibrators(msinfo, field):
     nchan = info['SPW']['NUM_CHAN'][0]
     
     src = db.db[field]
-    aghz = src["a_ghz"]
-    bghz = src["b_ghz"]
-    cghz = src["c_ghz"]
-    dghz = src["d_ghz"]
+    aghz = src["a_casa"]
+    bghz = src["b_casa"]
+    cghz = src["c_casa"]
+    dghz = src["d_casa"]
 
-    I, a, b, c, d = db.convert_pb_to_casaspi(
-            ref / 1e9,
-            ref / 1e9 + bw / 1e9,
-            ref / 1e9,
-            aghz, bghz, cghz, dghz)
-
-    return dict(I=I, a=a, b=b, c=c, d=d, ref='{0:f}GHz'.format(ref/1e9))
+    return dict(I=src['S_v0'], 
+	a=src['a_casa'], 
+	b=src['b_casa'], 
+	c=src['c_casa'], 
+	d=src['d_casa'], 
+	ref=src['v0'])
 
 
 def find_in_casa_calibrators(msinfo, field):

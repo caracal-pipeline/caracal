@@ -66,10 +66,23 @@ def worker(pipeline, recipe, config):
  
         # Set model
         field = get_field(config['set_model'].get('field', 'fcal'))
+        model = utils.find_in_native_calibrators(msinfo, field)
+        standard = utils.find_in_casa_calibrators(msinfo, field)
         if pipeline.enable_task(config, 'set_model'):
             # First check if field is in CASA database
-            standard = utils.find_in_casa_calibrators(msinfo, field)
-            if standard:
+            if model:
+                opts = {
+                  "vis"         : msname,
+                  "field"       : field,
+                  "standard"    : "manual",
+                  "fluxdensity" : model['i'],
+                  "reffreq"     : opts['ref'],
+                  "spix"        : [model[a] for a in 'abcd'],
+                  "scalebychan" : True,
+                  "usescratch"  : False,
+                }
+
+            elif standard:
                 opts = {
                   "vis"         : msname,
                   "field"       : field,
@@ -78,20 +91,9 @@ def worker(pipeline, recipe, config):
                   "scalebychan" : True,
                }
             else:
-                model = utils.find_in_native_calibrators(msinfo, field)
-                if model == False:
-                    raise RuntimeError('Flux calibrator field "{0:s}" not found in our databases'.format(field))
-                opts = {
-                  "vis"         : msname,
-                  "field"       : field,
-                  "standard"    : "manual",
-                  "fluxdensity" : model['I'],
-                  "reffreq"     : opts['ref'],
-                  "spix"        : [model[a] for a in 'abcd'],
-                  "scalebychan" : True,
-                  "usescratch"  : False,
-                }
-           
+                raise RuntimeError('The flux calibrator field "{}" could not be \
+found in our database or in the CASA NRAO database'.format(field))
+                      
             step = 'set_model_cal_{0:d}'.format(i)
             recipe.add('cab/casa_setjy', step,
                opts,
@@ -228,7 +230,6 @@ def worker(pipeline, recipe, config):
             if config['gain_cal_flux'].get('flag', False):
                 flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
 
-
         # Gain calibration for Gaincal field
         if pipeline.enable_task(config, 'gain_cal_gain'):
             step = 'gain_cal_gain_{0:d}'.format(i)
@@ -256,7 +257,6 @@ def worker(pipeline, recipe, config):
 
             if config['gain_cal_gain'].get('flag', False):
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
-
 
             if config['gain_cal_gain'].get('plot', True):
                 for plot in 'amp','phase':
@@ -313,7 +313,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
-
         applied = []
         for ft in ['bpcal','gcal','target']:
             gaintablelist,gainfieldlist,interplist = [],[],[]
@@ -350,53 +349,3 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
-
-        # Plot corrected real vs imag for bandpass field
-        if pipeline.enable_task(config, 'plot_data'):
-            if config['plot_data'].get('bandpass_reim', False):
-                step = 'plot_bp_reim_{0:d}'.format(i)
-                field = get_field(config['plot_data'].get('field', 'bpcal'))
-                recipe.add('cab/casa_plotms', step,
-                   {
-                    "vis"           : msname,
-                    "field"         : field,
-                    "correlation"   : 'XX,YY',
-                    "timerange"     : '',
-                    "antenna"       : '',
-                    "xaxis"         : 'imag',
-                    "xdatacolumn"   : 'corrected',
-                    "yaxis"         : 'real',
-                    "ydatacolumn"   : 'corrected',
-                    "coloraxis"     : 'corr',
-                    "plotfile"      : prefix+'-bpcal-reim.png',
-                    "overwrite"     : True,
-                    "uvrange"       : config.get('uvrange', ''),
-                    "showgui"       : False,
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{0:s}:: Plot imag vs real for bandpass calibrator ms={1:s}'.format(step, msname))
-
-            if config['plot_data'].get('bandpass_ap', False):
-                step = 'plot_bp_ap_{0:d}'.format(i)
-                field = get_field(config['plot_data'].get('field', 'bpcal'))
-                recipe.add('cab/casa_plotms', step,
-                   {
-                    "vis"           : msname,
-                    "field"         : field,
-                    "correlation"   : 'XX,YY',
-                    "timerange"     : '',
-                    "antenna"       : '',
-                    "xaxis"         : 'phase',
-                    "xdatacolumn"   : 'corrected',
-                    "yaxis"         : 'amp',
-                    "ydatacolumn"   : 'corrected',
-                    "coloraxis"     : 'baseline',
-                    "plotfile"      : prefix+'-bpcal-ap.png',
-                    "overwrite"     : True,
-                    "uvrange"       : config.get('uvrange', ''),
-                    "showgui"       : False,
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{0:s}:: Plot amp vs phase for bandpass calibrator ms={1:s}'.format(step, msname))

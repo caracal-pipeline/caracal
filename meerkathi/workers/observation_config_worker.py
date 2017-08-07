@@ -41,8 +41,7 @@ def worker(pipeline, recipe, config):
         if config['fcal'] == 'auto':
             while len(fcals)>0:
                 fcal = utils.observed_longest(msinfo, fcals)
-                #if utils.find_in_casa_calibrators(msinfo, fcal) or utils.find_in_native_calibrators(msinfo, fcal):
-                if utils.find_in_casa_calibrators(msinfo, fcal):
+                if utils.find_in_casa_calibrators(msinfo, fcal) or utils.find_in_native_calibrators(msinfo, fcal):
                     pipeline.fcal[i] = fcal
                     break
                 fcals.remove(fcal) 

@@ -28,10 +28,11 @@ get_data:
     data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
     enable: yes
     reset: no
-    untar: yes
   h5toms:
     enable: yes
     channel_range: null
+  untar:
+    enable: yes
   obsinfo:
     enable: yes
     include_json: yes
@@ -155,15 +156,26 @@ cross_cal:
     enable: yes
     field: gcal
     applymode: calflag
-  plot_data:
-    enable: no
-    bandpass_reim: yes
-    field: bpcal
+
+# Inspect 1GC calibration
+cross_cal_inspect:
+  enable: yes
+  order: 5
+  label: 1gc1
+  real_imag:
+    enable: yes
+    fields: gcal,bpcal
+  amp_phase:
+    enable: yes
+    fields: gcal,bpcal
+  amp_uvwave:
+    enable: yes
+    fields: gcal,bpcal
 
 # Split target data
 split_target:
   enable: yes
-  order: 5
+  order: 6
   split_target:
     enable: yes
     time_average: 32s
@@ -176,7 +188,7 @@ split_target:
 self_cal:
   enable: yes
   label: corr
-  order: 6
+  order: 7
   primary_beam: no
   # Imaging settings
   img_npix: 1180
@@ -264,7 +276,7 @@ self_cal:
 
 image_HI:
   enable: yes
-  order: 7
+  order: 8
   label: corr
   uvcontsub: 
     enable: yes

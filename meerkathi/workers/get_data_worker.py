@@ -127,17 +127,18 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=data_path,
                     label='{0:s}:: Downloading data'.format(step))
-                if config['download'].get('untar', False):
-                    step = 'untar_{:d}'.format(i)
-                    # Function to untar Ms from .tar file
-                    def untar():
-                        mspath = os.path.abspath(pipeline.msdir)
-                        subprocess.check_call(['tar', 'xvf',
-                            os.path.join(mspath, msname+'.tar'),
-                            '-C', mspath])
-                    # add function to recipe
-                    recipe.add(untar, step, {},
-                               label='{0:s}:: Get Ms from tarbal ms={1:s}'.format(step, msname))
+
+        if pipeline.enable_task(config, 'untar'):
+            step = 'untar_{:d}'.format(i)
+            # Function to untar Ms from .tar file
+            def untar():
+                mspath = os.path.abspath(pipeline.msdir)
+                subprocess.check_call(['tar', 'xvf',
+                    os.path.join(mspath, msname+'.tar'),
+                    '-C', mspath])
+            # add function to recipe
+            recipe.add(untar, step, {},
+                       label='{0:s}:: Get Ms from tarbal ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)

@@ -71,7 +71,7 @@ def worker(pipeline, recipe, config):
                 {
                   "msname"      : msname,
                   "column"      : config['autoflag'].get('coumn', 'DATA'),
-                  "fields"      : config['autoflag'].get('fields', pipeline.bpcal[i]),
+                  "fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
                   "strategy"    : config['autoflag']['strategy'],
                 },
                 input=pipeline.input,

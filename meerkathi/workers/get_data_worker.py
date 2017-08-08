@@ -131,14 +131,17 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'untar'):
             step = 'untar_{:d}'.format(i)
             # Function to untar Ms from .tar file
-            def untar():
+            def untar(ms):
                 mspath = os.path.abspath(pipeline.msdir)
                 subprocess.check_call(['tar', 'xvf',
-                    os.path.join(mspath, msname+'.tar'),
+                    os.path.join(mspath, ms+'.tar'),
                     '-C', mspath])
             # add function to recipe
-            recipe.add(untar, step, {},
-                       label='{0:s}:: Get Ms from tarbal ms={1:s}'.format(step, msname))
+            recipe.add(untar, step, 
+                 {
+                  "ms"        : msname,
+                 },
+                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)

@@ -39,6 +39,14 @@ table_suffix = {
 def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
+
+        msname = pipeline.msnames[i]
+        refant = pipeline.reference_antenna[i]
+        prefix = pipeline.prefixes[i]
+        dataid = pipeline.dataid[i]
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
+
         # Check if field was specified as known key, else return the 
         # same value. 
         def get_field(field):
@@ -49,7 +57,8 @@ def worker(pipeline, recipe, config):
             return str(name)
 
         def flag_gains(cal, opts):
-            step = '{0:s}_{1:d}'.format(cal, i)
+            opts = dict(opts)
+            step = 'plot_{0:s}_{1:d}'.format(cal, i)
             opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
             opts["datacolumn"] = 'CPARAM'
             recipe.add('cab/casa_flagdata', step, opts,
@@ -57,13 +66,6 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging gains'.format(step))
 
-        msname = pipeline.msnames[i]
-        refant = pipeline.reference_antenna[i]
-        prefix = pipeline.prefixes[i]
-        dataid = pipeline.dataid[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
- 
         # Set model
         field = get_field(config['set_model'].get('field', 'fcal'))
         model = utils.find_in_native_calibrators(msinfo, field)

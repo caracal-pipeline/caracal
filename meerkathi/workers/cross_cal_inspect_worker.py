@@ -68,7 +68,7 @@ def worker(pipeline, recipe, config):
                    label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = config['amp_uvwave'].get('field', 'fcal,bpcal').field(',')
+            fields = config['amp_uvwave'].get('field', 'fcal,bpcal').split(',')
             for field in fields:
                 field = get_field(field)
                 step = 'plot_uvwave_{0:d}'.format(i)

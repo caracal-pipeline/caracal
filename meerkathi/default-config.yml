@@ -7,7 +7,6 @@ general:
   msdir: msdir
   input: input
   output: output
-#TODO: Moving fields like dataid, fcal, gcal, etc. out of general section makes the sections that they've been moved to be required for the pipeline. Need to decide if this is a good thing.
 
 # Get data to be reduced
 get_data:
@@ -300,3 +299,13 @@ image_HI:
     enable: yes
   sofia:
     enable: no
+    flagregion: [0,255,0,255,881,937]
+    threshold: 4
+    merge: yes
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
+

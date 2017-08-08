@@ -44,7 +44,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
-  reference_antenna: ['m006']
+  reference_antenna: 'm006'
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:
@@ -149,7 +149,7 @@ cross_cal:
     field: bpcal
     applymode: calflag
   apply_gain_cal_gain:
-    enable: yes
+    enable: no
     field: gcal
     applymode: calflag
   apply_transfer_fluxscale:

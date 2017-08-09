@@ -157,19 +157,22 @@ cross_cal:
     applymode: calflag
 
 # Inspect 1GC calibration
-cross_cal_inspect:
+inspect_data:
   enable: yes
   order: 5
   label: 1gc1
   real_imag:
     enable: yes
     fields: gcal,bpcal
+    column: corrected
   amp_phase:
     enable: yes
     fields: gcal,bpcal
+    column: corrected
   amp_uvwave:
     enable: yes
     fields: gcal,bpcal
+    column: corrected
 
 # Split target data
 split_target:

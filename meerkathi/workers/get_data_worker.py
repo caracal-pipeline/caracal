@@ -79,7 +79,7 @@ def worker(pipeline, recipe, config):
             dm = cfg['download_mode'].upper()
             if dm == "MEERKAT":
                 step = 'download_{:d}'.format(i)
-                def checked_download():
+                def checked_download(h5file, basename):
                     (data_url != "") and meerkathi.log.warn("Download mode set to MeerKAT, but user specified a data-url. This will be ignored")
                     if not os.path.exists(os.path.join(pipeline.data_path, basename + '.json')): # user is being silly... download metadata anyway
                         mdata = mai.query_metadatas(pipeline.data_path,
@@ -101,7 +101,11 @@ def worker(pipeline, recipe, config):
                                                        meta):
                         mai.download_observations(pipeline.data_path, [meta])
                 # add function to recipe
-                recipe.add(checked_download, step, {},
+                recipe.add(checked_download, step, 
+                      {
+                       "h5file"    : h5file,
+                       "basename"  : basename,
+                      },
                     label='{0:s}:: Downloading MeerKAT data'.format(step))
 
             elif dm == "MANUAL":
@@ -115,7 +119,7 @@ def worker(pipeline, recipe, config):
                         "continue-at": "-"
                     },
                     input=pipeline.input,
-                    output=data_path,
+                    output=pipeline.data_path,
                     label='{0:s}:: Downloading data'.format(step))
                 else:
                     os.system('rm -rf {0:s}/{1:s}'.format(pipeline.data_path, msname))
@@ -125,7 +129,7 @@ def worker(pipeline, recipe, config):
                         "output": msname if config['download'].get('untar', False) else msname + '.tar',
                     },
                     input=pipeline.input,
-                    output=data_path,
+                    output=pipeline.data_path,
                     label='{0:s}:: Downloading data'.format(step))
 
         if pipeline.enable_task(config, 'untar'):

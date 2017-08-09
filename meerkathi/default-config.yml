@@ -7,7 +7,6 @@ general:
   msdir: msdir
   input: input
   output: output
-#TODO: Moving fields like dataid, fcal, gcal, etc. out of general section makes the sections that they've been moved to be required for the pipeline. Need to decide if this is a good thing.
 
 # Get data to be reduced
 get_data:
@@ -28,10 +27,11 @@ get_data:
     data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
     enable: yes
     reset: no
-    untar: yes
   h5toms:
     enable: yes
     channel_range: null
+  untar:
+    enable: yes
   obsinfo:
     enable: yes
     include_json: yes
@@ -43,7 +43,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
-  reference_antenna: ['m006']
+  reference_antenna: 'm006'
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:
@@ -148,22 +148,36 @@ cross_cal:
     field: bpcal
     applymode: calflag
   apply_gain_cal_gain:
-    enable: yes
+    enable: no
     field: gcal
     applymode: calflag
   apply_transfer_fluxscale:
     enable: yes
     field: gcal
     applymode: calflag
-  plot_data:
-    enable: no
-    bandpass_reim: yes
-    field: bpcal
+
+# Inspect 1GC calibration
+inspect_data:
+  enable: yes
+  order: 5
+  label: 1gc1
+  real_imag:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+  amp_phase:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+  amp_uvwave:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
 
 # Split target data
 split_target:
   enable: yes
-  order: 5
+  order: 6
   split_target:
     enable: yes
     time_average: 32s
@@ -176,7 +190,7 @@ split_target:
 self_cal:
   enable: yes
   label: corr
-  order: 6
+  order: 7
   primary_beam: no
   # Imaging settings
   img_npix: 1180
@@ -194,6 +208,7 @@ self_cal:
   img_joinchannels: yes
   img_fit_spectral_pol: 1
   img_column: CORRECTED_DATA
+  img_pol: I
   # Calibration settings
   cal_Gsols: [1, 90] 
   cal_DDsols: [60, 500]
@@ -264,7 +279,7 @@ self_cal:
 
 image_HI:
   enable: yes
-  order: 7
+  order: 8
   label: corr
   uvcontsub: 
     enable: yes
@@ -287,3 +302,13 @@ image_HI:
     enable: yes
   sofia:
     enable: no
+    flagregion: [0,255,0,255,881,937]
+    threshold: 4
+    merge: yes
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
+

@@ -70,8 +70,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/autoflagger', step,
                 {
                   "msname"      : msname,
-                  "column"      : config['autoflag'].get('coumn', 'DATA'),
-                  "fields"      : config['autoflag'].get('fields', pipeline.bpcal[i]),
+                  "column"      : config['autoflag'].get('column', 'DATA'),
+                  "fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
                   "strategy"    : config['autoflag']['strategy'],
                 },
                 input=pipeline.input,

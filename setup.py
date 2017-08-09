@@ -13,7 +13,7 @@ requirements = [
 'numpy==1.13.1',
 'scipy==0.19.1',
 'pysolr==3.4.0',
-'progressbar2 >= 3.11.0'
+'progressbar2>=3.11.0'
 ]
 
 PACKAGE_NAME = 'meerkathi'
@@ -42,12 +42,16 @@ def get_version():
 
 setup(name = PACKAGE_NAME,
     version = get_version(),
-    description = "MeerKAT end-to-end data reduction pipeline for spectral line data",
+    description = "MeerKAT end-to-end data reduction pipeline",
     author = "MeerKATHI peeps",
     author_email = "sphemakh@gmail.com",
     url = "https://github.com/sphemakh/meerkathi",
-    packages = ["meerkathi","meerkathi_misc", "meerkathi/workers"],
-    package_data = { "meerkathi" : ['default-config.yml']},
+    packages = ["meerkathi","meerkathi_misc", "meerkathi/workers", "meerkathi/dispatch_crew"],
+    package_data = { 
+           "meerkathi" : ['default-config.yml', 
+                          'data/southern_calibrators.txt',
+                          'data/casa_calibrators.yml']
+                   },
     install_requires = requirements,
     scripts = ["bin/" + i for i in os.listdir("bin")],
     classifiers = [],

@@ -1,5 +1,6 @@
 import os
 import sys
+import stimela.dismissable as sdm
 
 NAME = 'Self calibration loop'
 
@@ -15,18 +16,19 @@ def worker(pipeline, recipe, config):
     auto_mask = config['img_automask']
     robust = config['img_robust']
     nchans = config['img_nchans']
-    pol = config['img_pol']
+    pol = config.get('img_pol', 'I')
     thresh_pix = config['sf_thresh_isl']
     thresh_isl = config['sf_thresh_pix']
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
+    taper = config.get('img_uvtaper', None)
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
-    # functions for conviency
+    # functions for convience
 
     def image(num):
         key = 'image_{}'.format(num)
@@ -42,6 +44,7 @@ def worker(pipeline, recipe, config):
                       "scale"     : config[key].get('cell', cell),
                       "pol"       : config[key].get('pol', pol),
                       "channelsout"   : nchans,
+                      "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
                       "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                   },
             input=pipeline.input,
@@ -63,6 +66,7 @@ def worker(pipeline, recipe, config):
                       "niter"     : config[key].get('niter', niter),
                       "mgain"     : config[key].get('mgain', mgain),
                       "pol"       : config[key].get('pol', pol),
+                      "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
                       "channelsout"     : nchans,
                       "joinchannels"    : config[key].get('joinchannels', joinchannels),
                       "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),

@@ -17,6 +17,8 @@ def worker(pipeline, recipe, config):
             setattr(pipeline, item, config[item])
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
+   
+    pipeline.nchans = [None]*pipeline.nobs
             
     for i, prefix in enumerate(pipeline.prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
@@ -27,6 +29,10 @@ def worker(pipeline, recipe, config):
         gcals = intents['gcal'][-1]
         bpcals = intents['bpcal'][-1]
         targets = intents['target'][-1]
+
+        # Get channels in MS
+        with open(msinfo, 'r') as stdr:
+            pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN'][0]
         
         # Set gain calibrator
         if config['gcal'] == 'auto':

@@ -61,13 +61,13 @@ def worker(pipeline, recipe, config):
                   "npix"      : config['image'].get('npix', 300),
                   "trim"      : config['image'].get('trim', 256),
                   "scale"     : config['image'].get('cell', 20),
-                  "prefix"    : prefix+'_HI',
+                  "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['image'].get('niter', 1000000),
                   "mgain"     : config['image'].get('mgain', 0.90),
-                  "channelsout"     : config['image'].get('nchans', pipeline.nchans),
+                  "channelsout"     : config['image'].get('nchans', pipeline.nchans[0]),
                   "auto-threshold"  : config['image'].get('autothreshold', 5),
                   #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
-                  "channelrange" : config['image'].get('channelrange', [0,pipeline.nchans]),
+                  "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0]]),
               },  
         input=pipeline.input,
         output=pipeline.output,
@@ -77,11 +77,42 @@ def worker(pipeline, recipe, config):
         step = 'make_cube'
         recipe.add('cab/fitstool', step,
             {    
-                "image"    : [prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(pipeline.nchans)],
-                "output"   : prefix+'_HI-cube.fits',
+                "image"    : [pipeline.prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(pipeline.nchans[0])],
+                "output"   : pipeline.prefix+'_HI-cube.fits',
                 "stack"    : True,
+                "delete-files" : True,
                 "fits-axis": 'FREQ',
             },
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Make cube from wsclean channel images'.format(step))
+
+
+    if pipeline.enable_task(config, 'sofia'):
+        step = 'sofia_sources'
+        recipe.add('cab/sofia', step,
+            {
+        #    USE THIS FOR THE WSCLEAN DIRTY CUBE
+        #    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(combprefix),
+        #    USE THIS FOR THE CASA CLEAN CUBE
+            "import.inFile"         : pipeline.prefix+'_HI-cube.fits:output',       # CASA CLEAN cube
+            "steps.doMerge"         : config['sofia'].get('merge', True),
+            "steps.doMom0"          : True,
+            "steps.doMom1"          : False,
+            "steps.doParameterise"  : False,
+            "steps.doReliability"   : False,
+            "steps.doWriteCat"      : False,
+            "steps.doWriteMask"     : True,
+            "steps.doFlag"          : True,
+            "flag.regions"          : config['sofia'].get('flagregion', [0,255,0,255,881,937]),
+            "SCfind.threshold"      : config['sofia'].get('threshold', 4),
+            "merge.radiusX"         : config['sofia'].get('mergeX', 2),
+            "merge.radiusY"         : config['sofia'].get('mergeY', 2),
+            "merge.radiusZ"         : config['sofia'].get('mergeZ', 3),
+            "merge.minSizeX"        : config['sofia'].get('minSizeX', 3),
+            "merge.minSizeY"        : config['sofia'].get('minSizeY', 3),
+            "merge.minSizeZ"        : config['sofia'].get('minSizeZ', 5),
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Make SoFiA mask and images'.format(step))

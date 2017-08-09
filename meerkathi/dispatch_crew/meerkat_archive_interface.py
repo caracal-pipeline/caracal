@@ -235,7 +235,7 @@ def download_observations(directory, observations):
         f = open(filename, 'ab' if file_exists else 'wb')
         bar = (progressbar.ProgressBar(max_value=progressbar.UnknownLength)
             if remote_file_size is None else progressbar.ProgressBar(
-                max_value=int(remote_file_size)))
+                maxval=int(remote_file_size)))
 
         #Download chunks of file and write to disk
         try:

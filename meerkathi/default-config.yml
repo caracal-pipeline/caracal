@@ -31,7 +31,7 @@ get_data:
     enable: yes
     channel_range: null
   untar:
-    enable: yes
+    enable: no
   obsinfo:
     enable: yes
     include_json: yes

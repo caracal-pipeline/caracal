@@ -12,13 +12,14 @@ def worker(pipeline, recipe, config):
             name = field
         return str(name)
 
+    uvrange = config.get('uvrange', '')
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
         label = config.get('label', '')
 
         if pipeline.enable_task(config, 'real_imag'):
-            fields = config['real_imag'].get('field', 'fcal,bpcal').split(',')
+            fields = config['real_imag'].get('fields', 'gcal,bpcal').split(',')
             for field in fields:
                 field = get_field(field)
                 step = 'plot_real_imag_{0:d}'.format(i)
@@ -33,17 +34,20 @@ def worker(pipeline, recipe, config):
                     "xdatacolumn"   : config['real_imag'].get('datacolumn', 'corrected'),
                     "yaxis"         : 'real',
                     "ydatacolumn"   : config['real_imag'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['real_imag'].get('avgtime', ''),
+                    "avgchannel"    : config['real_imag'].get('avgchannel', ''),
                     "coloraxis"     : 'corr',
                     "plotfile"      : '{0:s}-{1:s}-reim.png'.format(prefix, field),
                     "overwrite"     : True,
                     "showgui"       : False,
+                    "uvrange"       : uvrange,
                    },
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Plot imag vs real for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_phase'):
-            fields = config['amp_phase'].get('field', 'fcal,bpcal').split(',')
+            fields = config['amp_phase'].get('fields', 'gcal,bpcal').split(',')
             for field in fields:
                 field = get_field(field)
                 step = 'plot_amp_phase_{0:d}'.format(i)
@@ -58,17 +62,20 @@ def worker(pipeline, recipe, config):
                     "xdatacolumn"   : config['amp_phase'].get('datacolumn', 'corrected'),
                     "yaxis"         : 'amp',
                     "ydatacolumn"   : config['amp_phase'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['amp_phase'].get('avgtime', ''),
+                    "avgchannel"    : config['amp_phase'].get('avgchannel', ''),
                     "coloraxis"     : 'corr',
                     "plotfile"      : '{0:s}-{1:s}-ap.png'.format(prefix, field),
                     "overwrite"     : True,
                     "showgui"       : False,
+                    "uvrange"       : uvrange,
                    },
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = config['amp_uvwave'].get('field', 'fcal,bpcal').split(',')
+            fields = config['amp_uvwave'].get('fields', 'gcal,bpcal').split(',')
             for field in fields:
                 field = get_field(field)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -83,12 +90,15 @@ def worker(pipeline, recipe, config):
                     "xdatacolumn"   : config['amp_uvwave'].get('datacolumn', 'corrected'),
                     "yaxis"         : 'amp',
                     "ydatacolumn"   : config['amp_uvwave'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['amp_uvwave'].get('avgtime', ''),
+                    "avgchannel"    : config['amp_uvwave'].get('avgchannel', ''),
                     "coloraxis"     : 'baseline',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
                     "plotfile"      : '{0:s}-{1:s}-uvwave.png'.format(prefix, field),
                     "overwrite"     : True,
                     "showgui"       : False,
+                    "uvrange"       : uvrange,
                    },
                    input=pipeline.input,
                    output=pipeline.output,

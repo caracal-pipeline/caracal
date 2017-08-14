@@ -22,17 +22,20 @@ def worker(pipeline, recipe, config):
             
     for i, prefix in enumerate(pipeline.prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        intents = utils.categorize_fields(msinfo)
 
+        # Get channels in MS
+        with open(msinfo, 'r') as stdr:
+            pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN'][0]
+
+        if 'auto' not in [config[item] for item in 'fcal bpcal gcal target'.split()]:
+            return
+
+        intents = utils.categorize_fields(msinfo)
         # Get fields and their purposes
         fcals = intents['fcal'][-1]
         gcals = intents['gcal'][-1]
         bpcals = intents['bpcal'][-1]
         targets = intents['target'][-1]
-
-        # Get channels in MS
-        with open(msinfo, 'r') as stdr:
-            pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN'][0]
         
         # Set gain calibrator
         if config['gcal'] == 'auto':
@@ -62,7 +65,7 @@ def worker(pipeline, recipe, config):
             pipeline.bpcal[i] = utils.observed_longest(msinfo, bpcals)
             meerkathi.log.info('Auto selecting bandpass calibrator field as {:s}'.format(pipeline.bpcal[i]))
         else:
-            pipeline.bpcal[i] = onfig['bpcal']
+            pipeline.bpcal[i] = config['bpcal']
         tobs = utils.field_observation_length(msinfo, pipeline.bpcal[i])/60.0
         meerkathi.log.info('Field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.bpcal[i], tobs))
 

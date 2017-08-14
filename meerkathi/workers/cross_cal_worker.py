@@ -93,7 +93,7 @@ def worker(pipeline, recipe, config):
                   "field"       : field,
                   "standard"    : "manual",
                   "fluxdensity" : model['I'],
-                  "reffreq"     : opts['ref'],
+                  "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
                   "spix"        : [model[a] for a in 'abcd'],
                   "scalebychan" : True,
                   "usescratch"  : False,

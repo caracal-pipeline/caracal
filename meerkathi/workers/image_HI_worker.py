@@ -54,6 +54,7 @@ def worker(pipeline, recipe, config):
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
 	
         step = 'image_HI'
+        nchans = config['image'].get('nchans', pipeline.nchans[0])
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
@@ -65,7 +66,7 @@ def worker(pipeline, recipe, config):
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['image'].get('niter', 1000000),
                   "mgain"     : config['image'].get('mgain', 0.90),
-                  "channelsout"     : config['image'].get('nchans', pipeline.nchans[0]),
+                  "channelsout"     : nchans,
                   "auto-threshold"  : config['image'].get('autothreshold', 5),
                   #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
                   "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0]]),
@@ -75,10 +76,11 @@ def worker(pipeline, recipe, config):
         label='{:s}:: Image HI'.format(step))
 
     if pipeline.enable_task(config, 'make_cube'):
+        nchans = config['image'].get('nchans', pipeline.nchans[0])
         step = 'make_cube'
         recipe.add('cab/fitstool', step,
             {    
-                "image"    : [pipeline.prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(pipeline.nchans[0])],
+                "image"    : [pipeline.prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(nchans)],
                 "output"   : pipeline.prefix+'_HI-cube.fits',
                 "stack"    : True,
                 "delete-files" : True,

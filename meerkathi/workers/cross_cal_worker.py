@@ -56,6 +56,21 @@ def worker(pipeline, recipe, config):
                 name = field
             return str(name)
 
+        def get_gain_field(applyme, applyto=None):
+            if applyme == 'delay_cal':
+                return get_field('bpcal')
+            if applyme == 'bp_cal':
+                return get_field('bpcal')
+            if applyme == 'gain_cal_flux':
+                return get_field('fcal')
+            if applyme == 'gain_cal_gain':
+                return get_field('gcal')
+            if applyme == 'transfer_fluxscale':
+                if applyto in ['gcal', 'target']:
+                    return get_field('gcal')
+                elif applyto == 'bpcal':
+                    return get_field('bpcal')
+            
         def flag_gains(cal, opts):
             opts = dict(opts)
             step = 'plot_{0:s}_{1:d}'.format(cal, i)
@@ -77,7 +92,7 @@ def worker(pipeline, recipe, config):
                   "vis"         : msname,
                   "field"       : field,
                   "standard"    : "manual",
-                  "fluxdensity" : model['i'],
+                  "fluxdensity" : model['I'],
                   "reffreq"     : opts['ref'],
                   "spix"        : [model[a] for a in 'abcd'],
                   "scalebychan" : True,
@@ -88,7 +103,7 @@ def worker(pipeline, recipe, config):
                 opts = {
                   "vis"         : msname,
                   "field"       : field,
-                  "standard"    : standard,
+                  "standard"    : config['set_model'].get('standard', standard),
                   "usescratch"  : False,
                   "scalebychan" : True,
                }
@@ -200,7 +215,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "combine"      : config['gain_cal_flux'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
-                 "gaintable"    : [prefix+".B0:output",prefix+".K0:output"],
+                 "gaintable"    : [prefix+".K0:output",prefix+".B0:output"],
                  "interp"       : ['nearest','nearest'],
                  "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_flux'].get('minsnr', 5),
@@ -246,7 +261,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "combine"      : config['gain_cal_gain'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
-                 "gaintable"    : [prefix+".B0:output",prefix+".K0:output"],
+                 "gaintable"    : [prefix+".K0:output",prefix+".B0:output"],
                  "interp"       : ['linear','linear'],
                  "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_gain'].get('minsnr', 5),
@@ -320,13 +335,14 @@ found in our database or in the CASA NRAO database'.format(field))
             gaintablelist,gainfieldlist,interplist = [],[],[]
             no_table_to_apply = True
             field = getattr(pipeline, ft)[i]
-            for applyme in applycal_interp_rules[ft].keys():
+            for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
+                # applycal_interp_rules[ft].keys():
                 if not pipeline.enable_task(config, 'apply_'+applyme):
                     continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
-                
-                gainfield = get_field(config['apply_'+applyme].get('field', ft))
+                 
+                gainfield = get_gain_field(applyme, ft)
                 gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)

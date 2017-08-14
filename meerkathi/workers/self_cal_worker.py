@@ -229,3 +229,67 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'image_5'):
         image(5)
+
+    if pipeline.enable_task(config, 'restore_model'):
+        num = config['restore_model']['model']
+
+        if isinstance(num, str) and len(num.split('+'))==2:
+            combine = True
+            mm = num.split('+')
+            models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
+            final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
+
+            step = 'combine_models_{0:s}_{1:s}'.format(*mm)
+            recipe.add('cab/tigger_convert', step,
+                {                   
+                    "input-skymodel"    : models[0],
+                    "append"    : models[1],
+                    "output-skymodel"   : final,
+                    "rename"  : True,
+                    "force"   : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Combined models'.format(step))
+
+        else:
+            num = int(model)
+            final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
+
+        if config['restore_model'].get('clean_model', None):
+            num = int(config['restore_model'].get('clean_model', None))
+       
+            conv_model = prefix + '-convolved_model.fits:output'
+            recipe.add('cab/fitstool', step,
+                {
+                    "image"    : [prefix+'_{0:d}-MFS-{1:s}.fits:output'.format(num, im) for im in ('image','residual')],
+                    "output"   : conv_model,
+                    "diff"     : True,
+                    "force"    : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make convolved model'.format(step))
+
+            with_cc = prefix + '-with_cc.fits:output'
+            recipe.add('cab/fitstool', step,
+                {
+                    "image"    : [prefix+'_{0:d}-MFS-image.fits:output'.format(num), conv_model],
+                    "output"   : with_cc,
+                    "sum"      : True,
+                    "force"    : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Add clean components'.format(step))
+
+            recipe.add('cab/tigger_restore', step,
+                {
+                    "input-image"    : with_cc,
+                    "input-skymodel" : final,
+                    "output-image"   : prefix+'.fullrest.fits',
+                    "force"          : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Add extracted skymodel'.format(step))

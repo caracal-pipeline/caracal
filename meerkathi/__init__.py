@@ -59,8 +59,8 @@ class MeerKATHI(object):
                 continue
             order = opts.get('order', i+1)
 
-            if name.find('-'):
-                worker = name.split('-')[0] + '_worker'
+            if name.find('__')>=0:
+                worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
 
@@ -114,7 +114,7 @@ class MeerKATHI(object):
             except ImportError:
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
-            config = self.config[_worker.split('_worker')[0]]
+            config = self.config[_name]
             if config['enable'] is False:
                 self.skip.append(_worker)
                 continue

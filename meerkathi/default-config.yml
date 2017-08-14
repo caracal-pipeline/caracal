@@ -276,6 +276,11 @@ self_cal:
     enable: yes
     auto_mask: 3
     auto_threshold: 0.5
+  restore_model:
+    enable: yes
+    model: '2+3'
+    clean_model: '4'
+  
 
 image_HI:
   enable: yes

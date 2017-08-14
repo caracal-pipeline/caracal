@@ -57,7 +57,8 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
-                  "weight"    : 'briggs {}'.format(config['image'].get('robust', 2)),
+                  "weight"    : '{0} {1}'.format(config['image'].get('weight', 
+                                                  'natural'), config['image'].get('robust', '')),
                   "npix"      : config['image'].get('npix', 300),
                   "trim"      : config['image'].get('trim', 256),
                   "scale"     : config['image'].get('cell', 20),

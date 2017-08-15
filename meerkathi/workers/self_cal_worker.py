@@ -32,7 +32,9 @@ def worker(pipeline, recipe, config):
 
     def image(num):
         key = 'image_{}'.format(num)
+        mask = False
         if config[key].get('peak_based_mask_on_dirty', False):
+            mask = True
             step = 'image_{}_dirty'.format(num)
             recipe.add('cab/wsclean', step,
                   {                   
@@ -50,12 +52,25 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make dirty image to create clean mask'.format(step))
-
+            
+            step = 'mask_dirty_{}'.format(num)
+            recipe.add('cab/cleanmask', step,
+               {
+                 "image"           :  '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num),
+                 "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
+                 "dilate"          :  False,
+                 "peak-fraction"   :  0.5,
+                 "no-negative"     :  True,
+                 "boxes"           :  1,
+                 "log-level"       :  'DEBUG',
+               },
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Make mask based on peak of dirty image'.format(step))
 
         if pipeline.enable_task(config, key):
             step = 'image_{}'.format(num)
-            recipe.add('cab/wsclean', step,
-                  {                   
+            image_opts = {                   
                       "msname"    : mslist,
                       "column"    : config[key].get('column', column),
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
@@ -71,12 +86,17 @@ def worker(pipeline, recipe, config):
                       "joinchannels"    : config[key].get('joinchannels', joinchannels),
                       "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                       "auto-threshold": config[key].get('autothreshold', auto_thresh),
-                      "auto-mask"  :   config[key].get('automask', auto_mask),
-                  },
+                  }
+            if mask:
+                image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
+            else:
+                image_opts.update( {"auto-mask" : config[key].get('automask', auto_mask)} )
+
+            recipe.add('cab/wsclean', step,
+            image_opts,
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make image after first round of calibration'.format(step))
-
 
     def extract_sources(num):
         key = 'extract_sources_{0:d}'.format(num)

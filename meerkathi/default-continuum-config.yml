@@ -40,7 +40,6 @@ get_data:
 observation_config:
   enable: yes
   order: 1
-  target: auto
   fcal: auto
   bpcal: auto
   gcal: auto
@@ -174,20 +173,6 @@ inspect_data:
     enable: yes
     fields: gcal,bpcal
     column: corrected
-  amp_ant:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-  phase_uvwave:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-  amp_scan:
-    enable: yes
-    fields: target,gcal,bpcal
-    column: corrected
-    avgtime: '40'
-    avgchannel: '32'
 
 # Split target data
 split_target:

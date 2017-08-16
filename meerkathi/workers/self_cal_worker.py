@@ -67,36 +67,55 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
+        
+        elif config[key].get('mask', False):
+            mask = True
+            sigma = config[key].get('mask_sigma', None)
+            pf = config[key].get('mask_peak_fraction', None)
+            recipe.add('cab/cleanmask', step,
+               {
+                 "image"           :  '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num-1),
+                 "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
+                 "dilate"          :  False,
+                 "peak-fraction"   :  sdm.dismissable(pf),
+                 "sigma"           :  sdm.dismissable(sigma),
+                 "no-negative"     :  True,
+                 "boxes"           :  1,
+                 "log-level"       :  'DEBUG',
+               },
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Make mask based on peak of dirty image'.format(step))
 
-        if pipeline.enable_task(config, key):
-            step = 'image_{}'.format(num)
-            image_opts = {                   
-                      "msname"    : mslist,
-                      "column"    : config[key].get('column', column),
-                      "weight"    : 'briggs {}'.format(config.get('robust', robust)),
-                      "npix"      : config[key].get('npix', npix),
-                      "trim"      : config[key].get('trim', trim),
-                      "scale"     : config[key].get('cell', cell),
-                      "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
-                      "niter"     : config[key].get('niter', niter),
-                      "mgain"     : config[key].get('mgain', mgain),
-                      "pol"       : config[key].get('pol', pol),
-                      "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
-                      "channelsout"     : nchans,
-                      "joinchannels"    : config[key].get('joinchannels', joinchannels),
-                      "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                      "auto-threshold": config[key].get('autothreshold', auto_thresh),
-                  }
-            if mask:
-                image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
-            else:
-                image_opts.update( {"auto-mask" : config[key].get('automask', auto_mask)} )
 
-            recipe.add('cab/wsclean', step,
-            image_opts,
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{:s}:: Make image after first round of calibration'.format(step))
+        step = 'image_{}'.format(num)
+        image_opts = {                   
+                  "msname"    : mslist,
+                  "column"    : config[key].get('column', column),
+                  "weight"    : 'briggs {}'.format(config.get('robust', robust)),
+                  "npix"      : config[key].get('npix', npix),
+                  "trim"      : config[key].get('trim', trim),
+                  "scale"     : config[key].get('cell', cell),
+                  "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
+                  "niter"     : config[key].get('niter', niter),
+                  "mgain"     : config[key].get('mgain', mgain),
+                  "pol"       : config[key].get('pol', pol),
+                  "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
+                  "channelsout"     : nchans,
+                  "joinchannels"    : config[key].get('joinchannels', joinchannels),
+                  "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
+                  "auto-threshold": config[key].get('autothreshold', auto_thresh),
+              }
+        if mask:
+            image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
+        else:
+            image_opts.update( {"auto-mask" : config[key].get('automask', auto_mask)} )
+
+        recipe.add('cab/wsclean', step,
+        image_opts,
+        input=pipeline.input,
+        output=pipeline.output,
+        label='{:s}:: Make image after first round of calibration'.format(step))
 
     def extract_sources(num):
         key = 'extract_sources_{0:d}'.format(num)

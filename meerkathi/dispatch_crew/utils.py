@@ -29,6 +29,7 @@ def categorize_fields(msinfo):
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
     intents = info['FIELD']['INTENTS']
+    intent_ids = info['FIELD']['STATE_ID']
 
     mapping = {
 'fcal' : (['CALIBRATE_FLUX'], []),
@@ -38,7 +39,7 @@ def categorize_fields(msinfo):
 }
 
     for i, field in enumerate(names):
-        ints = intents[i].split(',')
+        ints = intents[intent_ids[i]].split(',')
         for intent in ints:
             for ftype in mapping:
                 if intent in mapping[ftype][0]:

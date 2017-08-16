@@ -72,6 +72,7 @@ def worker(pipeline, recipe, config):
             mask = True
             sigma = config[key].get('mask_sigma', None)
             pf = config[key].get('mask_peak_fraction', None)
+            step = 'mask_{}'.format(num)
             recipe.add('cab/cleanmask', step,
                {
                  "image"           :  '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num-1),

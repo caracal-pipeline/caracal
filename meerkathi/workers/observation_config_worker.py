@@ -27,9 +27,15 @@ def worker(pipeline, recipe, config):
         with open(msinfo, 'r') as stdr:
             pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN'][0]
 
+        # get reference antenna
+        if config['reference_antenna'] == 'auto':
+            msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
+            pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
+            meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
+
         if 'auto' not in [config[item] for item in 'fcal bpcal gcal target'.split()]:
             return
-
+        
         intents = utils.categorize_fields(msinfo)
         # Get fields and their purposes
         fcals = intents['fcal'][-1]

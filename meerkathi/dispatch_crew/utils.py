@@ -29,6 +29,7 @@ def categorize_fields(msinfo):
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
     intents = info['FIELD']['INTENTS']
+    intent_ids = info['FIELD']['STATE_ID']
 
     mapping = {
 'fcal' : (['CALIBRATE_FLUX'], []),
@@ -38,7 +39,7 @@ def categorize_fields(msinfo):
 }
 
     for i, field in enumerate(names):
-        ints = intents[i].split(',')
+        ints = intents[intent_ids[i]].split(',')
         for intent in ints:
             for ftype in mapping:
                 if intent in mapping[ftype][0]:
@@ -176,6 +177,13 @@ def find_in_native_calibrators(msinfo, field):
 	c=src['c_casa'], 
 	d=src['d_casa'], 
 	ref=src['v0'])
+
+def meerkat_refant(obsinfo):
+    """ get reference antenna. Only works for MeerKAT observations downloaded through meerkathi"""
+
+    with open(obsinfo) as stdr:
+        info = yaml.load(stdr)
+    return info['RefAntenna']
 
 
 def find_in_casa_calibrators(msinfo, field):

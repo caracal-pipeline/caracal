@@ -177,6 +177,13 @@ def find_in_native_calibrators(msinfo, field):
 	d=src['d_casa'], 
 	ref=src['v0'])
 
+def meerkat_refant(obsinfo):
+    """ get reference antenna. Only works for MeerKAT observations downloaded through meerkathi"""
+
+    with open(obsinfo) as stdr:
+        info = yaml.load(stdr)
+    return info['RefAntenna']
+
 
 def find_in_casa_calibrators(msinfo, field):
     """Check if field is in the CASA NRAO Calibrators database. 

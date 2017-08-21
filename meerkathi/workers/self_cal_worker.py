@@ -22,6 +22,7 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
+    gsols = config.get('cal_Gsols', [1,1])
     taper = config.get('img_uvtaper', None)
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
@@ -93,7 +94,7 @@ def worker(pipeline, recipe, config):
         image_opts = {                   
                   "msname"    : mslist,
                   "column"    : config[key].get('column', column),
-                  "weight"    : 'briggs {}'.format(config.get('robust', robust)),
+                  "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),
                   "scale"     : config[key].get('cell', cell),
@@ -160,18 +161,22 @@ def worker(pipeline, recipe, config):
 
         step = 'extract_{0:d}'.format(num)
         calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
-
+        if detection_image:
+            blank_limit = 1e-9
+        else:
+            blank_limit = None
         recipe.add('cab/pybdsm', step,
             {                   
                 "image"         : im,
                 "thresh_pix"    : config[key].get('thresh_pix', thresh_pix),
                 "thresh_isl"    : config[key].get('thresh_isl', thresh_isl),
                 "outfile"       : '{:s}.fits:output'.format(calmodel),
-                "blank_limit"   : 1e-9,
+                "blank_limit"   : sdm.dismissable(blank_limit),
+                "adaptive_rms_box" : True,
                 "port2tigger"   : True,
                 "multi_chan_beam": spi_do,
                 "spectralindex_do": spi_do,
-                "detection_image": detection_image,
+                "detection_image": sdm.dismissable(detection_image),
             },
             input=pipeline.input,
             output=pipeline.output,
@@ -216,7 +221,7 @@ def worker(pipeline, recipe, config):
                  "output-data"  : config[key].get('output_data', 'CORR_RES'),
                  "output-column": "CORRECTED_DATA",
                  "Gjones"       : True,
-                 "Gjones-solution-intervals" : config.get('cal_Gsols', [1, 1]),
+                 "Gjones-solution-intervals" : config[key].get('Gsols', gsols),
                  "Gjones-matrix-type" : config[key].get('gain_matrix_type', 'GainDiagPhase'),
                  "read-flags-from-ms" :	True,
                  "read-flagsets"      : "-stefcal",
@@ -314,7 +319,7 @@ def worker(pipeline, recipe, config):
             with_cc = prefix + '-with_cc.fits:output'
             recipe.add('cab/fitstool', step,
                 {
-                    "image"    : [prefix+'_{0:d}-MFS-image.fits:output'.format(num), conv_model],
+                    "image"    : [prefix+'_5-MFS-image.fits:output', conv_model],
                     "output"   : with_cc,
                     "sum"      : True,
                     "force"    : True,

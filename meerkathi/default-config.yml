@@ -44,7 +44,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
-  reference_antenna: 'm006'
+  reference_antenna: auto
 
 # Peform some basic operations to get it ready for reduction
 prepare_data:
@@ -86,7 +86,7 @@ cross_cal:
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes
-    solint: 32s
+    solint: inf
     field: bpcal
     plot: yes
   bp_cal:
@@ -95,16 +95,8 @@ cross_cal:
     field: bpcal
     minnrbl: 4
     minsnr: 3
-    solnorm: yes
+    solnorm: no
     solint: ""
-    flag:
-      mode: rflag
-      winsize: 1
-      chanbin: 100
-      ntime: 5
-      freqdevscale: 2
-      timedevscale: 2
-    plot: yes
   gain_cal_flux:
     enable: yes
     combine: ""
@@ -112,13 +104,6 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     solnorm: yes
-    flag:
-      mode: rflag
-      winsize: 10
-      chanbin: 1
-      ntime: 5
-      freqdevscale: 2
-      timedevscale: 2
     plot: no
   gain_cal_gain:
     enable: yes
@@ -126,14 +111,7 @@ cross_cal:
     field: gcal
     minnrbl: 4
     minsnr: 3
-    solnorm: yes
-    flag:
-      mode: rflag
-      winsize: 10
-      chanbin: 1
-      ntime: 5
-      freqdevscale: 2
-      timedevscale: 2
+    solnorm: no
     plot: yes
   transfer_fluxscale:
     enable: yes
@@ -166,27 +144,37 @@ inspect_data:
     enable: yes
     fields: gcal,bpcal
     column: corrected
+    avgtime: '90'
+    avgchannel: '32'
   amp_phase:
     enable: yes
     fields: gcal,bpcal
     column: corrected
+    avgtime: '90'
+    avgchannel: '32'
   amp_uvwave:
     enable: yes
     fields: gcal,bpcal
     column: corrected
+    avgtime: '90'
+    avgchannel: '32'
   amp_ant:
     enable: yes
     fields: gcal,bpcal
     column: corrected
+    avgtime: '90'
+    avgchannel: '32'
   phase_uvwave:
     enable: yes
     fields: gcal,bpcal
     column: corrected
+    avgtime: '90'
+    avgchannel: '32'
   amp_scan:
     enable: yes
-    fields: target,gcal,bpcal
+    fields: gcal,bpcal
     column: corrected
-    avgtime: '40'
+    avgtime: '90'
     avgchannel: '32'
 
 # Split target data
@@ -195,7 +183,7 @@ split_target:
   order: 6
   split_target:
     enable: yes
-    time_average: 32s
+    time_average: 8s
     freq_average: 1
     label: corr
   prepms:
@@ -208,7 +196,7 @@ self_cal:
   order: 7
   primary_beam: no
   # Imaging settings
-  img_npix: 1180
+  img_npix: 1580
   img_trim: 1024
   img_mgain: 0.9
   img_cell: 5
@@ -225,7 +213,7 @@ self_cal:
   img_column: CORRECTED_DATA
   img_pol: I
   # Calibration settings
-  cal_Gsols: [1, 90] 
+  cal_Gsols: [80, 250] 
   cal_DDsols: [60, 500]
   cal_flag_ampl: [0.5, 1.5]
   cal_gain_amplitude_clip_low: 0.5 
@@ -235,12 +223,12 @@ self_cal:
   sf_thresh_isl: 8 
   image_1:
     enable: yes
-    peak_based_mask_on_dirty: 0.5  # make a dirty image first, then mask based on peak on dirty image
+    auto_mask: 20
+    autothreshold: 0.5
     column: DATA
   extract_sources_1:
     enable: yes
-    spi: yes
-    detection_image: yes # use convoled model (restored-residual) to ensure that only cleaned flux is included in model
+    spi: no
   calibrate_1:
     enable: yes
     model: '1' # use model from extract_sources_1
@@ -249,26 +237,23 @@ self_cal:
   image_2:
     enable: yes
     mask: yes # mask will be based on previous image
-    automask: 10
-    autothreshold: 1
+    automask: 20
+    autothreshold: 0.5
   extract_sources_2:
     enable: yes
-    spi: yes
-    detection_image: yes
+    spi: no
   calibrate_2:
     enable: yes
     model: '2' # use model from extract_sources_2
     output_data: CORR_RES
     gain_matrix_type: GainDiag
-    add_vis_model: no
   image_3:
     enable: yes
-    auto_mask: 8
-    auto_threshold: 1
+    auto_mask: 10
+    auto_threshold: 0.5
   extract_sources_3:
     enable: yes
     spi: no
-    detection_image: yes
     thresh_pix: 10
     thresh_isl: 5
   calibrate_3:
@@ -276,11 +261,10 @@ self_cal:
     model: '2+3' # combine models from 2 and 3
     output_data: CORR_RES
     gain_matrix_type: GainDiag
-    add_vis_model: no
   image_4:
     enable: yes
-    auto_mask: 3
-    auto_threshold: 0.5
+    auto_mask: 5
+    auto_threshold: 0.25
   calibrate_4:
     enable: yes
     model: '2+3'
@@ -290,13 +274,12 @@ self_cal:
   image_5:
     enable: yes
     auto_mask: 3
-    auto_threshold: 0.5
+    auto_threshold: 0.25
   restore_model:
     enable: yes
     model: '2+3'
     clean_model: '4'
   
-
 image_HI:
   enable: yes
   order: 8
@@ -304,10 +287,13 @@ image_HI:
   uvcontsub: 
     enable: yes
     fitorder: 1
+  sublocker: 
+    enable: yes
+    use_contsub: yes
   image:
     enable: yes
-    use_contsub: true
-    npix: 300
+    use_contsub: tyes
+    npix: 400
     trim: 256
     mgain: 0.9
     cell: 20
@@ -315,7 +301,6 @@ image_HI:
     robust: 2
     niter: 1000000
     autothreshold: 3
-    automask: 5
     cleanborder: 0
     facets: 11
   make_cube:
@@ -331,4 +316,3 @@ image_HI:
     minSizeX: 3
     minSizeY: 3
     minSizeZ: 5
-

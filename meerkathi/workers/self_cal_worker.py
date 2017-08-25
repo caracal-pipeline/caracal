@@ -119,6 +119,24 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
 
+
+    def make_cube(num, imtype='model'): 
+        im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
+        step = 'makecube_{}'.format(num)
+        images = ['{0:s}_{1}-{2:04d}-{3:s}.fits:output'.format(prefix, num, i, imtype) for i in range(nchans)]
+        recipe.add('cab/fitstool', step,
+            {                   
+                "image"     : images,
+                "output"    : im,
+                "stack"     : True,
+                "fits-axis" : 'FREQ',
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Make convolved model'.format(step))
+
+        return im
+
     def extract_sources(num):
         key = 'extract_sources_{0:d}'.format(num)
         if config[key].get('detection_image', False):
@@ -139,23 +157,7 @@ def worker(pipeline, recipe, config):
 
         spi_do = config[key].get('spi', False) 
         if spi_do:
-            step = 'get_beams_{0:d}'.format(num)
-            # Get beam information from individual
-            # FITS images
-
-            im = '{0:s}_{1:d}-cube.fits:output'.format(prefix, num)
-            step = 'makecube_{0:d}'.format(num)
-            images = ['{0:s}_{1:d}-{2:04d}-image.fits:output'.format(prefix, num, i) for i in range(nchans)]
-            recipe.add('cab/fitstool', step,
-                {                   
-                    "image"     : images,
-                    "output"    : im,
-                    "stack"     : True,
-                    "fits-axis" : 'FREQ',
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make convolved model'.format(step))
+            im = make_cube(num, 'image')
         else:
             im = '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num)
 
@@ -182,39 +184,84 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Extract sources'.format(step))
 
-    def calibrate(num):
-        key = 'calibrate_{0:d}'.format(num)
-        model = config[key].get('model', num)
-
+    def predict_from_fits(num, model, index):
         if isinstance(model, str) and len(model.split('+'))==2:
             combine = True
             mm = model.split('+')
-            models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
-            calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
-
-            step = 'combine_models_{0:s}_{1:s}'.format(*mm)
-            recipe.add('cab/tigger_convert', step,
-                {                   
-                    "input-skymodel"    : models[0],
-                    "append"    : models[1],
-                    "output-skymodel"   : calmodel,
-                    "rename"  : True,
-                    "force"   : True,
+            # Combine FITS models if more than one is given
+            step = 'combine_models_' + '_'.join(map(str, mm))
+            calmodel = '{0:s}_{1:d}-FITS-combined.fits:output'.format(prefix, num)
+            cubes = [ make_cube(n, 'model') for n in mm]
+            recipe.add('cab/fitstool', step,
+                {
+                    "image"    : cubes,
+                    "output"   : calmodel,
+                    "sum"      : True,
+                    "force"    : True,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Combined models'.format(step))
-
+                label='{0:s}:: Add clean components'.format(step))
         else:
-            model = int(model)
-            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-        
+            calmodel = make_cube(num)
+            
+        step = 'predict_fromfits_{}'.format(num)
+        recipe.add('cab/lwimager', 'predict', {
+                "msname"        : mslist[index], 
+                "simulate_fits" : calmodel,
+                "column"        : 'MODEL_DATA',
+                "img_nchan"     : nchans,
+                "img_chanstep"  : 1,
+                "nchan"         : pipeline.nchans[index],
+                "cellsize"      : cell,
+                "chanstep"      : 1,
+        },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Predict from FITS ms={1:s}'.format(step, mslist[index]))
+
+    def calibrate(num):
+        key = 'calibrate_{0:d}'.format(num)
+        model = config[key].get('model', num)
+        vismodel = config[key].get('add_vis_model', False)
+        if config[key].get('visonly', False):
+            vismodel = True
+            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
+            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+                stdw.write('#format: ra_d dec_d i\n')
+                stdw.write('0.0 -30.0 1e-99')
+            for i,msname in enumerate(mslist):
+                predict_from_fits(num, model, i)
+        else: 
+            if isinstance(model, str) and len(model.split('+'))==2:
+                combine = True
+                mm = model.split('+')
+                models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
+                calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
+
+                step = 'combine_models_' + '_'.join(map(str, mm))
+                recipe.add('cab/tigger_convert', step,
+                    {                   
+                        "input-skymodel"    : models[0],
+                        "append"    : models[1],
+                        "output-skymodel"   : calmodel,
+                        "rename"  : True,
+                        "force"   : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Combined models'.format(step))
+
+            else:
+                model = int(model)
+                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+
         for i,msname in enumerate(mslist):
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
                  "skymodel"     :  calmodel,
-                 "add-vis-model":  config[key].get('add_vis_model', False),
+                 "add-vis-model":  vismodel,
                  "msname"       :  msname,
                  "threads"      :  16,
                  "column"       :  "DATA",

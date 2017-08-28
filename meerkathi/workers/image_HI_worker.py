@@ -119,3 +119,15 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Make SoFiA mask and images'.format(step))
+
+    if pipeline.enable_task(config, 'flagging_summary'):
+        for i,msname in enumerate(mslist):
+            step = 'flagging_summary_image_HI_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"         : msname,
+                  "mode"        : 'summary',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))

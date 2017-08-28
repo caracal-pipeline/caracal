@@ -385,3 +385,15 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add extracted skymodel'.format(step))
+
+        for i,msname in enumerate(mslist):
+            if pipeline.enable_task(config, 'flagging_summary'):
+                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                recipe.add('cab/casa_flagdata', step,
+                    {
+                      "vis"         : msname,
+                      "mode"        : 'summary',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))

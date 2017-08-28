@@ -185,6 +185,7 @@ def main(argv):
         if e.code != 0:
             log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol %d shutdown. This is likely a bug, please report." % e.code)
             log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
+            sys.exit(1) #indicate failure
         else:
             log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
     except:
@@ -192,3 +193,4 @@ def main(argv):
         log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
         tb = traceback.format_exc()
         log.error(tb)
+        sys.exit(1) #indicate failure

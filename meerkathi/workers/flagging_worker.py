@@ -72,7 +72,8 @@ def worker(pipeline, recipe, config):
                 {
                   "msname"      : msname,
                   "column"      : config['autoflag'].get('column', 'DATA'),
-                  "fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
+                  #Have to flag all fields - very likely have RFI inbetween calibrator scans
+                  #"fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
                   "strategy"    : config['autoflag']['strategy'],
                 },
                 input=pipeline.input,

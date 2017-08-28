@@ -21,7 +21,9 @@ get_data:
     product_type_name: 'MeerKATAR1TelescopeProduct'
     minimum_observation_duration: 2 #hours
     product_num_channels: 32768
-    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]' 
+    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
+    description_matches: '.*'
+    required_fields: [] 
   download:
     download_mode: meerkat # meerkat or manual (case insensitive)
     data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically

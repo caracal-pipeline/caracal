@@ -7,7 +7,7 @@ import meerkathi
 import pysolr
 import requests
 import progressbar
-
+import re
 
 def __standard_observation_query(filename=None,
                                  product_type_name="MeerKATAR1TelescopeProduct",
@@ -34,10 +34,12 @@ def __standard_observation_query(filename=None,
     query = ' AND '.join('%s:%s' % (fq.field, fq.query) for fq in query_list if fq.query is not None)
     return query
 
-def __intent_filter(solr_url,
+def __query_filter(solr_url,
                     query=None,
                     required_intents=['gaincal', 'bpcal', 'target'],
-                    required_minimum_duration=2):
+                    required_minimum_duration=2,
+                    required_fields=[],
+                    required_description='.*'):
     """
     Find recent telescope observations suitable for imaging
     """
@@ -88,6 +90,22 @@ def __intent_filter(solr_url,
                                 'are present.'.format(observation))
             return False
 
+        # Check that the description matches
+        prod_desc = solr_result.get('Description', '')
+        if not re.match(required_description, prod_desc):
+            meerkathi.log.warn('Ignoring "{}", observation description doesn\'t match '
+                               'user query Regex.'.format(observation))
+            return False
+
+        # Check that required fields have been observed
+        obs_fields = solr_result.get('Targets', [])
+        for f in required_fields:
+            if f not in obs_fields:
+                meerkathi.log.warn('Ignoring "{}", observation doesn\'t contain '
+                                   'field "{}" as required by user.'.format(observation,
+                                                                            f))
+                return False
+
 
         # Don't take anything less than 2 hours in duration
         duration = solr_result['Duration']
@@ -123,7 +141,9 @@ def query_metadatas(input_dir,
                     product_num_channels=4096,
                     time_extent="[NOW-3DAYS TO NOW]",
                     required_intents=['gaincal','bpcal','target'],
-                    required_minimum_duration=2):
+                    required_minimum_duration=2,
+                    required_fields=[],
+                    required_description='.*'):
     """ Return a list of observation metadatas """
 
     # If a specific HDF5 file is specified, attempt to load local metadata first
@@ -151,13 +171,15 @@ def query_metadatas(input_dir,
                                     "Reusing it.".format(metadata_path))
 
                 results = itertools.chain(results, [load_observation_metadata(input_dir,
-                                                                             metadata_filename)])
+                                                                              metadata_filename)])
             else:
                 # Nope, need to download it from the server
-                results = itertools.chain(results, __intent_filter(solr_url,
-                                                                   query,
-                                                                   required_intents,
-                                                                   required_minimum_duration))
+                results = itertools.chain(results, __query_filter(solr_url,
+                                                                  query,
+                                                                  required_intents,
+                                                                  required_minimum_duration,
+                                                                  required_fields,
+                                                                  required_description))
 
     else:
         query = __standard_observation_query(filename=None,
@@ -165,10 +187,12 @@ def query_metadatas(input_dir,
                                              product_num_channels=product_num_channels,
                                              time_extent=time_extent)
 
-        results = itertools.chain(results, __intent_filter(solr_url,
-                                                           query,
-                                                           required_intents,
-                                                           required_minimum_duration))
+        results = itertools.chain(results, __query_filter(solr_url,
+                                                          query,
+                                                          required_intents,
+                                                          required_minimum_duration,
+                                                          required_fields,
+                                                          required_description))
     return list(results)
 
 def download_observations(directory, observations):

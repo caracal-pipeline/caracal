@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
 
         if 'auto' not in [config[item] for item in 'fcal bpcal gcal target'.split()]:
-            return
+            continue
         
         intents = utils.categorize_fields(msinfo)
         # Get fields and their purposes

@@ -69,6 +69,9 @@ flagging:
   flag_antennas:
     enable: no
     antennas: null
+  flag_scan:
+    enable: no
+    scans: null
   static_mask:
     enable: no
     mask: null

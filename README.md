@@ -9,7 +9,7 @@ cd meerkathi
 ```
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
-$ pip install <path to meerkathi folder>
+$ pip install <absolute path to meerkathi folder>
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 

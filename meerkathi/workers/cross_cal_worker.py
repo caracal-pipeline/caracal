@@ -81,11 +81,11 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging gains'.format(step))
 
-        # Set model
-        field = get_field(config['set_model'].get('field', 'fcal'))
-        model = utils.find_in_native_calibrators(msinfo, field)
-        standard = utils.find_in_casa_calibrators(msinfo, field)
         if pipeline.enable_task(config, 'set_model'):
+            # Set model
+            field = get_field(config['set_model'].get('field', 'fcal'))
+            model = utils.find_in_native_calibrators(msinfo, field)
+            standard = utils.find_in_casa_calibrators(msinfo, field)
             # Prefer our standard over the NRAO standard
             if model:
                 opts = {
@@ -335,9 +335,10 @@ found in our database or in the CASA NRAO database'.format(field))
             no_table_to_apply = True
             field = getattr(pipeline, ft)[i]
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-                # applycal_interp_rules[ft].keys():
                 if not pipeline.enable_task(config, 'apply_'+applyme):
                     continue
+                if ft not in config['apply_'+applyme].get('applyto', 'bpcal,gcal,target').split(','):
+                   continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
                  
@@ -366,3 +367,14 @@ found in our database or in the CASA NRAO database'.format(field))
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+
+        if pipeline.enable_task(config, 'flagging_summary'):
+            step = 'flagging_summary_crosscal_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"         : msname,
+                  "mode"        : 'summary',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))

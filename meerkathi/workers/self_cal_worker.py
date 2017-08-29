@@ -8,6 +8,7 @@ NAME = 'Self calibration loop'
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
     trim = config['img_trim']
+    spwid = config.get('spwid', 0)
     cleanborder = 0
     cell = config['img_cell']
     mgain = config['img_mgain']
@@ -212,7 +213,7 @@ def worker(pipeline, recipe, config):
                 "column"        : 'MODEL_DATA',
                 "img_nchan"     : nchans,
                 "img_chanstep"  : 1,
-                "nchan"         : pipeline.nchans[index],
+                "nchan"         : pipeline.nchans[index][spwid],
                 "cellsize"      : cell,
                 "chanstep"      : 1,
         },
@@ -385,3 +386,15 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add extracted skymodel'.format(step))
+
+        for i,msname in enumerate(mslist):
+            if pipeline.enable_task(config, 'flagging_summary'):
+                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                recipe.add('cab/casa_flagdata', step,
+                    {
+                      "vis"         : msname,
+                      "mode"        : 'summary',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))

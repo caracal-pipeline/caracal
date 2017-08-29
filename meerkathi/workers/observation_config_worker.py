@@ -9,7 +9,7 @@ def worker(pipeline, recipe, config):
     """Requires *-obsinfo.json file from get_data worker"""
 
     # itnitialse things
-    for item in 'fcal bpcal gcal target reference_antenna'.split():
+    for item in 'fcal bpcal gcal target reference_antenna nchans'.split():
         val = config[item]
         if val and not isinstance(config[item], list):
             setattr(pipeline, item, [config[item]]*pipeline.nobs)
@@ -18,14 +18,8 @@ def worker(pipeline, recipe, config):
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
    
-    pipeline.nchans = [None]*pipeline.nobs
-            
     for i, prefix in enumerate(pipeline.prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-
-        # Get channels in MS
-        with open(msinfo, 'r') as stdr:
-            pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN'][0]
 
         # get reference antenna
         if config['reference_antenna'] == 'auto':
@@ -33,8 +27,15 @@ def worker(pipeline, recipe, config):
             pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
 
-        if 'auto' not in [config[item] for item in 'fcal bpcal gcal target'.split()]:
+        if 'auto' not in [config[item] for item in 'fcal bpcal gcal target nchans'.split()]:
             continue
+
+        # Get channels in MS
+        if config['nchans'] == 'auto':
+            with open(msinfo, 'r') as stdr:
+                spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+                pipeline.nchans[i] = spw
+            meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
         
         intents = utils.categorize_fields(msinfo)
         # Get fields and their purposes

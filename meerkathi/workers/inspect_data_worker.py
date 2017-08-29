@@ -20,9 +20,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'real_imag'):
             fields = config['real_imag'].get('fields', 'gcal,bpcal').split(',')
-            for field in fields:
+            for field_ in fields:
                 for col in ['baseline', 'scan']:
-                    field = get_field(field)
+                    field = get_field(field_)
                     step = 'plot_real_imag_{0:d}'.format(i)
                     recipe.add('cab/casa_plotms', step,
                        {
@@ -39,7 +39,7 @@ def worker(pipeline, recipe, config):
                         "avgchannel"    : config['real_imag'].get('avgchannel', ''),
                         "coloraxis"     : col,
                         "iteraxis"      : 'corr',
-                        "plotfile"      : '{0:s}-{1:s}-{2:s}-reim.png'.format(prefix, field, col),
+                        "plotfile"      : '{0:s}-{1:s}-{2:s}-{3:s}-reim.png'.format(prefix, label, field_, col),
                         "expformat"     : 'png',
                         "exprange"      : 'all',
                         "overwrite"     : True,
@@ -52,9 +52,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'amp_phase'):
             fields = config['amp_phase'].get('fields', 'gcal,bpcal').split(',')
-            for field in fields:
+            for field_ in fields:
                 for col in ['baseline', 'scan']:
-                    field = get_field(field)
+                    field = get_field(field_)
                     step = 'plot_amp_phase_{0:d}'.format(i)
                     recipe.add('cab/casa_plotms', step,
                        {
@@ -71,7 +71,7 @@ def worker(pipeline, recipe, config):
                         "avgchannel"    : config['amp_phase'].get('avgchannel', ''),
                         "coloraxis"     : col,
                         "iteraxis"      : 'corr',
-                        "plotfile"      : '{0:s}-{1:s}-{2:s}-ap.png'.format(prefix, field, col),
+                        "plotfile"      : '{0:s}-{1:s}-{2:s}-{3:s}-ap.png'.format(prefix, label, field_, col),
                         "expformat"     : 'png',
                         "exprange"      : 'all',
                         "overwrite"     : True,
@@ -84,8 +84,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'amp_uvwave'):
             fields = config['amp_uvwave'].get('fields', 'gcal,bpcal').split(',')
-            for field in fields:
-                field = get_field(field)
+            for field_ in fields:
+                field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
                 recipe.add('cab/casa_plotms', step,
                    {
@@ -104,7 +104,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-ampuvwave.png'.format(prefix, field),
+                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampuvwave.png'.format(prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -115,8 +115,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'amp_ant'):
             fields = config['amp_ant'].get('fields', 'gcal,bpcal').split(',')
-            for field in fields:
-                field = get_field(field)
+            for field_ in fields:
+                field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
                 recipe.add('cab/casa_plotms', step,
                    {
@@ -134,7 +134,7 @@ def worker(pipeline, recipe, config):
                     "coloraxis"     : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-ampant.png'.format(prefix, field),
+                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampant.png'.format(prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -146,8 +146,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'phase_uvwave'):
             fields = config['phase_uvwave'].get('fields', 'gcal,bpcal').split(',')
-            for field in fields:
-                field = get_field(field)
+            for field_ in fields:
+                field = get_field(field_)
                 step = 'phase_uvwave_{0:d}'.format(i)
                 recipe.add('cab/casa_plotms', step,
                    {
@@ -166,7 +166,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-phaseuvwave.png'.format(prefix, field),
+                    "plotfile"      : '{0:s}-{1:s}-{2:s}-phaseuvwave.png'.format(prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -178,8 +178,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'amp_scan'):
             fields = config['amp_scan'].get('fields', 'gcal,target,bpcal').split(',')
-            for field in fields:
-                field = get_field(field)
+            for field_ in fields:
+                field = get_field(field_)
                 step = 'plot_ampscan_{0:d}'.format(i)
                 recipe.add('cab/casa_plotms', step,
                    {
@@ -198,7 +198,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-ampscan.png'.format(prefix, field),
+                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampscan.png'.format(prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,

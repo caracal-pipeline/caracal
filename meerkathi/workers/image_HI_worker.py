@@ -54,7 +54,8 @@ def worker(pipeline, recipe, config):
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
 	
         step = 'image_HI'
-        nchans = config['image'].get('nchans', pipeline.nchans[0])
+        spwid = config['image'].get('spwid', 0)
+        nchans = config['image'].get('nchans', pipeline.nchans[0][spwid])
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
@@ -69,14 +70,14 @@ def worker(pipeline, recipe, config):
                   "channelsout"     : nchans,
                   "auto-threshold"  : config['image'].get('autothreshold', 5),
                   #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
-                  "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0]]),
+                  "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
               },  
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Image HI'.format(step))
 
     if pipeline.enable_task(config, 'make_cube'):
-        nchans = config['image'].get('nchans', pipeline.nchans[0])
+        nchans = config['image'].get('nchans', pipeline.nchans[0][spwid])
         step = 'make_cube'
         recipe.add('cab/fitstool', step,
             {    
@@ -119,3 +120,15 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Make SoFiA mask and images'.format(step))
+
+    if pipeline.enable_task(config, 'flagging_summary'):
+        for i,msname in enumerate(mslist):
+            step = 'flagging_summary_image_HI_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"         : msname,
+                  "mode"        : 'summary',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))

@@ -44,6 +44,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
+  nchans: auto
   reference_antenna: auto
 
 # Peform some basic operations to get it ready for reduction
@@ -74,6 +75,8 @@ flagging:
   autoflag:
     enable: yes
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+  flagging_summary:
+    enable: yes
 
 # First generation calibration
 cross_cal:
@@ -121,19 +124,25 @@ cross_cal:
   apply_delay_cal:
     enable: yes
     field: bpcal
+    applyto: bpcal,gcal,target
     applymode: calflag
   apply_bp_cal:
     enable: yes
+    applyto: bpcal,gcal,target
     field: bpcal
     applymode: calflag
   apply_gain_cal_gain:
     enable: no
     field: gcal
+    applyto: bpcal,gcal,target
     applymode: calflag
   apply_transfer_fluxscale:
     enable: yes
     field: gcal
+    applyto: bpcal,gcal,target
     applymode: calflag
+  flagging_summary:
+    enable: yes
 
 # Inspect 1GC calibration
 inspect_data:
@@ -195,6 +204,7 @@ self_cal:
   label: corr
   order: 7
   primary_beam: no
+  spwid: 0
   # Imaging settings
   img_npix: 1580
   img_trim: 1024
@@ -279,6 +289,8 @@ self_cal:
     enable: yes
     model: '2+3'
     clean_model: '4'
+  flagging_summary:
+    enable: yes
   
 image_HI:
   enable: yes
@@ -293,6 +305,7 @@ image_HI:
   image:
     enable: yes
     use_contsub: tyes
+    spwid: 0
     npix: 400
     trim: 256
     mgain: 0.9
@@ -316,3 +329,5 @@ image_HI:
     minSizeX: 3
     minSizeY: 3
     minSizeZ: 5
+  flagging_summary:
+    enable: yes

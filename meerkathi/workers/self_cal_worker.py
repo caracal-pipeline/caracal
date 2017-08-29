@@ -8,6 +8,7 @@ NAME = 'Self calibration loop'
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
     trim = config['img_trim']
+    spwid = config.get('spwid', 0)
     cleanborder = 0
     cell = config['img_cell']
     mgain = config['img_mgain']
@@ -212,7 +213,7 @@ def worker(pipeline, recipe, config):
                 "column"        : 'MODEL_DATA',
                 "img_nchan"     : nchans,
                 "img_chanstep"  : 1,
-                "nchan"         : pipeline.nchans[index],
+                "nchan"         : pipeline.nchans[index][spwid],
                 "cellsize"      : cell,
                 "chanstep"      : 1,
         },

@@ -55,8 +55,6 @@ def __query_filter(solr_url,
 
     archive = pysolr.Solr(solr_url)
 
-    res = archive.search(search, sort='StartTime desc', rows=1000)
-
     def _observation_filter(solr_result):
         """
         Filter out KAT observations that don't cut the mustard
@@ -118,9 +116,16 @@ def __query_filter(solr_url,
             return False
 
         return True
+    hits = []
+    curr_cursor = "*"
+    res = archive.search(search, sort='ProductName desc, id asc', rows=1000, cursorMark='*')
+    # Step through query results - may be many pages
+    while curr_cursor != res.nextCursorMark:
+        curr_cursor = res.nextCursorMark
+        hits += filter(_observation_filter, res)
+        res = archive.search(search, sort='ProductName desc, id asc', rows=1000, cursorMark=curr_cursor)
 
-    # If no query was supplied, filter the observations
-    return filter(_observation_filter, res)
+    return hits
 
 def load_observation_metadata(directory, filename):
     """ Load observation metadata """

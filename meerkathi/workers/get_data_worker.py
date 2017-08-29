@@ -25,7 +25,9 @@ def worker(pipeline, recipe, config):
                                                            product_num_channels=None,
                                                            time_extent=None,
                                                            required_intents=[],
-                                                           required_minimum_duration=0))
+                                                           required_minimum_duration=0,
+                                                           required_fields=[],
+                                                           required_description=".*"))
             for m in mdata:
                 bn = os.path.splitext(os.path.basename(m["Filename"]))[0]
                 mai.dump_observation_metadata(pipeline.data_path,
@@ -38,16 +40,18 @@ def worker(pipeline, recipe, config):
                                         cfg["query_url"],
                                         filename=None,
                                         product_type_name=cfg["product_type_name"],
-                                  product_num_channels=cfg["product_num_channels"],
-                                  time_extent=cfg["when_observed"],
-                                  required_intents=cfg["required_intents"],
-                                  required_minimum_duration=cfg["minimum_observation_duration"])
+                                        product_num_channels=cfg["product_num_channels"],
+                                        time_extent=cfg["when_observed"],
+                                        required_intents=cfg["required_intents"],
+                                        required_minimum_duration=cfg["minimum_observation_duration"],
+                                        required_fields=cfg["required_fields"],
+                                        required_description=cfg["description_matches"])
             for m in mdata:
                 bn = os.path.splitext(os.path.basename(m["Filename"]))[0]
                 mai.dump_observation_metadata(pipeline.data_path,
                                               bn + '.json',
                                               m)
-            pipeline.init_names([os.path.basename(m["Filename"]) for m in mdata])
+            pipeline.init_names([os.path.splitext(os.path.basename(m["Filename"]))[0] for m in mdata])
 
             if pipeline.nobs == 0:
                 meerkathi.log.warn("The archive says there is no new data matching your search parameters. "
@@ -89,7 +93,10 @@ def worker(pipeline, recipe, config):
                                             product_num_channels=None,
                                             time_extent=None,
                                             required_intents=[],
-                                            required_minimum_duration=0)
+                                            required_minimum_duration=0,
+                                            required_fields=[],
+                                            required_description=".*")
+
                         if len(mdata) == 0:
                             raise RuntimeError("Invalid product specified. You may want to run the meerkat_archive_query step or double check your dataid.")
                         meta = mdata[0]

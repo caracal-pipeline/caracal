@@ -21,7 +21,9 @@ get_data:
     product_type_name: 'MeerKATAR1TelescopeProduct'
     minimum_observation_duration: 2 #hours
     product_num_channels: 32768
-    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]' 
+    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
+    description_matches: '.*'
+    required_fields: [] 
   download:
     download_mode: meerkat # meerkat or manual (case insensitive)
     data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
@@ -147,7 +149,7 @@ cross_cal:
   flagging_summary:
     enable: yes
 
-# Inspect 1GC calibration
+# Inspect 1GC calibration pre-secondpass
 inspect_data:
   enable: yes
   order: 5
@@ -188,11 +190,133 @@ inspect_data:
     column: corrected
     avgtime: '90'
     avgchannel: '32'
+    
+# Post-calibration flagging
+flagging__2:
+  enable: no
+  order: 6
+  flag_autocorr:
+    enable: no
+  flag_spw:
+    enable: no
+    channels: "*:1419.8~1421.3MHz"
+  flag_antennas:
+    enable: no
+    antennas: null
+  static_mask:
+    enable: no
+    mask: null
+  autoflag:
+    enable: yes
+    strategy: 30Mar2017_secondpass_strategy.rfis # This has to be in the pipeline input folder
+    column: CORRECTED_DATA
+    
+# First generation calibration
+cross_cal__2:
+  enable: no
+  order: 7
+  uvrange: ">50"
+  label: 1gc2
+  set_model:
+    enable: yes
+    field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
+  delay_cal:
+    enable: yes
+    solint: inf
+    field: bpcal
+    plot: yes
+  bp_cal:
+    enable: yes
+    combine: ""
+    field: bpcal
+    minnrbl: 4
+    minsnr: 3
+    solnorm: no
+    solint: ""
+  gain_cal_flux:
+    enable: yes
+    combine: ""
+    field: fcal
+    minnrbl: 4
+    minsnr: 3
+    solnorm: yes
+    plot: no
+  gain_cal_gain:
+    enable: yes
+    combine: ""
+    field: gcal
+    minnrbl: 4
+    minsnr: 3
+    solnorm: no
+    plot: yes
+  transfer_fluxscale:
+    enable: yes
+    reference: fcal 
+    transfer: gcal
+    plot: yes
+  apply_delay_cal:
+    enable: yes
+    field: bpcal
+    applymode: calflag
+  apply_bp_cal:
+    enable: yes
+    field: bpcal
+    applymode: calflag
+  apply_gain_cal_gain:
+    enable: no
+    field: gcal
+    applymode: calflag
+  apply_transfer_fluxscale:
+    enable: yes
+    field: gcal
+    applymode: calflag
+    
+# Inspect 1GC calibration
+inspect_data__2:
+  enable: no
+  order: 8
+  label: 1gc2
+  real_imag:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_phase:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_uvwave:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_ant:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  phase_uvwave:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_scan:
+    enable: yes
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
 
 # Split target data
 split_target:
   enable: yes
-  order: 6
+  order: 9
   split_target:
     enable: yes
     time_average: 8s
@@ -205,7 +329,7 @@ split_target:
 self_cal:
   enable: yes
   label: corr
-  order: 7
+  order: 10
   primary_beam: no
   spwid: 0
   # Imaging settings
@@ -297,7 +421,7 @@ self_cal:
   
 image_HI:
   enable: yes
-  order: 8
+  order: 11
   label: corr
   uvcontsub: 
     enable: yes

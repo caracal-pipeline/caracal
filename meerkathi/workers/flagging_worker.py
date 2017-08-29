@@ -59,7 +59,7 @@ def worker(pipeline, recipe, config):
                     "msname"    : msname,
                     "mask"      : config['static_mask']['mask'],
                     "accumulation_mode" : 'or',
-                    "uvrange"   : config['static_mask'].get('uvrange', "0~10"),
+                    "uvrange"   : config['static_mask'].get('uvrange', "''"),
                     "memory"    : 4096,
                 },
                 input=pipeline.input,
@@ -72,7 +72,8 @@ def worker(pipeline, recipe, config):
                 {
                   "msname"      : msname,
                   "column"      : config['autoflag'].get('column', 'DATA'),
-                  "fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
+                  #Have to flag all fields - very likely have RFI inbetween calibrator scans
+                  #"fields"      : config['autoflag'].get('fields', pipeline.gcal[i]),
                   "strategy"    : config['autoflag']['strategy'],
                 },
                 input=pipeline.input,

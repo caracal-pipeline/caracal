@@ -86,7 +86,7 @@ def worker(pipeline, recipe, config):
             field = get_field(config['set_model'].get('field', 'fcal'))
             model = utils.find_in_native_calibrators(msinfo, field)
             standard = utils.find_in_casa_calibrators(msinfo, field)
-            # First check if field is in CASA database
+            # Prefer our standard over the NRAO standard
             if model:
                 opts = {
                   "vis"         : msname,
@@ -98,15 +98,14 @@ def worker(pipeline, recipe, config):
                   "scalebychan" : True,
                   "usescratch"  : False,
                 }
-
             elif standard:
-                opts = {
+               opts = {
                   "vis"         : msname,
                   "field"       : field,
                   "standard"    : config['set_model'].get('standard', standard),
                   "usescratch"  : False,
                   "scalebychan" : True,
-               }
+                }
             else:
                 raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))

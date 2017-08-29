@@ -46,13 +46,9 @@ setup(name = PACKAGE_NAME,
     author = "MeerKATHI peeps",
     author_email = "sphemakh@gmail.com",
     url = "https://github.com/sphemakh/meerkathi",
-    packages = ["meerkathi","meerkathi_misc", "meerkathi/workers", "meerkathi/dispatch_crew"],
-    package_data = { 
-           "meerkathi" : ['default-config.yml', 
-                          'data/southern_calibrators.txt',
-                          'data/casa_calibrators.yml']
-                   },
+    packages=[PACKAGE_NAME],
     install_requires = requirements,
+    include_package_data = True,
     scripts = ["bin/" + i for i in os.listdir("bin")],
     classifiers = [],
      )

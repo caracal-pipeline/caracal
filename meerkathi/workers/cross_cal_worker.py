@@ -91,20 +91,20 @@ def worker(pipeline, recipe, config):
                 opts = {
                   "vis"         : msname,
                   "field"       : field,
-                  "standard"    : config['set_model'].get('standard', standard),
-                  "usescratch"  : False,
-                  "scalebychan" : True,
-               }
-            elif standard:
-                opts = {
-                  "vis"         : msname,
-                  "field"       : field,
                   "standard"    : "manual",
                   "fluxdensity" : model['I'],
                   "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
                   "spix"        : [model[a] for a in 'abcd'],
                   "scalebychan" : True,
                   "usescratch"  : False,
+                }
+            elif standard:
+               opts = {
+                  "vis"         : msname,
+                  "field"       : field,
+                  "standard"    : config['set_model'].get('standard', standard),
+                  "usescratch"  : False,
+                  "scalebychan" : True,
                 }
             else:
                 raise RuntimeError('The flux calibrator field "{}" could not be \

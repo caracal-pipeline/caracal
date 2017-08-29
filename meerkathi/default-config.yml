@@ -431,7 +431,7 @@ image_HI:
     use_contsub: yes
   image:
     enable: yes
-    use_contsub: tyes
+    use_contsub: yes
     spwid: 0
     npix: 400
     trim: 256

@@ -333,10 +333,10 @@ self_cal:
   primary_beam: no
   spwid: 0
   # Imaging settings
-  img_npix: 1580
-  img_trim: 1024
+  img_npix: 8192 #at very least 50% padding for alias protection
+  img_trim: 5540
   img_mgain: 0.9
-  img_cell: 5
+  img_cell: 1.3
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000

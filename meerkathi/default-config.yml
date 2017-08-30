@@ -66,8 +66,8 @@ flagging:
   flag_autocorr:
     enable: yes
   flag_spw:
-    enable: no
-    channels: "*:1419.8~1421.3MHz"
+    enable: yes
+    channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
   flag_antennas:
     enable: no
     antennas: null

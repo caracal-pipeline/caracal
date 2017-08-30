@@ -433,10 +433,10 @@ image_HI:
     enable: yes
     use_contsub: yes
     spwid: 0
-    npix: 400
-    trim: 256
+    npix: 2048
+    trim: 1440
     mgain: 0.9
-    cell: 20
+    cell: 2.5
     weight: briggs
     robust: 2
     niter: 1000000

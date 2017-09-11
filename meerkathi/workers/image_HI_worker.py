@@ -68,8 +68,8 @@ def worker(pipeline, recipe, config):
                   "niter"     : config['image'].get('niter', 1000000),
                   "mgain"     : config['image'].get('mgain', 0.90),
                   "channelsout"     : nchans,
-                  "auto-threshold"  : config['image'].get('autothreshold', 5),
-                  #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
+                  "auto-threshold"  : config['image'].get('auto_threshold', 5),
+                  "auto-mask"  :   config['image'].get('auto_mask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
                   "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
               },  
         input=pipeline.input,
@@ -77,6 +77,7 @@ def worker(pipeline, recipe, config):
         label='{:s}:: Image HI'.format(step))
 
     if pipeline.enable_task(config, 'make_cube'):
+        spwid = config['image'].get('spwid', 0)
         nchans = config['image'].get('nchans', pipeline.nchans[0][spwid])
         step = 'make_cube'
         recipe.add('cab/fitstool', step,

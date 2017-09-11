@@ -6,7 +6,37 @@ import sys
 NAME = 'Automatically catergorize observed fields'
 
 def worker(pipeline, recipe, config):
-    """Requires *-obsinfo.json file from get_data worker"""
+
+    if pipeline.enable_task(config, 'obsinfo'):
+        for i in range(pipeline.nobs):
+            msname = pipeline.msnames[i]
+            prefix = pipeline.prefixes[i]
+            if config['obsinfo'].get('listobs', True):
+                step = 'listobs_{:d}'.format(i)
+                recipe.add('cab/casa_listobs', step,
+                    {
+                      "vis"         : msname,
+                      "listfile"    : prefix+'-obsinfo.txt' ,
+                      "overwrite"   : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+        
+            if config['obsinfo'].get('summary_json', True):
+                 step = 'summary_json_{:d}'.format(i)
+                 recipe.add('cab/msutils', step,
+                    {
+                      "msname"      : msname,
+                      "command"     : 'summary',
+                      "outfile"     : prefix+'-obsinfo.json',
+                    },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+                 
+        recipe.run()
+        recipe.jobs = []
 
     # itnitialse things
     for item in 'fcal bpcal gcal target reference_antenna nchans'.split():
@@ -17,6 +47,10 @@ def worker(pipeline, recipe, config):
             setattr(pipeline, item, config[item])
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
+
+    # Set antenna properties
+    pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
+    pipeline.dish_diameter = config.get('dish_diameter', 13.5)
    
     for i, prefix in enumerate(pipeline.prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
@@ -86,4 +120,3 @@ def worker(pipeline, recipe, config):
             for target in targets:
                 tobs = utils.field_observation_length(msinfo, target)/60.0
                 meerkathi.log.info('Targer field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
-

@@ -172,26 +172,3 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
-
-        if pipeline.enable_task(config, 'obsinfo'):
-            step = 'listobs_{:d}'.format(i)
-            recipe.add('cab/casa_listobs', step,
-                {
-                  "vis"         : msname,
-                  "listfile"    : prefix+'-obsinfo.txt' ,
-                  "overwrite"   : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
-
-            if config['obsinfo'].get('include_json', True):
-                 recipe.add('cab/msutils', step,
-                    {
-                      "msname"      : msname,
-                      "command"     : 'summary',
-                      "outfile"     : prefix+'-obsinfo.json',
-                    },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))

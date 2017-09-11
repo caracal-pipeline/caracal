@@ -41,7 +41,7 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
 
         msname = pipeline.msnames[i]
-        refant = pipeline.reference_antenna[i]
+        refant = pipeline.reference_antenna[i] or '0'
         prefix = pipeline.prefixes[i]
         dataid = pipeline.dataid[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
@@ -84,30 +84,38 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'set_model'):
             # Set model
             field = get_field(config['set_model'].get('field', 'fcal'))
-            model = utils.find_in_native_calibrators(msinfo, field)
-            standard = utils.find_in_casa_calibrators(msinfo, field)
-            # Prefer our standard over the NRAO standard
-            if model:
+            if config['set_model'].get('no_verify', False):
                 opts = {
-                  "vis"         : msname,
-                  "field"       : field,
-                  "standard"    : "manual",
-                  "fluxdensity" : model['I'],
-                  "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
-                  "spix"        : [model[a] for a in 'abcd'],
-                  "scalebychan" : True,
-                  "usescratch"  : False,
-                }
-            elif standard:
-               opts = {
-                  "vis"         : msname,
-                  "field"       : field,
-                  "standard"    : config['set_model'].get('standard', standard),
-                  "usescratch"  : False,
-                  "scalebychan" : True,
+                    "vis"        : msname,
+                    "field"      : field,
+                    "scalebychan": True,
+                    "usescratch" : True,
                 }
             else:
-                raise RuntimeError('The flux calibrator field "{}" could not be \
+                model = utils.find_in_native_calibrators(msinfo, field)
+                standard = utils.find_in_casa_calibrators(msinfo, field)
+                # Prefer our standard over the NRAO standard
+                if model:
+                    opts = {
+                      "vis"         : msname,
+                      "field"       : field,
+                      "standard"    : "manual",
+                      "fluxdensity" : model['I'],
+                      "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
+                      "spix"        : [model[a] for a in 'abcd'],
+                      "scalebychan" : True,
+                      "usescratch"  : False,
+                    }
+                elif standard:
+                   opts = {
+                      "vis"         : msname,
+                      "field"       : field,
+                      "standard"    : config['set_model'].get('standard', standard),
+                      "usescratch"  : False,
+                      "scalebychan" : True,
+                    }
+                else:
+                    raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
                       
             step = 'set_model_cal_{0:d}'.format(i)
@@ -187,7 +195,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     recipe.add('cab/casa_plotcal', step,
                        {
                         "caltable"  : prefix+".B0:output",
-                        "xaxis"     : 'chan',
+                        "xaxis"     : 'freq',
                         "yaxis"     : plot,
                         "field"     : field,
                         "iteration" : 'antenna',
@@ -352,7 +360,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 continue
 
             applied.append(field)
-            step = 'apply_{0:s}_{1:s}_{2:d}'.format(ft, dataid, i)
+            step = 'apply_{0:s}_{1:d}'.format(ft, i)
             recipe.add('cab/casa_applycal', step,
                {
                 "vis"       : msname,

@@ -65,6 +65,10 @@ flagging:
   order: 3
   flag_autocorr:
     enable: yes
+  quack_flagging:
+    enable: no
+    quackinterval: 10
+    quackmode: beg
   flag_spw:
     enable: yes
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
@@ -91,6 +95,7 @@ cross_cal:
   label: 1gc1
   set_model:
     enable: yes
+    no_verify: no
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes

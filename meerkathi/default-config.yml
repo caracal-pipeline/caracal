@@ -65,6 +65,10 @@ flagging:
   order: 3
   flag_autocorr:
     enable: yes
+  quack_flagging:
+    enable: no
+    quackinterval: 10
+    quackmode: beg
   flag_spw:
     enable: yes
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway

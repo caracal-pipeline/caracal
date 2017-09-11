@@ -34,14 +34,14 @@ get_data:
     channel_range: null
   untar:
     enable: no
-  obsinfo:
-    enable: yes
-    include_json: yes
 
 # Setup some basic observation information
 observation_config:
   enable: yes
   order: 1
+  obsinfo:
+    listobs: yes
+    summary_json: yes
   target: auto
   fcal: auto
   bpcal: auto
@@ -322,6 +322,10 @@ split_target:
     time_average: 8s
     freq_average: 1
     label: corr
+  obsinfo: 
+    enable: yes
+    listobs: no
+    summary_json: yes
   prepms:
     enable: no
 
@@ -331,6 +335,7 @@ self_cal:
   label: corr
   order: 10
   primary_beam: no
+  calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
   img_npix: 8192 #at very least 50% padding for alias protection
@@ -350,9 +355,8 @@ self_cal:
   img_column: CORRECTED_DATA
   img_pol: I
   # Calibration settings
-  cal_Gsols: [80, 250] 
-  cal_DDsols: [60, 500]
-  cal_flag_ampl: [0.5, 1.5]
+  cal_Gsols: auto
+  cal_DDsols: [300, 500]
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5 
   # Source finding settings
@@ -360,8 +364,8 @@ self_cal:
   sf_thresh_isl: 8 
   image_1:
     enable: yes
-    auto_mask: 20
-    autothreshold: 0.5
+    auto_mask: 40
+    auto_threshold: 0.5
     column: DATA
   extract_sources_1:
     enable: yes
@@ -373,12 +377,11 @@ self_cal:
     gain_matrix_type: GainDiagPhase
   image_2:
     enable: yes
-    mask: yes # mask will be based on previous image
-    automask: 20
-    autothreshold: 0.5
+    auto_mask: 30
+    auto_threshold: 0.5
   extract_sources_2:
     enable: yes
-    spi: no
+    spi: yes
   calibrate_2:
     enable: yes
     model: '2' # use model from extract_sources_2
@@ -435,12 +438,13 @@ image_HI:
     spwid: 0
     npix: 2048
     trim: 1440
-    mgain: 0.9
+    mgain: 0.85
     cell: 2.5
     weight: briggs
     robust: 2
     niter: 1000000
-    autothreshold: 3
+    auto_mask: 3
+    auto_threshold: 0.25
     cleanborder: 0
     facets: 11
   make_cube:

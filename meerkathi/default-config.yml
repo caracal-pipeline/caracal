@@ -95,6 +95,7 @@ cross_cal:
   label: 1gc1
   set_model:
     enable: yes
+    no_verify: no
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes

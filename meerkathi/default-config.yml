@@ -345,8 +345,8 @@ self_cal:
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_autothreshold: 3
-  img_automask: 5
+  img_auto_threshold: 3
+  img_auto_mask: 5
   img_cleanborder: 0
   img_facets: 11
   img_nchans: 3

@@ -40,6 +40,7 @@ observation_config:
   enable: yes
   order: 1
   obsinfo:
+    enable: yes
     listobs: yes
     summary_json: yes
   target: auto

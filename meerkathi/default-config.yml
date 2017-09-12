@@ -16,7 +16,7 @@ get_data:
   meerkat_query_available:
     enable: yes
     poll_mode: 'poll' # 'override' or 'poll' to specify manual product name through dataid or poll to find suitable products in archive
-    query_url: 'http://192.168.1.50:8983/solr/kat_core' #if manual you can specify your url to, say, NRAO ftp server-hosted file here
+    query_url: 'http://192.168.1.50:8983/solr/kat_core' #MeerKAT Apache Solr server
     required_intents: ['gaincal','bpcal','target'] #these better be here for imaging, otherwise manual intervention is required
     product_type_name: 'MeerKATAR1TelescopeProduct'
     minimum_observation_duration: 2 #hours

@@ -41,6 +41,7 @@ def worker(pipeline, recipe, config):
     bsols = config.get('cal_Bsols', [0,1])
     taper = config.get('img_uvtaper', None)
     label = config['label']
+    bjones = config.get('Bjones', False)
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
     prefix = pipeline.prefix
@@ -315,14 +316,20 @@ def worker(pipeline, recipe, config):
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
 
         autosols = [],[]
+        autosols_set = False
         if config[key].get('Gsols', gsols) == 'auto' or \
                        config[key].get('Bsols', gsols) == 'auto':
             autosols = autoset_calibration_intervals(recipe, calmodel, num, key)
             config[key]['Bjones'] = True
+            autosols_set = True
 
         for i,msname in enumerate(mslist):
-            gsols_ = autosols[i][0] or config[key].get('Gsols', gsols)
-            bsols_ = autosols[i][1] or config[key].get('Bsols', bsols)
+            if autosols_set:
+                gsols_ = autosols[i][0] 
+                bsols_ = autosols[i][1] 
+            else:
+                gsols_ = config[key].get('Gsols', gsols)
+                bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
@@ -349,7 +356,7 @@ def worker(pipeline, recipe, config):
                  "Bjones"                    : config[key].get('Bjones', False),
                  "Bjones-ampl-clipping"      : True,
                  "Bjones-solution-intervals" : bsols_,
-                 "Bjones-ampl-clipping"      : config[key].get('Bjones', False),
+                 "Bjones-ampl-clipping"      : config[key].get('Bjones', bjones),
                  "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Bjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "make-plots"           : True,
@@ -371,14 +378,20 @@ def worker(pipeline, recipe, config):
             calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
 
         autosols = [],[]
+        autosols_set = False
         if config[key].get('Gsols', gsols) == 'auto' or \
                        config[key].get('Bsols', gsols) == 'auto':
             autosols = autoset_calibration_intervals(recipe, calmodel, num, key)
             config[key]['Bjones'] = True
+            autosols_set = True
 
         for i,msname in enumerate(mslist):
-            gsols_ = autosols[i][0] or config[key].get('Gsols', gsols)
-            bsols_ = autosols[i][1] or config[key].get('Bsols', bsols)
+            if autosols_set:
+                gsols_ = autosols[i][0] 
+                bsols_ = autosols[i][1] 
+            else:
+                gsols_ = config[key].get('Gsols', gsols)
+                bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/cubical', step, 
@@ -401,7 +414,7 @@ def worker(pipeline, recipe, config):
                     "j1-freq-int"      : gsols_[1],
                     "j1-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "j1-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
-                    "j2-solvable"      : config[key].get('Bjones', False),
+                    "j2-solvable"      : config[key].get('Bjones', bjones),
                     "j2-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
                     "j2-time-int"      : bsols_[0],
                     "j2-freq-int"      : bsols_[1],

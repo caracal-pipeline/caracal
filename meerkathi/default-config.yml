@@ -40,6 +40,7 @@ observation_config:
   enable: yes
   order: 1
   obsinfo:
+    enable: yes
     listobs: yes
     summary_json: yes
   target: auto
@@ -322,11 +323,11 @@ inspect_data__2:
 split_target:
   enable: yes
   order: 9
+  label: corr
   split_target:
     enable: yes
     time_average: 8s
     freq_average: 1
-    label: corr
   obsinfo: 
     enable: yes
     listobs: no

@@ -105,6 +105,7 @@ cross_cal:
     minsnr: 3
     solnorm: no
     solint: ""
+    plot: yes
   gain_cal_flux:
     enable: yes
     combine: ""

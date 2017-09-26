@@ -94,6 +94,7 @@ cross_cal:
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes
+    combine: ""
     solint: inf
     field: bpcal
     plot: yes

@@ -129,6 +129,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "field"        : field,
                  "refant"       : refant,
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
+                 "combine"      : config['delay_cal'].get('combine', ''),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },

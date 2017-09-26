@@ -120,7 +120,6 @@ cross_cal:
     field: gcal
     minnrbl: 4
     minsnr: 3
-    solnorm: no
     plot: yes
   transfer_fluxscale:
     enable: yes
@@ -223,6 +222,7 @@ cross_cal__2:
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes
+    combine: ""
     solint: inf
     field: bpcal
     plot: yes
@@ -240,7 +240,6 @@ cross_cal__2:
     field: fcal
     minnrbl: 4
     minsnr: 3
-    solnorm: yes
     plot: no
   gain_cal_gain:
     enable: yes
@@ -248,7 +247,6 @@ cross_cal__2:
     field: gcal
     minnrbl: 4
     minsnr: 3
-    solnorm: no
     plot: yes
   transfer_fluxscale:
     enable: yes

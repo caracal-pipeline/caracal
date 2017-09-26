@@ -113,7 +113,6 @@ cross_cal:
     field: fcal
     minnrbl: 4
     minsnr: 3
-    solnorm: yes
     plot: no
   gain_cal_gain:
     enable: yes

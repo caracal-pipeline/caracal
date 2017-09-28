@@ -186,7 +186,7 @@ inspect_data:
     avgchannel: '32'
   amp_scan:
     enable: yes
-    fields: gcal,bpcal
+    fields: gcal,bpcal,target
     column: corrected
     avgtime: '90'
     avgchannel: '32'
@@ -307,7 +307,7 @@ inspect_data__2:
     avgchannel: '32'
   amp_scan:
     enable: yes
-    fields: gcal,bpcal
+    fields: gcal,bpcal,target
     column: corrected
     avgtime: '90'
     avgchannel: '32'

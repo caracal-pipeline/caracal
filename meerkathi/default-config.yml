@@ -425,7 +425,7 @@ image_HI:
   uvcontsub: 
     enable: yes
     fitorder: 1
-  sublocker: 
+  sunblocker: 
     enable: yes
     use_contsub: yes
   image:

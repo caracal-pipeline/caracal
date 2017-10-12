@@ -87,6 +87,7 @@ flagging:
 cross_cal:
   enable: yes
   order: 4
+  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
@@ -215,6 +216,7 @@ flagging__2:
 cross_cal__2:
   enable: no
   order: 7
+  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc2
   set_model:

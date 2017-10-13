@@ -2,41 +2,41 @@
 
 # General pipeline information, data IDs, prefixes for output
 general:
-  data_path: input/data # change me!
-  prefix: meerkathi-pipeline
-  msdir: msdir
-  input: input
-  output: output
+  data_path: input/data              # where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
+  msdir: msdir                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
+  input: input                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
+  output: output                     # where MeerKATHI writes output products
+  prefix: meerkathi-pipeline         # prefix for output products
 
 # Get data to be reduced
-get_data:
-  dataid: [] # change me if need be... you can always just image the newest observations as well
+get_data:                                               # always enable, even if the MS files are already in place, else the pipeline doesn't know what files to process and does nothing
+  dataid: []                                            # process these HDF5/MS files
   enable: yes
   order: 0
-  meerkat_query_available:
+  meerkat_query_available:                              # query the MeerKAT archive to look for HDF5 files and metadata (but no download yet; this is set furher below)
     enable: yes
-    poll_mode: 'poll' # 'override' or 'poll' to specify manual product name through dataid or poll to find suitable products in archive
-    query_url: 'http://192.168.1.50:8983/solr/kat_core' #MeerKAT Apache Solr server
-    required_intents: ['gaincal','bpcal','target'] #these better be here for imaging, otherwise manual intervention is required
-    product_type_name: 'MeerKATAR1TelescopeProduct'
-    minimum_observation_duration: 2 #hours
+    poll_mode: 'poll'                                   # 'override' (look for files in dataid above; ignore options below query_url) or 'poll' (search archive with options below query_url)
+    query_url: 'http://192.168.1.50:8983/solr/kat_core' # MeerKAT Apache Solr server
+    required_intents: ['gaincal','bpcal','target']      # these better be here for imaging, otherwise manual intervention is required
+    product_type_name: 'MeerKATAR1TelescopeProduct'     # change only if you want data not from MeerKAT (e.g., KAT7)
+    minimum_observation_duration: 2                     # hours
     product_num_channels: 32768
     when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
     description_matches: '.*'
     required_fields: [] 
-  download:
-    download_mode: meerkat # meerkat or manual (case insensitive)
-    data_url: "" #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
+  download:                                             # download HDF5 files and metadata for IDs in dataid or returned by the query above; disable if the required files are already in data_path
+    download_mode: meerkat                              # meerkat or manual (case insensitive)
+    data_url: ""                                        #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
     enable: yes
-    reset: no
-  h5toms:
+    reset: no                                           # overwrite HDF5 and metadata files in data_path
+  h5toms:                                               # convert HDF5 files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file
     enable: yes
-    channel_range: null
-  untar:
+    channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive)
+  untar:                                                # untar the MS.TAR file in msdir; this will overwrite the existing MS file
     enable: no
-  obsinfo:
+  obsinfo:                                              # run CASA LISTOBS and write meerkathi_<dataid>_obsinfo.txt file to output directory set above
     enable: yes
-    include_json: yes
+    include_json: yes                                   # also write a obsinfo.json to same output directory
 
 # Setup some basic observation information
 observation_config:

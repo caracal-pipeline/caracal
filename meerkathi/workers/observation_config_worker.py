@@ -85,5 +85,5 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Found {0:d} target fields {1:s}'.format(len(targets), pipeline.target[i]))
             for target in targets:
                 tobs = utils.field_observation_length(msinfo, target)/60.0
-                meerkathi.log.info('Targer field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
+                meerkathi.log.info('Target field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
 

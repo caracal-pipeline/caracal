@@ -158,9 +158,10 @@ found in our database or in the CASA NRAO database'.format(field))
         # Set "Combine" to 'scan' for getting combining all scans for BP soln.
         if pipeline.enable_task(config, 'bp_cal'):
             if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
-            else: gaintables,interpolations=[],[]
+            else: gaintables,interpolations='',''
             field = get_field(config['bp_cal'].get('field', 'bpcal'))
             step = 'bp_cal_{0:d}'.format(i)
+
             recipe.add('cab/casa_bandpass', step,
                {
                  "vis"          : msname,

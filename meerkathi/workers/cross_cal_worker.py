@@ -2,6 +2,7 @@ import sys
 import os
 import meerkathi.dispatch_crew.utils as utils
 import yaml
+import stimela.dismissable as sdm
 
 NAME = "Cross calibration"
 
@@ -158,7 +159,7 @@ found in our database or in the CASA NRAO database'.format(field))
         # Set "Combine" to 'scan' for getting combining all scans for BP soln.
         if pipeline.enable_task(config, 'bp_cal'):
             if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
-            else: gaintables,interpolations='',''
+            else: gaintables,interpolations=None,''
             field = get_field(config['bp_cal'].get('field', 'bpcal'))
             step = 'bp_cal_{0:d}'.format(i)
 
@@ -171,7 +172,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "solint"       : config['bp_cal'].get('solint', 'inf'),
                  "combine"      : config['bp_cal'].get('combine', ''),
                  "bandtype"     : "B",
-                 "gaintable"    : gaintables,
+                 "gaintable"    : sdm.dismissable(gaintables),
                  "interp"       : interpolations,
                  "fillgaps"     : 70,
                  "uvrange"      : config['uvrange'],

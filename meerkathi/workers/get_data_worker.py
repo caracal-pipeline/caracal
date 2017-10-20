@@ -139,20 +139,6 @@ def worker(pipeline, recipe, config):
                     output=pipeline.data_path,
                     label='{0:s}:: Downloading data'.format(step))
 
-        if pipeline.enable_task(config, 'untar'):
-            step = 'untar_{:d}'.format(i)
-            # Function to untar Ms from .tar file
-            def untar(ms):
-                mspath = os.path.abspath(pipeline.msdir)
-                subprocess.check_call(['tar', 'xvf',
-                    os.path.join(mspath, ms+'.tar'),
-                    '-C', mspath])
-            # add function to recipe
-            recipe.add(untar, step, 
-                 {
-                  "ms"        : msname,
-                 },
-                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
@@ -172,6 +158,21 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
+
+        elif pipeline.enable_task(config, 'untar'):
+            step = 'untar_{:d}'.format(i)
+            # Function to untar Ms from .tar file
+            def untar(ms):
+                mspath = os.path.abspath(pipeline.msdir)
+                subprocess.check_call(['tar', 'xvf',
+                    os.path.join(mspath, ms+'.tar'),
+                    '-C', mspath])
+            # add function to recipe
+            recipe.add(untar, step, 
+                 {
+                  "ms"        : msname,
+                 },
+                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'obsinfo'):
             step = 'listobs_{:d}'.format(i)

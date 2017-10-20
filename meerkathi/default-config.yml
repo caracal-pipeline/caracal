@@ -31,7 +31,7 @@ get_data:                                               # always enable, even if
     reset: no                                           # overwrite HDF5 and metadata files in data_path
   h5toms:                                               # convert HDF5 files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file
     enable: yes
-    channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive)
+    channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive, null=all channels)
   untar:                                                # untar the MS.TAR file in msdir; this will overwrite the existing MS file
     enable: no
   obsinfo:                                              # run CASA LISTOBS and write meerkathi_<dataid>_obsinfo.txt file to output directory set above

@@ -5,6 +5,7 @@ import itertools
 import meerkathi
 import meerkathi.dispatch_crew.meerkat_archive_interface as mai
 import stimela.dismissable as sdm
+import warnings
 
 NAME = "Get convert and extract data"
 
@@ -195,3 +196,20 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+
+            if config['obsinfo'].get('vampirisms', True):
+                try:
+                    from sunblocker.sunblocker import Sunblocker
+                    step = 'vampirisms_{0:d}'.format(i)
+                    recipe.add(Sunblocker().vampirisms, step,
+                        {
+                            "inset"       : '{0:s}/{1:s}'.format(pipeline.msdir, msname),
+                            "dryrun"      : True,
+                            "nononsoleil" : True,
+                            "verb"        : True,
+                        },
+                    label='{0:s}:: Note sunrise and sunset'.format(step))
+
+                except ImportError:
+                    warnings.warn('Sunblocker module not found. Will skip vampirisms step')
+

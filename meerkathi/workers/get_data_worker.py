@@ -16,6 +16,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info("User specified MeerKAT filenames manually. Will now contact MeerKAT archive for their metadata...")
             dids = config["dataid"] if isinstance(config["dataid"], list) else [config["dataid"]]
             mdata = []
+            pipeline.metadata = []
             for did in dids:
                 mdata = \
                 itertools.chain(mdata, mai.query_metadatas(pipeline.data_path,
@@ -33,6 +34,7 @@ def worker(pipeline, recipe, config):
                 mai.dump_observation_metadata(pipeline.data_path,
                                               bn + '.json',
                                               m)
+                pipeline.metadata.append('{0:s}/{1:s}.json'.format(pipeline.data_path, bn))
             pipeline.init_names(config["dataid"])
         elif cfg["poll_mode"] == "poll":
             meerkathi.log.info("Polling the MeerKAT archive for the latest imaging observations...")
@@ -138,24 +140,10 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.data_path,
                     label='{0:s}:: Downloading data'.format(step))
-
-        if pipeline.enable_task(config, 'untar'):
-            step = 'untar_{:d}'.format(i)
-            # Function to untar Ms from .tar file
-            def untar(ms):
-                mspath = os.path.abspath(pipeline.msdir)
-                subprocess.check_call(['tar', 'xvf',
-                    os.path.join(mspath, ms+'.tar'),
-                    '-C', mspath])
-            # add function to recipe
-            recipe.add(untar, step, 
-                 {
-                  "ms"        : msname,
-                 },
-                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
-
+    
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
+
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
 
@@ -172,3 +160,59 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
+
+    if pipeline.enable_task(config, 'combine'):
+        step = 'combine_data'
+        newid = config['combine']['newid']
+        msnames = pipeline.msnames
+        metadata = pipeline.metadata[0]
+        pipeline.init_names([newid])
+        msname = pipeline.msnames[0]
+        pipeline.metada = [metadata]
+
+        if config['combine'].get('reset', True):
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
+                os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
+
+            recipe.add('cab/casa_concat', step, 
+                {
+                    "vis"       : msnames,
+                    "concatvis" : msname,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Combine datasets'.format(step))
+
+        if config['combine'].get('tar', True):
+            step = 'tar_{:d}'.format(i)
+            tar_options = config['combine'].get('tar_options', 'cvf')
+            # Function to untar Ms from .tar file
+            def tar(ms):
+                mspath = os.path.abspath(pipeline.msdir)
+                subprocess.check_call(['tar', tar_options,
+                    os.path.join(mspath, ms+'.tar'),
+                    os.path.join(mspath, ms),
+                    ])
+            # add function to recipe
+            recipe.add(tar, step, 
+                 {
+                  "ms"        : msname,
+                 },
+                 label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
+
+    for i, msname in enumerate(pipeline.msnames):
+        if pipeline.enable_task(config, 'untar'):
+                step = 'untar_{:d}'.format(i)
+                tar_options = config['untar'].get('tar_options', 'xvf')
+                # Function to untar Ms from .tar file
+                def untar(ms):
+                    mspath = os.path.abspath(pipeline.msdir)
+                    subprocess.check_call(['tar', tar_options,
+                        os.path.join(mspath, ms+'.tar'),
+                        '-C', mspath])
+                # add function to recipe
+                recipe.add(untar, step, 
+                     {
+                      "ms"        : msname,
+                     },
+                     label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))

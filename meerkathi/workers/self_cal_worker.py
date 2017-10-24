@@ -41,7 +41,8 @@ def worker(pipeline, recipe, config):
     bsols = config.get('cal_Bsols', [0,1])
     taper = config.get('img_uvtaper', None)
     label = config['label']
-    bjones = config.get('Bjones', False)
+    bjones = config.get('cal_Bjones', False)
+    ncpu = config.get('ncpu', 9)
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
     prefix = pipeline.prefix
@@ -337,7 +338,7 @@ def worker(pipeline, recipe, config):
                  "skymodel"             : calmodel,
                  "add-vis-model"        : vismodel,
                  "msname"               : msname,
-                 "threads"              : config[key].get('ncpu', 8),
+                 "threads"              : ncpu,
                  "column"               : "DATA",
                  "output-data"          : config[key].get('output_data', 'CORR_RES'),
                  "output-column"        : "CORRECTED_DATA",
@@ -360,7 +361,7 @@ def worker(pipeline, recipe, config):
                  "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Bjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "make-plots"           : True,
-                 "tile-size"            : 512,
+                 "tile-size"            : time_chunk,
                },
                input=pipeline.input,
                output=pipeline.output,
@@ -385,6 +386,11 @@ def worker(pipeline, recipe, config):
             config[key]['Bjones'] = True
             autosols_set = True
 
+        if config[key].get('Bjones', bjones):
+            jones_chain = 'G,B'
+        else:
+            jones_chain = 'G' 
+
         for i,msname in enumerate(mslist):
             if autosols_set:
                 gsols_ = autosols[i][0] 
@@ -399,9 +405,11 @@ def worker(pipeline, recipe, config):
                     "data-ms"          : msname, 
                     "data-column"      : 'DATA',
                     "model-column"     : 'MODEL_DATA' if config[key].get('add_vis_model', False) else ' "" ',
-                    "data-time-chunk"  : 512,
+                    "j2-term-iters"    : 200,
+                    "data-time-chunk"  : time_chunk,
                     "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
-                    "dist-ncpu"        : config[key].get('ncpu', 8),
+                    "dist-ncpu"        : ncpu,
+                    "sol-jones"        : jones_chain,
                     "model-lsm"        : calmodel,
                     "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                     "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')],

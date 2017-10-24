@@ -57,7 +57,7 @@ def worker(pipeline, recipe, config):
 
         # get reference antenna
         if config['reference_antenna'] == 'auto':
-            msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
+            msmeta = pipeline.metadata[i]
             pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
         

@@ -18,8 +18,8 @@ def worker(pipeline, recipe, config):
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol', 'I')
-    thresh_pix = config['sf_thresh_isl']
-    thresh_isl = config['sf_thresh_pix']
+    thresh_pix = config['sf_thresh_pix']
+    thresh_isl = config['sf_thresh_isl']
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']

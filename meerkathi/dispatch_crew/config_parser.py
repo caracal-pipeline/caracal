@@ -115,6 +115,13 @@ class config_parser:
             else:
                 raise argparse.ArgumentTypeError("Failed to convert argument. Must be one of "
                                                  "'yes', 'true', 'no' or 'false'.")
+
+        def _nonetype(v):
+            if v.upper() in ("NONE","NULL"):
+                return None
+            else:
+                return str(v)
+
         def _subparser_tree(sections,
                             base_section="",
                             update_only = False,
@@ -154,7 +161,11 @@ class config_parser:
                                                 default=default,
                                                 nargs="?",
                                                 const=True)
-
+                        elif default is None:
+                            parser.add_argument("--%s" % option_name,
+                                                type=_nonetype,
+                                                default=default,
+                                                nargs="?")
                         else:
                             parser.add_argument("--%s" % option_name,
                                                 type=type(default),

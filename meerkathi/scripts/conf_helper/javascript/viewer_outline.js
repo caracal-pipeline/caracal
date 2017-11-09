@@ -78,6 +78,27 @@ outline_viewer.prototype.notify = function(type, payload) {
 		// update reference to model to which this viewer is registered as observer
 		this._model = payload;
 		this.on_select({"target":{"id":this._name + "__0"}}, this);
+	} else if (type == "key_update") {
+		function check_enabled(obj, instname, level=0){
+			var kv = 0;
+			for (var key in obj) {
+				if (obj.hasOwnProperty(key)){
+					if (is_dict(obj[key])) {
+						marker = (!(obj[key].hasOwnProperty("enable")) ? "&squf;" : 
+							  obj[key]["enable"] ? "&squf;" : "&curren;");
+
+						btnname = instname + "__" + kv;
+						btninst = document.getElementById(btnname);
+						btninst.innerHTML = marker + "   " +
+								    key.replace(/__/g," round ").replace(/_/g, " ");
+						check_enabled(obj[key], btnname, level + 1);
+					}
+				}
+				++kv;
+			}
+		}
+		check_enabled(payload.data, this._name); 
+	
 	}
 }
 outline_viewer.prototype.on_select = function(e, inst) {

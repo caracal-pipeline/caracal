@@ -51,17 +51,34 @@ class parameter_file {
 	set subtree_select(newsel) {
 		if (!Array.isArray(newsel))
 			throw "Expected array for new selection";
-
+		var d = this._dict;
 		for (var i = 0; i < newsel.length; ++i) {
-			if (!(typeof this._dict == "object" && Object.keys(this._dict).length > newsel[i])){
+			if (!(typeof d == "object" && Object.keys(d).length > newsel[i])){
 				throw "New selection out of bounds for level " + i + ": " + newsel[i];
-			}
+			} else d = d[Object.keys(d)[newsel[i]]];
 		}
 		this._subtree_sel = newsel.slice();
 		//notify all of new subtree selection
 		for (var i = 0; i < this._viewers.length; ++i){
 			this._viewers[i].notify("subtree_select", this);
 		}		
+	}
+
+	update_key(level, value) {
+		if (!Array.isArray(level))
+			throw "Expected array for new selection";
+		var d = this._dict;
+		for (var i = 0; i < level.length; ++i) {
+			if (!(typeof d == "object" && Object.keys(d).length > level[i])){
+				throw "New selection out of bounds for level " + i + ": " + level[i];
+			} else d = i < level.length - 1 ? d[Object.keys(d)[level[i]]] : d;
+		}
+		d[Object.keys(d)[level[level.length - 1]]] = value;
+		//notify all observers of the key update 
+		for (var i = 0; i < this._viewers.length; ++i){
+			this._viewers[i].notify("key_update", this);
+		}		
+
 	}
 
 	register_viewer(viewer) {

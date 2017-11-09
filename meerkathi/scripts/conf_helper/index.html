@@ -12,21 +12,24 @@
 			if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
 				alert('The File APIs are not fully supported in this browser.');
 			}
-			function getQueryVariable(variable) {
-				/* 
-				 * Ref: http://www.idealog.us/2006/06/javascript_to_p.html
-				 * Return querystring variable if exists, null otherwise
-				 *
-                                 */
-				var query = window.location.search.substring(1);
-				var vars = query.split('&');
-				for (var i = 0; i < vars.length; i++) {
-					var pair = vars[i].split('=');
-					if (decodeURIComponent(pair[0]) == variable)
-						return decodeURIComponent(pair[1]);
-				}
-				return null;
-			}
+            function getParameterByName(name, url = null) {
+                /*
+                 * Ref https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript  
+                 */
+                if (!url) url = window.location.href;
+                name = name.replace(/[\[\]]/g, "\\$&");
+                var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                    results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, " "));
+            }
+            function b64DecodeUnicode(str) {
+                // Going backwards: from bytestream, to percent-encoding, to original string.
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                        }).join(''));
+            }
 		</script>
 	</head>
 	<body>
@@ -41,6 +44,17 @@
 			var oview = new outline_viewer();
 			paramfile.register_viewer(adebuglog);
 			paramfile.register_viewer(oview);
+            var cfgtxt = getParameterByName("filetxt");
+            if (!cfgtxt) {
+                alert("Configuration file text should be passsed in as querystring base64 encoded and labelled \"filetxt\"");
+            } else {
+                try{
+                    console.log(cfgtxt);
+                    paramfile.load(cfgtxt);
+                } catch (err) {
+                    alert("Failed to decode filetxt querystring argument. Is it Base64 encoded?\n"+err.message);
+                }
+            }
 			function on_load_file(e){
 				var file, fr;
 				if (!e.files[0]) {

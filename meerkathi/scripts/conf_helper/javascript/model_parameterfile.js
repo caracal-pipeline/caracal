@@ -12,17 +12,32 @@ class parameter_file {
 		this._errviewers = [];
 	}
 	load(file) {
-		var fconf = new FileReader();
-		this._fn = file.name;
-		fconf.onload = ev => this.on_load_handler(ev);
-		try {
-			fconf.readAsText(file);
-		} catch (err) {
-			for (var i = 0; i < this._errviewers.length; ++i){
-				this._errviewers[i].notify_err("Cannot open file '"+ this._fn + "'. Verify that it is a valid yaml file",
-					err);
-			}
-		}		
+        if (typeof file == "string"){
+            this._fn = "new.yml";
+            try {
+                this._dict = JSON.parse(file);
+        		for (var i = 0; i < this._viewers.length; ++i){
+		        	this._viewers[i].notify(this);
+        		}		
+            } catch (err) {
+                for (var i = 0; i < this._errviewers.length; ++i){
+                    this._errviewers[i].notify_err("Cannot parse string. Verify that it is valid JSON.",
+                        err);
+                }
+            }
+        } else {
+    		var fconf = new FileReader();
+    		this._fn = file.name;
+	    	fconf.onload = ev => this.on_load_handler(ev);
+            try {
+                fconf.readAsText(file);
+            } catch (err) {
+                for (var i = 0; i < this._errviewers.length; ++i){
+                    this._errviewers[i].notify_err("Cannot open file '"+ this._fn + "'. Verify that it is a valid yaml file",
+                        err);
+                }
+            }
+        }
 	}
 	get data() {
 		return this._dict;

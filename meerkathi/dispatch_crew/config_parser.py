@@ -79,6 +79,12 @@ class config_parser:
 
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
             help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
+        
+        add('-ce', '--config-editor',
+            help='Start the interactive configuration editor after dumping a configuration file to the specified filename (requires X session with decent webbrowser installed).')
+
+        add('--interactive-port', type=int, default=8888,
+            help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 
         return parser
 

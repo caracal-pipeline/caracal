@@ -8,8 +8,8 @@ class console_viewer {
 	constructor() {
 	}
 }
-console_viewer.prototype.notify = function(e) {
-	console.log(e.toString());
+console_viewer.prototype.notify = function(type, payload) {
+	console.log(type + ": " + payload);
 }
 console_viewer.prototype.notify_err = function(msg, e){
 	console.log(msg);

@@ -7,7 +7,9 @@
 		<script src="javascript/model_parameterfile.js"></script>
 		<script src="javascript/viewer_consoleviewer.js"></script>
 		<script src="javascript/viewer_outline.js"></script>
+		<script src="javascript/viewer_fieldeditor.js"></script>
 		<link rel="stylesheet" href="css/default.css">
+
 		<script type="text/javascript">
 			if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
 				alert('The File APIs are not fully supported in this browser.');
@@ -34,35 +36,24 @@
 	</head>
 	<body>
 		<div id="div_filebrowse">
-			<form id="frm_filebrowse">
-				<input type="file" class="browser" value="atob(getQueryVariable(\"file\"))" id="ofd_yamlbrowser" onchange="on_load_file(this);" />
-			</form>
+			<input type="file" class="browser" id="ofd_yamlbrowser" />
 		</div>
+		<div id="div_page">
+		</div>
+
 		<script>
 			var paramfile = new parameter_file();
 			var adebuglog = new console_viewer();
-			var oview = new outline_viewer();
+			var oview = new outline_viewer(document.getElementById("div_page"));
+			var editor = new fieldeditor_viewer(document.getElementById("div_page"));
 			paramfile.register_viewer(adebuglog);
 			paramfile.register_viewer(oview);
-            var cfgtxt = getParameterByName("filetxt");
-            if (!cfgtxt) {
-                alert("Configuration file text should be passsed in as querystring base64 encoded and labelled \"filetxt\"");
-            } else {
-                try{
-                    console.log(cfgtxt);
-                    paramfile.load(cfgtxt);
-                } catch (err) {
-                    alert("Failed to decode filetxt querystring argument. Is it Base64 encoded?\n"+err.message);
-                }
-            }
-			function on_load_file(e){
-				var file, fr;
-				if (!e.files[0]) {
-					alert("Please select a file");
-				} else {
-					paramfile.load(e.files[0]);
-				}
-				return false;
+			paramfile.register_viewer(editor);
+			var cfgtxt = getParameterByName("filetxt");
+			if (!cfgtxt) {
+				alert("Configuration file text should be passsed in as querystring base64 encoded and labelled \"filetxt\"");
+			} else {	
+				paramfile.load(cfgtxt);
 			}
 		</script>
 	</body>

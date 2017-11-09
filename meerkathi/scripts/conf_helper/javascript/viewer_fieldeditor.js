@@ -4,57 +4,73 @@ function is_dict(v) {
 }
 
 
-class outline_viewer {
+class fieldeditor_viewer {
 	constructor(parent){
 		this._name = "oviewer_"+(outline_viewer._instance_counter++);
 		this._model = null;
-		this._init = false;
 		this._children = [];
-		parent.innerHTML += "<div class='treeoutline' id='" + this._name + "'> </div>";
+		this._init = false;
+		parent.innerHTML += "<div class='opteditor' id='" + this._name + "'> </div>";
 	}
 }
-outline_viewer.prototype.notify = function(type, payload) {
-	if (type == "load"){
+fieldeditor_viewer.prototype.notify = function(type, payload) {
+	if (type == "load" || type == "subtree_select"){
 		if (this._init) {
 			document.getElementById(this._name).innerHTML = "";
 			this._children = [];
 		}
-
 		this._init = true;
 		// add an indented button for each level of the tree
 		// (depth first recursion down to leafs)
-		function tree(obj, instname, level=0){
+		function fillform(obj, instname, model, level=0){
 			var inner_elems = ""
 			var kv = 0;
 			for (var key in obj){
 				if (obj.hasOwnProperty(key)) {
 					if (is_dict(obj[key])){
-						marker = (!(obj[key].hasOwnProperty("enable")) ? "&squf;" : 
-							  obj[key]["enable"] ? "&squf;" : "&curren;");
-						var ind = level * 10;
-						var w = 100 - ind;
-						var disp = (level == 0) ? 'inline' : 'none';
-						var css = "width: " + w + "%; " +
-							  "pad-left: " + ind + 
-							  "%; text-align: left; " + 
-							  "display: " + disp + ";";
-						btnname = instname + "__" + kv;
-						var elem = "<button id=\"" + btnname + 
-							   "\" style=\"" + css + 
-							   "\" class=\"treeviewsel\"> " +
-							   marker + "   " +
-							   key.replace(/__/g," round ").replace(/_/g, " ") +
-							   " </button>";
-						inner_elems = inner_elems + elem + tree(obj[key], btnname, level + 1);
+						nm = instname + "__" + kv;
+						inner_elems = inner_elems + fillform(obj[key], nm, model, level + 1);
+					} else {
+						sel = model.subtree_select;
+						fieldfamily = instname.split("__").reverse();
+						fieldfamily.pop();
+						fieldfamily = fieldfamily.reverse();
+						if (fieldfamily.length == sel.length) {
+							var ischild = true;
+							for (var i = fieldfamily.length - 1; i >= 0; --i){
+								if (fieldfamily[i] != sel[i]){
+									ischild = false;
+									break;
+								}
+							}
+							if (ischild) {
+
+								lblname = instname + "__" + kv + "__label";
+								edtname = instname + "__" + kv;
+								var edt = "<input type=\"text\" "+
+									  "id=\"" + edtname + 
+									  "\" class=\"editoreditbox\"" +
+									  "value=\"" + obj[key] + "\"/>";
+								var lbl = "<label id=\"" + lblname + 
+									  "\" class=\"editorlabel\"> " + 
+									  key.replace(/-/g," round ").replace(/_/g, " ") + 
+									  " </label>";
+								inner_elems = inner_elems + 
+									      "<div class=\"editorlabelsep\">" + 
+									      lbl + edt + 
+									      " </div>";
+							}
+						}
 					}
 				}
 				++kv;
 			}
-			inner_elems = "<div style=\"text-align: right;\">" + inner_elems + "</div>"
+			inner_elems = "<div style=\"text-align: left;\">" + inner_elems + "</div>"
 			return inner_elems;
 		}
-		innerhtml = tree(payload.data, this._name);
+		innerhtml = fillform(payload.data, this._name, payload);	
 		document.getElementById(this._name).innerHTML = innerhtml;
+		/*
 		// register callback for buttons
 		// (depth first recursion down to leafs)
 		function register(obj, callback, instname, inst, level=0){
@@ -75,12 +91,13 @@ outline_viewer.prototype.notify = function(type, payload) {
 			return res;
 		}
 		this._children.concat(register(payload.data, this.on_select, this._name, this));
+		*/
 		// update reference to model to which this viewer is registered as observer
 		this._model = payload;
-		this.on_select({"target":{"id":this._name + "__0"}}, this);
 	}
-}
-outline_viewer.prototype.on_select = function(e, inst) {
+};
+
+fieldeditor_viewer.prototype.on_select = function(e, inst) {
 	// get selected and its ancestors (from button id)
 	sel = e.target.id.split("__").reverse();
 	sel.pop();
@@ -97,26 +114,18 @@ outline_viewer.prototype.on_select = function(e, inst) {
 					btnfamily = btnfamily.reverse();
 					//if the parent is selected then this option needs expanding
 					//never hide roots
-					var issel = btnfamily[level] == selected[level];
-					var hide = false;
+					var dispst = 'inline';
 					for (var i = level - 1; i >= 0; --i){
 						if (btnfamily[i] != selected[i]){
-							hide = true;
-							issel = false;
+							dispst = 'none';
 							break;
 						}
 					}
 					btninst = document.getElementById(btnname);
-					btninst.style.display = (hide) ? 'none' : 'inline';
-					if (issel) { 
-						btninst.setAttribute("disabled", true);
-					} else {
-						btninst.removeAttribute("disabled");
-					}
-
+					btninst.style.display = dispst;
+					var ind = level * 5;
+					var w = 100 - ind;
 					collapse_all(obj[key], btnname, selected, level + 1);
-					
-
 				}
 			}
 			++kv;
@@ -124,5 +133,5 @@ outline_viewer.prototype.on_select = function(e, inst) {
 	}
 	collapse_all(inst._model.data, inst._name, sel);
 	inst._model.subtree_select = sel;
-}
-outline_viewer._instance_counter = 0;
+};
+fieldeditor_viewer._instance_counter = 0;

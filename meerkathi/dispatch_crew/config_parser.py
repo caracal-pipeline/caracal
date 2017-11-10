@@ -61,6 +61,7 @@ class config_parser:
         add("-v","--version", action='version',version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__.__version__))
         add('-c', '--config',
             type=lambda a: is_valid_file(parser, a),
+            default=DEFAULT_CONFIG,
             help='Pipeline configuration file (YAML/JSON format)')
 
         add('-gd', '--get-default',

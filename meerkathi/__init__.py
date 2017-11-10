@@ -176,7 +176,7 @@ def main(argv):
     elif args.config_editor:
         log.info("Entering interactive mode as requested: MeerKATHI configuration editor")
         port = args.interactive_port
-        file_abs = os.path.join(pckgdir, "default-config.yml")
+        file_abs = args.config
         with file(file_abs, 'r') as f:
             cfg_txt = json.dumps(ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1)))
         web_dir = os.path.join(os.path.dirname(scripts.__file__), 'conf_helper')

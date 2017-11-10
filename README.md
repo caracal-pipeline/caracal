@@ -13,6 +13,7 @@ git submodule update --init --recursive
 ```
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
+$ pip install pip wheel setuptools -U
 $ pip install <absolute path to meerkathi folder>
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```

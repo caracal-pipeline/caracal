@@ -37,11 +37,15 @@ $ meerkathi --help
 ```
 $ meerkathi -ce
 ```
-5. (Alternatively) dump a copy of the default configuration file to the current directory:
+5. An existing configuration file can be edited as follows:
+```
+$ meerkathi -c <configuration file> -ce
+```
+6. (Alternatively) dump a copy of the default configuration file to the current directory:
 ```
 $ meerkathi -gd <configuration file>
 ```
-6. Run the pipeline
+7. Run the pipeline
 ```
 $ meerkathi -c <configuration file>
 ```

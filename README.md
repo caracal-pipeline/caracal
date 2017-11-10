@@ -5,33 +5,49 @@ Use https and your github credentials, then go to the pipeline folder 'meerkathi
 git clone https://github.com/ska-sa/meerkathi.git
 cd meerkathi
 ```
-1. Start and activate virtual environment
+1. Check out submodules
+```
+git submodule update --init --recursive 
+```
+2. Start and activate virtual environment
 ```
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
 $ pip install <absolute path to meerkathi folder>
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
-
-2. Install stimela in venv
+3. Install latest stimela in venv (**temporary patchjob: fixes forthcoming in Stimela v0.3.1**)
 ```
 pip install git+https://github.com/SpheMakh/Stimela
 ```
 
-3. Build Stimela (don't do this on com4, I've alredy built it)
+3. Build Stimela
 ```
 $ stimela build
 ```
+
 ## Running the pipeline
 1. Activate the MeerKATHI virtual environment
 2. Make sure that the data all the required data is present
-3. Check if you pipeline is setup properly 
+3. Check if your installation is set up properly: 
 ```
-$ meerkathi -c <configuration file> --help
+$ meerkathi --help
 ```
-4. Run the pipeline
+4. GUI config editor can be started with (you need an X-session and Mozilla Firefox >= 56.0):
 ```
-$ meerkathi -c <configuration>
+$ meerkathi -ce
+```
+5. An existing configuration file can be edited as follows:
+```
+$ meerkathi -c <configuration file> -ce
+```
+6. (Alternatively) dump a copy of the default configuration file to the current directory:
+```
+$ meerkathi -gd <configuration file>
+```
+7. Run the pipeline
+```
+$ meerkathi -c <configuration file>
 ```
 
 ## Help and descriptions

@@ -54,7 +54,7 @@ fieldeditor_viewer.prototype.notify = function(type, payload) {
 									  "string"  : "text"};
 								accessor = {"undefined" : "value=\""+obj[key]+"\"",
 									    "object" : "value=\""+obj[key]+"\"",
- 									    "boolean" : "checked",
+ 									    "boolean" : obj[key] ? "checked" : "",
 									    "number"  : "value=\""+obj[key]+"\"",
 									    "string"  : "value=\""+obj[key]+"\""};
 
@@ -133,7 +133,7 @@ fieldeditor_viewer.prototype.on_change = function(e, inst) {
 	sel.pop();
 	sel = sel.reverse();
 	// collapse everything except the buttons which parents are in the selected subtree
-        nv = (typeof e.target.checked == "boolean") ? e.target.checked : e.target.value;
+        nv = (e.target.type == "checkbox") ? e.target.checked : e.target.value;
 	inst._model.update_key(sel, nv);
 };
 fieldeditor_viewer._instance_counter = 0;

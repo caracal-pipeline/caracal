@@ -5,6 +5,11 @@
  */
 
 class console_viewer {
+	/*
+	 * Debugging viewer
+	 *
+	 * Need to be registered to a yaml config model controller
+	 */
 	constructor() {
 	}
 }
@@ -13,6 +18,6 @@ console_viewer.prototype.notify = function(type, payload) {
 }
 console_viewer.prototype.notify_err = function(msg, e){
 	console.log(msg);
-	throw e;
+	console.log(e);
 }
 

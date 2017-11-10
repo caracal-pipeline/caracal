@@ -143,6 +143,7 @@ class config_parser:
             # Add subsection / update when necessary
             groups = OrderedDict()
             for opt, default in sec_defaults.iteritems():
+                if opt == "__helpstr": continue
                 option_name = base_section + "_" + opt if base_section != "" else opt
                 if isinstance(default, dict):
                     groups[opt] = _subparser_tree(default,

@@ -1,3 +1,8 @@
+/*
+ * meerkathi yaml configuration file field editor viewer
+ * (c) benjamin hugo, ska-sa. 2017
+ */
+
 
 function is_dict(v) {
 	return typeof v==='object' && v!==null && !(v instanceof Array) && !(v instanceof Date);
@@ -5,31 +10,57 @@ function is_dict(v) {
 
 
 class fieldeditor_viewer {
+	/*
+	 * Basic fields editor
+	 * Need to be registered to a yaml data modelcontroller
+	 */
 	constructor(parent){
+		/*
+		 * parent - DOM parent
+		 */
 		this._name = "feditor_"+(fieldeditor_viewer._instance_counter++);
 		this._model = null;
 		this._children = [];
 		this._init = false;
-		parent.innerHTML += "<div class='opteditor' id='" + this._name + "'> </div>";
+		this._hlpstrdiv = "<div class='hlpdiv' id='" + this._name + "_hlpdiv'> </div>";
+		this._errmsg = "<p class='errdivmsg' id='" + this._name + "_errmsg'> </p>";
+		this._errdiv = "<div style='display:none' class='errdiv' id='" + this._name + "_errdiv'>" +
+			       this._errmsg + 
+			       "<button class='errdivtoggle' " + 
+			 		"onclick='document.getElementById(\"" + this._name + 
+						"_errdiv\").style.display=\"none\"'> Hide </button>" +
+			       "</div>";
+		parent.innerHTML += "<div class='opteditor' id='" + 
+				    this._name + "'> " + 
+				    this._hlpstrdiv + 
+				    " </div>";
 	}
-}
+	update_hlpdiv(msg){
+		document.getElementById(this._name + "_hlpdiv").innerHTML = "<p class=\"hlppar\">" + msg + "</p>";
+	}
+	raise_errdiv(msg){
+		document.getElementById(this._name + "_errmsg").innerHTML = "Error: " + msg;
+		document.getElementById(this._name + "_errdiv").style.display = "block";
+	}
+};
 fieldeditor_viewer.prototype.notify = function(type, payload) {
 	if (type == "load" || type == "subtree_select"){
 		if (this._init) {
-			document.getElementById(this._name).innerHTML = "";
+			document.getElementById(this._name).innerHTML = this._errdiv + this._hlpstrdiv;
 			this._children = [];
+			this.update_hlpdiv("No help available for this section. Update '__helpstr' in the config file.");
 		}
 		this._init = true;
 		// add an indented button for each level of the tree
 		// (depth first recursion down to leafs)
-		function fillform(obj, instname, model, level=0){
+		function fillform(obj, instname, inst, model, level=0){
 			var inner_elems = "";
 			var kv = 0;
 			for (var key in obj){
-				if (obj.hasOwnProperty(key)) {
+				if (obj.hasOwnProperty(key) && key != "__helpstr") {
 					if (is_dict(obj[key])){
 						nm = instname + "__" + kv;
-						inner_elems = inner_elems + fillform(obj[key], nm, model, level + 1);
+						inner_elems = inner_elems + fillform(obj[key], nm, inst, model, level + 1);
 					} else {
 						sel = model.subtree_select;
 						fieldfamily = instname.split("__").reverse();
@@ -73,21 +104,21 @@ fieldeditor_viewer.prototype.notify = function(type, payload) {
 							}
 						}
 					}
-				}
+				} 
 				++kv;
 			}
 			inner_elems = "<div style=\"text-align: left;\">" + inner_elems + "</div>"
 			return inner_elems;
 		}
-		innerhtml = fillform(payload.data, this._name, payload);	
-		document.getElementById(this._name).innerHTML = innerhtml;
+		innerhtml = fillform(payload.data, this._name, this, payload);	
+		document.getElementById(this._name).innerHTML += innerhtml;
 		// register callback for buttons
 		// (depth first recursion down to leafs)
 		function register(obj, callback, instname, inst, model, level=0){
 			var kv = 0;
 			res = [];
 			for (var key in obj) {
-				if (obj.hasOwnProperty(key)){
+				if (obj.hasOwnProperty(key) && key != "__helpstr"){
 					if (is_dict(obj[key])) {
 						nm = instname + "__" + kv;
 						res.concat(register(obj[key], callback, nm, inst, model, level + 1));
@@ -115,7 +146,23 @@ fieldeditor_viewer.prototype.notify = function(type, payload) {
 							}
 						}
 					}
+				} else if (obj.hasOwnProperty(key) && key == "__helpstr"){
+					sel = model.subtree_select;
+					fieldfamily = instname.split("__").reverse();
+					fieldfamily.pop();
+					fieldfamily = fieldfamily.reverse();
+					if (fieldfamily.length == sel.length) {
+						var issel = true;
+						for (var i = fieldfamily.length - 1; i >= 0; --i){
+							if (fieldfamily[i] != sel[i]){
+								issel = false;
+								break;
+							}
+						}
+						if (issel) inst.update_hlpdiv(obj[key]);
+					}
 				}
+
 				++kv;
 			}
 			return res;
@@ -136,4 +183,8 @@ fieldeditor_viewer.prototype.on_change = function(e, inst) {
         nv = (e.target.type == "checkbox") ? e.target.checked : e.target.value;
 	inst._model.update_key(sel, nv);
 };
+fieldeditor_viewer.prototype.notify_err = function(msg, e){
+	this.raise_errdiv(e);
+};
+
 fieldeditor_viewer._instance_counter = 0;

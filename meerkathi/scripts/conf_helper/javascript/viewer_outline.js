@@ -1,3 +1,7 @@
+/*
+ * meerkathi yaml configuration file tree drawer viewer
+ * (c) benjamin hugo, ska-sa. 2017
+ */
 
 function is_dict(v) {
 	return typeof v==='object' && v!==null && !(v instanceof Array) && !(v instanceof Date);
@@ -5,7 +9,14 @@ function is_dict(v) {
 
 
 class outline_viewer {
+    /*
+     * Basic 'accordion'-style tree viewer
+     * Should be registered to a yaml config modelcontroller
+     */
 	constructor(parent){
+        /*
+         * parent - DOM parent to which this control should be added
+         */
 		this._name = "oviewer_"+(outline_viewer._instance_counter++);
 		this._model = null;
 		this._init = false;

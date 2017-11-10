@@ -5,6 +5,9 @@
  */
 
 class parameter_file {
+	/*
+	 * YAML config loader (model-controller)
+	 */
 	constructor(){
 		this._fn = "";
 		this._dict = "";
@@ -13,6 +16,11 @@ class parameter_file {
 		this._subtree_sel = [0];
 	}
 	load(file) {
+		/*
+		 * file - either:
+		 *        a file handle to a yaml file: will load with jsyaml
+		 *        or: a JSON string of externally parsed yaml
+		 */
 		if (typeof file == "string"){
 		    this._fn = "new.yml";
 		    try {
@@ -49,6 +57,11 @@ class parameter_file {
 	}
 
 	set subtree_select(newsel) {
+		/*
+		 * Selects a subtree
+		 * newsel - an array with full path to the tree root
+		 * postcondition - notifies registered viewers of a subtree selection change
+		 */
 		if (!Array.isArray(newsel))
 			throw "Expected array for new selection";
 		var d = this._dict;
@@ -61,27 +74,40 @@ class parameter_file {
 		//notify all of new subtree selection
 		for (var i = 0; i < this._viewers.length; ++i){
 			this._viewers[i].notify("subtree_select", this);
-		}		
+		}
 	}
 
 	update_key(level, value) {
-		if (!Array.isArray(level))
-			throw "Expected array for new selection";
-		var d = this._dict;
-		for (var i = 0; i < level.length; ++i) {
-			if (!(typeof d == "object" && Object.keys(d).length > level[i])){
-				throw "New selection out of bounds for level " + i + ": " + level[i];
-			} else d = i < level.length - 1 ? d[Object.keys(d)[level[i]]] : d;
+		/*
+		 * Update a leaf value
+		 * level - an array with full path to tree root of leaf to modify
+		 * postcondition - notifies registered viewers of a leaf change
+		 */
+		try {
+			if (!Array.isArray(level))
+				throw "Expected array for new selection";
+			var d = this._dict;
+			for (var i = 0; i < level.length; ++i) {
+				if (!(typeof d == "object" && Object.keys(d).length > level[i])){
+					throw "New selection out of bounds for level " + i + ": " + level[i];
+				} else d = i < level.length - 1 ? d[Object.keys(d)[level[i]]] : d;
+			}
+			d[Object.keys(d)[level[level.length - 1]]] = value;
+			//notify all observers of the key update 
+			for (var i = 0; i < this._viewers.length; ++i){
+				this._viewers[i].notify("key_update", this);
+			}
+		} catch(err) {
+			for (var i = 0; i < this._errviewers.length; ++i){
+				this._errviewers[i].notify_err("", err);
+			}	
 		}
-		d[Object.keys(d)[level[level.length - 1]]] = value;
-		//notify all observers of the key update 
-		for (var i = 0; i < this._viewers.length; ++i){
-			this._viewers[i].notify("key_update", this);
-		}		
-
 	}
 
 	register_viewer(viewer) {
+		/*
+		 * registers a viewer object to this model controller
+		 */
 		if (typeof viewer !== "object") {
 			throw "Viewer not an object";
 		}
@@ -89,7 +115,7 @@ class parameter_file {
 			throw "Viewer doesn't expose notify";
 		}
 		this._viewers.push(viewer);
-		if (typeof viewer.notify_err === "function") {
+		if (typeof viewer.notify_err == "function") {
 			this._errviewers.push(viewer);
 		}
 	}

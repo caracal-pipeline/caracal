@@ -54,6 +54,54 @@ div.opteditor {
 div.editorlabelsep{
 	width:100%;
 }
+div.hlpdiv{
+	width:98%;
+	margin-top: 10px;
+	background-color: #ffffff;
+	border-width: 1%;
+	border-color: #000000;
+	border-style: solid;
+	border-radius: 5px;
+	text-align: center;
+}
+div.errdiv{
+	width:98%;
+	margin-top: 10px;
+	background-color: #ffaaaa;
+	min-height:40px;
+	border-width: 1%;
+	border-color: #000000;
+	border-style: solid;
+	border-radius: 5px;
+	text-align: center;
+}
+p.errdivmsg{
+	font-weight: bold;
+}
+button.errdivtoggle{
+
+	margin-bottom:10px;
+}
+button.errdivtoggle{
+	height: 30px;
+	background-color: #bb3333;
+	min-width:80px;
+	min-height:30px;
+	color: #ffffff;
+	font-weight: bold;
+	border-style: solid;
+	border-width: 2px;
+	border-radius: 5px;
+}
+button.errdivtoggle:hover{
+	background-color: #dd5555;
+	cursor: pointer;	
+}
+
+
+p.hlppar{
+	font-style: italic;
+}
 input.editoreditbox{
 	text-align: left;
 	width:55%;

@@ -1,7 +1,7 @@
 ## Default meerkathi pipeline configuration
 
-# General pipeline information, data IDs, prefixes for output
 general:
+  __helpstr: General pipeline information, data IDs, prefixes for output
   data_path: input/data              # where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
   msdir: msdir                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
   input: input                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)

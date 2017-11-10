@@ -56,6 +56,14 @@ class parameter_file {
 		return this._subtree_sel.slice();
 	}
 
+	get json_file() {
+		return new Blob([JSON.stringify(this._dict, null, 4)], {type: "application/json"});
+	}
+
+	get yaml_file(){
+		return new Blob([jsyaml.safeDump(this._dict)], {type: "text/yaml"});
+	}
+
 	set subtree_select(newsel) {
 		/*
 		 * Selects a subtree

@@ -36,7 +36,8 @@
 	</head>
 	<body>
 		<div id="div_filebrowse">
-			<input type="file" class="browser" id="ofd_yamlbrowser" />
+			<button class="save", id="btn_saveJSON"> Export to JSON </button>
+			<button class="save", id="btn_saveYAML"> Export to YAML </button>
 		</div>
 		<div id="div_page">
 		</div>
@@ -49,12 +50,48 @@
 			paramfile.register_viewer(adebuglog);
 			paramfile.register_viewer(oview);
 			paramfile.register_viewer(editor);
-			var cfgtxt = getParameterByName("filetxt");
-			if (!cfgtxt) {
-				alert("Configuration file text should be passsed in as querystring base64 encoded and labelled \"filetxt\"");
-			} else {	
-				paramfile.load(cfgtxt);
-			}
+			paramfile.load(getParameterByName("filetxt"));
+			dljson = document.getElementById("btn_saveJSON");
+			dljson.onclick = function(){
+				var pf = paramfile;
+				function download(paramfile){
+					var link = document.createElement('a');
+					data = window.URL.createObjectURL(paramfile.json_file);
+					link.href = data;
+					link.download="paramfile.json";
+					link.innerHTML="";
+					link.style.display="none";
+					document.body.appendChild(link);
+					link.click();
+					
+					setTimeout(function(){
+						    // For Firefox it is necessary to delay revoking the ObjectURL
+						    window.URL.revokeObjectURL(data);
+						   }, 1000);
+				}
+				download(pf);
+			};
+			dlyaml = document.getElementById("btn_saveYAML");
+			dlyaml.onclick = function(){
+				var pf = paramfile;
+				function download(paramfile){
+					var link = document.createElement('a');
+					data = window.URL.createObjectURL(paramfile.yaml_file);
+					link.href = data;
+					link.download="paramfile.yaml";
+					link.innerHTML="";
+					link.style.display="none";
+					document.body.appendChild(link);
+					link.click();
+					
+					setTimeout(function(){
+						    // For Firefox it is necessary to delay revoking the ObjectURL
+						    window.URL.revokeObjectURL(data);
+						   }, 1000);
+				}
+				download(pf);
+			};
+
 		</script>
 	</body>
 </html>

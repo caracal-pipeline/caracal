@@ -107,6 +107,20 @@ class config_parser:
 
         # Lambda for transforming sections and options
         xformer = lambda s: s.replace('-', '_')
+        def _str2bool(v):
+            if v.upper() in ("YES","TRUE"):
+                return True
+            elif v.upper() in ("NO","FALSE"):
+                return False
+            else:
+                raise argparse.ArgumentTypeError("Failed to convert argument. Must be one of "
+                                                 "'yes', 'true', 'no' or 'false'.")
+
+        def _nonetype(v):
+            if v.upper() in ("NONE","NULL"):
+                return None
+            else:
+                return str(v)
 
         def _subparser_tree(sections,
                             base_section="",
@@ -141,6 +155,17 @@ class config_parser:
                                                 default=default,
                                                 nargs="?",
                                                 action='append')
+                        elif isinstance(default, bool):
+                            parser.add_argument("--%s" % option_name,
+                                                type=_str2bool,
+                                                default=default,
+                                                nargs="?",
+                                                const=True)
+                        elif default is None:
+                            parser.add_argument("--%s" % option_name,
+                                                type=_nonetype,
+                                                default=default,
+                                                nargs="?")
                         else:
                             parser.add_argument("--%s" % option_name,
                                                 type=type(default),

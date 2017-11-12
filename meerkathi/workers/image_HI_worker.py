@@ -39,7 +39,7 @@ def worker(pipeline, recipe, config):
                         "radrange"  : 0,
                         "angle"     : 0,
                         "showdir"   : pipeline.output,
-                        "show"      : prefix + '.sublocker.pdf',
+                        "show"      : prefix + '.sunblocker.pdf',
                         "verb"      : True,
                         "dryrun"    : False,
                     },

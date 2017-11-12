@@ -2,6 +2,7 @@ import sys
 import os
 import meerkathi.dispatch_crew.utils as utils
 import yaml
+import stimela.dismissable as sdm
 
 NAME = "Cross calibration"
 
@@ -137,6 +138,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "field"        : field,
                  "refant"       : refant,
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
+                 "combine"      : config['delay_cal'].get('combine', ''),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },
@@ -164,8 +166,11 @@ found in our database or in the CASA NRAO database'.format(field))
 
         # Set "Combine" to 'scan' for getting combining all scans for BP soln.
         if pipeline.enable_task(config, 'bp_cal'):
+            if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+            else: gaintables,interpolations=None,''
             field = get_field(config['bp_cal'].get('field', 'bpcal'))
             step = 'bp_cal_{0:d}'.format(i)
+
             recipe.add('cab/casa_bandpass', step,
                {
                  "vis"          : msname,
@@ -175,7 +180,8 @@ found in our database or in the CASA NRAO database'.format(field))
                  "solint"       : config['bp_cal'].get('solint', 'inf'),
                  "combine"      : config['bp_cal'].get('combine', ''),
                  "bandtype"     : "B",
-                 "gaintable"    : [prefix+'.K0:output'],
+                 "gaintable"    : sdm.dismissable(gaintables),
+                 "interp"       : interpolations,
                  "fillgaps"     : 70,
                  "uvrange"      : config['uvrange'],
                  "minsnr"       : config['bp_cal'].get('minsnr', 5),
@@ -210,6 +216,10 @@ found in our database or in the CASA NRAO database'.format(field))
 
         # Gain calibration for Flux calibrator field
         if pipeline.enable_task(config, 'gain_cal_flux'):
+            if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+            else: gaintables,interpolations=[],[]
+            gaintables+=[prefix+".B0:output"]
+            interpolations+=['nearest']
             step = 'gain_cal_flux_{0:d}'.format(i)
             field = get_field(config['gain_cal_flux'].get('field', 'fcal'))
             recipe.add('cab/casa_gaincal', step,
@@ -222,8 +232,8 @@ found in our database or in the CASA NRAO database'.format(field))
                  "combine"      : config['gain_cal_flux'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
-                 "gaintable"    : [prefix+".K0:output",prefix+".B0:output"],
-                 "interp"       : ['nearest','nearest'],
+                 "gaintable"    : gaintables,
+                 "interp"       : interpolations,
                  "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_flux'].get('minsnr', 5),
                  "minblperant"  : config['gain_cal_flux'].get('minnrbl', 4),
@@ -256,6 +266,10 @@ found in our database or in the CASA NRAO database'.format(field))
 
         # Gain calibration for Gaincal field
         if pipeline.enable_task(config, 'gain_cal_gain'):
+            if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['linear']
+            else: gaintables,interpolations=[],[]
+            gaintables+=[prefix+".B0:output"]
+            interpolations+=['linear']
             step = 'gain_cal_gain_{0:d}'.format(i)
             field = get_field(config['gain_cal_gain'].get('field', 'gcal'))
             recipe.add('cab/casa_gaincal', step,
@@ -268,8 +282,8 @@ found in our database or in the CASA NRAO database'.format(field))
                  "combine"      : config['gain_cal_gain'].get('combine', ''),
                  "gaintype"     : "G",
                  "calmode"      : 'ap',
-                 "gaintable"    : [prefix+".K0:output",prefix+".B0:output"],
-                 "interp"       : ['linear','linear'],
+                 "gaintable"    : gaintables,
+                 "interp"       : interpolations,
                  "uvrange"      : config['uvrange'],
                  "minsnr"       : config['gain_cal_gain'].get('minsnr', 5),
                  "minblperant"  : config['gain_cal_gain'].get('minnrbl', 4),

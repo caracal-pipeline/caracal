@@ -5,6 +5,7 @@ import itertools
 import meerkathi
 import meerkathi.dispatch_crew.meerkat_archive_interface as mai
 import stimela.dismissable as sdm
+import warnings
 
 NAME = "Get convert and extract data"
 
@@ -140,7 +141,8 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.data_path,
                     label='{0:s}:: Downloading data'.format(step))
-    
+
+
         if pipeline.enable_task(config, 'h5toms'):
             step = 'h5toms_{:d}'.format(i)
 
@@ -160,6 +162,7 @@ def worker(pipeline, recipe, config):
                 input=data_path,
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
+
 
     if pipeline.enable_task(config, 'combine'):
         step = 'combine_data'
@@ -216,3 +219,19 @@ def worker(pipeline, recipe, config):
                       "ms"        : msname,
                      },
                      label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
+
+            if config['obsinfo'].get('vampirisms', True):
+                try:
+                    from sunblocker.sunblocker import Sunblocker
+                    step = 'vampirisms_{0:d}'.format(i)
+                    recipe.add(Sunblocker().vampirisms, step,
+                        {
+                            "inset"       : '{0:s}/{1:s}'.format(pipeline.msdir, msname),
+                            "dryrun"      : True,
+                            "nononsoleil" : True,
+                            "verb"        : True,
+                        },
+                    label='{0:s}:: Note sunrise and sunset'.format(step))
+
+                except ImportError:
+                    warnings.warn('Sunblocker module not found. Will skip vampirisms step')

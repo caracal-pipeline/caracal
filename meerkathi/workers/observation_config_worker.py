@@ -84,7 +84,7 @@ def worker(pipeline, recipe, config):
             else:
                 pipeline.gcal[i] = config['gcal']
             tobs = utils.field_observation_length(msinfo, pipeline.gcal[i])/60.0
-            meerkathi.log.info('Field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.gcal[i], tobs))
+            meerkathi.log.info('Gain calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.gcal[i], tobs))
 
             # Set flux calibrator
             if config['fcal'] == 'auto':
@@ -98,7 +98,7 @@ def worker(pipeline, recipe, config):
             else:
                 pipeline.fcal[i] = config['fcal']
             tobs = utils.field_observation_length(msinfo, pipeline.fcal[i])/60.0
-            meerkathi.log.info('Field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.fcal[i], tobs))
+            meerkathi.log.info('Flux calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.fcal[i], tobs))
 
             # Set bandpass calibrator
             if config['bpcal'] == 'auto':
@@ -107,7 +107,7 @@ def worker(pipeline, recipe, config):
             else:
                 pipeline.bpcal[i] = config['bpcal']
             tobs = utils.field_observation_length(msinfo, pipeline.bpcal[i])/60.0
-            meerkathi.log.info('Field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.bpcal[i], tobs))
+            meerkathi.log.info('Bandpass calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(pipeline.bpcal[i], tobs))
 
             # Select target field(s)
             if config['target'] == 'auto':

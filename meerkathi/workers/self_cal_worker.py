@@ -32,8 +32,8 @@ def worker(pipeline, recipe, config):
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol', 'I')
-    thresh_pix = config['sf_thresh_isl']
-    thresh_isl = config['sf_thresh_pix']
+    thresh_pix = config['sf_thresh_pix']
+    thresh_isl = config['sf_thresh_isl']
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
@@ -43,6 +43,7 @@ def worker(pipeline, recipe, config):
     label = config['label']
     bjones = config.get('cal_Bjones', False)
     ncpu = config.get('ncpu', 9)
+    mfsprefix = ["",'-MFS'][int(nchans>1)]
 
     mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
     prefix = pipeline.prefix
@@ -76,7 +77,7 @@ def worker(pipeline, recipe, config):
             step = 'mask_dirty_{}'.format(num)
             recipe.add('cab/cleanmask', step,
                {
-                 "image"           :  '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num),
+                 "image"           :  '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix),
                  "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
                  "dilate"          :  False,
                  "peak-fraction"   :  0.5,
@@ -95,7 +96,7 @@ def worker(pipeline, recipe, config):
             step = 'mask_{}'.format(num)
             recipe.add('cab/cleanmask', step,
                {
-                 "image"           :  '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num-1),
+                 "image"           :  '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num-1, mfsprefix),
                  "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
                  "dilate"          :  False,
                  "peak-fraction"   :  sdm.dismissable(pf),
@@ -161,7 +162,7 @@ def worker(pipeline, recipe, config):
             detection_image = prefix + '-detection_image_{0:d}.fits:output'.format(num)
             recipe.add('cab/fitstool', step,
                 {                   
-                    "image"    : [prefix+'_{0:d}-MFS-{1:s}.fits:output'.format(num, im) for im in ('image','residual')],
+                    "image"    : [prefix+'_{0:d}{2:s}-{1:s}.fits:output'.format(num, im, mfsprefix) for im in ('image','residual')],
                     "output"   : detection_image,
                     "diff"     : True,
                     "force"    : True,
@@ -176,7 +177,7 @@ def worker(pipeline, recipe, config):
         if spi_do:
             im = make_cube(num, 'image')
         else:
-            im = '{0:s}_{1:d}-MFS-image.fits:output'.format(prefix, num)
+            im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
 
         step = 'extract_{0:d}'.format(num)
         calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
@@ -510,7 +511,7 @@ def worker(pipeline, recipe, config):
             conv_model = prefix + '-convolved_model.fits:output'
             recipe.add('cab/fitstool', step,
                 {
-                    "image"    : [prefix+'_{0:d}-MFS-{1:s}.fits:output'.format(num, im) for im in ('image','residual')],
+                    "image"    : [prefix+'_{0:d}{2:s}-{1:s}.fits:output'.format(num, im, mfsprefix) for im in ('image','residual')],
                     "output"   : conv_model,
                     "diff"     : True,
                     "force"    : True,
@@ -522,7 +523,7 @@ def worker(pipeline, recipe, config):
             with_cc = prefix + '-with_cc.fits:output'
             recipe.add('cab/fitstool', step,
                 {
-                    "image"    : [prefix+'_5-MFS-image.fits:output', conv_model],
+                    "image"    : [prefix+'_5{0:s}-image.fits:output'.format(mfsprefix), conv_model],
                     "output"   : with_cc,
                     "sum"      : True,
                     "force"    : True,

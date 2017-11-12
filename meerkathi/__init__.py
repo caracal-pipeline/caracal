@@ -124,7 +124,7 @@ class MeerKATHI(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
             config = self.config[_name]
-            if config['enable'] is False:
+            if config.get('enable', True) is False:
                 self.skip.append(_worker)
                 continue
             # Define stimela recipe instance for worker

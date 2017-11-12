@@ -10,30 +10,33 @@ def worker(pipeline, recipe, config):
 
     # itnitialse things
     for item in 'fcal bpcal gcal target reference_antenna nchans'.split():
-        val = config[item]
+        val = config.get(item, 'auto')
         if val and not isinstance(config[item], list):
             setattr(pipeline, item, [config[item]]*pipeline.nobs)
         elif isinstance(config[item], list):
             setattr(pipeline, item, config[item])
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
-   
+
+    for item in 'fcal bpcal gcal target'.split():
+        setattr(pipeline, item + "_id", [])
+
     for i, prefix in enumerate(pipeline.prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
 
         # get reference antenna
-        if config['reference_antenna'] == 'auto':
+        if config.get('reference_antenna', 'auto') == 'auto':
             msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
             pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
-        
+
         # Get channels in MS
         if config['nchans'] == 'auto':
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 pipeline.nchans[i] = spw
             meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
-        
+
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target'.split()]:
             intents = utils.categorize_fields(msinfo)
@@ -59,7 +62,7 @@ def worker(pipeline, recipe, config):
                     if utils.find_in_casa_calibrators(msinfo, fcal) or utils.find_in_native_calibrators(msinfo, fcal):
                         pipeline.fcal[i] = fcal
                         break
-                    fcals.remove(fcal) 
+                    fcals.remove(fcal)
                 meerkathi.log.info('Auto selecting flux calibrator as {:s}'.format(pipeline.fcal[i]))
             else:
                 pipeline.fcal[i] = config['fcal']
@@ -87,3 +90,8 @@ def worker(pipeline, recipe, config):
                 tobs = utils.field_observation_length(msinfo, target)/60.0
                 meerkathi.log.info('Target field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
 
+        # update ids for all fields now that auto fields were selected
+        for item in 'fcal bpcal gcal target'.split():
+            flds =  getattr(pipeline, item)[i].split(',') \
+                        if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
+            getattr(pipeline, item + "_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))

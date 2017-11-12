@@ -51,15 +51,21 @@ def worker(pipeline, recipe, config):
         # Check if field was specified as known key, else return the 
         # same value. 
         def get_field(field):
-            if field in ['bpcal', 'gcal', 'target', 'fcal']:
-                name = getattr(pipeline, field)[i]
-            else:
-                name = field
-            return str(name)
+            """
+                gets field ids parsed previously in the pipeline 
+                params:
+                    field: list of ids or comma-seperated list of ids where
+                           ids are in bpcal, gcal, target, fcal or an actual field name
+            """
+            return ','.join(map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+                                                if isinstance(getattr(pipeline, x)[i], str) else getattr(pipeline, x)[i])
+                                              if x in ['bpcal', 'gcal', 'target', 'fcal']
+                                              else x.split(','),
+                                field.split(',') if isinstance(field, str) else field))
 
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field('bpcal')
+                return get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
             if applyme == 'bp_cal':
                 return get_field('bpcal')
             if applyme == 'gain_cal_flux':
@@ -71,12 +77,12 @@ def worker(pipeline, recipe, config):
                     return get_field('gcal')
                 elif applyto == 'bpcal':
                     return get_field('bpcal')
-            
-        def flag_gains(cal, opts):
+
+        def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
             step = 'plot_{0:s}_{1:d}'.format(cal, i)
             opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
-            opts["datacolumn"] = 'CPARAM'
+            opts["datacolumn"] = datacolumn
             recipe.add('cab/casa_flagdata', step, opts,
                 input=pipeline.input,
                 output=pipeline.output,
@@ -110,19 +116,16 @@ def worker(pipeline, recipe, config):
             else:
                 raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
-                      
             step = 'set_model_cal_{0:d}'.format(i)
             recipe.add('cab/casa_setjy', step,
                opts,
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
-           
         # Delay calibration
         if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
-
-            field = get_field(config['delay_cal'].get('field', 'bpcal'))
+            field = get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
@@ -137,6 +140,9 @@ found in our database or in the CASA NRAO database'.format(field))
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Delay calibration ms={1:s}'.format(step, msname))
+
+            if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
+                flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
             if  config['delay_cal'].get('plot', True):
                 step = 'plot_delay_cal_{0:d}'.format(i)
@@ -184,7 +190,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Bandpass calibration ms={1:s}'.format(step, msname))
 
-            if config['bp_cal'].get('flag', False):
+            if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
             if config['bp_cal'].get('plot', True):
@@ -253,7 +259,7 @@ found in our database or in the CASA NRAO database'.format(field))
                        output=pipeline.output,
                        label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_flux'].get('flag', False):
+            if config['gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
                 flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
 
         # Gain calibration for Gaincal field
@@ -285,7 +291,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_gain'].get('flag', False):
+            if config['gain_cal_gain'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
             if config['gain_cal_gain'].get('plot', True):
@@ -355,7 +361,6 @@ found in our database or in the CASA NRAO database'.format(field))
                    continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
-                 
                 gainfield = get_gain_field(applyme, ft)
                 gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
                 gainfieldlist.append(gainfield)
@@ -381,6 +386,46 @@ found in our database or in the CASA NRAO database'.format(field))
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+
+        # auto flag closure errors and systematic issues based on calibrated calibrator phase (chi-squared thresholds)
+        # Physical assertion: Expect calibrator phase == 0 (calibrator at phase centre). Corrected phases should be at phase centre
+        # Any deviation from this expected value per baseline means that there are baseline-based gains (closure errors)
+        # that couldn't be corrected solely antenna-based gains. These baselines must be flagged out of the calibrator and the 
+        # target fields between calibrator scans which were marked bad.
+        # Compare in-between scans per baseline per field per channel
+        # Also compare in-between baselines per scan per field per channel
+        if pipeline.enable_task(config, 'autoflag_closure_error'):
+            step = 'autoflag_closure_error_{0:d}'.format(i)
+            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
+            def_calfields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+            if config['autoflag_closure_error'].get('fields', 'auto') != 'auto' and \
+               not set(config['autoflag_closure_error'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'target']):
+                raise KeyError("autoflag on phase fields can only be 'auto' or be a combination of 'gcal', 'bpcal' or 'target'")
+            if config['autoflag_closure_error'].get('calibrator_fields', 'auto') != 'auto' and \
+               not set(config['autoflag_closure_error'].get('calibrator_fields', 'auto')) <=  set(['gcal', 'bpcal']):
+                raise KeyError("autoflag on phase calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
+
+            fields = def_fields if config['autoflag_closure_error'].get('fields', 'auto') == 'auto' else \
+                     ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_closure_error'].get('fields').split(',')])
+            calfields = def_calfields if config['autoflag_closure_error'].get('calibrator_fields', 'auto') == 'auto' else \
+                     ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_closure_error'].get('calibrator_fields').split(',')])
+
+            recipe.add("cab/politsiyakat_cal_phase", step,
+                {
+                    "msname": msname,
+                    "field": fields,
+                    "cal_field": calfields,
+                    "scan_to_scan_threshold": config["autoflag_closure_error"]["scan_to_scan_threshold"],
+                    "baseline_to_group_threshold": config["autoflag_closure_error"]["baseline_to_group_threshold"],
+
+                    "dpi": config['autoflag_closure_error'].get('dpi', 300),
+                    "plot_size": config['autoflag_closure_error'].get('plot_size', 6),
+                    "nproc_threads": config['autoflag_closure_error'].get('threads', 8),
+                    "data_column": config['autoflag_closure_error'].get('column', "DATA")
+                },
+                input=pipeline.input, output=pipeline.output,
+                label="{0:s}: Flag out baselines with closure errors")
+
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:d}'.format(i)

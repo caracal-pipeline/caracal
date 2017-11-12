@@ -212,13 +212,14 @@ def main(argv):
         meerkathi.log.info("Found the following reference calibrators (in CASA format):")
         meerkathi.log.info(cdb)
 
+    import exceptions
     try:
         pipeline = MeerKATHI(arg_groups,
                              args.workers_directory, stimela_build=args.stimela_build,
                              add_all_first=args.add_all_first, prefix=args.general_prefix)
 
         pipeline.run_workers()
-    except SystemExit as e:
+    except exceptions.SystemExit as e:
         if e.code != 0:
             log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol %d shutdown. This is likely a bug, please report." % e.code)
             log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))

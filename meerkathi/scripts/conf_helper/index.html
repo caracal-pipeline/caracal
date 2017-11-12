@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>MeerKATHI Configuration Editor</title>
+		<script src="javascript/js-yaml/dist/js-yaml.js"></script>
+		<script src="javascript/model_parameterfile.js"></script>
+		<script src="javascript/viewer_consoleviewer.js"></script>
+		<script src="javascript/viewer_outline.js"></script>
+		<script src="javascript/viewer_fieldeditor.js"></script>
+		<link rel="stylesheet" href="css/default.css">
+
+		<script type="text/javascript">
+			if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
+				alert('The File APIs are not fully supported in this browser.');
+			}
+            function getParameterByName(name, url = null) {
+                /*
+                 * Ref https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript  
+                 */
+                if (!url) url = window.location.href;
+                name = name.replace(/[\[\]]/g, "\\$&");
+                var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                    results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, " "));
+            }
+            function b64DecodeUnicode(str) {
+                // Going backwards: from bytestream, to percent-encoding, to original string.
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                        }).join(''));
+            }
+		</script>
+	</head>
+	<body>
+		<div id="div_filebrowse">
+			<button class="save", id="btn_saveJSON"> Export to JSON </button>
+			<button class="save", id="btn_saveYAML"> Export to YAML </button>
+		</div>
+		<div id="div_page">
+		</div>
+
+		<script>
+			var paramfile = new parameter_file();
+			var adebuglog = new console_viewer();
+			var oview = new outline_viewer(document.getElementById("div_page"));
+			var editor = new fieldeditor_viewer(document.getElementById("div_page"));
+			paramfile.register_viewer(adebuglog);
+			paramfile.register_viewer(oview);
+			paramfile.register_viewer(editor);
+			paramfile.load(getParameterByName("filetxt"));
+			dljson = document.getElementById("btn_saveJSON");
+			dljson.onclick = function(){
+				var pf = paramfile;
+				function download(paramfile){
+					var link = document.createElement('a');
+					data = window.URL.createObjectURL(paramfile.json_file);
+					link.href = data;
+					link.download="paramfile.json";
+					link.innerHTML="";
+					link.style.display="none";
+					document.body.appendChild(link);
+					link.click();
+					
+					setTimeout(function(){
+						    // For Firefox it is necessary to delay revoking the ObjectURL
+						    window.URL.revokeObjectURL(data);
+						   }, 1000);
+				}
+				download(pf);
+			};
+			dlyaml = document.getElementById("btn_saveYAML");
+			dlyaml.onclick = function(){
+				var pf = paramfile;
+				function download(paramfile){
+					var link = document.createElement('a');
+					data = window.URL.createObjectURL(paramfile.yaml_file);
+					link.href = data;
+					link.download="paramfile.yaml";
+					link.innerHTML="";
+					link.style.display="none";
+					document.body.appendChild(link);
+					link.click();
+					
+					setTimeout(function(){
+						    // For Firefox it is necessary to delay revoking the ObjectURL
+						    window.URL.revokeObjectURL(data);
+						   }, 1000);
+				}
+				download(pf);
+			};
+
+		</script>
+	</body>
+</html>

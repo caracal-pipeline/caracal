@@ -12,6 +12,15 @@ import meerkathi.__version__ as __version__
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
+import meerkathi.scripts as scripts
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+from BaseHTTPServer import HTTPServer
+from multiprocessing import Process
+import webbrowser
+import base64
+from urllib import urlencode
+import ruamel.yaml
+import json
 
 MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
@@ -163,6 +172,34 @@ def main(argv):
     if args.get_default:
         log.info("Dumping default configuration to %s as requested. Goodbye!" % args.get_default)
         os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
+        return
+    elif args.config_editor:
+        log.info("Entering interactive mode as requested: MeerKATHI configuration editor")
+        port = args.interactive_port
+        file_abs = args.config
+        with file(file_abs, 'r') as f:
+            cfg_txt = json.dumps(ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1)))
+        web_dir = os.path.join(os.path.dirname(scripts.__file__), 'conf_helper')
+        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+                 (port, web_dir))
+        log.info("Press Ctrl-C to exit")
+        hndl = SimpleHTTPRequestHandler
+
+        def host():
+            httpd = HTTPServer(("", port), hndl)
+            os.chdir(web_dir)
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt, SystemExit:
+                httpd.shutdown()
+
+        wt = Process(target = host)
+        try:
+            wt.start()
+            webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
+            wt.join()
+        except KeyboardInterrupt, SystemExit:
+            log.info("Interrupt received - shutting down web server. Goodbye!")
         return
 
     # Very good idea to print user options into the log before running:

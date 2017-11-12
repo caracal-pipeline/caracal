@@ -1,0 +1,156 @@
+html { 
+	height: 100%; 
+}
+body { 
+	height: 100%;
+}
+form#frm_filebrowse {
+	width: 100%;
+	height: 100%;
+}
+div#div_filebrowse {
+	background-color: #000000;
+	width: 100%;
+	color: white;
+	text-align: right;
+	vertical-align: middle;
+}
+div#div_page {
+	width: 100%;
+	height: 90%;
+	clear:both;
+}
+button.save{
+	vertical-align: middle;
+	background-color: #11aa11;
+	min-width:80px;
+	min-height:30px;
+	color: #ffffff;
+	font-weight: bold;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-right: 5px;
+	margin-left: 5px;
+	border-style: solid;
+	border-width: 2px;
+	border-radius: 5px;
+}
+button.save:hover{
+	background-color: #33cc33;
+	cursor: pointer;	
+}
+
+input.browser {
+	text-align: right;
+	font-size: 16px;
+	min-width:100%;
+	width:100%;
+	padding: 0.7% 0.7%;
+	box-sizing: border-box;
+	border: none;
+}
+
+div.treeoutline {
+	width:30%;
+	min-width:30%;
+	min-height:90%;
+	height:90%;
+	background-color: #000000;
+	border-width: 10px;
+	border-color: #000000;
+	overflow: auto;
+	float: left;
+}
+div.opteditor {
+	background-color: #dddddd;
+	height:89%;
+	min-height:89%;
+	width: 69%;
+	float: right;
+	border-width: 1%;
+	border-color: #999999;
+	border-style: solid;
+	overflow: auto;
+}
+div.editorlabelsep{
+	width:100%;
+}
+div.hlpdiv{
+	width:98%;
+	margin-top: 10px;
+	background-color: #ffffff;
+	border-width: 1%;
+	border-color: #000000;
+	border-style: solid;
+	border-radius: 5px;
+	text-align: center;
+}
+div.errdiv{
+	width:98%;
+	margin-top: 10px;
+	background-color: #ffaaaa;
+	min-height:40px;
+	border-width: 1%;
+	border-color: #000000;
+	border-style: solid;
+	border-radius: 5px;
+	text-align: center;
+}
+p.errdivmsg{
+	font-weight: bold;
+}
+button.errdivtoggle{
+	height: 30px;
+	background-color: #bb3333;
+	min-width:80px;
+	min-height:30px;
+	color: #ffffff;
+	font-weight: bold;
+	margin-bottom:10px;
+	border-style: solid;
+	border-width: 2px;
+	border-radius: 5px;
+}
+button.errdivtoggle:hover{
+	background-color: #dd5555;
+	cursor: pointer;	
+}
+
+
+p.hlppar{
+	font-style: italic;
+}
+input.editoreditbox{
+	text-align: left;
+	width:55%;
+}
+input.editoreditbox:focus{
+	background-color: #dddd99;
+}
+label.editorlabel{
+	text-align: left;
+	width: 40%;
+	display:inline-block;
+	margin-left:1.5%;
+	margin-top: 10px;
+}
+button.treeviewsel{
+	height: 50px;
+	background-color: #11aa11;
+	color: #ffffff;
+	font-weight: bold;
+	font-size: 16px;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	border-style: none;
+}
+button.treeviewsel:hover{
+	background-color: #33cc33;
+	color: #ffffff;
+	cursor: pointer;	
+}
+button.treeviewsel:disabled{
+	background-color: #cc3333;
+	color: #ffffff;
+	cursor: not-allowed;	
+}

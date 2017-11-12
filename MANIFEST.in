@@ -5,3 +5,5 @@ recursive-include meerkathi/data *.yml
 recursive-include meerkathi/data *.txt
 recursive-include meerkathi/dispatch_crew *.py
 recursive-include meerkathi/workers *.py
+recursive-include meerkathi/scripts/conf_helper/javascript/js-yaml *
+recursive-include meerkathi/scripts *.py *.html *.css *.js

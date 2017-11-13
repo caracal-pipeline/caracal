@@ -8,8 +8,9 @@ general:
   output: output                     # where MeerKATHI writes output products
   prefix: meerkathi-pipeline         # prefix for output products
 
-# Get data to be reduced
-get_data:                                               # always enable, even if the MS files are already in place, else the pipeline doesn't know what files to process and does nothing
+get_data:
+  __helpstr: Get data to be reduced
+  # always enable, even if the MS files are already in place, else the pipeline doesn't know what files to process and does nothing
   dataid: []                                            # process these HDF5/MS files
   enable: yes
   order: 0
@@ -38,9 +39,9 @@ get_data:                                               # always enable, even if
     enable: yes
     include_json: yes                                   # also write a obsinfo.json to same output directory
 
-# Setup some basic observation information
 observation_config:
-  enable: yes
+  __helpstr: Setup some basic observation information
+  # always enable, else the pipeline doesn't know which fields are which
   order: 1
   target: auto
   fcal: auto
@@ -49,8 +50,8 @@ observation_config:
   nchans: auto
   reference_antenna: auto
 
-# Peform some basic operations to get it ready for reduction
 prepare_data:
+  __helpstr: Peform some basic operations to get it ready for reduction
   enable: yes
   order: 2
   fixvis:
@@ -59,10 +60,18 @@ prepare_data:
     enable: no
     add_imaging_cols: no
 
-# Pre-calibration flagging
 flagging:
+  __helpstr: Pre-calibration flagging
   enable: yes
   order: 3
+  autoflag_autocorr_powerspectra:
+    enable: yes
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
   flag_autocorr:
     enable: yes
   flag_spw:
@@ -77,14 +86,14 @@ flagging:
   static_mask:
     enable: no
     mask: null
-  autoflag:
+  autoflag_rfi:
     enable: yes
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: yes
 
-# First generation calibration
 cross_cal:
+  __helpstr: First generation calibration
   enable: yes
   order: 4
   otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
@@ -96,9 +105,13 @@ cross_cal:
   delay_cal:
     enable: yes
     combine: ""
-    solint: inf
-    field: bpcal
+    solint: "60s" # Useful diagnostic to keep track of system delays with time
+    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
     plot: yes
+    flag:
+      enable: yes
+      mode: clip
+      clipminmax: [-60,60]
   bp_cal:
     enable: yes
     combine: ""
@@ -147,11 +160,19 @@ cross_cal:
     field: gcal
     applyto: bpcal,gcal,target
     applymode: calflag
+  autoflag_closure_error:
+    enable: yes
+    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
+    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
+    column: CORRECTED_DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
   flagging_summary:
     enable: yes
 
-# Inspect 1GC calibration pre-secondpass
 inspect_data:
+  __helpstr: Inspect 1GC calibration pre-secondpass
   enable: yes
   order: 5
   label: 1gc1
@@ -194,8 +215,17 @@ inspect_data:
     
 # Post-calibration flagging
 flagging__2:
+  __helpstr: Post-calibration flagging
   enable: no
   order: 6
+  autoflag_autocorr_powerspectra:
+    enable: no
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: CORRECTED_DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
   flag_autocorr:
     enable: no
   flag_spw:
@@ -225,9 +255,13 @@ cross_cal__2:
   delay_cal:
     enable: yes
     combine: ""
-    solint: inf
-    field: bpcal
+    solint: "60s" # Useful diagnostic to keep track of system delays with time
+    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
     plot: yes
+    flag:
+      enable: yes
+      mode: clip
+      clipminmax: [-60,60]
   bp_cal:
     enable: yes
     combine: ""
@@ -271,9 +305,19 @@ cross_cal__2:
     enable: yes
     field: gcal
     applymode: calflag
-    
-# Inspect 1GC calibration
+  autoflag_closure_error:
+    enable: yes
+    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
+    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
+    column: CORRECTED_DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flagging_summary:
+    enable: yes
+  
 inspect_data__2:
+  __helpstr: Inspect 1GC calibration
   enable: no
   order: 8
   label: 1gc2
@@ -314,8 +358,8 @@ inspect_data__2:
     avgtime: '90'
     avgchannel: '32'
 
-# Split target data
 split_target:
+  __helpstr: Split target data
   enable: yes
   order: 9
   split_target:
@@ -326,8 +370,8 @@ split_target:
   prepms:
     enable: no
 
-# Self calibration
 self_cal:
+  __helpstr: Self calibration
   enable: yes
   label: corr
   order: 10
@@ -421,6 +465,7 @@ self_cal:
     enable: yes
   
 image_HI:
+  __helpstr: Make HI cube
   enable: yes
   order: 11
   label: corr

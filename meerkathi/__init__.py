@@ -207,6 +207,26 @@ def main(argv):
         except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
+    elif args.report_viewer:
+        log.info("Entering interactive mode as requested: MEERKATHI report viewer")
+        port = args.interactive_port
+        web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
+        if not os.path.exists(web_dir):
+            log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
+            return
+        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+                 (port, web_dir))
+        log.info("Press Ctrl-C to exit")
+        hndl = SimpleHTTPRequestHandler
+
+        wt = Process(target = __host)
+        try:
+            wt.start()
+            webbrowser.open("http://localhost:%d/" % port)
+            wt.join()
+        except KeyboardInterrupt, SystemExit:
+            log.info("Interrupt received - shutting down web server. Goodbye!")
+        return
 
     # Very good idea to print user options into the log before running:
     cp().log_options()

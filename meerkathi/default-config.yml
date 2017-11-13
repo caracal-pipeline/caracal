@@ -472,7 +472,7 @@ image_HI:
   uvcontsub: 
     enable: yes
     fitorder: 1
-    fitspw: '0:0~775;855~1000'         # set to null to fit all unflagged channels, OR select line-free channels with CASA syntax, e.g., '0:0~100;150:300'
+    fitspw: null         # set to null to fit all unflagged channels, OR select line-free channels with CASA syntax, e.g., '0:0~100;150:300'
   sunblocker: 
     enable: yes
     use_contsub: yes

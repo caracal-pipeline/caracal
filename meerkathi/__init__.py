@@ -195,7 +195,7 @@ def main(argv):
             os.chdir(web_dir)
             try:
                 httpd.serve_forever()
-            except KeyboardInterrupt, SystemExit:
+            except (KeyboardInterrupt, SystemExit):
                 httpd.shutdown()
 
         wt = Process(target = host)
@@ -203,7 +203,7 @@ def main(argv):
             wt.start()
             webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
             wt.join()
-        except KeyboardInterrupt, SystemExit:
+        except (KeyboardInterrupt, SystemExit):
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
 

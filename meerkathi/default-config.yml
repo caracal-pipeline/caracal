@@ -59,6 +59,8 @@ prepare_data:
   prepms:
     enable: no
     add_imaging_cols: no
+  add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
+    enable: yes
 
 # Pre-calibration flagging
 flagging:

@@ -34,7 +34,21 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
-                 
+
+            if config['obsinfo'].get('vampirisms', False):
+                step = 'vampirisms_{0:d}'.format(i)
+                recipe.add('cab/sunblocker', step,
+                    {
+                        "command"     : 'vampirisms',
+                        "inset"       : msname,
+                        "dryrun"      : True,
+                        "nononsoleil" : True,
+                        "verb"        : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                label='{0:s}:: Note sunrise and sunset'.format(step))
+
         recipe.run()
         recipe.jobs = []
 

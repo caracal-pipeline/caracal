@@ -21,32 +21,28 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Subtract continuum'.format(step))
 
         if pipeline.enable_task(config, 'sunblocker'):
-
-            try:
-                from sunblocker.sunblocker import Sunblocker
-                if config['sunblocker']['use_contsub']:
-                    msname = msname+'.contsub'
-                step = 'sunblocker_{0:d}'.format(i)
-                recipe.add(Sunblocker().phazer, step, 
-                    {
-                        "inset"     : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
-                        "outset"    : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
-                        "imsize"    : config['image'].get('npix', 300),
-                        "cell"      : config['image'].get('cell', 20),
-                        "pol"       : 'i',
-                        "threshold" : config['sunblocker'].get('threshold', 4),
-                        "mode"      : 'all',
-                        "radrange"  : 0,
-                        "angle"     : 0,
-                        "showdir"   : pipeline.output,
-                        "show"      : prefix + '.sunblocker.pdf',
-                        "verb"      : True,
-                        "dryrun"    : False,
-                    },
-                    label='{0:s}:: Block out sun'.format(step))
-
-            except ImportError:
-                warnings.warn('Sunblocker program not found. Will skip sublocking step')
+            if config['sunblocker']['use_contsub']:
+                msname = msname+'.contsub'
+            step = 'sunblocker_{0:d}'.format(i)
+            recipe.add("cab/sunblocker", step, 
+                {
+                    "command"   : "phazer",
+                    "inset"     : msname,
+                    "outset"    : msname,
+                    "imsize"    : config['image'].get('npix', 300),
+                    "cell"      : config['image'].get('cell', 20),
+                    "pol"       : 'i',
+                    "threshold" : config['sunblocker'].get('threshold', 4),
+                    "mode"      : 'all',
+                    "radrange"  : 0,
+                    "angle"     : 0,
+                    "show"      : prefix + '.sunblocker.pdf',
+                    "verb"      : True,
+                    "dryrun"    : False,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Block out sun'.format(step))
 
             
     if pipeline.enable_task(config, 'image'):

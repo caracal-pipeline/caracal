@@ -1,4 +1,4 @@
-FROM stimela/base:0.2.9
+FROM stimela/base:0.3.1
 MAINTAINER <sphemkha@gmail.com>
 ADD . /build
 ENV USER root

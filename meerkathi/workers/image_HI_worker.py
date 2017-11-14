@@ -100,9 +100,6 @@ def worker(pipeline, recipe, config):
         spwid = config['casa_image'].get('spwid', 0)
         nchans = config['casa_image'].get('nchans','all')
         if nchans=='all': nchans=pipeline.nchans[0][spwid]
-
-        
-
         recipe.add('cab/casa_clean', step,
             {
                  "msname"         :    mslist,
@@ -136,15 +133,18 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/sofia', step,
             {
             "import.inFile"         : cubename,
+            "steps.doFlag"          : config['sofia'].get('flag', False),
+            "steps.doScaleNoise"    : True,
+            "steps.doSCfind"        : True,
             "steps.doMerge"         : config['sofia'].get('merge', True),
+            "steps.doReliability"   : False,
+            "steps.doParameterise"  : False,
+            "steps.doWriteMask"     : True,
             "steps.doMom0"          : True,
             "steps.doMom1"          : False,
-            "steps.doParameterise"  : False,
-            "steps.doReliability"   : False,
             "steps.doWriteCat"      : False,
-            "steps.doWriteMask"     : True,
-            "steps.doFlag"          : True,
             "flag.regions"          : config['sofia'].get('flagregion', []),
+            "scaleNoise.statistic"  : config['sofia'].get('rmsMode', 'mad'),
             "SCfind.threshold"      : config['sofia'].get('threshold', 4),
             "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
             "merge.radiusX"         : config['sofia'].get('mergeX', 2),

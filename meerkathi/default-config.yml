@@ -508,13 +508,6 @@ image_HI:
   sofia:
     enable: yes
     imager: 'casa'      # 'casa' or 'wsclean'
-    threshold: 4
-    merge: yes
-    mergeX: 2
-    mergeY: 2
-    mergeZ: 3
-    minSizeX: 3
-    minSizeY: 3
-    minSizeZ: 5
+    threshold: 6
   flagging_summary:
     enable: yes

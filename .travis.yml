@@ -1,0 +1,10 @@
+language: python
+sudo: required
+services:
+- docker
+before_install:
+- true
+install:
+- docker build -t meerkathi .
+script:
+- true

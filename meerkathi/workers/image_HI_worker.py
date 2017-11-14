@@ -127,13 +127,12 @@ def worker(pipeline, recipe, config):
 
 
     if pipeline.enable_task(config, 'sofia'):
+        if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
+        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {
-        #    USE THIS FOR THE WSCLEAN DIRTY CUBE
-        #    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(combprefix),
-        #    USE THIS FOR THE CASA CLEAN CUBE
-            "import.inFile"         : pipeline.prefix+'_HI-cube.fits:output',       # CASA CLEAN cube
+            "import.inFile"         : cubename,
             "steps.doMerge"         : config['sofia'].get('merge', True),
             "steps.doMom0"          : True,
             "steps.doMom1"          : False,
@@ -142,7 +141,7 @@ def worker(pipeline, recipe, config):
             "steps.doWriteCat"      : False,
             "steps.doWriteMask"     : True,
             "steps.doFlag"          : True,
-            "flag.regions"          : config['sofia'].get('flagregion', [0,255,0,255,881,937]),
+            "flag.regions"          : config['sofia'].get('flagregion', []),
             "SCfind.threshold"      : config['sofia'].get('threshold', 4),
             "merge.radiusX"         : config['sofia'].get('mergeX', 2),
             "merge.radiusY"         : config['sofia'].get('mergeY', 2),

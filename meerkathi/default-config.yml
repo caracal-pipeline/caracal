@@ -493,7 +493,7 @@ image_HI:
     cleanborder: 0
     make_cube: yes
   casa_image:
-    enable: yes
+    enable: no
     use_contsub: yes
     spwid: 0
     nchans: 'all'      # set to 'auto' to use all channels
@@ -506,8 +506,9 @@ image_HI:
     threshold: '10mJy'
     port2fits: True
   sofia:
-    enable: no
-    flagregion: [0,255,0,255,881,937]
+    enable: yes
+    imager: 'casa'      # 'casa' or 'wsclean'
+    flagregion: []
     threshold: 4
     merge: yes
     mergeX: 2

@@ -100,6 +100,9 @@ def worker(pipeline, recipe, config):
         spwid = config['casa_image'].get('spwid', 0)
         nchans = config['casa_image'].get('nchans','all')
         if nchans=='all': nchans=pipeline.nchans[0][spwid]
+
+        
+
         recipe.add('cab/casa_clean', step,
             {
                  "msname"         :    mslist,
@@ -143,6 +146,7 @@ def worker(pipeline, recipe, config):
             "steps.doFlag"          : True,
             "flag.regions"          : config['sofia'].get('flagregion', []),
             "SCfind.threshold"      : config['sofia'].get('threshold', 4),
+            "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
             "merge.radiusX"         : config['sofia'].get('mergeX', 2),
             "merge.radiusY"         : config['sofia'].get('mergeY', 2),
             "merge.radiusZ"         : config['sofia'].get('mergeZ', 3),

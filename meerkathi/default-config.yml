@@ -508,7 +508,6 @@ image_HI:
   sofia:
     enable: yes
     imager: 'casa'      # 'casa' or 'wsclean'
-    flagregion: []
     threshold: 4
     merge: yes
     mergeX: 2

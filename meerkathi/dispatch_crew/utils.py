@@ -9,20 +9,20 @@ import Tigger
 import codecs
 
 def angular_dist_pos_angle (ra1, dec1, ra2, dec2):
-  	"""Computes the angular distance between the two points on a sphere, and
-  	the position angle (North through East) of the direction from 1 to 2."""
+    """Computes the angular distance between the two points on a sphere, and
+    the position angle (North through East) of the direction from 1 to 2."""
 
-  	# Knicked from ska-sa/tigger
-  	ra = ra2 - ra1
-  	sind0, sind, cosd0, cosd = numpy.sin(dec1), numpy.sin(dec2), numpy.cos(dec1), numpy.cos(dec2)
-  	sina, cosa = numpy.sin(ra)*cosd, numpy.cos(ra)*cosd
-  	x = cosa*sind0 - sind*cosd0
-  	y = sina
-  	z = cosa*cosd0 + sind*sind0
-  	PA = numpy.arctan2(y,-x)
-  	R = numpy.arccos(z)
+    # Knicked from ska-sa/tigger
+    ra = ra2 - ra1
+    sind0, sind, cosd0, cosd = numpy.sin(dec1), numpy.sin(dec2), numpy.cos(dec1), numpy.cos(dec2)
+    sina, cosa = numpy.sin(ra)*cosd, numpy.cos(ra)*cosd
+    x = cosa*sind0 - sind*cosd0
+    y = sina
+    z = cosa*cosd0 + sind*sind0
+    PA = numpy.arctan2(y,-x)
+    R = numpy.arccos(z)
 
-  	return R,PA
+    return R,PA
 
 def categorize_fields(msinfo):
     with open(msinfo, 'r') as f:
@@ -34,11 +34,11 @@ def categorize_fields(msinfo):
     intent_ids = info['FIELD']['STATE_ID']
 
     mapping = {
-'fcal' : (['CALIBRATE_FLUX'], []),
-'gcal' : (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
-'bpcal': (['CALIBRATE_BANDPASS'], []),
-'target': (['TARGET'], []),
-}
+        'fcal' : (['CALIBRATE_FLUX'], []),
+        'gcal' : (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
+        'bpcal': (['CALIBRATE_BANDPASS'], []),
+        'target': (['TARGET'], []),
+    }
 
     for i, field in enumerate(names):
         ints = intents[intent_ids[i]].split(',')
@@ -49,6 +49,15 @@ def categorize_fields(msinfo):
 
     return mapping
 
+def get_field_id(msinfo, field_name):
+    """ Gets field id """
+    with open(msinfo, 'r') as f:
+        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+    names = info['FIELD']['NAME']
+    ids = info['FIELD']['SOURCE_ID']
+    if field_name not in names:
+        raise KeyError("Could not find field '%s'" % field_name)
+    return ids[names.index(field_name)]
 
 def select_gcal(msinfo, targets, calibrators, mode='nearest'):
     """
@@ -77,7 +86,6 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
             if most_scans < len(info['SCAN'][field]):
                 most_scans = len(info['SCAN'][field])
                 gcal = names[idx]
-                
     elif mode == 'nearest':
         tras = []
         tdecs = []

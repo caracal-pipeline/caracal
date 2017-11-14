@@ -22,6 +22,7 @@ import base64
 from urllib import urlencode
 import ruamel.yaml
 import json
+from meerkathi.dispatch_crew.reporter import reporter as mrr
 
 MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
@@ -126,7 +127,7 @@ class MeerKATHI(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
             config = self.config[_name]
-            if config['enable'] is False:
+            if config.get('enable', True) is False:
                 self.skip.append(_worker)
                 continue
             # Define stimela recipe instance for worker
@@ -151,10 +152,15 @@ class MeerKATHI(object):
                 recipe.run()
 
         # Execute all workers if they saved for later execution
-        if self.add_all_first:
-            for worker in self.workers:
-                if worker not in self.skip:
-                    self.recipes[worker[1]].run()
+        try:
+            if self.add_all_first:
+                for worker in self.workers:
+                    if worker not in self.skip:
+                        self.recipes[worker[1]].run()
+        finally: # write reports even if the pipeline only runs partially
+            reporter = mrr(self)
+            reporter.generate_reports()
+
 
 
 def main(argv):
@@ -173,6 +179,14 @@ def main(argv):
     log.info("")
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
+    def __host():
+        httpd = HTTPServer(("", port), hndl)
+        os.chdir(web_dir)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt, SystemExit:
+            httpd.shutdown()
+
     # User requests default config => dump and exit
     if args.get_default:
         log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(args.get_default))
@@ -190,20 +204,32 @@ def main(argv):
         log.info("Press Ctrl-C to exit")
         hndl = SimpleHTTPRequestHandler
 
-        def host():
-            httpd = HTTPServer(("", port), hndl)
-            os.chdir(web_dir)
-            try:
-                httpd.serve_forever()
-            except (KeyboardInterrupt, SystemExit):
-                httpd.shutdown()
-
-        wt = Process(target = host)
+        wt = Process(target = __host)
         try:
             wt.start()
             webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
             wt.join()
         except (KeyboardInterrupt, SystemExit):
+            log.info("Interrupt received - shutting down web server. Goodbye!")
+        return
+    elif args.report_viewer:
+        log.info("Entering interactive mode as requested: MEERKATHI report viewer")
+        port = args.interactive_port
+        web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
+        if not os.path.exists(web_dir):
+            log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
+            return
+        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+                 (port, web_dir))
+        log.info("Press Ctrl-C to exit")
+        hndl = SimpleHTTPRequestHandler
+
+        wt = Process(target = __host)
+        try:
+            wt.start()
+            webbrowser.open("http://localhost:%d/" % port)
+            wt.join()
+        except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
 
@@ -217,13 +243,14 @@ def main(argv):
         meerkathi.log.info("Found the following reference calibrators (in CASA format):")
         meerkathi.log.info(cdb)
 
+    import exceptions
     try:
         pipeline = MeerKATHI(arg_groups,
                              args.workers_directory, stimela_build=args.stimela_build,
                              add_all_first=args.add_all_first, prefix=args.general_prefix)
 
         pipeline.run_workers()
-    except SystemExit as e:
+    except exceptions.SystemExit as e:
         if e.code != 0:
             log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:d} shutdown. This is likely a bug, please report.".format(e.code))
             log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__.__version__)))

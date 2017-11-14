@@ -13,7 +13,11 @@ requirements = [
 'numpy>=1.13.1',
 'scipy>=0.19.1',
 'pysolr>=3.4.0',
-'progressbar2>=3.11.0'
+'progressbar2>=3.11.0',
+'nbconvert>=5.3.1',
+'aplpy>=1.1.1',
+'matplotlib>=2.1.0',
+'jupyter>=1.0.0'
 ]
 
 PACKAGE_NAME = 'meerkathi'

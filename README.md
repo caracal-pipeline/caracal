@@ -50,7 +50,10 @@ $ meerkathi -gd <configuration file>
 ```
 $ meerkathi -c <configuration file>
 ```
-
+8. View generated reports (produced even in event of partial pipeline failure)
+```
+$ meerkathi -c <configuration file> -rv
+```
 ## Help and descriptions
 For Stimela see https://github.com/SpheMakh/Stimela and wiki therein.
 For this pipeline and MeerKAT specific notes see [wiki](https://github.com/ska-sa/meerkathi/wiki) of this repository.

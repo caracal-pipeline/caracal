@@ -493,7 +493,7 @@ image_HI:
     cleanborder: 0
     make_cube: yes
   casa_image:
-    enable: no
+    enable: yes
     use_contsub: yes
     spwid: 0
     nchans: 'all'      # set to 'auto' to use all channels

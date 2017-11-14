@@ -84,6 +84,9 @@ class config_parser:
         add('-ce', '--config-editor', action='store_true',
             help='Start the interactive configuration editor (requires X session with decent [ie. firefox] webbrowser installed).')
 
+        add('-rv', '--report-viewer', action='store_true',
+            help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
+
         add('--interactive-port', type=int, default=8888,
             help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 

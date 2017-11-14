@@ -21,6 +21,7 @@ import base64
 from urllib import urlencode
 import ruamel.yaml
 import json
+from meerkathi.dispatch_crew.reporter import reporter as mrr
 
 MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
@@ -146,10 +147,15 @@ class MeerKATHI(object):
                 recipe.run()
 
         # Execute all workers if they saved for later execution
-        if self.add_all_first:
-            for worker in self.workers:
-                if worker not in self.skip:
-                    self.recipes[worker[1]].run()
+        try:
+            if self.add_all_first:
+                for worker in self.workers:
+                    if worker not in self.skip:
+                        self.recipes[worker[1]].run()
+        finally: # write reports even if the pipeline only runs partially
+            reporter = mrr(self)
+            reporter.generate_reports()
+
 
 
 def main(argv):
@@ -168,6 +174,14 @@ def main(argv):
     log.info("")
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
+    def __host():
+        httpd = HTTPServer(("", port), hndl)
+        os.chdir(web_dir)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt, SystemExit:
+            httpd.shutdown()
+
     # User requests default config => dump and exit
     if args.get_default:
         log.info("Dumping default configuration to %s as requested. Goodbye!" % args.get_default)
@@ -185,18 +199,30 @@ def main(argv):
         log.info("Press Ctrl-C to exit")
         hndl = SimpleHTTPRequestHandler
 
-        def host():
-            httpd = HTTPServer(("", port), hndl)
-            os.chdir(web_dir)
-            try:
-                httpd.serve_forever()
-            except KeyboardInterrupt, SystemExit:
-                httpd.shutdown()
-
-        wt = Process(target = host)
+        wt = Process(target = __host)
         try:
             wt.start()
             webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
+            wt.join()
+        except KeyboardInterrupt, SystemExit:
+            log.info("Interrupt received - shutting down web server. Goodbye!")
+        return
+    elif args.report_viewer:
+        log.info("Entering interactive mode as requested: MEERKATHI report viewer")
+        port = args.interactive_port
+        web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
+        if not os.path.exists(web_dir):
+            log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
+            return
+        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+                 (port, web_dir))
+        log.info("Press Ctrl-C to exit")
+        hndl = SimpleHTTPRequestHandler
+
+        wt = Process(target = __host)
+        try:
+            wt.start()
+            webbrowser.open("http://localhost:%d/" % port)
             wt.join()
         except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")

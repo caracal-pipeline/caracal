@@ -476,22 +476,35 @@ image_HI:
   sunblocker: 
     enable: yes
     use_contsub: yes
-  image:
-    enable: yes
+  wsclean_image:
+    enable: no
     use_contsub: yes
     spwid: 0
+    nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
     npix: 2048
     trim: 1440
     mgain: 0.9
     cell: 2.5
     weight: briggs
     robust: 2
+    facets: 11
     niter: 1000000
     autothreshold: 3
     cleanborder: 0
-    facets: 11
-  make_cube:
+    make_cube: yes
+  casa_image:
     enable: yes
+    use_contsub: yes
+    spwid: 0
+    nchans: 'all'      # set to 'auto' to use all channels
+    startchan: 0
+    npix: 2048
+    cell: 2.5
+    weight: briggs
+    robust: 2
+    niter: 1000000
+    threshold: '10mJy'
+    port2fits: True
   sofia:
     enable: no
     flagregion: [0,255,0,255,881,937]

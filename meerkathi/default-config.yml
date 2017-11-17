@@ -489,14 +489,15 @@ image_HI:
     robust: 2
     facets: 11
     niter: 1000
-    autothreshold: 5
+    automask: 5
+    autothreshold: 1
     cleanborder: 0
     make_cube: yes
   casa_image:
     enable: yes
     use_contsub: yes
     spwid: 0
-    nchans: 'all'      # set to 'auto' to use all channels
+    nchans: 'all'      # set to 'all' to use all channels
     startchan: 0
     npix: 512
     cell: 7

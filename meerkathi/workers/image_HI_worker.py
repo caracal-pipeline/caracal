@@ -71,7 +71,7 @@ def worker(pipeline, recipe, config):
                   "mgain"     : config['wsclean_image'].get('mgain', 0.90),
                   "channelsout"     : nchans,
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
-                  #"auto-mask"  :   config['wsclean_image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
+                  "auto-mask"  :   config['wsclean_image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
                   "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
               },  
         input=pipeline.input,

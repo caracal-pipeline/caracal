@@ -79,19 +79,22 @@ def worker(pipeline, recipe, config):
         label='{:s}:: Image HI'.format(step))
 
         if config['wsclean_image']['make_cube']:
-            nchans = config['wsclean_image'].get('nchans', pipeline.nchans[0][spwid])
-            step = 'make_cube'
-            recipe.add('cab/fitstool', step,
-                {    
-                    "image"    : [pipeline.prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(nchans)],
-                    "output"   : pipeline.prefix+'_HI-cube.fits',
-                    "stack"    : True,
-                    "delete-files" : True,
-                    "fits-axis": 'FREQ',
-                },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{0:s}:: Make cube from wsclean channel images'.format(step))
+            #nchans = config['wsclean_image'].get('nchans', pipeline.nchans[0][spwid])
+            if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
+            else: imagetype=['image','dirty','psf','residual','first-residual','model']
+            for mm in imagetype:
+                step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
+                recipe.add('cab/fitstool', step,
+                    {    
+                        "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
+                        "output"   : pipeline.prefix+'_HI-{0:s}-cube.fits'.format(mm),
+                        "stack"    : True,
+                        "delete-files" : True,
+                        "fits-axis": 'FREQ',
+                    },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_contsub']:

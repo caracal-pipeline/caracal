@@ -6,6 +6,7 @@ NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
+    restfreq = config.get('restfreq','1.420405752GHz')
 
     for i, msname in enumerate(mslist):
         if pipeline.enable_task(config, 'uvcontsub'):
@@ -50,67 +51,105 @@ def worker(pipeline, recipe, config):
                 warnings.warn('Sunblocker program not found. Will skip sublocking step')
 
             
-    if pipeline.enable_task(config, 'image'):
-        if config['image']['use_contsub']:
+    if pipeline.enable_task(config, 'wsclean_image'):
+        if config['wsclean_image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
-	
-        step = 'image_HI'
-        spwid = config['image'].get('spwid', 0)
-        nchans = config['image'].get('nchans', pipeline.nchans[0][spwid])
+        step = 'wsclean_image_HI'
+        spwid = config['wsclean_image'].get('spwid', 0)
+        nchans = config['wsclean_image'].get('nchans','all')
+        if nchans=='all': nchans=pipeline.nchans[0][spwid]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
-                  "weight"    : '{0} {1}'.format(config['image'].get('weight', 
-                                                  'natural'), config['image'].get('robust', '')),
-                  "npix"      : config['image'].get('npix', 300),
-                  "trim"      : config['image'].get('trim', 256),
-                  "scale"     : config['image'].get('cell', 20),
+                  "weight"    : '{0} {1}'.format(config['wsclean_image'].get('weight', 
+                                                  'natural'), config['wsclean_image'].get('robust', '')),
+                  "npix"      : config['wsclean_image'].get('npix', 300),
+                  "trim"      : config['wsclean_image'].get('trim', 256),
+                  "scale"     : config['wsclean_image'].get('cell', 20),
                   "prefix"    : pipeline.prefix+'_HI',
-                  "niter"     : config['image'].get('niter', 1000000),
-                  "mgain"     : config['image'].get('mgain', 0.90),
+                  "niter"     : config['wsclean_image'].get('niter', 1000000),
+                  "mgain"     : config['wsclean_image'].get('mgain', 0.90),
                   "channelsout"     : nchans,
-                  "auto-threshold"  : config['image'].get('autothreshold', 5),
-                  #"auto-mask"  :   config['image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
-                  "channelrange" : config['image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
+                  "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
+                  "auto-mask"  :   config['wsclean_image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
+                  "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
               },  
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Image HI'.format(step))
 
-    if pipeline.enable_task(config, 'make_cube'):
-        nchans = config['image'].get('nchans', pipeline.nchans[0][spwid])
-        step = 'make_cube'
-        recipe.add('cab/fitstool', step,
-            {    
-                "image"    : [pipeline.prefix+'_HI-{:04d}-image.fits:output'.format(d) for d in xrange(nchans)],
-                "output"   : pipeline.prefix+'_HI-cube.fits',
-                "stack"    : True,
-                "delete-files" : True,
-                "fits-axis": 'FREQ',
+        if config['wsclean_image']['make_cube']:
+            #nchans = config['wsclean_image'].get('nchans', pipeline.nchans[0][spwid])
+            if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
+            else: imagetype=['image','dirty','psf','residual','first-residual','model']
+            for mm in imagetype:
+                step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
+                recipe.add('cab/fitstool', step,
+                    {    
+                        "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
+                        "output"   : pipeline.prefix+'_HI-{0:s}-cube.fits'.format(mm),
+                        "stack"    : True,
+                        "delete-files" : True,
+                        "fits-axis": 'FREQ',
+                    },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+
+    if pipeline.enable_task(config, 'casa_image'):
+        if config['casa_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
+        step = 'casa_image_HI'
+        spwid = config['casa_image'].get('spwid', 0)
+        nchans = config['casa_image'].get('nchans','all')
+        if nchans=='all': nchans=pipeline.nchans[0][spwid]
+        recipe.add('cab/casa_clean', step,
+            {
+                 "msname"         :    mslist,
+                 "prefix"         :    pipeline.prefix+'_HI',
+#                 "field"          :    target,
+#                 "column"         :    "CORRECTED_DATA",
+                 "mode"           :    'channel',
+                 "nchan"          :    nchans,
+                 "start"          :    config['casa_image'].get('startchan', 0,),
+                 "interpolation"  :    'nearest',
+                 "niter"          :    config['casa_image'].get('niter', 1000000),
+                 "psfmode"        :    'hogbom',
+                 "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
+                 "npix"           :    config['casa_image'].get('npix', 300),
+                 "cellsize"       :    config['casa_image'].get('cell', 20),
+                 "weight"         :    config['casa_image'].get('weight', 'briggs'),
+                 "robust"         :    config['casa_image'].get('robust', 2.0),
+#                 "wprojplanes"    :    1,
+                 "port2fits"      :    True,
+                 "restfreq"       :    restfreq,
             },
             input=pipeline.input,
             output=pipeline.output,
-            label='{0:s}:: Make cube from wsclean channel images'.format(step))
+            label='{:s}:: Image HI'.format(step))
 
 
     if pipeline.enable_task(config, 'sofia'):
+        if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
+        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {
-        #    USE THIS FOR THE WSCLEAN DIRTY CUBE
-        #    "import.inFile"     :   '{:s}-cube.dirty.fits:output'.format(combprefix),
-        #    USE THIS FOR THE CASA CLEAN CUBE
-            "import.inFile"         : pipeline.prefix+'_HI-cube.fits:output',       # CASA CLEAN cube
+            "import.inFile"         : cubename,
+            "steps.doFlag"          : config['sofia'].get('flag', False),
+            "steps.doScaleNoise"    : True,
+            "steps.doSCfind"        : True,
             "steps.doMerge"         : config['sofia'].get('merge', True),
+            "steps.doReliability"   : False,
+            "steps.doParameterise"  : False,
+            "steps.doWriteMask"     : True,
             "steps.doMom0"          : True,
             "steps.doMom1"          : False,
-            "steps.doParameterise"  : False,
-            "steps.doReliability"   : False,
             "steps.doWriteCat"      : False,
-            "steps.doWriteMask"     : True,
-            "steps.doFlag"          : True,
-            "flag.regions"          : config['sofia'].get('flagregion', [0,255,0,255,881,937]),
+            "flag.regions"          : config['sofia'].get('flagregion', []),
+            "scaleNoise.statistic"  : config['sofia'].get('rmsMode', 'mad'),
             "SCfind.threshold"      : config['sofia'].get('threshold', 4),
+            "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
             "merge.radiusX"         : config['sofia'].get('mergeX', 2),
             "merge.radiusY"         : config['sofia'].get('mergeY', 2),
             "merge.radiusZ"         : config['sofia'].get('mergeZ', 3),

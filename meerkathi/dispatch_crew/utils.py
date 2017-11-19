@@ -5,7 +5,7 @@ import yaml
 import meerkathi
 import meerkathi.dispatch_crew.caltables as mkct 
 import re
-import Tigger
+import astropy.io.fits as fitsio
 import codecs
 
 def angular_dist_pos_angle (ra1, dec1, ra2, dec2):
@@ -226,10 +226,15 @@ def find_in_casa_calibrators(msinfo, field):
         return False
 
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
-    model = Tigger.load(skymodel)
+    if isinstance(skymodel, str):
+        skymodel = [skymodel]
+    flux = 0
+    for name in skymodel:
+        with fitsio.open(name) as hdu:
+            model = hdu[1].data
+        # Get total flux from model
+        flux += model['Total_flux'].sum()
 
-    # Get total flux from model
-    flux = numpy.sum( [src.flux.I for src in model.sources] )
     # Get number of antennas
     with open(msinfo) as yr:
         info = yaml.load(yr)

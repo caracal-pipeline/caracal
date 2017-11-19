@@ -42,6 +42,7 @@ def worker(pipeline, recipe, config):
     taper = config.get('img_uvtaper', None)
     label = config['label']
     bjones = config.get('cal_Bjones', False)
+    time_chunk = config.get('cal_time_chunk', 128)
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["",'-MFS'][int(nchans>1)]
 
@@ -240,7 +241,8 @@ def worker(pipeline, recipe, config):
 
 
     def combine_models(models, num):
-        model_names = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in models]
+        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in models]
+        model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(pipeline.output, prefix, m) for m in models]
         calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
 
         step = 'combine_models_' + '_'.join(map(str, models))
@@ -256,7 +258,7 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Combined models'.format(step))
 
-        return calmodel
+        return calmodel, model_names_fits
 
     def autoset_calibration_intervals(recipe, skymodel, num, key):
         ## No way around it. The recipe has to be executed at this point to get the sky model
@@ -265,7 +267,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         solints = []
-        skymodel = os.path.join(pipeline.output, skymodel.split(':')[0])
+        # skymodel = os.path.join(pipeline.output, skymodel.split(':')[0])
         for i in range(pipeline.nobs):
             msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[i], label)
             phase_only = config[key].get('gain_matrix_type', 'GainDiagPhase') == 'GainDiagPhase'
@@ -312,16 +314,17 @@ def worker(pipeline, recipe, config):
             if isinstance(model, str) and len(model.split('+'))>1:
                 combine = True
                 mm = model.split('+')
-                calmodel = combine_models(mm, num)
+                calmodel, fits_model = combine_models(mm, num)
             else:
                 model = int(model)
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
         autosols = [],[]
         autosols_set = False
         if config[key].get('Gsols', gsols) == 'auto' or \
                        config[key].get('Bsols', gsols) == 'auto':
-            autosols = autoset_calibration_intervals(recipe, calmodel, num, key)
+            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True
 
@@ -374,16 +377,17 @@ def worker(pipeline, recipe, config):
         if isinstance(model, str) and len(model.split('+'))>1:
             combine = True
             mm = model.split('+')
-            calmodel = combine_models(mm, num)
+            calmodel, fits_model = combine_models(mm, num)
         else:
             model = int(model)
             calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
         autosols = [],[]
         autosols_set = False
         if config[key].get('Gsols', gsols) == 'auto' or \
                        config[key].get('Bsols', gsols) == 'auto':
-            autosols = autoset_calibration_intervals(recipe, calmodel, num, key)
+            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True
 

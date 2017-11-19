@@ -17,7 +17,7 @@ requirements = [
 'nbconvert>=5.3.1',
 'aplpy>=1.1.1',
 'matplotlib>=2.1.0',
-'jupyter>=1.0.0'
+'jupyter>=1.0.0',
 ]
 
 PACKAGE_NAME = 'meerkathi'

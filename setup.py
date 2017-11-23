@@ -53,6 +53,6 @@ setup(name = PACKAGE_NAME,
     packages=[PACKAGE_NAME],
     install_requires = requirements,
     include_package_data = True,
-    scripts = ["bin/" + i for i in os.listdir("bin")],
+    scripts = ["bin/" + j for j in os.listdir("bin")],
     classifiers = [],
      )

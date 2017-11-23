@@ -487,6 +487,8 @@ image_HI:
   sunblocker: 
     enable: yes
     use_contsub: yes
+    imsize: 800
+    cell: 7
   wsclean_image:
     enable: no
     use_contsub: yes

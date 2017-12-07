@@ -9,7 +9,14 @@ pckgdir = os.path.dirname(os.path.abspath(__file__))
 import stimela
 import glob
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
-import meerkathi.__version__ as __version__
+
+# Distutils standard  way to do version numbering
+import pkg_resources
+try:
+    __version__ = pkg_resources.require("meerkathi")[0].version
+except pkg_resources.DistributionNotFound:
+    __version__ = "dev"
+
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct

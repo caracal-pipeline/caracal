@@ -7,6 +7,11 @@ def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
     prefix = pipeline.prefix
     restfreq = config.get('restfreq','1.420405752GHz')
+    npix = config.get('npix', 1024)
+    cell = config.get('cell', 7)
+    weight = config.get('weight', 'natural')
+    robust = config.get('robust', 0)
+
 
     for i, msname in enumerate(mslist):
         if pipeline.enable_task(config, 'uvcontsub'):
@@ -23,32 +28,28 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Subtract continuum'.format(step))
 
         if pipeline.enable_task(config, 'sunblocker'):
-
-            try:
-                from sunblocker.sunblocker import Sunblocker
-                if config['sunblocker']['use_contsub']:
-                    msname = msname+'.contsub'
-                step = 'sunblocker_{0:d}'.format(i)
-                recipe.add(Sunblocker().phazer, step, 
-                    {
-                        "inset"     : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
-                        "outset"    : ['{0:s}/{1:s}'.format(pipeline.msdir, msname)],
-                        "imsize"    : config['image'].get('npix', 300),
-                        "cell"      : config['image'].get('cell', 20),
-                        "pol"       : 'i',
-                        "threshold" : config['sunblocker'].get('threshold', 4),
-                        "mode"      : 'all',
-                        "radrange"  : 0,
-                        "angle"     : 0,
-                        "showdir"   : pipeline.output,
-                        "show"      : prefix + '.sunblocker.pdf',
-                        "verb"      : True,
-                        "dryrun"    : False,
-                    },
-                    label='{0:s}:: Block out sun'.format(step))
-
-            except ImportError:
-                warnings.warn('Sunblocker program not found. Will skip sublocking step')
+            if config['sunblocker']['use_contsub']:
+                msname = msname+'.contsub'
+            step = 'sunblocker_{0:d}'.format(i)
+            recipe.add("cab/sunblocker", step, 
+                {
+                    "command"   : "phazer",
+                    "inset"     : msname,
+                    "outset"    : msname,
+                    "imsize"    : config['sunblocker'].get('imsize', npix),
+                    "cell"      : config['sunblocker'].get('cell', cell),
+                    "pol"       : 'i',
+                    "threshold" : config['sunblocker'].get('threshold', 4),
+                    "mode"      : 'all',
+                    "radrange"  : 0,
+                    "angle"     : 0,
+                    "show"      : prefix + '.sunblocker.pdf',
+                    "verb"      : True,
+                    "dryrun"    : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Block out sun'.format(step))
 
             
     if pipeline.enable_task(config, 'wsclean_image'):
@@ -57,21 +58,25 @@ def worker(pipeline, recipe, config):
         step = 'wsclean_image_HI'
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans','all')
+        # Construct weight specification
+        if config['wsclean_image'].get('weight', 'natural') == 'briggs':
+            weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
+        else:
+            weight = config['wsclean_image'].get('weight', weight)
         if nchans=='all': nchans=pipeline.nchans[0][spwid]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
-                  "weight"    : '{0} {1}'.format(config['wsclean_image'].get('weight', 
-                                                  'natural'), config['wsclean_image'].get('robust', '')),
-                  "npix"      : config['wsclean_image'].get('npix', 300),
-                  "trim"      : config['wsclean_image'].get('trim', 256),
-                  "scale"     : config['wsclean_image'].get('cell', 20),
+                  "weight"    : weight,
+                  "npix"      : config['wsclean_image'].get('npix', npix),
+                  "trim"      : dsm(config['wsclean_image'].get('trim', None)),
+                  "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
                   "mgain"     : config['wsclean_image'].get('mgain', 0.90),
                   "channelsout"     : nchans,
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
-                  "auto-mask"  :   config['wsclean_image'].get('automask', 3), # causes segfaults in channel mode. Will be fixed in wsclean 2.4
+                  "auto-mask"  :   config['wsclean_image'].get('automask', 3),
                   "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
               },  
         input=pipeline.input,
@@ -108,7 +113,6 @@ def worker(pipeline, recipe, config):
                  "msname"         :    mslist,
                  "prefix"         :    pipeline.prefix+'_HI',
 #                 "field"          :    target,
-#                 "column"         :    "CORRECTED_DATA",
                  "mode"           :    'channel',
                  "nchan"          :    nchans,
                  "start"          :    config['casa_image'].get('startchan', 0,),
@@ -116,10 +120,10 @@ def worker(pipeline, recipe, config):
                  "niter"          :    config['casa_image'].get('niter', 1000000),
                  "psfmode"        :    'hogbom',
                  "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
-                 "npix"           :    config['casa_image'].get('npix', 300),
-                 "cellsize"       :    config['casa_image'].get('cell', 20),
-                 "weight"         :    config['casa_image'].get('weight', 'briggs'),
-                 "robust"         :    config['casa_image'].get('robust', 2.0),
+                 "npix"           :    config['casa_image'].get('npix', npix),
+                 "cellsize"       :    config['casa_image'].get('cell', cell),
+                 "weight"         :    config['casa_image'].get('weight', weight),
+                 "robust"         :    config['casa_image'].get('robust', robust),
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,

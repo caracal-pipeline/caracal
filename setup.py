@@ -17,7 +17,7 @@ requirements = [
 'nbconvert>=5.3.1',
 'aplpy>=1.1.1',
 'matplotlib>=2.1.0',
-'jupyter>=1.0.0'
+'jupyter>=1.0.0',
 ]
 
 PACKAGE_NAME = 'meerkathi'
@@ -53,6 +53,6 @@ setup(name = PACKAGE_NAME,
     packages=[PACKAGE_NAME],
     install_requires = requirements,
     include_package_data = True,
-    scripts = ["bin/" + i for i in os.listdir("bin")],
+    scripts = ["bin/" + j for j in os.listdir("bin")],
     classifiers = [],
      )

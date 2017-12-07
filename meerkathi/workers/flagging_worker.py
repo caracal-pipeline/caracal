@@ -53,6 +53,20 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
 
+        if pipeline.enable_task(config, 'quack_flagging'):
+            step = 'quack_flagging_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"           : msname,
+                  "mode"          : 'quack',
+                  "quackinterval" : config['quack_flagging'].get('quackinterval', 10),
+                  "quackmode"     : config['quack_flagging'].get('quackmode', 'beg'),
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
+
+
         if pipeline.enable_task(config, 'flag_spw'):
             step = 'flag_spw_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),

@@ -35,14 +35,15 @@ get_data:
     channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive, null=all channels)
   untar:                                                # untar the MS.TAR file in msdir; this will overwrite the existing MS file
     enable: no
-  obsinfo:                                              # run CASA LISTOBS and write meerkathi_<dataid>_obsinfo.txt file to output directory set above
-    enable: yes
-    include_json: yes                                   # also write a obsinfo.json to same output directory
 
 observation_config:
   __helpstr: Setup some basic observation information
   # always enable, else the pipeline doesn't know which fields are which
   order: 1
+  obsinfo:
+    enable: yes
+    listobs: yes
+    summary_json: yes
   target: auto
   fcal: auto
   bpcal: auto
@@ -59,6 +60,8 @@ prepare_data:
   prepms:
     enable: no
     add_imaging_cols: no
+  add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
+    enable: yes
 
 flagging:
   __helpstr: Pre-calibration flagging
@@ -74,6 +77,10 @@ flagging:
     threads: 8
   flag_autocorr:
     enable: yes
+  quack_flagging:
+    enable: no
+    quackinterval: 10
+    quackmode: beg
   flag_spw:
     enable: yes
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
@@ -101,6 +108,7 @@ cross_cal:
   label: 1gc1
   set_model:
     enable: yes
+    no_verify: no
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
     enable: yes
@@ -362,11 +370,15 @@ split_target:
   __helpstr: Split target data
   enable: yes
   order: 9
+  label: corr
   split_target:
     enable: yes
     time_average: 8s
     freq_average: 1
-    label: corr
+  obsinfo: 
+    enable: yes
+    listobs: no
+    summary_json: yes
   prepms:
     enable: no
 
@@ -376,6 +388,7 @@ self_cal:
   label: corr
   order: 10
   primary_beam: no
+  calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
   img_npix: 8192 #at very least 50% padding for alias protection
@@ -385,8 +398,8 @@ self_cal:
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_autothreshold: 3
-  img_automask: 5
+  img_auto_threshold: 3
+  img_auto_mask: 5
   img_cleanborder: 0
   img_facets: 11
   img_nchans: 3
@@ -395,9 +408,8 @@ self_cal:
   img_column: CORRECTED_DATA
   img_pol: I
   # Calibration settings
-  cal_Gsols: [80, 250] 
-  cal_DDsols: [60, 500]
-  cal_flag_ampl: [0.5, 1.5]
+  cal_Gsols: auto
+  cal_DDsols: [300, 500]
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5 
   # Source finding settings
@@ -405,8 +417,8 @@ self_cal:
   sf_thresh_isl: 8 
   image_1:
     enable: yes
-    auto_mask: 20
-    autothreshold: 0.5
+    auto_mask: 40
+    auto_threshold: 0.5
     column: DATA
   extract_sources_1:
     enable: yes
@@ -418,12 +430,11 @@ self_cal:
     gain_matrix_type: GainDiagPhase
   image_2:
     enable: yes
-    mask: yes # mask will be based on previous image
-    automask: 20
-    autothreshold: 0.5
+    auto_mask: 30
+    auto_threshold: 0.5
   extract_sources_2:
     enable: yes
-    spi: no
+    spi: yes
   calibrate_2:
     enable: yes
     model: '2' # use model from extract_sources_2
@@ -476,6 +487,8 @@ image_HI:
   sunblocker: 
     enable: yes
     use_contsub: yes
+    imsize: 800
+    cell: 7
   wsclean_image:
     enable: no
     use_contsub: yes

@@ -62,7 +62,7 @@ def __query_filter(solr_url,
         """
 
         # Create an observation string for logging
-        filename, description = (solr_result[f] for f in
+        filename, description = (solr_result.get(f,'') for f in
             ('Filename', 'Description'))
         observation = '{} {}'.format(filename, description[:50])
 

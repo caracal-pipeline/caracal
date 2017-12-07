@@ -21,7 +21,7 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'meerkathi'
-__version__ = 0.1.0
+__version__ = '0.1.0'
 
 setup(name = PACKAGE_NAME,
     version = __version__,

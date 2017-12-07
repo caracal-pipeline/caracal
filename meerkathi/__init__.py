@@ -181,7 +181,7 @@ def main(argv):
     log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
     log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__.__version__)))
+    log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
     log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
     log.info("")
     args = cp(argv).args
@@ -260,13 +260,13 @@ def main(argv):
     except exceptions.SystemExit as e:
         if e.code != 0:
             log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:d} shutdown. This is likely a bug, please report.".format(e.code))
-            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__.__version__)))
+            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
             sys.exit(1) #indicate failure
         else:
             log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
     except:
         log.error("Whoops... big explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
-        log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__.__version__)))
+        log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
         tb = traceback.format_exc()
         log.error(tb)
         sys.exit(1) #indicate failure

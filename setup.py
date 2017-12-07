@@ -33,5 +33,13 @@ setup(name = PACKAGE_NAME,
     install_requires = requirements,
     include_package_data = True,
     scripts = ["bin/" + j for j in os.listdir("bin")],
-    classifiers = [],
+    license=["GNU GPL v2"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python",
+        "Topic :: Scientific/Engineering :: Astronomy"
+    ]
      )

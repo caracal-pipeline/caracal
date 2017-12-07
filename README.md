@@ -17,10 +17,6 @@ $ pip install pip wheel setuptools -U
 $ pip install <absolute path to meerkathi folder>
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
-3. Install latest stimela in venv (**temporary patchjob: fixes forthcoming in Stimela v0.3.1**)
-```
-pip install git+https://github.com/SpheMakh/Stimela
-```
 
 3. Build Stimela
 ```

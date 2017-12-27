@@ -69,7 +69,7 @@ def worker(pipeline, recipe, config):
                   "msname"    : mslist,
                   "weight"    : weight,
                   "npix"      : config['wsclean_image'].get('npix', npix),
-                  "trim"      : dsm(config['wsclean_image'].get('trim', None)),
+                  "trim"      : sdm(config['wsclean_image'].get('trim', None)),
                   "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),

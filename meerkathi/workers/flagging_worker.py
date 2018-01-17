@@ -79,6 +79,18 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
+        if pipeline.enable_task(config, 'flag_time'):
+            step = 'flag_time_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata','flagtime_{:d}'.format(i),
+                {
+                  "vis"       : msname,
+                  "mode"      : 'manual',
+                  "timerange" : config['flag_time']['timerange'],
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+
         if pipeline.enable_task(config, 'flag_scan'):
             step = 'flag_scan_{0:d}'.format(i)
             recipe.add('cab/casa_flagdata', step,

@@ -84,6 +84,9 @@ flagging:
   flag_spw:
     enable: yes
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
+  flag_time:
+    enable: no
+    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
   flag_antennas:
     enable: no
     antennas: null

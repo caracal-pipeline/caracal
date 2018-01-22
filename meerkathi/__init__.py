@@ -2,13 +2,21 @@
 
 import sys
 import os
+import traceback
 
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 
 import stimela
 import glob
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
-import meerkathi.__version__ as __version__
+
+# Distutils standard  way to do version numbering
+import pkg_resources
+try:
+    __version__ = pkg_resources.require("meerkathi")[0].version
+except pkg_resources.DistributionNotFound:
+    __version__ = "dev"
+
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
@@ -122,6 +130,7 @@ class MeerKATHI(object):
             try:
                 worker = __import__(_worker)
             except ImportError:
+                traceback.print_exc()
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
             config = self.config[_name]
@@ -133,6 +142,9 @@ class MeerKATHI(object):
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir, 
                                loggername='STIMELA-{:d}'.format(i), 
                                build_label=self.stimela_build)
+            # Don't allow pipeline-wide resume
+            # functionality
+            os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
             worker.worker(self, recipe, config)
@@ -140,10 +152,10 @@ class MeerKATHI(object):
             # execute each worker after adding its steps
 
             if self.add_all_first:
-                log.info("Adding worker %s before running" % _worker)
+                log.info("Adding worker {0:s} before running".format(_worker))
                 self.recipes[_worker] = recipe
             else:
-                log.info("Running worker %s" % _worker)
+                log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
 
         # Execute all workers if they saved for later execution
@@ -169,8 +181,8 @@ def main(argv):
     log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
     log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: %s (version %s)" % (pckgdir, str(__version__.__version__)))
-    log.info("A logfile will be dumped here: %s" % MEERKATHI_LOG)
+    log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
+    log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
     log.info("")
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
@@ -184,7 +196,7 @@ def main(argv):
 
     # User requests default config => dump and exit
     if args.get_default:
-        log.info("Dumping default configuration to %s as requested. Goodbye!" % args.get_default)
+        log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(args.get_default))
         os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
         return
     elif args.config_editor:
@@ -204,7 +216,7 @@ def main(argv):
             wt.start()
             webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
             wt.join()
-        except KeyboardInterrupt, SystemExit:
+        except (KeyboardInterrupt, SystemExit):
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
     elif args.report_viewer:
@@ -247,14 +259,14 @@ def main(argv):
         pipeline.run_workers()
     except exceptions.SystemExit as e:
         if e.code != 0:
-            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol %d shutdown. This is likely a bug, please report." % e.code)
-            log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
+            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:d} shutdown. This is likely a bug, please report.".format(e.code))
+            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
             sys.exit(1) #indicate failure
         else:
             log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
     except:
         log.error("Whoops... big explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
-        log.error("Your logfile is here: %s. You are running version: %s" % (MEERKATHI_LOG, str(__version__.__version__)))
+        log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
         tb = traceback.format_exc()
         log.error(tb)
         sys.exit(1) #indicate failure

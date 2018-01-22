@@ -1,8 +1,22 @@
 import os
 import sys
+import yaml
+import meerkathi
 import stimela.dismissable as sdm
+from meerkathi.dispatch_crew import utils
 
 NAME = 'Self calibration loop'
+
+CUBICAL_OUT = {
+    "CORR_DATA"    : 'sc',
+    "CORR_RES"     : 'sr',
+}
+
+CUBICAL_MT = {
+    "Gain2x2"      : 'complex-2x2', 
+    "GainDiag"      : 'complex-2x2',  #TODO:: Change this. Ask cubical to support this mode
+    "GainDiagPhase": 'phase-diag',
+}
 
 
 def worker(pipeline, recipe, config):
@@ -13,8 +27,8 @@ def worker(pipeline, recipe, config):
     cell = config['img_cell']
     mgain = config['img_mgain']
     niter = config['img_niter']
-    auto_thresh = config['img_autothreshold']
-    auto_mask = config['img_automask']
+    auto_thresh = config['img_auto_threshold']
+    auto_mask = config['img_auto_mask']
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol', 'I')
@@ -23,11 +37,16 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    gsols = config.get('cal_Gsols', [1,1])
+    gsols = config.get('cal_Gsols', [1,0])
+    bsols = config.get('cal_Bsols', [0,1])
     taper = config.get('img_uvtaper', None)
+    label = config['label']
+    bjones = config.get('cal_Bjones', False)
+    time_chunk = config.get('cal_time_chunk', 128)
+    ncpu = config.get('ncpu', 9)
     mfsprefix = ["",'-MFS'][int(nchans>1)]
 
-    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
+    mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
@@ -91,7 +110,6 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
 
-
         step = 'image_{}'.format(num)
         image_opts = {                   
                   "msname"    : mslist,
@@ -108,19 +126,18 @@ def worker(pipeline, recipe, config):
                   "channelsout"     : nchans,
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                  "auto-threshold": config[key].get('autothreshold', auto_thresh),
+                  "auto-threshold": config[key].get('auto_threshold', auto_thresh),
               }
         if mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
-            image_opts.update( {"auto-mask" : config[key].get('automask', auto_mask)} )
+            image_opts.update( {"auto-mask" : config[key].get('auto_mask', auto_mask)} )
 
         recipe.add('cab/wsclean', step,
         image_opts,
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
-
 
     def make_cube(num, imtype='model'): 
         im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
@@ -222,10 +239,69 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Predict from FITS ms={1:s}'.format(step, mslist[index]))
 
-    def calibrate(num):
+
+    def combine_models(models, num):
+        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in models]
+        model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(pipeline.output, prefix, m) for m in models]
+        calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
+
+        step = 'combine_models_' + '_'.join(map(str, models))
+        recipe.add('cab/tigger_convert', step,
+            {                   
+                "input-skymodel"    : model_names[0],
+                "append"    : model_names[1],
+                "output-skymodel"   : calmodel,
+                "rename"  : True,
+                "force"   : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Combined models'.format(step))
+
+        return calmodel, model_names_fits
+
+    def autoset_calibration_intervals(recipe, skymodel, num, key):
+        ## No way around it. The recipe has to be executed at this point to get the sky model
+        recipe.run()
+        # Empty job que after execution
+        recipe.jobs = []
+
+        solints = []
+        # skymodel = os.path.join(pipeline.output, skymodel.split(':')[0])
+        for i in range(pipeline.nobs):
+            msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[i], label)
+            phase_only = config[key].get('gain_matrix_type', 'GainDiagPhase') == 'GainDiagPhase'
+
+            dtdf, dt, df = utils.estimate_solints(msinfo, skymodel, 
+                  pipeline.Tsys_eta, pipeline.dish_diameter, 
+                  npol=2, gain_tol=config[key].get('gain_tol', 0.05), 
+                  j=2 if phase_only else 3)
+
+            with open(msinfo) as yr:
+                info = yaml.load(yr)
+            nchans = sum( info['SPW']['NUM_CHAN'])
+            target = info['FIELD']['NAME'].index(pipeline.target[i])
+            
+            tot_time = sum( info['SCAN'][str(target)].values() )
+
+            # Minimum time bins needed for gain_error=gain_tol for entire bandwidth
+            min_time_bin = int( (dtdf / (df * nchans)) / dt + 1)
+            # Minimum freq bins needed for gain_error=gain_tol for entire time
+            min_freq_bin = int( (dtdf / (tot_time)) / df + 1)
+
+            gsols = [min_time_bin, 0]
+            bsols = [0, min_freq_bin]
+            solints.append([gsols,bsols])
+
+        meerkathi.log.info('Product of time and frequency solution intervals is {0:.4g} [s . Hz]'.format(dtdf))
+        
+        return solints
+
+    def calibrate_meqtrees(num):
         key = 'calibrate_{0:d}'.format(num)
         model = config[key].get('model', num)
         vismodel = config[key].get('add_vis_model', False)
+
         if config[key].get('visonly', False):
             vismodel = True
             calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
@@ -235,57 +311,140 @@ def worker(pipeline, recipe, config):
             for i,msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
         else: 
-            if isinstance(model, str) and len(model.split('+'))==2:
+            if isinstance(model, str) and len(model.split('+'))>1:
                 combine = True
                 mm = model.split('+')
-                models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
-                calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
-
-                step = 'combine_models_' + '_'.join(map(str, mm))
-                recipe.add('cab/tigger_convert', step,
-                    {                   
-                        "input-skymodel"    : models[0],
-                        "append"    : models[1],
-                        "output-skymodel"   : calmodel,
-                        "rename"  : True,
-                        "force"   : True,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Combined models'.format(step))
-
+                calmodel, fits_model = combine_models(mm, num)
             else:
                 model = int(model)
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+
+        autosols = [],[]
+        autosols_set = False
+        if config[key].get('Gsols', gsols) == 'auto' or \
+                       config[key].get('Bsols', gsols) == 'auto':
+            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
+            config[key]['Bjones'] = True
+            autosols_set = True
 
         for i,msname in enumerate(mslist):
+            if autosols_set:
+                gsols_ = autosols[i][0] 
+                bsols_ = autosols[i][1] 
+            else:
+                gsols_ = config[key].get('Gsols', gsols)
+                bsols_ = config[key].get('Bsols', bsols)
+
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
-                 "skymodel"     :  calmodel,
-                 "add-vis-model":  vismodel,
-                 "msname"       :  msname,
-                 "threads"      :  16,
-                 "column"       :  "DATA",
-                 "output-data"  : config[key].get('output_data', 'CORR_RES'),
-                 "output-column": "CORRECTED_DATA",
-                 "Gjones"       : True,
-                 "Gjones-solution-intervals" : config[key].get('Gsols', gsols),
-                 "Gjones-matrix-type" : config[key].get('gain_matrix_type', 'GainDiagPhase'),
-                 "read-flags-from-ms" :	True,
-                 "read-flagsets"      : "-stefcal",
-                 "write-flagset"      : "stefcal",
+                 "skymodel"             : calmodel,
+                 "add-vis-model"        : vismodel,
+                 "msname"               : msname,
+                 "threads"              : ncpu,
+                 "column"               : "DATA",
+                 "output-data"          : config[key].get('output_data', 'CORR_RES'),
+                 "output-column"        : "CORRECTED_DATA",
+                 "prefix"               : '{0:s}-{1:d}_meqtrees'.format(pipeline.dataid[i], num),
+                 "label"                : 'cal{0:d}'.format(num),
+                 "read-flags-from-ms"   : True,
+                 "read-flagsets"        : "-stefcal",
+                 "write-flagset"        : "stefcal",
                  "write-flagset-policy" : "replace",
-                 "Gjones-ampl-clipping" :  True,
-                 "Gjones-ampl-clipping-low" : config.get('cal_gain_amplitude_clip_low', 0.5),
-                 "Gjones-ampl-clipping-high": config.get('cal_gain_amplitude_clip_high', 1.5),
-                 "label"              : 'cal{0:d}'.format(num),
-                 "make-plots"         : True,
-                 "tile-size"          : 512,
+                 "Gjones"               : True,
+                 "Gjones-solution-intervals" : gsols_,
+                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type', 'GainDiag'),
+                 "Gjones-ampl-clipping"      : True,
+                 "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
+                 "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
+                 "Bjones"                    : config[key].get('Bjones', False),
+                 "Bjones-ampl-clipping"      : True,
+                 "Bjones-solution-intervals" : bsols_,
+                 "Bjones-ampl-clipping"      : config[key].get('Bjones', bjones),
+                 "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
+                 "Bjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
+                 "make-plots"           : True,
+                 "tile-size"            : time_chunk,
                },
                input=pipeline.input,
                output=pipeline.output,
-               label='{0:s}:: First selfcal ms={1:s}'.format(step, msname))
+               label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
+
+    def calibrate_cubical(num):
+        key = 'calibrate_{0:d}'.format(num)
+        model = config[key].get('model', num)
+        if isinstance(model, str) and len(model.split('+'))>1:
+            combine = True
+            mm = model.split('+')
+            calmodel, fits_model = combine_models(mm, num)
+        else:
+            model = int(model)
+            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+
+        autosols = [],[]
+        autosols_set = False
+        if config[key].get('Gsols', gsols) == 'auto' or \
+                       config[key].get('Bsols', gsols) == 'auto':
+            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
+            config[key]['Bjones'] = True
+            autosols_set = True
+
+        if config[key].get('Bjones', bjones):
+            jones_chain = 'G,B'
+        else:
+            jones_chain = 'G' 
+
+        for i,msname in enumerate(mslist):
+            if autosols_set:
+                gsols_ = autosols[i][0] 
+                bsols_ = autosols[i][1] 
+            else:
+                gsols_ = config[key].get('Gsols', gsols)
+                bsols_ = config[key].get('Bsols', bsols)
+
+            step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
+            recipe.add('cab/cubical', step, 
+                {   
+                    "data-ms"          : msname, 
+                    "data-column"      : 'DATA',
+                    "model-column"     : 'MODEL_DATA' if config[key].get('add_vis_model', False) else ' "" ',
+                    "j2-term-iters"    : 200,
+                    "data-time-chunk"  : time_chunk,
+                    "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
+                    "dist-ncpu"        : ncpu,
+                    "sol-jones"        : jones_chain,
+                    "model-lsm"        : calmodel,
+                    "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
+                    "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')],
+                    "out-plots-show"   : False,
+                    "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
+                    "montblanc-dtype"  : 'float',
+                    "j1-solvable"      : True,
+                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
+                    "j1-time-int"      : gsols_[0],
+                    "j1-freq-int"      : gsols_[1],
+                    "j1-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "j1-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "j2-solvable"      : config[key].get('Bjones', bjones),
+                    "j2-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
+                    "j2-time-int"      : bsols_[0],
+                    "j2-freq-int"      : bsols_[1],
+                    "j2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "j2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                },  
+                input=pipeline.input,
+                output=pipeline.output,
+                shared_memory='100Gb',
+                label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
+
+    # decide which tool to use for calibration
+    calwith = config.get('calibrate_with', 'meqtrees').lower()
+    if calwith == 'meqtrees':
+        calibrate = calibrate_meqtrees
+    elif calwith == 'cubical':
+        calibrate = calibrate_cubical
 
     # selfcal loop
     if pipeline.enable_task(config, 'image_1'):

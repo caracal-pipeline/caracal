@@ -42,7 +42,7 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
 
         msname = pipeline.msnames[i]
-        refant = pipeline.reference_antenna[i]
+        refant = pipeline.reference_antenna[i] or '0'
         prefix = pipeline.prefixes[i]
         dataid = pipeline.dataid[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
@@ -91,30 +91,38 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'set_model'):
             # Set model
             field = get_field(config['set_model'].get('field', 'fcal'))
-            model = utils.find_in_native_calibrators(msinfo, field)
-            standard = utils.find_in_casa_calibrators(msinfo, field)
-            # Prefer our standard over the NRAO standard
-            if model:
+            if config['set_model'].get('no_verify', False):
                 opts = {
-                  "vis"         : msname,
-                  "field"       : field,
-                  "standard"    : "manual",
-                  "fluxdensity" : model['I'],
-                  "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
-                  "spix"        : [model[a] for a in 'abcd'],
-                  "scalebychan" : True,
-                  "usescratch"  : False,
-                }
-            elif standard:
-               opts = {
-                  "vis"         : msname,
-                  "field"       : field,
-                  "standard"    : config['set_model'].get('standard', standard),
-                  "usescratch"  : False,
-                  "scalebychan" : True,
+                    "vis"        : msname,
+                    "field"      : field,
+                    "scalebychan": True,
+                    "usescratch" : True,
                 }
             else:
-                raise RuntimeError('The flux calibrator field "{}" could not be \
+                model = utils.find_in_native_calibrators(msinfo, field)
+                standard = utils.find_in_casa_calibrators(msinfo, field)
+                # Prefer our standard over the NRAO standard
+                if model:
+                    opts = {
+                      "vis"         : msname,
+                      "field"       : field,
+                      "standard"    : "manual",
+                      "fluxdensity" : model['I'],
+                      "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
+                      "spix"        : [model[a] for a in 'abcd'],
+                      "scalebychan" : True,
+                      "usescratch"  : False,
+                    }
+                elif standard:
+                   opts = {
+                      "vis"         : msname,
+                      "field"       : field,
+                      "standard"    : config['set_model'].get('standard', standard),
+                      "usescratch"  : False,
+                      "scalebychan" : True,
+                    }
+                else:
+                    raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
             recipe.add('cab/casa_setjy', step,
@@ -146,17 +154,12 @@ found in our database or in the CASA NRAO database'.format(field))
 
             if  config['delay_cal'].get('plot', True):
                 step = 'plot_delay_cal_{0:d}'.format(i)
-                recipe.add('cab/casa_plotcal', step,
+                recipe.add('cab/msutils', step,
                    {
-                    "caltable"  : prefix+".K0:output",
-                    "xaxis"     : 'antenna',
-                    "yaxis"     : 'delay',
-                    "field"     : field,
-                    "iteration" : 'antenna',
-                    "subplot"   : 441,
-                    "plotsymbol": 'o',
-                    "figfile"   : '{0:s}-K0.png'.format(prefix),
-                    "showgui"   : False,
+                    "command"   : 'plot_gains',
+                    "ctable"    : prefix+".K0:output",
+                    "tabtype"   : 'delay',
+                    "plot_file" : '{0:s}-K0'.format(prefix),
                    },
                    input=pipeline.input,
                    output=pipeline.output,
@@ -196,17 +199,12 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['bp_cal'].get('plot', True):
                  for plot in 'amp','phase':
                     step = 'plot_bandpass_{0:s}_{1:d}'.format(plot, i)
-                    recipe.add('cab/casa_plotcal', step,
+                    recipe.add('cab/msutils', step,
                        {
-                        "caltable"  : prefix+".B0:output",
-                        "xaxis"     : 'chan',
-                        "yaxis"     : plot,
-                        "field"     : field,
-                        "iteration" : 'antenna',
-                        "subplot"   : 441,
-                        "plotsymbol": ',',
-                        "figfile"   : '{0:s}-B0-{1:s}.png'.format(prefix, plot),
-                        "showgui"   : False,
+                        "command"   : 'plot_gains',
+                        "ctable"  : prefix+".B0:output",
+                        "tabtype"   : 'bandpass',
+                        "plot_file"   : '{0:s}-B0-{1:s}'.format(prefix, plot),
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -243,17 +241,12 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['gain_cal_flux'].get('plot', True):
                 for plot in 'amp','phase':
                     step = 'plot_gain_cal_flux_{0:s}_{1:d}'.format(plot, i)
-                    recipe.add('cab/casa_plotcal', step,
+                    recipe.add('cab/msutils', step,
                        {
-                        "caltable"  : prefix+".G0:output",
-                        "xaxis"     : 'time',
-                        "yaxis"     : plot,
-                        "field"     : field,
-                        "iteration" : 'antenna',
-                        "subplot"   : 441,
-                        "plotsymbol": 'o',
-                        "figfile"   : '{0:s}-G0-fcal-{1:s}.png'.format(prefix, plot),
-                        "showgui"   : False,
+                        "command"   : 'plot_gains',
+                        "ctable"  : prefix+".G0:output",
+                        "tabtype"   : 'gain',
+                        "plot_file"   : '{0:s}-G0-fcal-{1:s}.png'.format(prefix, plot),
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -297,17 +290,12 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['gain_cal_gain'].get('plot', True):
                 for plot in 'amp','phase':
                     step = 'plot_gain_cal_{0:s}_{1:d}'.format(plot, i)
-                    recipe.add('cab/casa_plotcal', step,
+                    recipe.add('cab/msutils', step,
                        {
-                        "caltable"  : prefix+".G0:output",
-                        "xaxis"     : 'time',
-                        "yaxis"     : plot,
-                        "field"     : field,
-                        "iteration" : 'antenna',
-                        "subplot"   : 441,
-                        "plotsymbol": 'o',
-                        "figfile"   : '{0:s}-G0-gcal-{1:s}.png'.format(prefix, plot),
-                        "showgui"   : False,
+                        "command"   : 'plot_gains',
+                        "ctable"  : prefix+".G0:output",
+                        "tabtype"   : 'gain',
+                        "plot_file"   : '{0:s}-G0-{1:s}'.format(prefix, plot),
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -333,17 +321,12 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['transfer_fluxscale'].get('plot', True):
                 for plot in 'amp','phase':
                     step = 'plot_fluxscale_{0:s}_{1:d}'.format(plot, i)
-                    recipe.add('cab/casa_plotcal', step,
+                    recipe.add('cab/msutils', step,
                        {
-                        "caltable"  : prefix+".F0:output",
-                        "xaxis"     : 'time',
-                        "yaxis"     : plot,
-                        "field"     : '',
-                        "iteration" : 'antenna',
-                        "subplot"   : 441,
-                        "plotsymbol": 'o',
-                        "figfile"   : '{0:s}-F0-{1:s}.png'.format(prefix, plot),
-                        "showgui"   : False,
+                        "command"   : 'plot_gains',
+                        "ctable"  : prefix+".F0:output",
+                        "tabtype"   : 'gain',
+                        "plot_file"   : '{0:s}-F0-{1:s}'.format(prefix, plot),
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -371,7 +354,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 continue
 
             applied.append(field)
-            step = 'apply_{0:s}_{1:s}_{2:d}'.format(ft, dataid, i)
+            step = 'apply_{0:s}_{1:d}'.format(ft, i)
             recipe.add('cab/casa_applycal', step,
                {
                 "vis"       : msname,

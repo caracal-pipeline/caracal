@@ -4,12 +4,13 @@ import sys
 NAME = 'Split and average target data'
 
 def worker(pipeline, recipe, config):
-
+    label = config['label']
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
         target = pipeline.target[i]
-        tms = '{0:s}-{1:s}.ms'.format(msname[:-3], config['split_target']['label'])
+        tms = '{0:s}-{1:s}.ms'.format(msname[:-3], label)
         flagv = tms + '.flagversions'
+        prefix = pipeline.prefixes[i]
 
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
@@ -22,9 +23,10 @@ def worker(pipeline, recipe, config):
                 {
                     "vis"           : msname,
                     "outputvis"     : tms,
-                    "timebin"       : config['split_target']['time_average'],
-                    "width"         : config['split_target']['freq_average'],
+                    "timebin"       : config['split_target'].get('time_average', ''),
+                    "width"         : config['split_target'].get('freq_average', 1),
                     "datacolumn"    : 'corrected',
+                    "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,
                 },
@@ -36,9 +38,34 @@ def worker(pipeline, recipe, config):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
                 {
-                  "msname"  : msname,
+                  "msname"  : tms,
                   "command" : 'prep' ,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, msname))
+                label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
+
+        if pipeline.enable_task(config, 'obsinfo'):
+            if config['obsinfo'].get('listobs', True):
+                step = 'listobs_{:d}'.format(i)
+                recipe.add('cab/casa_listobs', step,
+                    {
+                      "vis"         : tms,
+                      "listfile"    : '{0:s}-{1:s}-obsinfo.txt'.format(prefix, label),
+                      "overwrite"   : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
+    
+            if config['obsinfo'].get('summary_json', True):
+                 step = 'summary_json_{:d}'.format(i)
+                 recipe.add('cab/msutils', step,
+                    {
+                      "msname"      : tms,
+                      "command"     : 'summary',
+                      "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, label),
+                    },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))

@@ -5,6 +5,8 @@ import yaml
 import meerkathi
 import meerkathi.dispatch_crew.caltables as mkct 
 import re
+import astropy.io.fits as fitsio
+import codecs
 
 def angular_dist_pos_angle (ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -222,3 +224,56 @@ def find_in_casa_calibrators(msinfo, field):
         return db['standards'][int(standard)]
     else:
         return False
+
+def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
+    if isinstance(skymodel, str):
+        skymodel = [skymodel]
+    flux = 0
+    for name in skymodel:
+        with fitsio.open(name) as hdu:
+            model = hdu[1].data
+        # Get total flux from model
+        flux += model['Total_flux'].sum()
+
+    # Get number of antennas
+    with open(msinfo) as yr:
+        info = yaml.load(yr)
+    nant = len(info['ANT']['NAME'])
+
+    # Get time and frequency resoltion of data
+    dtime = info['EXPOSURE']
+    bw = sum(info['SPW']['TOTAL_BANDWIDTH'])
+    nchans = sum(info['SPW']['NUM_CHAN'])
+    dfreq = bw/nchans
+    
+    k_b =  1.38e-23 # Boltzman's constant
+    Jy = 1e-26 # 1 Jansky
+
+    # estimate noise needed for a gain error of 'gain_tol' using Sandeep Sirothia's Equation (priv comm). 
+    visnoise = flux * numpy.sqrt(nant - j) * gain_tol
+    # calculate dt*df (solution intervals) needed to get that noise
+    effective_area = numpy.pi * (dish_diameter / 2.0)**2
+    dt_dfreq = ( 2 * k_b * Tsys_eta  / (Jy * numpy.sqrt(npol) * effective_area * visnoise) )**2 
+
+    # return/save dt*df and the time, frequency resolution of the data
+    if save:
+        with codecs.open(msinfo, 'w', 'utf8') as yw:
+            info['DTDF'] = dt_dfreq
+            yaml.dump(data, yw, default_flow_style=False)
+    
+    return dt_dfreq, dtime, dfreq
+
+
+def imaging_params(msinfo, spwid=0):
+    with open(msinfo) as yr:
+        info = yaml.load(yr)
+
+    maxbl = info['MAXBL']
+    dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])
+    freq = info['SPW']["REF_FREQUENCY"][spwid]
+    wavelegnth = 2.998e8/freq
+    
+    FoV = numpy.rad2deg( 1.22 * wavelength / dish_size  )
+    max_res = numpy.rad2deg( wavelength / maxbl )
+    
+    return max_res, FoV

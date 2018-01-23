@@ -129,7 +129,7 @@ cross_cal:
     field: bpcal
     minnrbl: 4
     minsnr: 3
-    solnorm: no
+    solnorm: yes
     solint: ""
     plot: yes
     remove_ph_time_var: no

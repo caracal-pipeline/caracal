@@ -377,7 +377,7 @@ split_target:
   label: corr
   split_target:
     enable: yes
-    time_average: 8s
+    time_average: ''
     freq_average: 1
   obsinfo: 
     enable: yes
@@ -395,43 +395,43 @@ self_cal:
   calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
-  img_npix: 8192 #at very least 50% padding for alias protection
+  img_npix: 8192                            # at very least 50% padding for alias protection
   img_trim: 5540
   img_mgain: 0.9
   img_cell: 1.3
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_auto_threshold: 3
-  img_auto_mask: 5
-  img_cleanborder: 0
-  img_facets: 11
-  img_nchans: 3
+  img_auto_threshold: 3                     # Cleaning threshold for cleaning
+  img_auto_mask: 5                          # Masking threshold (will be recalculated every clean major loop)
+  img_cleanborder: 0                        
+  img_facets: 11                            # No implemented 
+  img_nchans: 3                             # Number of output channels for imaging
   img_joinchannels: yes
-  img_fit_spectral_pol: 1
-  img_column: CORRECTED_DATA
+  img_fit_spectral_pol: 1                   # Fit a polynomial over frequency to each clean component
+  img_column: CORRECTED_DATA                # Column to image
   img_pol: I
   # Calibration settings
-  cal_Gsols: auto
-  cal_DDsols: [300, 500]
-  cal_gain_amplitude_clip_low: 0.5 
-  cal_gain_amplitude_clip_high: 1.5 
+  cal_Gsols: auto                           # calibration solution intervals: [time_bins, freq_bins], zero means full interval. 'auto' means that these will calculated internally
+  cal_DDsols: [300, 500]                    # direction dependent gain solution intervals (not implemented)
+  cal_gain_amplitude_clip_low: 0.5          # Flag data if corresponding gain has a value below this
+  cal_gain_amplitude_clip_high: 1.5         # Flag data if corresponding gain has a value above this
   # Source finding settings
-  sf_thresh_pix: 10
-  sf_thresh_isl: 8 
-  image_1:
+  sf_thresh_pix: 10                         # Peak threshold for source finder (in sigma above noise)
+  sf_thresh_isl: 8                          # Island threshold for source finder (in sigma above noise)
+  image_1:                                  # Make intial image 
     enable: yes
-    auto_mask: 40
+    auto_mask: 40                           
     auto_threshold: 0.5
     column: DATA
-  extract_sources_1:
+  extract_sources_1:                        # Find sources in image
     enable: yes
     spi: no
   calibrate_1:
     enable: yes
-    model: '1' # use model from extract_sources_1
-    output_data: CORR_DATA
-    gain_matrix_type: GainDiagPhase
+    model: '1'                              # use model from extract_sources_1
+    output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
+    gain_matrix_type: GainDiagPhase         # Gain matrix type. Options are GainDiagPhase, GainDiag, Gain2x2
   image_2:
     enable: yes
     auto_mask: 30
@@ -441,7 +441,7 @@ self_cal:
     spi: yes
   calibrate_2:
     enable: yes
-    model: '2' # use model from extract_sources_2
+    model: '2'                              # Use model from extract_sources_2
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_3:
@@ -450,12 +450,12 @@ self_cal:
     auto_threshold: 0.5
   extract_sources_3:
     enable: yes
-    spi: no
+    spi: no                                 # Add spectral indices to skymodel (img_chans must be >1 in this for this to work)
     thresh_pix: 10
     thresh_isl: 5
   calibrate_3:
     enable: yes
-    model: '2+3' # combine models from 2 and 3
+    model: '2+3'                            # Combine models from 2 and 3
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_4:
@@ -467,12 +467,12 @@ self_cal:
     model: '2+3'
     output_data: CORR_RES
     gain_matrix_type: GainDiag
-    add_vis_model: yes
+    add_vis_model: yes                  # Add/Use clean components from latest imaging step to/as sky model for calibation
   image_5:
     enable: yes
     auto_mask: 3
     auto_threshold: 0.25
-  restore_model:
+  restore_model:                        # Restore modelled to final calibrated residual image
     enable: yes
     model: '2+3'
     clean_model: '4'

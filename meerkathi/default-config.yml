@@ -132,6 +132,7 @@ cross_cal:
     solnorm: no
     solint: ""
     plot: yes
+    remove_ph_time_var: no
   gain_cal_flux:
     enable: yes
     combine: ""

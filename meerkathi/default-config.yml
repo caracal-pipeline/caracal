@@ -496,6 +496,7 @@ image_HI:
   wsclean_image:
     enable: no
     use_contsub: yes
+    pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
     npix: 800
@@ -513,6 +514,7 @@ image_HI:
   casa_image:
     enable: yes
     use_contsub: yes
+    pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels
     startchan: 0

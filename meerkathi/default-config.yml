@@ -386,7 +386,7 @@ split_target:
   prepms:
     enable: no
 
-self_cal:
+self_cal_2GC:
   __helpstr: Self calibration
   enable: yes
   label: corr

@@ -127,11 +127,17 @@ def worker(pipeline, recipe, config):
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                   "auto-threshold": config[key].get('auto_threshold', auto_thresh),
+                  "multiscale" : config[key].get('multi_scale', False),
+                  "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
+        if config[key].get('mask_from_sky', False):
+            image_opts.update( {"fitsmask" : sdm.dismissable(config[key].get('fits_mask', None))})
         if mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
             image_opts.update( {"auto-mask" : config[key].get('auto_mask', auto_mask)} )
+
+
 
         recipe.add('cab/wsclean', step,
         image_opts,

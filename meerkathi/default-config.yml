@@ -125,6 +125,7 @@ cross_cal:
       clipminmax: [-60,60]
   bp_cal:
     enable: yes
+    set_refant: no
     combine: ""
     field: bpcal
     minnrbl: 4
@@ -135,6 +136,7 @@ cross_cal:
     remove_ph_time_var: no
   gain_cal_flux:
     enable: yes
+    set_refant: no
     combine: ""
     field: fcal
     minnrbl: 4
@@ -142,6 +144,7 @@ cross_cal:
     plot: no
   gain_cal_gain:
     enable: yes
+    set_refant: no
     combine: ""
     field: gcal
     minnrbl: 4

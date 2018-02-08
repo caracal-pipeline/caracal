@@ -132,7 +132,7 @@ def worker(pipeline, recipe, config):
               }
         if config[key].get('mask_from_sky', False):
             image_opts.update( {"fitsmask" : sdm.dismissable(config[key].get('fits_mask', None))})
-        if mask:
+        elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
             image_opts.update( {"auto-mask" : config[key].get('auto_mask', auto_mask)} )
@@ -264,7 +264,9 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Combined models'.format(step))
 
-        return calmodel, model_names_fits
+        return calmodel, model_names_fits	
+
+
 
     def autoset_calibration_intervals(recipe, skymodel, num, key):
         ## No way around it. The recipe has to be executed at this point to get the sky model

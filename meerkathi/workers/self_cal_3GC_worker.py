@@ -127,11 +127,19 @@ def worker(pipeline, recipe, config):
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                   "auto-threshold": config[key].get('auto_threshold', auto_thresh),
+                  "multiscale" : config[key].get('multi_scale', False),
+                  "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
-        if mask:
+        if config[key].get('mask_from_sky', False):
+            fitmask = config[key].get('fits_mask', None)
+	    fitmask_address = 'masking/'+str(fitmask)
+	    image_opts.update( {"fitsmask" : fitmask_address+':output'})
+        elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
             image_opts.update( {"auto-mask" : config[key].get('auto_mask', auto_mask)} )
+
+
 
         recipe.add('cab/wsclean', step,
         image_opts,
@@ -258,7 +266,9 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Combined models'.format(step))
 
-        return calmodel, model_names_fits
+        return calmodel, model_names_fits	
+
+
 
     def autoset_calibration_intervals(recipe, skymodel, num, key):
         ## No way around it. The recipe has to be executed at this point to get the sky model

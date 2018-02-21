@@ -131,7 +131,9 @@ def worker(pipeline, recipe, config):
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
         if config[key].get('mask_from_sky', False):
-            image_opts.update( {"fitsmask" : sdm.dismissable(config[key].get('fits_mask', None))})
+            fitmask = config[key].get('fits_mask', None)
+	    fitmask_address = 'masking/'+str(fitmask)
+	    image_opts.update( {"fitsmask" : fitmask_address+':output'})
         elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:

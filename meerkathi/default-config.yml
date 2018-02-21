@@ -44,6 +44,12 @@ observation_config:
     enable: yes
     listobs: yes
     summary_json: yes
+  primary_beam:
+    enable: no  # Don't enbale this if you not me 
+    diameter: 6.0
+    pixels: 256
+    freq: "856 1760 64"
+    coefficients_file: null
   target: auto
   fcal: auto
   bpcal: auto

@@ -370,6 +370,30 @@ inspect_data__2:
     avgtime: '90'
     avgchannel: '32'
 
+mask_from_catalog:
+  __helpstr: Build mask from catalog
+  enable: yes
+  order: 9
+  centre_coord: ['03:18:0.000', '-37:27:0.000']
+  query_SUMMS:
+    enable: yes
+    width_image: '2.8d' 
+  make_mosaic:
+    enable: no
+  casa_regrid:
+    enable: no
+  build_beam:
+    enable: no
+    cell_size: 1
+    img_size: 10000.
+    frequency: 1.37031054688e9
+  pb_correction:
+    enable: no
+  make_mask:
+    enable: no
+    final_mask: 'SUMMS_mask.fits'
+    cutoff: 0.7e3
+
 split_target:
   __helpstr: Split target data
   enable: yes

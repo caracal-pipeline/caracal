@@ -143,3 +143,28 @@ def worker(pipeline, recipe, config):
             flds =  getattr(pipeline, item)[i].split(',') \
                         if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
             getattr(pipeline, item + "_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
+
+    if pipeline.enable_task(config, 'primary_beam'):
+        meerkathi.log.info('Generating primary beam')
+        recipe.add('cab/eidos', 'primary_beam',
+            {
+                "diameter"          : config['primary_beam'].get('diameter', 6.0),
+                "pixels"            : config['primary_beam'].get('pixels', 256),
+                "freq"              : config['primary_beam'].get('freq', "855 1760 64"),
+                "coefficients-file" : config['primary_beam']['coefficients_file'],
+                "prefix"            : pipeline.prefix,
+                "output-eight"      : True,
+            },
+        input=pipeline.input,
+        output=pipeline.output,
+        label="generate_primary_beam:: Generate primary beam")
+
+        pipeline.primary_beam = pipeline.prefix + "-$\(xy\)_$\(reim).fits"
+        pipeline.primary_beam_l_axis = "X"
+        pipeline.primary_beam_m_axis = "Y"
+        meerkathi.log.info('Primary beam registered as : \\ Pattern - {0:s}\
+                                                         \\ l-axis  - {1:s}\
+                                                         \\ m-axis  - {2:s}'.format(pipeline.primary_beam,
+                                                                                    pipeline.primary_beam_l_axis,
+                                                                                    pipeline.primary_beam_m_axis))
+

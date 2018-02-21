@@ -137,7 +137,7 @@ def worker(pipeline, recipe, config):
             if config['autoflag_rfi'].get('calibrator_fields', 'auto') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
-            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
+            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
             fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
 

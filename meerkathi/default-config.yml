@@ -487,6 +487,12 @@ image_HI:
   enable: yes
   order: 11
   label: corr
+  restfreq: '1.420405752GHz')
+  npix: 1024
+  cell: 7
+  weight: 'briggs'
+  robust: 0
+
   uvcontsub: 
     enable: yes
     fitorder: 1
@@ -494,8 +500,9 @@ image_HI:
   sunblocker: 
     enable: yes
     use_contsub: yes
-    imsize: 800
-    cell: 7
+#    imsize: 800
+#    cell: 7
+    threshold: 4
   wsclean_image:
     enable: no
     use_contsub: yes
@@ -509,7 +516,7 @@ image_HI:
     weight: briggs
     robust: 2
     facets: 11
-    niter: 1000
+    niter: 1000000
     automask: 5
     autothreshold: 1
     cleanborder: 0

@@ -12,7 +12,6 @@ def worker(pipeline, recipe, config):
     weight = config.get('weight', 'natural')
     robust = config.get('robust', 0)
 
-
     for i, msname in enumerate(mslist):
         if pipeline.enable_task(config, 'uvcontsub'):
             prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
@@ -73,12 +72,13 @@ def worker(pipeline, recipe, config):
                   "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
-                  "mgain"     : config['wsclean_image'].get('mgain', 0.90),
+                  "mgain"     : config['wsclean_image'].get('mgain', 1.0),
                   "channelsout"     : nchans,
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
                   "auto-mask"  :   config['wsclean_image'].get('automask', 3),
                   "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
                   "pol"        : config['wsclean_image'].get('pol','I'),
+                  "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
               },  
         input=pipeline.input,
         output=pipeline.output,

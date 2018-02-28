@@ -138,7 +138,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'sofia'):
         if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
-        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-cube.fits:output'
+        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-image-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {

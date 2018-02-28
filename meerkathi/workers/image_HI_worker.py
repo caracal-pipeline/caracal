@@ -85,9 +85,10 @@ def worker(pipeline, recipe, config):
         label='{:s}:: Image HI'.format(step))
 
         if config['wsclean_image']['make_cube']:
-            #nchans = config['wsclean_image'].get('nchans', pipeline.nchans[0][spwid])
             if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
-            else: imagetype=['image','dirty','psf','residual','first-residual','model']
+            else:
+                imagetype=['image','dirty','psf','residual','model']
+                if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
             for mm in imagetype:
                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                 recipe.add('cab/fitstool', step,

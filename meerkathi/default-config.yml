@@ -50,6 +50,9 @@ observation_config:
   gcal: auto
   nchans: auto
   reference_antenna: auto
+  firstchanfreq: auto
+  lastchanfreq: auto
+  chanwidth: auto
 
 prepare_data:
   __helpstr: Peform some basic operations to get it ready for reduction
@@ -497,14 +500,14 @@ image_HI:
     imsize: 800
     cell: 7
   wsclean_image:
-    enable: no
+    enable: yes
     use_contsub: yes
     pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
     npix: 800
     trim: 512
-    mgain: 0.9
+    mgain: 1.0
     cell: 7
     weight: briggs
     robust: 2
@@ -513,9 +516,10 @@ image_HI:
     automask: 5
     autothreshold: 1
     cleanborder: 0
+    no-update-mod: yes
     make_cube: yes
   casa_image:
-    enable: yes
+    enable: no
     use_contsub: yes
     pol: I
     spwid: 0
@@ -530,7 +534,7 @@ image_HI:
     port2fits: True
   sofia:
     enable: yes
-    imager: 'casa'      # 'casa' or 'wsclean'
+    imager: 'wsclean'      # 'casa' or 'wsclean'
     threshold: 6
   flagging_summary:
-    enable: yes
+    enable: no

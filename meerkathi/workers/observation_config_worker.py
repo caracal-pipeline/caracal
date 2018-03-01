@@ -6,11 +6,20 @@ import sys
 NAME = 'Automatically catergorize observed fields'
 
 def worker(pipeline, recipe, config):
-
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        prefixes = [pipeline.prefix]
+        nobs = 1
+    else:
+        msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
+        nobs = pipeline.nobs
+   
     if pipeline.enable_task(config, 'obsinfo'):
-        for i in range(pipeline.nobs):
-            msname = pipeline.msnames[i]
-            prefix = pipeline.prefixes[i]
+
+        for i in range(nobs):
+            prefix = prefixes[i]
+            msname = msnames[i]
             if config['obsinfo'].get('listobs', True):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
@@ -69,7 +78,7 @@ def worker(pipeline, recipe, config):
     for item in 'fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
 
-    for i, prefix in enumerate(pipeline.prefixes):
+    for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
 
         # get reference antenna
@@ -167,4 +176,3 @@ def worker(pipeline, recipe, config):
                                                          \\ m-axis  - {2:s}'.format(pipeline.primary_beam,
                                                                                     pipeline.primary_beam_l_axis,
                                                                                     pipeline.primary_beam_m_axis))
-

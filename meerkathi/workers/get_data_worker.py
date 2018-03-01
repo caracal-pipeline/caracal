@@ -163,28 +163,47 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
 
+    
+    for i, msname in enumerate(pipeline.msnames):
+       if pipeline.enable_task(config, 'untar'):
+               step = 'untar_{:d}'.format(i)
+               tar_options = config['untar'].get('tar_options', 'xvf')
+               # Function to untar Ms from .tar file
+               def untar(ms):
+                   mspath = os.path.abspath(pipeline.msdir)
+                   subprocess.check_call(['tar', tar_options,
+                       os.path.join(mspath, ms+'.tar'),
+                       '-C', mspath])
+               # add function to recipe
+               recipe.add(untar, step, 
+                    {
+                     "ms"        : msname,
+                    },
+                    label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
+
+    if pipeline.virtconcat is False:
+        return
 
     if pipeline.enable_task(config, 'combine'):
         step = 'combine_data'
-        newid = config['combine']['newid']
         msnames = pipeline.msnames
         metadata = pipeline.metadata[0]
-        pipeline.init_names([newid])
-        msname = pipeline.msnames[0]
         pipeline.metada = [metadata]
+        pipeline.vmsname = msname = config["combine"].get("vmsname", pipeline.prefix + "-virtconcat.ms")
+        pipeline.msnames = ["{0:s}/SUBMSS/{1:s}".format(pipeline.vmsname, _m) for _m in msnames]
 
         if config['combine'].get('reset', True):
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
 
-            recipe.add('cab/casa_concat', step, 
+            recipe.add('cab/casa_virtualconcat', step, 
                 {
                     "vis"       : msnames,
                     "concatvis" : msname,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Combine datasets'.format(step))
+                label='{0:s}:: Virtually concatenate datasets'.format(step))
 
         if config['combine'].get('tar', True):
             step = 'tar_{:d}'.format(i)
@@ -203,10 +222,9 @@ def worker(pipeline, recipe, config):
                  },
                  label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
 
-    for i, msname in enumerate(pipeline.msnames):
-        if pipeline.enable_task(config, 'untar'):
+        elif config['combine'].get('untar', {}).get("enable", False):
                 step = 'untar_{:d}'.format(i)
-                tar_options = config['untar'].get('tar_options', 'xvf')
+                tar_options = config["combine"]['untar'].get('tar_options', 'xvf')
                 # Function to untar Ms from .tar file
                 def untar(ms):
                     mspath = os.path.abspath(pipeline.msdir)

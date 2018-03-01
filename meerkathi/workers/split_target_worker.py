@@ -5,13 +5,14 @@ NAME = 'Split and average target data'
 
 def worker(pipeline, recipe, config):
     label = config['label']
+    pipeline.set_cal_msnames(label)
+
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
-        target = pipeline.target[i]
-        tms = '{0:s}-{1:s}.ms'.format(msname[:-3], label)
-        flagv = tms + '.flagversions'
+        target = pipeline.target[0]
         prefix = pipeline.prefixes[i]
-
+        tms = pipeline.cal_msnames[i]
+        flagv = tms + '.flagversions'
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \

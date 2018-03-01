@@ -1,8 +1,14 @@
 NAME = 'Pre-calibration flagging'
 
 def worker(pipeline, recipe, config):
-    for i in range(pipeline.nobs):
-        msname = pipeline.msnames[i]
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        nobs = 1
+    else:
+        msnames = pipeline.msnames
+        nobs = pipeline.nobs
+    for i in range(nobs):
+        msname = msnames[i]
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
         # not field structure dependent, since it is just based on the DC of the field

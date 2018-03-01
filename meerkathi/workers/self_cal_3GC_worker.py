@@ -46,7 +46,8 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["",'-MFS'][int(nchans>1)]
 
-    mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
+    pipeline.set_cal_msnames(label)
+    mslist = pipeline.cal_msnames
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()

@@ -38,13 +38,19 @@ table_suffix = {
 
 
 def worker(pipeline, recipe, config):
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        nobs = 1
+        prefixes = [pipeline.prefix]
+    else:
+        msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
+        nobs = pipeline.nobs
 
-    for i in range(pipeline.nobs):
-
-        msname = pipeline.msnames[i]
+    for i in range(nobs):
+        msname = msnames[i]
         refant = pipeline.reference_antenna[i] or '0'
-        prefix = pipeline.prefixes[i]
-        dataid = pipeline.dataid[i]
+        prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
 

@@ -1,0 +1,293 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  image_HI:
+    desc: Create HI data cube and detect sources therein.
+    type: map
+    mapping:
+      enable:
+        desc: Execute segment image_HI (true/false). Default is true. 
+        type: bool
+        required: true
+      order:
+        desc: Order in queue of workers. Default is 11.
+        type: int
+        required: false
+      label:
+        desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
+        type: str
+        required: false
+      restfreq:
+        desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
+        type: str
+        required: false
+      npix:
+        desc: Default image size in pixels, list containing one or two integers. In case of one for both axes, in case of two one for x- and one for y-axis. Default is [1024].
+        type: seq
+        sequence:
+          - type: int
+        required: false
+      cell:
+        desc: Default scale of a pixel in arcsec. Default is 7.
+        type: float
+        required: false
+      weight:
+        desc: Default weight for the worker. Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is natural.
+        type: str
+        required: false
+      robust:
+        desc: Default robust parameter in case of Briggs weighting. Default is 2.
+        type: float
+        required: false
+
+      uvcontsub:
+        desc: Perform a continuum subtraction on the visibilities by fitting a fitorderth-order polynomial to xx and yy correlations at each time step.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment uvcontsub (true/false). Default is true.
+            type: bool
+            required: false
+          fitorder:
+            desc: Order of the polynomial to be subtracted. Default is 1.
+            type: int
+            required: false
+          fitspw:
+            desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagged visibilities will be performed. (Defaults to null)
+            type: str
+            required: false
+
+      sunblocker:
+        desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sunblocker (true/false). Default is true.
+            type: bool
+            required: false
+          use_contsub:
+            desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
+            type: bool
+            required: false
+          imsize:
+            desc: Image size (use the same as in wsclean_image or casa_image). Default is worker max(npix).
+            type: int
+            required: false
+          cell:
+            desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell.
+            type: float
+            required: false
+          threshold:
+            desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.0.
+            type: float
+            required: false
+
+      wsclean_image:
+        desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment wsclean_image (true/false). Default is true.
+            type: bool
+            required: false
+          use_contsub:
+            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
+            type: bool
+            required: false
+          pol:
+            desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations). Default is I.
+            type: str
+            required: false
+          spwid:
+            desc: Spectral window to use. Default is 0.
+            type: int
+            required: false
+          nchans:
+            desc: Number of channels to analyse. 0 means all channels. Default is 0.
+            type: text
+            required: false
+          channelrange:
+            desc: Channels to analyze. List of integers. Set to [0] to use all channels or [start channel, end channel] for a channel range. Default is [0].
+            type: seq
+            sequence:
+              - type: int
+            required: false
+          npix:
+            desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is Worker default for npix.
+            type: seq
+            seq:
+              - type: int
+            required: false
+          trim:
+            desc: After inversion, trim the images to the given size. List of integers (width and height) or a single integer for a square image. Default is npix.
+            type: seq
+            seq:
+              - type: int
+            required: false
+          mgain:
+            desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 1.0.
+            type: float
+            required: false
+          cell:
+            desc: Scale of a pixel in arcsec. Default is Worker default for cell.
+            type: float
+            required: false
+          weight:
+            desc: Weightmode can be \'natural\', \'uniform\', \'briggs\'. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
+            type: str
+            required: false
+          robust: 
+            desc: Robust parameter in case of Briggs weighting. Default is 2.0.
+            type: float
+            required: false
+          niter:
+            desc: Maximum number of clean iterations to perform. Default is 1000000.
+            type: int
+            required: false
+          automask: 
+            desc: Clean threshold (Cutoff parameter) for automasking in first stage. In the first stage, a full multiscale clean is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 5.0.
+            type: float
+            required: false
+          autothreshold:
+            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            type: float
+            required: false
+          cleanborder:
+            desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.0.
+            type: float
+            required: false
+          make_cube:
+            desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is true.
+            type: bool
+            required: false
+          no-update-mod:
+            desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
+            type: bool
+            required: false
+
+      casa_image:
+        desc: Use CASA to create line data cube.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment casa_image (true/false). Default is false.
+            type: bool
+            required: false
+          use_contsub:
+            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
+            type: bool
+            required: false
+          pol:
+            desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations). Default is I.
+            type: str
+            required: false
+          spwid:
+            desc: Spectral window to use. Default is 0.
+            type: int
+            required: false
+          nchans:
+            desc: Number of channels. If set to 0, all channels are used. Otherwise provide the number of channels (starting with startchan, see below). Default is 0.
+            type: text
+            required: false
+          startchan:
+            desc: Starting channel of the cube. Used in combination with nchans. Default is 0.
+            type: int
+            required: false
+          npix:
+            desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is worker npix.
+            type: seq
+            seq:
+              - type: int
+            required: false
+          cell:
+            desc: Scale of a pixel in arcsec. Default is worker cell.
+            type: float
+            required: false
+          weight:
+            desc: Weightmode can be \'natural\', \'uniform\', \'briggs\'. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is worker weight.
+            type: str
+            required: false
+          robust:
+            desc: Robust parameter in case of Briggs weighting. Default is worker robust.
+            type: float
+            required: false
+          niter:
+            desc: Maximum number of clean iterations to perform. Default is 1000000.
+            type: int
+            required: false
+          threshold:
+            desc: Flux level to stop cleaning, must include units, e.g. '1.0mJy'. Default is '10mJy'.
+            type: str
+            required: false
+          port2fits:
+            desc: Port output to fits files if true. Default is true.
+            type: bool
+            required: false
+      sofia: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (true/false)? Default is true.
+            type: bool
+            required: false
+          imager:
+            desc: Description of imager used in previous steps to produce data cube. Default is \'casa\'.
+            type: str
+            required: false
+          rmsmode:
+            desc: Method to determine rms (\'mad\' for using median absolute deviation, \'std\' for using standard deviation, \'negative\' for using Gaussian fit to negative voxels). Default is \'mad\'
+            type: str
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (true/false)? Default is false.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          merge:
+            desc: Use method to de-select and merge emission islands detected by any of SoFiA’s source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (true/false). Default is true.
+            type: bool
+            required: false
+          mergeX:
+            desc: Merge-'radius' in x-direction. Default is 2
+            type: int
+            required: false
+          mergeY: 
+            desc: Merge-'radius' in y-direction. Default is 2
+            type: int
+            required: false
+          mergeZ: 
+            desc: Merge-'radius' in z-direction (velocity direction). Default is 3
+            type: int
+            required: false
+          minSizeX:
+            desc: Minimum size in x-direction. Default is 3.
+            type: int
+            required: false
+          minSizeY:
+            desc: Minimum size in y-direction. Default is 3.
+            type: int
+            required: false
+          minSizeZ:
+            desc: Minimum size in y-direction. Default is 5.      
+            type: int
+            required: false
+      flagging_summary:
+        desc: Print out flagging summary.
+        type: map
+        mapping:
+          enable:
+            desc: Execute printing flagging summary.
+            type: bool
+            required: false

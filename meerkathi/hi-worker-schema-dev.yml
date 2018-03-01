@@ -5,11 +5,11 @@ mapping:
     required: true
 
   image_HI:
-    desc: Create HI data cube and detect sources therein
+    desc: Create HI data cube and detect sources therein.
     type: map
     mapping:
       enable:
-        desc: Execute segment image_HI (yes/no). Default is yes. 
+        desc: Execute segment image_HI (true/false). Default is true. 
         type: bool
         required: true
       order:
@@ -20,16 +20,16 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
         required: false
-        
       restfreq:
         desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
         type: str
         required: false
       npix:
-          seq:
-            -  type: int
-          desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images. Default is 1024.
-          required: false
+        desc: Default image size in pixels, list containing one or two integers. In case of one for both axes, in case of two one for x- and one for y-axis. Default is [1024].
+        type: seq
+        sequence:
+          - type: int
+        required: false
       cell:
         desc: Default scale of a pixel in arcsec. Default is 7.
         type: float
@@ -42,12 +42,13 @@ mapping:
         desc: Default robust parameter in case of Briggs weighting. Default is 2.
         type: float
         required: false
+
       uvcontsub:
         desc: Perform a continuum subtraction on the visibilities by fitting a fitorderth-order polynomial to xx and yy correlations at each time step.
         type: map
         mapping:
           enable:
-            desc: Execute segment uvcontsub (yes/no). Default is yes.
+            desc: Execute segment uvcontsub (true/false). Default is true.
             type: bool
             required: false
           fitorder:
@@ -55,43 +56,45 @@ mapping:
             type: int
             required: false
           fitspw:
-            desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
+            desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagged visibilities will be performed. (Defaults to null)
             type: str
             required: false
+
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map
         mapping:
           enable:
-            desc: Execute segment sunblocker (yes/no). Default is yes.
+            desc: Execute segment sunblocker (true/false). Default is true.
             type: bool
             required: false
           use_contsub:
-            desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
             type: bool
             required: false
           imsize:
-            desc: Image size (use the same as in wsclean_image or casa_image). Default is worker npix
+            desc: Image size (use the same as in wsclean_image or casa_image). Default is worker max(npix).
             type: int
             required: false
           cell:
-            desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell
+            desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell.
             type: float
             required: false
           threshold:
-            desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
+            desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.0.
             type: float
             required: false
+
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map
         mapping:
           enable:
-            desc: Execute segment wsclean_image (yes/no). Default is yes.
+            desc: Execute segment wsclean_image (true/false). Default is true.
             type: bool
             required: false
           use_contsub:
-            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
             type: bool
             required: false
           pol:
@@ -103,15 +106,14 @@ mapping:
             type: int
             required: false
           nchans:
-            desc: Number of channels to analyse, 'all' or an integer number. Default is 'all'
+            desc: Number of channels to analyse. 0 means all channels. Default is 0.
             type: text
             required: false
           channelrange:
-            desc: Channels to analyze. Set to 'all' to use all channels or [start channel, end channel] for a channel range. Default is [0, nchans].
-            matching: "any"
-            seq:
+            desc: Channels to analyze. List of integers. Set to [0] to use all channels or [start channel, end channel] for a channel range. Default is [0].
+            type: seq
+            sequence:
               - type: int
-              - type: str
             required: false
           npix:
             desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is Worker default for npix.
@@ -120,29 +122,25 @@ mapping:
               - type: int
             required: false
           trim:
-            desc: After inversion, trim the images to the given size. List of integers (width and height) or a single integer for a square image. Default is 512.
+            desc: After inversion, trim the images to the given size. List of integers (width and height) or a single integer for a square image. Default is npix.
             type: seq
             seq:
               - type: int
             required: false
-          channelsout:
-            desc: Number of output channels or 'all'. The bandwidth will be split into this number of channels. Default is 'all'
-            type: text
-            required: false
           mgain:
-            desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 0.9.
+            desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 1.0.
             type: float
             required: false
           cell:
-            desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is Worker default for cell.
-            type: text
+            desc: Scale of a pixel in arcsec. Default is Worker default for cell.
+            type: float
             required: false
           weight:
-            desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
+            desc: Weightmode can be \'natural\', \'uniform\', \'briggs\'. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
             type: str
             required: false
           robust: 
-            desc: Robust parameter in case of Briggs weighting. Default is 2.
+            desc: Robust parameter in case of Briggs weighting. Default is 2.0.
             type: float
             required: false
           niter:
@@ -150,7 +148,7 @@ mapping:
             type: int
             required: false
           automask: 
-            desc: Clean threshold (Cutoff parameter) for automasking in first stage. In the first stage, a full multiscale clean is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 5.
+            desc: Clean threshold (Cutoff parameter) for automasking in first stage. In the first stage, a full multiscale clean is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 5.0.
             type: float
             required: false
           autothreshold:
@@ -158,26 +156,28 @@ mapping:
             type: float
             required: false
           cleanborder:
-            desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.
+            desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.0.
             type: float
             required: false
           make_cube:
-            desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is yes.
+            desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is true.
             type: bool
             required: false
           no-update-mod:
             desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
             type: bool
             required: false
+
       casa_image:
         desc: Use CASA to create line data cube.
         type: map
         mapping:
           enable:
+            desc: Execute segment casa_image (true/false). Default is false.
             type: bool
             required: false
           use_contsub:
-            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (true/false). Default is true.
             type: bool
             required: false
           pol:
@@ -189,7 +189,7 @@ mapping:
             type: int
             required: false
           nchans:
-            desc: Number of channels. If set to 'all', all channels are used. Otherwise provide the number of channels (starting with startchan, see below). Default is 'all'.
+            desc: Number of channels. If set to 0, all channels are used. Otherwise provide the number of channels (starting with startchan, see below). Default is 0.
             type: text
             required: false
           startchan:
@@ -203,11 +203,11 @@ mapping:
               - type: int
             required: false
           cell:
-            desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is worker cell.
-            type: text
+            desc: Scale of a pixel in arcsec. Default is worker cell.
+            type: float
             required: false
           weight:
-            desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is worker weight.
+            desc: Weightmode can be \'natural\', \'uniform\', \'briggs\'. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is worker weight.
             type: str
             required: false
           robust:
@@ -223,7 +223,7 @@ mapping:
             type: str
             required: false
           port2fits:
-            desc: Port output to fits files if yes. Default is yes.
+            desc: Port output to fits files if true. Default is true.
             type: bool
             required: false
       sofia: 
@@ -231,15 +231,15 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment sofia (yes/no)? Default is yes.
+            desc: Execute segment sofia (true/false)? Default is true.
             type: bool
             required: false
           imager:
-            desc: Description of imager used in previous steps to produce data cube. Default is 'casa'.
+            desc: Description of imager used in previous steps to produce data cube. Default is \'casa\'.
             type: str
             required: false
-          rmsMode:
-            desc: Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels). Default is 'mad'
+          rmsmode:
+            desc: Method to determine rms (\'mad\' for using median absolute deviation, \'std\' for using standard deviation, \'negative\' for using Gaussian fit to negative voxels). Default is \'mad\'
             type: str
             required: false
           threshold:
@@ -247,7 +247,7 @@ mapping:
             type: float
             required: false
           flag:
-            desc: Use flag regions (yes/no)? Default is no.
+            desc: Use flag regions (true/false)? Default is false.
             type: bool
             required: false
           flagregion:
@@ -256,7 +256,7 @@ mapping:
               - type: int
             required: false
           merge:
-            desc: Use method to de-select and merge emission islands detected by any of SoFiA’s source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (yes/no). Default is yes.
+            desc: Use method to de-select and merge emission islands detected by any of SoFiA’s source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (true/false). Default is true.
             type: bool
             required: false
           mergeX:

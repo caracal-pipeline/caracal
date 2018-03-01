@@ -30,6 +30,7 @@ from urllib import urlencode
 import ruamel.yaml
 import json
 from meerkathi.dispatch_crew.reporter import reporter as mrr
+import subprocess
 
 MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
@@ -67,6 +68,7 @@ class MeerKATHI(object):
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
         self.data_path = self.config['general']['data_path']
+        self.virtconcat = self.config['general'].get('virtconcat', False)
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
@@ -93,6 +95,8 @@ class MeerKATHI(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
+        if config["general"].get("init_pipeline", True):
+            self.init_pipeline()
 
     def init_names(self, dataid):
         """ iniitalize names to be used throughout the pipeline and associated 
@@ -105,6 +109,7 @@ class MeerKATHI(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.virtconcat = self.virtconcat and len(self.dataid) > 1 if self.dataid else self.virtconcat
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)
@@ -116,6 +121,26 @@ class MeerKATHI(object):
             if value and len(value)==1:
                 value = value*nobs
                 setattr(self, item, value)
+
+    def set_cal_msnames(self, label):
+        if self.virtconcat:
+            self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
+        else:
+            self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3], "-"+label if label else "") for msname in self.msnames]
+
+    def init_pipeline(self):
+        # First create input folders if they don't exist
+        if not os.path.exists(self.input):
+            os.mkdir(self.input)
+        if not os.path.exists(self.data_path):
+            os.mkdir(self.data_path)
+
+        # Copy input data files into pipeline input folder
+        log.info("Copying meerkat input files into input folder")
+        for _f in os.listdir("{0:s}/data/meerkat_files".format(pckgdir)):
+            f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
+            if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
+                subprocess.check_call(["cp", "-r", f, self.input])
 
     def enable_task(self, config, task):
         a = config.get(task, False)

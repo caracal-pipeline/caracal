@@ -12,7 +12,6 @@ def worker(pipeline, recipe, config):
     weight = config.get('weight', 'natural')
     robust = config.get('robust', 0)
 
-
     for i, msname in enumerate(mslist):
         if pipeline.enable_task(config, 'uvcontsub'):
             prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
@@ -73,21 +72,23 @@ def worker(pipeline, recipe, config):
                   "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
-                  "mgain"     : config['wsclean_image'].get('mgain', 0.90),
+                  "mgain"     : config['wsclean_image'].get('mgain', 1.0),
                   "channelsout"     : nchans,
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
                   "auto-mask"  :   config['wsclean_image'].get('automask', 3),
                   "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
                   "pol"        : config['wsclean_image'].get('pol','I'),
+                  "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
               },  
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Image HI'.format(step))
 
         if config['wsclean_image']['make_cube']:
-            #nchans = config['wsclean_image'].get('nchans', pipeline.nchans[0][spwid])
             if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
-            else: imagetype=['image','dirty','psf','residual','first-residual','model']
+            else:
+                imagetype=['image','dirty','psf','residual','model']
+                if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
             for mm in imagetype:
                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                 recipe.add('cab/fitstool', step,
@@ -137,7 +138,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'sofia'):
         if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
-        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-cube.fits:output'
+        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-image-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {

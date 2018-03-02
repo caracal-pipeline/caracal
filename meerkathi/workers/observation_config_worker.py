@@ -62,7 +62,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # itnitialse things
-    for item in 'fcal bpcal gcal target reference_antenna nchans'.split():
+    for item in 'fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
         val = config.get(item, 'auto')
         if val and not isinstance(config[item], list):
             setattr(pipeline, item, [config[item]]*pipeline.nobs)
@@ -74,12 +74,13 @@ def worker(pipeline, recipe, config):
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
     pipeline.dish_diameter = config.get('dish_diameter', 13.5)
-   
+
     for item in 'fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}/{3:s}-obsinfo.json'.format(pipeline.data_path, pipeline.dataid[i],pipeline.output,prefix))
 
         # get reference antenna
         if config.get('reference_antenna', 'auto') == 'auto':
@@ -93,6 +94,17 @@ def worker(pipeline, recipe, config):
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 pipeline.nchans[i] = spw
             meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
+
+        # Get first chan, last chan, chan width
+        with open(msinfo, 'r') as stdr:
+            chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+            firstchanfreq = [ss[0] for ss in chfr]
+            lastchanfreq  = [ss[-1] for ss in chfr]
+            chanwidth     = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
+            pipeline.firstchanfreq[i] = firstchanfreq
+            pipeline.lastchanfreq[i]  = lastchanfreq
+            pipeline.chanwidth[i] = chanwidth
+            meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
 
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target'.split()]:

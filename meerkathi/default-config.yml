@@ -7,7 +7,6 @@ general:
   input: input                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
   output: output                     # where MeerKATHI writes output products
   prefix: meerkathi-pipeline         # prefix for output products
-  virtconcat: no
   init_pipeline: yes                 # Initialse pipeline by adding meerkat input files and creating input/data_path if they don't exist
 
 get_data:
@@ -42,7 +41,9 @@ get_data:
   combine:
     enable: yes
     reset: no
-    tar: no
+    tar:
+      enable: yes
+      tar_options: cvf
     untar:
       enable: no
       tar_opts: xvf

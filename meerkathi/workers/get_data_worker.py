@@ -168,6 +168,7 @@ def worker(pipeline, recipe, config):
        if pipeline.enable_task(config, 'untar'):
                step = 'untar_{:d}'.format(i)
                tar_options = config['untar'].get('tar_options', 'xvf')
+
                # Function to untar Ms from .tar file
                def untar(ms):
                    mspath = os.path.abspath(pipeline.msdir)
@@ -205,13 +206,12 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Virtually concatenate datasets'.format(step))
 
-        if config['combine'].get('tar', True):
-            step = 'tar_{:d}'.format(i)
-            tar_options = config['combine'].get('tar_options', 'cvf')
+        if config['combine'].get('tar', {}).get("enable", True):
+            step = 'tar_vc_{:d}'.format(i)
             # Function to untar Ms from .tar file
             def tar(ms):
                 mspath = os.path.abspath(pipeline.msdir)
-                subprocess.check_call(['tar', tar_options,
+                subprocess.check_call(['tar', config["combine"]['tar'].get('tar_options', 'cvf'),
                     os.path.join(mspath, ms+'.tar'),
                     os.path.join(mspath, ms),
                     ])
@@ -220,15 +220,14 @@ def worker(pipeline, recipe, config):
                  {
                   "ms"        : msname,
                  },
-                 label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
+                 label='{0:s}:: Create tarbal ms={1:s}'.format(step, msname))
 
         elif config['combine'].get('untar', {}).get("enable", False):
-                step = 'untar_{:d}'.format(i)
-                tar_options = config["combine"]['untar'].get('tar_options', 'xvf')
+                step = 'untar_vc_{:d}'.format(i)
                 # Function to untar Ms from .tar file
                 def untar(ms):
                     mspath = os.path.abspath(pipeline.msdir)
-                    subprocess.check_call(['tar', tar_options,
+                    subprocess.check_call(['tar', config["combine"]['untar'].get('tar_options', 'xvf'),
                         os.path.join(mspath, ms+'.tar'),
                         '-C', mspath])
                 # add function to recipe

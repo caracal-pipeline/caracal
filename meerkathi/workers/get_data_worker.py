@@ -182,10 +182,8 @@ def worker(pipeline, recipe, config):
                     },
                     label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
 
-    if pipeline.virtconcat is False:
-        return
-
     if pipeline.enable_task(config, 'combine'):
+        pipeline.virtconcat = True
         step = 'combine_data'
         msnames = pipeline.msnames
         metadata = pipeline.metadata[0]

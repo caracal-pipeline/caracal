@@ -68,7 +68,7 @@ class MeerKATHI(object):
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
         self.data_path = self.config['general']['data_path']
-        self.virtconcat = self.config['general'].get('virtconcat', False)
+        self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
         sys.path.append(self.workers_directory)
@@ -109,7 +109,6 @@ class MeerKATHI(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.virtconcat = self.virtconcat and len(self.dataid) > 1 if self.dataid else self.virtconcat
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)

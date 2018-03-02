@@ -39,7 +39,7 @@ get_data:
     enable: no
     tar_opts: xvf
   combine:
-    enable: yes
+    enable: no
     reset: no
     tar:
       enable: yes
@@ -127,7 +127,7 @@ cross_cal:
   __helpstr: First generation calibration
   enable: yes
   order: 4
-  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  otfdelay: no            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:

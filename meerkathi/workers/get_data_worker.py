@@ -186,8 +186,9 @@ def worker(pipeline, recipe, config):
         pipeline.virtconcat = True
         step = 'combine_data'
         msnames = pipeline.msnames
-        metadata = pipeline.metadata[0]
-        pipeline.metada = [metadata]
+        if hasattr(pipeline, "metadata"):
+            metadata = pipeline.metadata[0]
+            pipeline.metada = [metadata]
         pipeline.vmsname = msname = config["combine"].get("vmsname", pipeline.prefix + "-virtconcat.ms")
         pipeline.msnames = ["{0:s}/SUBMSS/{1:s}".format(pipeline.vmsname, _m) for _m in msnames]
 

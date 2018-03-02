@@ -21,7 +21,7 @@ def worker(pipeline, recipe, config):
                 {
                     "msname"    : msname,
                     "fitorder"  : config['uvcontsub'].get('fitorder', 1),
-                    "fitspw"    : sdm.dismissable(config['uvcontsub'].get('fitspw',None))
+                    "fitspw"    : sdm.dismissable(config['uvcontsub'].get('fitspw', None))
                 },
                 input=pipeline.input,
                 output=pipeline.output,

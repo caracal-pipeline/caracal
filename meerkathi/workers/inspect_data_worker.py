@@ -13,9 +13,18 @@ def worker(pipeline, recipe, config):
         return str(name)
 
     uvrange = config.get('uvrange', '')
-    for i in range(pipeline.nobs):
-        msname = pipeline.msnames[i]
-        prefix = pipeline.prefixes[i]
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        prefixes = [pipeline.prefix]
+        nobs = 1
+    else:
+        msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
+        nobs = pipeline.nobs
+
+    for i in range(nobs):
+        msname = msnames[i]
+        prefix = prefixes[i]
         label = config.get('label', '')
 
         if pipeline.enable_task(config, 'real_imag'):

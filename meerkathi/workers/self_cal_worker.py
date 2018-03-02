@@ -291,7 +291,7 @@ def worker(pipeline, recipe, config):
             with open(msinfo) as yr:
                 info = yaml.load(yr)
             nchans = sum( info['SPW']['NUM_CHAN'])
-            target = info['FIELD']['NAME'].index(pipeline.target[i])
+            target = info['FIELD']['NAME'].index(pipeline.target[0])
             
             tot_time = sum( info['SCAN'][str(target)].values() )
 

@@ -60,7 +60,7 @@ observation_config:
     diameter: 6.0
     pixels: 256
     freq: "856 1760 64"
-    coefficients_file: null
+    coefficients_file: meerkat_coeff_dict.npy
   target: auto
   fcal: auto
   bpcal: auto
@@ -112,7 +112,7 @@ flagging:
     scans: null
   static_mask:
     enable: no
-    mask: null
+    mask: meerkat_coeff_dict.npy
   autoflag_rfi:
     enable: yes
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder

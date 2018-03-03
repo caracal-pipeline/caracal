@@ -18,6 +18,7 @@ requirements = [
 'aplpy>=1.1.1',
 'matplotlib>=2.1.0',
 'jupyter>=1.0.0',
+'pykwalify>=1.6.0',
 ]
 
 PACKAGE_NAME = 'meerkathi'

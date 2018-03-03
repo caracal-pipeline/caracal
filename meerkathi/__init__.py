@@ -4,11 +4,9 @@ import sys
 import os
 import traceback
 
-pckgdir = os.path.dirname(os.path.abspath(__file__))
 
 import stimela
 import glob
-from meerkathi.dispatch_crew.config_parser import config_parser as cp
 
 # Distutils standard  way to do version numbering
 import pkg_resources
@@ -17,6 +15,12 @@ try:
 except pkg_resources.DistributionNotFound:
     __version__ = "dev"
 
+pckgdir = os.path.dirname(os.path.abspath(__file__))
+MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
+DEFAULT_CONFIG = os.path.join(pckgdir, "schema", "default-config.yml")
+SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
+
+from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
@@ -31,7 +35,6 @@ import ruamel.yaml
 import json
 from meerkathi.dispatch_crew.reporter import reporter as mrr
 
-MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 
 def create_logger():
     """ Create a console logger """

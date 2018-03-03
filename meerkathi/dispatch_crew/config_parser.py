@@ -4,10 +4,11 @@ import meerkathi
 import os
 import copy
 import ruamel.yaml
+from pykwalify.core import Core
 import itertools
 from collections import OrderedDict
 
-DEFAULT_CONFIG = os.path.join(meerkathi.pckgdir, 'default-config.yml')
+DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
@@ -190,13 +191,21 @@ class config_parser:
         args_bak = copy.deepcopy(args)
         args, remainder = parser.parse_known_args(args_bak)
         if args.config:
-            meerkathi.log.info("Loading defaults from user configuration '{}'".format(args.config))
-            with open(args.config, 'r') as f:
-                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            config_file = args.config
+            conf_msg = "Loading defaults from user configuration '{}'".format(config_file)
         else:
-            meerkathi.log.info("Loading defaults from installation configuration '{}'".format(DEFAULT_CONFIG))
-            with open(DEFAULT_CONFIG, 'r') as f:
-                file_config = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            config_file = DEFAULT_CONFIG
+            conf_msg = "Loading defaults from user configuration '{}'".format(config_file)
+
+        meerkathi.log.info(conf_msg)
+        with open(args.config, 'r') as f:
+            tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            schema_version = tmp["schema_version"]
+            meerkathi.log.info("MeerKATHI schema version is {0:}".format(schema_version))
+
+        schema = os.path.join(meerkathi.pckgdir, "schema", "schema-{0:s}.yml".format(schema_version))
+        c = Core(source_data=tmp, schema_files=[schema])
+        file_config = c.validate(raise_exception=True)
         parser = cls.__primary_parser(add_help=True)
         groups = _subparser_tree(file_config, parser=parser)
         args, remainder = parser.parse_known_args(args_bak)

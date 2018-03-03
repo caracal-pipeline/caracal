@@ -1,77 +1,74 @@
-## Default meerkathi pipeline configuration
+## Default meerkathi pipeline 
+schema_version: 0.1.0
 
 general:
-  __helpstr: General pipeline information, data IDs, prefixes for output
-  data_path: input/data              # where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
-  msdir: msdir                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
-  input: input                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
-  output: output                     # where MeerKATHI writes output products
-  prefix: meerkathi-pipeline         # prefix for output products
+  data_path: input/data         
+  msdir: msdir                   
+  input: input                    
+  output: output                   
+  prefix: meerkathi-pipeline        
 
 get_data:
-  __helpstr: Get data to be reduced
-  # always enable, even if the MS files are already in place, else the pipeline doesn't know what files to process and does nothing
-  dataid: []                                            # process these HDF5/MS files
-  enable: yes
+  dataid: ["1232342423"]                               
+  enable: true
   order: 0
-  meerkat_query_available:                              # query the MeerKAT archive to look for HDF5 files and metadata (but no download yet; this is set furher below)
-    enable: yes
-    poll_mode: 'poll'                                   # 'override' (look for files in dataid above; ignore options below query_url) or 'poll' (search archive with options below query_url)
-    query_url: 'http://192.168.1.50:8983/solr/kat_core' # MeerKAT Apache Solr server
-    required_intents: ['gaincal','bpcal','target']      # these better be here for imaging, otherwise manual intervention is required
-    product_type_name: 'MeerKATAR1TelescopeProduct'     # change only if you want data not from MeerKAT (e.g., KAT7)
-    minimum_observation_duration: 2                     # hours
+  meerkat_query_available:                              
+    enable: true
+    poll_mode: 'poll'                                   
+    query_url: 'http://192.168.1.50:8983/solr/kat_core' 
+    required_intents: ['gaincal','bpcal','target']      
+    product_type_name: 'MeerKATAR1TelescopeProduct'     
+    minimum_observation_duration: 2                    
     product_num_channels: 32768
     when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
     description_matches: '.*'
     required_fields: [] 
-  download:                                             # download HDF5 files and metadata for IDs in dataid or returned by the query above; disable if the required files are already in data_path
-    download_mode: meerkat                              # meerkat or manual (case insensitive)
-    data_url: ""                                        #if manual you can specify your url to, say, NRAO ftp server-hosted file here. MeerKAT is filled automatically
-    enable: yes
-    reset: no                                           # overwrite HDF5 and metadata files in data_path
-  h5toms:                                               # convert HDF5 files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file
-    enable: yes
-    channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive, null=all channels)
-  untar:                                                # untar the MS.TAR file in msdir; this will overwrite the existing MS file
-    enable: no
+  download:                       
+    download_mode: meerkat         
+    data_url: ""    
+    enable: true
+    reset: false     
+  h5toms:             
+    enable: true
+    channel_range: null 
+    tar: true
+  untar:               
+    enable: false
 
 observation_config:
-  __helpstr: Setup some basic observation information
-  # always enable, else the pipeline doesn't know which fields are which
   order: 1
   obsinfo:
-    enable: yes
-    listobs: yes
-    summary_json: yes
+    enable: true
+    listobs: true
+    summary_json: true
   target: auto
   fcal: auto
   bpcal: auto
   gcal: auto
-  nchans: auto
   reference_antenna: auto
-  firstchanfreq: auto
-  lastchanfreq: auto
-  chanwidth: auto
+  nchans: 0
+  firstchanfreq: 0
+  lastchanfreq: 0
+  chanwidth: 0
+
 
 prepare_data:
-  __helpstr: Peform some basic operations to get it ready for reduction
-  enable: yes
+  enable: true
   order: 2
   fixvis:
-    enable: yes
+    enable: true
   prepms:
-    enable: no
-    add_imaging_cols: no
+    enable: false
+    add_imaging_cols: false
   add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
-    enable: yes
+    enable: true
+
 
 flagging:
-  __helpstr: Pre-calibration flagging
-  enable: yes
+  enable: true
   order: 3
   autoflag_autocorr_powerspectra:
-    enable: yes
+    enable: true
     scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
     antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
     column: DATA
@@ -79,107 +76,104 @@ flagging:
     calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
     threads: 8
   flag_autocorr:
-    enable: yes
+    enable: true
   quack_flagging:
-    enable: no
+    enable: false
     quackinterval: 10
     quackmode: beg
   flag_spw:
-    enable: yes
+    enable: true
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
   flag_time:
-    enable: no
+    enable: false
     timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
   flag_antennas:
-    enable: no
+    enable: false
     antennas: null
   flag_scan:
-    enable: no
+    enable: false
     scans: null
   static_mask:
-    enable: no
+    enable: false
     mask: null
   autoflag_rfi:
-    enable: yes
+    enable: true
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
-    enable: yes
+    enable: true
+
 
 cross_cal:
-  __helpstr: First generation calibration
-  enable: yes
+  enable: true
   order: 4
-  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
-    enable: yes
-    no_verify: no
+    enable: true
+    no_verify: false
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
   delay_cal:
-    enable: yes
+    enable: true
     combine: ""
     solint: "60s" # Useful diagnostic to keep track of system delays with time
     field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot: yes
+    plot: true
     flag:
-      enable: yes
+      enable: true
       mode: clip
       clipminmax: [-60,60]
   bp_cal:
-    enable: yes
-    set_refant: no
+    enable: true
     combine: ""
     field: bpcal
     minnrbl: 4
     minsnr: 3
-    solnorm: yes
+    solnorm: true
     solint: ""
-    plot: yes
-    remove_ph_time_var: no
+    plot: true
+    remove_ph_time_var: false
   gain_cal_flux:
-    enable: yes
-    set_refant: no
+    enable: true
     combine: ""
     field: fcal
     minnrbl: 4
     minsnr: 3
-    plot: no
+    plot: false
   gain_cal_gain:
-    enable: yes
-    set_refant: no
+    enable: true
     combine: ""
     field: gcal
     minnrbl: 4
     minsnr: 3
-    plot: yes
+    plot: true
   transfer_fluxscale:
-    enable: yes
+    enable: true
     reference: fcal 
     transfer: gcal
-    plot: yes
+    plot: true
   apply_delay_cal:
-    enable: yes
+    enable: true
     field: bpcal
     applyto: bpcal,gcal,target
     applymode: calflag
   apply_bp_cal:
-    enable: yes
+    enable: true
     applyto: bpcal,gcal,target
     field: bpcal
     applymode: calflag
   apply_gain_cal_gain:
-    enable: no
+    enable: false
     field: gcal
     applyto: bpcal,gcal,target
     applymode: calflag
   apply_transfer_fluxscale:
-    enable: yes
+    enable: true
     field: gcal
     applyto: bpcal,gcal,target
     applymode: calflag
   autoflag_closure_error:
-    enable: yes
+    enable: true
     scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
     baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
     column: CORRECTED_DATA
@@ -187,217 +181,71 @@ cross_cal:
     calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
     threads: 8
   flagging_summary:
-    enable: yes
+    enable: true
 
 inspect_data:
-  __helpstr: Inspect 1GC calibration pre-secondpass
-  enable: yes
+  enable: true
   order: 5
   label: 1gc1
   real_imag:
-    enable: yes
+    enable: true
     fields: gcal,bpcal
     column: corrected
     avgtime: '90'
     avgchannel: '32'
   amp_phase:
-    enable: yes
+    enable: true
     fields: gcal,bpcal
     column: corrected
     avgtime: '90'
     avgchannel: '32'
   amp_uvwave:
-    enable: yes
+    enable: true
     fields: gcal,bpcal
     column: corrected
     avgtime: '90'
     avgchannel: '32'
   amp_ant:
-    enable: yes
+    enable: true
     fields: gcal,bpcal
     column: corrected
     avgtime: '90'
     avgchannel: '32'
   phase_uvwave:
-    enable: yes
+    enable: true
     fields: gcal,bpcal
     column: corrected
     avgtime: '90'
     avgchannel: '32'
   amp_scan:
-    enable: yes
-    fields: gcal,bpcal,target
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-    
-# Post-calibration flagging
-flagging__2:
-  __helpstr: Post-calibration flagging
-  enable: no
-  order: 6
-  autoflag_autocorr_powerspectra:
-    enable: no
-    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
-    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
-    column: CORRECTED_DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
-  flag_autocorr:
-    enable: no
-  flag_spw:
-    enable: no
-    channels: "*:1419.8~1421.3MHz"
-  flag_antennas:
-    enable: no
-    antennas: null
-  static_mask:
-    enable: no
-    mask: null
-  autoflag:
-    enable: yes
-    strategy: 30Mar2017_secondpass_strategy.rfis # This has to be in the pipeline input folder
-    column: CORRECTED_DATA
-    
-# First generation calibration
-cross_cal__2:
-  enable: no
-  order: 7
-  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
-  uvrange: ">50"
-  label: 1gc2
-  set_model:
-    enable: yes
-    field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
-  delay_cal:
-    enable: yes
-    combine: ""
-    solint: "60s" # Useful diagnostic to keep track of system delays with time
-    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot: yes
-    flag:
-      enable: yes
-      mode: clip
-      clipminmax: [-60,60]
-  bp_cal:
-    enable: yes
-    combine: ""
-    field: bpcal
-    minnrbl: 4
-    minsnr: 3
-    solnorm: no
-    solint: ""
-  gain_cal_flux:
-    enable: yes
-    combine: ""
-    field: fcal
-    minnrbl: 4
-    minsnr: 3
-    plot: no
-  gain_cal_gain:
-    enable: yes
-    combine: ""
-    field: gcal
-    minnrbl: 4
-    minsnr: 3
-    plot: yes
-  transfer_fluxscale:
-    enable: yes
-    reference: fcal 
-    transfer: gcal
-    plot: yes
-  apply_delay_cal:
-    enable: yes
-    field: bpcal
-    applymode: calflag
-  apply_bp_cal:
-    enable: yes
-    field: bpcal
-    applymode: calflag
-  apply_gain_cal_gain:
-    enable: no
-    field: gcal
-    applymode: calflag
-  apply_transfer_fluxscale:
-    enable: yes
-    field: gcal
-    applymode: calflag
-  autoflag_closure_error:
-    enable: yes
-    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
-    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
-    column: CORRECTED_DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
-  flagging_summary:
-    enable: yes
-  
-inspect_data__2:
-  __helpstr: Inspect 1GC calibration
-  enable: no
-  order: 8
-  label: 1gc2
-  real_imag:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_phase:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_uvwave:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_ant:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  phase_uvwave:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_scan:
-    enable: yes
+    enable: true
     fields: gcal,bpcal,target
     column: corrected
     avgtime: '90'
     avgchannel: '32'
 
+
 split_target:
-  __helpstr: Split target data
-  enable: yes
+  enable: true
   order: 9
   label: corr
-  split_target:
-    enable: yes
+  split:
+    enable: true
     time_average: ''
     freq_average: 1
   obsinfo: 
-    enable: yes
-    listobs: no
-    summary_json: yes
+    enable: true
+    listobs: false
+    summary_json: true
   prepms:
-    enable: no
+    enable: false
 
-self_cal:
-  __helpstr: Self calibration
-  enable: yes
+
+selfcal:
+  enable: true
   label: corr
   order: 10
-  primary_beam: no
+  primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
@@ -413,9 +261,9 @@ self_cal:
   img_cleanborder: 0                        
   img_facets: 11                            # No implemented 
   img_nchans: 3                             # Number of output channels for imaging
-  img_joinchannels: yes
+  img_joinchannels: true
   img_fit_spectral_pol: 1                   # Fit a polynomial over frequency to each clean component
-  img_column: CORRECTED_DATA                # Column to image
+  img_column: CORR_DATA                # Column to image
   img_pol: I
   # Calibration settings
   cal_Gsols: auto                           # calibration solution intervals: [time_bins, freq_bins], zero means full interval. 'auto' means that these will calculated internally
@@ -426,106 +274,109 @@ self_cal:
   sf_thresh_pix: 10                         # Peak threshold for source finder (in sigma above noise)
   sf_thresh_isl: 8                          # Island threshold for source finder (in sigma above noise)
   image_1:                                  # Make intial image 
-    enable: yes
+    enable: true
     auto_mask: 40                           
     auto_threshold: 0.5
     column: DATA
   extract_sources_1:                        # Find sources in image
-    enable: yes
-    spi: no
+    enable: true
+    spi: true
   calibrate_1:
-    enable: yes
+    enable: true
     model: '1'                              # use model from extract_sources_1
     output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
     gain_matrix_type: GainDiagPhase         # Gain matrix type. Options are GainDiagPhase, GainDiag, Gain2x2
   image_2:
-    enable: yes
+    enable: true
     auto_mask: 30
     auto_threshold: 0.5
   extract_sources_2:
-    enable: yes
-    spi: yes
+    enable: true
+    spi: true
   calibrate_2:
-    enable: yes
+    enable: true
     model: '2'                              # Use model from extract_sources_2
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_3:
-    enable: yes
+    enable: true
     auto_mask: 10
     auto_threshold: 0.5
   extract_sources_3:
-    enable: yes
-    spi: no                                 # Add spectral indices to skymodel (img_chans must be >1 in this for this to work)
+    enable: true
+    spi: true                                # Add spectral indices to skymodel (img_chans must be >1 in this for this to work)
     thresh_pix: 10
     thresh_isl: 5
   calibrate_3:
-    enable: yes
+    enable: true
     model: '2+3'                            # Combine models from 2 and 3
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_4:
-    enable: yes
+    enable: true
     auto_mask: 5
     auto_threshold: 0.25
   calibrate_4:
-    enable: yes
+    enable: true
     model: '2+3'
     output_data: CORR_RES
     gain_matrix_type: GainDiag
-    add_vis_model: yes                  # Add/Use clean components from latest imaging step to/as sky model for calibation
+    add_vis_model: true                  # Add/Use clean components from latest imaging step to/as sky model for calibation
   image_5:
-    enable: yes
+    enable: true
     auto_mask: 3
     auto_threshold: 0.25
   restore_model:                        # Restore modelled to final calibrated residual image
-    enable: yes
+    enable: true
     model: '2+3'
     clean_model: '4'
   flagging_summary:
-    enable: yes
-  
+    enable: true
+    
+
 image_HI:
-  __helpstr: Make HI cube
-  enable: yes
+  enable: true
   order: 11
   label: corr
+  restfreq: '1.420405752GHz'
+  npix: [1024]
+  cell: 7
+  weight: 'briggs'
+  robust: 0
   uvcontsub: 
-    enable: yes
+    enable: true
     fitorder: 1
     fitspw: null         # set to null to fit all unflagged channels, OR select line-free channels with CASA syntax, e.g., '0:0~100;150:300'
   sunblocker: 
-    enable: yes
-    use_contsub: yes
-    imsize: 800
-    cell: 7
+    enable: true
+    use_contsub: true
+    threshold: 4
   wsclean_image:
-    enable: yes
-    use_contsub: yes
+    enable: true
+    use_contsub: true
     pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
-    npix: 800
-    trim: 512
+    npix: [800]
+    trim: [512]
     mgain: 1.0
     cell: 7
     weight: briggs
     robust: 2
-    facets: 11
-    niter: 1000
+    niter: 1000000
     automask: 5
     autothreshold: 1
     cleanborder: 0
-    no-update-mod: yes
-    make_cube: yes
+    no-update-mod: true
+    make_cube: true
   casa_image:
-    enable: no
-    use_contsub: yes
+    enable: false
+    use_contsub: true
     pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels
     startchan: 0
-    npix: 512
+    npix: [512]
     cell: 7
     weight: briggs
     robust: 2
@@ -533,8 +384,8 @@ image_HI:
     threshold: '10mJy'
     port2fits: True
   sofia:
-    enable: yes
+    enable: true
     imager: 'wsclean'      # 'casa' or 'wsclean'
     threshold: 6
   flagging_summary:
-    enable: no
+    enable: false

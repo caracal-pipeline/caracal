@@ -7,6 +7,7 @@ general:
   input: input                       # where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files)
   output: output                     # where MeerKATHI writes output products
   prefix: meerkathi-pipeline         # prefix for output products
+  init_pipeline: yes                 # Initialse pipeline by adding meerkat input files and creating input/data_path if they don't exist
 
 get_data:
   __helpstr: Get data to be reduced
@@ -33,8 +34,19 @@ get_data:
   h5toms:                                               # convert HDF5 files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file
     enable: yes
     channel_range: null                                 # convert to .MS only channels in this range (0-based, inclusive, null=all channels)
+    tar: yes
   untar:                                                # untar the MS.TAR file in msdir; this will overwrite the existing MS file
     enable: no
+    tar_opts: xvf
+  combine:
+    enable: no
+    reset: no
+    tar:
+      enable: yes
+      tar_options: cvf
+    untar:
+      enable: no
+      tar_opts: xvf
 
 observation_config:
   __helpstr: Setup some basic observation information
@@ -44,12 +56,21 @@ observation_config:
     enable: yes
     listobs: yes
     summary_json: yes
+  primary_beam:
+    enable: no  # Available bu no worker can use beams at the moment
+    diameter: 6.0
+    pixels: 256
+    freq: "856 1760 64"
+    coefficients_file: meerkat_coeff_dict.npy
   target: auto
   fcal: auto
   bpcal: auto
   gcal: auto
   nchans: auto
   reference_antenna: auto
+  firstchanfreq: auto
+  lastchanfreq: auto
+  chanwidth: auto
 
 prepare_data:
   __helpstr: Peform some basic operations to get it ready for reduction
@@ -95,7 +116,7 @@ flagging:
     scans: null
   static_mask:
     enable: no
-    mask: null
+    mask: meerkat_coeff_dict.npy
   autoflag_rfi:
     enable: yes
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
@@ -106,7 +127,7 @@ cross_cal:
   __helpstr: First generation calibration
   enable: yes
   order: 4
-  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  otfdelay: no            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
@@ -228,151 +249,6 @@ inspect_data:
     avgtime: '90'
     avgchannel: '32'
     
-# Post-calibration flagging
-flagging__2:
-  __helpstr: Post-calibration flagging
-  enable: no
-  order: 6
-  autoflag_autocorr_powerspectra:
-    enable: no
-    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
-    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
-    column: CORRECTED_DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
-  flag_autocorr:
-    enable: no
-  flag_spw:
-    enable: no
-    channels: "*:1419.8~1421.3MHz"
-  flag_antennas:
-    enable: no
-    antennas: null
-  static_mask:
-    enable: no
-    mask: null
-  autoflag:
-    enable: yes
-    strategy: 30Mar2017_secondpass_strategy.rfis # This has to be in the pipeline input folder
-    column: CORRECTED_DATA
-    
-# First generation calibration
-cross_cal__2:
-  enable: no
-  order: 7
-  otfdelay: yes            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
-  uvrange: ">50"
-  label: 1gc2
-  set_model:
-    enable: yes
-    field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
-  delay_cal:
-    enable: yes
-    combine: ""
-    solint: "60s" # Useful diagnostic to keep track of system delays with time
-    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot: yes
-    flag:
-      enable: yes
-      mode: clip
-      clipminmax: [-60,60]
-  bp_cal:
-    enable: yes
-    combine: ""
-    field: bpcal
-    minnrbl: 4
-    minsnr: 3
-    solnorm: no
-    solint: ""
-  gain_cal_flux:
-    enable: yes
-    combine: ""
-    field: fcal
-    minnrbl: 4
-    minsnr: 3
-    plot: no
-  gain_cal_gain:
-    enable: yes
-    combine: ""
-    field: gcal
-    minnrbl: 4
-    minsnr: 3
-    plot: yes
-  transfer_fluxscale:
-    enable: yes
-    reference: fcal 
-    transfer: gcal
-    plot: yes
-  apply_delay_cal:
-    enable: yes
-    field: bpcal
-    applymode: calflag
-  apply_bp_cal:
-    enable: yes
-    field: bpcal
-    applymode: calflag
-  apply_gain_cal_gain:
-    enable: no
-    field: gcal
-    applymode: calflag
-  apply_transfer_fluxscale:
-    enable: yes
-    field: gcal
-    applymode: calflag
-  autoflag_closure_error:
-    enable: yes
-    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
-    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
-    column: CORRECTED_DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
-  flagging_summary:
-    enable: yes
-  
-inspect_data__2:
-  __helpstr: Inspect 1GC calibration
-  enable: no
-  order: 8
-  label: 1gc2
-  real_imag:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_phase:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_uvwave:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_ant:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  phase_uvwave:
-    enable: yes
-    fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-  amp_scan:
-    enable: yes
-    fields: gcal,bpcal,target
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-
 split_target:
   __helpstr: Split target data
   enable: yes
@@ -497,14 +373,14 @@ image_HI:
     imsize: 800
     cell: 7
   wsclean_image:
-    enable: no
+    enable: yes
     use_contsub: yes
     pol: I
     spwid: 0
     nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
     npix: 800
     trim: 512
-    mgain: 0.9
+    mgain: 1.0
     cell: 7
     weight: briggs
     robust: 2
@@ -513,9 +389,10 @@ image_HI:
     automask: 5
     autothreshold: 1
     cleanborder: 0
+    no-update-mod: yes
     make_cube: yes
   casa_image:
-    enable: yes
+    enable: no
     use_contsub: yes
     pol: I
     spwid: 0
@@ -530,7 +407,7 @@ image_HI:
     port2fits: True
   sofia:
     enable: yes
-    imager: 'casa'      # 'casa' or 'wsclean'
+    imager: 'wsclean'      # 'casa' or 'wsclean'
     threshold: 6
   flagging_summary:
-    enable: yes
+    enable: no

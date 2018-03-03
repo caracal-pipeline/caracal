@@ -9,7 +9,7 @@ from nbconvert import HTMLExporter
 from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert.preprocessors import CellExecutionError
 
-REPORT_TEMPLATE=os.path.join(meerkathi.scripts.__path__[0], "obs_report", "Observation Report.ipynb")
+REPORT_TEMPLATE = os.path.join(meerkathi.scripts.__path__[0], "obs_report", "Observation Report.ipynb")
 
 class reporter:
     def __init__(self, pipeline):
@@ -24,7 +24,8 @@ class reporter:
 
     def generate_reports(self):
         """ generate an html report for every ms in the pipeline """
-        report_names = [os.path.join(self.__report_dir, "%s.report.html" % ms) for ms in self.__ms]
+        report_names = [os.path.join(self.__report_dir, 
+                "%s.report.html" % os.path.basename(ms)) for ms in self.__ms]
         for ms, rep in zip(self.__ms, report_names):
             meerkathi.log.info("Creating a report for dataset id '%s'. "
                                "The report will be dumped here: '%s'." % (ms, rep))

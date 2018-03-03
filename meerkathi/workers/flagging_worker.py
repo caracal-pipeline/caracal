@@ -1,8 +1,14 @@
 NAME = 'Pre-calibration flagging'
 
 def worker(pipeline, recipe, config):
-    for i in range(pipeline.nobs):
-        msname = pipeline.msnames[i]
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        nobs = 1
+    else:
+        msnames = pipeline.msnames
+        nobs = pipeline.nobs
+    for i in range(nobs):
+        msname = msnames[i]
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
         # not field structure dependent, since it is just based on the DC of the field
@@ -137,7 +143,7 @@ def worker(pipeline, recipe, config):
             if config['autoflag_rfi'].get('calibrator_fields', 'auto') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
-            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
+            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
             fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
 

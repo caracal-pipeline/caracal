@@ -28,6 +28,9 @@ mapping:
         type: str
         required: true
         desc: Prefix for MeerKATHI output products
+      init_pipeline:
+        desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
+        type: bool
 
   get_data:
     type: map
@@ -127,15 +130,52 @@ mapping:
             desc: List of online flags to apply (from 'static,cam,data_lost,ingest_rfi,cal_rfi,predicted_rfi', default is all flags, '' will apply no flags)
 
       untar:
-        type: map
         desc: Unarchive from MS from a archive file.
+        type: map
         mapping:
           enable:
             type: bool
             desc: Execute this segment
           tar_options: 
             type: str
-            desc: Options to parse to 'tar' command. Default is 'xvf'
+            desc: Options to parse to 'tar' command
+      
+      combine:
+        desc: Virtually concatenate MSs and proceed with the combined MS
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this section
+            required: true
+          reset:
+            type: bool
+            desc: Delete concatenated MS if it exists. Else, proceed with existing MS
+            required: true
+          tar:
+            desc: Create a tarbal of the converted MS
+            type: map
+            mapping:
+              enable: 
+                desc: Execute this section
+                type: bool
+                required: true
+              tar_options:
+                type: str
+                desc: Options to parse to the tar command
+                required: true
+          untar:
+            desc: Unarchive from MS from a archive file.
+            type: map
+            mapping:
+              enable: 
+                desc: Execute this section
+                type: bool
+                required: true
+              tar_options:
+                type: str
+                desc: Options to parse to the tar command
+                required: true
 
 
   observation_config:
@@ -198,6 +238,30 @@ mapping:
         desc: Channel width. If set to 0 then will automatically set using metadata file (only for meerkat data)
         type: int
         required: true
+      primary_beam:
+        desc: Generate primary beam model
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this section
+            required: true
+          freq:
+            desc: A single freq, or the start, end freqs, and channel width in MHz
+            type: str
+            required: true
+          diameter:
+            desc: Diameter of the required beam
+            type: float
+            required: true
+          pixels:
+            desc: Number of pixels on one side
+            type: int
+            required: true
+          coeficients_file:
+            desc: Coeficients file name
+            type: str
+            required: true
 
 
   prepare_data:

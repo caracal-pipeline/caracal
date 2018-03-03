@@ -6,10 +6,12 @@ general:
   msdir: msdir                   
   input: input                    
   output: output                   
-  prefix: meerkathi-pipeline        
+  prefix: meerkathi-pipeline
+  init_pipeline: true
+
 
 get_data:
-  dataid: ["1232342423"]                               
+  dataid: []                               
   enable: true
   order: 0
   meerkat_query_available:                              
@@ -32,8 +34,20 @@ get_data:
     enable: true
     channel_range: null 
     tar: true
+    full_poll: true
   untar:               
     enable: false
+    tar_options: xvf
+  combine:
+    enable: false
+    reset: true
+    tar:
+      enable: true
+      tar_options: cvf
+    untar:
+      enable: no
+      tar_options: xvf
+
 
 observation_config:
   order: 1
@@ -50,13 +64,19 @@ observation_config:
   firstchanfreq: 0
   lastchanfreq: 0
   chanwidth: 0
+  primary_beam:
+    enable: true
+    freq: "856 1760 64"
+    diameter: 6 
+    pixels: 256
+    coeficients_file: meerkat_coeff_dict.py
 
 
 prepare_data:
   enable: true
   order: 2
   fixvis:
-    enable: true
+    enable: false
   prepms:
     enable: false
     add_imaging_cols: false
@@ -94,8 +114,8 @@ flagging:
     enable: false
     scans: null
   static_mask:
-    enable: false
-    mask: null
+    enable: true
+    mask: meerkat_coeff_dict.py
   autoflag_rfi:
     enable: true
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
@@ -106,7 +126,7 @@ flagging:
 cross_cal:
   enable: true
   order: 4
-  otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  otfdelay: false            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
@@ -182,6 +202,7 @@ cross_cal:
     threads: 8
   flagging_summary:
     enable: true
+
 
 inspect_data:
   enable: true
@@ -263,7 +284,7 @@ selfcal:
   img_nchans: 3                             # Number of output channels for imaging
   img_joinchannels: true
   img_fit_spectral_pol: 1                   # Fit a polynomial over frequency to each clean component
-  img_column: CORR_DATA                # Column to image
+  img_column: CORR_DATA                     # Column to image
   img_pol: I
   # Calibration settings
   cal_Gsols: auto                           # calibration solution intervals: [time_bins, freq_bins], zero means full interval. 'auto' means that these will calculated internally

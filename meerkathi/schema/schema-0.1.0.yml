@@ -228,15 +228,15 @@ mapping:
         required: true
       firstchanfreq:
         desc: First frequency channel. If set to 0 then will automatically set using metadata file (only for meerkat data)
-        type: int
+        type: str
         required: true
       lastchanfreq:
         desc: Last frequency. If set to 0 then will automatically set using metadata file (only for meerkat data)
-        type: int
+        type: str
         required: true
       chanwidth:
         desc: Channel width. If set to 0 then will automatically set using metadata file (only for meerkat data)
-        type: int
+        type: str
         required: true
       primary_beam:
         desc: Generate primary beam model
@@ -258,7 +258,7 @@ mapping:
             desc: Number of pixels on one side
             type: int
             required: true
-          coeficients_file:
+          coefficients_file:
             desc: Coeficients file name
             type: str
             required: true
@@ -1033,7 +1033,7 @@ mapping:
             required: true
 
 
-  selfcal:
+  self_cal:
     type: map
     desc: Perform Self calibration on the data
     mapping:

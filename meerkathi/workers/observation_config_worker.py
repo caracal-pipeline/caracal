@@ -89,7 +89,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
 
         # Get channels in MS
-        if config['nchans'] == 'auto':
+        if config['nchans'] == 0:
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 pipeline.nchans[i] = spw

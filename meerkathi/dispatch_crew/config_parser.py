@@ -206,6 +206,7 @@ class config_parser:
         schema = os.path.join(meerkathi.pckgdir, "schema", "schema-{0:s}.yml".format(schema_version))
         c = Core(source_data=tmp, schema_files=[schema])
         file_config = c.validate(raise_exception=True)
+        del file_config["schema_version"]
         parser = cls.__primary_parser(add_help=True)
         groups = _subparser_tree(file_config, parser=parser)
         args, remainder = parser.parse_known_args(args_bak)

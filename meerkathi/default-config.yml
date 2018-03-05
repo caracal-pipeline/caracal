@@ -31,7 +31,7 @@ get_data:
     enable: true
     reset: false     
   h5toms:             
-    enable: false
+    enable: true
     channel_range: null 
     tar: true
     full_poll: true
@@ -65,7 +65,7 @@ observation_config:
   lastchanfreq: auto
   chanwidth: auto
   primary_beam:
-    enable: true
+    enable: false
     freq: "856 1760 64"
     diameter: 6 
     pixels: 256
@@ -73,7 +73,7 @@ observation_config:
 
 
 prepare_data:
-  enable: false
+  enable: true
   order: 2
   fixvis:
     enable: false
@@ -85,7 +85,7 @@ prepare_data:
 
 
 flagging:
-  enable: false
+  enable: true
   order: 3
   autoflag_autocorr_powerspectra:
     enable: true
@@ -124,7 +124,7 @@ flagging:
 
 
 cross_cal:
-  enable: false
+  enable: true
   order: 4
   otfdelay: false            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
@@ -205,7 +205,7 @@ cross_cal:
 
 
 inspect_data:
-  enable: false
+  enable: true
   order: 5
   label: 1gc1
   real_imag:
@@ -247,7 +247,7 @@ inspect_data:
 
 
 split_target:
-  enable: false
+  enable: true
   order: 9
   label: corr
   split:

@@ -270,53 +270,53 @@ self_cal:
   calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
-  img_npix: 8192                            # at very least 50% padding for alias protection
+  img_npix: 8192
   img_trim: 5540
   img_mgain: 0.9
   img_cell: 1.3
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_auto_threshold: 3                     # Cleaning threshold for cleaning
-  img_auto_mask: 5                          # Masking threshold (will be recalculated every clean major loop)
+  img_auto_threshold: 3  
+  img_auto_mask: 5
   img_cleanborder: 0                        
-  img_facets: 11                            # No implemented 
-  img_nchans: 3                             # Number of output channels for imaging
+  img_facets: 11
+  img_nchans: 3
   img_joinchannels: true
-  img_fit_spectral_pol: 1                   # Fit a polynomial over frequency to each clean component
-  img_column: CORRECTED_DATA                   # Column to image
+  img_fit_spectral_pol: 1
+  img_column: CORRECTED_DATA 
   img_pol: I
   # Calibration settings
-  cal_Gsols: auto                           # calibration solution intervals: [time_bins, freq_bins], zero means full interval. 'auto' means that these will calculated internally
-  cal_DDsols: [300, 500]                    # direction dependent gain solution intervals (not implemented)
-  cal_gain_amplitude_clip_low: 0.5          # Flag data if corresponding gain has a value below this
-  cal_gain_amplitude_clip_high: 1.5         # Flag data if corresponding gain has a value above this
+  cal_Gsols: 0 
+  cal_DDsols: 0
+  cal_gain_amplitude_clip_low: 0.5 
+  cal_gain_amplitude_clip_high: 1.5
   # Source finding settings
-  sf_thresh_pix: 10                         # Peak threshold for source finder (in sigma above noise)
-  sf_thresh_isl: 8                          # Island threshold for source finder (in sigma above noise)
-  image_1:                                  # Make intial image 
+  sf_thresh_pix: 10
+  sf_thresh_isl: 8
+  image_1:
     enable: true
     auto_mask: 40                           
     auto_threshold: 0.5
     column: DATA
-  extract_sources_1:                        # Find sources in image
+  extract_sources_1:
     enable: true
-    spi: true
+    spi: false
   calibrate_1:
     enable: true
-    model: '1'                              # use model from extract_sources_1
-    output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
-    gain_matrix_type: GainDiagPhase         # Gain matrix type. Options are GainDiagPhase, GainDiag, Gain2x2
+    model: '1'
+    output_data: CORR_DATA
+    gain_matrix_type: GainDiagPhase
   image_2:
     enable: true
     auto_mask: 30
     auto_threshold: 0.5
   extract_sources_2:
     enable: true
-    spi: true
+    spi: false
   calibrate_2:
     enable: true
-    model: '2'                              # Use model from extract_sources_2
+    model: '2'
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_3:
@@ -325,12 +325,12 @@ self_cal:
     auto_threshold: 0.5
   extract_sources_3:
     enable: true
-    spi: true                                # Add spectral indices to skymodel (img_chans must be >1 in this for this to work)
+    spi: false 
     thresh_pix: 10
     thresh_isl: 5
   calibrate_3:
     enable: true
-    model: '2+3'                            # Combine models from 2 and 3
+    model: '2+3' 
     output_data: CORR_RES
     gain_matrix_type: GainDiag
   image_4:
@@ -342,12 +342,12 @@ self_cal:
     model: '2+3'
     output_data: CORR_RES
     gain_matrix_type: GainDiag
-    add_vis_model: true                  # Add/Use clean components from latest imaging step to/as sky model for calibation
+    add_vis_model: true 
   image_5:
     enable: true
     auto_mask: 3
     auto_threshold: 0.25
-  restore_model:                        # Restore modelled to final calibrated residual image
+  restore_model: 
     enable: true
     model: '2+3'
     clean_model: '4'
@@ -367,7 +367,7 @@ image_HI:
   uvcontsub: 
     enable: true
     fitorder: 1
-    fitspw: null         # set to null to fit all unflagged channels, OR select line-free channels with CASA syntax, e.g., '0:0~100;150:300'
+    fitspw: null 
   sunblocker: 
     enable: true
     use_contsub: true
@@ -377,7 +377,7 @@ image_HI:
     use_contsub: true
     pol: I
     spwid: 0
-    nchans: 'all'      # set to 'all' to use all channels; can also use the option wsclean:channelrange: [chan_start,chan_end]
+    nchans: 'all' 
     npix: [800]
     trim: [512]
     mgain: 1.0
@@ -395,7 +395,7 @@ image_HI:
     use_contsub: true
     pol: I
     spwid: 0
-    nchans: 'all'      # set to 'all' to use all channels
+    nchans: 'all'
     startchan: 0
     npix: [512]
     cell: 7
@@ -406,7 +406,7 @@ image_HI:
     port2fits: True
   sofia:
     enable: true
-    imager: 'wsclean'      # 'casa' or 'wsclean'
+    imager: 'wsclean'
     threshold: 6
   flagging_summary:
     enable: false

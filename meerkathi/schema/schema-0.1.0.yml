@@ -1121,23 +1121,21 @@ mapping:
         required: false
       img_column:
         type: str
-        enum: ["DATA", "CORR_DATA"]
         desc: Column to image
         required: false
       img_pol:
         type: str
-        enum: ["I", "U", "Q", "V"]
         desc: Stokes image to create
         required: true
       cal_Gsols:
-        type: str
-        enum: ["auto", "time_bins", "freq_bins"]
         desc: Calibration solution intervals
-        required: false                          # if not specified full interval is selected
-      cal_DDsols:
         seq:
-          - type: int
-        desc: Direction dependent gain solution intervals
+            - type: int
+        required: false
+      cal_DDsols:
+        desc: Calibration solution intervals
+        seq:
+            - type: int
         required: false
       cal_gain_amplitude_clip_low:
         type: float

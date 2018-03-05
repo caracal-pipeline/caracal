@@ -65,7 +65,7 @@ observation_config:
   lastchanfreq: auto
   chanwidth: auto
   primary_beam:
-    enable: true
+    enable: false
     freq: "856 1760 64"
     diameter: 6 
     pixels: 256

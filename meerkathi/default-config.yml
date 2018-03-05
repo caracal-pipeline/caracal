@@ -287,8 +287,8 @@ self_cal:
   img_column: CORRECTED_DATA 
   img_pol: I
   # Calibration settings
-  cal_Gsols: 0 
-  cal_DDsols: 0
+  cal_Gsols: []
+  cal_DDsols: []
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5
   # Source finding settings

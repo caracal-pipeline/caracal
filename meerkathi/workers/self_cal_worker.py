@@ -37,8 +37,8 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    gsols = config.get('cal_Gsols', [1,0])
-    bsols = config.get('cal_Bsols', [0,1])
+    gsols = config.get('cal_Gsols', [])
+    bsols = config.get('cal_Bsols', []) 
     taper = config.get('img_uvtaper', None)
     label = config['label']
     bjones = config.get('cal_Bjones', False)
@@ -333,8 +333,8 @@ def worker(pipeline, recipe, config):
 
         autosols = [],[]
         autosols_set = False
-        if config[key].get('Gsols', gsols) == 'auto' or \
-                       config[key].get('Bsols', gsols) == 'auto':
+        if config[key].get('Gsols', gsols) == [] or \
+                       config[key].get('Bsols', gsols) == []:
             autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True
@@ -396,8 +396,8 @@ def worker(pipeline, recipe, config):
 
         autosols = [],[]
         autosols_set = False
-        if config[key].get('Gsols', gsols) == 'auto' or \
-                       config[key].get('Bsols', gsols) == 'auto':
+        if config[key].get('Gsols', gsols) == [] or \
+                       config[key].get('Bsols', gsols) == []:
             autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True

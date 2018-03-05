@@ -991,7 +991,7 @@ mapping:
         desc: Label for new data set
         type: str
         required: true
-      split:
+      split_target:
         desc: Split data
         type: map
         mapping:

@@ -250,7 +250,7 @@ split_target:
   enable: true
   order: 9
   label: corr
-  split:
+  split_target:
     enable: true
     time_average: ''
     freq_average: 1

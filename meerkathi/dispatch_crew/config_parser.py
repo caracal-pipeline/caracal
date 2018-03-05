@@ -75,6 +75,9 @@ class config_parser:
             help='Label of stimela build to use',
             default=None)
 
+        add('-s', '--schema',
+            help='Name of custom schema for corresponding to configuration file')
+
         add('-pcs', '--print-calibrator-standard',
             help='Prints auxilary calibrator standard into the log',
             action='store_true')
@@ -201,9 +204,9 @@ class config_parser:
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             schema_version = tmp["schema_version"]
-            meerkathi.log.info("MeerKATHI schema version is {0:}".format(schema_version))
 
-        schema = os.path.join(meerkathi.pckgdir, "schema", "schema-{0:s}.yml".format(schema_version))
+        schema = args.schema or os.path.join(meerkathi.pckgdir, "schema", "schema-{0:s}.yml".format(schema_version))
+        meerkathi.log.info("Using schema {0:s}, which has version number {0:s}".format(schema, schema_version))
         c = Core(source_data=tmp, schema_files=[schema])
         file_config = c.validate(raise_exception=True)
         del file_config["schema_version"]

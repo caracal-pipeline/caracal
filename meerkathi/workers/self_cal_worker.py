@@ -37,8 +37,8 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    gsols = config.get('cal_Gsols', [1,0])
-    bsols = config.get('cal_Bsols', [0,1])
+    gsols = config.get('cal_Gsols', [])
+    bsols = config.get('cal_Bsols', []) 
     taper = config.get('img_uvtaper', None)
     label = config['label']
     bjones = config.get('cal_Bjones', False)
@@ -46,7 +46,8 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["",'-MFS'][int(nchans>1)]
 
-    mslist = ['{0:s}-{1:s}.ms'.format(did, label) for did in pipeline.dataid]
+    pipeline.set_cal_msnames(label)
+    mslist = pipeline.cal_msnames
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
@@ -127,11 +128,19 @@ def worker(pipeline, recipe, config):
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                   "auto-threshold": config[key].get('auto_threshold', auto_thresh),
+                  "multiscale" : config[key].get('multi_scale', False),
+                  "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
-        if mask:
+        if config[key].get('mask_from_sky', False):
+            fitmask = config[key].get('fits_mask', None)
+	    fitmask_address = 'masking/'+str(fitmask)
+	    image_opts.update( {"fitsmask" : fitmask_address+':output'})
+        elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
             image_opts.update( {"auto-mask" : config[key].get('auto_mask', auto_mask)} )
+
+
 
         recipe.add('cab/wsclean', step,
         image_opts,
@@ -258,7 +267,9 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Combined models'.format(step))
 
-        return calmodel, model_names_fits
+        return calmodel, model_names_fits	
+
+
 
     def autoset_calibration_intervals(recipe, skymodel, num, key):
         ## No way around it. The recipe has to be executed at this point to get the sky model
@@ -280,7 +291,7 @@ def worker(pipeline, recipe, config):
             with open(msinfo) as yr:
                 info = yaml.load(yr)
             nchans = sum( info['SPW']['NUM_CHAN'])
-            target = info['FIELD']['NAME'].index(pipeline.target[i])
+            target = info['FIELD']['NAME'].index(pipeline.target[0])
             
             tot_time = sum( info['SCAN'][str(target)].values() )
 
@@ -322,8 +333,8 @@ def worker(pipeline, recipe, config):
 
         autosols = [],[]
         autosols_set = False
-        if config[key].get('Gsols', gsols) == 'auto' or \
-                       config[key].get('Bsols', gsols) == 'auto':
+        if config[key].get('Gsols', gsols) == [] or \
+                       config[key].get('Bsols', gsols) == []:
             autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True
@@ -385,8 +396,8 @@ def worker(pipeline, recipe, config):
 
         autosols = [],[]
         autosols_set = False
-        if config[key].get('Gsols', gsols) == 'auto' or \
-                       config[key].get('Bsols', gsols) == 'auto':
+        if config[key].get('Gsols', gsols) == [] or \
+                       config[key].get('Bsols', gsols) == []:
             autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
             autosols_set = True

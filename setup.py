@@ -18,6 +18,7 @@ requirements = [
 'aplpy>=1.1.1',
 'matplotlib>=2.1.0',
 'jupyter>=1.0.0',
+'pykwalify>=1.6.0',
 ]
 
 PACKAGE_NAME = 'meerkathi'
@@ -28,10 +29,17 @@ setup(name = PACKAGE_NAME,
     description = "MeerKAT end-to-end data reduction pipeline",
     author = "MeerKATHI peeps",
     author_email = "sphemakh@gmail.com",
-    url = "https://github.com/sphemakh/meerkathi",
-    packages=[PACKAGE_NAME],
+    url = "https://github.com/ska-sa/meerkathi",
+    packages=[PACKAGE_NAME], 
     install_requires = requirements,
     include_package_data = True,
+    package_data = {
+        "meerkathi"    : [
+                          "data/meerkat_files/*.rfis",
+                          "data/meerkat_files/*.npy",
+                               ],
+
+    },
     scripts = ["bin/" + j for j in os.listdir("bin")],
     license=["GNU GPL v2"],
     classifiers=[

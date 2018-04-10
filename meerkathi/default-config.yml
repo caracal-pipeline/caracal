@@ -390,6 +390,13 @@ image_HI:
     cleanborder: 0
     no-update-mod: true
     make_cube: true
+    make_mask: true
+  rewsclean_image:
+    enable: true
+    fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
+    niter: 0
+    autothreshold: 0.5
+    make_cube: true
   casa_image:
     enable: false
     use_contsub: true

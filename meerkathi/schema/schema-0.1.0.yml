@@ -1534,6 +1534,7 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
+                 
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map
@@ -1617,10 +1618,44 @@ mapping:
             desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is yes.
             type: bool
             required: false
+          make_mask:
+            desc: If set to true the output is a sofia mask, if set to false no sofia mask is made. Default is yes.
+            type: bool
+            required: false
           no-update-mod:
             desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
             type: bool
             required: false
+      rewsclean_image:
+        desc: Use WSClean to recreate line data cube using a three-dimensional mask. See WSclean wiki on sourceforge.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment wsclean_image (yes/no). Default is yes.
+            type: bool
+            required: false
+          fitsmask:
+            desc: Accepts a 3D-mask cleaning mask in fits format. Mask from sofia/own. Default is 'sofia_mask'
+            type: str
+            required: false
+          niter:
+            desc: Maximum number of clean iterations to perform. Default is 1000000.
+            type: int
+            required: false
+          autothreshold:
+            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            type: float
+            required: false
+          cleanborder:
+            desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.
+            type: float
+            required: false
+          make_cube:
+            desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is yes.
+            type: bool
+            required: false
+
+      
       casa_image:
         desc: Use CASA to create line data cube.
         type: map

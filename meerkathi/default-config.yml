@@ -384,7 +384,7 @@ image_HI:
     cell: 7
     weight: briggs
     robust: 2
-    niter: 1000000
+    niter: 10000000
     automask: 5
     autothreshold: 1
     cleanborder: 0
@@ -394,7 +394,7 @@ image_HI:
   rewsclean_image:
     enable: true
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
-    niter: 0
+    niter: 10000000
     autothreshold: 0.5
     make_cube: true
   casa_image:

@@ -147,9 +147,9 @@ def worker(pipeline, recipe, config):
 
  
     if pipeline.enable_task(config, 'rewsclean_image'):
-        sofia_mask=config['rewsclean_image'].get('fitsmask', 'sofia_mask') 
-        if sofia_mask=='sofia_mask':
-          sofia_mask=pipeline.prefix+'_wscl0_HI-image-cube_mask.fits:output' 
+        HIclean_mask=config['rewsclean_image'].get('fitsmask', 'sofia_mask') 
+        if HIclean_mask=='sofia_mask':
+          HIclean_mask=pipeline.prefix+'_wscl0_HI-image-cube_mask.fits:output' 
               
         if config['wsclean_image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]            
@@ -167,7 +167,7 @@ def worker(pipeline, recipe, config):
             {                       
                   "msname"    : mslist,
                   "weight"    : weight,
-                  "fitsmask"  : sofia_mask, #config['rewsclean_image'].get('fitsmask', sofia_mask),
+                  "fitsmask"  : HIclean_mask, 
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   "trim"      : sdm.dismissable(config['wsclean_image'].get('trim', None)),
                   "scale"     : config['wsclean_image'].get('cell', cell),

@@ -377,18 +377,26 @@ image_HI:
     use_contsub: true
     pol: I
     spwid: 0
-    nchans: 'all' 
-    npix: [800]
-    trim: [512]
+    nchans: 'all'
+    channelrange: [0] 
+    npix: [1024]
+    trim: [1024]
     mgain: 1.0
     cell: 7
     weight: briggs
     robust: 2
-    niter: 1000000
+    niter: 10000000
     automask: 5
     autothreshold: 1
     cleanborder: 0
     no-update-mod: true
+    make_cube: true
+    make_mask: true
+  rewsclean_image:
+    enable: true
+    fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
+    niter: 10000000
+    autothreshold: 0.5
     make_cube: true
   casa_image:
     enable: false
@@ -397,7 +405,7 @@ image_HI:
     spwid: 0
     nchans: 'all'
     startchan: 0
-    npix: [512]
+    npix: [1024]
     cell: 7
     weight: briggs
     robust: 2
@@ -406,7 +414,17 @@ image_HI:
     port2fits: True
   sofia:
     enable: true
-    imager: 'wsclean'
-    threshold: 6
+    imager: 'casa'
+    rmsMode: 'mad'
+    threshold: 4.0
+    flag: false
+    flagregion: []
+    merge: true
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
   flagging_summary:
-    enable: false
+    enable: true

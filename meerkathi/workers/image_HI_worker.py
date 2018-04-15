@@ -149,7 +149,7 @@ def worker(pipeline, recipe, config):
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {
-            "import.inFile"         : pipeline.prefix+'_HI.image.fits',
+            "import.inFile"         : pipeline.prefix+'_HI.image.fits:output',
             "steps.doFlag"          : config['sofia'].get('flag', False),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,

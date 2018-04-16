@@ -407,7 +407,6 @@ image_HI:
     port2fits: True
   sofia:
     enable: true
-    imager: 'casa'
     rmsMode: 'mad'
     threshold: 4.0
     flag: false

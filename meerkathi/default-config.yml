@@ -414,6 +414,14 @@ image_HI:
   sofia:
     enable: true
     imager: 'wsclean'
+    rmsMode: 'mad'
     threshold: 6
+    merge: true
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
   flagging_summary:
     enable: false

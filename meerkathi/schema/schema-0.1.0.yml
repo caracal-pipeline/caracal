@@ -1687,10 +1687,6 @@ mapping:
             desc: Execute segment sofia (yes/no)? Default is yes.
             type: bool
             required: false
-          imager:
-            desc: Description of imager used in previous steps to produce data cube. Default is 'casa'.
-            type: str
-            required: false
           rmsMode:
             desc: Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels). Default is 'mad'
             type: str

@@ -1121,6 +1121,7 @@ mapping:
         required: false
       img_column:
         type: str
+        enum: ["DATA", "CORRECTED_DATA"]
         desc: Column to image
         required: false
       img_pol:
@@ -1172,7 +1173,7 @@ mapping:
             required: true
           column:
             type: str
-            enum: ["DATA", "CORR_DATA"]
+            enum: ["DATA", "CORRECTED_DATA"]
             desc: Column to image
             required: false
 
@@ -1242,7 +1243,7 @@ mapping:
             required: true
           column:
             type: str
-            enum: ["DATA", "CORR_DATA"]
+            enum: ["DATA", "CORRECTED_DATA"]
             desc: Column to image
             required: false
 
@@ -1312,7 +1313,7 @@ mapping:
             required: true
           column:
             type: str
-            enum: ["DATA", "CORR_DATA"]
+            enum: ["DATA", "CORRECTED_DATA"]
             desc: Column to image
             required: false
 
@@ -1381,7 +1382,7 @@ mapping:
             required: true
           column:
             type: str
-            enum: ["DATA", "CORR_DATA"]
+            enum: ["DATA", "CORRECTED_DATA"]
             desc: Column to image
             required: false
       calibrate_4:
@@ -1428,7 +1429,7 @@ mapping:
             required: true
           column:
             type: str
-            enum: ["DATA", "CORR_DATA"]
+            enum: ["DATA", "CORRECTED_DATA"]
             desc: Column to image
             required: false             # If not specified, CORR_DATA column will be imaged
       restore_model:
@@ -1685,10 +1686,6 @@ mapping:
           enable:
             desc: Execute segment sofia (yes/no)? Default is yes.
             type: bool
-            required: false
-          imager:
-            desc: Description of imager used in previous steps to produce data cube. Default is 'casa'.
-            type: str
             required: false
           rmsMode:
             desc: Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels). Default is 'mad'

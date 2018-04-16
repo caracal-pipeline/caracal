@@ -102,7 +102,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/fitstool', step,
                     {    
                         "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                        "output"   : pipeline.prefix+'_HI-{0:s}-cube.fits'.format(mm),
+                        "output"   : pipeline.prefix+'_HI.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,
                         "fits-axis": 'FREQ',
@@ -146,12 +146,10 @@ def worker(pipeline, recipe, config):
 
 
     if pipeline.enable_task(config, 'sofia'):
-        if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
-        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-image-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {
-            "import.inFile"         : cubename,
+            "import.inFile"         : pipeline.prefix+'_HI.image.fits:output',
             "steps.doFlag"          : config['sofia'].get('flag', False),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,

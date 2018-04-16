@@ -377,9 +377,10 @@ image_HI:
     use_contsub: true
     pol: I
     spwid: 0
-    nchans: 'all' 
-    npix: [800]
-    trim: [512]
+    nchans: 'all'
+    channelrange: [0] 
+    npix: [1024]
+    trim: [1024]
     mgain: 1.0
     cell: 7
     weight: briggs
@@ -397,7 +398,7 @@ image_HI:
     spwid: 0
     nchans: 'all'
     startchan: 0
-    npix: [512]
+    npix: [1024]
     cell: 7
     weight: briggs
     robust: 2
@@ -406,7 +407,16 @@ image_HI:
     port2fits: True
   sofia:
     enable: true
-    imager: 'wsclean'
-    threshold: 6
+    rmsMode: 'mad'
+    threshold: 4.0
+    flag: false
+    flagregion: []
+    merge: true
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
   flagging_summary:
-    enable: false
+    enable: true

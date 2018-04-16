@@ -88,7 +88,7 @@ flagging:
   enable: true
   order: 3
   autoflag_autocorr_powerspectra:
-    enable: true
+    enable: false
     scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
     antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
     column: DATA
@@ -193,7 +193,7 @@ cross_cal:
     applyto: bpcal,gcal,target
     applymode: calflag
   autoflag_closure_error:
-    enable: true
+    enable: false
     scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
     baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
     column: CORRECTED_DATA

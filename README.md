@@ -23,6 +23,47 @@ $ export PYTHONPATH='' # Ensure that you use venv Python
 $ stimela build
 ```
 
+### Install on Mac
+
+0. create a python environment
+
+`conda create env --name meer_venv`
+
+1. activate environment
+
+`source activate meer_venv`
+
+2. clone `meerkathi`
+```
+git clone https://github.com/ska-sa/meerkathi.git
+cd meerkathi
+git submodule update --init --recursive 
+```
+3. Start and activate virtual environment
+```
+$ virtualenv meerkathi-venv
+$ source meerkathi-venv/bin/activate
+$ pip install pip wheel setuptools -U
+$ pip install <absolute path to meerkathi folder>
+$ export PYTHONPATH='' # Ensure that you use venv Python
+```
+
+4. Build stimela
+
+`stimela build`
+
+5. run meerkathi
+
+`meerkathi -c path_to_configuration_file`
+
+WARNING: if `/etc/shadow` is not found:
+```
+pip install --upgrade git+https://github.com/SpheMakh/Stimela.git@issue-241
+stimela clean -ac
+stimela clean -aC
+stimela build --no-cache
+```
+
 ## Running the pipeline
 1. Activate the MeerKATHI virtual environment
 2. Make sure that the data all the required data is present

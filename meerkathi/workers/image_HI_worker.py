@@ -1,6 +1,27 @@
 import sys
+import os
 import warnings
 import stimela.dismissable as sdm
+from astropy.io import fits
+import meerkathi
+
+def freq_to_vel(filename):
+    C = 2.99792458e+8 # m/s
+    HI = 1.4204057517667e+9 # Hz
+    filename=filename.split(':')
+    filename='{0:s}/{1:s}'.format(filename[1],filename[0])
+    if not os.path.exists(filename): meerkathi.log.info('Skipping conversion for {0:s}. File does not exist.'.format(filename))
+    else:
+        with fits.open(filename, mode='update') as cube:
+            headcube = cube[0].header
+            if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
+            else: restfreq = HI
+            if 'FREQ' in headcube['ctype3']:
+                headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
+                headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
+                headcube['ctype3'] = 'VELO-HEL'
+                if 'cunit3' in headcube: del headcube['cunit3']
+            else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
@@ -18,7 +39,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'uvcontsub'):
             prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
             step = 'contsub_{:d}'.format(i)
-            recipe.add('cab/casa_uvcontsub', step, 
+            recipe.add('cab/casa_uvcontsub', step,
                 {
                     "msname"    : msname,
                     "fitorder"  : config['uvcontsub'].get('fitorder', 1),
@@ -67,16 +88,19 @@ def worker(pipeline, recipe, config):
         else:
             weight = config['wsclean_image'].get('weight', weight)
         if nchans=='all': nchans=pipeline.nchans[0][spwid]
-        channelrange = config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]])
-        if channelrange == [0]:
-            channelrange = [0, pipeline.nchans[0][spwid]]
+        firstchan = config['wsclean_image'].get('firstchan', 0)
+        binchans  = config['wsclean_image'].get('binchans', 1)
+        channelrange = [firstchan, firstchan+nchans*binchans]
+        #channelrange = config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]])
+        #if channelrange == [0]:
+        #    channelrange = [0, pipeline.nchans[0][spwid]]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
                   "weight"    : weight,
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   # Notice that the following might be adjusted to schema and config file
-                  "trim"      : sdm.dismissable(config['wsclean_image'].get('trim', None)),
+                  "padding"   : config['wsclean_image'].get('padding', 1.2),
                   "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
@@ -144,6 +168,16 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{:s}:: Image HI'.format(step))
 
+    if pipeline.enable_task(config,'freq_to_vel'):
+        for ss in ['dirty','psf','residual','model','image']:
+            cubename=pipeline.prefix+'_HI.'+ss+'.fits:output'
+            recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
+                       {
+                           'filename' : cubename,
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
 
     if pipeline.enable_task(config, 'sofia'):
         step = 'sofia_sources'

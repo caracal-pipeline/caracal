@@ -319,6 +319,10 @@ mapping:
         desc: Order in queue of workers. Generally a non-negative integer. 
         type: int
         required: true
+      label:
+        desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
+        type: str
+        required: false
 
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
@@ -1556,15 +1560,16 @@ mapping:
             type: int
             required: false
           nchans:
-            desc: Number of channels to analyse, 'all' or an integer number. Default is 'all'
+            desc: Number of channels of HI cube, 'all' or an integer number. Default is 'all'.
             type: text
             required: false
-          channelrange:
-            desc: Channels to analyze. Set to 'all' to use all channels or [start channel, end channel] for a channel range. Default is [0, nchans].
-            matching: "any"
-            seq:
-              - type: int
-              - type: str
+          firstchan:
+            desc: First channel of HI cube. Default is 0.
+            type: int
+            required: false
+          binchans:
+            desc: Integer binning of channels. Default is 1 (no binning).
+            type: int
             required: false
           npix:
             desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is Worker default for npix.
@@ -1572,15 +1577,9 @@ mapping:
             seq:
               - type: int
             required: false
-          trim:
-            desc: After inversion, trim the images to the given size. List of integers (width and height) or a single integer for a square image. Default is 512.
-            type: seq
-            seq:
-              - type: int
-            required: false
-          channelsout:
-            desc: Number of output channels or 'all'. The bandwidth will be split into this number of channels. Default is 'all'
-            type: text
+          padding:
+            desc: Images have initial size padding*npix, and are later trimmed to npix. Default is 1.2.
+            type: float
             required: false
           mgain:
             desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 0.9.
@@ -1677,6 +1676,14 @@ mapping:
             required: false
           port2fits:
             desc: Port output to fits files if yes. Default is yes.
+            type: bool
+            required: false
+      freq_to_vel:
+        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed. Default is true.
+        type: map
+        mapping:
+          enable:
+            desc: Execute conversion.
             type: bool
             required: false
       sofia: 

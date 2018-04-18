@@ -1096,15 +1096,15 @@ mapping:
         desc: Number of cleaning iterations
         required: true
       img_auto_threshold:
-        type: int
-        desc: Stopping threshold for cleaning
+        type: float
+        desc: Estimate noise level using a robust estimator and stop at sigma x stddev.
         required: true
       img_auto_mask:
-        type: int
-        desc: Masking threshold (will be recalculated every clean major loop)
+        type: float
+        desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
         required: true
       img_cleanborder:
-        type: int
+        type: float
         desc: Clean border
         required: false
       img_facets:
@@ -1603,11 +1603,11 @@ mapping:
             type: int
             required: false
           automask: 
-            desc: Clean threshold (Cutoff parameter) for automasking in first stage. In the first stage, a full multiscale clean is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 5.
+            desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             type: float
             required: false
           autothreshold:
-            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev 
             type: float
             required: false
           cleanborder:
@@ -1643,7 +1643,7 @@ mapping:
             type: int
             required: false
           autothreshold:
-            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
             required: false
           cleanborder:

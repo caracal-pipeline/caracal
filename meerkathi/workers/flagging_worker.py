@@ -7,6 +7,7 @@ def worker(pipeline, recipe, config):
     else:
         msnames = pipeline.msnames
         nobs = pipeline.nobs
+    if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
     for i in range(nobs):
         msname = msnames[i]
         # flag antennas automatically based on drifts in the scan average of the 

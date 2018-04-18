@@ -87,6 +87,7 @@ prepare_data:
 flagging:
   enable: true
   order: 3
+  label: ''
   autoflag_autocorr_powerspectra:
     enable: false
     scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
@@ -378,9 +379,10 @@ image_HI:
     pol: I
     spwid: 0
     nchans: 'all'
-    channelrange: [0] 
+    firstchan: 0
+    binchans: 1
     npix: [1024]
-    trim: [1024]
+    padding: 1.2
     mgain: 1.0
     cell: 7
     weight: briggs
@@ -412,6 +414,8 @@ image_HI:
     niter: 0
     threshold: '10mJy'
     port2fits: True
+  freq_to_vel:
+    enable: true
   sofia:
     enable: true
     rmsMode: 'mad'

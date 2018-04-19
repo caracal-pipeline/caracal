@@ -11,8 +11,8 @@ general:
 
 
 get_data:
-  dataid: []                               
   enable: true
+  dataid: []                               
   order: 0
   meerkat_query_available:                              
     enable: true
@@ -26,9 +26,9 @@ get_data:
     description_matches: '.*'
     required_fields: [] 
   download:                       
+    enable: true
     download_mode: meerkat         
     data_url: ""    
-    enable: true
     reset: false     
   h5toms:             
     enable: true

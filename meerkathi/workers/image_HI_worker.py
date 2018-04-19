@@ -92,25 +92,21 @@ def worker(pipeline, recipe, config):
         firstchan = config['wsclean_image'].get('firstchan', 0)
         binchans  = config['wsclean_image'].get('binchans', 1)
         channelrange = [firstchan, firstchan+nchans*binchans]
-        #channelrange = config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]])
-        #if channelrange == [0]:
-        #    channelrange = [0, pipeline.nchans[0][spwid]]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
+                  "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
+                  "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
-                  # Notice that the following might be adjusted to schema and config file
                   "padding"   : config['wsclean_image'].get('padding', 1.2),
                   "scale"     : config['wsclean_image'].get('cell', cell),
-                  "prefix"    : pipeline.prefix+'_HI',
+                  "channelsout"     : nchans,
+                  "channelrange" : channelrange,
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
                   "mgain"     : config['wsclean_image'].get('mgain', 1.0),
-                  "channelsout"     : nchans,
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
                   "auto-mask"  :   config['wsclean_image'].get('automask', 3),
-                  "channelrange" : channelrange,
-                  "pol"        : config['wsclean_image'].get('pol','I'),
                   "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
               },  
         input=pipeline.input,
@@ -127,7 +123,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/fitstool', step,
                     {    
                         "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                        "output"   : pipeline.prefix+'_wscl0_HI.{0:s}.fits'.format(mm),
+                        "output"   : pipeline.prefix+'_HI.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,
                         "fits-axis": 'FREQ',
@@ -138,32 +134,32 @@ def worker(pipeline, recipe, config):
 
         if config['wsclean_image']['make_mask']:
            step = 'make_sofia_mask'
-           cubename = pipeline.prefix+'_wscl0_HI.image.fits:output'
-           outmask = pipeline.prefix+'_wscl0_HI-image'
+           cubename = pipeline.prefix+'_HI.image.fits:output'
+           outmask = pipeline.prefix+'_HI.image_clean'
            recipe.add('cab/sofia', step,
                {
-            	"import.inFile"         : cubename,
-            	"steps.doFlag"          : config['sofia'].get('flag', False),
+                "import.inFile"         : cubename,
+                "steps.doFlag"          : False,
                 "steps.doScaleNoise"    : True,
                 "steps.doSCfind"        : True,
-                "steps.doMerge"         : config['sofia'].get('merge', True),
+                "steps.doMerge"         : True,
                 "steps.doReliability"   : False,
-            	"steps.doParameterise"  : False,
-           	    "steps.doWriteMask"     : True,
-           	    "steps.doMom0"          : True,
-           	    "steps.doMom1"          : False,
-           	    "steps.doWriteCat"      : False,
-            	"flag.regions"          : [], 
-           	    "scaleNoise.statistic"  : 'mad' ,
-           	    "SCfind.threshold"      : 4, 
-           	    "SCfind.rmsMode"        : 'mad',
-            	"merge.radiusX"         : 2, 
-           	    "merge.radiusY"         : 2,
-            	"merge.radiusZ"         : 2, 
-           	    "merge.minSizeX"        : 2,
-           	    "merge.minSizeY"        : 2, 
-            	"merge.minSizeZ"        : 2,
-           	    "writeCat.basename"     : outmask,
+                "steps.doParameterise"  : False,
+       	        "steps.doWriteMask"     : True,
+                "steps.doMom0"          : False,
+                "steps.doMom1"          : False,
+                "steps.doWriteCat"      : False,
+                "flag.regions"          : [], 
+                "scaleNoise.statistic"  : 'mad' ,
+                "SCfind.threshold"      : 4, 
+                "SCfind.rmsMode"        : 'mad',
+                "merge.radiusX"         : 2, 
+                "merge.radiusY"         : 2,
+                "merge.radiusZ"         : 2,
+                "merge.minSizeX"        : 2,
+                "merge.minSizeY"        : 2, 
+                "merge.minSizeZ"        : 2,
+                "writeCat.basename"     : outmask,
                },
                input=pipeline.input,
                output=pipeline.output,
@@ -173,7 +169,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'rewsclean_image'):
         HIclean_mask=config['rewsclean_image'].get('fitsmask', 'sofia_mask') 
         if HIclean_mask=='sofia_mask':
-          HIclean_mask=pipeline.prefix+'_wscl0_HI-image_mask.fits:output' 
+          HIclean_mask=pipeline.prefix+'_HI.image_clean_mask.fits:output' 
               
         if config['wsclean_image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]            
@@ -181,27 +177,30 @@ def worker(pipeline, recipe, config):
         
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans','all')
-        
+
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
-            weight = 'briggs {0:.3f}'.format( config['rewsclean_image'].get('robust', robust))
+            weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
-        if nchans=='all': nchans=pipeline.nchans[0][spwid]        
+        if nchans=='all': nchans=pipeline.nchans[0][spwid]
+        firstchan = config['wsclean_image'].get('firstchan', 0)
+        binchans  = config['wsclean_image'].get('binchans', 1)
+        channelrange = [firstchan, firstchan+nchans*binchans]
         recipe.add('cab/wsclean', step,
             {                       
                   "msname"    : mslist,
+                  "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
-                  "fitsmask"  : HIclean_mask, 
+                  "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
-                  "trim"      : sdm.dismissable(config['wsclean_image'].get('trim', None)),
+                  "padding"   : config['wsclean_image'].get('padding', 1.2),
                   "scale"     : config['wsclean_image'].get('cell', cell),
-                  "prefix"    : pipeline.prefix+'_wscl1_HI',
+                  "channelsout"     : nchans,
+                  "channelrange" : channelrange,
+                  "fitsmask"  : HIclean_mask, 
                   "niter"     : config['rewsclean_image'].get('niter', 1000000),
                   "mgain"     : config['wsclean_image'].get('mgain', 1.0),
-                  "channelsout"     : nchans,
                   "auto-threshold"  : config['rewsclean_image'].get('autothreshold', 5),
-                  "channelrange" : config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]]),
-                  "pol"        : config['wsclean_image'].get('pol','I'),
                   "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
             },  
         input=pipeline.input,
@@ -217,7 +216,7 @@ def worker(pipeline, recipe, config):
                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                 recipe.add('cab/fitstool', step,
                     {    
-                        "image"    : [pipeline.prefix+'_wscl1_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
+                        "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
                         "output"   : pipeline.prefix+'_HI.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,

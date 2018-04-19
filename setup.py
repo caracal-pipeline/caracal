@@ -17,6 +17,7 @@ requirements = [
 'nbconvert>=5.3.1',
 'aplpy>=1.1.1',
 'matplotlib>=2.1.0',
+'tornado>=4.0.0,<5.0.0',
 'jupyter>=1.0.0',
 'pykwalify>=1.6.0',
 ]

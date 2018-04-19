@@ -319,6 +319,10 @@ mapping:
         desc: Order in queue of workers. Generally a non-negative integer. 
         type: int
         required: true
+      label:
+        desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
+        type: str
+        required: false
 
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
@@ -1092,15 +1096,15 @@ mapping:
         desc: Number of cleaning iterations
         required: true
       img_auto_threshold:
-        type: int
-        desc: Stopping threshold for cleaning
+        type: float
+        desc: Estimate noise level using a robust estimator and stop at sigma x stddev.
         required: true
       img_auto_mask:
-        type: int
-        desc: Masking threshold (will be recalculated every clean major loop)
+        type: float
+        desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
         required: true
       img_cleanborder:
-        type: int
+        type: float
         desc: Clean border
         required: false
       img_facets:
@@ -1557,15 +1561,16 @@ mapping:
             type: int
             required: false
           nchans:
-            desc: Number of channels to analyse, 'all' or an integer number. Default is 'all'
+            desc: Number of channels of HI cube, 'all' or an integer number. Default is 'all'.
             type: text
             required: false
-          channelrange:
-            desc: Channels to analyze. Set to 'all' to use all channels or [start channel, end channel] for a channel range. Default is [0, nchans].
-            matching: "any"
-            seq:
-              - type: int
-              - type: str
+          firstchan:
+            desc: First channel of HI cube. Default is 0.
+            type: int
+            required: false
+          binchans:
+            desc: Integer binning of channels. Default is 1 (no binning).
+            type: int
             required: false
           npix:
             desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is Worker default for npix.
@@ -1573,15 +1578,9 @@ mapping:
             seq:
               - type: int
             required: false
-          trim:
-            desc: After inversion, trim the images to the given size. List of integers (width and height) or a single integer for a square image. Default is 512.
-            type: seq
-            seq:
-              - type: int
-            required: false
-          channelsout:
-            desc: Number of output channels or 'all'. The bandwidth will be split into this number of channels. Default is 'all'
-            type: text
+          padding:
+            desc: Images have initial size padding*npix, and are later trimmed to npix. Default is 1.2.
+            type: float
             required: false
           mgain:
             desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 0.9.
@@ -1604,11 +1603,11 @@ mapping:
             type: int
             required: false
           automask: 
-            desc: Clean threshold (Cutoff parameter) for automasking in first stage. In the first stage, a full multiscale clean is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 5.
+            desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             type: float
             required: false
           autothreshold:
-            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev 
             type: float
             required: false
           cleanborder:
@@ -1644,7 +1643,7 @@ mapping:
             type: int
             required: false
           autothreshold:
-            desc: Clean threshold (Cutoff parameter) for automasking in second stage. In the first stage, a full multiscale clean with a cutoff parameter automask is run and a mask (for each scale) is created. In the second stage, CLEANing continues to a cutoff parameter of autothreshold using each scale-dependent mask for each scale. Default is 1.
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
             required: false
           cleanborder:
@@ -1714,6 +1713,14 @@ mapping:
             desc: Port output to fits files if yes. Default is yes.
             type: bool
             required: false
+      freq_to_vel:
+        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed. Default is true.
+        type: map
+        mapping:
+          enable:
+            desc: Execute conversion.
+            type: bool
+            required: false
       sofia: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
@@ -1721,10 +1728,6 @@ mapping:
           enable:
             desc: Execute segment sofia (yes/no)? Default is yes.
             type: bool
-            required: false
-          imager:
-            desc: Description of imager used in previous steps to produce data cube. Default is 'casa'.
-            type: str
             required: false
           rmsMode:
             desc: Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels). Default is 'mad'

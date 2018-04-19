@@ -1,6 +1,27 @@
 import sys
+import os
 import warnings
 import stimela.dismissable as sdm
+from astropy.io import fits
+import meerkathi
+
+def freq_to_vel(filename):
+    C = 2.99792458e+8 # m/s
+    HI = 1.4204057517667e+9 # Hz
+    filename=filename.split(':')
+    filename='{0:s}/{1:s}'.format(filename[1],filename[0])
+    if not os.path.exists(filename): meerkathi.log.info('Skipping conversion for {0:s}. File does not exist.'.format(filename))
+    else:
+        with fits.open(filename, mode='update') as cube:
+            headcube = cube[0].header
+            if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
+            else: restfreq = HI
+            if 'FREQ' in headcube['ctype3']:
+                headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
+                headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
+                headcube['ctype3'] = 'VELO-HEL'
+                if 'cunit3' in headcube: del headcube['cunit3']
+            else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
@@ -18,7 +39,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'uvcontsub'):
             prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
             step = 'contsub_{:d}'.format(i)
-            recipe.add('cab/casa_uvcontsub', step, 
+            recipe.add('cab/casa_uvcontsub', step,
                 {
                     "msname"    : msname,
                     "fitorder"  : config['uvcontsub'].get('fitorder', 1),
@@ -68,16 +89,19 @@ def worker(pipeline, recipe, config):
         else:
             weight = config['wsclean_image'].get('weight', weight)
         if nchans=='all': nchans=pipeline.nchans[0][spwid]
-        channelrange = config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]])
-        if channelrange == [0]:
-            channelrange = [0, pipeline.nchans[0][spwid]]
+        firstchan = config['wsclean_image'].get('firstchan', 0)
+        binchans  = config['wsclean_image'].get('binchans', 1)
+        channelrange = [firstchan, firstchan+nchans*binchans]
+        #channelrange = config['wsclean_image'].get('channelrange', [0, pipeline.nchans[0][spwid]])
+        #if channelrange == [0]:
+        #    channelrange = [0, pipeline.nchans[0][spwid]]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
                   "weight"    : weight,
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   # Notice that the following might be adjusted to schema and config file
-                  "trim"      : sdm.dismissable(config['wsclean_image'].get('trim', None)),
+                  "padding"   : config['wsclean_image'].get('padding', 1.2),
                   "scale"     : config['wsclean_image'].get('cell', cell),
                   "prefix"    : pipeline.prefix+'_HI',
                   "niter"     : config['wsclean_image'].get('niter', 1000000),
@@ -103,7 +127,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/fitstool', step,
                     {    
                         "image"    : [pipeline.prefix+'_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                        "output"   : pipeline.prefix+'_wscl0_HI-{0:s}-cube.fits'.format(mm),
+                        "output"   : pipeline.prefix+'_wscl0_HI.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,
                         "fits-axis": 'FREQ',
@@ -114,8 +138,8 @@ def worker(pipeline, recipe, config):
 
         if config['wsclean_image']['make_mask']:
            step = 'make_sofia_mask'
-           cubename=pipeline.prefix+'_wscl0_HI-image-cube.fits:output'
-           outmask=pipeline.prefix+'_wscl0_HI-image-cube'
+           cubename = pipeline.prefix+'_wscl0_HI.image.fits:output'
+           outmask = pipeline.prefix+'_wscl0_HI-image'
            recipe.add('cab/sofia', step,
                {
             	"import.inFile"         : cubename,
@@ -125,21 +149,21 @@ def worker(pipeline, recipe, config):
                 "steps.doMerge"         : config['sofia'].get('merge', True),
                 "steps.doReliability"   : False,
             	"steps.doParameterise"  : False,
-           	 "steps.doWriteMask"     : True,
-           	 "steps.doMom0"          : True,
-           	 "steps.doMom1"          : False,
-           	 "steps.doWriteCat"      : False,
-            	"flag.regions"           : [], 
-           	 "scaleNoise.statistic"  : 'mad' ,
-           	 "SCfind.threshold"      :4, 
-           	 "SCfind.rmsMode"        : 'mad',
+           	    "steps.doWriteMask"     : True,
+           	    "steps.doMom0"          : True,
+           	    "steps.doMom1"          : False,
+           	    "steps.doWriteCat"      : False,
+            	"flag.regions"          : [], 
+           	    "scaleNoise.statistic"  : 'mad' ,
+           	    "SCfind.threshold"      : 4, 
+           	    "SCfind.rmsMode"        : 'mad',
             	"merge.radiusX"         : 2, 
-           	 "merge.radiusY"         :2 ,
+           	    "merge.radiusY"         : 2,
             	"merge.radiusZ"         : 2, 
-           	 "merge.minSizeX"        :2 ,
-           	 "merge.minSizeY"        :2, 
-            	"merge.minSizeZ"        : 2 ,
-           	"writeCat.basename"     : outmask,
+           	    "merge.minSizeX"        : 2,
+           	    "merge.minSizeY"        : 2, 
+            	"merge.minSizeZ"        : 2,
+           	    "writeCat.basename"     : outmask,
                },
                input=pipeline.input,
                output=pipeline.output,
@@ -149,7 +173,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'rewsclean_image'):
         HIclean_mask=config['rewsclean_image'].get('fitsmask', 'sofia_mask') 
         if HIclean_mask=='sofia_mask':
-          HIclean_mask=pipeline.prefix+'_wscl0_HI-image-cube_mask.fits:output' 
+          HIclean_mask=pipeline.prefix+'_wscl0_HI-image_mask.fits:output' 
               
         if config['wsclean_image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]            
@@ -194,7 +218,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/fitstool', step,
                     {    
                         "image"    : [pipeline.prefix+'_wscl1_HI-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                        "output"   : pipeline.prefix+'_HI-{0:s}-cube.fits'.format(mm),
+                        "output"   : pipeline.prefix+'_HI.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,
                         "fits-axis": 'FREQ',
@@ -202,9 +226,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make {1:s} cube from rewsclean {1:s} channels'.format(step,mm.replace('-','_')))
-
-
-
+            cubename = pipeline.prefix+'_HI-image.fits'
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_contsub']:
@@ -239,14 +261,22 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{:s}:: Image HI'.format(step))
 
+    if pipeline.enable_task(config,'freq_to_vel'):
+        for ss in ['dirty','psf','residual','model','image']:
+            cubename=pipeline.prefix+'_HI.'+ss+'.fits:output'
+            recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
+                       {
+                           'filename' : cubename,
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
 
     if pipeline.enable_task(config, 'sofia'):
-        if config['sofia']['imager']=='casa': cubename=pipeline.prefix+'_HI.image.fits:output'
-        elif config['sofia']['imager']=='wsclean': cubename=pipeline.prefix+'_HI-image-cube.fits:output'
         step = 'sofia_sources'
         recipe.add('cab/sofia', step,
             {
-            "import.inFile"         : cubename,
+            "import.inFile"         : pipeline.prefix+'_HI.image.fits:output',
             "steps.doFlag"          : config['sofia'].get('flag', False),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,

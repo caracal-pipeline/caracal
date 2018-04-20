@@ -1,5 +1,9 @@
 NAME = 'Pre-calibration flagging'
 
+import sys
+import meerkathi
+
+
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
@@ -75,16 +79,33 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'flag_spw'):
+            flagspwselection=config['flag_spw']['channels']
             step = 'flag_spw_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
-                {
-                  "vis"     : msname,
-                  "mode"    : 'manual',
-                  "spw"     : config['flag_spw']['channels'],
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+            found_valid_data=0
+            if config['flag_spw'].get('ensure_valid_selection',False):
+                scalefactor,scalefactor_dict=1,{'GHz':1e+9,'MHz':1e+6,'kHz':1e+3}
+                for ff in flagspwselection.split(','):
+                    for dd in scalefactor_dict:
+                        if dd in ff: ff,scalefactor=ff.replace(dd,''),scalefactor_dict[dd]
+                    ff=ff.replace('Hz','').split(':')
+                    if len(ff)>1: spws=ff[0]
+                    edges=[ii*scalefactor for ii in map(float,ff[-1].split('~'))]
+                    if spws=='*': spws,edges=range(len(pipeline.firstchanfreq[i])),[edges for uu in range(len(pipeline.firstchanfreq[i]))]
+                    else: spws,edges=[spws,],[edges,]
+                    for ss in spws:
+                        if min(edges[ss][1],pipeline.lastchanfreq[i][ss])-max(edges[ss][0],pipeline.firstchanfreq[i][ss])>0: found_valid_data=1
+                if not found_valid_data: meerkathi.log.warn('The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname,flagspwselection,step))
+
+            if found_valid_data or not config['flag_spw'].get('ensure_valid_selection',False):
+                recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
+                    {
+                      "vis"     : msname,
+                      "mode"    : 'manual',
+                      "spw"     : flagspwselection,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_time'):
             step = 'flag_time_{0:d}'.format(i)

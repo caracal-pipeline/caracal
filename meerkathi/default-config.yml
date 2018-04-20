@@ -105,6 +105,7 @@ flagging:
   flag_spw:
     enable: true
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
+    ensure_valid_selection: false
   flag_time:
     enable: false
     timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
@@ -383,11 +384,12 @@ image_HI:
     binchans: 1
     npix: [1024]
     padding: 1.2
-    mgain: 1.0
     cell: 7
     weight: briggs
     robust: 2
+    taper: 0
     niter: 10000000
+    mgain: 1.0
     automask: 5
     autothreshold: 1
     cleanborder: 0
@@ -399,7 +401,6 @@ image_HI:
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
     niter: 10000000
     autothreshold: 0.5
-    make_cube: true
   casa_image:
     enable: false
     use_contsub: true

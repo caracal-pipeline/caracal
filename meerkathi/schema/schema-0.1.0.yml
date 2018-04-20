@@ -396,6 +396,10 @@ mapping:
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel", e.g. "*:856~880MHz". End channel not inclusive.
             type: str
             required: false
+          ensure_valid_selection:
+            desc: Check whether the channel selection returns any data. If it does not, FLAGDATA is not executed, preventing the pipeline from crashing.
+            type: bool
+            required: false
 
       flag_time: 
         desc: Flag timerange in the data using CASA FLAGDATA task.
@@ -1598,6 +1602,10 @@ mapping:
             desc: Robust parameter in case of Briggs weighting. Default is 2.
             type: float
             required: false
+          taper:
+            desc: Gaussian taper FWHM in arcsec. Default is 0, no tapering.
+            type: float
+            required: false
           niter:
             desc: Maximum number of clean iterations to perform. Default is 1000000.
             type: int
@@ -1627,7 +1635,7 @@ mapping:
             type: bool
             required: false
       rewsclean_image:
-        desc: Use WSClean to recreate line data cube using a three-dimensional mask. See WSclean wiki on sourceforge.
+        desc: Use WSClean to recreate line data cube using a three-dimensional mask. Most WSClean settings are taken from wsclean_image. See WSclean wiki on sourceforge.
         type: map
         mapping:
           enable:
@@ -1645,14 +1653,6 @@ mapping:
           autothreshold:
             desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
-            required: false
-          cleanborder:
-            desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.
-            type: float
-            required: false
-          make_cube:
-            desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is yes.
-            type: bool
             required: false
 
       

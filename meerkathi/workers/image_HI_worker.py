@@ -97,6 +97,7 @@ def worker(pipeline, recipe, config):
                   "msname"    : mslist,
                   "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
+                  "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
                   "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   "padding"   : config['wsclean_image'].get('padding', 1.2),
@@ -191,6 +192,7 @@ def worker(pipeline, recipe, config):
                   "msname"    : mslist,
                   "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
+                  "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
                   "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   "padding"   : config['wsclean_image'].get('padding', 1.2),
@@ -207,7 +209,7 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: re-Image HI'.format(step))
 
-        if config['rewsclean_image']['make_cube']:
+        if config['wsclean_image']['make_cube']:
             if not config['rewsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
             else:
                 imagetype=['image','dirty','psf','residual','model']

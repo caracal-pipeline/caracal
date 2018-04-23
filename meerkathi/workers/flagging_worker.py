@@ -89,11 +89,14 @@ def worker(pipeline, recipe, config):
                         if dd in ff: ff,scalefactor=ff.replace(dd,''),scalefactor_dict[dd]
                     ff=ff.replace('Hz','').split(':')
                     if len(ff)>1: spws=ff[0]
+                    else: spws='*'
                     edges=[ii*scalefactor for ii in map(float,ff[-1].split('~'))]
-                    if spws=='*': spws,edges=range(len(pipeline.firstchanfreq[i])),[edges for uu in range(len(pipeline.firstchanfreq[i]))]
-                    else: spws,edges=[spws,],[edges,]
+                    if spws=='*': spws=range(len(pipeline.firstchanfreq[i]))
+                    elif '~' in spws: spws=range(int(spws.split('~')[0]),int(spws.split('~')[1])+1)
+                    else: spws=[spws,]
+                    edges=[edges for uu in range(len(spws))]
                     for ss in spws:
-                        if min(edges[ss][1],pipeline.lastchanfreq[i][ss])-max(edges[ss][0],pipeline.firstchanfreq[i][ss])>0: found_valid_data=1
+                        if ss<len(pipeline.lastchanfreq[i]) and min(edges[ss][1],pipeline.lastchanfreq[i][ss])-max(edges[ss][0],pipeline.firstchanfreq[i][ss])>0: found_valid_data=1
                 if not found_valid_data: meerkathi.log.warn('The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname,flagspwselection,step))
 
             if found_valid_data or not config['flag_spw'].get('ensure_valid_selection',False):

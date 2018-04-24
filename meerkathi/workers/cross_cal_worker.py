@@ -82,7 +82,7 @@ def worker(pipeline, recipe, config):
                 if applyto in ['gcal', 'target']:
                     return get_field('gcal')
                 elif applyto == 'bpcal':
-                    return get_field('bpcal')
+                    return get_field('fcal')
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)

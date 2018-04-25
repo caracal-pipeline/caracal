@@ -81,8 +81,7 @@ def worker(pipeline, recipe, config):
         step = 'wsclean_image_HI'
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
-        if nchans == 0:
-            nchans = 'all'
+        if nchans == 0: nchans = 'all'
         # Construct weight specification
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
@@ -177,8 +176,8 @@ def worker(pipeline, recipe, config):
         step = 'rewsclean_image_HI'
         
         spwid = config['wsclean_image'].get('spwid', 0)
-        nchans = config['wsclean_image'].get('nchans','all')
-
+        nchans = config['wsclean_image'].get('nchans',0)
+        if nchans == 0: nchans = 'all'
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:

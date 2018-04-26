@@ -45,7 +45,7 @@ get_data:
       enable: true
       tar_options: cvf
     untar:
-      enable: no
+      enable: false
       tar_options: xvf
 
 

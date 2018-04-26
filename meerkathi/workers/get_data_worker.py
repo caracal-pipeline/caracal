@@ -192,7 +192,8 @@ def worker(pipeline, recipe, config):
         pipeline.vmsname = msname = config["combine"].get("vmsname", pipeline.prefix + "-virtconcat.ms")
         pipeline.msnames = ["{0:s}/SUBMSS/{1:s}".format(pipeline.vmsname, _m) for _m in msnames]
 
-        if config['combine'].get('reset', True):
+        if not os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)) or config['combine'].get('reset', True):
+
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
 

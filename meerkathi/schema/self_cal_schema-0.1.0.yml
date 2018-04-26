@@ -1,0 +1,429 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  self_cal:
+    type: map
+    desc: Perform Self calibration on the data
+    mapping:
+      enable:
+        type: bool
+        desc: Execute this segment
+        required: true
+      label:
+        type: str
+        desc: Label to tag the output files
+        required: true
+      order:
+        type: int
+        desc: Workers are executed in ascedning order based on this value
+        required: true
+      primary_beam:
+        type: bool
+        desc: Use primary beam
+        required: true
+      calibrate_with:
+        type: str
+        enum: ["meqtrees", "cubical"]
+        desc: Tool to use for calibration
+        required: true
+      spwid:
+        type: int
+        desc: Provide spectral window id
+        required: true
+      img_npix:
+        type: int
+        desc: Number of pixels to create an image (i.e. at very least 50% padding for alias protection)
+        required: true
+      img_trim:
+        type: int
+        desc: Number of pixels in output image
+        required: true
+      img_mgain:
+        type: float
+        desc: Image CLEANing gain
+        required: true
+      img_cell:
+        type: float
+        desc: Image pixel size (arcsec)
+        required: true
+      img_weight:
+        type: str
+        enum: ["briggs", "uniform", "natural"]
+        desc: Image weighting type
+        required: true
+      img_robust:
+        type: float
+        desc: Briggs robust value
+        required: false
+      img_niter:
+        type: int
+        desc: Number of cleaning iterations
+        required: true
+      img_auto_threshold:
+        type: float
+        desc: Estimate noise level using a robust estimator and stop at sigma x stddev.
+        required: true
+      img_auto_mask:
+        type: float
+        desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
+        required: true
+      img_cleanborder:
+        type: float
+        desc: Clean border
+        required: false
+      img_facets:
+        type: int
+        desc: Number facet to image
+        required: false
+      img_nchans:
+        type: int
+        desc: Number of channesls in output image
+        required: false
+      img_joinchannels:
+        type: bool
+        desc: Join channels to create MFS image
+        required: true
+      img_fit_spectral_pol:
+        type: int
+        desc: Fit a polynomial over frequency to each clean component
+        required: false
+      img_column:
+        type: str
+        enum: ["DATA", "CORRECTED_DATA"]
+        desc: Column to image
+        required: false
+      img_pol:
+        type: str
+        desc: Stokes image to create
+        required: true
+      cal_Gsols:
+        desc: Calibration solution intervals
+        seq:
+            - type: int
+        required: false
+      cal_DDsols:
+        desc: Calibration solution intervals
+        seq:
+            - type: int
+        required: false
+      cal_gain_amplitude_clip_low:
+        type: float
+        desc: Lower gain amplitude clipping
+        required: true
+      cal_gain_amplitude_clip_high:
+        type: float
+        desc: Higher gain amplitude clipping
+        required: true
+      sf_thresh_pix:
+        type: int
+        desc: Source finder pixel threshold
+        required: true
+      sf_thresh_isl:
+        type: int
+        desc: Source finder island threshold
+        required: true
+
+      image_1:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA"]
+            desc: Column to image
+            required: false
+
+      extract_sources_1:
+        type: map
+        desc: Source finding parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          spi:
+            type: bool
+            desc: Extract source spectral index
+            required: false            # if not specified no spi will be determined
+          thresh_pix:
+            type: int
+            desc: Source finder pixel threshold
+            required: false
+          thresh_isl:
+            type: int
+            desc: Source finder island threshold
+            required: false
+
+      calibrate_1:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          model:
+            type: str
+            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: true
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: true
+          add_vis_model:
+            type: bool
+            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            required: false
+
+      image_2:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA"]
+            desc: Column to image
+            required: false
+
+      extract_sources_2:
+        type: map
+        desc: Source finding parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          spi:
+            type: bool
+            desc: Extract source spectral index
+            required: false            # if not specified no spi will be determined
+          thresh_pix:
+            type: int
+            desc: Source finder pixel threshold
+            required: false
+          thresh_isl:
+            type: int
+            desc: Source finder island threshold
+            required: false
+
+      calibrate_2:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          model:
+            type: str
+            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: true
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: true
+          add_vis_model:
+            type: bool
+            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            required: false
+
+      image_3:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA"]
+            desc: Column to image
+            required: false
+
+      extract_sources_3:
+        type: map
+        desc: Source finding parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          spi:
+            type: bool
+            desc: Extract source spectral index
+            required: false            # if not specified no spi will be determined
+          thresh_pix:
+            type: int
+            desc: Source finder pixel threshold
+            required: false
+          thresh_isl:
+            type: int
+            desc: Source finder island threshold
+            required: false
+
+      calibrate_3:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          model:
+            type: str
+            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: true
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: true
+          add_vis_model:
+            type: bool
+            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            required: false
+      image_4:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA"]
+            desc: Column to image
+            required: false
+      calibrate_4:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          model:
+            type: str
+            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: true
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: true
+          add_vis_model:
+            type: bool
+            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            required: false
+      image_5:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA"]
+            desc: Column to image
+            required: false             # If not specified, CORR_DATA column will be imaged
+      restore_model:
+        type: map
+        desc: Restore modelled to final calibrated residual image
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          model:
+            type: str
+            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+          clean_model: 
+            type: str
+            desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
+            required: true
+      flagging_summary:
+        type: map
+        desc: Output the flagging summary
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true

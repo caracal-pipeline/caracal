@@ -38,6 +38,7 @@ setup(name = PACKAGE_NAME,
         "meerkathi"    : [
                           "data/meerkat_files/*.rfis",
                           "data/meerkat_files/*.npy",
+                          "data/meerkat_files/*.txt",
                                ],
 
     },

@@ -102,6 +102,10 @@ flagging:
     enable: false
     quackinterval: 10
     quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
   flag_spw:
     enable: true
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway

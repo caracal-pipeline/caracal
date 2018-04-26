@@ -2,18 +2,22 @@ NAME = 'Pre-calibration flagging'
 
 import sys
 import meerkathi
+import yaml
 
 
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
+        prefixes = [pipeline.prefix]
         nobs = 1
     else:
         msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
         nobs = pipeline.nobs
     if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
     for i in range(nobs):
         msname = msnames[i]
+        prefix = prefixes[i]
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
         # not field structure dependent, since it is just based on the DC of the field
@@ -77,6 +81,34 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
+
+        if pipeline.enable_task(config, 'flag_shadow'):
+            if config['flag_shadow'].get('include_full_mk64',False):
+                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+                addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
+                with open(msinfo, 'r') as stdr: subarray = yaml.load(stdr)['ANT']['NAME']
+                idleants=open(addantennafile,'r').readlines()
+                for aa in subarray:
+                    for kk in range(len(idleants)):
+                        if aa in idleants[kk]:
+                            del(idleants[kk:kk+3])
+                            break
+                addantennafile='idleants.txt'
+                with open('{0:s}/{1:s}'.format(pipeline.input,addantennafile),'w') as ia:
+                    for aa in idleants: ia.write(aa)
+                addantennafile+=':input'
+            else: addantennafile = None
+            step = 'flag_shadow_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"         : msname,
+                  "mode"        : 'shadow',
+                  "tolerance"   : config['flag_shadow'].get('tolerance',0),
+                  "addantenna"  : addantennafile,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_spw'):
             flagspwselection=config['flag_spw']['channels']

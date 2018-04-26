@@ -384,6 +384,23 @@ mapping:
             enum: ["beg", "endb", "end", "tail"]
             required: false
 
+      flag_shadow:
+        desc: Flag shadowed antennas through the CASA task FLAGDATA.
+        type: map
+        mapping:
+          enable:
+            desc: Enables flagging of shadowed antennas.
+            type: bool
+            required: false
+          tolerance:
+            desc: Amounts of shadow allowed (in metres). Default is 0. A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
+            type: float
+            required: false
+          include_full_mk64:
+            desc: Consider all MeerKAT-64 antennas in the shadowing calculation even if only a subarray is used. Default is False.
+            type: bool
+            required: false
+
       flag_spw: 
         desc: Flag spectral windows/channels. Of course, through FLAGDATA.
         type: map

@@ -20,6 +20,7 @@ requirements = [
 'tornado>=4.0.0,<5.0.0',
 'jupyter>=1.0.0',
 'pykwalify>=1.6.0',
+'yamlordereddictloader',
 ]
 
 PACKAGE_NAME = 'meerkathi'

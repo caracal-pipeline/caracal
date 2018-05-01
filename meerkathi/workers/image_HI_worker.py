@@ -81,8 +81,7 @@ def worker(pipeline, recipe, config):
         step = 'wsclean_image_HI'
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
-        if nchans == 0:
-            nchans = 'all'
+        if nchans == 0: nchans = 'all'
         # Construct weight specification
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
@@ -97,6 +96,7 @@ def worker(pipeline, recipe, config):
                   "msname"    : mslist,
                   "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
+                  "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
                   "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   "padding"   : config['wsclean_image'].get('padding', 1.2),
@@ -176,8 +176,8 @@ def worker(pipeline, recipe, config):
         step = 'rewsclean_image_HI'
         
         spwid = config['wsclean_image'].get('spwid', 0)
-        nchans = config['wsclean_image'].get('nchans','all')
-
+        nchans = config['wsclean_image'].get('nchans',0)
+        if nchans == 0: nchans = 'all'
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
@@ -191,6 +191,7 @@ def worker(pipeline, recipe, config):
                   "msname"    : mslist,
                   "prefix"    : pipeline.prefix+'_HI',
                   "weight"    : weight,
+                  "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
                   "pol"        : config['wsclean_image'].get('pol','I'),
                   "npix"      : config['wsclean_image'].get('npix', npix),
                   "padding"   : config['wsclean_image'].get('padding', 1.2),
@@ -207,7 +208,7 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: re-Image HI'.format(step))
 
-        if config['rewsclean_image']['make_cube']:
+        if config['wsclean_image']['make_cube']:
             if not config['rewsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
             else:
                 imagetype=['image','dirty','psf','residual','model']

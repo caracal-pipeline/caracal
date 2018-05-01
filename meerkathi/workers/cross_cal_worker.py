@@ -82,7 +82,7 @@ def worker(pipeline, recipe, config):
                 if applyto in ['gcal', 'target']:
                     return get_field('gcal')
                 elif applyto == 'bpcal':
-                    return get_field('bpcal')
+                    return get_field('fcal')
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
@@ -234,7 +234,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 gaintables+=[prefix+".PREB0:output"]
                 interpolations+=['nearest']
                 step = 'pre_gain_cal_flux_{0:d}'.format(i)
-                field = get_field(config['gain_cal_flux'].get('field', 'bpcal'))
+                field = get_field(config['bp_cal'].get('field', 'bpcal'))
                 recipe.add('cab/casa_gaincal', step,
                    {
                      "vis"          : msname,

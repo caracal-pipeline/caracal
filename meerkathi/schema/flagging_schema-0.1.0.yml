@@ -81,6 +81,23 @@ mapping:
             enum: ["beg", "endb", "end", "tail"]
             required: false
 
+      flag_shadow:
+        desc: Flag shadowed antennas through the CASA task FLAGDATA.
+        type: map
+        mapping:
+          enable:
+            desc: Enables flagging of shadowed antennas.
+            type: bool
+            required: false
+          tolerance:
+            desc: Amounts of shadow allowed (in metres). Default is 0. A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
+            type: float
+            required: false
+          include_full_mk64:
+            desc: Consider all MeerKAT-64 antennas in the shadowing calculation even if only a subarray is used. Default is False.
+            type: bool
+            required: false
+
       flag_spw: 
         desc: Flag spectral windows/channels. Of course, through FLAGDATA.
         type: map
@@ -93,13 +110,17 @@ mapping:
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel", e.g. "*:856~880MHz". End channel not inclusive.
             type: str
             required: false
+          ensure_valid_selection:
+            desc: Check whether the channel selection returns any data. If it does not, FLAGDATA is not executed, preventing the pipeline from crashing. This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
+            type: bool
+            required: false
 
       flag_time: 
         desc: Flag timerange in the data using CASA FLAGDATA task.
         type: map
         mapping: 
           enable: 
-            desc: Enable flagging timeranges.
+            desc: Enabla flagging timeranges.
             type: bool
             required: false
           timerange: 

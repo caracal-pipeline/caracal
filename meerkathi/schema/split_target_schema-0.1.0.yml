@@ -1,0 +1,62 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  split_target:
+    desc: Split and average target data
+    type: map
+    mapping:
+      enable:
+        desc: Execute this worker
+        type: bool
+        required: true
+      order:
+        desc: Order of worker in queue
+        type: int
+        required: true
+      label:
+        desc: Label for new data set
+        type: str
+        required: true
+      split_target:
+        desc: Split data
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: true
+          time_average:
+            desc: Time averaging
+            type: str
+            required: true
+          freq_average:
+            desc: Frequency averaging
+            type: int
+            required: true
+      obsinfo:
+        desc: Get observation information
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: true
+          listobs:
+            desc: Run CASA listobs
+            type: bool
+            required: true
+          summary_json:
+            desc: Run MSUtils function
+            type: bool
+            required: true
+      prepms:
+        desc: Run MSUtils prepms function
+        type: map
+        mapping:
+          enable:
+            desc: Run this section
+            type: bool
+            required: true

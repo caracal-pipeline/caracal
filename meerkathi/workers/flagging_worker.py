@@ -1,14 +1,23 @@
 NAME = 'Pre-calibration flagging'
 
+import sys
+import meerkathi
+import yaml
+
+
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
+        prefixes = [pipeline.prefix]
         nobs = 1
     else:
         msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
         nobs = pipeline.nobs
+    if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
     for i in range(nobs):
         msname = msnames[i]
+        prefix = prefixes[i]
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
         # not field structure dependent, since it is just based on the DC of the field
@@ -73,17 +82,65 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
 
-        if pipeline.enable_task(config, 'flag_spw'):
-            step = 'flag_spw_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
+        if pipeline.enable_task(config, 'flag_shadow'):
+            if config['flag_shadow'].get('include_full_mk64',False):
+                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+                addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
+                with open(msinfo, 'r') as stdr: subarray = yaml.load(stdr)['ANT']['NAME']
+                idleants=open(addantennafile,'r').readlines()
+                for aa in subarray:
+                    for kk in range(len(idleants)):
+                        if aa in idleants[kk]:
+                            del(idleants[kk:kk+3])
+                            break
+                addantennafile='idleants.txt'
+                with open('{0:s}/{1:s}'.format(pipeline.input,addantennafile),'w') as ia:
+                    for aa in idleants: ia.write(aa)
+                addantennafile+=':input'
+            else: addantennafile = None
+            step = 'flag_shadow_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
                 {
-                  "vis"     : msname,
-                  "mode"    : 'manual',
-                  "spw"     : config['flag_spw']['channels'],
+                  "vis"         : msname,
+                  "mode"        : 'shadow',
+                  "tolerance"   : config['flag_shadow'].get('tolerance',0),
+                  "addantenna"  : addantennafile,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
+
+        if pipeline.enable_task(config, 'flag_spw'):
+            flagspwselection=config['flag_spw']['channels']
+            step = 'flag_spw_{0:d}'.format(i)
+            found_valid_data=0
+            if config['flag_spw'].get('ensure_valid_selection',False):
+                scalefactor,scalefactor_dict=1,{'GHz':1e+9,'MHz':1e+6,'kHz':1e+3}
+                for ff in flagspwselection.split(','):
+                    for dd in scalefactor_dict:
+                        if dd in ff: ff,scalefactor=ff.replace(dd,''),scalefactor_dict[dd]
+                    ff=ff.replace('Hz','').split(':')
+                    if len(ff)>1: spws=ff[0]
+                    else: spws='*'
+                    edges=[ii*scalefactor for ii in map(float,ff[-1].split('~'))]
+                    if spws=='*': spws=range(len(pipeline.firstchanfreq[i]))
+                    elif '~' in spws: spws=range(int(spws.split('~')[0]),int(spws.split('~')[1])+1)
+                    else: spws=[spws,]
+                    edges=[edges for uu in range(len(spws))]
+                    for ss in spws:
+                        if ss<len(pipeline.lastchanfreq[i]) and min(edges[ss][1],pipeline.lastchanfreq[i][ss])-max(edges[ss][0],pipeline.firstchanfreq[i][ss])>0: found_valid_data=1
+                if not found_valid_data: meerkathi.log.warn('The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname,flagspwselection,step))
+
+            if found_valid_data or not config['flag_spw'].get('ensure_valid_selection',False):
+                recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
+                    {
+                      "vis"     : msname,
+                      "mode"    : 'manual',
+                      "spw"     : flagspwselection,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flag_time'):
             step = 'flag_time_{0:d}'.format(i)

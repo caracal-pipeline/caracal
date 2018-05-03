@@ -9,8 +9,9 @@ cd meerkathi
 ```
 git submodule update --init --recursive 
 ```
-2. Start and activate virtual environment
+2. Start and activate virtual environment outside the meerkathi directory
 ```
+$ cd ..
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
 $ pip install pip wheel setuptools -U

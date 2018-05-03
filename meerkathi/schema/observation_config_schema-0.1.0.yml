@@ -1,0 +1,90 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  observation_config:
+    type: map
+    desc: Setup some basic observation information
+    mapping:
+      order:
+        desc: Order in queue of workers
+        type: int
+        required: true
+      obsinfo:
+        desc: Get observation information
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section 
+            type: bool
+            required: true
+          listobs:
+            desc: Run CASA listobs task to get observation information
+            type: bool
+            required: true
+          summary_json:
+            desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
+            type: bool
+            required: true
+      target:
+        desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        type: str
+        required: true
+      gcal:
+        desc: Gain calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        type: str
+        required: true
+      bpcal:
+        desc: Bandpass calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        type: str
+        required: true
+      fcal:
+        desc: Fluxscale calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        type: str
+        required: true
+      reference_antenna:
+        desc: Reference antenna. If set to 'auto' then will automatically set using metadata file (only for meerkat data)
+        type: str
+        required: true
+      nchans:
+        desc: Number of channels. If set to 0 then will automatically set using metadata file (only for meerkat data)
+        type: int
+        required: true
+      firstchanfreq:
+        desc: First frequency channel. If set to 0 then will automatically set using metadata file (only for meerkat data)
+        type: str
+        required: true
+      lastchanfreq:
+        desc: Last frequency. If set to 0 then will automatically set using metadata file (only for meerkat data)
+        type: str
+        required: true
+      chanwidth:
+        desc: Channel width. If set to 0 then will automatically set using metadata file (only for meerkat data)
+        type: str
+        required: true
+      primary_beam:
+        desc: Generate primary beam model
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this section
+            required: true
+          freq:
+            desc: A single freq, or the start, end freqs, and channel width in MHz
+            type: str
+            required: true
+          diameter:
+            desc: Diameter of the required beam
+            type: float
+            required: true
+          pixels:
+            desc: Number of pixels on one side
+            type: int
+            required: true
+          coefficients_file:
+            desc: Coeficients file name
+            type: str
+            required: true

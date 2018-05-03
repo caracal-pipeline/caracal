@@ -196,7 +196,6 @@ class MeerKATHI(object):
             reporter.generate_reports()
 
 
-
 def main(argv):
     log.info("")
 
@@ -220,6 +219,16 @@ def main(argv):
             httpd.serve_forever()
         except KeyboardInterrupt, SystemExit:
             httpd.shutdown()
+
+    if args.schema:
+        schema = {}
+        for item in args.schema:
+            _name, _schema = item.split(",")  
+            schema[_name] = _schema
+        args.schema = schema
+    else:
+        args.schema = {}
+            
 
     # User requests default config => dump and exit
     if args.get_default:

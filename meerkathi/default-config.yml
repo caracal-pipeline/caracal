@@ -11,8 +11,8 @@ general:
 
 
 get_data:
-  dataid: []                               
   enable: true
+  dataid: []                               
   order: 0
   meerkat_query_available:                              
     enable: true
@@ -26,9 +26,9 @@ get_data:
     description_matches: '.*'
     required_fields: [] 
   download:                       
+    enable: true
     download_mode: meerkat         
     data_url: ""    
-    enable: true
     reset: false     
   h5toms:             
     enable: true
@@ -45,7 +45,7 @@ get_data:
       enable: true
       tar_options: cvf
     untar:
-      enable: no
+      enable: false
       tar_options: xvf
 
 
@@ -87,6 +87,7 @@ prepare_data:
 flagging:
   enable: true
   order: 3
+  label: ''
   autoflag_autocorr_powerspectra:
     enable: false
     scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
@@ -101,9 +102,14 @@ flagging:
     enable: false
     quackinterval: 10
     quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
   flag_spw:
     enable: true
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
+    ensure_valid_selection: false
   flag_time:
     enable: false
     timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
@@ -377,14 +383,17 @@ image_HI:
     use_contsub: true
     pol: I
     spwid: 0
-    nchans: 'all' 
-    npix: [800]
-    trim: [512]
-    mgain: 1.0
+    nchans: 'all'
+    firstchan: 0
+    binchans: 1
+    npix: [1024]
+    padding: 1.2
     cell: 7
     weight: briggs
     robust: 2
-    niter: 1000000
+    taper: 0
+    niter: 10000000
+    mgain: 1.0
     automask: 5
     autothreshold: 1
     cleanborder: 0
@@ -394,9 +403,8 @@ image_HI:
   rewsclean_image:
     enable: true
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
-    niter: 0
+    niter: 10000000
     autothreshold: 0.5
-    make_cube: true
   casa_image:
     enable: false
     use_contsub: true
@@ -404,16 +412,27 @@ image_HI:
     spwid: 0
     nchans: 'all'
     startchan: 0
-    npix: [512]
+    npix: [1024]
     cell: 7
     weight: briggs
     robust: 2
     niter: 0
     threshold: '10mJy'
     port2fits: True
+  freq_to_vel:
+    enable: true
   sofia:
     enable: true
-    imager: 'wsclean'
-    threshold: 6
+    rmsMode: 'mad'
+    threshold: 4.0
+    flag: false
+    flagregion: []
+    merge: true
+    mergeX: 2
+    mergeY: 2
+    mergeZ: 3
+    minSizeX: 3
+    minSizeY: 3
+    minSizeZ: 5
   flagging_summary:
-    enable: false
+    enable: true

@@ -1,0 +1,48 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  prepare_data:
+    desc: Prepare the data for calibration and imaging.
+    type: map
+    mapping:
+      enable:
+        desc: Executes the data preparation step.
+        type: bool
+        required: true
+      order: 
+        desc: Order in queue of workers.
+        type: int
+        required: true
+      fixvis:
+        desc: Fixes the UVW coordinates through the CASA task fixvis.
+        type: map
+        mapping:
+          enable:
+            desc: Enable execution of fixvis.
+            type: bool
+            required: false
+
+      prepms:
+        desc: Add BITFLAG column to MS.
+        type: map
+        mapping: 
+          enable: 
+            desc: Enable addition of BITFLAG column to MS.
+            type: bool
+            required: false
+          add_imaging_cols:
+            desc: Adds imaging columns to the measurement set.
+            type: bool
+            required: false
+
+      add_spectral_weights: 
+        desc: Add spectral weights column to the measurement set.
+        type: map
+        mapping: 
+          enable: 
+            desc: Enables addition of spectral weights column to the measurement set.
+            type: bool
+            required: false

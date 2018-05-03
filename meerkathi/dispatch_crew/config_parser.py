@@ -7,6 +7,7 @@ import ruamel.yaml
 from pykwalify.core import Core
 import itertools
 from collections import OrderedDict
+from meerkathi.dispatch_crew import ClassHelp
 
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 
@@ -75,8 +76,11 @@ class config_parser:
             help='Label of stimela build to use',
             default=None)
 
-        add('-s', '--schema',
-            help='Name of custom schema for corresponding to configuration file')
+        add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
+            help='Path to custom schema for worker(s). Can be specified multiple times')
+
+        add('-wh', '--worker-help', metavar="WORKER_NAME",
+            help='Get help for a worker')
 
         add('-pcs', '--print-calibrator-standard',
             help='Prints auxilary calibrator standard into the log',
@@ -193,6 +197,17 @@ class config_parser:
         # Parse user commandline options, loading defaults either from the default pipeline or user-supplied pipeline
         args_bak = copy.deepcopy(args)
         args, remainder = parser.parse_known_args(args_bak)
+        file_config = {}
+        if args.schema:
+            _schema = {}
+            for item in args.schema:
+                _name, __schema = item.split(",")
+                _schema[_name] = __schema
+            args.schema = _schema
+        else:
+            args.schema = {}
+
+
         if args.config:
             config_file = args.config
             conf_msg = "Loading defaults from user configuration '{}'".format(config_file)
@@ -205,11 +220,33 @@ class config_parser:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             schema_version = tmp["schema_version"]
 
-        schema = args.schema or os.path.join(meerkathi.pckgdir, "schema", "schema-{0:s}.yml".format(schema_version))
-        meerkathi.log.info("Using schema {0:s}, which has version number {0:s}".format(schema, schema_version))
-        c = Core(source_data=tmp, schema_files=[schema])
-        file_config = c.validate(raise_exception=True)
-        del file_config["schema_version"]
+        if args.worker_help:
+            schema = os.path.join(meerkathi.pckgdir, "schema", 
+                    "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
+            with open(schema, "r") as f:
+                worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+
+            helper = ClassHelp.WorkerOptions(args.worker_help, worker_dict["mapping"][args.worker_help])
+            helper.print_worker()
+
+        for key,worker in tmp.iteritems():
+            if key=="schema_version":
+                continue
+            elif worker.get("enable", True) is False:
+                continue
+
+            _key = key.split("__")[0]
+            schema = args.schema.get(key, None) or os.path.join(meerkathi.pckgdir, 
+                  "schema", "{0:s}_schema-{1:s}.yml".format(_key, schema_version))
+            meerkathi.log.info("Validating configuration for worker [{0:s}]".format(key))
+            
+            source_data = {
+                            _key : worker,
+                            "schema_version" : schema_version,
+            }
+            c = Core(source_data=source_data, schema_files=[schema])
+            file_config[key] = c.validate(raise_exception=True)[_key]
+
         parser = cls.__primary_parser(add_help=True)
         groups = _subparser_tree(file_config, parser=parser)
         args, remainder = parser.parse_known_args(args_bak)

@@ -1,0 +1,144 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  mask_from_catalog:
+    type: map
+    desc: Builds mask to clean the dirty image from SUMSS catalog, merges the mask with a mask from a higher resolution image (for Fornax A, fomalont et al. 1998)
+    mapping:
+      enable:
+        type: bool
+        desc: Execute this worker
+        required: true
+      order: 
+        type: int
+        required: true
+        desc: Workers are executed in ascending order based on this value.      
+      centre_coord:
+        seq:
+          - type: str
+        required: true
+        desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"] 
+      catalog:
+        type: str
+        required: True
+        desc: Name of catalog to query, either NVSS or SUMSS
+      catalog_mask:
+        type: str
+        required: false
+        desc: Name of the output mask from SUMSS catalog
+      fornaxa_finalmask: 
+        type: str
+        required: false
+        desc: Name of the output mask of Fornax A          
+      final_mask:
+        type: str
+        required: false
+        desc: Name of the output final mask 
+
+
+      query_SUMSS:
+        type: map
+        desc: Query SUMSS / NVSS catalog to select fields from which extract the mask
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true  
+          width_image:  
+            type: str
+            desc: Width of the region of sky we want to mask (keep larger than dirty image)
+            required: true 
+     
+      build_beam:
+        type: map
+        desc: Build a gaussian primary beam of MeerKAT to correct the SUMSS field (image size same of dirty image)
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true        
+          img_size: 
+            type: int
+            desc: Number of pixels in the mask (must be the same as img_npix in selfcal)
+            required: true
+          cell_size:
+            type: float
+            desc: Size fo pixel in the mask (arcsecm, must be the same as img_cell in selfcal)
+            required: true
+          frequency:   
+            type: float
+            desc: Primary beam size changes with frequency, provide central frequency of dataset
+            required: true
+          copyhead:
+            type: bool
+            desc: copy header for mask from existing image
+            required: true
+          headname:
+            type: str
+            desc: filename in output directory from which copy the header
+            required: false
+            
+      make_mosaic:
+        type: map
+        desc: Mosaic the SUMSS fields (contained in input/fields) using MONTAGE 
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true        
+       
+      casa_regrid:
+        type: map
+        desc: Regrid Mosaic to size of dirty image/gaussian beam 
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true        
+     
+      pb_correction:
+        type: map
+        desc: Correct mosaic for MeerKAT primary beam 
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true    
+     
+      make_mask:
+        type: map
+        desc: Build mask from SUMSS mosaic (corrected for primary beam)
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true   
+          cutoff:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            required: false       
+     
+      fornaxa_mask:
+        type: map
+        desc: Build mask from a high resolution image of a source (contained in input/fields, called Fornaxa_vla.fits)
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true  
+          fornaxa_cutoff:
+            type: float
+            desc: Cutoff to select sources in the map with diffuse emission, corrected (or not) for the primary beam (Jy)
+            required: false         
+     
+      add_masks:
+        type: map
+        desc: Add mask of diffuse emission to mask from SUMSS
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true

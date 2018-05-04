@@ -4,6 +4,14 @@ import warnings
 import stimela.dismissable as sdm
 from astropy.io import fits
 import meerkathi
+# Modules useful to calculate common barycentric frequency grid
+from astropy.time import Time
+from astropy.coordinates import SkyCoord
+from astropy.coordinates import EarthLocation
+from astropy import constants
+import re, datetime
+import numpy as np
+
 
 def freq_to_vel(filename):
     C = 2.99792458e+8 # m/s
@@ -26,7 +34,8 @@ def freq_to_vel(filename):
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
-    prefix = pipeline.prefix
+    #prefix = pipeline.prefix
+    prefixes = pipeline.prefixes
     restfreq = config.get('restfreq','1.420405752GHz')
     npix = config.get('npix', [1024])
     if len(npix) == 1:
@@ -35,9 +44,38 @@ def worker(pipeline, recipe, config):
     weight = config.get('weight', 'natural')
     robust = config.get('robust', 0)
 
+    firstchanfreq=pipeline.firstchanfreq
+    chanw=pipeline.chanwidth
+    lastchanfreq=pipeline.lastchanfreq
+    RA=pipeline.TRA
+    Dec=pipeline.TDec
+
+    teldict={'meerkat':[21.4430,-30.7130],'gmrt':[73.9723, 19.1174],'vla':[-107.6183633,34.0783584],'wsrt':[52.908829698,6.601997592],'atca':[-30.307665436,149.550164466]}
+    tellocation=teldict[config.get('telescope','meerkat')]
+    telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
+
+    firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
+    for i, prefix in enumerate(prefixes):
+        msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, prefix)
+        with open(msinfo, 'r') as searchfile:
+            for longdatexp in searchfile:
+               if "Observed from" in longdatexp:
+                   dates   = longdatexp
+                   matches = re.findall('(\d{2}[- ](\d{2}|January|Jan|February|Feb|March|Mar|April|Apr|May|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)[\- ]\d{2,4})', dates)
+                   obsstartdate = str(matches[0][0])
+                   obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
+                   targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
+                   v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
+                   corr=np.sqrt((constants.c-v)/(constants.c+v))
+                   firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
+
+    # WARNING: it assumes a single SPW for the HI line data being processed by this worker!
+    comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
+    nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))
+
     for i, msname in enumerate(mslist):
+        prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
         if pipeline.enable_task(config, 'uvcontsub'):
-            prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
             step = 'contsub_{:d}'.format(i)
             recipe.add('cab/casa_uvcontsub', step,
                 {
@@ -74,10 +112,52 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Block out sun'.format(step))
  
-            
+
+        if pipeline.enable_task(config, 'doppler_corr'):
+           if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
+           if config['doppler_corr']['use_contsub']:
+                msname = msname+'.contsub'
+                col='data'
+                if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
+           else:
+                col='corrected'
+
+           if config['doppler_corr'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
+           else: nchan_mstr=min(nchan_dopp,config['doppler_corr'].get('nchan', nchan_dopp))
+
+           step = 'doppler_corr_{:d}'.format(i)
+           recipe.add('cab/casa_mstransform', step,
+                {
+                    "msname"    : msname,
+                    "outputvis" : msname+'.regrd',
+                    "regridms"  : config['doppler_corr'].get('regrid', True),
+                    "mode"      : config['doppler_corr'].get('mode', 'frequency'),
+                    "nchan"     : nchan_mstr,
+                    "start"     : '{0:.3f}Hz'.format(comfreq0),
+                    "width"     : '{0:.3f}Hz'.format(comchanw),
+                    "interpolation" : 'nearest',
+                    "datacolumn" : col,
+                    "restfreq"  :restfreq,
+                    "outframe"  : config['doppler_corr'].get('outframe', 'bary'),
+                    "veltype"   : config['doppler_corr'].get('veltype', 'radio'),
+                    "douvcontsub" : config['doppler_corr'].get('msuvcontsub', False),
+                    "fitspw"    : sdm.dismissable(config['doppler_corr'].get('fitspw', None)),
+                    "fitorder"  : config['doppler_corr'].get('fitorder', 1),
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Doppler tracking corrections'.format(step))
+
+
     if pipeline.enable_task(config, 'wsclean_image'):
-        if config['wsclean_image']['use_contsub']:
+        if not config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
             mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
+        elif config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.contsub.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        elif config['wsclean_image']['use_doppcorr'] and not config['wsclean_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        else:
+            mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
         step = 'wsclean_image_HI'
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
@@ -170,9 +250,16 @@ def worker(pipeline, recipe, config):
         HIclean_mask=config['rewsclean_image'].get('fitsmask', 'sofia_mask') 
         if HIclean_mask=='sofia_mask':
           HIclean_mask=pipeline.prefix+'_HI.image_clean_mask.fits:output' 
-              
-        if config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]            
+
+        if not config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
+        elif config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.contsub.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        elif config['wsclean_image']['use_doppcorr'] and not config['wsclean_image']['use_contsub']:
+            mslist = ['{0:s}-{1:s}.ms.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        else:
+            mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
+
         step = 'rewsclean_image_HI'
         
         spwid = config['wsclean_image'].get('spwid', 0)
@@ -212,7 +299,7 @@ def worker(pipeline, recipe, config):
             if not config['rewsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
             else:
                 imagetype=['image','dirty','psf','residual','model']
-                if config['rewsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
+                if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
             for mm in imagetype:
                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                 recipe.add('cab/fitstool', step,

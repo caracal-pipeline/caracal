@@ -57,7 +57,7 @@ mapping:
           combine:
             type: str
             desc: Parameter to combine different data axis for solving.
-            enum: ["","obs", "scan", "spw", "field"]
+            enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
           solint:
             type: str
@@ -100,7 +100,7 @@ mapping:
           combine:
             type: str
             desc: Parameter to combine different data axis for solving.
-            enum: ["","obs", "scan", "spw", "field"]
+            enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
           field: 
             type: str

@@ -82,6 +82,56 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
+
+      doppler_corr:
+        desc: Perform doppler tracking corrections
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment doppler correction (yes/no). Default is yes.
+            type: bool
+            required: false
+          use_contsub:
+            desc: Execute doppler corrections on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            type: bool
+            required: false
+          telescope:
+            desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
+            enum: ['meerkat','vla','gmrt', 'wsrt', 'atca']
+            type: str
+            required: false
+          regrid:
+            desc: Transform channel labels and visibilities to a different spectral reference frame. default is True
+            type: bool
+            required: false
+          mode:
+            desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
+            type: str
+            required: false
+          nchan:
+            desc: Number of channels to regrid, 'all' is for all channels or an integer number. Default is 'all'
+            type: text
+            required: false
+          outframe:
+            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'. Defaut is 'BARY'
+            type: str
+            required: false
+          veltype:
+            desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
+            type: str
+            required: false
+          msuvcontsub:
+            desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform. Default is false
+            type: bool
+            required: false
+          fitspw:
+            desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
+            type: str
+            required: false
+          fitorder:
+            desc: Polynomial order for the continuum fits
+            type: int
+            required: false
                  
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
@@ -93,6 +143,10 @@ mapping:
             required: false
           use_contsub:
             desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            type: bool
+            required: false
+          use_doppcorr:
+            desc: Execute wsclean_image on doppler tracking corrected data. Default is yes
             type: bool
             required: false
           pol:

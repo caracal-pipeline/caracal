@@ -251,7 +251,6 @@ inspect_data:
     avgtime: '90'
     avgchannel: '32'
 
-
 split_target:
   enable: true
   order: 9
@@ -266,6 +265,40 @@ split_target:
     summary_json: true
   prepms:
     enable: false
+
+mask_from_catalog:
+  enable: yes
+  order: 10
+  centre_coord: ['03:18:0.000', '-37:27:0.000']
+  catalog: 'SUMSS'
+  catalog_mask: 'sumss_mask.fits'
+  fornaxa_finalmask: 'fornaxa_mask.fits'
+  final_mask: 'sumss_fornaxa_mask.fits'
+  query_SUMSS:
+    enable: yes
+    width_image: '4d'
+  build_beam:
+    enable: yes
+    img_size: 3500      #must be the same as  im_npix in selfcal worker
+    cell_size: 2.6         #this will change and we will use the self_cal_3GC keywords
+    frequency: 1.37031054688e9
+    copyhead : True
+    headname : 'fa1_1-MFS-image.fits'
+  make_mosaic:
+    enable: yes
+  casa_regrid:
+    enable: yes
+  pb_correction:
+    enable:  yes
+  make_mask:
+    enable: yes
+    cutoff: 1.e-3
+  fornaxa_mask:
+    enable: yes
+    fornaxa_cutoff: 1.e-3
+  add_masks:
+    enable: yes
+
 
 
 self_cal:

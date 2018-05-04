@@ -89,14 +89,14 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'sunblocker'):
-            if config['sunblocker']['use_contsub']:
-                msname = msname+'.contsub'
+            if config['sunblocker']['use_contsub']: msnamesb = msname+'.contsub'
+            else: msnamesb = msname
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step, 
                 {
                     "command"   : "phazer",
-                    "inset"     : msname,
-                    "outset"    : msname,
+                    "inset"     : msnamesb,
+                    "outset"    : msnamesb,
                     "imsize"    : config['sunblocker'].get('imsize', max(npix)),
                     "cell"      : config['sunblocker'].get('cell', cell),
                     "pol"       : 'i',
@@ -116,10 +116,11 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'doppler_corr'):
            if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
            if config['doppler_corr']['use_contsub']:
-                msname = msname+'.contsub'
+                msnamedc = msname+'.contsub'
                 col='data'
                 if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
            else:
+                msnamedc = msname
                 col='corrected'
 
            if config['doppler_corr'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
@@ -128,8 +129,8 @@ def worker(pipeline, recipe, config):
            step = 'doppler_corr_{:d}'.format(i)
            recipe.add('cab/casa_mstransform', step,
                 {
-                    "msname"    : msname,
-                    "outputvis" : msname+'.regrd',
+                    "msname"    : msnamedc,
+                    "outputvis" : msnamedc+'.regrd',
                     "regridms"  : config['doppler_corr'].get('regrid', True),
                     "mode"      : config['doppler_corr'].get('mode', 'frequency'),
                     "nchan"     : nchan_mstr,

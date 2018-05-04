@@ -44,16 +44,15 @@ def worker(pipeline, recipe, config):
     weight = config.get('weight', 'natural')
     robust = config.get('robust', 0)
 
+    # Find common barycentric frequency grid for all input .MS
     firstchanfreq=pipeline.firstchanfreq
     chanw=pipeline.chanwidth
     lastchanfreq=pipeline.lastchanfreq
     RA=pipeline.TRA
     Dec=pipeline.TDec
-
     teldict={'meerkat':[21.4430,-30.7130],'gmrt':[73.9723, 19.1174],'vla':[-107.6183633,34.0783584],'wsrt':[52.908829698,6.601997592],'atca':[-30.307665436,149.550164466]}
     tellocation=teldict[config.get('telescope','meerkat')]
     telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
-
     firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, prefix)
@@ -68,10 +67,10 @@ def worker(pipeline, recipe, config):
                    v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
                    corr=np.sqrt((constants.c-v)/(constants.c+v))
                    firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
-
-    # WARNING: it assumes a single SPW for the HI line data being processed by this worker!
+    # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
     comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
     nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))
+    meerkathi.log.info('Found common barycentric frequency grid for all input .MS: {0:d} channels starting at {1:.3f} Hz and with channel width {2:.3f} Hz.'.format(nchan_dopp,comfreq0,comchanw))
 
     for i, msname in enumerate(mslist):
         prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
@@ -163,15 +162,17 @@ def worker(pipeline, recipe, config):
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0: nchans = 'all'
+        if nchans=='all':
+          if config['wsclean_image']['use_doppcorr']: nchans=nchan_dopp
+          else: nchans=pipeline.nchans[0][spwid]
+        firstchan = config['wsclean_image'].get('firstchan', 0)
+        binchans  = config['wsclean_image'].get('binchans', 1)
+        channelrange = [firstchan, firstchan+nchans*binchans]
         # Construct weight specification
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
-        if nchans=='all': nchans=pipeline.nchans[0][spwid]
-        firstchan = config['wsclean_image'].get('firstchan', 0)
-        binchans  = config['wsclean_image'].get('binchans', 1)
-        channelrange = [firstchan, firstchan+nchans*binchans]
         recipe.add('cab/wsclean', step,
               {                       
                   "msname"    : mslist,
@@ -266,14 +267,16 @@ def worker(pipeline, recipe, config):
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0: nchans = 'all'
+        if nchans=='all':
+          if config['wsclean_image']['use_doppcorr']: nchans=nchan_dopp
+          else: nchans=pipeline.nchans[0][spwid]
+        firstchan = config['wsclean_image'].get('firstchan', 0)
+        binchans  = config['wsclean_image'].get('binchans', 1)
+        channelrange = [firstchan, firstchan+nchans*binchans]
         if config['wsclean_image'].get('weight', 'natural') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
-        if nchans=='all': nchans=pipeline.nchans[0][spwid]
-        firstchan = config['wsclean_image'].get('firstchan', 0)
-        binchans  = config['wsclean_image'].get('binchans', 1)
-        channelrange = [firstchan, firstchan+nchans*binchans]
         recipe.add('cab/wsclean', step,
             {                       
                   "msname"    : mslist,

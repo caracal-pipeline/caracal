@@ -2,6 +2,7 @@ import meerkathi.dispatch_crew.utils as utils
 import yaml
 import meerkathi
 import sys
+import numpy as np
 
 NAME = 'Automatically catergorize observed fields'
 
@@ -71,6 +72,9 @@ def worker(pipeline, recipe, config):
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
 
+    setattr(pipeline, 'TRA', [None]*pipeline.nobs)
+    setattr(pipeline, 'TDec', [None]*pipeline.nobs)
+
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
     pipeline.dish_diameter = config.get('dish_diameter', 13.5)
@@ -80,7 +84,7 @@ def worker(pipeline, recipe, config):
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}/{3:s}-obsinfo.json'.format(pipeline.data_path, pipeline.dataid[i],pipeline.output,prefix))
+        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
 
         # get reference antenna
         if config.get('reference_antenna', 'auto') == 'auto':
@@ -105,6 +109,17 @@ def worker(pipeline, recipe, config):
             pipeline.lastchanfreq[i]  = lastchanfreq
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
+
+        # Get the target RA and Dec
+        with open(msinfo, 'r') as stdr:
+            targetinfo = yaml.load(stdr)['FIELD']
+            targetpos = targetinfo['REFERENCE_DIR']
+            targetint = targetinfo['INTENTS']
+            targetpos=targetpos[targetint.index('TARGET')][0]
+            TRA  = targetpos[0]/np.pi*180
+            TDec = targetpos[1]/np.pi*180
+            pipeline.TRA[i]  = TRA
+            pipeline.TDec[i] = TDec
 
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target'.split()]:

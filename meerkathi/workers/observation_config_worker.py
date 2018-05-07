@@ -110,17 +110,6 @@ def worker(pipeline, recipe, config):
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
 
-        # Get the target RA and Dec
-        with open(msinfo, 'r') as stdr:
-            targetinfo = yaml.load(stdr)['FIELD']
-            targetpos = targetinfo['REFERENCE_DIR']
-            targetint = targetinfo['INTENTS']
-            targetpos=targetpos[targetint.index('TARGET')][0]
-            TRA  = targetpos[0]/np.pi*180
-            TDec = targetpos[1]/np.pi*180
-            pipeline.TRA[i]  = TRA
-            pipeline.TDec[i] = TDec
-
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target'.split()]:
             intents = utils.categorize_fields(msinfo)
@@ -173,6 +162,16 @@ def worker(pipeline, recipe, config):
             for target in targets:
                 tobs = utils.field_observation_length(msinfo, target)/60.0
                 meerkathi.log.info('Target field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
+
+        # Get the target RA and Dec
+        with open(msinfo, 'r') as stdr:
+            # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
+            # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[0] only
+            targetinfo = yaml.load(stdr)['FIELD']
+            targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(targets[0])][0]
+            pipeline.TRA[i]  = targetpos[0]/np.pi*180
+            pipeline.TDec[i] = targetpos[1]/np.pi*180
+            meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
         for item in 'fcal bpcal gcal target'.split():

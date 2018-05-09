@@ -1,0 +1,400 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  ss:
+    type: map
+    desc: Perform Self calibration on the data
+    mapping:
+      enable:
+        type: bool
+        desc: Execute this segment
+        required: true
+      label:
+        type: str
+        desc: Label to tag the output files
+        required: true
+      order:
+        type: int
+        desc: Workers are executed in ascedning order based on this value
+        required: true
+      spwid:
+        type: int
+        desc: Provide spectral window id
+        required: true
+      img_npix:
+        type: int
+        desc: Number of pixels to create an image (i.e. at very least 50% padding for alias protection)
+        required: true
+      img_trim:
+        type: int
+        desc: Number of pixels in output image
+        required: true
+      img_mgain:
+        type: float
+        desc: Image CLEANing gain
+        required: true
+      img_cell:
+        type: float
+        desc: Image pixel size (arcsec)
+        required: true
+      img_weight:
+        type: str
+        enum: ["briggs", "uniform", "natural"]
+        desc: Image weighting type
+        required: true
+      img_robust:
+        type: float
+        desc: Briggs robust value
+        required: false
+      img_niter:
+        type: int
+        desc: Number of cleaning iterations
+        required: true
+      img_auto_threshold:
+        type: float
+        desc: Stopping threshold for cleaning
+        required: true
+      img_cleanborder:
+        type: int
+        desc: Clean border
+        required: false
+      img_nchans:
+        type: int
+        desc: Number of channesls in output image
+        required: false
+      img_joinchannels:
+        type: bool
+        desc: Join channels to create MFS image
+        required: true
+      img_fit_spectral_pol:
+        type: bool
+        desc: Fit a polynomial over frequency to each clean component
+        required: false
+      img_pol:
+        type: str
+        desc: Stokes image to create
+        required: true
+      cal_Gsols:
+        desc: Calibration solution intervals
+        seq:
+            - type: int
+        required: false
+      cal_gain_amplitude_clip_low:
+        type: float
+        desc: Lower gain amplitude clipping
+        required: true
+      cal_gain_amplitude_clip_high:
+        type: float
+        desc: Higher gain amplitude clipping
+        required: true
+      cal_time_chunk:
+        type: float
+        desc: number of visibilities along time axis
+        required: true
+
+      image_1:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA", "MODEL_DATA"]
+            desc: Column to image
+            required: false
+          mask_from_sky:
+            type: bool
+            desc: switch on cleaning within mask from fits file
+            required: false
+          fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: true
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false          
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false    
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false     
+          no_update_model:
+            type: bool
+            desc: do not update column MODEL_DATA after wsclean
+            required: false                
+          minuvw_m:
+            type: int
+            desc: exclude short baselines [m]
+            required: false
+
+      image_11:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA", "MODEL_DATA"]
+            desc: Column to image
+            required: false
+          mask_from_sky:
+            type: bool
+            desc: switch on cleaning within mask from fits file
+            required: false
+          fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: true
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false          
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false    
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false     
+          no_update_model:
+            type: bool
+            desc: do not update column MODEL_DATA after wsclean
+            required: false                
+          minuvw_m:
+            type: int
+            desc: exclude short baselines [m]
+            required: false
+
+      calibrate_1:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: false
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: false
+          add_vis_model:
+            type: bool
+            desc: Calibrate using MODEL_DATA column
+            required: false
+
+      image_2:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA", "MODEL_DATA"]
+            desc: Column to image
+            required: false
+          mask_from_sky:
+            type: bool
+            desc: switch on cleaning within mask from fits file
+            required: false
+          fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: true
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false          
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false    
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false     
+          no_update_model:
+            type: bool
+            desc: do not update column MODEL_DATA after wsclean
+            required: false                
+          minuvw_m:
+            type: int
+            desc: exclude short baselines [m]
+            required: false
+
+      calibrate_2:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: false
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: false
+          add_vis_model:
+            type: bool
+            desc: Calibrate using MODEL_DATA column
+            required: false
+
+      image_3:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA", "MODEL_DATA"]
+            desc: Column to image
+            required: false
+          mask_from_sky:
+            type: bool
+            desc: switch on cleaning within mask from fits file
+            required: false
+          fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: true
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false          
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false    
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false     
+          no_update_model:
+            type: bool
+            desc: do not update column MODEL_DATA after wsclean
+            required: false                
+          minuvw_m:
+            type: int
+            desc: exclude short baselines [m]
+            required: false
+
+      calibrate_3:
+        type: map
+        desc: Calibration parameters
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          output_data:
+            type: str
+            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            desc: Data to output after calibration
+            required: false
+          gain_matrix_type:
+            type: str
+            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            desc: Gain matrix type
+            required: false
+          add_vis_model:
+            type: bool
+            desc: Calibrate using MODEL_DATA column
+            required: false
+
+      image_4:
+        type: map
+        desc: Imaging parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: true
+          column:
+            type: str
+            enum: ["DATA", "CORRECTED_DATA", "MODEL_DATA"]
+            desc: Column to image
+            required: false
+          mask_from_sky:
+            type: bool
+            desc: switch on cleaning within mask from fits file
+            required: false
+          fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: true
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false          
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false    
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false     
+          no_update_model:
+            type: bool
+            desc: do not update column MODEL_DATA after wsclean
+            required: false                
+          minuvw_m:
+            type: int
+            desc: exclude short baselines [m]
+            required: false

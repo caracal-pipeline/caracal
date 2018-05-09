@@ -60,9 +60,11 @@ def worker(pipeline, recipe, config):
 			hdr['NAXIS']   = 2
 			hdr.set('NAXIS1',  imsize, after='NAXIS')
 			hdr.set('NAXIS2',  imsize, after='NAXIS1')
-	
-		del hdr['CUNIT1']
-		del hdr['CUNIT2']
+		
+		if 'CUNIT1' in hdr:
+			del hdr['CUNIT1']
+		if 'CUNIT2' in hdr:
+			del hdr['CUNIT2']
 		
 		pb_fwhm = 1.02*(2.99792458E8)/obs_freq/13.5/np.pi*180.
 		pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
@@ -136,9 +138,13 @@ def worker(pipeline, recipe, config):
 		elif copy_head == False:
 
 			head = pblist[0].header
-			del head['ORIGIN']
-			del head['CUNIT1']
-			del head['CUNIT2']
+
+			if 'ORIGIN' in head:
+				del head['ORIGIN']
+			if 'CUNIT1' in head:
+				del head['CUNIT1']
+			if 'CUNIT2' in head:
+				del head['CUNIT2']
 
 		fits.writeto(filename,dat,head,overwrite=True)
 

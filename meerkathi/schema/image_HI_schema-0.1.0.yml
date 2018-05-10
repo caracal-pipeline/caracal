@@ -42,6 +42,14 @@ mapping:
         desc: Default robust parameter in case of Briggs weighting. Default is 2.
         type: float
         required: false
+      subtractmodelcol:
+        desc: Replace the column CORRECTED_DATA with the difference CORRECTED_DATA - MODEL_DATA. This is useful for continuum subtraction as it enables the subtraction of the most recent continuum clean model.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment subtractmodelcol. Default is False.
+            type: bool
+            required: false
       uvcontsub:
         desc: Perform a continuum subtraction on the visibilities by fitting a fitorderth-order polynomial to xx and yy correlations at each time step.
         type: map

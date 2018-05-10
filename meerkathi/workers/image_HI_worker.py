@@ -69,11 +69,28 @@ def worker(pipeline, recipe, config):
                    firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
     # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
     comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
-    nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))
+    nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
     meerkathi.log.info('Found common barycentric frequency grid for all input .MS: {0:d} channels starting at {1:.3f} Hz and with channel width {2:.3f} Hz.'.format(nchan_dopp,comfreq0,comchanw))
 
     for i, msname in enumerate(mslist):
         prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
+
+        if pipeline.enable_task(config, 'subtractmodelcol'):
+            step = 'modelsub_{:d}'.format(i)
+            recipe.add('cab/msutils', step,
+                {
+                    "command"  : 'sumcols',
+                    "msname"   : msname,
+                    "subtract" : True,
+                    "col1"     : 'CORRECTED_DATA',
+                    "col2"     : 'MODEL_DATA',
+                    "column"   : 'CORRECTED_DATA'
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Subtract model column'.format(step))
+
+
         if pipeline.enable_task(config, 'uvcontsub'):
             step = 'contsub_{:d}'.format(i)
             recipe.add('cab/casa_uvcontsub', step,

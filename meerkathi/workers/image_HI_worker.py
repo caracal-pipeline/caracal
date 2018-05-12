@@ -11,6 +11,7 @@ from astropy.coordinates import EarthLocation
 from astropy import constants
 import re, datetime
 import numpy as np
+import yaml
 
 
 def freq_to_vel(filename):
@@ -34,7 +35,7 @@ def freq_to_vel(filename):
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
-    #prefix = pipeline.prefix
+    pipeline.prefixes = ['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq','1.420405752GHz')
     npix = config.get('npix', [1024])
@@ -43,6 +44,25 @@ def worker(pipeline, recipe, config):
     cell = config.get('cell', 7)
     weight = config.get('weight', 'natural')
     robust = config.get('robust', 0)
+
+    # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
+    for i, prefix in enumerate(prefixes):
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        with open(msinfo, 'r') as stdr:
+            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            pipeline.nchans[i] = spw
+        meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
+
+        # Get first chan, last chan, chan width
+        with open(msinfo, 'r') as stdr:
+            chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+            firstchanfreq = [ss[0] for ss in chfr]
+            lastchanfreq  = [ss[-1] for ss in chfr]
+            chanwidth     = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
+            pipeline.firstchanfreq[i] = firstchanfreq
+            pipeline.lastchanfreq[i]  = lastchanfreq
+            pipeline.chanwidth[i] = chanwidth
+            meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
 
     # Find common barycentric frequency grid for all input .MS
     firstchanfreq=pipeline.firstchanfreq
@@ -130,20 +150,20 @@ def worker(pipeline, recipe, config):
  
 
         if pipeline.enable_task(config, 'doppler_corr'):
-           if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
-           if config['doppler_corr']['use_contsub']:
+            if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
+            if config['doppler_corr']['use_contsub']:
                 msnamedc = msname+'.contsub'
                 col='data'
                 if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
-           else:
+            else:
                 msnamedc = msname
                 col='corrected'
 
-           if config['doppler_corr'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
-           else: nchan_mstr=min(nchan_dopp,config['doppler_corr'].get('nchan', nchan_dopp))
+            if config['doppler_corr'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
+            else: nchan_mstr=min(nchan_dopp,config['doppler_corr'].get('nchan', nchan_dopp))
 
-           step = 'doppler_corr_{:d}'.format(i)
-           recipe.add('cab/casa_mstransform', step,
+            step = 'doppler_corr_{:d}'.format(i)
+            recipe.add('cab/casa_mstransform', step,
                 {
                     "msname"    : msnamedc,
                     "outputvis" : msnamedc+'.regrd',

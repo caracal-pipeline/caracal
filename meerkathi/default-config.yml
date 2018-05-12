@@ -262,7 +262,7 @@ split_target:
     freq_average: 1
   obsinfo: 
     enable: true
-    listobs: false
+    listobs: true
     summary_json: true
   prepms:
     enable: false
@@ -276,7 +276,7 @@ self_cal:
   calibrate_with: meqtrees
   spwid: 0
   # Imaging settings
-  img_npix: 8192
+  img_npix: 5540
   img_trim: 5540
   img_mgain: 0.9
   img_cell: 1.3

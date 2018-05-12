@@ -21,6 +21,7 @@ requirements = [
 'jupyter>=1.0.0',
 'pykwalify>=1.6.0',
 'yamlordereddictloader',
+'astropy',
 ]
 
 PACKAGE_NAME = 'meerkathi'

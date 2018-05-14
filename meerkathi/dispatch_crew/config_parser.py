@@ -89,9 +89,6 @@ class config_parser:
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
             help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
 
-        add('-ce', '--config-editor', action='store_true',
-            help='Start the interactive configuration editor (requires X session with decent [ie. firefox] webbrowser installed).')
-
         add('-rv', '--report-viewer', action='store_true',
             help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
 

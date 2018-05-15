@@ -35,7 +35,7 @@ import ruamel.yaml
 import json
 from meerkathi.dispatch_crew.reporter import reporter as mrr
 import subprocess
-
+from meerkathi.dispatch_crew import worker_help
 
 def create_logger():
     """ Create a console logger """
@@ -197,6 +197,39 @@ class MeerKATHI(object):
 
 
 def main(argv):
+    args = cp(argv).args
+    arg_groups = cp(argv).arg_groups
+
+    def __host():
+        httpd = HTTPServer(("", port), hndl)
+        os.chdir(web_dir)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt, SystemExit:
+            httpd.shutdown()
+
+    if args.schema:
+        schema = {}
+        for item in args.schema:
+            _name, _schema = item.split(",")
+            schema[_name] = _schema
+        args.schema = schema
+    else:
+        args.schema = {}
+
+    with open(args.config, 'r') as f:
+        tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+        schema_version = tmp["schema_version"]
+
+    if args.worker_help:
+        schema = os.path.join(pckgdir, "schema",
+                "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
+        with open(schema, "r") as f:
+            worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+
+        helper = worker_help.worker_options(args.worker_help, worker_dict["mapping"][args.worker_help])
+        helper.print_worker()
+
     log.info("")
 
     log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
@@ -210,25 +243,6 @@ def main(argv):
     log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
     log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
     log.info("")
-    args = cp(argv).args
-    arg_groups = cp(argv).arg_groups
-    def __host():
-        httpd = HTTPServer(("", port), hndl)
-        os.chdir(web_dir)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt, SystemExit:
-            httpd.shutdown()
-
-    if args.schema:
-        schema = {}
-        for item in args.schema:
-            _name, _schema = item.split(",")  
-            schema[_name] = _schema
-        args.schema = schema
-    else:
-        args.schema = {}
-            
 
     # User requests default config => dump and exit
     if args.get_default:

@@ -411,7 +411,7 @@ image_HI:
     automask: 5
     autothreshold: 1
     cleanborder: 0
-    no-update-mod: true
+    no_update_mod: true
     make_cube: true
     make_mask: true
   rewsclean_image:

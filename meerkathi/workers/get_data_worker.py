@@ -156,6 +156,7 @@ def worker(pipeline, recipe, config):
                     "no-auto"       : False,
                     "tar"           : True,
                     "model-data"    : True,
+                    "verbose"       : False,
                     "channel-range" : sdm.dismissable(config['h5toms'].get('channel_range', None)),
                     "full-pol"      : config['h5toms'].get('full_pol', False),
                 },

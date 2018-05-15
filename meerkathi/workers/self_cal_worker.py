@@ -460,13 +460,13 @@ def worker(pipeline, recipe, config):
     # selfcal loop
     if pipeline.enable_task(config, 'image_1'):
         image(1)
-    
+
     if pipeline.enable_task(config, 'extract_sources_1'):
         extract_sources(1)
 
     if pipeline.enable_task(config, 'calibrate_1'):
         calibrate(1)
-        
+
     if pipeline.enable_task(config, 'image_2'):
         image(2)
 
@@ -505,7 +505,7 @@ def worker(pipeline, recipe, config):
 
             step = 'combine_models_{0:s}_{1:s}'.format(*mm)
             recipe.add('cab/tigger_convert', step,
-                {                   
+                {
                     "input-skymodel"    : models[0],
                     "append"    : models[1],
                     "output-skymodel"   : final,
@@ -516,13 +516,26 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Combined models'.format(step))
 
-        else:
-            num = int(model)
+        elif isinstance(num, str) and num.isdigit():
+            inputlsm = '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num)
             final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
+            step = 'combine_models_{0:s}'.format(num) 
+            recipe.add('cab/tigger_convert', step,
+                {
+                    "input-skymodel"    : '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num),
+                    "output-skymodel"   : final,
+                    "rename"  : True,
+                    "force"   : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Combined models'.format(step))
+        else:
+            raise ValueError("restore_model_model should be integer-valued string or indicate which models to be appended, eg. 2+3")
 
         if config['restore_model'].get('clean_model', None):
             num = int(config['restore_model'].get('clean_model', None))
-       
+
             conv_model = prefix + '-convolved_model.fits:output'
             recipe.add('cab/fitstool', step,
                 {

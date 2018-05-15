@@ -154,7 +154,7 @@ class config_parser:
                                              default=opt_default,
                                              nargs=("+" if opt_required else "*") if is_list else "?",
                                              metavar=meta,
-                                             type=_nonetype,
+                                             type=lambda x: _nonetype(x, opt_type),
                                              help=opt_desc + " [%s default: %s]" % ("list:%s" % opt_type if is_list else opt_type, str(opt_default)))
             else:
                 raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))

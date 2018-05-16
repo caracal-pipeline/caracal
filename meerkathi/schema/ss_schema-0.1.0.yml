@@ -132,7 +132,10 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
-            required: false     
+            required: false 
+          fit_spectral_pol:
+            type: int
+            desc: number of elements of polynomial to fit to MODEL_DATA
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean
@@ -179,7 +182,10 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
-            required: false     
+            required: false 
+          fit_spectral_pol:
+            type: int
+            desc: number of elements of polynomial to fit to MODEL_DATA    
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean
@@ -249,7 +255,10 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
-            required: false     
+            required: false   
+          fit_spectral_pol:
+            type: int
+            desc: number of elements of polynomial to fit to MODEL_DATA  
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean
@@ -319,7 +328,10 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
-            required: false     
+            required: false    
+          fit_spectral_pol:
+            type: int
+            desc: number of elements of polynomial to fit to MODEL_DATA 
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean
@@ -389,7 +401,10 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
-            required: false     
+            required: false 
+          fit_spectral_pol:
+            type: int
+            desc: number of elements of polynomial to fit to MODEL_DATA    
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean

@@ -409,9 +409,22 @@ image_HI:
     enable: true
     use_contsub: true
     threshold: 4
+  doppler_corr:
+    enable: true
+    use_contsub: true
+    telescope: meerkat
+    regrid: true
+    mode: 'frequency'
+    nchan: 'all'
+    outframe: 'bary' 
+    veltype: 'radio'
+    msuvcontsub: false
+    fitspw: null 
+    fitorder: 1
   wsclean_image:
     enable: true
     use_contsub: true
+    use_doppcorr: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -433,7 +446,7 @@ image_HI:
     make_mask: true
   rewsclean_image:
     enable: true
-    fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
+    fitsmask: fa2_p1_nosub_HI.image_clean_mask.fits # or own mask '<mask-name>.fits:output' 
     niter: 10000000
     autothreshold: 0.5
   casa_image:
@@ -466,4 +479,4 @@ image_HI:
     minSizeY: 3
     minSizeZ: 5
   flagging_summary:
-    enable: true
+    enable: true 

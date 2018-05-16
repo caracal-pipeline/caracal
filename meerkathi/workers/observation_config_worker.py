@@ -2,6 +2,7 @@ import meerkathi.dispatch_crew.utils as utils
 import yaml
 import meerkathi
 import sys
+import numpy as np
 
 NAME = 'Automatically catergorize observed fields'
 
@@ -71,6 +72,9 @@ def worker(pipeline, recipe, config):
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
 
+    setattr(pipeline, 'TRA', [None]*pipeline.nobs)
+    setattr(pipeline, 'TDec', [None]*pipeline.nobs)
+
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
     pipeline.dish_diameter = config.get('dish_diameter', 13.5)
@@ -80,7 +84,7 @@ def worker(pipeline, recipe, config):
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}/{3:s}-obsinfo.json'.format(pipeline.data_path, pipeline.dataid[i],pipeline.output,prefix))
+        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
 
         # get reference antenna
         if config.get('reference_antenna', 'auto') == 'auto':
@@ -159,6 +163,16 @@ def worker(pipeline, recipe, config):
                 tobs = utils.field_observation_length(msinfo, target)/60.0
                 meerkathi.log.info('Target field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
 
+        # Get the target RA and Dec
+        with open(msinfo, 'r') as stdr:
+            # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
+            # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[0] only
+            targetinfo = yaml.load(stdr)['FIELD']
+            targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(targets[0])][0]
+            pipeline.TRA[i]  = targetpos[0]/np.pi*180
+            pipeline.TDec[i] = targetpos[1]/np.pi*180
+            meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
+
         # update ids for all fields now that auto fields were selected
         for item in 'fcal bpcal gcal target'.split():
             flds =  getattr(pipeline, item)[i].split(',') \
@@ -188,3 +202,4 @@ def worker(pipeline, recipe, config):
                                                          \\ m-axis  - {2:s}'.format(pipeline.primary_beam,
                                                                                     pipeline.primary_beam_l_axis,
                                                                                     pipeline.primary_beam_m_axis))
+

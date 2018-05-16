@@ -35,7 +35,7 @@ import ruamel.yaml
 import json
 from meerkathi.dispatch_crew.reporter import reporter as mrr
 import subprocess
-
+from meerkathi.dispatch_crew import worker_help
 
 def create_logger():
     """ Create a console logger """
@@ -197,6 +197,39 @@ class MeerKATHI(object):
 
 
 def main(argv):
+    args = cp(argv).args
+    arg_groups = cp(argv).arg_groups
+
+    def __host():
+        httpd = HTTPServer(("", port), hndl)
+        os.chdir(web_dir)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt, SystemExit:
+            httpd.shutdown()
+
+    if args.schema:
+        schema = {}
+        for item in args.schema:
+            _name, _schema = item.split(",")
+            schema[_name] = _schema
+        args.schema = schema
+    else:
+        args.schema = {}
+
+    with open(args.config, 'r') as f:
+        tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+        schema_version = tmp["schema_version"]
+
+    if args.worker_help:
+        schema = os.path.join(pckgdir, "schema",
+                "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
+        with open(schema, "r") as f:
+            worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+
+        helper = worker_help.worker_options(args.worker_help, worker_dict["mapping"][args.worker_help])
+        helper.print_worker()
+
     log.info("")
 
     log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
@@ -210,50 +243,11 @@ def main(argv):
     log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
     log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
     log.info("")
-    args = cp(argv).args
-    arg_groups = cp(argv).arg_groups
-    def __host():
-        httpd = HTTPServer(("", port), hndl)
-        os.chdir(web_dir)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt, SystemExit:
-            httpd.shutdown()
-
-    if args.schema:
-        schema = {}
-        for item in args.schema:
-            _name, _schema = item.split(",")  
-            schema[_name] = _schema
-        args.schema = schema
-    else:
-        args.schema = {}
-            
 
     # User requests default config => dump and exit
     if args.get_default:
         log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(args.get_default))
         os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
-        return
-    elif args.config_editor:
-        log.info("Entering interactive mode as requested: MeerKATHI configuration editor")
-        port = args.interactive_port
-        file_abs = args.config
-        with file(file_abs, 'r') as f:
-            cfg_txt = json.dumps(ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1)))
-        web_dir = os.path.join(os.path.dirname(scripts.__file__), 'conf_helper')
-        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
-                 (port, web_dir))
-        log.info("Press Ctrl-C to exit")
-        hndl = SimpleHTTPRequestHandler
-
-        wt = Process(target = __host)
-        try:
-            wt.start()
-            webbrowser.open("http://localhost:%d/index.html?%s" % (port, urlencode({"filetxt":cfg_txt})))
-            wt.join()
-        except (KeyboardInterrupt, SystemExit):
-            log.info("Interrupt received - shutting down web server. Goodbye!")
         return
     elif args.report_viewer:
         log.info("Entering interactive mode as requested: MEERKATHI report viewer")

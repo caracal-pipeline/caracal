@@ -231,7 +231,7 @@ mapping:
             desc: If set to true the output is a sofia mask, if set to false no sofia mask is made. Default is yes.
             type: bool
             required: false
-          no-update-mod:
+          no_update_mod:
             desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
             type: bool
             required: false

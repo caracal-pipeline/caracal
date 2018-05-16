@@ -1,3 +1,0 @@
-[submodule "meerkathi/scripts/conf_helper/javascript/js-yaml"]
-	path = meerkathi/scripts/conf_helper/javascript/js-yaml
-	url = https://github.com/nodeca/js-yaml

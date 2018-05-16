@@ -196,7 +196,7 @@ def worker(pipeline, recipe, config):
         else:
             blank_limit = None
         recipe.add('cab/pybdsm', step,
-            {                   
+            {
                 "image"         : im,
                 "thresh_pix"    : config[key].get('thresh_pix', thresh_pix),
                 "thresh_isl"    : config[key].get('thresh_isl', thresh_isl),
@@ -256,7 +256,7 @@ def worker(pipeline, recipe, config):
 
         step = 'combine_models_' + '_'.join(map(str, models))
         recipe.add('cab/tigger_convert', step,
-            {                   
+            {
                 "input-skymodel"    : model_names[0],
                 "append"    : model_names[1],
                 "output-skymodel"   : calmodel,
@@ -267,7 +267,7 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{0:s}:: Combined models'.format(step))
 
-        return calmodel, model_names_fits	
+        return calmodel, model_names_fits
 
 
 
@@ -503,7 +503,7 @@ def worker(pipeline, recipe, config):
             models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
             final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
 
-            step = 'combine_models_{0:s}_{1:s}'.format(*mm)
+            step = 'create_final_lsm_{0:s}_{1:s}'.format(*mm)
             recipe.add('cab/tigger_convert', step,
                 {
                     "input-skymodel"    : models[0],
@@ -519,7 +519,7 @@ def worker(pipeline, recipe, config):
         elif isinstance(num, str) and num.isdigit():
             inputlsm = '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num)
             final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
-            step = 'combine_models_{0:s}'.format(num) 
+            step = 'create_final_lsm_{0:s}'.format(num)
             recipe.add('cab/tigger_convert', step,
                 {
                     "input-skymodel"    : '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num),
@@ -551,7 +551,7 @@ def worker(pipeline, recipe, config):
             with_cc = prefix + '-with_cc.fits:output'
             recipe.add('cab/fitstool', step,
                 {
-                    "image"    : [prefix+'_5{0:s}-image.fits:output'.format(mfsprefix), conv_model],
+                    "image"    : [prefix+'_{0:d}{1:s}-image.fits:output'.format(num, mfsprefix), conv_model],
                     "output"   : with_cc,
                     "sum"      : True,
                     "force"    : True,

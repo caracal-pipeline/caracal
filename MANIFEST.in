@@ -3,6 +3,8 @@ recursive-include meerkathi/ *.py
 recursive-include meerkathi/ *.yml
 recursive-include meerkathi/data *.yml
 recursive-include meerkathi/data *.txt
+recursive-include meerkathi/data *.rfis
+recursive-include meerkathi/data *.npy
 recursive-include meerkathi/data *.lsm
 recursive-include meerkathi/dispatch_crew *.py
 recursive-include meerkathi/workers *.py

@@ -36,14 +36,7 @@ setup(name = PACKAGE_NAME,
     packages=[PACKAGE_NAME], 
     install_requires = requirements,
     include_package_data = True,
-    package_data = {
-        "meerkathi"    : [
-                          "data/meerkat_files/*.rfis",
-                          "data/meerkat_files/*.npy",
-                          "data/meerkat_files/*.txt",
-                               ],
-
-    },
+    ##package_data - any binary or meta data files should go into MANIFEST.in
     scripts = ["bin/" + j for j in os.listdir("bin")],
     license=["GNU GPL v2"],
     classifiers=[

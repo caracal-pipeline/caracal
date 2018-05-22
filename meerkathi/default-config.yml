@@ -391,6 +391,103 @@ self_cal:
   flagging_summary:
     enable: true
     
+sc:
+  enable: no
+  label: corr
+  order: 12
+  spwid: 0
+  # Imaging settings
+  img_npix: 720                          # at very least 50% padding for alias protection
+  img_trim: 720
+  img_mgain: 0.9                          #for major cycle of wsclean
+  img_cell: 10.
+  img_weight: briggs
+  img_robust: -1.0
+  #cleaning settings
+  img_niter: 1000000
+  img_auto_threshold: 0.1                     # Cleaning threshold for cleaning
+  img_cleanborder: 0                        
+  img_nchans: 20                          # Number of output channels for imaging
+  img_joinchannels: yes
+  img_fit_spectral_pol: no                   # Fit a polynomial over frequency to each clean component
+  img_pol: I
+  # Calibration settings
+  cal_Gsols: [10,50]                        #one gain solution each 10 time intervals and 100 channels
+  cal_gain_amplitude_clip_low: 0.5          # Flag data if corresponding gain has a value below this
+  cal_gain_amplitude_clip_high: 1.5         # Flag data if corresponding gain has a value above this
+  cal_time_chunk: 2995
+  # Island threshold for source finder (in sigma above noise)
+  image_1:                                  # Make intial image 
+    enable: no
+    auto_threshold: 0.1
+    mask_from_sky: True
+    fits_mask: 'sumss_fornaxa_mask.fits'
+    multi_scale: True
+    multi_scale_scales: [0,10,25,40] #pixel
+    column: DATA
+    local_rms: True
+    minuvw_m: 0
+    no_update_model: True 
+  image_11:
+    enable: yes
+    auto_threshold: 0.3
+    mask_from_sky: True
+    fits_mask: 'fa2_sof_p1_1_mask.fits'
+    multi_scale: False
+    multi_scale_scales: [0,10,25,40] #pixel
+    column: DATA
+    local_rms: True
+    no_update_model: False
+    fit_spectral_pol: 4
+    minuvw_m: 0
+  calibrate_1:
+    enable: yes
+    output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
+    gain_matrix_type: GainDiagPhase  
+    add_vis_model: True 
+  image_2:
+    enable: yes
+    auto_threshold: 0.3
+    mask_from_sky: True
+    fits_mask: 'fa2_sof_p1_2_mask.fits'
+    multi_scale: False
+    multi_scale_scales: [0,10,25,40] #pixel
+    column: CORRECTED_DATA
+    local_rms: True
+    no_update_model: False
+    fit_spectral_pol: 4
+    minuvw_m: 0
+  calibrate_2:
+    enable: no
+    output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
+    gain_matrix_type: GainDiagPhase
+    add_vis_model: True
+  image_3:
+    enable: no
+    auto_threshold: 0.1
+    mask_from_sky: True
+    fits_mask: 'fa2_sof_p1_2_mask.fits'
+    multi_scale: False
+    column: CORRECTED_DATA
+    local_rms: True
+    no_update_model: True
+    minuvw_m: 0
+  calibrate_3:
+    enable: no
+    output_data: CORR_DATA                  # Data to output after calibration. Options are CORR_RES (corrected residual), CORR_DATA (corrected data), RES (residual data)
+    gain_matrix_type: GainDiagPhase
+    add_vis_model: True
+  image_4:
+    enable: no
+    auto_threshold: 0.5
+    mask_from_sky: True
+    fits_mask: 'fa2_sof_p1_3_mask.fits'
+    multi_scale: True
+    multi_scale_scales: [0,10,25]
+    column: CORRECTED_DATA
+    local_rms: True
+    no_update_model: False
+    minuvw_m: 0
 
 image_HI:
   enable: true

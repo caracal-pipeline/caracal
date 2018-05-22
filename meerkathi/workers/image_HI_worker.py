@@ -226,7 +226,7 @@ def worker(pipeline, recipe, config):
                   "mgain"     : config['wsclean_image'].get('mgain', 1.0),
                   "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
                   "auto-mask"  :   config['wsclean_image'].get('automask', 3),
-                  "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
+                  "no-update-model-required": config['wsclean_image'].get('no_update_mod', True)
               },  
         input=pipeline.input,
         output=pipeline.output,
@@ -330,7 +330,7 @@ def worker(pipeline, recipe, config):
                   "niter"     : config['rewsclean_image'].get('niter', 1000000),
                   "mgain"     : config['wsclean_image'].get('mgain', 1.0),
                   "auto-threshold"  : config['rewsclean_image'].get('autothreshold', 5),
-                  "no-update-model-required": config['wsclean_image'].get('no-update-mod', True)
+                  "no-update-model-required": config['wsclean_image'].get('no_update_mod', True)
             },  
         input=pipeline.input,
         output=pipeline.output,

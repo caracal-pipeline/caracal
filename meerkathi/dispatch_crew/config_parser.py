@@ -7,7 +7,6 @@ import ruamel.yaml
 from pykwalify.core import Core
 import itertools
 from collections import OrderedDict
-from meerkathi.dispatch_crew import ClassHelp
 
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 
@@ -89,9 +88,6 @@ class config_parser:
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
             help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
 
-        add('-ce', '--config-editor', action='store_true',
-            help='Start the interactive configuration editor (requires X session with decent [ie. firefox] webbrowser installed).')
-
         add('-rv', '--report-viewer', action='store_true',
             help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
 
@@ -134,63 +130,83 @@ class config_parser:
                 raise argparse.ArgumentTypeError("Failed to convert argument. Must be one of "
                                                  "'yes', 'true', 'no' or 'false'.")
 
-        def _nonetype(v):
+        def _nonetype(v, opt_type="str"):
+            type_map = { "str" : str, "int": int, "float": float, "bool": _str2bool, "text": str }
+            _opt_type = type_map[opt_type]
             if v.upper() in ("NONE","NULL"):
                 return None
             else:
-                return str(v)
+                return _opt_type(v)
+
+        def _option_factory(opt_type,
+                            is_list,
+                            opt_name,
+                            opt_required,
+                            opt_desc,
+                            opt_valid_opts,
+                            opt_default,
+                            parser_instance):
+            opt_desc = opt_desc.replace("%", "%%").encode('utf-8').strip()
+            if opt_type == "int" or opt_type == "float" or opt_type == "str" or opt_type == "bool" or opt_type == "text":
+                meta = opt_type
+                parser_instance.add_argument("--%s" % opt_name,
+                                             choices=opt_valid_opts,
+                                             default=opt_default,
+                                             nargs=("+" if opt_required else "*") if is_list else "?",
+                                             metavar=meta,
+                                             type=lambda x: _nonetype(x, opt_type),
+                                             help=opt_desc + " [%s default: %s]" % ("list:%s" % opt_type if is_list else opt_type, str(opt_default)))
+            else:
+                raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
+
+
 
         def _subparser_tree(sections,
+                            schema_sections,
                             base_section="",
                             update_only = False,
                             args = None,
                             parser = None):
             """ Recursively creates subparser tree for the config """
-            if sections is None:
-                return
+            groups = OrderedDict()
 
-            sec_defaults = {xformer(k): v for k,v in sections.iteritems() }
+            if sections is None:
+                return groups
+
+            sec_defaults = {xformer(k): v for k,v in sections.iteritems()}
 
             # Transform keys
             # Add subsection / update when necessary
-            groups = OrderedDict()
+            assert isinstance(schema_sections, dict)
+            assert schema_sections["type"] == "map"
+            assert isinstance(schema_sections["mapping"], dict)
             for opt, default in sec_defaults.iteritems():
-                if opt == "__helpstr": continue
                 option_name = base_section + "_" + opt if base_section != "" else opt
+                assert opt in schema_sections["mapping"], "%s does not define a type in schema" % opt
                 if isinstance(default, dict):
                     groups[opt] = _subparser_tree(default,
+                                                  schema_sections["mapping"][opt],
                                                   base_section=option_name,
                                                   update_only=update_only,
                                                   args=args,
                                                   parser=parser)
                 else:
+                    assert (("seq" in schema_sections["mapping"][opt]) and ("type" in schema_sections["mapping"][opt]["seq"][0])) or \
+                            "type" in schema_sections["mapping"][opt], "Option %s missing type in schema" % option_name
+
                     if update_only:
                         parser.set_defaults(**{option_name: default})
                         groups[opt] = getattr(args, option_name)
                     else:
-                        if isinstance(default, list):
-                            parser.add_argument("--%s" % option_name,
-                                                type=str,
-                                                default=default,
-                                                nargs="?",
-                                                action='append')
-                        elif isinstance(default, bool):
-                            parser.add_argument("--%s" % option_name,
-                                                type=_str2bool,
-                                                default=default,
-                                                nargs="?",
-                                                const=True)
-                        elif default is None:
-                            parser.add_argument("--%s" % option_name,
-                                                type=_nonetype,
-                                                default=default,
-                                                nargs="?")
-                        else:
-                            parser.add_argument("--%s" % option_name,
-                                                type=type(default),
-                                                default=default,
-                                                nargs="?")
-
+                        _option_factory(schema_sections["mapping"][opt]["type"] if "seq" not in schema_sections["mapping"][opt] else \
+                                                                schema_sections["mapping"][opt]["seq"][0]["type"],
+                                        "seq" in schema_sections["mapping"][opt],
+                                        option_name,
+                                        schema_sections["mapping"][opt].get("required", False),
+                                        schema_sections["mapping"][opt].get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
+                                        schema_sections["mapping"][opt].get("enum", None),
+                                        default,
+                                        parser)
                         groups[opt] = default
             return groups
 
@@ -208,27 +224,43 @@ class config_parser:
             args.schema = {}
 
 
-        if args.config:
-            config_file = args.config
-            conf_msg = "Loading defaults from user configuration '{}'".format(config_file)
-        else:
-            config_file = DEFAULT_CONFIG
-            conf_msg = "Loading defaults from user configuration '{}'".format(config_file)
+        config_file = args.config if args.config else DEFAULT_CONFIG
 
-        meerkathi.log.info(conf_msg)
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             schema_version = tmp["schema_version"]
 
-        if args.worker_help:
-            schema = os.path.join(meerkathi.pckgdir, "schema", 
-                    "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
-            with open(schema, "r") as f:
-                worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+        # Validate each worker section against the schema and
+        # parse schema to extract types and set up cmd argument parser
+        parser = cls.__primary_parser(add_help=True)
+        for key,worker in tmp.iteritems():
+            if key=="schema_version":
+                continue
+            elif worker.get("enable", True) is False:
+                continue
+            _key = key.split("__")[0]
+            schema_fn = os.path.join(meerkathi.pckgdir,
+                                     "schema", "{0:s}_schema-{1:s}.yml".format(_key,
+                                                                               schema_version))
+            source_data = {
+                            _key : worker,
+                            "schema_version" : schema_version,
+            }
+            c = Core(source_data=source_data, schema_files=[schema_fn])
+            file_config[key] = c.validate(raise_exception=True)[_key]
+            with open(schema_fn, 'r') as f:
+                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            _subparser_tree(file_config[key],
+                            schema["mapping"][_key],
+                            base_section=key,
+                            parser=parser)
 
-            helper = ClassHelp.WorkerOptions(args.worker_help, worker_dict["mapping"][args.worker_help])
-            helper.print_worker()
+        # finally parse remaining args and update parameter tree with user-supplied commandline arguments
+        args, remainder = parser.parse_known_args(args_bak)
+        if len(remainder) > 0:
+            raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
+        groups = OrderedDict()
         for key,worker in tmp.iteritems():
             if key=="schema_version":
                 continue
@@ -236,24 +268,17 @@ class config_parser:
                 continue
 
             _key = key.split("__")[0]
-            schema = args.schema.get(key, None) or os.path.join(meerkathi.pckgdir, 
-                  "schema", "{0:s}_schema-{1:s}.yml".format(_key, schema_version))
-            meerkathi.log.info("Validating configuration for worker [{0:s}]".format(key))
-            
-            source_data = {
-                            _key : worker,
-                            "schema_version" : schema_version,
-            }
-            c = Core(source_data=source_data, schema_files=[schema])
-            file_config[key] = c.validate(raise_exception=True)[_key]
-
-        parser = cls.__primary_parser(add_help=True)
-        groups = _subparser_tree(file_config, parser=parser)
-        args, remainder = parser.parse_known_args(args_bak)
-        if len(remainder) > 0:
-            raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
-        groups = _subparser_tree(file_config, update_only=True, args=args, parser=parser)
-
+            schema_fn = os.path.join(meerkathi.pckgdir,
+                                      "schema", "{0:s}_schema-{1:s}.yml".format(_key,
+                                                                                schema_version))
+            with open(schema_fn, 'r') as f:
+                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            groups[key] = _subparser_tree(file_config[key],
+                                          schema["mapping"][_key],
+                                          base_section=key,
+                                          update_only=True,
+                                          args=args,
+                                          parser=parser)
         cls.__store_args(args, groups)
 
     @classmethod
@@ -266,6 +291,7 @@ class config_parser:
 
             def _printval(k, v):
                 if isinstance(v, dict):
+                    if not v.get("enable", True): return
                     (indent=="\t") and meerkathi.log.info(indent.ljust(60,"#"))
                     meerkathi.log.info(indent + "Subsection %s:" % k)
                     (indent=="\t") and meerkathi.log.info(indent.ljust(60,"#"))

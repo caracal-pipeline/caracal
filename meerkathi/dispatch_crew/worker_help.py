@@ -4,7 +4,7 @@ import sys
 from  argparse import ArgumentParser
 
 
-class WorkerOptions(object):
+class worker_options(object):
     def __init__(self, name, worker_dict, parser=None):
         """
             Prints out help for a worker
@@ -22,7 +22,6 @@ class WorkerOptions(object):
         if section["type"] == "map":
             for name in section["mapping"]:
                 segment = section["mapping"][name]
-                
                 # Find segment lineage
                 if lineage is None:
                     _lineage = name
@@ -33,18 +32,23 @@ class WorkerOptions(object):
                     self.traverse_worker(segment, _lineage)
                     continue
 
-                desc = segment["desc"].replace("%", "%%")
                 args = {}
                 dtype = None
                 if segment.has_key("seq"):
                     args["action"] = "append"
                     dtype = segment["seq"][0]["type"]
+                    ptype = "list:" + dtype
                 elif segment["type"] not in ["bool"]:
                     args["type"] = eval(dtype or segment["type"])
                     if segment.has_key("enum"):
                         args["choices"] = segment["enum"]
+                    ptype = segment["type"]
                 else:
                     args["action"] = "store_true"
+                    ptype = "bool"
+                desc = segment.get("desc",
+                                   "!!! option %s missing schema description. Please file this bug !!!" % name).replace("%", "%%")
+                desc = desc + " [type: %s]" % ptype
                 self.parser.add_argument("--{0:s}".format(_lineage), help=desc, **args) 
         else:
             return

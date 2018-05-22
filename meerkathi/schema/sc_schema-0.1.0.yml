@@ -197,7 +197,7 @@ mapping:
 
       calibrate_1:
         type: map
-        desc: Calibration parameters
+        desc: Calibration parameters using meqtrees
         mapping:
           enable:
             type: bool
@@ -270,7 +270,7 @@ mapping:
 
       calibrate_2:
         type: map
-        desc: Calibration parameters
+        desc: Calibration parameters using meqtrees
         mapping:
           enable:
             type: bool
@@ -343,7 +343,7 @@ mapping:
 
       calibrate_3:
         type: map
-        desc: Calibration parameters
+        desc: Calibration parameters using meqtrees
         mapping:
           enable:
             type: bool

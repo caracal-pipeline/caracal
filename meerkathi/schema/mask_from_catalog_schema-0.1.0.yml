@@ -24,7 +24,7 @@ mapping:
       catalog:
         type: str
         required: True
-        desc: Name of catalog to query, either NVSS or SUMSS
+        desc: Name of catalog to query, either NVSS (not active yet) or SUMSS
       catalog_mask:
         type: str
         required: false
@@ -41,7 +41,7 @@ mapping:
 
       query_SUMSS:
         type: map
-        desc: Query SUMSS / NVSS catalog to select fields from which extract the mask
+        desc: Query SUMSS to select fields from which extract the mask
         mapping:
           enable:
             type: bool

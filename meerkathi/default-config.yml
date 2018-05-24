@@ -301,6 +301,11 @@ self_cal:
   # Source finding settings
   sf_thresh_pix: 10
   sf_thresh_isl: 8
+  aimfast:
+    enable: true
+    dr_tolerance: 0.15
+    normality_tolerance: 0.15
+    area_factor: 10
   image_1:
     enable: true
     auto_mask: 40                           

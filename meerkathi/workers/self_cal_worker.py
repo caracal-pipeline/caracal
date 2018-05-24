@@ -1,6 +1,7 @@
 import os
 import sys
 import yaml
+import json
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -250,8 +251,10 @@ def worker(pipeline, recipe, config):
 
 
     def combine_models(models, num):
-        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in models]
-        model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(pipeline.output, prefix, m) for m in models]
+        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
+                       prefix, m) for m in models]
+        model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(
+                            pipeline.output, prefix, m) for m in models]
         calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
 
         step = 'combine_models_' + '_'.join(map(str, models))
@@ -450,6 +453,73 @@ def worker(pipeline, recipe, config):
                 shared_memory='100Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
+    def get_aimfast_data(filename='output/fidelity_results.json'):
+        "Extracts data from the json data file"
+        with open(filename) as f:
+            data = json.load(f)
+        return data
+
+    def quality_check(n, prefix='meerkathi-pipeline'):
+        "Examine the aimfast results to see if they meet specified conditions"
+        # If total number of iterations is reached stop
+        key = 'aimfast'
+        DR_tolerance = config[key].get('DR_tolerance', 0.15)
+        normality_tolerance = config[key].get('normality_tolerance', 0.15)
+        cal_niter = config[key].get('cal_niter', 5)
+        fidelity_data = get_aimfast_data()
+        if n > cal_niter:
+            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+            return True
+        # Ensure atleast one iteration is ran to compare previous and subsequent images
+        if n >= 2:
+            DR0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+                     pipeline.input, prefix, n - 1)][
+                     '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
+                         pipeline.input, prefix, n - 1 if n - 1 <= 2 else 4,
+                         '-combined' if n - 1 > 2 else '')]['DR']
+            DR1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+                     pipeline.input, prefix, n)][
+                    '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
+                         pipeline.input, prefix, n if n <= 2 else 4,
+                         '-combined' if n > 2 else '')]['DR']
+            DR_delta = DR1 - DR0
+            # Confirm that previous image DR is smaller than subsequent image
+            # Also make sure the difference is greater than the tolerance
+            if DR_delta < DR_tolerance*DR0:
+                meerkathi.log.info('Dynamic range')
+                meerkathi.log.info('{:f} < {:f}'.format(DR_delta, DR_tolerance*DR0))
+                return True
+        if n >= 2:
+            RES0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+                     pipeline.input, prefix, n - 1)]
+            RES1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+                     pipeline.input, prefix, n)]
+            normality_delta = RES0['NORM'][0] - RES1['NORM'][0]
+            # Confirm that previous image normality statistic is smaller than subsequent image
+            # Also make sure the difference is greater than the tolerance
+            if normality_delta < normality_tolerance*RES0['NORM'][0]:
+                meerkathi.log.info('Normality test')
+                meerkathi.log.info('{:f} < {:f}'.format(
+                    normality_delta, normality_tolerance*RES0['NORM'][0]))
+                return True
+        # If no condition is met return false to continue
+        return False
+
+    def image_quality_assessment(num):
+        step = 'aimfast'
+        recipe.add('cab/aimfast', step,
+                {
+                    "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
+                                                 prefix, num if num <= 2 else 4,
+                                                 '-combined' if num > 2 else ''),
+                    "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits'.format(prefix, num),
+                    "normality-model"      : 'normaltest',
+                    "area-factor"          : config[step].get('area_factor', 10)
+                },
+                input=pipeline.output,
+                output=pipeline.output,
+                label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
+
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
     if calwith == 'meqtrees':
@@ -464,6 +534,9 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'extract_sources_1'):
         extract_sources(1)
 
+    if pipeline.enable_task(config, 'aimfast'):
+        image_quality_assessment(1)
+
     if pipeline.enable_task(config, 'calibrate_1'):
         calibrate(1)
 
@@ -473,26 +546,53 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'extract_sources_2'):
         extract_sources(2)
 
-    if pipeline.enable_task(config, 'calibrate_2'):
-        calibrate(2)
+    if pipeline.enable_task(config, 'aimfast'):
+        image_quality_assessment(2)
 
-    if pipeline.enable_task(config, 'image_3'):
-        image(3)
+    recipe.run(['aimfast_1', 'aimfast_2'])
 
-    if pipeline.enable_task(config, 'extract_sources_3'):
-        extract_sources(3)
+    if not quality_check(2):
 
-    if pipeline.enable_task(config, 'calibrate_3'):
-        calibrate(3)
+        if pipeline.enable_task(config, 'calibrate_2'):
+            calibrate(2)
 
-    if pipeline.enable_task(config, 'image_4'):
-        image(4)
+        if pipeline.enable_task(config, 'image_3'):
+            image(3)
 
-    if pipeline.enable_task(config, 'calibrate_4'):
-        calibrate(4)
+        if pipeline.enable_task(config, 'extract_sources_3'):
+            extract_sources(3)
+            combine_models(['2', '3'], 4)
 
-    if pipeline.enable_task(config, 'image_5'):
-        image(5)
+       if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(3)
+
+        recipe.run(['aimfast_3'])
+
+    if not quality_check(3):
+
+        if pipeline.enable_task(config, 'calibrate_3'):
+            calibrate(3)
+
+        if pipeline.enable_task(config, 'image_4'):
+            image(4)
+
+        if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(4)
+
+        recipe.run(['aimfast_4'])
+
+    if not quality_check(4):
+
+        if pipeline.enable_task(config, 'calibrate_4'):
+            calibrate(4)
+
+        if pipeline.enable_task(config, 'image_5'):
+            image(5)
+
+        if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(5)
+
+        recipe.run(['aimfast_5'])
 
     if pipeline.enable_task(config, 'restore_model'):
         num = config['restore_model']['model']
@@ -500,7 +600,8 @@ def worker(pipeline, recipe, config):
         if isinstance(num, str) and len(num.split('+'))==2:
             combine = True
             mm = num.split('+')
-            models = [ '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, m) for m in mm]
+            models = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
+                      prefix, m) for m in mm]
             final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
 
             step = 'create_final_lsm_{0:s}_{1:s}'.format(*mm)

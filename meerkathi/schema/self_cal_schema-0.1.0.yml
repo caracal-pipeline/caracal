@@ -126,6 +126,27 @@ mapping:
         desc: Source finder island threshold
         required: true
 
+      aimfast:
+        type: map
+        desc: Quality assessment parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          dr_tolerance:
+            type: float
+            desc: Relative change in dynamic range from latter to current iter
+            required: true
+          normality_tolerance:
+            type: float
+            desc: Relative change in normality stats from latter to current iter
+            required: true
+          area_factor:
+            type: float
+            desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
+            required: false
+
       image_1:
         type: map
         desc: Imaging parameter

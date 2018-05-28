@@ -166,9 +166,9 @@ def worker(pipeline, recipe, config):
         # Get the target RA and Dec
         with open(msinfo, 'r') as stdr:
             # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
-            # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[0] only
+            # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[i].split(',')[0] only
             targetinfo = yaml.load(stdr)['FIELD']
-            targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(targets[0])][0]
+            targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(pipeline.target[i].split(',')[0])][0]
             pipeline.TRA[i]  = targetpos[0]/np.pi*180
             pipeline.TDec[i] = targetpos[1]/np.pi*180
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))

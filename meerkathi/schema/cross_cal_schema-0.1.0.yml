@@ -45,6 +45,10 @@ mapping:
             type: str 
             desc: Set the field to carry out setjy on. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.   
             required: true
+          threads:
+            type: int
+            desc: Set the number of threads to use when predicting local sky model using MeqTrees.
+            required: false
 
       delay_cal:
         type: map

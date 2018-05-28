@@ -161,7 +161,8 @@ def field_observation_length(msinfo, field):
 
 def find_in_native_calibrators(msinfo, field):
     """Check if field is in the South Calibrators database. 
-       Return model if it is. Else, return False. 
+       Return model if it is. Return lsm if an lsm is available. 
+       Otherwise, return False. 
     """
 
     db = mkct.calibrator_database()
@@ -180,13 +181,15 @@ def find_in_native_calibrators(msinfo, field):
     bghz = src["b_casa"]
     cghz = src["c_casa"]
     dghz = src["d_casa"]
-
-    return dict(I=src['S_v0'], 
-	a=src['a_casa'], 
-	b=src['b_casa'], 
-	c=src['c_casa'], 
-	d=src['d_casa'], 
-	ref=src['v0'])
+    if "lsm" in src:
+        return src["lsm"]
+    else:
+        return dict(I=src['S_v0'],
+                    a=src['a_casa'],
+                    b=src['b_casa'],
+                    c=src['c_casa'],
+                    d=src['d_casa'],
+                    ref=src['v0'])
 
 def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through meerkathi"""

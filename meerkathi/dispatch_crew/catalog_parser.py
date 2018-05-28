@@ -21,7 +21,8 @@ class catalog_parser:
       """ Return multiline string describing the calibrator database """
       lines = [""]
       lines.extend(["\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
-                    "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f" %
+                    "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
+                    "lsm:%s\tlsm epoch:%d" %
                   (str(name).ljust(15),
                    db["epoch"],
                    db["ra"],
@@ -31,7 +32,9 @@ class catalog_parser:
                    db["a_casa"],
                    db["b_casa"],
                    db["c_casa"],
-                   db["d_casa"])
+                   db["d_casa"],
+                   db.get("lsm", "<none>").ljust(30),
+                   db.get("lsm_epoch", db["epoch"]))
             for name, db in self._cat.iteritems()])
       return '\n'.join(lines)
 
@@ -77,15 +80,19 @@ class catalog_parser:
                     valset = re.match(r"^alias src=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
                                       r"dest=(?P<dest>[0-9A-Za-z\-+_ ]+)$",
                                       command)
-                    #else illegal
+                    #else lsm?
                     if not valset:
-                        raise RuntimeError("Illegal line encountered while parsing"
-                                           "southern standard at line %d:'%s'" %
-                                           (ln_no, line))
-
-                    cmd = "alias"
-                else:
-                    cmd = "add"
+                        valset = re.match(r"^lsm name=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
+                                          r"epoch=(?P<epoch>[0-9]+)[ ]+"
+                                          r"(?P<lsmname>[0-9a-zA-Z\-.]+)$",
+                                          command)
+                        if not valset:
+                            raise RuntimeError("Illegal line encountered while parsing"
+                                               "southern standard at line %d:'%s'" %
+                                               (ln_no, line))
+                        else: cmd = "lsm"
+                    else: cmd = "alias"
+                else: cmd = "add"
 
                 if cmd == "add":
                     # parse sources (spectra in MHz)
@@ -134,10 +141,22 @@ class catalog_parser:
                     src = valset.group("src")
                     dest = valset.group("dest")
                     if not src in calibrator_db:
-                        raise RuntimeError("%s has not been defined. Cannot alias "
+                        raise RuntimeError("%s has not been defined. cannot alias "
                                            "%s to %s in line %d" %
                                            (src,dest,src,ln_no))
                     calibrator_db[dest] = calibrator_db[src]
+                elif cmd == "lsm":
+                    src = valset.group("src")
+                    epoch = valset.group("epoch")
+                    lsm = valset.group("lsmname")
+                    if not src in calibrator_db:
+                        raise RuntimeError("%s has not been defined. Cannot link lsm "
+                                           "%s to %s in line %d" % 
+                                           (src, lsm, ln_no))
+                    calibrator_db[name]["lsm"] = lsm
+                    calibrator_db[name]["lsm_epoch"] = int(epoch)
+                else:
+                    raise RuntimeError("Invalid command processed. This is a bug")
 
                 # finally parse next line
                 line = f.readline()

@@ -196,12 +196,12 @@ mapping:
             seq:
               - type: int
             desc: Source finder pixel threshold
-            required: false
+            required: true
           thresh_isl:
             seq:
               - type: int
             desc: Source finder island threshold
-            required: false
+            required: true
 
       calibrate:
         type: map

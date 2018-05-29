@@ -301,64 +301,29 @@ self_cal:
   # Source finding settings
   sf_thresh_pix: 10
   sf_thresh_isl: 8
+  cal_niter: 4
   aimfast:
     enable: true
-    dr_tolerance: 0.15
-    normality_tolerance: 0.15
+    dr_tolerance: 0.10
+    normality_tolerance: 0.10
+    normality_model: normaltest
     area_factor: 10
-  image_1:
+  image:
     enable: true
-    auto_mask: 40                           
-    auto_threshold: 0.5
+    auto_mask: [40 , 30, 10, 5, 3]
+    auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
     column: DATA
-  extract_sources_1:
+  extract_sources:
     enable: true
     spi: false
-  calibrate_1:
+    thresh_pix: [10, 10, 10]
+    thresh_isl: [8, 8, 5]
+  calibrate:
     enable: true
-    model: '1'
+    model: ['1', '2', '2+3', '2+3']
     output_data: CORR_DATA
     gain_matrix_type: GainDiagPhase
-  image_2:
-    enable: true
-    auto_mask: 30
-    auto_threshold: 0.5
-  extract_sources_2:
-    enable: true
-    spi: false
-  calibrate_2:
-    enable: true
-    model: '2'
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
-  image_3:
-    enable: true
-    auto_mask: 10
-    auto_threshold: 0.5
-  extract_sources_3:
-    enable: true
-    spi: false 
-    thresh_pix: 10
-    thresh_isl: 5
-  calibrate_3:
-    enable: true
-    model: '2+3' 
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
-  image_4:
-    enable: true
-    auto_mask: 5
-    auto_threshold: 0.25
-  calibrate_4:
-    enable: true
-    model: '2+3'
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
     add_vis_model: true 
-  image_5:
-    enable: true
-    auto_mask: 3
-    auto_threshold: 0.25
   restore_model: 
     enable: true
     model: '2+3'

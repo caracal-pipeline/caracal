@@ -302,6 +302,7 @@ self_cal:
   sf_thresh_pix: 10
   sf_thresh_isl: 8
   cal_niter: 4
+  start_at_iter: 1
   aimfast:
     enable: true
     dr_tolerance: 0.10

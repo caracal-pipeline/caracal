@@ -398,7 +398,6 @@ def worker(pipeline, recipe, config):
         key = 'calibrate'
         model = config[key].get('model', num)
         if isinstance(model, str) and len(model.split('+'))>1:
-            combine = True
             mm = model.split('+')
             calmodel, fits_model = combine_models(mm, num)
         else:
@@ -574,6 +573,10 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']
+            if isinstance(num, str) and len(num.split('+')) == 2:
+                mm = num.split('+')
+                if int(mm[-1]) > iter_counter:
+                    num = str(iter_counter)
         else:
             extract_sources = len(config['extract_sources'].get(
                                   'thresh_isl', [iter_counter]))
@@ -607,7 +610,7 @@ def worker(pipeline, recipe, config):
             step = 'create_final_lsm_{0:s}'.format(num)
             recipe.add('cab/tigger_convert', step,
                 {
-                    "input-skymodel"    : '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num),
+                    "input-skymodel"    : inputlsm,
                     "output-skymodel"   : final,
                     "rename"  : True,
                     "force"   : True,
@@ -620,6 +623,8 @@ def worker(pipeline, recipe, config):
 
         if config['restore_model'].get('clean_model', None):
             num = int(config['restore_model'].get('clean_model', None))
+            if num > iter_counter:
+                num = iter_counter
 
             conv_model = prefix + '-convolved_model.fits:output'
             recipe.add('cab/fitstool', step,

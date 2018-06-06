@@ -94,7 +94,7 @@ def worker(pipeline, recipe, config):
 
     for i, msname in enumerate(mslist):
         prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
-
+        
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -264,7 +264,7 @@ def worker(pipeline, recipe, config):
                 "steps.doMerge"         : True,
                 "steps.doReliability"   : False,
                 "steps.doParameterise"  : False,
-       	        "steps.doWriteMask"     : True,
+                "steps.doWriteMask"     : True,
                 "steps.doMom0"          : False,
                 "steps.doMom1"          : False,
                 "steps.doWriteCat"      : False,

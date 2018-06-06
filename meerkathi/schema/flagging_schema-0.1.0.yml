@@ -187,6 +187,10 @@ mapping:
             desc: Fields to flag. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal, target).
             type: str
             required: false
+          column:
+            desc: Fields to flag. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal, target).
+            type: str
+            required: false
 
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.

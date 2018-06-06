@@ -195,15 +195,13 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
             if config['autoflag_rfi'].get('fields', 'auto') != 'auto' and \
-               not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'target']):
-                raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'gcal', 'bpcal' or 'target'")
-            if config['autoflag_rfi'].get('calibrator_fields', 'auto') != 'auto' and \
-               not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal']):
-                raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
-            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+               not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['fcal','gcal', 'bpcal', 'target']):
+                raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'fcal', 'gcal', 'bpcal' or 'target'")
+            def_fields = ','.join([pipeline.fcal_id[i], pipeline.bpcal_id[i], pipeline.gcal_id[i]]) if \
+                         pipeline.bpcal_id[i] != pipeline.fcal_id[i] else \
+                        ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
             fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
-
             recipe.add('cab/autoflagger', step,
                 {
                   "msname"      : msname,

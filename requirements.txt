@@ -11,4 +11,4 @@ jupyter>=1.0.0
 pykwalify>=1.6.0
 yamlordereddictloader
 astropy
-git+https://github.com/SpheMakh/Stimela.git/@master#egg=Stimela
+git+https://github.com/SpheMakh/Stimela.git/@stimela_devel#egg=Stimela

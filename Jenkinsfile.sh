@@ -39,43 +39,43 @@ cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/firs
 stimela pull
 stimela build
 
-meerkathi --get_data_meerkat_query_available_poll_mode override \
-          --get_data_dataid 1477074305 \
-          --general_data_path $TEST_DATA_DIR \
-          --get_data_meerkat_query_available_enable no \
-          --get_data_download_enable no \
-          --get_data_h5toms_channel_range '2525,2781' \
-          --self_cal_img_npix 4096 \
-          --self_cal_image_2_auto_mask 10 \
-          --self_cal_image_3_enable yes \
-          --self_cal_image_4_enable no \
-          --self_cal_image_5_enable no \
-          --self_cal_calibrate_3_enable yes \
-          --self_cal_calibrate_4_enable no \
-          --self_cal_extract_sources_3_enable yes \
-          --self_cal_restore_model_model 2 \
-          --image_HI_wsclean_image_npix 256 256 \
-          --image_HI_flagging_summary_enable no \
-          --self_cal_restore_model_clean_model 3          
-
-# New selfcal test once it goes in
 #meerkathi --get_data_meerkat_query_available_poll_mode override \
 #          --get_data_dataid 1477074305 \
 #          --general_data_path $TEST_DATA_DIR \
 #          --get_data_meerkat_query_available_enable no \
 #          --get_data_download_enable no \
-#          --get_data_h5toms_channel_range 2525,2781 \
+#          --get_data_h5toms_channel_range '2525,2781' \
 #          --self_cal_img_npix 4096 \
-#          --self_cal_cal_niter 3 \
-#          --self_cal_image_enable yes \
-#          --self_cal_image_auto_mask 40 30 10 \
-#          --self_cal_image_auto_thresh 0.5 0.5 0.5 \
-#          --self_cal_extract_sources_enable yes \
-#          --self_cal_extract_sources_thresh_pix 10 10 10 \
-#          --self_cal_extract_sources_thresh_isl 8 8 5 \
-#          --self_cal_calibrate_enable yes \
-#          --self_cal_restore_model_clean_model 2 \
+#          --self_cal_image_2_auto_mask 10 \
+#          --self_cal_image_3_enable yes \
+#          --self_cal_image_4_enable no \
+#          --self_cal_image_5_enable no \
+#          --self_cal_calibrate_3_enable yes \
+#          --self_cal_calibrate_4_enable no \
+#          --self_cal_extract_sources_3_enable yes \
+#          --self_cal_restore_model_model 2 \
 #          --image_HI_wsclean_image_npix 256 256 \
 #          --image_HI_flagging_summary_enable no \
-#          --self_cal_restore_model_clean_model 3 
-#
+#          --self_cal_restore_model_clean_model 3          
+
+# New selfcal test once it goes in
+meerkathi --get_data_meerkat_query_available_poll_mode override \
+          --get_data_dataid 1477074305 \
+          --general_data_path $TEST_DATA_DIR \
+          --get_data_meerkat_query_available_enable no \
+          --get_data_download_enable no \
+          --get_data_h5toms_channel_range 2525,2781 \
+          --self_cal_img_npix 4096 \
+          --self_cal_cal_niter 3 \
+          --self_cal_image_enable yes \
+          --self_cal_image_auto_mask 40 30 10 \
+          --self_cal_image_auto_thresh 0.5 0.5 0.5 \
+          --self_cal_extract_sources_enable yes \
+          --self_cal_extract_sources_thresh_pix 10 10 10 \
+          --self_cal_extract_sources_thresh_isl 8 8 5 \
+          --self_cal_calibrate_enable yes \
+          --self_cal_restore_model_clean_model 2 \
+          --image_HI_wsclean_image_npix 256 256 \
+          --image_HI_flagging_summary_enable no \
+          --self_cal_restore_model_clean_model 3 
+

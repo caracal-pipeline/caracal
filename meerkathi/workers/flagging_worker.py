@@ -217,7 +217,7 @@ def worker(pipeline, recipe, config):
                   "column"      : config['autoflag_rfi'].get('column', 'DATA'),
                   # flag the calibrators for RFI and apply to target
                   "fields"      : fields,
-                  "bands"       : config['autoflag_rfi'].get('bands', "0"),
+                  #"bands"       : config['autoflag_rfi'].get('bands', "0"),
                   "strategy"    : config['autoflag_rfi']['strategy'],
                 },
                 input=pipeline.input,

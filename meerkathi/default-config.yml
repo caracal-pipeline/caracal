@@ -76,7 +76,7 @@ prepare_data:
   enable: true
   order: 2
   fixvis:
-    enable: true
+    enable: false
   prepms:
     enable: false
     add_imaging_cols: false
@@ -124,6 +124,8 @@ flagging:
     mask: labelled_rfimask.pickle.npy
   autoflag_rfi:
     enable: true
+    column: DATA
+    fields: fcal,bpcal,gcal
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
@@ -268,11 +270,23 @@ split_target:
   prepms:
     enable: false
 
+flagging__2:
+  enable: true
+  order: 10
+  label: corr
+  autoflag_rfi:
+    enable: true
+    column: DATA
+    fields: target
+    strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+  flagging_summary:
+    enable: true
+
 
 self_cal:
   enable: true
   label: corr
-  order: 10
+  order: 11
   primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
@@ -363,7 +377,7 @@ self_cal:
 
 image_HI:
   enable: true
-  order: 11
+  order: 12
   label: corr
   restfreq: '1.420405752GHz'
   npix: [1024]

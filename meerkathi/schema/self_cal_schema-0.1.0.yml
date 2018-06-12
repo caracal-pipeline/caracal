@@ -125,8 +125,42 @@ mapping:
         type: int
         desc: Source finder island threshold
         required: true
+      cal_niter:
+        type: int
+        desc: Number of self-calibration iterations to perform
+        required: true
+      start_at_iter:
+        type: int
+        desc: Start self-cal iteration loop at this start value
+        required: false
 
-      image_1:
+      aimfast:
+        type: map
+        desc: Quality assessment parameter
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: true
+          dr_tolerance:
+            type: float
+            desc: Relative change in dynamic range from latter to current iter
+            required: true
+          normality_tolerance:
+            type: float
+            desc: Relative change in normality stats from latter to current iter
+            required: true
+          area_factor:
+            type: float
+            desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
+            required: false
+          normality_model:
+            type: str
+            enum: ["normaltest", "shapiro"]
+            desc: normality test model to use. Note that normaltest is the D'Agostino
+            required: true
+
+      image:
         type: map
         desc: Imaging parameter
         mapping:
@@ -135,11 +169,13 @@ mapping:
             desc: Execute this segment
             required: true
           auto_mask:
-            type: int
+            seq:
+              - type: int
             desc: Auto masking threshold
             required: true
           auto_threshold:
-            type: float
+            seq:
+              - type: float
             desc: Auto clean threshold
             required: true
           column:
@@ -148,7 +184,7 @@ mapping:
             desc: Column to image
             required: false
 
-      extract_sources_1:
+      extract_sources:
         type: map
         desc: Source finding parameters
         mapping:
@@ -161,15 +197,17 @@ mapping:
             desc: Extract source spectral index
             required: false            # if not specified no spi will be determined
           thresh_pix:
-            type: int
+            seq:
+              - type: int
             desc: Source finder pixel threshold
-            required: false
+            required: true
           thresh_isl:
-            type: int
+            seq:
+              - type: int
             desc: Source finder island threshold
-            required: false
+            required: true
 
-      calibrate_1:
+      calibrate:
         type: map
         desc: Calibration parameters
         mapping:
@@ -178,7 +216,8 @@ mapping:
             desc: Execute this segment
             required: true
           model:
-            type: str
+            seq:
+              - type: str
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
           output_data:

@@ -76,7 +76,7 @@ prepare_data:
   enable: true
   order: 2
   fixvis:
-    enable: true
+    enable: false
   prepms:
     enable: false
     add_imaging_cols: false
@@ -124,6 +124,8 @@ flagging:
     mask: labelled_rfimask.pickle.npy
   autoflag_rfi:
     enable: true
+    column: DATA
+    fields: fcal,bpcal,gcal
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
@@ -268,11 +270,23 @@ split_target:
   prepms:
     enable: false
 
+flagging__2:
+  enable: true
+  order: 10
+  label: corr
+  autoflag_rfi:
+    enable: true
+    column: DATA
+    fields: target
+    strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+  flagging_summary:
+    enable: true
+
 
 self_cal:
   enable: true
   label: corr
-  order: 10
+  order: 11
   primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
@@ -301,59 +315,30 @@ self_cal:
   # Source finding settings
   sf_thresh_pix: 10
   sf_thresh_isl: 8
-  image_1:
+  cal_niter: 4
+  start_at_iter: 1
+  aimfast:
     enable: true
-    auto_mask: 40                           
-    auto_threshold: 0.5
+    dr_tolerance: 0.10
+    normality_tolerance: 0.10
+    normality_model: normaltest
+    area_factor: 10
+  image:
+    enable: true
+    auto_mask: [40 , 30, 10, 5, 3]
+    auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
     column: DATA
-  extract_sources_1:
+  extract_sources:
     enable: true
     spi: false
-  calibrate_1:
+    thresh_pix: [10, 10, 10]
+    thresh_isl: [8, 8, 5]
+  calibrate:
     enable: true
-    model: '1'
+    model: ['1', '2', '2+3', '2+3']
     output_data: CORR_DATA
     gain_matrix_type: GainDiagPhase
-  image_2:
-    enable: true
-    auto_mask: 30
-    auto_threshold: 0.5
-  extract_sources_2:
-    enable: true
-    spi: false
-  calibrate_2:
-    enable: true
-    model: '2'
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
-  image_3:
-    enable: true
-    auto_mask: 10
-    auto_threshold: 0.5
-  extract_sources_3:
-    enable: true
-    spi: false 
-    thresh_pix: 10
-    thresh_isl: 5
-  calibrate_3:
-    enable: true
-    model: '2+3' 
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
-  image_4:
-    enable: true
-    auto_mask: 5
-    auto_threshold: 0.25
-  calibrate_4:
-    enable: true
-    model: '2+3'
-    output_data: CORR_RES
-    gain_matrix_type: GainDiag
     add_vis_model: true 
-  image_5:
-    enable: true
-    auto_mask: 3
-    auto_threshold: 0.25
   restore_model: 
     enable: true
     model: '2+3'
@@ -363,7 +348,7 @@ self_cal:
 
 image_HI:
   enable: true
-  order: 11
+  order: 12
   label: corr
   restfreq: '1.420405752GHz'
   npix: [1024]

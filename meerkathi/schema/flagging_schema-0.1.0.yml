@@ -140,6 +140,10 @@ mapping:
             desc: Antennas to flag. Follows the CASA Flagdata syntax. 
             type: str
             required: false
+          timerange: 
+            desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
+            type: str
+            required: false
 
       flag_scan:
         desc: Flag bad scans. Uses CASA Flagdata task.

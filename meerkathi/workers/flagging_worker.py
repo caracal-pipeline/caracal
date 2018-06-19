@@ -172,7 +172,8 @@ def worker(pipeline, recipe, config):
                 {
                   "vis"         : msname,
                   "mode"        : 'manual',
-                  "antenna"     : config['flag_antennas']['antennas']
+                  "antenna"     : config['flag_antennas']['antennas'],
+                  "timerange"   : config['flag_antennas'].get('timerange',""),
                 },
                 input=pipeline.input,
                 output=pipeline.output,

@@ -1,0 +1,42 @@
+Pipeline Installation
+
+ARTIP Seems installed merely following the instruction.
+The casa version used is different in case of problems later on.
+Download GMRT data for testing
+
+
+Installing MeerKATHI
+
+as per instructions first clone git
+git clone https://github.com/ska-sa/meerkathi.git
+cd meerkathi
+git submodule update --init --recursive
+
+cannot start the virtualenv
+
+apparently cause pipenv should be installed first
+pip install --user pipenv
+pip install virtualenv.
+need to add
+home/peter/.local/bin to the path
+
+
+Docker and virtual/pipenv should be installed
+user should be able to run docker as non-root
+https://docs.docker.com/install/linux/docker-ce/ubuntu/
+
+
+We need to be in bash
+then
+git clone https://github.com/ska-sa/meerkathi.git
+cd meerkathi
+git submodule update --init --recursive 
+
+virtualenv --python=/home/peter/Applications/Anaconda2/bin/python2.7 --clear --no-wheel --no-pip --no-setuptools --always-copy meerkathi-venv
+source meerkathi-venv/bin/activate
+pip install argparse
+pip install pip wheel setuptools -U
+pip install /home/peter/Pipelines/meerkathi/
+export PYTHONPATH=''
+
+stimela build 

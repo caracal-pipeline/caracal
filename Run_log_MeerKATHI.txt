@@ -1,0 +1,53 @@
+23-05-2018
+
+The pipeline fails when setting target fcal bpcal and gcal to their targets instead of using auto in the observation_config setting leads to the local variable 'targets' in observation_config_worker.py to be undefined as the targets are never read from from the input yaml file when none of them are auto.
+
+Have file an issue and modified observation_config_worker.py on line 165 by adding
+     	  else:
+             targets = config['target'].split(',')
+             pipeline.target[i] = ','.join(targets)
+             pipeline.bpcal[i] = config['bpcal']
+             pipeline.fcal[i] = config['fcal']
+             pipeline.gcal[i] = config['gcal']
+
+--------------------------------------------------------------------------------
+The pipeline crashes in the first selfcal loop  due to the fact that it doesn't find any sources in the MFS image and then the stimela worker does not find the meerkathi-pipeline_1-pybdsm.fits file as it is not produced. This crashes the pipeline. In this case it is correct that pybdsm didn't find any sources as the MFS image was dominated by noise. However, some of the split band images did have sources so it might be something to look at them when no sources are found in the MFS image.
+
+I have now flagged the outer 10 channels of the band pass to ensure that these do not go into the image.
+
+--------------------------------------------------------------------------------
+
+The MFS image is now improved and seems to show a source but the source finder still finds nil sources.
+Calibration has a lot  of variation. How to average channels? There is a massive spike in the data in channel 174
+
+
+------------------------------------------------------------------------
+The flagging strategy was running on stokes Q which does not work for the GMRT. Made a new strategy and added the fields paramter to to autoflag_rfi in the yml scheme so that inittially only the calibrators are flagged.
+
+This should get fixed in the new master
+
+---------------
+
+It seems the flags from the first flagging round are not progressed to the second because you need to set or with original in aoflagger scheme.
+
+
+
+---------
+The apply bandpass field apears to be bpcal,gcal why? Because it applied to the gainfield table. This is ok.
+You cannot prived two flux calibrators, they will not be separated.
+
+--------
+The delay calibration goes crazy for several antennas that appeared ofline. The target data gets flagged but not the calibrators. Added a timerange to the antenna flagging options. To allow for partial time flagging.
+
+The initial gc1 calibration is unsuccesful. Why?
+
+It seems that the best results are achieved by only applying the bandpass+ gain calibration. Why are delays messing things up? Does applying flux calibration improve things? No it seems that both applying the fluxscale and the delays messes things up.
+
+
+Default does not apply the gaincal.
+
+It seems that when doing fluxscale the solution are both written out and applied to the gain calibration table. This means that when applying both the calibration is applied twice. The same seems to be true for the delay cal. The default yaml does not apply the gain calibration table.
+
+----------
+
+The target is still crap but phase is good now. Is the target crap because of useing the gcal as bandpass?

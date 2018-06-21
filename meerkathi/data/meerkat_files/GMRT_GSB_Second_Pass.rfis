@@ -13,14 +13,14 @@ Created by AOFlagger 2.9.0 (2016-12-20)
         <new-flagging>0</new-flagging>
       </action>
       <action type="ForEachPolarisationBlock">
-        <on-xx>1</on-xx>
+        <on-xx>0</on-xx>
         <on-xy>0</on-xy>
         <on-yx>0</on-yx>
-        <on-yy>1</on-yy>
+        <on-yy>0</on-yy>
         <on-stokes-i>0</on-stokes-i>
         <on-stokes-q>0</on-stokes-q>
         <on-stokes-u>0</on-stokes-u>
-        <on-stokes-v>0</on-stokes-v>
+        <on-stokes-v>1</on-stokes-v>
         <children>
           <action type="ForEachComplexComponentAction">
             <on-amplitude>1</on-amplitude>

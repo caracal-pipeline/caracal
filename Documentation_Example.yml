@@ -1,0 +1,521 @@
+## Default meerkathi pipeline
+schema_version: 0.1.0
+general:
+  data_path: /home/peter/Test2/
+  prefix: meerkathi-pipeline
+  msdir: /home/peter/Test2/
+  input: /home/peter/Test2/GMRT_In
+  output: /home/peter/Test2/GMRT_Out
+  init_pipeline: true
+
+# Get data to be reduced
+get_data:
+  dataid: ["GMRT_Original"] 
+  enable: true
+  order: 0
+  meerkat_query_available:
+    enable: false
+    poll_mode: 'override'  
+    query_url: 'http://192.168.1.50:8983/solr/kat_core'
+    required_intents: ['gaincal','bpcal','target'] 
+    product_type_name: 'MeerKATAR1TelescopeProduct'
+    minimum_observation_duration: 2
+    product_num_channels: 32768
+    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
+    description_matches: '.*'
+    required_fields: [] 
+  download:
+    download_mode: meerkat 
+    data_url: "" 
+    enable: false
+    reset: false
+  h5toms:
+    enable: false
+    channel_range: null 
+    tar: true
+    full_poll: true
+  untar:               
+    enable: false
+    tar_options: xvf
+  combine:
+    enable: false
+    reset: true
+    tar:
+      enable: false
+      tar_options: cvf
+    untar:
+      enable: false
+      tar_options: xvf
+  
+# Setup some basic observation information
+observation_config:
+  order: 1
+  obsinfo: 
+    enable: false
+    listobs: true
+    summary_json: true
+  target: J0754+25
+  fcal: 3C48
+  bpcal: 3C48
+  gcal: 0741+312
+  nchans: 512
+  reference_antenna: C11
+  firstchanfreq: auto
+  lastchanfreq: auto
+  chanwidth: auto
+  primary_beam:
+    enable: false
+    freq: "856 1760 64"
+    diameter: 6 
+    pixels: 256
+    coefficients_file: meerkat_coeff_dict.npy
+
+
+prepare_data:
+  enable: false
+  order: 2
+  fixvis:
+    enable: true
+  prepms:
+    enable: false
+    add_imaging_cols: false
+  add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
+    enable: false
+
+
+flagging:
+  enable: false
+  label: ''
+  order: 3
+  autoflag_autocorr_powerspectra:
+    enable: false
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flag_autocorr:
+    enable: true
+  quack_flagging:
+    enable: false
+    quackinterval: 32.2
+    quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
+  flag_spw:
+    enable: true
+    channels: "0:0~30,0:440~511" #band-rolloffs
+    ensure_valid_selection: false
+  flag_time:
+    enable: false
+    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+  flag_antennas:
+    enable: true
+    antennas: '1'
+    timerange: '<2017/09/23/04:40:26'
+  flag_scan:
+    enable: false
+    scans: null
+  static_mask:
+    enable: false
+    mask: labelled_rfimask.pickle.npy
+  autoflag_rfi:
+    enable: true
+    strategy: GMRT_GSB_First_Pass.rfis # This has to be in the pipeline input folder
+    fields: gcal,bpcal
+  flagging_summary:
+    enable: true
+
+flagging__2:
+  enable: false
+  label: ''
+  order: 4
+  autoflag_autocorr_powerspectra:
+    enable: false
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flag_autocorr:
+    enable: false
+  quack_flagging:
+    enable: false
+    quackinterval: 32.2
+    quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
+  flag_spw:
+    enable: false
+    channels: "0:0~30,0:440~511" #band-rolloffs
+    ensure_valid_selection: false
+  flag_time:
+    enable: false
+    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+  flag_antennas:
+    enable: true
+    antennas: '23'
+  flag_scan:
+    enable: false
+    scans: null
+  static_mask:
+    enable: false
+    mask: labelled_rfimask.pickle.npy
+  autoflag_rfi:
+    enable: false
+    strategy: GMRT_GSB_First_Pass.rfis # This has to be in the pipeline input folder
+    fields: gcal,bpcal
+  flagging_summary:
+    enable: true
+
+flagging__3:
+  enable: false
+  label: ''
+  order: 5
+  autoflag_autocorr_powerspectra:
+    enable: false
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flag_autocorr:
+    enable: false
+  quack_flagging:
+    enable: false
+    quackinterval: 32.2
+    quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
+  flag_spw:
+    enable: false
+    channels: "0:0~30,0:440~511" #band-rolloffs
+    ensure_valid_selection: false
+  flag_time:
+    enable: false
+    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+  flag_antennas:
+    enable: true
+    antennas: '26'
+    timerange: '>2017/09/23/03:58:11'
+  flag_scan:
+    enable: false
+    scans: null
+  static_mask:
+    enable: false
+    mask: labelled_rfimask.pickle.npy
+  autoflag_rfi:
+    enable: false
+    strategy: GMRT_GSB_First_Pass.rfis # This has to be in the pipeline input folder
+    fields: gcal,bpcal
+  flagging_summary:
+    enable: true
+
+
+
+
+cross_cal:
+  enable: false
+  order: 6
+  otfdelay: true        # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  uvrange: ">50"
+  label: 1gc1
+  set_model:
+    enable: true
+    no_verify: false
+    field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
+  delay_cal:
+    enable: true
+    combine: ""
+    solint: "60s" # Useful diagnostic to keep track of system delays with time
+    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
+    minsnr: 5
+    minnrbl: 4
+    plot: true
+    flag:
+      enable: true
+      mode: clip
+      clipminmax: [-60,60]
+  bp_cal:
+    enable: true
+    combine: ""
+    field: bpcal,gcal
+    minnrbl: 4
+    minsnr: 5
+    solnorm: true
+    solint: "inf,5ch"
+    plot: true
+    remove_ph_time_var: false
+  gain_cal_flux:
+    enable: true
+    combine: ""
+    field: fcal
+    minnrbl: 4
+    minsnr: 5
+    plot: false
+  gain_cal_gain:
+    enable: true
+    combine: ""
+    field: gcal
+    minnrbl: 4
+    minsnr: 5
+    plot: true
+  transfer_fluxscale:
+    enable: true
+    reference: fcal 
+    transfer: gcal
+    plot: true
+  apply_delay_cal:
+    enable: true
+    field: bpcal,gcal
+    applyto: bpcal,gcal,target
+    applymode: calflag
+  apply_bp_cal:
+    enable: true
+    applyto: bpcal,gcal,target
+    field: bpcal,gcal
+    applymode: calflag
+  apply_gain_cal_gain:
+    enable: false
+    field: gcal
+    applyto: gcal,target
+    applymode: calflag
+  apply_transfer_fluxscale:
+    enable: true
+    field: fcal
+    applyto: fcal,gcal,target
+    applymode: calflag
+  autoflag_closure_error:
+    enable: false
+    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
+    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
+    column: CORRECTED_DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flagging_summary:
+    enable: false
+
+
+inspect_data:
+  enable: false
+  order: 7
+  label: 1gc1
+  real_imag:
+    enable: true
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_phase:
+    enable: true
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_uvwave:
+    enable: true
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_ant:
+    enable: true
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  phase_uvwave:
+    enable: true
+    fields: gcal,bpcal
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+  amp_scan:
+    enable: true
+    fields: gcal,bpcal,target
+    column: corrected
+    avgtime: '90'
+    avgchannel: '32'
+
+split_target:
+  enable: false
+  order: 8
+  label: corr
+  split_target:
+    enable: true
+    time_average: 16.1s
+    freq_average: 1
+  obsinfo: 
+    enable: true
+    listobs: true
+    summary_json: true
+  prepms:
+    enable: false
+
+# Post-calibration flagging
+flagging__4:
+  enable: true
+  label: corr
+  order: 9
+  autoflag_autocorr_powerspectra:
+    enable: false
+    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
+    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
+    column: DATA
+    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    threads: 8
+  flag_autocorr:
+    enable: true
+  quack_flagging:
+    enable: false
+    quackinterval: 32.2
+    quackmode: beg
+  flag_shadow:
+    enable: false
+    tolerance: 0
+    include_full_mk64: false
+  flag_spw:
+    enable: false
+    channels: "0:0~10,0:465~511" #band-rolloffs
+    ensure_valid_selection: false
+  flag_time:
+    enable: false
+    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+  flag_antennas:
+    enable: false
+    antennas: null
+  flag_scan:
+    enable: false
+    scans: null
+  static_mask:
+    enable: false
+    mask: labelled_rfimask.pickle.npy
+  autoflag_rfi:
+    enable: true
+    strategy: GMRT_GSB_Second_Pass.rfis # This has to be in the pipeline input folder
+  flagging_summary:
+    enable: true
+
+self_cal:
+  enable: false
+  label: corr
+  order: 10
+  primary_beam: false
+  calibrate_with: meqtrees
+  spwid: 0
+  # Imaging settings
+  img_npix: 5540
+  img_trim: 5540
+  img_mgain: 0.95
+  img_cell: 0.5
+  img_weight: briggs
+  img_robust: 0.0
+  img_niter: 1000000
+  img_auto_threshold: 3  
+  img_auto_mask: 5
+  img_cleanborder: 0                        
+  img_facets: 11
+  img_nchans: 2
+  img_joinchannels: true
+  img_fit_spectral_pol: 1
+  img_column: CORRECTED_DATA 
+  img_pol: I
+  # Calibration settings
+  cal_Gsols: [10,25]
+  cal_DDsols: [300,500]
+  cal_gain_amplitude_clip_low: 0.5 
+  cal_gain_amplitude_clip_high: 1.5
+  # Source finding settings
+  sf_thresh_pix: 10
+  sf_thresh_isl: 8
+  cal_niter: 4
+  start_at_iter: 1
+  aimfast:
+    enable: true
+    dr_tolerance: 0.10
+    normality_tolerance: 0.10
+    normality_model: normaltest
+    area_factor: 10
+  image:
+    enable: true
+    auto_mask: [40 , 30, 10, 5, 3]
+    auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
+    column: DATA
+  extract_sources:
+    enable: true
+    spi: false
+    thresh_pix: [10, 10, 10]
+    thresh_isl: [8, 8, 5]
+  calibrate:
+    enable: true
+    model: ['1', '2', '2+3', '2+3']
+    output_data: CORR_DATA
+    gain_matrix_type: GainDiagPhase
+    add_vis_model: true 
+  restore_model: 
+    enable: true
+    model: '2+3'
+    clean_model: '4'
+  flagging_summary:
+    enable: true
+
+image_HI:
+  enable: false
+  order: 11
+  label: corr
+  uvcontsub: 
+    enable: true
+    fitorder: 1
+    fitspw: null 
+  sunblocker: 
+    enable: true
+    use_contsub: true
+    imsize: 800
+    cell: 7
+  wsclean_image:
+    enable: true
+    use_contsub: true
+    spwid: 0
+    nchans: 'all' 
+    npix: [800]
+#    trim: [512]
+    mgain: 0.9
+    cell: 4
+    weight: briggs
+    robust: 2
+    niter: 1000
+    automask: 5
+    autothreshold: 1
+    cleanborder: 0
+#    no-update-mod: true
+    make_cube: true
+  casa_image:
+    enable: true
+    use_contsub: true
+    spwid: 0
+    nchans: 'all'
+    startchan: 0
+    npix: [512]
+    cell: 7
+    weight: briggs
+    robust: 2
+    niter: 0
+    threshold: '10mJy'
+    port2fits: True
+  sofia:
+    enable: true
+#    imager: 'casa' #'casa' or 'wsclean'
+    threshold: 6
+  flagging_summary:
+    enable: true

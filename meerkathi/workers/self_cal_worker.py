@@ -510,9 +510,9 @@ def worker(pipeline, recipe, config):
                         normality_delta, normality_tolerance*residual0['NORM'][0]))
                     return False
             # If total number of iterations is reached stop
-            if n - 1 == cal_niter:
-                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-                return False
+        if n - 1 == cal_niter:
+            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+            return False
             # Ensure atleast one iteration is ran to compare previous and subsequent images
         # If no condition is met return true to continue
         return True
@@ -558,7 +558,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(iter_counter)
     while quality_check(iter_counter,
-                        enable=True if pipeline.enable_task(
+                        enable = True if pipeline.enable_task(
                             config, 'aimfast') else False):
         if pipeline.enable_task(config, 'calibrate'):
             calibrate(iter_counter)

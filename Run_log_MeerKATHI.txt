@@ -34,7 +34,7 @@ It seems the flags from the first flagging round are not progressed to the secon
 
 ---------
 The apply bandpass field apears to be bpcal,gcal why? Because it applied to the gainfield table. This is ok.
-You cannot prived two flux calibrators, they will not be separated.
+You cannot provide two flux calibrators, they will not be separated.
 
 --------
 The delay calibration goes crazy for several antennas that appeared ofline. The target data gets flagged but not the calibrators. Added a timerange to the antenna flagging options. To allow for partial time flagging.
@@ -43,7 +43,6 @@ The initial gc1 calibration is unsuccesful. Why?
 
 It seems that the best results are achieved by only applying the bandpass+ gain calibration. Why are delays messing things up? Does applying flux calibration improve things? No it seems that both applying the fluxscale and the delays messes things up.
 
-
 Default does not apply the gaincal.
 
 It seems that when doing fluxscale the solution are both written out and applied to the gain calibration table. This means that when applying both the calibration is applied twice. The same seems to be true for the delay cal. The default yaml does not apply the gain calibration table.
@@ -51,3 +50,34 @@ It seems that when doing fluxscale the solution are both written out and applied
 ----------
 
 The target is still crap but phase is good now. Is the target crap because of useing the gcal as bandpass?
+yes, do not use.
+
+------
+
+Pipeline crashes on aimfast with the error:
+
+PipelineException: Exception occurred while running pipeline component 'aimfast_1:: Image fidelity assessment for 1': Parameter normality-model is unknown. Run 'stimela cabs -i aimfast' to get help on this cab
+
+The log-aimfast.txt is empty except for:
+
+-----------------------------------
+Stimela version     : 0.3.1
+Cab name            : peter_cab/aimfast
+-------------------------------------
+Need to rebuild stimela.
+
+The problem could be that aimfast is not installed. However I thought that stimela was a selfcontained program so it shouldn't be.
+
+
+Running with aimfast: false results in a different error. In this case the firts round of imaging and extracting are not even done while with aimfast on those seem to work fine.
+
+meerkathi - 2018-06-25 12:34:52,083 ERROR - Traceback (most recent call last):
+  File "Installpath/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 289, in main
+    pipeline.run_workers()
+  File "Installpath/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 177, in run_workers
+    worker.worker(self, recipe, config)
+  File "Installpath/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 564, in worker
+    calibrate(iter_counter)
+  File "Installpath/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 323, in calibrate_meqtrees
+    model = config[key].get('model', num)[num-1]
+IndexError: list index out of range

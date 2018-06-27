@@ -68,6 +68,11 @@ Need to rebuild stimela.
 
 The problem could be that aimfast is not installed. However I thought that stimela was a selfcontained program so it shouldn't be.
 
+The problem is that stimela does not know the parameter 'normality-model' even after upgarding and rebuil;ding stimela
+
+Need stimela_devel which can be installed using
+
+pip install --upgrade -r /home/peter/Pipelines/MeerKATHI/meerkathi/requirements.txt /home/peter/Pipelines/MeerKATHI/meerkathi
 
 Running with aimfast: false results in a different error. In this case the firts round of imaging and extracting are not even done while with aimfast on those seem to work fine.
 
@@ -81,3 +86,5 @@ meerkathi - 2018-06-25 12:34:52,083 ERROR - Traceback (most recent call last):
   File "Installpath/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 323, in calibrate_meqtrees
     model = config[key].get('model', num)[num-1]
 IndexError: list index out of range
+
+So now we need aimfast which isn't installed

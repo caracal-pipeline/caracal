@@ -461,7 +461,7 @@ def worker(pipeline, recipe, config):
                 shared_memory='100Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def get_aimfast_data(filename='output/fidelity_results.json'):
+    def get_aimfast_data(filename= pipeline.output+'/fidelity_results.json'):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
@@ -558,7 +558,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(iter_counter)
     while quality_check(iter_counter,
-                        enable=True if pipeline.enable_task(
+                        enable = True if pipeline.enable_task(
                             config, 'aimfast') else False):
         if pipeline.enable_task(config, 'calibrate'):
             calibrate(iter_counter)

@@ -478,16 +478,49 @@ def worker(pipeline, recipe, config):
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
+            for i in fidelity_data:
+                print i,fidelity_data
+ #           if n >= 2:
+ #               dr0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+ #                        pipeline.output, prefix, n - 1)][
+ #                        '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
+ #                            pipeline.output, prefix, n - 1 if n - 1 <= 2 else 3,
+ #                            '-combined' if n - 1 > 2 else '')]['DR']
+ #               dr1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+ #                        pipeline.output, prefix, n)][
+ #                       '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
+ #                            pipeline.output, prefix, n if n <= 2 else 3,
+ #                            '-combined' if n > 2 else '')]['DR']
+ #               dr_delta = dr1 - dr0
+ #               # Confirm that previous image DR is smaller than subsequent image
+ #               # Also make sure the difference is greater than the tolerance
+ #               if dr_delta < dr_tolerance*dr0:
+ #                   meerkathi.log.info('Stopping criterion: Dynamic range')
+ #                   meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
+ #                   return False
+ #           if n >= 2:
+ #               residual0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+ #                        pipeline.output, prefix, n - 1)]
+ #               residual1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
+ #                        pipeline.output, prefix, n)]
+ #               normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
+ #               # Confirm that previous image normality statistic is smaller than subsequent image
+ #               # Also make sure the difference is greater than the tolerance
+ #               if normality_delta < normality_tolerance*residual0['NORM'][0]:
+ #                   meerkathi.log.info('Stopping criterion: Normality test')
+ #                   meerkathi.log.info('{:f} < {:f}'.format(
+ #                       normality_delta, normality_tolerance*residual0['NORM'][0]))
+ #                   return False
             if n >= 2:
-                dr0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n - 1)][
-                         '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
-                             pipeline.input, prefix, n - 1 if n - 1 <= 2 else 3,
+                dr0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
+                          prefix, n - 1)][
+                         '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
+                              prefix, n - 1 if n - 1 <= 2 else 3,
                              '-combined' if n - 1 > 2 else '')]['DR']
-                dr1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n)][
-                        '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
-                             pipeline.input, prefix, n if n <= 2 else 3,
+                dr1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
+                         prefix, n)][
+                        '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
+                              prefix, n if n <= 2 else 3,
                              '-combined' if n > 2 else '')]['DR']
                 dr_delta = dr1 - dr0
                 # Confirm that previous image DR is smaller than subsequent image
@@ -497,10 +530,10 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
                     return False
             if n >= 2:
-                residual0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n - 1)]
-                residual1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n)]
+                residual0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
+                          prefix, n - 1)]
+                residual1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
+                          prefix, n)]
                 normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance

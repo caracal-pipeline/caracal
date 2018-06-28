@@ -52,21 +52,21 @@ $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
 $ pip install pip wheel setuptools -U
 ```
-3. If working from master branch it may be necessary to install bleeding edge fixes from upstream dependencies. Please install the requirements.txt requirements:
+4. If working from master branch it may be necessary to install bleeding edge fixes from upstream dependencies. Please install the requirements.txt requirements:
 ```
 $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 ```
-4. Install meerKATHI
+5. Install meerKATHI
 ```
 $ pip install <absolute path to meerkathi folder>
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 
-4. Build stimela
+6. Build stimela
 
 `stimela build`
 
-5. run meerkathi
+7. run meerkathi
 
 `meerkathi -c path_to_configuration_file`
 

@@ -89,6 +89,8 @@ def worker(pipeline, recipe, config):
                    firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
     # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
     comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
+    comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+    comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
     nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
     meerkathi.log.info('Found common barycentric frequency grid for all input .MS: {0:d} channels starting at {1:.3f} Hz and with channel width {2:.3f} Hz.'.format(nchan_dopp,comfreq0,comchanw))
 

@@ -469,6 +469,10 @@ def worker(pipeline, recipe, config):
 
     def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
+        # If total number of iterations is reached stop
+        if n == cal_niter:
+           meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+           return False
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
             recipe.run()
@@ -478,10 +482,6 @@ def worker(pipeline, recipe, config):
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
-            # If total number of iterations is reached stop
-            if n == cal_niter:
-                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-                return False
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n >= 2:
                 dr0 = fidelity_data['meerkathi_{0}-residual'.format(

@@ -159,6 +159,11 @@ mapping:
             enum: ["normaltest", "shapiro"]
             desc: normality test model to use. Note that normaltest is the D'Agostino
             required: true
+          label:
+            type: str
+            desc: label when saving data as JSON file
+            required: true
+
 
       image:
         type: map

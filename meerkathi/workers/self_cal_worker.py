@@ -475,54 +475,19 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             key = 'aimfast'
+            label = config[key].get('label', 'meerkathi')
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
-            for i in fidelity_data:
-                print i,fidelity_data
- #           if n >= 2:
- #               dr0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n - 1)][
- #                        '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
- #                            pipeline.output, prefix, n - 1 if n - 1 <= 2 else 3,
- #                            '-combined' if n - 1 > 2 else '')]['DR']
- #               dr1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n)][
- #                       '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
- #                            pipeline.output, prefix, n if n <= 2 else 3,
- #                            '-combined' if n > 2 else '')]['DR']
- #               dr_delta = dr1 - dr0
- #               # Confirm that previous image DR is smaller than subsequent image
- #               # Also make sure the difference is greater than the tolerance
- #               if dr_delta < dr_tolerance*dr0:
- #                   meerkathi.log.info('Stopping criterion: Dynamic range')
- #                   meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
- #                   return False
- #           if n >= 2:
- #               residual0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n - 1)]
- #               residual1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n)]
- #               normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
- #               # Confirm that previous image normality statistic is smaller than subsequent image
- #               # Also make sure the difference is greater than the tolerance
- #               if normality_delta < normality_tolerance*residual0['NORM'][0]:
- #                   meerkathi.log.info('Stopping criterion: Normality test')
- #                   meerkathi.log.info('{:f} < {:f}'.format(
- #                       normality_delta, normality_tolerance*residual0['NORM'][0]))
- #                   return False
- # This is a path for an naming issue with the aimfast json file. This really should not go into the main pipeline.
             if n >= 2:
-                dr0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n - 1)][
-                         '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
-                              prefix, n - 1 if n - 1 <= 2 else 3,
-                             '-combined' if n - 1 > 2 else '')]['DR']
-                dr1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                         prefix, n)][
-                        '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
-                              prefix, n if n <= 2 else 3,
-                             '-combined' if n > 2 else '')]['DR']
+                dr0 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n-1, label)][
+                              '{0:d}_{1:s}-model'.format(
+                                n - 1, label)]['DR']
+                dr1 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n, label)][
+                              '{0:d}_{1:s}-model'.format(
+                                n, label)]['DR']
                 dr_delta = dr1 - dr0
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -531,10 +496,10 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
                     return False
             if n >= 2:
-                residual0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n - 1)]
-                residual1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n)]
+                residual0 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n-1, label)]
+                residual1 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n, label)]
                 normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -569,7 +534,9 @@ def worker(pipeline, recipe, config):
                                                  prefix, num),
                     "normality-model"      :  config[step].get(
                                                   'normality_model', 'normaltest'),
-                    "area-factor"          : config[step].get('area_factor', 10)
+                    "area-factor"          : config[step].get('area_factor', 10),
+                    "label"                : '{0:d}_{1:s}'.format(num, config[step].get(
+                                                'label', 'meekathi'))
                 },
                 input=pipeline.output,
                 output=pipeline.output,
@@ -592,7 +559,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(iter_counter)
     while quality_check(iter_counter,
-                        enable = True if pipeline.enable_task(
+                        enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
         if pipeline.enable_task(config, 'calibrate'):
             calibrate(iter_counter)

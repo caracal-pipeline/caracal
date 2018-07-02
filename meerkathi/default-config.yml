@@ -323,6 +323,7 @@ self_cal:
     normality_tolerance: 0.10
     normality_model: normaltest
     area_factor: 10
+    label: meerkathi
   image:
     enable: true
     auto_mask: [40 , 30, 10, 5, 3]

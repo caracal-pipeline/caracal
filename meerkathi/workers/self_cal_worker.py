@@ -461,7 +461,7 @@ def worker(pipeline, recipe, config):
                 shared_memory='100Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def get_aimfast_data(filename='output/fidelity_results.json'):
+    def get_aimfast_data(filename= pipeline.output+'/fidelity_results.json'):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
@@ -475,20 +475,19 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             key = 'aimfast'
+            label = config[key].get('label', 'meerkathi')
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
             if n >= 2:
-                dr0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n - 1)][
-                         '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
-                             pipeline.input, prefix, n - 1 if n - 1 <= 2 else 3,
-                             '-combined' if n - 1 > 2 else '')]['DR']
-                dr1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n)][
-                        '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
-                             pipeline.input, prefix, n if n <= 2 else 3,
-                             '-combined' if n > 2 else '')]['DR']
+                dr0 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n-1, label)][
+                              '{0:d}_{1:s}-model'.format(
+                                n - 1, label)]['DR']
+                dr1 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n, label)][
+                              '{0:d}_{1:s}-model'.format(
+                                n, label)]['DR']
                 dr_delta = dr1 - dr0
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -497,10 +496,10 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
                     return False
             if n >= 2:
-                residual0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n - 1)]
-                residual1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
-                         pipeline.input, prefix, n)]
+                residual0 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n-1, label)]
+                residual1 = fidelity_data['{0:d}_{1:s}-residual'.format(
+                          n, label)]
                 normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -510,9 +509,9 @@ def worker(pipeline, recipe, config):
                         normality_delta, normality_tolerance*residual0['NORM'][0]))
                     return False
             # If total number of iterations is reached stop
-            if n - 1 == cal_niter:
-                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-                return False
+        if n - 1 == cal_niter:
+            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+            return False
             # Ensure atleast one iteration is ran to compare previous and subsequent images
         # If no condition is met return true to continue
         return True
@@ -535,7 +534,9 @@ def worker(pipeline, recipe, config):
                                                  prefix, num),
                     "normality-model"      :  config[step].get(
                                                   'normality_model', 'normaltest'),
-                    "area-factor"          : config[step].get('area_factor', 10)
+                    "area-factor"          : config[step].get('area_factor', 10),
+                    "label"                : '{0:d}_{1:s}'.format(num, config[step].get(
+                                                'label', 'meekathi'))
                 },
                 input=pipeline.output,
                 output=pipeline.output,

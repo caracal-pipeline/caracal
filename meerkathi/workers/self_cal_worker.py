@@ -461,14 +461,18 @@ def worker(pipeline, recipe, config):
                 shared_memory='100Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def get_aimfast_data(filename= pipeline.output+'/fidelity_results.json'):
+    def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
         return data
 
-    def quality_check(n, prefix='meerkathi-pipeline', enable=True):
+    def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
+        # If total number of iterations is reached stop
+        if n == cal_niter:
+           meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+           return False
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
             recipe.run()
@@ -478,50 +482,13 @@ def worker(pipeline, recipe, config):
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
-            for i in fidelity_data:
-                print i,fidelity_data
- #           if n >= 2:
- #               dr0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n - 1)][
- #                        '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
- #                            pipeline.output, prefix, n - 1 if n - 1 <= 2 else 3,
- #                            '-combined' if n - 1 > 2 else '')]['DR']
- #               dr1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n)][
- #                       '/{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html'.format(
- #                            pipeline.output, prefix, n if n <= 2 else 3,
- #                            '-combined' if n > 2 else '')]['DR']
- #               dr_delta = dr1 - dr0
- #               # Confirm that previous image DR is smaller than subsequent image
- #               # Also make sure the difference is greater than the tolerance
- #               if dr_delta < dr_tolerance*dr0:
- #                   meerkathi.log.info('Stopping criterion: Dynamic range')
- #                   meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
- #                   return False
- #           if n >= 2:
- #               residual0 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n - 1)]
- #               residual1 = fidelity_data['/{0:s}/{1:s}_{2:d}-MFS-residual.fits'.format(
- #                        pipeline.output, prefix, n)]
- #               normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
- #               # Confirm that previous image normality statistic is smaller than subsequent image
- #               # Also make sure the difference is greater than the tolerance
- #               if normality_delta < normality_tolerance*residual0['NORM'][0]:
- #                   meerkathi.log.info('Stopping criterion: Normality test')
- #                   meerkathi.log.info('{:f} < {:f}'.format(
- #                       normality_delta, normality_tolerance*residual0['NORM'][0]))
- #                   return False
+            # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n >= 2:
-                dr0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n - 1)][
-                         '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
-                              prefix, n - 1 if n - 1 <= 2 else 3,
-                             '-combined' if n - 1 > 2 else '')]['DR']
-                dr1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                         prefix, n)][
-                        '/input/{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
-                              prefix, n if n <= 2 else 3,
-                             '-combined' if n > 2 else '')]['DR']
+                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
+                        n-1)][
+                        'meerkathi_{0}-model'.format(n - 1)]['DR']
+                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
+                        'meerkathi_{0}-model'.format(n)]['DR']
                 dr_delta = dr1 - dr0
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -530,10 +497,8 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
                     return False
             if n >= 2:
-                residual0 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n - 1)]
-                residual1 = fidelity_data['/input/{0:s}_{1:d}-MFS-residual.fits'.format(
-                          prefix, n)]
+                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
@@ -542,11 +507,6 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(
                         normality_delta, normality_tolerance*residual0['NORM'][0]))
                     return False
-            # If total number of iterations is reached stop
-        if n - 1 == cal_niter:
-            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-            return False
-            # Ensure atleast one iteration is ran to compare previous and subsequent images
         # If no condition is met return true to continue
         return True
 
@@ -561,14 +521,15 @@ def worker(pipeline, recipe, config):
         step = 'aimfast'
         recipe.add('cab/aimfast', step,
                 {
-                    "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html'.format(
+                    "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
                                                  prefix, num if num <= 2 else 3,
                                                  '-combined' if num > 2 else ''),
-                    "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits'.format(
+                    "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits:output'.format(
                                                  prefix, num),
                     "normality-model"      :  config[step].get(
                                                   'normality_model', 'normaltest'),
-                    "area-factor"          : config[step].get('area_factor', 10)
+                    "area-factor"          : config[step].get('area_factor', 10),
+                    "label"                : "meerkathi_{}".format(num),
                 },
                 input=pipeline.output,
                 output=pipeline.output,
@@ -591,7 +552,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(iter_counter)
     while quality_check(iter_counter,
-                        enable = True if pipeline.enable_task(
+                        enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
         if pipeline.enable_task(config, 'calibrate'):
             calibrate(iter_counter)

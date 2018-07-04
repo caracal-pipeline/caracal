@@ -113,8 +113,9 @@ def worker(pipeline, recipe, config):
                         "skymodel"  : model,
                         "msname"    : msname,
                         "field-id"  : utils.get_field_id(msinfo, field),
-                        "threads"   : config.get('threads', 1),
+                        "threads"   : config["set_model"].get('threads', 1),
                         "mode"      : "simulate",
+                        "tile-size" : 128,
                         "column"    : "MODEL_DATA",
                     }
                 elif model: # spectral model if specified in our standard

@@ -279,45 +279,6 @@ def worker(pipeline, recipe, config):
         return calmodel, model_names_fits
 
 
-
-    def autoset_calibration_intervals(recipe, skymodel, num, key):
-        ## No way around it. The recipe has to be executed at this point to get the sky model
-        recipe.run()
-        # Empty job que after execution
-        recipe.jobs = []
-
-        solints = []
-        # skymodel = os.path.join(pipeline.output, skymodel.split(':')[0])
-        for i in range(pipeline.nobs):
-            msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[i], label)
-            phase_only = config[key].get('gain_matrix_type',
-                    'GainDiagPhase') == ('GainDiagPhase' if num == 1 else 'GainDiag')
-
-            dtdf, dt, df = utils.estimate_solints(msinfo, skymodel,
-                  pipeline.Tsys_eta, pipeline.dish_diameter,
-                  npol=2, gain_tol=config[key].get('gain_tol', 0.05),
-                  j=2 if phase_only else 3)
-
-            with open(msinfo) as yr:
-                info = yaml.load(yr)
-            nchans = sum( info['SPW']['NUM_CHAN'])
-            target = info['FIELD']['NAME'].index(pipeline.target[0])
-
-            tot_time = sum(info['SCAN'][str(target)].values())
-
-            # Minimum time bins needed for gain_error=gain_tol for entire bandwidth
-            min_time_bin = int((dtdf / (df * nchans)) / dt + 1)
-            # Minimum freq bins needed for gain_error=gain_tol for entire time
-            min_freq_bin = int((dtdf / (tot_time)) / df + 1)
-
-            gsols = [min_time_bin, 0]
-            bsols = [0, min_freq_bin]
-            solints.append([gsols, bsols])
-
-        meerkathi.log.info('Product of time and frequency solution intervals is {0:.4g} [s . Hz]'.format(dtdf))
-
-        return solints
-
     def calibrate_meqtrees(num):
         key = 'calibrate'
         model = config[key].get('model', num)[num-1]
@@ -342,21 +303,13 @@ def worker(pipeline, recipe, config):
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-        autosols = [],[]
-        autosols_set = False
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
-            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
-            autosols_set = True
 
         for i,msname in enumerate(mslist):
-            if autosols_set:
-                gsols_ = autosols[i][0] 
-                bsols_ = autosols[i][1] 
-            else:
-                gsols_ = config[key].get('Gsols', gsols)
-                bsols_ = config[key].get('Bsols', bsols)
+            gsols_ = config[key].get('Gsols', gsols)
+            bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
@@ -405,13 +358,9 @@ def worker(pipeline, recipe, config):
             calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
             fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-        autosols = [],[]
-        autosols_set = False
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
-            autosols = autoset_calibration_intervals(recipe, fits_model, num, key)
             config[key]['Bjones'] = True
-            autosols_set = True
 
         if config[key].get('Bjones', bjones):
             jones_chain = 'G,B'
@@ -419,12 +368,8 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G' 
 
         for i,msname in enumerate(mslist):
-            if autosols_set:
-                gsols_ = autosols[i][0] 
-                bsols_ = autosols[i][1] 
-            else:
-                gsols_ = config[key].get('Gsols', gsols)
-                bsols_ = config[key].get('Bsols', bsols)
+            gsols_ = config[key].get('Gsols', gsols)
+            bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/cubical', step, 

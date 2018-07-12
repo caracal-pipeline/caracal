@@ -88,3 +88,117 @@ meerkathi - 2018-06-25 12:34:52,083 ERROR - Traceback (most recent call last):
 IndexError: list index out of range
 
 So now we need aimfast which isn't installed
+Rebuild stimela worked.
+
+Now it crashes on
+
+
+meerkathi - 2018-06-27 10:37:07,462 ERROR - Traceback (most recent call last):
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 289, in main
+    pipeline.run_workers()
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 177, in run_workers
+    worker.worker(self, recipe, config)
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 562, in worker
+    config, 'aimfast') else False):
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 480, in quality_check
+    fidelity_data = get_aimfast_data()
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 466, in get_aimfast_data
+    with open(filename) as f:
+IOError: [Errno 2] No such file or directory: 'output/fidelity_results.json'
+
+
+So the pipeline is hardcoded with 'output' as directory which should be the pipeline.output variable.
+
+And once more it crashes.
+meerkathi - 2018-06-27 16:26:47,779 ERROR - Traceback (most recent call last):
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 289, in main
+    pipeline.run_workers()
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/__init__.py", line 177, in run_workers
+    worker.worker(self, recipe, config)
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 562, in worker
+    config, 'aimfast') else False):
+  File "Installdir/Anaconda2/lib/python2.7/site-packages/meerkathi/workers/self_cal_worker.py", line 483, in quality_check
+    pipeline.input, prefix, n - 1)][
+KeyError: '//home/msdir/inputdir/meerkathi-pipeline_1-MFS-residual.fits'
+
+These should be fixed now.
+
+-------------------------------------------
+We have started from the beginning again and somehow the calibration is completely f'ed up.
+Must be a double calibration. Let's try only bandpass and delay.
+AAAAArg no doesn't work. Try applying all tables by hand.
+
+Ok so it waorks with
+
+#  applycal :: Apply calibrations solutions(s) to data
+vis                 = 'GMRT_Original.ms' #  Name of input visibility file
+field               =      '1,2'        #  Select field using field id(s) or
+                                        #   field name(s)
+spw                 =         ''        #  Select spectral window/channels
+intent              =         ''        #  Select observing intent
+selectdata          =      False        #  Other data selection parameters
+docallib            =      False        #  Use callib or traditional cal apply
+                                        #   parameters
+     gaintable      = ['GMRT_Out/meerkathi-GMRT_Original-1gc1.B0', 'GMRT_Out/meerkathi-GMRT_Original-1gc1.G0'] #  G
+                                        #   ain calibration table(s) to apply on
+                                        #   the fly
+     gainfield      = ['0', '1']        #  Select a subset of calibrators from
+                                        #   gaintable(s)
+     interp         = ['linear', 'linear'] #  Interp type in time[,freq], per
+                                        #   gaintable. default==linear,linear
+     spwmap         =         []        #  Spectral windows combinations to form
+                                        #   for gaintables(s)
+     calwt          =     [True]        #  Calibrate data weights per gaintable.
+
+parang              =      False        #  Apply parallactic angle correction
+applymode           =         ''        #  Calibration mode: ""="calflag","calfl
+                                        #   agstrict","trial","flagonly","flagon
+                                        #   lystrict", or "calonly"
+flagbackup          =       True        #  Automatically back up the state of
+                                        #   flags before the run?
+
+This was with no transfer of the fluxscale and a false otfdelay.
+
+What about when we do delay 1  bandpass 0  flux 1
+     	   	      linear   linear      linear
+
+We first delete the tables before running again It also works with
+
+
+#  applycal :: Apply calibrations solutions(s) to data
+vis                 = 'GMRT_Original.ms' #  Name of input visibility file
+field               =      '1,2'        #  Select field using field id(s) or
+                                        #   field name(s)
+spw                 =         ''        #  Select spectral window/channels
+intent              =         ''        #  Select observing intent
+selectdata          =      False        #  Other data selection parameters
+docallib            =      False        #  Use callib or traditional cal apply
+                                        #   parameters
+     gaintable      = ['GMRT_Out/meerkathi-GMRT_Original-1gc1.K0', 'GMRT_Out/meerkathi-GMRT_Original-1gc1.B0', 'GMRT_Out/meerkathi-GMRT_Original-1gc1.F0'] #  G
+                                        #   ain calibration table(s) to apply on
+                                        #   the fly
+     gainfield      = ['1', '0', '1']   #  Select a subset of calibrators from
+                                        #   gaintable(s)
+     interp         = ['linear', 'linear', 'linear'] #  Interp type in
+                                        #   time[,freq], per gaintable.
+                                        #   default==linear,linear
+     spwmap         =         []        #  Spectral windows combinations to form
+                                        #   for gaintables(s)
+     calwt          =     [True]        #  Calibrate data weights per gaintable.
+
+parang              =      False        #  Apply parallactic angle correction
+applymode           =         ''        #  Calibration mode: ""="calflag","calfl
+                                        #   agstrict","trial","flagonly","flagon
+                                        #   lystrict", or "calonly"
+flagbackup          =       True        #  Automatically back up the state of
+                                        #   flags before the run?
+
+
+
+Let's try to apply the latter through the pipeleine.
+
+Ok all good now.
+
+----------------------------------------
+Self cal is very optimistic.
+

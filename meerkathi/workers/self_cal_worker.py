@@ -281,7 +281,9 @@ def worker(pipeline, recipe, config):
 
     def calibrate_meqtrees(num):
         key = 'calibrate'
+        
         model = config[key].get('model', num)[num-1]
+        print model,num,key
         vismodel = config[key].get('add_vis_model', False) if num == cal_niter else False
 
         if config[key].get('visonly', False):
@@ -310,7 +312,7 @@ def worker(pipeline, recipe, config):
         for i,msname in enumerate(mslist):
             gsols_ = config[key].get('Gsols', gsols)
             bsols_ = config[key].get('Bsols', bsols)
-
+            print i,gsols_
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
@@ -329,8 +331,7 @@ def worker(pipeline, recipe, config):
                  "write-flagset-policy" : "replace",
                  "Gjones"               : True,
                  "Gjones-solution-intervals" : sdm.dismissable(gsols_ or None),
-                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type',
-                                          'GainDiag') if num == 1 else 'GainDiag',
+                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type','GainDiag')[num-1] if num <= len(config[key].get('gain_matrix_type','GainDiag')) else 'GainDiag',
                  "Gjones-ampl-clipping"      : True,
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
@@ -420,6 +421,7 @@ def worker(pipeline, recipe, config):
            return False
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
+            
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
@@ -467,8 +469,9 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/aimfast', step,
                 {
                     "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                                                 prefix, num if num <= 2 else 3,
-                                                 '-combined' if num > 2 else ''),
+                                                 prefix, num if num <= len(config['calibrate'].get('model', num))
+                                                 else len(config['calibrate'].get('model', num)),
+                                                 '-combined' if len(model.split('+')) >= 2 else ''),
                     "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits:output'.format(
                                                  prefix, num),
                     "normality-model"      :  config[step].get(

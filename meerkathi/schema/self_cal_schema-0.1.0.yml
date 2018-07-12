@@ -226,8 +226,8 @@ mapping:
             desc: Data to output after calibration
             required: true
           gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            seq:
+              - type: str
             desc: Gain matrix type
             required: true
           add_vis_model:

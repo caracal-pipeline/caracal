@@ -168,6 +168,10 @@ mapping:
             type: int
             desc: Minimum required SNR for solutions.
             required: false
+          solint: 
+            type: str
+            desc: Time solution interval
+            required: false
           plot: 
             type: bool
             desc: Enables plotting of gains.
@@ -197,6 +201,10 @@ mapping:
           minsnr:
             type: int
             desc: Minimum required SNR for solutions.
+            required: false
+          solint: 
+            type: str
+            desc: Time solution interval
             required: false
           plot:
             type: bool

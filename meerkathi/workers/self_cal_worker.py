@@ -465,6 +465,9 @@ def worker(pipeline, recipe, config):
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
                 combine_models(mm, num)
+        else:
+            # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.
+            model = config['calibrate'].get('model', num)[len(config['extract_sources'].get('thresh_pix', thresh_pix))-1]
         step = 'aimfast'
         recipe.add('cab/aimfast', step,
                 {

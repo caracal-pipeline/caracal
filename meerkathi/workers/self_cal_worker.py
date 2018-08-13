@@ -434,12 +434,12 @@ def worker(pipeline, recipe, config):
                         'meerkathi_{0}-model'.format(n - 1)]['DR']
                 dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
                         'meerkathi_{0}-model'.format(n)]['DR']
-                dr_delta = dr1 - dr0
+                dr_delta = (dr1 - dr0)/float(dr0)
                 # Confirm that previous image DR is smaller than subsequent image
-                # Also make sure the difference is greater than the tolerance
-                if dr_delta < dr_tolerance*dr0:
+                # Also make sure the fractional difference is greater than the tolerance
+                if dr_delta < dr_tolerance:
                     meerkathi.log.info('Stopping criterion: Dynamic range')
-                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
+                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
                     return False
             if n >= 2:
                 residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]

@@ -461,7 +461,7 @@ def worker(pipeline, recipe, config):
                 if residual1['STDDev'] > residual0['STDDev']*noise_tolerance:
                     meerkathi.log.info('Stopping criterion: Increased noise')
                     meerkathi.log.info('{:f} > {:f}'.format(
-                        residual1, residual0['STDDev']*noise_tolerance))
+                        residual1['STDDev'], residual0['STDDev']*noise_tolerance))
                     return False
 
         # If no condition is met return true to continue

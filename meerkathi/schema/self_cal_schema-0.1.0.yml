@@ -150,6 +150,10 @@ mapping:
             type: float
             desc: Relative change in normality stats from latter to current iter
             required: true
+          noise_tolerance:
+            type: float
+            desc: Noise factor increase to stop self cal
+            required: true
           area_factor:
             type: float
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af

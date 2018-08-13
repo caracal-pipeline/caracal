@@ -426,7 +426,7 @@ def worker(pipeline, recipe, config):
             key = 'aimfast'
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
-            noise_tolerance = config[key].get('noise_tolerance_factor', 3)
+            noise_tolerance = config[key].get('noise_tolerance', 3.0)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n >= 2:

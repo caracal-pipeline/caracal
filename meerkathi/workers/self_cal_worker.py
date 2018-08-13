@@ -38,7 +38,7 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    gsols = config.get('cal_Gsols', [])
+ #   gsols = config.get('cal_Gsols', [])
     bsols = config.get('cal_Bsols', [])
     taper = config.get('img_uvtaper', None)
     label = config['label']

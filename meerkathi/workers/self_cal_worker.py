@@ -426,6 +426,7 @@ def worker(pipeline, recipe, config):
             key = 'aimfast'
             dr_tolerance = config[key].get('dr_tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
+            noise_tolerance = config[key].get('noise_tolerance_factor', 3)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n >= 2:
@@ -452,6 +453,17 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('{:f} < {:f}'.format(
                         normality_delta, normality_tolerance*residual0['NORM'][0]))
                     return False
+            if n >= 2:
+                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
+                # Confirm that previous image noise is not smaller than subsequent image
+                # by a factor of atleast three
+                if residual1['STDDev'] > residual0['STDDev']*noise_tolerance:
+                    meerkathi.log.info('Stopping criterion: Increased noise')
+                    meerkathi.log.info('{:f} > {:f}'.format(
+                        residual1, residual0['STDDev']*noise_tolerance))
+                    return False
+
         # If no condition is met return true to continue
         return True
 

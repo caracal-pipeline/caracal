@@ -457,7 +457,7 @@ def worker(pipeline, recipe, config):
                 residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Confirm that previous image noise is not smaller than subsequent image
-                # by a factor of atleast three
+                # by a factor of atleast noise_tolerance or three default
                 if residual1['STDDev'] > residual0['STDDev']*noise_tolerance:
                     meerkathi.log.info('Stopping criterion: Increased noise')
                     meerkathi.log.info('{:f} > {:f}'.format(

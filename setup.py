@@ -8,7 +8,7 @@ except ImportError as e:
   from distutils.core import setup
 
 requirements = [
-'ruamel.yaml>=0.15.22',
+'ruamel.yaml==0.15.22',
 'stimela>=0.3.1',
 'numpy>=1.13.1',
 'scipy>=0.19.1',

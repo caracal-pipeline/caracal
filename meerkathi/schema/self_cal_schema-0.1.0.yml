@@ -179,8 +179,8 @@ mapping:
             desc: Auto clean threshold
             required: true
           column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
+            seq:
+              - type: str
             desc: Column to image
             required: false
 
@@ -221,13 +221,13 @@ mapping:
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
           output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            seq:
+              - type: str
             desc: Data to output after calibration
             required: true
           gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            seq:
+              - type: str
             desc: Gain matrix type
             required: true
           add_vis_model:
@@ -292,7 +292,7 @@ mapping:
             required: true
           output_data:
             type: str
-            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            enum: ["CORR_RES", "CORR_DATA"]
             desc: Data to output after calibration
             required: true
           gain_matrix_type:
@@ -362,7 +362,7 @@ mapping:
             required: true
           output_data:
             type: str
-            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            enum: ["CORR_RES", "CORR_DATA"]
             desc: Data to output after calibration
             required: true
           gain_matrix_type:
@@ -409,7 +409,7 @@ mapping:
             required: true
           output_data:
             type: str
-            enum: ["CORR_RES", "CORR_DATA", "RES"]
+            enum: ["CORR_RES", "CORR_DATA"]
             desc: Data to output after calibration
             required: true
           gain_matrix_type:

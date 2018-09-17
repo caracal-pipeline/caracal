@@ -38,7 +38,7 @@ def worker(pipeline, recipe, config):
     column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
- #   gsols = config.get('cal_Gsols', [])
+    gsols = config.get('cal_Gsols', [])
     bsols = config.get('cal_Bsols', [])
     taper = config.get('img_uvtaper', None)
     label = config['label']
@@ -283,7 +283,6 @@ def worker(pipeline, recipe, config):
         key = 'calibrate'
         
         model = config[key].get('model', num)[num-1]
-        print model,num,key
         vismodel = config[key].get('add_vis_model', False) if num == cal_niter else False
 
         if config[key].get('visonly', False):
@@ -308,11 +307,17 @@ def worker(pipeline, recipe, config):
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
             config[key]['Bjones'] = True
+    
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)
+            print(config[key].get('Gsols_time'))
+            if not config[key].get('Gsols_time') or \
+                       not config[key].get('Gsols_channel'):
+                gsols_ = gsols
+            else:
+                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
+                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
             bsols_ = config[key].get('Bsols', bsols)
-            print i,gsols_
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {

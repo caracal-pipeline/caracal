@@ -1,0 +1,7 @@
+2018-09-18 11:18:11,569 - STIMELA-1 - INFO - ---------------------------------
+2018-09-18 11:18:11,569 - STIMELA-1 - INFO - Stimela version 1.0.0
+2018-09-18 11:18:11,569 - STIMELA-1 - INFO - Sphesihle Makhathini <sphemakh@gmail.com>
+2018-09-18 11:18:11,570 - STIMELA-1 - INFO - Running: Automatically catergorize observed fields
+2018-09-18 11:18:11,570 - STIMELA-1 - INFO - ---------------------------------
+2018-09-18 11:18:12,341 - STIMELA-1 - INFO - Saving pipeline information in .last_automatically_catergorize_observed_fields.json
+2018-09-18 11:18:12,341 - STIMELA-1 - INFO - Recipe executed successfully

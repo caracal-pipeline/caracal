@@ -170,7 +170,7 @@ mapping:
             required: true
           auto_mask:
             seq:
-              - type: int
+              - type: int 
             desc: Auto masking threshold
             required: true
           auto_threshold:
@@ -226,13 +226,23 @@ mapping:
             desc: Data to output after calibration
             required: true
           gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
+            seq:
+              - type: str
             desc: Gain matrix type
             required: true
           add_vis_model:
             type: bool
             desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            required: false
+          Gsols_time:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+          Gsols_channel:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
 
       image_2:

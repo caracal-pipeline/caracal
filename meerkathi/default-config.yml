@@ -337,7 +337,9 @@ self_cal:
     enable: true
     model: ['1', '2', '2+3', '2+3']
     output_data: CORR_DATA
-    gain_matrix_type: GainDiagPhase
+    gain_matrix_type: [GainDiagPhase, GainDiagPhase]
+    Gsols_time: [1,1,1]
+    Gsols_channel: [0,0,0]
     add_vis_model: true 
   restore_model: 
     enable: true

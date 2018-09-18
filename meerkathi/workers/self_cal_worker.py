@@ -281,6 +281,7 @@ def worker(pipeline, recipe, config):
 
     def calibrate_meqtrees(num):
         key = 'calibrate'
+        
         model = config[key].get('model', num)[num-1]
         vismodel = config[key].get('add_vis_model', False) if num == cal_niter else False
 
@@ -306,11 +307,17 @@ def worker(pipeline, recipe, config):
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
             config[key]['Bjones'] = True
+    
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)
+            print(config[key].get('Gsols_time'))
+            if not config[key].get('Gsols_time') or \
+                       not config[key].get('Gsols_channel'):
+                gsols_ = gsols
+            else:
+                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
+                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
             bsols_ = config[key].get('Bsols', bsols)
-
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
@@ -329,8 +336,7 @@ def worker(pipeline, recipe, config):
                  "write-flagset-policy" : "replace",
                  "Gjones"               : True,
                  "Gjones-solution-intervals" : sdm.dismissable(gsols_ or None),
-                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type',
-                                          'GainDiag') if num == 1 else 'GainDiag',
+                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type','GainDiag')[num-1] if num <= len(config[key].get('gain_matrix_type','GainDiag')) else 'GainDiag',
                  "Gjones-ampl-clipping"      : True,
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
@@ -368,7 +374,12 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G' 
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)
+            if not config[key].get('Gsols_time') or \
+               not config[key].get('Gsols_channel'):
+                gsols_ = gsols
+            else:
+                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
+                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
@@ -389,7 +400,7 @@ def worker(pipeline, recipe, config):
                     "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                     "montblanc-dtype"  : 'float',
                     "j1-solvable"      : True,
-                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
+                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type','Gain2x2')[num-1] if num <= len(config[key].get('gain_matrix_type','Gain2x2')) else 'Gain2x2'],
                     "j1-time-int"      : gsols_[0],
                     "j1-freq-int"      : gsols_[1],
                     "j1-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
@@ -420,6 +431,7 @@ def worker(pipeline, recipe, config):
            return False
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
+            
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
@@ -454,7 +466,7 @@ def worker(pipeline, recipe, config):
                     return False
         # If no condition is met return true to continue
         return True
-
+   
     def image_quality_assessment(num):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
@@ -463,12 +475,16 @@ def worker(pipeline, recipe, config):
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
                 combine_models(mm, num)
+        else:
+            # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.
+            model = config['calibrate'].get('model', num)[len(config['extract_sources'].get('thresh_pix', thresh_pix))-1]
         step = 'aimfast'
         recipe.add('cab/aimfast', step,
                 {
                     "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                                                 prefix, num if num <= 2 else 3,
-                                                 '-combined' if num > 2 else ''),
+                                                 prefix, num if num <= len(config['calibrate'].get('model', num))
+                                                 else len(config['calibrate'].get('model', num)),
+                                                 '-combined' if len(model.split('+')) >= 2 else ''),
                     "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits:output'.format(
                                                  prefix, num),
                     "normality-model"      :  config[step].get(

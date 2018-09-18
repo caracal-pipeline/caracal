@@ -116,7 +116,7 @@ def worker(pipeline, recipe, config):
         step = 'image_{}'.format(num)
         image_opts = {
                   "msname"    : mslist,
-                  "column"    : config[key].get('column', column)[[num-1 if len(config[key].get('column') >= num) else -1],
+                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column') >= num) else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),

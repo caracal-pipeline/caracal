@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
-                      "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column') >= num) else -1],
+                      "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
                       "trim"      : config[key].get('trim', trim),
@@ -116,7 +116,7 @@ def worker(pipeline, recipe, config):
         step = 'image_{}'.format(num)
         image_opts = {
                   "msname"    : mslist,
-                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column') >= num) else -1],
+                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),
@@ -329,7 +329,7 @@ def worker(pipeline, recipe, config):
                  "write-flagset-policy" : "replace",
                  "Gjones"               : True,
                  "Gjones-solution-intervals" : sdm.dismissable(gsols_ or None),
-                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type', 'GainDiag')[[num-1 if len(config[key].get('gain_matrix_type') >= num) else -1], 
+                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type', 'GainDiag')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1], 
                  "Gjones-ampl-clipping"      : True,
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),

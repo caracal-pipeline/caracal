@@ -327,7 +327,7 @@ self_cal:
     enable: true
     auto_mask: [40 , 30, 10, 5, 3]
     auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
-    column: DATA
+    column: ["DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA"]
   extract_sources:
     enable: true
     spi: false
@@ -336,8 +336,8 @@ self_cal:
   calibrate:
     enable: true
     model: ['1', '2', '2+3', '2+3']
-    output_data: CORR_DATA
-    gain_matrix_type: GainDiagPhase
+    output_data: ["CORR_DATA", "CORR_RES","CORR_RES","CORR_RES"]
+    gain_matrix_type: ["GainDiagPhase","GainDiag","GainDiag","GainDiag"]
     add_vis_model: true 
   restore_model: 
     enable: true

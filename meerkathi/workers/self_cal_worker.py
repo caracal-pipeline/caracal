@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
-                      "column"    : config[key].get('column', column) if num == 1 else column,
+                      "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
                       "trim"      : config[key].get('trim', trim),
@@ -116,7 +116,7 @@ def worker(pipeline, recipe, config):
         step = 'image_{}'.format(num)
         image_opts = {
                   "msname"    : mslist,
-                  "column"    : config[key].get('column', column) if num == 1 else column,
+                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),
@@ -130,8 +130,8 @@ def worker(pipeline, recipe, config):
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                   "auto-threshold": config[key].get('auto_threshold',
-                                       [auto_mask])[num-1 if len(config[key].get(
-                                           'auto_mask', [auto_mask])) > 1 else 0],
+                                       [auto_thresh])[num-1 if len(config[key].get(
+                                           'auto_mask', [auto_mask])) >= num else 0],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
@@ -308,7 +308,7 @@ def worker(pipeline, recipe, config):
             config[key]['Bjones'] = True
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)
+            gsols_ = config[key].get('Gsols', gsols)  #TODO Make gsols a list - different solints for each round.
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
@@ -319,7 +319,7 @@ def worker(pipeline, recipe, config):
                  "msname"               : msname,
                  "threads"              : ncpu,
                  "column"               : "DATA",
-                 "output-data"          : config[key].get('output_data', 'CORR_RES'),
+                 "output-data"          : config[key].get('output_data', 'CORR_DATA')[num-1],
                  "output-column"        : "CORRECTED_DATA",
                  "prefix"               : '{0:s}-{1:d}_meqtrees'.format(pipeline.dataid[i], num),
                  "label"                : 'cal{0:d}'.format(num),
@@ -329,8 +329,7 @@ def worker(pipeline, recipe, config):
                  "write-flagset-policy" : "replace",
                  "Gjones"               : True,
                  "Gjones-solution-intervals" : sdm.dismissable(gsols_ or None),
-                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type',
-                                          'GainDiag') if num == 1 else 'GainDiag',
+                 "Gjones-matrix-type"   : config[key].get('gain_matrix_type', 'GainDiag')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1], 
                  "Gjones-ampl-clipping"      : True,
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
@@ -415,7 +414,7 @@ def worker(pipeline, recipe, config):
     def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
-        if n == cal_niter:
+        if n == cal_niter+1:
            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
            return False
         if enable:
@@ -434,12 +433,12 @@ def worker(pipeline, recipe, config):
                         'meerkathi_{0}-model'.format(n - 1)]['DR']
                 dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
                         'meerkathi_{0}-model'.format(n)]['DR']
-                dr_delta = dr1 - dr0
+                dr_delta = (dr1 - dr0)/float(dr0)
                 # Confirm that previous image DR is smaller than subsequent image
-                # Also make sure the difference is greater than the tolerance
-                if dr_delta < dr_tolerance*dr0:
+                # Also make sure the fractional difference is greater than the tolerance
+                if dr_delta < dr_tolerance:
                     meerkathi.log.info('Stopping criterion: Dynamic range')
-                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance*dr0))
+                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
                     return False
             if n >= 2:
                 residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
@@ -508,7 +507,8 @@ def worker(pipeline, recipe, config):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(iter_counter)
-
+    if (iter_counter == cal_niter) :
+        image(iter_counter+1)
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']

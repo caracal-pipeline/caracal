@@ -1,0 +1,8 @@
+2018-09-18 15:53:06,055 - STIMELA-0 - INFO - Config directory not be found. Will create ./stimela_parameter_files
+2018-09-18 15:53:06,114 - STIMELA-0 - INFO - ---------------------------------
+2018-09-18 15:53:06,114 - STIMELA-0 - INFO - Stimela version 1.0.0
+2018-09-18 15:53:06,114 - STIMELA-0 - INFO - Sphesihle Makhathini <sphemakh@gmail.com>
+2018-09-18 15:53:06,114 - STIMELA-0 - INFO - Running: Get convert and extract data
+2018-09-18 15:53:06,114 - STIMELA-0 - INFO - ---------------------------------
+2018-09-18 15:53:06,127 - STIMELA-0 - INFO - Saving pipeline information in .last_get_convert_and_extract_data.json
+2018-09-18 15:53:06,127 - STIMELA-0 - INFO - Recipe executed successfully

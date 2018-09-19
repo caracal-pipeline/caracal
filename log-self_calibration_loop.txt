@@ -1,0 +1,180 @@
+2018-09-18 15:53:07,293 - STIMELA-10 - INFO - ---------------------------------
+2018-09-18 15:53:07,293 - STIMELA-10 - INFO - Stimela version 1.0.0
+2018-09-18 15:53:07,293 - STIMELA-10 - INFO - Sphesihle Makhathini <sphemakh@gmail.com>
+2018-09-18 15:53:07,293 - STIMELA-10 - INFO - Running: Self calibration loop
+2018-09-18 15:53:07,293 - STIMELA-10 - INFO - ---------------------------------
+2018-09-18 15:53:07,520 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_1'
+2018-09-18 15:53:07,725 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_1'
+2018-09-18 15:53:07,861 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-18 15:53:07,861 - STIMELA-10 - INFO - Running job image_1
+2018-09-18 15:53:07,861 - STIMELA-10 - INFO - STEP 1 :: image_1:: Make image after first round of calibration
+2018-09-18 15:53:07,899 - STIMELA-10 - INFO - Instantiating container [image_1-139621560760384153727878738]. The container ID is printed below.
+2018-09-18 16:55:00,967 - STIMELA-10 - INFO - Container [image_1-139621560760384153727878738] has executed successfully
+2018-09-18 16:55:01,726 - STIMELA-10 - INFO - Runtime was 1:01:52.073454.
+2018-09-18 16:55:05,807 - STIMELA-10 - INFO - Container image_1-139621560760384153727878738 has been stopped.
+2018-09-18 16:55:08,082 - STIMELA-10 - INFO - Running job extract_1
+2018-09-18 16:55:08,088 - STIMELA-10 - INFO - STEP 2 :: extract_1:: Extract sources
+2018-09-18 16:55:08,505 - STIMELA-10 - INFO - Instantiating container [extract_1-139621561451696153727878759]. The container ID is printed below.
+2018-09-18 16:58:54,301 - STIMELA-10 - INFO - Container [extract_1-139621561451696153727878759] has executed successfully
+2018-09-18 16:58:54,301 - STIMELA-10 - INFO - Runtime was 0:03:43.141446.
+2018-09-18 16:58:54,427 - STIMELA-10 - INFO - Container extract_1-139621561451696153727878759 has been stopped.
+2018-09-18 16:58:54,690 - STIMELA-10 - INFO - Running job aimfast
+2018-09-18 16:58:54,694 - STIMELA-10 - INFO - STEP 3 :: aimfast_1:: Image fidelity assessment for 1
+2018-09-18 16:58:54,797 - STIMELA-10 - INFO - Instantiating container [aimfast-13962168041081615372787878]. The container ID is printed below.
+2018-09-18 16:59:39,028 - STIMELA-10 - INFO - Container [aimfast-13962168041081615372787878] has executed successfully
+2018-09-18 16:59:39,028 - STIMELA-10 - INFO - Runtime was 0:00:42.762134.
+2018-09-18 16:59:39,162 - STIMELA-10 - INFO - Container aimfast-13962168041081615372787878 has been stopped.
+2018-09-18 16:59:39,512 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-18 16:59:39,608 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-18 16:59:40,941 - STIMELA-10 - INFO - Adding cab 'peter_cab/calibrator' to recipe. The container will be named 'calibrate_1_0'
+2018-09-18 16:59:41,310 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_2'
+2018-09-18 16:59:41,594 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_2'
+2018-09-18 16:59:41,788 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-18 16:59:41,803 - STIMELA-10 - INFO - Running job calibrate_1_0
+2018-09-18 16:59:41,803 - STIMELA-10 - INFO - STEP 1 :: calibrate_1_0:: Calibrate step 1 ms=GMRT_Original-corr.ms
+2018-09-18 16:59:41,866 - STIMELA-10 - INFO - Instantiating container [calibrate_1_0-139621680362024153728278039]. The container ID is printed below.
+2018-09-18 17:50:25,583 - STIMELA-10 - INFO - Container [calibrate_1_0-139621680362024153728278039] has executed successfully
+2018-09-18 17:50:25,593 - STIMELA-10 - INFO - Runtime was 0:50:42.842992.
+2018-09-18 17:50:26,102 - STIMELA-10 - INFO - Container calibrate_1_0-139621680362024153728278039 has been stopped.
+2018-09-18 17:50:26,791 - STIMELA-10 - INFO - Running job image_2
+2018-09-18 17:50:26,791 - STIMELA-10 - INFO - STEP 2 :: image_2:: Make image after first round of calibration
+2018-09-18 17:50:26,852 - STIMELA-10 - INFO - Instantiating container [image_2-139621560760384153728278108]. The container ID is printed below.
+2018-09-18 18:48:27,285 - STIMELA-10 - INFO - Container [image_2-139621560760384153728278108] has executed successfully
+2018-09-18 18:48:27,587 - STIMELA-10 - INFO - Runtime was 0:57:58.995665.
+2018-09-18 18:48:31,245 - STIMELA-10 - INFO - Container image_2-139621560760384153728278108 has been stopped.
+2018-09-18 18:48:33,110 - STIMELA-10 - INFO - Running job extract_2
+2018-09-18 18:48:33,110 - STIMELA-10 - INFO - STEP 3 :: extract_2:: Extract sources
+2018-09-18 18:48:33,412 - STIMELA-10 - INFO - Instantiating container [extract_2-139621561451696153728278143]. The container ID is printed below.
+2018-09-18 18:51:07,149 - STIMELA-10 - INFO - Container [extract_2-139621561451696153728278143] has executed successfully
+2018-09-18 18:51:07,149 - STIMELA-10 - INFO - Runtime was 0:02:31.269450.
+2018-09-18 18:51:07,239 - STIMELA-10 - INFO - Container extract_2-139621561451696153728278143 has been stopped.
+2018-09-18 18:51:07,419 - STIMELA-10 - INFO - Running job aimfast
+2018-09-18 18:51:07,419 - STIMELA-10 - INFO - STEP 4 :: aimfast_2:: Image fidelity assessment for 2
+2018-09-18 18:51:07,469 - STIMELA-10 - INFO - Instantiating container [aimfast-139621680410816153728278167]. The container ID is printed below.
+2018-09-18 18:52:01,299 - STIMELA-10 - INFO - Container [aimfast-139621680410816153728278167] has executed successfully
+2018-09-18 18:52:01,299 - STIMELA-10 - INFO - Runtime was 0:00:52.691368.
+2018-09-18 18:52:01,374 - STIMELA-10 - INFO - Container aimfast-139621680410816153728278167 has been stopped.
+2018-09-18 18:52:01,621 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-18 18:52:01,661 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-18 18:52:02,182 - STIMELA-10 - INFO - Adding cab 'peter_cab/calibrator' to recipe. The container will be named 'calibrate_2_0'
+2018-09-18 18:52:02,451 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_3'
+2018-09-18 18:52:02,651 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_3'
+2018-09-18 18:52:02,846 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-18 18:52:02,847 - STIMELA-10 - INFO - Running job calibrate_2_0
+2018-09-18 18:52:02,847 - STIMELA-10 - INFO - STEP 1 :: calibrate_2_0:: Calibrate step 2 ms=GMRT_Original-corr.ms
+2018-09-18 18:52:02,848 - STIMELA-10 - INFO - Instantiating container [calibrate_2_0-139621680362024153728952183]. The container ID is printed below.
+2018-09-18 19:40:25,886 - STIMELA-10 - INFO - Container [calibrate_2_0-139621680362024153728952183] has executed successfully
+2018-09-18 19:40:25,900 - STIMELA-10 - INFO - Runtime was 0:48:22.118327.
+2018-09-18 19:40:26,202 - STIMELA-10 - INFO - Container calibrate_2_0-139621680362024153728952183 has been stopped.
+2018-09-18 19:40:26,558 - STIMELA-10 - INFO - Running job image_3
+2018-09-18 19:40:26,558 - STIMELA-10 - INFO - STEP 2 :: image_3:: Make image after first round of calibration
+2018-09-18 19:40:26,560 - STIMELA-10 - INFO - Instantiating container [image_3-139621560760384153728952228]. The container ID is printed below.
+2018-09-18 21:04:49,723 - STIMELA-10 - INFO - Container [image_3-139621560760384153728952228] has executed successfully
+2018-09-18 21:04:50,018 - STIMELA-10 - INFO - Runtime was 1:24:21.757801.
+2018-09-18 21:04:52,792 - STIMELA-10 - INFO - Container image_3-139621560760384153728952228 has been stopped.
+2018-09-18 21:04:54,624 - STIMELA-10 - INFO - Running job extract_3
+2018-09-18 21:04:54,631 - STIMELA-10 - INFO - STEP 3 :: extract_3:: Extract sources
+2018-09-18 21:04:54,919 - STIMELA-10 - INFO - Instantiating container [extract_3-139621561451696153728952252]. The container ID is printed below.
+2018-09-18 21:07:26,285 - STIMELA-10 - INFO - Container [extract_3-139621561451696153728952252] has executed successfully
+2018-09-18 21:07:26,285 - STIMELA-10 - INFO - Runtime was 0:02:28.591689.
+2018-09-18 21:07:26,406 - STIMELA-10 - INFO - Container extract_3-139621561451696153728952252 has been stopped.
+2018-09-18 21:07:26,625 - STIMELA-10 - INFO - Running job aimfast
+2018-09-18 21:07:26,625 - STIMELA-10 - INFO - STEP 4 :: aimfast_3:: Image fidelity assessment for 3
+2018-09-18 21:07:26,671 - STIMELA-10 - INFO - Instantiating container [aimfast-139621680410816153728952273]. The container ID is printed below.
+2018-09-18 21:08:11,821 - STIMELA-10 - INFO - Container [aimfast-139621680410816153728952273] has executed successfully
+2018-09-18 21:08:11,821 - STIMELA-10 - INFO - Runtime was 0:00:43.960099.
+2018-09-18 21:08:11,868 - STIMELA-10 - INFO - Container aimfast-139621680410816153728952273 has been stopped.
+2018-09-18 21:08:12,183 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-18 21:08:12,215 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-18 21:08:13,357 - STIMELA-10 - INFO - Adding cab 'peter_cab/calibrator' to recipe. The container will be named 'calibrate_3_0'
+2018-09-18 21:08:20,697 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_4'
+2018-09-18 21:08:20,875 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_4'
+2018-09-18 21:08:21,015 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-18 21:08:21,015 - STIMELA-10 - INFO - Running job calibrate_3_0
+2018-09-18 21:08:21,015 - STIMELA-10 - INFO - STEP 1 :: calibrate_3_0:: Calibrate step 3 ms=GMRT_Original-corr.ms
+2018-09-18 21:08:21,017 - STIMELA-10 - INFO - Instantiating container [calibrate_3_0-139621680362024153729769293]. The container ID is printed below.
+2018-09-18 21:51:42,215 - STIMELA-10 - INFO - Container [calibrate_3_0-139621680362024153729769293] has executed successfully
+2018-09-18 21:51:42,226 - STIMELA-10 - INFO - Runtime was 0:43:20.344514.
+2018-09-18 21:51:42,786 - STIMELA-10 - INFO - Container calibrate_3_0-139621680362024153729769293 has been stopped.
+2018-09-18 21:51:43,416 - STIMELA-10 - INFO - Running job image_4
+2018-09-18 21:51:43,417 - STIMELA-10 - INFO - STEP 2 :: image_4:: Make image after first round of calibration
+2018-09-18 21:51:43,480 - STIMELA-10 - INFO - Instantiating container [image_4-139621560760384153729769345]. The container ID is printed below.
+2018-09-18 23:15:08,441 - STIMELA-10 - INFO - Container [image_4-139621560760384153729769345] has executed successfully
+2018-09-18 23:15:08,705 - STIMELA-10 - INFO - Runtime was 1:23:23.748371.
+2018-09-18 23:15:11,960 - STIMELA-10 - INFO - Container image_4-139621560760384153729769345 has been stopped.
+2018-09-18 23:15:13,434 - STIMELA-10 - INFO - Running job extract_4
+2018-09-18 23:15:13,434 - STIMELA-10 - INFO - STEP 3 :: extract_4:: Extract sources
+2018-09-18 23:15:13,678 - STIMELA-10 - INFO - Instantiating container [extract_4-139621561451696153729770077]. The container ID is printed below.
+2018-09-18 23:17:47,997 - STIMELA-10 - INFO - Container [extract_4-139621561451696153729770077] has executed successfully
+2018-09-18 23:17:47,997 - STIMELA-10 - INFO - Runtime was 0:02:32.035219.
+2018-09-18 23:17:48,060 - STIMELA-10 - INFO - Container extract_4-139621561451696153729770077 has been stopped.
+2018-09-18 23:17:48,298 - STIMELA-10 - INFO - Running job aimfast
+2018-09-18 23:17:48,298 - STIMELA-10 - INFO - STEP 4 :: aimfast_4:: Image fidelity assessment for 4
+2018-09-18 23:17:48,367 - STIMELA-10 - INFO - Instantiating container [aimfast-139621680410816153729770095]. The container ID is printed below.
+2018-09-18 23:18:33,807 - STIMELA-10 - INFO - Container [aimfast-139621680410816153729770095] has executed successfully
+2018-09-18 23:18:33,807 - STIMELA-10 - INFO - Runtime was 0:00:44.543822.
+2018-09-18 23:18:33,901 - STIMELA-10 - INFO - Container aimfast-139621680410816153729770095 has been stopped.
+2018-09-18 23:18:34,205 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-18 23:18:34,274 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-18 23:18:35,197 - STIMELA-10 - INFO - Adding cab 'peter_cab/calibrator' to recipe. The container will be named 'calibrate_4_0'
+2018-09-18 23:18:35,494 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_5'
+2018-09-18 23:18:35,707 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_5'
+2018-09-18 23:18:35,928 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-18 23:18:35,928 - STIMELA-10 - INFO - Running job calibrate_4_0
+2018-09-18 23:18:35,928 - STIMELA-10 - INFO - STEP 1 :: calibrate_4_0:: Calibrate step 4 ms=GMRT_Original-corr.ms
+2018-09-18 23:18:35,930 - STIMELA-10 - INFO - Instantiating container [calibrate_4_0-139621680362024153730551484]. The container ID is printed below.
+2018-09-18 23:33:27,235 - STIMELA-10 - INFO - Container [calibrate_4_0-139621680362024153730551484] has executed successfully
+2018-09-18 23:33:27,249 - STIMELA-10 - INFO - Runtime was 0:14:50.422815.
+2018-09-18 23:33:28,119 - STIMELA-10 - INFO - Container calibrate_4_0-139621680362024153730551484 has been stopped.
+2018-09-18 23:33:28,867 - STIMELA-10 - INFO - Running job image_5
+2018-09-18 23:33:28,867 - STIMELA-10 - INFO - STEP 2 :: image_5:: Make image after first round of calibration
+2018-09-18 23:33:28,905 - STIMELA-10 - INFO - Instantiating container [image_5-139621560760384153730551529]. The container ID is printed below.
+2018-09-19 00:54:22,093 - STIMELA-10 - INFO - Container [image_5-139621560760384153730551529] has executed successfully
+2018-09-19 00:54:22,379 - STIMELA-10 - INFO - Runtime was 1:20:52.045573.
+2018-09-19 00:54:26,111 - STIMELA-10 - INFO - Container image_5-139621560760384153730551529 has been stopped.
+2018-09-19 00:54:27,843 - STIMELA-10 - INFO - Running job extract_5
+2018-09-19 00:54:27,844 - STIMELA-10 - INFO - STEP 3 :: extract_5:: Extract sources
+2018-09-19 00:54:28,109 - STIMELA-10 - INFO - Instantiating container [extract_5-13962156145169615373055156]. The container ID is printed below.
+2018-09-19 00:57:03,241 - STIMELA-10 - INFO - Container [extract_5-13962156145169615373055156] has executed successfully
+2018-09-19 00:57:03,241 - STIMELA-10 - INFO - Runtime was 0:02:32.689573.
+2018-09-19 00:57:03,328 - STIMELA-10 - INFO - Container extract_5-13962156145169615373055156 has been stopped.
+2018-09-19 00:57:03,538 - STIMELA-10 - INFO - Running job aimfast
+2018-09-19 00:57:03,539 - STIMELA-10 - INFO - STEP 4 :: aimfast_5:: Image fidelity assessment for 5
+2018-09-19 00:57:03,606 - STIMELA-10 - INFO - Instantiating container [aimfast-139621680410816153730551578]. The container ID is printed below.
+2018-09-19 00:57:48,741 - STIMELA-10 - INFO - Container [aimfast-139621680410816153730551578] has executed successfully
+2018-09-19 00:57:48,741 - STIMELA-10 - INFO - Runtime was 0:00:43.903187.
+2018-09-19 00:57:48,786 - STIMELA-10 - INFO - Container aimfast-139621680410816153730551578 has been stopped.
+2018-09-19 00:57:49,058 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-19 00:57:49,145 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-19 00:57:50,022 - STIMELA-10 - INFO - Adding cab 'peter_cab/calibrator' to recipe. The container will be named 'calibrate_5_0'
+2018-09-19 00:57:50,290 - STIMELA-10 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'image_6'
+2018-09-19 00:57:50,489 - STIMELA-10 - INFO - Adding cab 'peter_cab/pybdsm' to recipe. The container will be named 'extract_6'
+2018-09-19 00:57:50,712 - STIMELA-10 - INFO - Adding cab 'peter_cab/aimfast' to recipe. The container will be named 'aimfast'
+2018-09-19 00:57:50,712 - STIMELA-10 - INFO - Running job calibrate_5_0
+2018-09-19 00:57:50,712 - STIMELA-10 - INFO - STEP 1 :: calibrate_5_0:: Calibrate step 5 ms=GMRT_Original-corr.ms
+2018-09-19 00:57:50,713 - STIMELA-10 - INFO - Instantiating container [calibrate_5_0-139621680362024153731146967]. The container ID is printed below.
+2018-09-19 01:13:01,147 - STIMELA-10 - INFO - Container [calibrate_5_0-139621680362024153731146967] has executed successfully
+2018-09-19 01:13:01,158 - STIMELA-10 - INFO - Runtime was 0:15:09.708148.
+2018-09-19 01:13:01,460 - STIMELA-10 - INFO - Container calibrate_5_0-139621680362024153731146967 has been stopped.
+2018-09-19 01:13:02,073 - STIMELA-10 - INFO - Running job image_6
+2018-09-19 01:13:02,074 - STIMELA-10 - INFO - STEP 2 :: image_6:: Make image after first round of calibration
+2018-09-19 01:13:02,112 - STIMELA-10 - INFO - Instantiating container [image_6-139621560760384153731147011]. The container ID is printed below.
+2018-09-19 02:48:20,645 - STIMELA-10 - INFO - Container [image_6-139621560760384153731147011] has executed successfully
+2018-09-19 02:48:20,966 - STIMELA-10 - INFO - Runtime was 1:35:16.888053.
+2018-09-19 02:48:24,397 - STIMELA-10 - INFO - Container image_6-139621560760384153731147011 has been stopped.
+2018-09-19 02:48:26,062 - STIMELA-10 - INFO - Running job extract_6
+2018-09-19 02:48:26,063 - STIMELA-10 - INFO - STEP 3 :: extract_6:: Extract sources
+2018-09-19 02:48:26,462 - STIMELA-10 - INFO - Instantiating container [extract_6-139621561451696153731147038]. The container ID is printed below.
+2018-09-19 02:51:05,575 - STIMELA-10 - INFO - Container [extract_6-139621561451696153731147038] has executed successfully
+2018-09-19 02:51:05,575 - STIMELA-10 - INFO - Runtime was 0:02:36.593079.
+2018-09-19 02:51:05,681 - STIMELA-10 - INFO - Container extract_6-139621561451696153731147038 has been stopped.
+2018-09-19 02:51:06,032 - STIMELA-10 - INFO - Running job aimfast
+2018-09-19 02:51:06,033 - STIMELA-10 - INFO - STEP 4 :: aimfast_6:: Image fidelity assessment for 6
+2018-09-19 02:51:06,052 - STIMELA-10 - INFO - Instantiating container [aimfast-139621680410816153731147057]. The container ID is printed below.
+2018-09-19 02:51:50,615 - STIMELA-10 - INFO - Container [aimfast-139621680410816153731147057] has executed successfully
+2018-09-19 02:51:50,615 - STIMELA-10 - INFO - Runtime was 0:00:43.349312.
+2018-09-19 02:51:50,661 - STIMELA-10 - INFO - Container aimfast-139621680410816153731147057 has been stopped.
+2018-09-19 02:51:50,905 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-19 02:51:50,965 - STIMELA-10 - INFO - Recipe executed successfully
+2018-09-19 02:51:51,285 - STIMELA-10 - INFO - Saving pipeline information in .last_self_calibration_loop.json
+2018-09-19 02:51:51,285 - STIMELA-10 - INFO - Recipe executed successfully

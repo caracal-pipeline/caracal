@@ -336,10 +336,15 @@ self_cal:
   calibrate:
     enable: true
     model: ['1', '2', '2+3', '2+3']
-    output_data: ["CORR_DATA", "CORR_RES","CORR_RES","CORR_RES"]
-    gain_matrix_type: ["GainDiagPhase","GainDiag","GainDiag","GainDiag"]
+<<<<<<< HEAD
+    output_data: CORR_DATA
+    gain_matrix_type: [GainDiagPhase, GainDiagPhase]
     Gsols_time: [1,1,1]
     Gsols_channel: [0,0,0]
+=======
+    output_data: ["CORR_DATA", "CORR_RES","CORR_RES","CORR_RES"]
+    gain_matrix_type: ["GainDiagPhase","GainDiag","GainDiag","GainDiag"]
+>>>>>>> origin/selfcal-fix
     add_vis_model: true 
   restore_model: 
     enable: true

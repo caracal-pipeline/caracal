@@ -149,9 +149,9 @@ def worker(pipeline, recipe, config):
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
 
-            recipe.add('cab/h5toms', step,
+            recipe.add('cab/mvftoms', step,
                 {
-                    "hdf5files"     : [h5file],
+                    "mvffiles"     : [h5file],
                     "output-ms"     : msname,
                     "no-auto"       : False,
                     "tar"           : True,

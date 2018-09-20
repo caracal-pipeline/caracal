@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# When run from the directory itself there is all kinds of logs and stimela files
+/stimela-parameters
+.last_automatically_catergorize_observed_fields.json
+.last_get_convert_and_extract_data.json
+log-automatically_catergorize_observed_fields.txt
+log-get_convert_and_extract_data.txt
+log-self_calibration_loop.txt

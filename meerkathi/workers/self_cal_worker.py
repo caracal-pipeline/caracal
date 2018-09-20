@@ -308,7 +308,13 @@ def worker(pipeline, recipe, config):
             config[key]['Bjones'] = True
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)  #TODO Make gsols a list - different solints for each round.
+            print(config[key].get('Gsols_time'))
+            if not config[key].get('Gsols_time') or \
+                       not config[key].get('Gsols_channel'):
+                gsols_ = gsols
+            else:
+                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
+                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
@@ -367,7 +373,12 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G' 
 
         for i,msname in enumerate(mslist):
-            gsols_ = config[key].get('Gsols', gsols)
+            if not config[key].get('Gsols_time') or \
+               not config[key].get('Gsols_channel'):
+                gsols_ = gsols
+            else:
+                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
+                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
@@ -388,7 +399,7 @@ def worker(pipeline, recipe, config):
                     "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                     "montblanc-dtype"  : 'float',
                     "j1-solvable"      : True,
-                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
+                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type','Gain2x2')[num-1] if num <= len(config[key].get('gain_matrix_type','Gain2x2')) else 'Gain2x2'],
                     "j1-time-int"      : gsols_[0],
                     "j1-freq-int"      : gsols_[1],
                     "j1-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
@@ -462,12 +473,16 @@ def worker(pipeline, recipe, config):
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
                 combine_models(mm, num)
+        #else:
+            # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.
+            #model = config['calibrate'].get('model', num)[len(config['extract_sources'].get('thresh_pix', thresh_pix))-1]
         step = 'aimfast'
         recipe.add('cab/aimfast', step,
                 {
                     "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                                                 prefix, num if num <= 2 else 3,
-                                                 '-combined' if num > 2 else ''),
+                                                 prefix, num if num <= len(config['calibrate'].get('model', num))
+                                                 else len(config['calibrate'].get('model', num)),
+                                                 '-combined' if len(model.split('+')) >= 2 else ''),
                     "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits:output'.format(
                                                  prefix, num),
                     "normality-model"      :  config[step].get(
@@ -507,8 +522,7 @@ def worker(pipeline, recipe, config):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(iter_counter)
-    if (iter_counter == cal_niter) :
-        image(iter_counter+1)
+
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']

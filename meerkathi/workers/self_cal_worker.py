@@ -438,30 +438,61 @@ def worker(pipeline, recipe, config):
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if n >= 2:
-                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
-                        n-1)][
-                        'meerkathi_{0}-model'.format(n - 1)]['DR']
-                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
-                        'meerkathi_{0}-model'.format(n)]['DR']
-                dr_delta = (dr1 - dr0)/float(dr0)
+            if n>= 2:
+                residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
+                # Unlike the other ratios DR should grow hence n-1/n < 1.
+                drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+                # Dynamic range is important
+                drweight=1.2
+                # The other parameters should become smaller, hence n/n-1 < 1
+                skewratio=residual1['SKEW']/residual0['SKEW']
+                # We care about the skewness when it is large. What is large?
+                # Let's go with 0.025 at that point it's weight is 0.5 
+                skewweight=residual1['SKEW']/0.05
+                kurtratio=residual1['KURT']/residual0['KURT']
+                # Kurtosis goes to 3 so this way it counts for 0.5 when normal distribution
+                kurtweight=residual1['KURT']/6.
+                meanratio=residual1['MEAN']/residual0['MEAN']
+                # We only care about the mean when it is large compared to the noise
+                # When it deviates from zero more than 20% of the noise this is a problem 
+                meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
+                noiseratio=residual1['STDDev']/residual0['STDDev']
+                # The noise should not change if it does that is a problem.
+                noiseweight=np.abs(1.-noiseratio)                
+                # These weights could be integrated with the ratios however while testing
+                #  kept them separately such that the idea behind them is easy to interpret.
+                # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
+                # it needs to be slightly lower to avoid keeping fitting without improvement
+                HolisticCheck=drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight
+                if HolisticCheck > 1.7*(1-dr_tolerance):
+                    meerkathi.log.info('Stopping criterion: Holistic Check')
+                    meerkathi.log.info('{:f} < {:f}'.format(HolisticCheck, 1.7*(1-dr_tolerance))
+                    return False
+#            if n >= 2:
+#                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
+#                        n-1)][
+#                        'meerkathi_{0}-model'.format(n - 1)]['DR']
+#                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
+#                        'meerkathi_{0}-model'.format(n)]['DR']
+#                dr_delta = (dr1 - dr0)/float(dr0)
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the fractional difference is greater than the tolerance
-                if dr_delta < dr_tolerance:
-                    meerkathi.log.info('Stopping criterion: Dynamic range')
-                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
-                    return False
-            if n >= 2:
-                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
-                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
-                normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
+#                if dr_delta < dr_tolerance:
+#                    meerkathi.log.info('Stopping criterion: Dynamic range')
+#                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
+#                    return False
+#            if n >= 2:
+#                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+#                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
+#                normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
-                if normality_delta < normality_tolerance*residual0['NORM'][0]:
-                    meerkathi.log.info('Stopping criterion: Normality test')
-                    meerkathi.log.info('{:f} < {:f}'.format(
-                        normality_delta, normality_tolerance*residual0['NORM'][0]))
-                    return False
+#                if normality_delta < normality_tolerance*residual0['NORM'][0]:
+#                    meerkathi.log.info('Stopping criterion: Normality test')
+#                    meerkathi.log.info('{:f} < {:f}'.format(
+#                        normality_delta, normality_tolerance*residual0['NORM'][0]))
+#                    return False
         # If no condition is met return true to continue
         return True
 

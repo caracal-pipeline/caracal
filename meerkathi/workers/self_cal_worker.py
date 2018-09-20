@@ -1,10 +1,7 @@
-import os
-import sys
-import yaml
 import json
+import os
 import meerkathi
 import stimela.dismissable as sdm
-from meerkathi.dispatch_crew import utils
 
 NAME = 'Self calibration loop'
 
@@ -340,7 +337,6 @@ def worker(pipeline, recipe, config):
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "Bjones"                    : config[key].get('Bjones', False),
-                 "Bjones-ampl-clipping"      : True,
                  "Bjones-solution-intervals" : sdm.dismissable(bsols_ or None),
                  "Bjones-ampl-clipping"      : config[key].get('Bjones', bjones),
                  "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
@@ -458,42 +454,50 @@ def worker(pipeline, recipe, config):
                 # When it deviates from zero more than 20% of the noise this is a problem 
                 meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
                 noiseratio=residual1['STDDev']/residual0['STDDev']
-                # The noise should not change if it does that is a problem.
-                noiseweight=np.abs(1.-noiseratio)                
-                # These weights could be integrated with the ratios however while testing
+                # The noise should not change if the residuals are gaussian in n-1.
+                # However, they should decline in case the residuals are non-gaussian.
+                # We want a weight that goes to 0 in both cases
+                if residual0['KURT']/6. < 0.52 and residual0['SKEW'] < 0.01:
+                    noiseweight=abs(1.-noiseratio)
+                else:
+                    # If declining then noiseratio is small and that's good, If rising it is a real bad thing.
+                    #  Hence we can just square the ratio
+                    noiseweight=noiseratio
+                # These weights could be integrated with the ratios however while testing I
                 #  kept them separately such that the idea behind them is easy to interpret.
                 # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
                 # it needs to be slightly lower to avoid keeping fitting without improvement
                 HolisticCheck=drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight
-                if HolisticCheck > 1.7*(1-dr_tolerance):
+                if 1.7*(1 - dr_tolerance) < HolisticCheck:
                     meerkathi.log.info('Stopping criterion: Holistic Check')
-                    meerkathi.log.info('{:f} < {:f}'.format(HolisticCheck, 1.7*(1-dr_tolerance))
+                    meerkathi.log.info('{:f} < {:f}'.format(HolisticCheck, 1.7*(1-dr_tolerance)))
                     return False
-#            if n >= 2:
-#                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
-#                        n-1)][
-#                        'meerkathi_{0}-model'.format(n - 1)]['DR']
-#                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
-#                        'meerkathi_{0}-model'.format(n)]['DR']
-#                dr_delta = (dr1 - dr0)/float(dr0)
+                                       
+                #            if n >= 2:
+                #                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
+                #                        n-1)][
+                #                        'meerkathi_{0}-model'.format(n - 1)]['DR']
+                #                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
+                #                        'meerkathi_{0}-model'.format(n)]['DR']
+                #                dr_delta = (dr1 - dr0)/float(dr0)
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the fractional difference is greater than the tolerance
-#                if dr_delta < dr_tolerance:
-#                    meerkathi.log.info('Stopping criterion: Dynamic range')
-#                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
-#                    return False
-#            if n >= 2:
-#                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
-#                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
-#                normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
+                #                if dr_delta < dr_tolerance:
+                #                    meerkathi.log.info('Stopping criterion: Dynamic range')
+                #                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
+                #                    return False
+                #            if n >= 2:
+                #                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+                #                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
+                #                normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
                 # Confirm that previous image normality statistic is smaller than subsequent image
                 # Also make sure the difference is greater than the tolerance
-#                if normality_delta < normality_tolerance*residual0['NORM'][0]:
-#                    meerkathi.log.info('Stopping criterion: Normality test')
-#                    meerkathi.log.info('{:f} < {:f}'.format(
-#                        normality_delta, normality_tolerance*residual0['NORM'][0]))
-#                    return False
-        # If no condition is met return true to continue
+                #                if normality_delta < normality_tolerance*residual0['NORM'][0]:
+                #                    meerkathi.log.info('Stopping criterion: Normality test')
+                #                    meerkathi.log.info('{:f} < {:f}'.format(
+                #                        normality_delta, normality_tolerance*residual0['NORM'][0]))
+                #                    return False
+                # If no condition is met return true to continue
         return True
 
     def image_quality_assessment(num):

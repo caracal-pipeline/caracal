@@ -322,7 +322,7 @@ def worker(pipeline, recipe, config):
                  "msname"               : msname,
                  "threads"              : ncpu,
                  "column"               : "DATA",
-                 "output-data"          : config[key].get('output_data', 'CORR_DATA')[num-1],
+                 "output-data"          : config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1],
                  "output-column"        : "CORRECTED_DATA",
                  "prefix"               : '{0:s}-{1:d}_meqtrees'.format(pipeline.dataid[i], num),
                  "label"                : 'cal{0:d}'.format(num),

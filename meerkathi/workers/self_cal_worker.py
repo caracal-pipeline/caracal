@@ -467,10 +467,13 @@ def worker(pipeline, recipe, config):
                 #  kept them separately such that the idea behind them is easy to interpret.
                 # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
                 # it needs to be slightly lower to avoid keeping fitting without improvement
-                HolisticCheck=drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight
-                if 1.7*(1 - dr_tolerance) < HolisticCheck:
+                # Ok that is the wrong philosophy. Their weighted mean should be less than 1-tolerance that means improvement.
+                # And the weights control how important each parameter is.
+                HolisticCheck=(drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
+                              /(drweight+skewweight+kurtweight+meanweight+noiseweight)
+                if (1 - dr_tolerance) < HolisticCheck:
                     meerkathi.log.info('Stopping criterion: Holistic Check')
-                    meerkathi.log.info('{:f} < {:f}'.format(HolisticCheck, 1.7*(1-dr_tolerance)))
+                    meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
                     return False
                                        
                 #            if n >= 2:

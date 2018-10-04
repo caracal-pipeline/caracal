@@ -140,7 +140,7 @@ def worker(pipeline, recipe, config):
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
             image_opts.update({"auto-mask" : config[key].get('auto_mask',
-                [auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) > 1 else 0]})
+                [auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) > num-1 else -1]})
 
 
 
@@ -439,13 +439,13 @@ def worker(pipeline, recipe, config):
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
                 drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
-                # Dynamic range is important
-                drweight=1.2
+                # Dynamic range is important, However it is based on one pixel.
+                drweight=0.8
                 # The other parameters should become smaller, hence n/n-1 < 1
                 skewratio=residual1['SKEW']/residual0['SKEW']
                 # We care about the skewness when it is large. What is large?
-                # Let's go with 0.025 at that point it's weight is 0.5 
-                skewweight=residual1['SKEW']/0.05
+                # Let's go with 0.005 at that point it's weight is 0.5
+                skewweight=residual1['SKEW']/0.005
                 kurtratio=residual1['KURT']/residual0['KURT']
                 # Kurtosis goes to 3 so this way it counts for 0.5 when normal distribution
                 kurtweight=residual1['KURT']/6.
@@ -474,6 +474,12 @@ def worker(pipeline, recipe, config):
                 if (1 - dr_tolerance) < HolisticCheck:
                     meerkathi.log.info('Stopping criterion: Holistic Check')
                     meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
+                    return False
+                # We also check the GAussianity of the noise if all is deteriating we will stop as well in case a user uses too low tolerance
+                GaussCheck = (skewratio+kurtratio+meanratio+noiseratio)/4.
+                if 1 < GaussCheck:
+                    meerkathi.log.info('Stopping criterion: Gaussian Check')
+                    meerkathi.log.info('{:f} < {:f}'.format(1., GaussianCheck))
                     return False
                                        
                 #            if n >= 2:

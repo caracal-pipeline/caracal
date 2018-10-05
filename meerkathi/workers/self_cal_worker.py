@@ -129,9 +129,7 @@ def worker(pipeline, recipe, config):
                   "channelsout"     : nchans,
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                  "auto-threshold": config[key].get('auto_threshold',
-                                       [auto_thresh])[num-1 if len(config[key].get(
-                                           'auto_mask', [auto_mask])) >= num else 0],
+                  "auto-threshold": config[key].get('auto_threshold',[auto_thresh])[num-1 if len(config[key].get('auto_threshold', [auto_thresh])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
@@ -142,8 +140,7 @@ def worker(pipeline, recipe, config):
         elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
-            image_opts.update({"auto-mask" : config[key].get('auto_mask',
-                [auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) > 1 else 0]})
+            image_opts.update({"auto-mask" : config[key].get('auto_mask',[auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) >= num else -1]})
 
 
 

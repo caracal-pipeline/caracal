@@ -145,8 +145,6 @@ def worker(pipeline, recipe, config):
             image_opts.update({"auto-mask" : config[key].get('auto_mask',
                 [auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) > 1 else 0]})
 
-
-
         recipe.add('cab/wsclean', step,
         image_opts,
         input=pipeline.input,
@@ -281,18 +279,27 @@ def worker(pipeline, recipe, config):
 
     def calibrate_meqtrees(num):
         key = 'calibrate'
-        model = config[key].get('model', num)[num-1]
-        vismodel = config[key].get('add_vis_model', False) if num == cal_niter else False
+        
+        if num == cal_niter:
+            vismodel = config[key].get('add_vis_model', False)  
+        else:
+            vismodel = False
+        #force to calibrate with model data column if specified by user
 
-        if config[key].get('visonly', False):
+        if config[key].get('model_mode', None) == 'pybdsm_vis':
             vismodel = True
             calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
+            model = config[key].get('model', num)[num-1]
             with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
                 stdw.write('#format: ra_d dec_d i\n')
                 stdw.write('0.0 -30.0 1e-99')
             for i, msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
-        else:
+
+            modelcolumn = None
+        
+        elif config[key].get('model_mode', None) == 'pybdsm_only':
+            model = config[key].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+')) > 1:
                 mm = model.split('+')
                 calmodel, fits_model = combine_models(mm, num,
@@ -302,6 +309,16 @@ def worker(pipeline, recipe, config):
                 model = int(model)
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+
+            modelcolumn = None
+        
+        elif  config[key].get('model_mode', None) == 'vis_only':
+            vismodel = True
+            modelcolumn = 'MODEL_DATA'
+            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
+            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+                stdw.write('#format: ra_d dec_d i\n')
+                stdw.write('0.0 -30.0 1e-99')
 
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
@@ -320,8 +337,9 @@ def worker(pipeline, recipe, config):
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
-                 "skymodel"             : calmodel,
+                 "skymodel"             : calmodel,  #in case I don't want to use a sky model
                  "add-vis-model"        : vismodel,
+                 "model-column"         : modelcolumn,
                  "msname"               : msname,
                  "threads"              : ncpu,
                  "column"               : "DATA",

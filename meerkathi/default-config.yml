@@ -282,6 +282,39 @@ flagging__2:
   flagging_summary:
     enable: true
 
+mask_from_catalog:
+  enable: no
+  order: 11
+  centre_coord: ['03:22:41.700', '-37:12:30.000']
+  catalog: 'SUMSS'
+  catalog_mask: 'sumss_mask.fits'
+  fornaxa_finalmask: 'fornaxa_mask.fits'
+  final_mask: 'sumss_fornaxa_mask.fits'
+  query_SUMSS:
+    enable: no
+    width_image: '4d'
+  build_beam:
+    enable: no
+    img_size: 3600      #must be the same as  im_npix in selfcal worker
+    cell_size: 2         #this will change and we will use the self_cal_3GC keywords
+    frequency: 1.37031054688e9
+    copyhead : yes
+    headname : 'fa3_hi_p1_sm_1-MFS-image.fits'
+  make_mosaic:
+    enable: yes
+  casa_regrid:
+    enable: yes
+  pb_correction:
+    enable:  yes
+  make_mask:
+    enable: yes
+    cutoff: 1.e-3
+  fornaxa_mask:
+    enable: yes
+    fornaxa_cutoff: 1.e-3
+  add_masks:
+    enable: yes
+
 
 self_cal:
   enable: true
@@ -328,6 +361,13 @@ self_cal:
     auto_mask: [40 , 30, 10, 5, 3]
     auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
     column: ["DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA"]
+    mask_from_sky: False
+    fits_mask: '' #filename in output/masking/
+    multi_scale: False
+    multi_scale_scales: [0,40,80,150] #pixel
+    local_rms: False
+    no_update_model: False
+    minuvw_m: 0
   extract_sources:
     enable: true
     spi: false
@@ -341,6 +381,7 @@ self_cal:
     Gsols_time: [15,15,15]
     Gsols_channel: [0,0,0]
     add_vis_model: true 
+    model_mode: 'vis_only'
   restore_model: 
     enable: true
     model: '2+3'

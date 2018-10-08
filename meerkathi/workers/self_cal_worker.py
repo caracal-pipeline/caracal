@@ -473,6 +473,7 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('Stopping criterion: Holistic Check')
                     meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
+                    global iter_counter
                     iter_counter -= 1
 
 

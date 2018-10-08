@@ -201,8 +201,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/pybdsm', step,
                 {
                     "image"         : im,
-                    "thresh_pix"    : config[key].get('thresh_pix', thresh_pix)[num-1 if len(config[key].get('thres_pix')) >= num else -1],
-                    "thresh_isl"    : config[key].get('thresh_isl', thresh_isl)[num-1 if len(config[key].get('thres_isl')) >= num else -1],
+                    "thresh_pix"    : config[key].get('thresh_pix', thresh_pix)[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+                    "thresh_isl"    : config[key].get('thresh_isl', thresh_isl)[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
                     "outfile"       : '{:s}.fits:output'.format(calmodel),
                     "blank_limit"   : sdm.dismissable(blank_limit),
                     "adaptive_rms_box" : True,

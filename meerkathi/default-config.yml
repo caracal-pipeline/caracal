@@ -287,9 +287,9 @@ mask_from_catalog:
   order: 11
   centre_coord: ['03:22:41.700', '-37:12:30.000']
   catalog: 'SUMSS'
-  catalog_mask: 'sumss_mask.fits'
-  fornaxa_finalmask: 'fornaxa_mask.fits'
-  final_mask: 'sumss_fornaxa_mask.fits'
+  catalog_mask: ' ' #specify output name of catalog mask
+  fornaxa_finalmask: '' #specify ouptut name of FornaxA mask if present
+  final_mask: '' #specify name of final mask for continuum imaging
   query_SUMSS:
     enable: no
     width_image: '4d'
@@ -299,7 +299,7 @@ mask_from_catalog:
     cell_size: 2         #this will change and we will use the self_cal_3GC keywords
     frequency: 1.37031054688e9
     copyhead : yes
-    headname : 'fa3_hi_p1_sm_1-MFS-image.fits'
+    headname : '' #name of continuuum image 
   make_mosaic:
     enable: yes
   casa_regrid:

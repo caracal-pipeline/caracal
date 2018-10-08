@@ -5,6 +5,9 @@ import stimela.dismissable as sdm
 
 NAME = 'Self calibration loop'
 
+# iter_counter is used as a global variable.
+
+
 CUBICAL_OUT = {
     "CORR_DATA"    : 'sc',
     "CORR_RES"     : 'sr',
@@ -418,9 +421,7 @@ def worker(pipeline, recipe, config):
     def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
-        if n == cal_niter+1:
-           meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-           return False
+
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
             recipe.run()
@@ -471,13 +472,17 @@ def worker(pipeline, recipe, config):
                 if (1 - dr_tolerance) < HolisticCheck:
                     meerkathi.log.info('Stopping criterion: Holistic Check')
                     meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
+                #   If we stop we want change the final output model to the previous iteration
+                    iter_counter -= 1
+
+
                     return False
                 # We also check the GAussianity of the noise if all is deteriating we will stop as well in case a user uses too low tolerance
-                GaussCheck = (skewratio+kurtratio+meanratio+noiseratio)/4.
-                if 1 < GaussCheck:
-                    meerkathi.log.info('Stopping criterion: Gaussian Check')
-                    meerkathi.log.info('{:f} < {:f}'.format(1., GaussianCheck))
-                    return False
+                #GaussCheck = (skewratio+kurtratio+meanratio+noiseratio)/4.
+                #if 1.1 < GaussCheck:
+                #    meerkathi.log.info('Stopping criterion: Gaussian Check')
+                #    meerkathi.log.info('{:f} < {:f}'.format(1., GaussianCheck))
+                #    return False
                                        
                 #            if n >= 2:
                 #                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
@@ -503,7 +508,11 @@ def worker(pipeline, recipe, config):
                 #                    meerkathi.log.info('{:f} < {:f}'.format(
                 #                        normality_delta, normality_tolerance*residual0['NORM'][0]))
                 #                    return False
-                # If no condition is met return true to continue
+            # If we reach the number of iterations we want to stop.
+            if n == cal_niter + 1:
+                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+                return False
+            # If no condition is met return true to continue
         return True
 
     def image_quality_assessment(num):
@@ -544,26 +553,29 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # selfcal loop
+    global iter_counter
     iter_counter = config.get('start_at_iter', 1)
-    if pipeline.enable_task(config, 'image'):
-        image(iter_counter)
-    if pipeline.enable_task(config, 'extract_sources'):
-        extract_sources(iter_counter)
-    if pipeline.enable_task(config, 'aimfast'):
-        image_quality_assessment(iter_counter)
+    #if pipeline.enable_task(config, 'image'):
+    #    image(iter_counter)
+    #if pipeline.enable_task(config, 'extract_sources'):
+    #    extract_sources(iter_counter)
+    #if pipeline.enable_task(config, 'aimfast'):
+    #    image_quality_assessment(iter_counter)
     while quality_check(iter_counter,
                         enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
-        if pipeline.enable_task(config, 'calibrate'):
-            calibrate(iter_counter)
+     #   if pipeline.enable_task(config, 'calibrate'):
+     #       calibrate(iter_counter)
         iter_counter += 1
-        if pipeline.enable_task(config, 'image'):
-            image(iter_counter)
-        if pipeline.enable_task(config, 'extract_sources'):
-            extract_sources(iter_counter)
-        if pipeline.enable_task(config, 'aimfast'):
-            image_quality_assessment(iter_counter)
+      #  if pipeline.enable_task(config, 'image'):
+      #      image(iter_counter)
+     #   if pipeline.enable_task(config, 'extract_sources'):
+     #       extract_sources(iter_counter)
+     #   if pipeline.enable_task(config, 'aimfast'):
+     #       image_quality_assessment(iter_counter)
+        print(iter_counter)
 
+    print(iter_counter)
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']

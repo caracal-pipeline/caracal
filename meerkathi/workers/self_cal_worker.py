@@ -5,7 +5,7 @@ import stimela.dismissable as sdm
 
 NAME = 'Self calibration loop'
 
-# iter_counter is used as a global variable.
+# self_cal_iter_counter is used as a global variable.
 
 
 CUBICAL_OUT = {
@@ -473,8 +473,8 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('Stopping criterion: Holistic Check')
                     meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
-                    global iter_counter
-                    iter_counter -= 1
+                    global self_cal_iter_counter
+                    self_cal_iter_counter -= 1
 
 
                     return False
@@ -554,43 +554,41 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # selfcal loop
-    global iter_counter
-    iter_counter = config.get('start_at_iter', 1)
-    #if pipeline.enable_task(config, 'image'):
-    #    image(iter_counter)
-    #if pipeline.enable_task(config, 'extract_sources'):
-    #    extract_sources(iter_counter)
-    #if pipeline.enable_task(config, 'aimfast'):
-    #    image_quality_assessment(iter_counter)
-    while quality_check(iter_counter,
+    global self_cal_iter_counter
+    self_cal_iter_counter = config.get('start_at_iter', 1)
+    if pipeline.enable_task(config, 'image'):
+        image(self_cal_iter_counter)
+    if pipeline.enable_task(config, 'extract_sources'):
+        extract_sources(self_cal_iter_counter)
+    if pipeline.enable_task(config, 'aimfast'):
+        image_quality_assessment(self_cal_iter_counter)
+    while quality_check(self_cal_iter_counter,
                         enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
-     #   if pipeline.enable_task(config, 'calibrate'):
-     #       calibrate(iter_counter)
-        iter_counter += 1
-      #  if pipeline.enable_task(config, 'image'):
-      #      image(iter_counter)
-     #   if pipeline.enable_task(config, 'extract_sources'):
-     #       extract_sources(iter_counter)
-     #   if pipeline.enable_task(config, 'aimfast'):
-     #       image_quality_assessment(iter_counter)
-        print(iter_counter)
+        if pipeline.enable_task(config, 'calibrate'):
+            calibrate(self_cal_iter_counter)
+        self_cal_iter_counter += 1
+        if pipeline.enable_task(config, 'image'):
+            image(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'extract_sources'):
+            extract_sources(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(self_cal_iter_counter)
 
-    print(iter_counter)
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']
             if isinstance(num, str) and len(num.split('+')) == 2:
                 mm = num.split('+')
-                if int(mm[-1]) > iter_counter:
-                    num = str(iter_counter)
+                if int(mm[-1]) > self_cal_iter_counter:
+                    num = str(self_cal_iter_counter)
         else:
             extract_sources = len(config['extract_sources'].get(
-                                  'thresh_isl', [iter_counter]))
+                                  'thresh_isl', [self_cal_iter_counter]))
             if extract_sources > 1:
-                num = '{:d}+{:d}'.format(iter_counter-1, iter_counter)
+                num = '{:d}+{:d}'.format(self_cal_iter_counter-1, self_cal_iter_counter)
             else:
-                num = iter_counter
+                num = self_cal_iter_counter
 
         if isinstance(num, str) and len(num.split('+')) == 2:
             mm = num.split('+')
@@ -630,8 +628,8 @@ def worker(pipeline, recipe, config):
 
         if config['restore_model'].get('clean_model', None):
             num = int(config['restore_model'].get('clean_model', None))
-            if num > iter_counter:
-                num = iter_counter
+            if num > self_cal_iter_counter:
+                num = self_cal_iter_counter
 
             conv_model = prefix + '-convolved_model.fits:output'
             recipe.add('cab/fitstool', step,

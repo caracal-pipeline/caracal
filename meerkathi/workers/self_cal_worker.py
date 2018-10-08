@@ -554,6 +554,7 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # selfcal loop
+    global iter_counter
     iter_counter = config.get('start_at_iter', 1)
     #if pipeline.enable_task(config, 'image'):
     #    image(iter_counter)

@@ -108,7 +108,17 @@ def worker(pipeline, recipe, config):
                 model = utils.find_in_native_calibrators(msinfo, field)
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
-                if model:
+                if isinstance(model, str): # use local sky model of calibrator field if exists
+                    opts = {
+                        "skymodel"  : model,
+                        "msname"    : msname,
+                        "field-id"  : utils.get_field_id(msinfo, field),
+                        "threads"   : config["set_model"].get('threads', 1),
+                        "mode"      : "simulate",
+                        "tile-size" : 128,
+                        "column"    : "MODEL_DATA",
+                    }
+                elif model: # spectral model if specified in our standard
                     opts = {
                       "vis"         : msname,
                       "field"       : field,
@@ -119,7 +129,7 @@ def worker(pipeline, recipe, config):
                       "scalebychan" : True,
                       "usescratch"  : False,
                     }
-                elif standard:
+                elif standard: # NRAO model otherwise
                    opts = {
                       "vis"         : msname,
                       "field"       : field,
@@ -131,7 +141,7 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
-            recipe.add('cab/casa_setjy', step,
+            recipe.add('cab/casa_setjy' if "skymodel" not in opts else 'cab/simulator', step,
                opts,
                input=pipeline.input,
                output=pipeline.output,

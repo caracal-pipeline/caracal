@@ -29,16 +29,20 @@ def worker(pipeline, recipe, config):
             def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
             def_calfields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
             if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') != 'auto' and \
-               not set(config['autoflag_autocorr_powerspectra'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'target']):
-                raise KeyError("autoflag on powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal' or 'target'")
+               not set(config['autoflag_autocorr_powerspectra'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
+                raise KeyError("autoflag on powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
             if config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto') != 'auto' and \
-               not set(config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal']):
-                raise KeyError("autoflag on powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
+               not set(config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
+                raise KeyError("autoflag on powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
 
             fields = def_fields if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
             calfields = def_calfields if config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
+
+            
+            fields = ",".join(set(fields.split(",")))
+            calfields = ",".join(set(calfields.split(",")))
 
             recipe.add("cab/politsiyakat_autocorr_amp", step,
                 {
@@ -195,14 +199,17 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
             if config['autoflag_rfi'].get('fields', 'auto') != 'auto' and \
-               not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'target']):
-                raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'gcal', 'bpcal' or 'target'")
+               not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'target', 'fcal']):
+                raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'gcal', 'fcal', 'bpcal' or 'target'")
             if config['autoflag_rfi'].get('calibrator_fields', 'auto') != 'auto' and \
-               not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal']):
-                raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal'")
+               not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
+                raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
             def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
             fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
+
+            # Make sure no field IDs are duplicated
+            fields = ",".join(set(fields.split(",")))
 
             recipe.add('cab/autoflagger', step,
                 {
@@ -210,6 +217,7 @@ def worker(pipeline, recipe, config):
                   "column"      : config['autoflag_rfi'].get('column', 'DATA'),
                   # flag the calibrators for RFI and apply to target
                   "fields"      : fields,
+                  #"bands"       : config['autoflag_rfi'].get('bands', "0"),
                   "strategy"    : config['autoflag_rfi']['strategy'],
                 },
                 input=pipeline.input,

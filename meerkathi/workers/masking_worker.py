@@ -1,4 +1,4 @@
-import os, sys, math, shutil
+import os, sys, math, shutil,glob
 import yaml
 import numpy as np
 from astroquery.vizier import Vizier
@@ -17,14 +17,12 @@ def worker(pipeline, recipe, config):
 #Worker's MODULES 
 ################################################################################
 
-	pipeline.output = pipeline.output+'/masking/'
-	if os.path.exists(pipeline.output) != True:
-		os.mkdir(pipeline.output)
+	mask_dir = pipeline.output+'/masking/'
+	if os.path.exists(mask_dir) != True:
+		os.mkdir(mask_dir)
 
+	def query_catalog(catalog_table,centre,width_im,cat_name):
 
-	def query_catalog(centre,width_im,cat_name):
-
-		catalog_table = pipeline.output+cat_name+'_'+pipeline.prefix+'_catalog.txt'			
 		Vizier.ROW_LIMIT = -1
 
 		p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'), 
@@ -32,30 +30,68 @@ def worker(pipeline, recipe, config):
 		tab = p[0]
 		ascii.write(tab,catalog_table,overwrite=True)
 
+	def set_mosaic_files(catalog_table,mask_dir,fields_dir):
+		
+		tab = ascii.read(catalog_table)
+		unique, counts = np.unique(tab['Mosaic'], return_counts=True)
+		mosaic_tmpdir = mask_dir+'/formosaic/'
+		mosaic_outdir = mask_dir+'/mosaic/'
+		
+		if os.path.exists(mosaic_tmpdir) == False:
+				os.mkdir(mosaic_tmpdir)
+		if os.path.exists(mosaic_outdir) == True:
+				shutil.rmtree(mosaic_outdir)
 
-	def build_beam(obs_freq,copy_head,headfile,centre,cell,imsize,out_beam):
+		for i in xrange(0,len(unique)):		
+				summsfield = fields_dir+str(unique[i])+'.FITS'
+				outfield = mosaic_tmpdir+str(unique[i])+'.FITS'         
+				shutil.copy(summsfield,outfield)
 
-		if copy_head == True:
-			hdrfile = fits.open(headfile)
-			hdr = hdrfile[0].header
-		elif copy_head == False:
+	def cleanup_mosaic_files(catalog_name,mask_dir):
 
-			w = wcs.WCS(naxis=2)
+		montage_mosaic = pipeline.output+'/mosaic.fits'
+		montage_mosaic_area = pipeline.output+'/mosaic_area.fits'
+		cat_mosaic = mask_dir+catalog_name+'_mosaic.fits'
+		cat_mosaic_area = mask_dir+catalog_name+'_mosaic_area.fits'
+		if os.path.exists(montage_mosaic):
+			shutil.move(montage_mosaic,cat_mosaic)
+		if os.path.exists(montage_mosaic_area):
+			shutil.move(montage_mosaic_area,cat_mosaic_area)
 
-			centre = coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs')
-			cell /= 3600.
+		montage_tmpdir = pipeline.output+'/mask_mosaic'
+		if os.path.exists(montage_tmpdir):
+			shutil.rmtree(montage_tmpdir)
 
-			w.wcs.crpix = [imsize/2, imsize/2]
-			w.wcs.cdelt = np.array([-cell, cell])
-			w.wcs.crval = [centre.ra.deg, centre.dec.deg]
-			w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
+		casafiles = glob.glob(mask_dir+'/*.image')
+		for i in xrange(0,len(casafiles)):
+			shutil.rmtree(casafiles[i])
 
-			hdr = w.to_header()
-			hdr['SIMPLE']  = 'T'
-			hdr['BITPIX']  = -32
-			hdr['NAXIS']   = 2
-			hdr.set('NAXIS1',  imsize, after='NAXIS')
-			hdr.set('NAXIS2',  imsize, after='NAXIS1')
+
+		
+
+	def build_beam(obs_freq,centre,cell,imsize,out_beam):
+
+		#if copy_head == True:
+		#	hdrfile = fits.open(headfile)
+		#	hdr = hdrfile[0].header
+		#elif copy_head == False:
+
+		w = wcs.WCS(naxis=2)
+
+		centre = coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs')
+		cell /= 3600.
+
+		w.wcs.crpix = [imsize/2, imsize/2]
+		w.wcs.cdelt = np.array([-cell, cell])
+		w.wcs.crval = [centre.ra.deg, centre.dec.deg]
+		w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
+
+		hdr = w.to_header()
+		hdr['SIMPLE']  = 'T'
+		hdr['BITPIX']  = -32
+		hdr['NAXIS']   = 2
+		hdr.set('NAXIS1',  imsize, after='NAXIS')
+		hdr.set('NAXIS2',  imsize, after='NAXIS1')
 		
 		if 'CUNIT1' in hdr:
 			del hdr['CUNIT1']
@@ -93,16 +129,8 @@ def worker(pipeline, recipe, config):
 		montage.mosaic(mosaic_tmpdir, mosaic_outdir)
 		shutil.rmtree(mosaic_tmpdir)
 
-#   This method does not conserve the number of pixels in the image
-#   def regrid_mosaic(mosaic,beam,mosaic_regrid,headername):
-#       
-#       montage.mGetHdr(beam,headername)
-#       montage.mProject(mosaic,mosaic_regrid,headername)
-
 	def pbcorr(beam,mosaic_regrid,mosaic_pbcorr):
-			
-			#montage.mProject(mosaic,mosaic_pbgrid,header_beam)
-			
+						
 		pblist = fits.open(beam)
 		pbdata = pblist[0].data
 
@@ -163,37 +191,179 @@ def worker(pipeline, recipe, config):
 #MAIN 
 ################################################################################
 
-	mask_dir  = pipeline.output+'/masking'
-	if os.path.exists(mask_dir) != True:
-		os.mkdir(mask_dir)
-
-
-	centre = config.get('centre_coord', [0,0])
-	catalog_name = config.get('catalog', 'SUMSS')
-	
+	centre = config.get('centre_coord', [0,0])	
+	mask_cell = config.get('cell_size', 1.)
+	mask_imsize = config.get('mask_size',3600.)
 	#input files
-	catalog_mask = mask_dir+str(config.get('catalog_mask', 'tmp_catalog.fits'))
+	root_mask = mask_dir+str(config.get('name_mask', 'dummymask.fots'))
 	#extended_finalmask = pipeline.output+'/masking/'+str(config.get('fornaxa_finalmask', 'tmp_fornaxa.fits'))
 	final_mask = mask_dir+str(config.get('final_mask', 'tmp_final_mask.fits'))   
+
+	catalog_name = config.get('catalog', 'SUMSS')	
 
 
 	if pipeline.enable_task(config, 'query_catalog'):
 		key = 'query_catalog'
+	
+		catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
 
 		recipe.add(query_catalog, 'query_source_catalog', 
 			{
 				'centre'  : centre,
 				'width_im': config[key].get('width_image', '2d'), 
 				'cat_name': catalog_name,
+				'catalog_table' : catalog_tab,
 			}, 
 			input=pipeline.input, 
 			output=pipeline.output,
 			label = 'Catalog pulled')
 
+		if catalog_name == 'SUMSS':
+
+			#read catalog table
+			fields_dir = pipeline.input+'/fields/'
+
+			step = '1' #set directories
+			recipe.add(set_mosaic_files, step,
+				{
+			    	'catalog_table': catalog_tab,
+			    	'mask_dir': mask_dir,
+			    	'fields_dir': fields_dir,
+
+				},
+				input = pipeline.input,
+				output = pipeline.output,
+				label='Preparing folders')
+
+			step = '2'
+			recipe.add('cab/montage', step,
+				{
+			    	'input_dir': 'masking/formosaic'+':output',
+				},
+				input = pipeline.input,
+				output = pipeline.output,
+				label='Mosaicing catalog')
 
 
-	#if catalog_name == 'SUMSS':
+			step = '3' #cleanup
+			recipe.add(cleanup_mosaic_files, step,
+				{
+			    	'catalog_name': catalog_name,
+			    	'mask_dir': mask_dir,
+				},
+				input = pipeline.input,
+				output = pipeline.output,
+				label='Cleanup folders')
 
+	if pipeline.enable_task(config, 'pb_correction'):
+
+		recipe.add(build_beam, 'build gaussian primary beam', 
+			{ 
+				'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),
+				'centre'   : centre,
+				'cell'     : mask_cell, 
+				'imsize'   : mask_imsize,
+				'out_beam' : mask_dir+'/gauss_pbeam.fits',
+			}, 
+			input=pipeline.input, 
+			output=pipeline.output)
+
+		mosaic = 'masking/'+catalog_name+'_mosaic.fits'
+		mosaic_casa = 'masking/mosaic_casa.image'
+
+		beam = 'masking/gauss_pbeam.fits'
+		beam_casa = 'masking/gauss_pbeam.image'
+
+		mosaic_regrid_casa = 'masking/mosaic_regrid.image'
+		mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
+	
+		mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+
+		step =  '1'
+		recipe.add('cab/casa_importfits', step,
+			{
+				"fitsimage"         : mosaic+':output',
+				"imagename"         : mosaic_casa+":output",
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Mosaic in casa format')
+
+		step =  '2'
+		recipe.add('cab/casa_importfits', step,
+			{
+				"fitsimage"         : beam+':output',
+				"imagename"         : beam_casa,
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Beam in casa format')
+		
+		step = '3'
+		recipe.add('cab/casa_imregrid', step,
+			{
+				"template"      : beam_casa+':output',
+				"imagename"     : mosaic_casa+':output',
+				"output"        : mosaic_regrid_casa,
+				"overwrite"     : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Regridding mosaic to size and projection of dirty image')
+
+		step = '4'
+		recipe.add('cab/casa_exportfits', step,
+			{
+				"fitsimage"         : mosaic_regrid+':output',
+				"imagename"         : mosaic_regrid_casa+':output',
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Extracted regridded mosaic')
+
+		recipe.add(pbcorr, 'Correcting mosaic for primary beam',
+			{
+				"mosaic_regrid" : pipeline.output+'/'+mosaic_regrid,
+				"mosaic_pbcorr" : pipeline.output+'/'+mosaic_pbcorr,
+				"beam"          : pipeline.output+'/'+beam,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Correcting mosaic for primary beam')
+
+		step = '5' #cleanup
+		recipe.add(cleanup_mosaic_files, step,
+			{
+			    'catalog_name': 'dummy',
+			    'mask_dir': mask_dir,
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Cleanup folders')
+
+
+	if pipeline.enable_task(config, 'make_mask'):
+
+		if config['make_mask'].get('mask_with', 'thresh') == 'thresh':
+	
+			if config['make_mask'].get('input_image', 'pbcorr') == 'pbcorr':
+				in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+			else:
+				in_image = 'masking/'+ config['make_mask'].get('input_image', 'pbcorr')
+
+			recipe.add(make_mask, 'Build mask from mosaic',
+				{
+					"mosaic_pbcorr" : pipeline.output+'/'+in_image,
+					"mask"          : root_mask, 
+					"contour"       : config['make_mask'].get('thresh_level', 10e-3),  
+				},
+				input=pipeline.input,
+				output=pipeline.output,
+				label='Mask done')
+				
 
 
 

@@ -109,7 +109,7 @@ def worker(pipeline, recipe, config):
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
                 meerkathi_model = isinstance(model, str)
-                if get_field(config['set_model'].get('meerkathi_model', False)) or meerkathi_model:
+                if config['set_model'].get('meerkathi_model', False) and meerkathi_model:
                     # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel"  : model,
@@ -120,7 +120,7 @@ def worker(pipeline, recipe, config):
                         "tile-size" : 128,
                         "column"    : "MODEL_DATA",
                     }
-                elif model: # spectral model if specified in our standard
+                elif isinstance(model, dict): # spectral model if specified in our standard
                     opts = {
                       "vis"         : msname,
                       "field"       : field,

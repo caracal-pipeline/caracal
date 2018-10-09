@@ -365,7 +365,7 @@ def worker(pipeline, recipe, config):
 				{
 					"mosaic_pbcorr" : pipeline.output+'/'+in_image,
 					"mask"          : cat_mask, 
-					"contour"       : config['make_mask'].get('thresh_level', 10e-3),  
+					"contour"       : config['make_mask'].get('thresh_lev', 10e-3),  
 				},
 				input=pipeline.input,
 				output=pipeline.output,

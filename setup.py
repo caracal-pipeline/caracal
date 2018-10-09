@@ -9,6 +9,7 @@ except ImportError as e:
 
 requirements = [
 'ruamel.yaml==0.15.22',
+'stimela>=0.3.2',
 'numpy>=1.13.1',
 'scipy>=0.19.1',
 'pysolr>=3.4.0',
@@ -23,10 +24,6 @@ requirements = [
 'astropy',
 ]
 
-repos = [
-'git+https://github.com/SpheMakh/Stimela.git/@master#egg=Stimela'
-]
-
 PACKAGE_NAME = 'meerkathi'
 __version__ = '0.1.0'
 
@@ -38,7 +35,6 @@ setup(name = PACKAGE_NAME,
     url = "https://github.com/ska-sa/meerkathi",
     packages=[PACKAGE_NAME], 
     install_requires = requirements,
-    dependency_links = repos,
     include_package_data = True,
     ##package_data - any binary or meta data files should go into MANIFEST.in
     scripts = ["bin/" + j for j in os.listdir("bin")],

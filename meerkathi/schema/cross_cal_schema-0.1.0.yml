@@ -37,6 +37,9 @@ mapping:
             type: bool
             desc: Execute the setjy task.
             required: true
+          meerkathi_model:
+            type: bool
+            required: false
           no_verify:
             type: bool
             desc: Enables setting standard manually.

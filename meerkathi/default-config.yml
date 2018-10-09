@@ -285,24 +285,26 @@ flagging__2:
 masking:
   enable: yes
   order: 11
-  centre_coord: ['','']
+  centre_coord: ['',''] #HH:MM:SS.S,DD:MM:SS.S
   mask_size: 3600      #must be the same as  im_npix in selfcal worker
   cell_size: 2         #this will ch
-  root_name_mask: '' #specify output name of catalog mask
-  final_mask: '' #specify name of final mask for continuum imaging
-  extended_source_input: '' #specify ouptut name of extended source mask if present in /input
+  name_mask: '' #specify output name of catalog mask
   query_catalog:
     enable: no
-    catalog: 'SUMSS'
+    catalog: 'SUMSS'  #foor now only SUMSS available
     width_image: '4d'
   pb_correction:
     enable: no
     frequency: 1.37031054688e9
   make_mask:
     enable: yes
-    mask_with: 'thresh'
-    input_image: 'pbcorr'
-    thresh_lev: 1e-3
+    mask_with: 'thresh' #for now only thresh available (Sofia in the future)
+    input_image: 'pbcorr' #input image comes from pb correction (or from somewhere else)
+    thresh_lev: 1e-3  
+  merge_with_extended:
+    enable: yes
+    extended_source_input: '' #specify ouptut name of extended source mask if present in /input/fields/
+    thresh_lev: 1e-3  
 
 
 self_cal:

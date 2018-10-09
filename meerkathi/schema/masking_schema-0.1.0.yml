@@ -94,4 +94,24 @@ mapping:
             desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
 
+      merge_with_extended:
+        type: map
+        desc: Merge with extedned map
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+          extended_source_input:
+            type: str
+            desc: name of image of extended source
+            required: false
+          mask_with:
+            type: str
+            enum: ["thresh", "sofia"]
+            desc: Tool to use for masking
+            required: false
+          thresh_lev:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            required: false
 

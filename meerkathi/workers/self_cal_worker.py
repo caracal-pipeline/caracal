@@ -428,7 +428,7 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             key = 'aimfast'
-            dr_tolerance = config[key].get('dr_tolerance', 0.10)
+            tolerance = config[key].get('tolerance', 0.10)
             normality_tolerance = config[key].get('normality_tolerance', 0.10)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
@@ -469,9 +469,9 @@ def worker(pipeline, recipe, config):
                 # And the weights control how important each parameter is.
                 HolisticCheck=(drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
                               /(drweight+skewweight+kurtweight+meanweight+noiseweight)
-                if (1 - dr_tolerance) < HolisticCheck:
+                if (1 - tolerance) < HolisticCheck:
                     meerkathi.log.info('Stopping criterion: Holistic Check')
-                    meerkathi.log.info('{:f} < {:f}'.format(1-dr_tolerance, HolisticCheck))
+                    meerkathi.log.info('{:f} < {:f}'.format(1-tolerance, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
                     global self_cal_iter_counter
                     self_cal_iter_counter -= 1
@@ -494,9 +494,9 @@ def worker(pipeline, recipe, config):
                 #                dr_delta = (dr1 - dr0)/float(dr0)
                 # Confirm that previous image DR is smaller than subsequent image
                 # Also make sure the fractional difference is greater than the tolerance
-                #                if dr_delta < dr_tolerance:
+                #                if dr_delta < tolerance:
                 #                    meerkathi.log.info('Stopping criterion: Dynamic range')
-                #                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
+                #                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, tolerance))
                 #                    return False
                 #            if n >= 2:
                 #                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]

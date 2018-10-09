@@ -142,13 +142,9 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
-          dr_tolerance:
+          tolerance:
             type: float
-            desc: Relative change in dynamic range from latter to current iter
-            required: true
-          normality_tolerance:
-            type: float
-            desc: Relative change in normality stats from latter to current iter
+            desc: Relative change in weighted mean of several indicators from aimfast.
             required: true
           area_factor:
             type: float

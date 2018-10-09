@@ -428,8 +428,7 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             key = 'aimfast'
-            tolerance = config[key].get('tolerance', 0.10)
-            normality_tolerance = config[key].get('normality_tolerance', 0.10)
+            tolerance = config[key].get('tolerance', 0.01)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:

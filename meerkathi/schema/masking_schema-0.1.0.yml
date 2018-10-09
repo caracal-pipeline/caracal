@@ -53,7 +53,7 @@ mapping:
           catalog:
             type: str
             required: True
-            desc: Name of catalog to query, either NVSS (not active yet) or SUMSS
+            desc: Name of catalog to query, either NVSS or SUMSS
           width_image:  
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)

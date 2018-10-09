@@ -300,7 +300,7 @@ masking:
     enable: yes
     mask_with: 'thresh' #for now only thresh available (Sofia in the future)
     input_image: 'pbcorr' #input image comes from pb correction (or from somewhere else)
-    thresh_lev: 1e-3  
+    thresh_lev: 4e-2  
   merge_with_extended:
     enable: yes
     extended_source_input: '' #specify ouptut name of extended source mask if present in /input/fields/

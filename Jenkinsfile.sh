@@ -34,7 +34,7 @@ cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/labe
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/1Apr2017_firstpass_strategy.rfis input/
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/30Mar2017_secondpass_strategy.rfis input/
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/firstpass_HI_strat2.rfis input/
-cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_files/fields/*.FITS input/
+#cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_files/fields/*.FITS input/
 
 # Aim, fire!
 stimela pull

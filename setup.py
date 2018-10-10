@@ -22,6 +22,7 @@ requirements = [
 'pykwalify>=1.6.0',
 'yamlordereddictloader',
 'astropy',
+'astroquery',
 ]
 
 PACKAGE_NAME = 'meerkathi'

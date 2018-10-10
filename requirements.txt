@@ -8,6 +8,7 @@ aplpy>=1.1.1
 matplotlib>=2.1.0
 tornado>=4.0.0,<5.0.0
 jupyter>=1.0.0
+astroquery
 pykwalify>=1.6.0
 yamlordereddictloader
 astropy

@@ -1,4 +1,4 @@
-type: map
+ type: map
 mapping:
   schema_version:
     type: str

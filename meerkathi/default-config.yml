@@ -290,11 +290,11 @@ masking:
   cell_size: 2         #this will ch
   name_mask: '' #specify output name of catalog mask
   query_catalog:
-    enable: no
+    enable: true
     catalog: 'SUMSS'  #foor now only SUMSS available
     width_image: '4d'
   pb_correction:
-    enable: no
+    enable: true
     frequency: 1.37031054688e9
   make_mask:
     enable: yes

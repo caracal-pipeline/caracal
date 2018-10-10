@@ -293,7 +293,7 @@ def worker(pipeline, recipe, config):
             for i, msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
 
-            modelcolumn = None
+            modelcolumn = 'MODEL_DATA'
         
         elif config[key].get('model_mode', None) == 'pybdsm_only':
             model = config[key].get('model', num)[num-1]
@@ -307,7 +307,7 @@ def worker(pipeline, recipe, config):
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-            modelcolumn = None
+            modelcolumn = 'MODEL_DATA'
         
         elif  config[key].get('model_mode', None) == 'vis_only':
             vismodel = True

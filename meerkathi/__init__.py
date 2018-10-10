@@ -269,11 +269,7 @@ def main(argv):
         except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
-    #Test for consistency in self_cal_loop
-    if arg_groups['self_cal']['enable'] == True and arg_groups['self_cal']['extract_sources']['enable'] == True and arg_groups['self_cal']['cal_niter'] > len(arg_groups['self_cal']['extract_sources']['thresh_pix']):
-        log.info("You requested a self_cal loop where the number of iterations (cal_niter = {0:d}) exceeds the length of the number of models that will be extracted (= {1:d}) ".format(arg_groups['self_cal']['cal_niter'],len(arg_groups['self_cal']['extract_sources']['thresh_pix'])))
-        sys.exit(1)
-  
+   
     # Very good idea to print user options into the log before running:
     cp().log_options()
 

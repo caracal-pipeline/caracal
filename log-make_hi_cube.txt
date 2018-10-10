@@ -1,0 +1,141 @@
+2018-10-09 23:22:58,436 - STIMELA-12 - INFO - ---------------------------------
+2018-10-09 23:22:58,437 - STIMELA-12 - INFO - Stimela version 1.0.0
+2018-10-09 23:22:58,437 - STIMELA-12 - INFO - Sphesihle Makhathini <sphemakh@gmail.com>
+2018-10-09 23:22:58,437 - STIMELA-12 - INFO - Running: Make HI Cube
+2018-10-09 23:22:58,437 - STIMELA-12 - INFO - ---------------------------------
+2018-10-09 23:23:00,551 - STIMELA-12 - INFO - Adding cab 'peter_cab/casa_uvcontsub' to recipe. The container will be named 'contsub_0'
+2018-10-09 23:23:00,720 - STIMELA-12 - INFO - Adding cab 'peter_cab/casa_mstransform' to recipe. The container will be named 'doppler_corr_0'
+2018-10-09 23:23:00,924 - STIMELA-12 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'wsclean_image_HI'
+2018-10-09 23:23:01,072 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_image_cube'
+2018-10-09 23:23:01,218 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_dirty_cube'
+2018-10-09 23:23:01,400 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_psf_cube'
+2018-10-09 23:23:01,548 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_residual_cube'
+2018-10-09 23:23:01,695 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_model_cube'
+2018-10-09 23:23:01,927 - STIMELA-12 - INFO - Adding cab 'peter_cab/sofia' to recipe. The container will be named 'make_sofia_mask'
+2018-10-09 23:23:02,122 - STIMELA-12 - INFO - Adding cab 'peter_cab/wsclean' to recipe. The container will be named 'rewsclean_image_HI'
+2018-10-09 23:23:02,272 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_image_cube'
+2018-10-09 23:23:02,419 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_dirty_cube'
+2018-10-09 23:23:02,599 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_psf_cube'
+2018-10-09 23:23:02,747 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_residual_cube'
+2018-10-09 23:23:02,896 - STIMELA-12 - INFO - Adding cab 'peter_cab/fitstool' to recipe. The container will be named 'make_model_cube'
+2018-10-09 23:23:02,897 - STIMELA-12 - INFO - Adding Python job 'spectral_header_to_vel_radio_dirty_cube' to recipe.
+2018-10-09 23:23:02,897 - STIMELA-12 - INFO - Adding Python job 'spectral_header_to_vel_radio_psf_cube' to recipe.
+2018-10-09 23:23:02,897 - STIMELA-12 - INFO - Adding Python job 'spectral_header_to_vel_radio_residual_cube' to recipe.
+2018-10-09 23:23:02,898 - STIMELA-12 - INFO - Adding Python job 'spectral_header_to_vel_radio_model_cube' to recipe.
+2018-10-09 23:23:02,898 - STIMELA-12 - INFO - Adding Python job 'spectral_header_to_vel_radio_image_cube' to recipe.
+2018-10-09 23:23:03,092 - STIMELA-12 - INFO - Adding cab 'peter_cab/sofia' to recipe. The container will be named 'sofia_sources'
+2018-10-09 23:23:03,286 - STIMELA-12 - INFO - Adding cab 'peter_cab/casa_flagdata' to recipe. The container will be named 'flagging_summary_image_HI_0'
+2018-10-09 23:23:03,287 - STIMELA-12 - INFO - Running job contsub_0
+2018-10-09 23:23:03,287 - STIMELA-12 - INFO - STEP 1 :: contsub_0:: Subtract continuum
+2018-10-09 23:23:03,306 - STIMELA-12 - INFO - Instantiating container [contsub_0-140323054748648153912018046]. The container ID is printed below.
+2018-10-09 23:40:23,795 - STIMELA-12 - INFO - Container [contsub_0-140323054748648153912018046] has executed successfully
+2018-10-09 23:40:23,843 - STIMELA-12 - INFO - Runtime was 0:17:19.867594.
+2018-10-09 23:40:24,688 - STIMELA-12 - INFO - Container contsub_0-140323054748648153912018046 has been stopped.
+2018-10-09 23:40:25,211 - STIMELA-12 - INFO - Running job doppler_corr_0
+2018-10-09 23:40:25,211 - STIMELA-12 - INFO - STEP 2 :: doppler_corr_0:: Doppler tracking corrections
+2018-10-09 23:40:25,369 - STIMELA-12 - INFO - Instantiating container [doppler_corr_0-140323055549744153912018062]. The container ID is printed below.
+2018-10-09 23:40:52,703 - STIMELA-12 - INFO - Container [doppler_corr_0-140323055549744153912018062] has executed successfully
+2018-10-09 23:40:52,703 - STIMELA-12 - INFO - Runtime was 0:00:26.655020.
+2018-10-09 23:40:52,818 - STIMELA-12 - INFO - Container doppler_corr_0-140323055549744153912018062 has been stopped.
+2018-10-09 23:40:53,000 - STIMELA-12 - INFO - Running job wsclean_image_HI
+2018-10-09 23:40:53,000 - STIMELA-12 - INFO - STEP 3 :: wsclean_image_HI:: Image HI
+2018-10-09 23:40:53,076 - STIMELA-12 - INFO - Instantiating container [wsclean_image_HI-140323054250912153912018079]. The container ID is printed below.
+2018-10-09 23:45:19,213 - STIMELA-12 - INFO - Container [wsclean_image_HI-140323054250912153912018079] has executed successfully
+2018-10-09 23:45:19,213 - STIMELA-12 - INFO - Runtime was 0:04:25.499006.
+2018-10-09 23:45:19,278 - STIMELA-12 - INFO - Container wsclean_image_HI-140323054250912153912018079 has been stopped.
+2018-10-09 23:45:19,474 - STIMELA-12 - INFO - Running job make_image_cube
+2018-10-09 23:45:19,475 - STIMELA-12 - INFO - STEP 4 :: make_image_cube:: Make image cube from wsclean image channels
+2018-10-09 23:45:19,512 - STIMELA-12 - INFO - Instantiating container [make_image_cube-14032317349656815391201810]. The container ID is printed below.
+2018-10-09 23:45:30,557 - STIMELA-12 - INFO - Container [make_image_cube-14032317349656815391201810] has executed successfully
+2018-10-09 23:45:30,557 - STIMELA-12 - INFO - Runtime was 0:00:10.569545.
+2018-10-09 23:45:30,619 - STIMELA-12 - INFO - Container make_image_cube-14032317349656815391201810 has been stopped.
+2018-10-09 23:45:30,778 - STIMELA-12 - INFO - Running job make_dirty_cube
+2018-10-09 23:45:30,779 - STIMELA-12 - INFO - STEP 5 :: make_dirty_cube:: Make dirty cube from wsclean dirty channels
+2018-10-09 23:45:30,809 - STIMELA-12 - INFO - Instantiating container [make_dirty_cube-140323173496568153912018114]. The container ID is printed below.
+2018-10-09 23:45:34,970 - STIMELA-12 - INFO - Container [make_dirty_cube-140323173496568153912018114] has executed successfully
+2018-10-09 23:45:34,970 - STIMELA-12 - INFO - Runtime was 0:00:03.722432.
+2018-10-09 23:45:35,033 - STIMELA-12 - INFO - Container make_dirty_cube-140323173496568153912018114 has been stopped.
+2018-10-09 23:45:35,258 - STIMELA-12 - INFO - Running job make_psf_cube
+2018-10-09 23:45:35,258 - STIMELA-12 - INFO - STEP 6 :: make_psf_cube:: Make psf cube from wsclean psf channels
+2018-10-09 23:45:35,298 - STIMELA-12 - INFO - Instantiating container [make_psf_cube-140323173496568153912018129]. The container ID is printed below.
+2018-10-09 23:45:39,243 - STIMELA-12 - INFO - Container [make_psf_cube-140323173496568153912018129] has executed successfully
+2018-10-09 23:45:39,243 - STIMELA-12 - INFO - Runtime was 0:00:03.506332.
+2018-10-09 23:45:39,291 - STIMELA-12 - INFO - Container make_psf_cube-140323173496568153912018129 has been stopped.
+2018-10-09 23:45:39,448 - STIMELA-12 - INFO - Running job make_residual_cube
+2018-10-09 23:45:39,448 - STIMELA-12 - INFO - STEP 7 :: make_residual_cube:: Make residual cube from wsclean residual channels
+2018-10-09 23:45:39,472 - STIMELA-12 - INFO - Instantiating container [make_residual_cube-140323173496568153912018147]. The container ID is printed below.
+2018-10-09 23:45:43,621 - STIMELA-12 - INFO - Container [make_residual_cube-140323173496568153912018147] has executed successfully
+2018-10-09 23:45:43,621 - STIMELA-12 - INFO - Runtime was 0:00:03.627185.
+2018-10-09 23:45:43,706 - STIMELA-12 - INFO - Container make_residual_cube-140323173496568153912018147 has been stopped.
+2018-10-09 23:45:43,872 - STIMELA-12 - INFO - Running job make_model_cube
+2018-10-09 23:45:43,872 - STIMELA-12 - INFO - STEP 8 :: make_model_cube:: Make model cube from wsclean model channels
+2018-10-09 23:45:43,899 - STIMELA-12 - INFO - Instantiating container [make_model_cube-140323173496568153912018162]. The container ID is printed below.
+2018-10-09 23:45:47,696 - STIMELA-12 - INFO - Container [make_model_cube-140323173496568153912018162] has executed successfully
+2018-10-09 23:45:47,696 - STIMELA-12 - INFO - Runtime was 0:00:03.294129.
+2018-10-09 23:45:47,749 - STIMELA-12 - INFO - Container make_model_cube-140323173496568153912018162 has been stopped.
+2018-10-09 23:45:47,969 - STIMELA-12 - INFO - Running job make_sofia_mask
+2018-10-09 23:45:47,969 - STIMELA-12 - INFO - STEP 9 :: make_sofia_mask:: Make SoFiA mask
+2018-10-09 23:45:47,991 - STIMELA-12 - INFO - Instantiating container [make_sofia_mask-140323054250768153912018177]. The container ID is printed below.
+2018-10-09 23:46:00,602 - STIMELA-12 - INFO - Container [make_sofia_mask-140323054250768153912018177] has executed successfully
+2018-10-09 23:46:00,602 - STIMELA-12 - INFO - Runtime was 0:00:11.804938.
+2018-10-09 23:46:00,651 - STIMELA-12 - INFO - Container make_sofia_mask-140323054250768153912018177 has been stopped.
+2018-10-09 23:46:00,804 - STIMELA-12 - INFO - Running job rewsclean_image_HI
+2018-10-09 23:46:00,805 - STIMELA-12 - INFO - STEP 10 :: rewsclean_image_HI:: re-Image HI
+2018-10-09 23:46:00,838 - STIMELA-12 - INFO - Instantiating container [rewsclean_image_HI-14032305425091215391201820]. The container ID is printed below.
+2018-10-09 23:48:30,767 - STIMELA-12 - INFO - Container [rewsclean_image_HI-14032305425091215391201820] has executed successfully
+2018-10-09 23:48:30,768 - STIMELA-12 - INFO - Runtime was 0:02:29.399577.
+2018-10-09 23:48:30,816 - STIMELA-12 - INFO - Container rewsclean_image_HI-14032305425091215391201820 has been stopped.
+2018-10-09 23:48:30,972 - STIMELA-12 - INFO - Running job make_image_cube
+2018-10-09 23:48:30,973 - STIMELA-12 - INFO - STEP 11 :: make_image_cube:: Make image cube from rewsclean image channels
+2018-10-09 23:48:30,975 - STIMELA-12 - INFO - Instantiating container [make_image_cube-14032317349656815391201822]. The container ID is printed below.
+2018-10-09 23:48:35,057 - STIMELA-12 - INFO - Container [make_image_cube-14032317349656815391201822] has executed successfully
+2018-10-09 23:48:35,057 - STIMELA-12 - INFO - Runtime was 0:00:03.606226.
+2018-10-09 23:48:35,106 - STIMELA-12 - INFO - Container make_image_cube-14032317349656815391201822 has been stopped.
+2018-10-09 23:48:35,277 - STIMELA-12 - INFO - Running job make_dirty_cube
+2018-10-09 23:48:35,277 - STIMELA-12 - INFO - STEP 12 :: make_dirty_cube:: Make dirty cube from rewsclean dirty channels
+2018-10-09 23:48:35,279 - STIMELA-12 - INFO - Instantiating container [make_dirty_cube-140323173496568153912018234]. The container ID is printed below.
+2018-10-09 23:48:39,287 - STIMELA-12 - INFO - Container [make_dirty_cube-140323173496568153912018234] has executed successfully
+2018-10-09 23:48:39,287 - STIMELA-12 - INFO - Runtime was 0:00:03.446173.
+2018-10-09 23:48:39,334 - STIMELA-12 - INFO - Container make_dirty_cube-140323173496568153912018234 has been stopped.
+2018-10-09 23:48:39,482 - STIMELA-12 - INFO - Running job make_psf_cube
+2018-10-09 23:48:39,482 - STIMELA-12 - INFO - STEP 13 :: make_psf_cube:: Make psf cube from rewsclean psf channels
+2018-10-09 23:48:39,484 - STIMELA-12 - INFO - Instantiating container [make_psf_cube-140323173496568153912018252]. The container ID is printed below.
+2018-10-09 23:48:43,467 - STIMELA-12 - INFO - Container [make_psf_cube-140323173496568153912018252] has executed successfully
+2018-10-09 23:48:43,467 - STIMELA-12 - INFO - Runtime was 0:00:03.239342.
+2018-10-09 23:48:43,514 - STIMELA-12 - INFO - Container make_psf_cube-140323173496568153912018252 has been stopped.
+2018-10-09 23:48:43,662 - STIMELA-12 - INFO - Running job make_residual_cube
+2018-10-09 23:48:43,662 - STIMELA-12 - INFO - STEP 14 :: make_residual_cube:: Make residual cube from rewsclean residual channels
+2018-10-09 23:48:43,665 - STIMELA-12 - INFO - Instantiating container [make_residual_cube-140323173496568153912018267]. The container ID is printed below.
+2018-10-09 23:48:47,704 - STIMELA-12 - INFO - Container [make_residual_cube-140323173496568153912018267] has executed successfully
+2018-10-09 23:48:47,704 - STIMELA-12 - INFO - Runtime was 0:00:03.533948.
+2018-10-09 23:48:47,754 - STIMELA-12 - INFO - Container make_residual_cube-140323173496568153912018267 has been stopped.
+2018-10-09 23:48:47,923 - STIMELA-12 - INFO - Running job make_model_cube
+2018-10-09 23:48:47,923 - STIMELA-12 - INFO - STEP 15 :: make_model_cube:: Make model cube from rewsclean model channels
+2018-10-09 23:48:47,926 - STIMELA-12 - INFO - Instantiating container [make_model_cube-140323173496568153912018282]. The container ID is printed below.
+2018-10-09 23:48:52,121 - STIMELA-12 - INFO - Container [make_model_cube-140323173496568153912018282] has executed successfully
+2018-10-09 23:48:52,121 - STIMELA-12 - INFO - Runtime was 0:00:03.631108.
+2018-10-09 23:48:52,168 - STIMELA-12 - INFO - Container make_model_cube-140323173496568153912018282 has been stopped.
+2018-10-09 23:48:52,383 - STIMELA-12 - INFO - Running job spectral_header_to_vel_radio_dirty_cube
+2018-10-09 23:48:52,383 - STIMELA-12 - INFO - STEP 16 :: Convert spectral axis from frequency to radio velocity for cube meerkathi-pipeline_HI.dirty.fits:output
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - Running job spectral_header_to_vel_radio_psf_cube
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - STEP 17 :: Convert spectral axis from frequency to radio velocity for cube meerkathi-pipeline_HI.psf.fits:output
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - Running job spectral_header_to_vel_radio_residual_cube
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - STEP 18 :: Convert spectral axis from frequency to radio velocity for cube meerkathi-pipeline_HI.residual.fits:output
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - Running job spectral_header_to_vel_radio_model_cube
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - STEP 19 :: Convert spectral axis from frequency to radio velocity for cube meerkathi-pipeline_HI.model.fits:output
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - Running job spectral_header_to_vel_radio_image_cube
+2018-10-09 23:48:52,726 - STIMELA-12 - INFO - STEP 20 :: Convert spectral axis from frequency to radio velocity for cube meerkathi-pipeline_HI.image.fits:output
+2018-10-09 23:48:52,727 - STIMELA-12 - INFO - Running job sofia_sources
+2018-10-09 23:48:52,727 - STIMELA-12 - INFO - STEP 21 :: sofia_sources:: Make SoFiA mask and images
+2018-10-09 23:48:52,746 - STIMELA-12 - INFO - Instantiating container [sofia_sources-140323054250768153912018297]. The container ID is printed below.
+2018-10-09 23:48:58,418 - STIMELA-12 - INFO - Container [sofia_sources-140323054250768153912018297] has executed successfully
+2018-10-09 23:48:58,418 - STIMELA-12 - INFO - Runtime was 0:00:05.212218.
+2018-10-09 23:48:58,465 - STIMELA-12 - INFO - Container sofia_sources-140323054250768153912018297 has been stopped.
+2018-10-09 23:48:58,649 - STIMELA-12 - INFO - Running job flagging_summary_image_HI_0
+2018-10-09 23:48:58,649 - STIMELA-12 - INFO - STEP 22 :: flagging_summary_image_HI_0:: Flagging summary  ms=GMRT_Original-corr.ms.contsub.regrd
+2018-10-09 23:48:58,666 - STIMELA-12 - INFO - Instantiating container [flagging_summary_image_HI_0-140323053904312153912018316]. The container ID is printed below.
+2018-10-09 23:49:15,674 - STIMELA-12 - INFO - Container [flagging_summary_image_HI_0-140323053904312153912018316] has executed successfully
+2018-10-09 23:49:15,674 - STIMELA-12 - INFO - Runtime was 0:00:16.512213.
+2018-10-09 23:49:15,720 - STIMELA-12 - INFO - Container flagging_summary_image_HI_0-140323053904312153912018316 has been stopped.
+2018-10-09 23:49:15,871 - STIMELA-12 - INFO - Saving pipeline information in .last_make_hi_cube.json
+2018-10-09 23:49:15,873 - STIMELA-12 - INFO - Recipe executed successfully

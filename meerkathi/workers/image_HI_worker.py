@@ -393,7 +393,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config,'freq_to_vel'):
         for ss in ['dirty','psf','residual','model','image']:
-            cubename=pipeline.prefix+'_HI.'+ss+'.fits:output'
+            cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {
                            'filename' : cubename,

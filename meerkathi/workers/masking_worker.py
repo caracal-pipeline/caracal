@@ -403,12 +403,13 @@ def worker(pipeline, recipe, config):
 	final_mask = mask_dir+str(config.get('name_mask', 'final_mask.fits'))   
 	catalog_name = config['query_catalog'].get('catalog', 'SUMSS')	
 
+	catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
+
 	if catalog_name == 'SUMSS':
 
 		if pipeline.enable_task(config, 'query_catalog'):
 			key = 'query_catalog'
 	
-			catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
 
 			recipe.add(query_catalog_sumss, 'query_source_catalog', 
 				{
@@ -484,7 +485,7 @@ def worker(pipeline, recipe, config):
 			if pipeline.enable_task(config, 'merge_with_extended') == False:
 				cat_mask = final_mask
 			else:
-				cat_mask = mask_dir+'/catalog_mask.fits'
+				cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
 
 			catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
 
@@ -579,7 +580,7 @@ def worker(pipeline, recipe, config):
 			output=pipeline.output,
 			label='Correcting mosaic for primary beam')
 
-	if pipeline.enable_task(config, 'make_mask'):
+	if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
 
 		if config['make_mask'].get('mask_with', 'thresh') == 'thresh':
 	
@@ -616,11 +617,36 @@ def worker(pipeline, recipe, config):
 		extended_regrid = 'masking/Fornaxa_vla_regrid.fits'
 		
 		beam = 'masking/gauss_pbeam.fits'
-		beam_casa = 'masking/gauss_pbeam.image'
 		
+		if os.path.exists(pipeline.output+'/'+beam) == False:
+			print 'XXXXXXXXXXXXXXXXXXXXXXXX'
+			recipe.add(build_beam, 'build gaussian primary beam', 
+			{ 
+				'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),
+				'centre'   : centre,
+				'cell'     : mask_cell, 
+				'imsize'   : mask_imsize,
+				'out_beam' : mask_dir+'/gauss_pbeam.fits',
+			}, 
+			input=pipeline.input, 
+			output=pipeline.output)
+		
+		beam_casa = 'masking/gauss_pbeam.image'
+
+		if os.path.exists(pipeline.output+'/'+beam_casa) == False:
+			step =  '0'
+			recipe.add('cab/casa_importfits', step,
+			{
+				"fitsimage"         : beam+':output',
+				"imagename"         : beam_casa,
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Beam in casa format')
+
 		ext_name_root = ext_name.split('.fits')[0]
 		extended_pbcorr = 'masking/'+ext_name_root+'_pbcorr.fits'
-
 		extended_mask = '/masking/'+ext_name_root+'_mask.fits'
 
 		step = '1'
@@ -679,11 +705,12 @@ def worker(pipeline, recipe, config):
 				input=pipeline.input,
 				output=pipeline.output,
 				label='Mask done')
-
+			
+		cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
 		recipe.add(merge_masks, 'Merging VLA Fornax into catalog mask',
 			{
 				"extended_mask"	: pipeline.output+extended_mask,
-				"catalog_mask"	: mask_dir+'/catalog_mask.fits',
+				"catalog_mask"	: cat_mask,
 				"end_mask"  	: final_mask,
 			},
 			input=pipeline.input,

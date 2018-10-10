@@ -148,6 +148,41 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
 
+    def sofia_mask(num):
+       step = 'make_sofia_mask'
+       cubename = pipeline.prefix+'_HI.image.fits:output'
+       outmask = pipeline.prefix+'_HI.image_clean'
+       recipe.add('cab/sofia', step,
+           {
+            "import.inFile"         : cubename,
+            "steps.doFlag"          : False,
+            "steps.doScaleNoise"    : True,
+            "steps.doSCfind"        : True,
+            "steps.doMerge"         : True,
+            "steps.doReliability"   : False,
+            "steps.doParameterise"  : False,
+            "steps.doWriteMask"     : True,
+            "steps.doMom0"          : False,
+            "steps.doMom1"          : False,
+            "steps.doWriteCat"      : False,
+            "flag.regions"          : [], 
+            "scaleNoise.statistic"  : 'mad' ,
+            "SCfind.threshold"      : 4, 
+            "SCfind.rmsMode"        : 'mad',
+            "merge.radiusX"         : 2, 
+            "merge.radiusY"         : 2,
+            "merge.radiusZ"         : 2,
+            "merge.minSizeX"        : 2,
+            "merge.minSizeY"        : 2, 
+            "merge.minSizeZ"        : 2,
+            "writeCat.basename"     : outmask,
+           },
+           input=pipeline.input,
+           output=pipeline.output,
+           label='{0:s}:: Make SoFiA mask'.format(step))
+
+
+
     def make_cube(num, imtype='model'):
         im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
         step = 'makecube_{}'.format(num)

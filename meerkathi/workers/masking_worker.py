@@ -396,7 +396,7 @@ def worker(pipeline, recipe, config):
 	if os.path.exists(mask_dir) != True:
 		os.mkdir(mask_dir)
 
-	centre = config.get('centre_coord', [0,0])	
+	centre = config.get('centre_coord', ['03:18:0.000', '-37:27:0.000'])	
 	mask_cell = config.get('cell_size', 1.)
 	mask_imsize = config.get('mask_size',3600.)
 

@@ -498,10 +498,10 @@ def worker(pipeline, recipe, config):
                                                  prefix, num if num <= len(config['calibrate'].get('model', num))
                                                  else len(config['calibrate'].get('model', num)),
                                                  '-combined' if len(model.split('+')) >= 2 else ''),
-                    "residual-image"       : '{0:s}_{1:d}-MFS-residual.fits:output'.format(
-                                                 prefix, num),
-                    "normality-model"      :  config[step].get(
-                                                  'normality_model', 'normaltest'),
+                    "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
+                                                 prefix, num, mfsprefix),
+                    "normality-model"      : config[step].get(
+                                                 'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
                 },

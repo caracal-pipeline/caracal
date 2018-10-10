@@ -148,42 +148,61 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
 
-    # def sofia_mask(num):
-    #    step = 'make_sofia_mask'
-    #    cubename = pipeline.prefix+'_HI.image.fits:output'
-    #    outmask = pipeline.prefix+'_HI.image_clean'
-    #    recipe.add('cab/sofia', step,
-    #        {
-    #         "import.inFile"         : cubename,
-    #         "steps.doFlag"          : False,
-    #         "steps.doScaleNoise"    : True,
-    #         "steps.doSCfind"        : True,
-    #         "steps.doMerge"         : True,
-    #         "steps.doReliability"   : False,
-    #         "steps.doParameterise"  : False,
-    #         "steps.doWriteMask"     : True,
-    #         "steps.doMom0"          : False,
-    #         "steps.doMom1"          : False,
-    #         "steps.doWriteCat"      : False,
-    #         "SCfind.kernelUnit"     : pixel,
-    #         "SCfind.kernels"        : [ [3, 3, 0, 'b'],  [6, 6, 0, 'b'],[20,20,0,'b'],[40,40,0,'b'],[80,80,0,'b'],[150,150,0,'b'],[300,300,0,'b'],[400,400,0,'b']]
-    #         "flag.regions"          : config.get('aaaa',[]), 
-    #         "scaleNoise.statistic"  : 'mad' ,
-    #         "SCfind.threshold"      : 4, 
-    #         "SCfind.rmsMode"        : 'mad',
-    #         "merge.radiusX"         : 2, 
-    #         "merge.radiusY"         : 2,
-    #         "merge.radiusZ"         : 2,
-    #         "merge.minSizeX"        : 2,
-    #         "merge.minSizeY"        : 2, 
-    #         "merge.minSizeZ"        : 2,
-    #         "writeCat.basename"     : outmask,
-    #        },
-    #        input=pipeline.input,
-    #        output=pipeline.output,
-    #        label='{0:s}:: Make SoFiA mask'.format(step))
+    def sofia_mask(num):
+        step = 'make_sofia_mask'
+        key = 'sofia_mask'
+        imagename = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
+        outmask = 'masking/{0:s}_{1:d}{2:s}-mask.fits'.format(prefix, num, mfsprefix)
+        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
+        
+        # user_kern = config[key].get('kernels', None)
+        # if user_kern:
+        #   for i in xrange(0,len(user_kern))
+        #     kern. 
+        #     def_kernels.concatenate(config[key].get('kernels'))
 
-
+        image_opts =   {
+              "import.inFile"         : imagename,
+              "steps.doFlag"          : True,
+              "steps.doScaleNoise"    : True,
+              "steps.doSCfind"        : True,
+              "steps.doMerge"         : True,
+              "steps.doReliability"   : False,
+              "steps.doParameterise"  : False,
+              "steps.doWriteMask"     : True,
+              "steps.doMom0"          : False,
+              "steps.doMom1"          : False,
+              "steps.doWriteCat"      : False, 
+              "SCfind.kernelUnit"     : 'pixel',
+              "SCfind.kernels"        : def_kernels,
+              "SCfind.threshold"      : config.get('threshold',4), 
+              "SCfind.rmsMode"        : 'mad',
+              "SCfind.edgeMode"       : 'constant',
+              "SCfind.fluxRange"      : 'all',
+              "scaleNoise.statistic"  : 'mad' ,
+              "scaleNoise.method"     : 'local',
+              "scaleNoise.scaleX"     : True,
+              "scaleNoise.scaleY"     : True,
+              "scaleNoise.scaleZ"     : False,
+              "merge.radiusX"         : 3, 
+              "merge.radiusY"         : 3,
+              "merge.radiusZ"         : 1,
+              "merge.minSizeX"        : 2,
+              "merge.minSizeY"        : 2, 
+              "merge.minSizeZ"        : 1,
+              "writeCat.basename"     : outmask+":output",
+            }
+        if config[key].get('flag') :
+          flags_sof = config[key].get('flagregion')
+          image_opts.update({"flag.regions": flags_sof})
+        if config[key].get('inputmask') :
+          image_opts.update({"import.maskFile": config[key].get('inputmask')})
+        
+        recipe.add('cab/sofia', step,
+          image_opts,
+          input=pipeline.input,
+          output=pipeline.output,
+          label='{0:s}:: Make SoFiA mask'.format(step))
 
     def make_cube(num, imtype='model'):
         im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
@@ -359,7 +378,6 @@ def worker(pipeline, recipe, config):
             config[key]['Bjones'] = True
 
         for i,msname in enumerate(mslist):
-            print(config[key].get('Gsols_time'))
             if not config[key].get('Gsols_time') or \
                        not config[key].get('Gsols_channel'):
                 gsols_ = gsols
@@ -558,6 +576,8 @@ def worker(pipeline, recipe, config):
     iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
         image(iter_counter)
+    if pipeline.enable_task(config, 'sofia_mask'):
+        sofia_mask(iter_counter)
     if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
@@ -570,6 +590,8 @@ def worker(pipeline, recipe, config):
         iter_counter += 1
         if pipeline.enable_task(config, 'image'):
             image(iter_counter)
+        if pipeline.enable_task(config, 'sofia_mask'):
+            sofia_mask(iter_counter)
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):

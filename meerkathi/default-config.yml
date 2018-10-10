@@ -359,6 +359,13 @@ self_cal:
     local_rms: False
     no_update_model: False
     minuvw_m: 0
+  sofia_mask:
+    enable: true
+    inputmask: ''
+    flag: false
+    flagregion: []
+    threshold: 5
+    kernels: []
   extract_sources:
     enable: true
     spi: false

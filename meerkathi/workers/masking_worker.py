@@ -592,7 +592,7 @@ def worker(pipeline, recipe, config):
 			if pipeline.enable_task(config, 'merge_with_extended') == False:
 				cat_mask = final_mask
 			else:
-				cat_mask = mask_dir+'/catalog_mask.fits'
+				cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
 
 			recipe.add(make_mask, 'Build mask from mosaic',
 				{
@@ -619,7 +619,6 @@ def worker(pipeline, recipe, config):
 		beam = 'masking/gauss_pbeam.fits'
 		
 		if os.path.exists(pipeline.output+'/'+beam) == False:
-			print 'XXXXXXXXXXXXXXXXXXXXXXXX'
 			recipe.add(build_beam, 'build gaussian primary beam', 
 			{ 
 				'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),

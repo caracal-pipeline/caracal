@@ -146,8 +146,8 @@ class MeerKATHI(object):
 
         #Copy fields for masking in input/fields/.
         log.info("Copying fields for masking into input folder")
-        for _f in os.listdir("{0:s}/data/fields".format(pckgdir)):
-            f = "{0:s}/data/fields/{1:s}".format(pckgdir, _f)
+        for _f in os.listdir("{0:s}/data/meerkat_files/".format(pckgdir)):
+            f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
             if not os.path.exists("{0:}/{1:s}".format(self.input,'fields')):
                 os.mkdir("{0:}/{1:s}".format(self.input,'fields'))
             if not os.path.exists("{0:}/{1:s}/{2:s}".format(self.input,'fields', _f)):

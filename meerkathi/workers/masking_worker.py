@@ -18,10 +18,6 @@ def worker(pipeline, recipe, config):
 #Worker's MODULES 
 ################################################################################
 
-	mask_dir = pipeline.output+'/masking/'
-	if os.path.exists(mask_dir) != True:
-		os.mkdir(mask_dir)
-
 	def ra2deg(ra_hms):
 		'''
 		Converts right ascension in hms coordinates to degrees and radians
@@ -65,40 +61,53 @@ def worker(pipeline, recipe, config):
 		return hh+mm+ss 
 
 
-	def query_catalog(catalog_table,centre,width_im,thresh,cat_name):
+	def query_catalog_sumss(catalog_table,centre,width_im,cat_name):
 
 		Vizier.ROW_LIMIT = -1
 
 		p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'), 
 			width=width_im, catalog=cat_name)
 		tab = p[0]
+
+		ascii.write(tab,catalog_table,overwrite=True)
+
+	def query_catalog_nvss():
+
+		Vizier.ROW_LIMIT = -1
+
+		p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'), 
+			width=width_im, catalog=cat_name)
+		tab = p[0]
+
+		ascii.write(tab,catalog_table,overwrite=True)
+
 		tab =  Table(tab, masked=True)
 
-		if cat_name == 'NVSS':
-			ra_deg= np.empty([len(tab['RAJ2000'])])
-			dec_deg = np.empty([len(tab['RAJ2000'])])
+		ra_deg= np.empty([len(tab['RAJ2000'])])
+		dec_deg = np.empty([len(tab['RAJ2000'])])
 
-			for i in xrange (0, len(tab['RAJ2000'])):
-			   tab['RAJ2000'][i] = string.join(string.split(tab['RAJ2000'][i],' '),':')
-			   ra_deg[i] = ra2deg(tab['RAJ2000'][i])
-			   tab['DEJ2000'][i] = string.join(string.split(tab['DEJ2000'][i],' '),':')
-			   dec_deg[i] = dec2deg(tab['DEJ2000'][i])
-			flux14 = np.array(tab['S1.4'],dtype=float)
-			
-			above_thresh = flux14<thresh*1e3
-	
-			for i in xrange(1,len(tab.colnames)):
-				tab[tab.colnames[i]][above_thresh] = np.nan
-			
-			ra_deg=Column(ra_deg)
-			dec_deg=Column(dec_deg)
+		for i in xrange (0, len(tab['RAJ2000'])):
+			tab['RAJ2000'][i] = string.join(string.split(tab['RAJ2000'][i],' '),':')
+			ra_deg[i] = ra2deg(tab['RAJ2000'][i])
+			tab['DEJ2000'][i] = string.join(string.split(tab['DEJ2000'][i],' '),':')
+			dec_deg[i] = dec2deg(tab['DEJ2000'][i])
+		
+		flux14 = np.array(tab['S1.4'],dtype=float)
+		above_thresh = flux14<thresh*1e3
 
-			tab.add_column(ra_deg, name= 'RADEG')
-			tab.add_column(dec_deg, name= 'DECDEG')
+		for i in xrange(1,len(tab.colnames)):
+			tab[tab.colnames[i]][above_thresh] = np.nan
+		
+		ra_deg=Column(ra_deg)
+		dec_deg=Column(dec_deg)
+
+		tab.add_column(ra_deg, name= 'RADEG')
+		tab.add_column(dec_deg, name= 'DECDEG')
 
 		tab =  Table(tab, masked=True)
 
 		ascii.write(tab,catalog_table,overwrite=True)
+
 
 	def set_mosaic_files(catalog_table,mask_dir,fields_dir):
 		
@@ -279,6 +288,10 @@ def worker(pipeline, recipe, config):
 #MAIN 
 ################################################################################
 
+	mask_dir = pipeline.output+'/masking/'
+	if os.path.exists(mask_dir) != True:
+		os.mkdir(mask_dir)
+
 	centre = config.get('centre_coord', [0,0])	
 	mask_cell = config.get('cell_size', 1.)
 	mask_imsize = config.get('mask_size',3600.)
@@ -286,58 +299,59 @@ def worker(pipeline, recipe, config):
 	final_mask = mask_dir+str(config.get('name_mask', 'final_mask.fits'))   
 	catalog_name = config['query_catalog'].get('catalog', 'SUMSS')	
 
-	if pipeline.enable_task(config, 'query_catalog'):
-		key = 'query_catalog'
+	if catalog_name == 'SUMSS':
+
+		if pipeline.enable_task(config, 'query_catalog'):
+			key = 'query_catalog'
 	
-		catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
+			catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'			
 
-		recipe.add(query_catalog, 'query_source_catalog', 
+			recipe.add(query_catalog_sumss, 'query_source_catalog', 
+				{
+					'centre'  : centre,
+					'width_im': config[key].get('width_image', '2d'), 
+					'cat_name': catalog_name,
+					'thresh': config['make_mask'].get('thresh_lev', 10e-3),
+					'catalog_table' : catalog_tab,
+				}, 
+				input=pipeline.input, 
+				output=pipeline.output,
+				label = 'Catalog pulled')
+
+
+		#read catalog table
+		fields_dir = pipeline.input+'/fields/'
+
+		step = '1' #set directories
+		recipe.add(set_mosaic_files, step,
 			{
-				'centre'  : centre,
-				'width_im': config[key].get('width_image', '2d'), 
-				'cat_name': catalog_name,
-				'thresh': config['make_mask'].get('thresh_lev', 10e-3),
-				'catalog_table' : catalog_tab,
-			}, 
-			input=pipeline.input, 
-			output=pipeline.output,
-			label = 'Catalog pulled')
+		    	'catalog_table': catalog_tab,
+		    	'mask_dir': mask_dir,
+		    	'fields_dir': fields_dir,
 
-		if catalog_name == 'SUMSS':
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Preparing folders')
 
-			#read catalog table
-			fields_dir = pipeline.input+'/fields/'
+		step = '2'
+		recipe.add('cab/montage', step,
+			{
+		    	'input_dir': 'masking/formosaic'+':output',
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Mosaicing catalog')
 
-			step = '1' #set directories
-			recipe.add(set_mosaic_files, step,
-				{
-			    	'catalog_table': catalog_tab,
-			    	'mask_dir': mask_dir,
-			    	'fields_dir': fields_dir,
-
-				},
-				input = pipeline.input,
-				output = pipeline.output,
-				label='Preparing folders')
-
-			step = '2'
-			recipe.add('cab/montage', step,
-				{
-			    	'input_dir': 'masking/formosaic'+':output',
-				},
-				input = pipeline.input,
-				output = pipeline.output,
-				label='Mosaicing catalog')
-
-			step = '5' #cleanup
-			recipe.add(move_files, step,
-				{
-				    'catalog_name': catalog_name,
-				    'mask_dir': mask_dir,
-				},
-				input = pipeline.input,
-				output = pipeline.output,
-				label='Cleanup folders')
+		step = '5' #cleanup
+		recipe.add(move_files, step,
+			{
+			    'catalog_name': catalog_name,
+			    'mask_dir': mask_dir,
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Cleanup folders')
 
 
 

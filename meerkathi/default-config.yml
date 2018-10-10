@@ -73,7 +73,7 @@ observation_config:
 
 
 prepare_data:
-  enable: true
+  enable: false
   order: 2
   fixvis:
     enable: false
@@ -399,31 +399,23 @@ image_HI:
   weight: 'briggs'
   robust: 0
   subtractmodelcol:
-    enable: false
-  uvcontsub: 
     enable: true
-    fitorder: 1
-    fitspw: null 
-  sunblocker: 
+  mstransform:
     enable: true
-    use_contsub: true
-    threshold: 4
-  doppler_corr:
-    enable: true
-    use_contsub: true
+    doppler: true
     telescope: meerkat
-    regrid: true
     mode: 'frequency'
-    nchan: 'all'
     outframe: 'bary' 
-    veltype: 'radio'
-    msuvcontsub: false
+    uvlin: true
     fitspw: null 
     fitorder: 1
+  sunblocker:
+    enable: false
+    use_mstransform: true
+    threshold: 4
   wsclean_image:
     enable: true
-    use_contsub: true
-    use_doppcorr: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -444,13 +436,13 @@ image_HI:
     make_cube: true
     make_mask: true
   rewsclean_image:
-    enable: true
+    enable: false
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
     niter: 10000000
     autothreshold: 0.5
   casa_image:
     enable: false
-    use_contsub: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -465,7 +457,7 @@ image_HI:
   freq_to_vel:
     enable: true
   sofia:
-    enable: true
+    enable: false
     rmsMode: 'mad'
     threshold: 4.0
     flag: false
@@ -478,4 +470,4 @@ image_HI:
     minSizeY: 3
     minSizeZ: 5
   flagging_summary:
-    enable: true 
+    enable: false

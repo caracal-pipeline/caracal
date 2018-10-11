@@ -96,6 +96,7 @@ def worker(pipeline, recipe, config):
 
     for i, msname in enumerate(mslist):
         prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
+        msname_mst=msname.replace('.ms','_mst.ms')
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub_{:d}'.format(i)
@@ -113,21 +114,39 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Subtract model column'.format(step))
 
 
-        if pipeline.enable_task(config, 'uvcontsub'):
-            step = 'contsub_{:d}'.format(i)
-            recipe.add('cab/casa_uvcontsub', step,
+        if pipeline.enable_task(config, 'mstransform'):
+            if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
+            col='corrected'
+
+            if config['mstransform'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
+            else: nchan_mstr=min(nchan_dopp,config['mstransform'].get('nchan', nchan_dopp))
+
+            step = 'mstransform_{:d}'.format(i)
+            recipe.add('cab/casa_mstransform', step,
                 {
                     "msname"    : msname,
-                    "fitorder"  : config['uvcontsub'].get('fitorder', 1),
-                    "fitspw"    : sdm.dismissable(config['uvcontsub'].get('fitspw',None))
+                    "outputvis" : msname_mst,
+                    "regridms"  : config['mstransform'].get('doppler', True),
+                    "mode"      : config['mstransform'].get('mode', 'frequency'),
+                    "nchan"     : nchan_mstr,
+                    "start"     : '{0:.3f}Hz'.format(comfreq0),
+                    "width"     : '{0:.3f}Hz'.format(comchanw),
+                    "interpolation" : 'nearest',
+                    "datacolumn" : col,
+                    "restfreq"  :restfreq,
+                    "outframe"  : config['mstransform'].get('outframe', 'bary'),
+                    "veltype"   : config['mstransform'].get('veltype', 'radio'),
+                    "douvcontsub" : config['mstransform'].get('uvlin', False),
+                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw', None)),
+                    "fitorder"  : config['mstransform'].get('fitorder', 1),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Subtract continuum'.format(step))
+                label='{0:s}:: Doppler tracking corrections'.format(step))
 
 
         if pipeline.enable_task(config, 'sunblocker'):
-            if config['sunblocker']['use_contsub']: msnamesb = msname+'.contsub'
+            if config['sunblocker']['use_mstransform']: msnamesb = msname_mst
             else: msnamesb = msname
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step, 
@@ -148,53 +167,11 @@ def worker(pipeline, recipe, config):
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Block out sun'.format(step))
- 
-
-        if pipeline.enable_task(config, 'doppler_corr'):
-            if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
-            if config['doppler_corr']['use_contsub']:
-                msnamedc = msname+'.contsub'
-                col='data'
-                if os.path.exists('{1:s}/{0:s}.regrd'.format(msname,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}.regrd'.format(msname,pipeline.msdir))
-            else:
-                msnamedc = msname
-                col='corrected'
-
-            if config['doppler_corr'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
-            else: nchan_mstr=min(nchan_dopp,config['doppler_corr'].get('nchan', nchan_dopp))
-
-            step = 'doppler_corr_{:d}'.format(i)
-            recipe.add('cab/casa_mstransform', step,
-                {
-                    "msname"    : msnamedc,
-                    "outputvis" : msnamedc+'.regrd',
-                    "regridms"  : config['doppler_corr'].get('regrid', True),
-                    "mode"      : config['doppler_corr'].get('mode', 'frequency'),
-                    "nchan"     : nchan_mstr,
-                    "start"     : '{0:.3f}Hz'.format(comfreq0),
-                    "width"     : '{0:.3f}Hz'.format(comchanw),
-                    "interpolation" : 'nearest',
-                    "datacolumn" : col,
-                    "restfreq"  :restfreq,
-                    "outframe"  : config['doppler_corr'].get('outframe', 'bary'),
-                    "veltype"   : config['doppler_corr'].get('veltype', 'radio'),
-                    "douvcontsub" : config['doppler_corr'].get('msuvcontsub', False),
-                    "fitspw"    : sdm.dismissable(config['doppler_corr'].get('fitspw', None)),
-                    "fitorder"  : config['doppler_corr'].get('fitorder', 1),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Doppler tracking corrections'.format(step))
-
+                label='{0:s}:: Block out sun'.format(step)) 
 
     if pipeline.enable_task(config, 'wsclean_image'):
-        if not config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
-        elif config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub.regrd'.format(did, config['label']) for did in pipeline.dataid]
-        elif config['wsclean_image']['use_doppcorr'] and not config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        if config['wsclean_image']['use_mstransform']:
+            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
         else:
             mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
         step = 'wsclean_image_HI'
@@ -202,7 +179,7 @@ def worker(pipeline, recipe, config):
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0: nchans = 'all'
         if nchans=='all':
-          if config['wsclean_image']['use_doppcorr']: nchans=nchan_dopp
+          if config['wsclean_image']['use_mstransform']: nchans=nchan_dopp
           else: nchans=pipeline.nchans[0][spwid]
         firstchan = config['wsclean_image'].get('firstchan', 0)
         binchans  = config['wsclean_image'].get('binchans', 1)
@@ -292,12 +269,8 @@ def worker(pipeline, recipe, config):
         if HIclean_mask=='sofia_mask':
           HIclean_mask=pipeline.prefix+'_HI.image_clean_mask.fits:output' 
 
-        if not config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
-        elif config['wsclean_image']['use_doppcorr'] and config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub.regrd'.format(did, config['label']) for did in pipeline.dataid]
-        elif config['wsclean_image']['use_doppcorr'] and not config['wsclean_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.regrd'.format(did, config['label']) for did in pipeline.dataid]
+        elif config['wsclean_image']['use_mstransform']:
+            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
         else:
             mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
 
@@ -307,7 +280,7 @@ def worker(pipeline, recipe, config):
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0: nchans = 'all'
         if nchans=='all':
-          if config['wsclean_image']['use_doppcorr']: nchans=nchan_dopp
+          if config['wsclean_image']['use_mstransform']: nchans=nchan_dopp
           else: nchans=pipeline.nchans[0][spwid]
         firstchan = config['wsclean_image'].get('firstchan', 0)
         binchans  = config['wsclean_image'].get('binchans', 1)
@@ -359,8 +332,8 @@ def worker(pipeline, recipe, config):
             cubename = pipeline.prefix+'_HI-image.fits'
 
     if pipeline.enable_task(config, 'casa_image'):
-        if config['casa_image']['use_contsub']:
-            mslist = ['{0:s}-{1:s}.ms.contsub'.format(did, config['label']) for did in pipeline.dataid]
+        if config['casa_image']['use_mstransform']:
+            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
         step = 'casa_image_HI'
         spwid = config['casa_image'].get('spwid', 0)
         nchans = config['casa_image'].get('nchans', 0)
@@ -393,7 +366,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config,'freq_to_vel'):
         for ss in ['dirty','psf','residual','model','image']:
-            cubename=pipeline.prefix+'_HI.'+ss+'.fits:output'
+            cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {
                            'filename' : cubename,

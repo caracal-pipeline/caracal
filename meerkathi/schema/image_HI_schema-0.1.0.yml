@@ -20,7 +20,6 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
         required: false
-        
       restfreq:
         desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
         type: str
@@ -50,68 +49,23 @@ mapping:
             desc: Execute segment subtractmodelcol. Default is False.
             type: bool
             required: false
-      uvcontsub:
-        desc: Perform a continuum subtraction on the visibilities by fitting a fitorderth-order polynomial to xx and yy correlations at each time step.
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment uvcontsub (yes/no). Default is yes.
-            type: bool
-            required: false
-          fitorder:
-            desc: Order of the polynomial to be subtracted. Default is 1.
-            type: int
-            required: false
-          fitspw:
-            desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
-            type: str
-            required: false
-      sunblocker:
-        desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment sunblocker (yes/no). Default is yes.
-            type: bool
-            required: false
-          use_contsub:
-            desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
-            type: bool
-            required: false
-          imsize:
-            desc: Image size (use the same as in wsclean_image or casa_image). Default is worker npix
-            type: int
-            required: false
-          cell:
-            desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell
-            type: float
-            required: false
-          threshold:
-            desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
-            type: float
-            required: false
-
-      doppler_corr:
-        desc: Perform doppler tracking corrections
+      mstransform:
+        desc: Perform UVLIN continuum subtraction and/or doppler tracking corrections
         type: map
         mapping:
           enable:
             desc: Execute segment doppler correction (yes/no). Default is yes.
             type: bool
-            required: false
-          use_contsub:
-            desc: Execute doppler corrections on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
-            type: bool
-            required: false
+            required: true
           telescope:
             desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
             enum: ['meerkat','vla','gmrt', 'wsrt', 'atca']
             type: str
             required: false
-          regrid:
+          doppler:
             desc: Transform channel labels and visibilities to a different spectral reference frame. default is True
             type: bool
-            required: false
+            required: true
           mode:
             desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
             type: str
@@ -128,10 +82,10 @@ mapping:
             desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
             type: str
             required: false
-          msuvcontsub:
+          uvlin:
             desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform. Default is false
             type: bool
-            required: false
+            required: true
           fitspw:
             desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
             type: str
@@ -140,7 +94,30 @@ mapping:
             desc: Polynomial order for the continuum fits
             type: int
             required: false
-                 
+      sunblocker:
+        desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sunblocker (yes/no). Default is yes.
+            type: bool
+            required: false
+          use_mstransform:
+            desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+            type: bool
+            required: false
+          imsize:
+            desc: Image size (use the same as in wsclean_image or casa_image). Default is worker npix
+            type: int
+            required: false
+          cell:
+            desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell
+            type: float
+            required: false
+          threshold:
+            desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
+            type: float
+            required: false
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map
@@ -149,12 +126,8 @@ mapping:
             desc: Execute segment wsclean_image (yes/no). Default is yes.
             type: bool
             required: false
-          use_contsub:
+          use_mstransform:
             desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
-            type: bool
-            required: false
-          use_doppcorr:
-            desc: Execute wsclean_image on doppler tracking corrected data. Default is yes
             type: bool
             required: false
           pol:
@@ -255,8 +228,6 @@ mapping:
             desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
             required: false
-
-      
       casa_image:
         desc: Use CASA to create line data cube.
         type: map
@@ -264,7 +235,7 @@ mapping:
           enable:
             type: bool
             required: false
-          use_contsub:
+          use_mstransform:
             desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false

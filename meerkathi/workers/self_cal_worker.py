@@ -5,6 +5,7 @@ import json
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
+from astropy.io import fits as fits
 
 NAME = 'Self calibration loop'
 
@@ -54,6 +55,29 @@ def worker(pipeline, recipe, config):
 
     # Define image() extract_sources() calibrate()
     # functions for convience
+
+
+    def change_header(filename,headfile,copy_head):
+      pblist = fits.open(filename)
+
+      dat = pblist[0].data
+
+      if copy_head == True:
+        hdrfile = fits.open(headfile)
+        head = hdrfile[0].header
+      elif copy_head == False:
+
+        head = pblist[0].header
+
+        if 'ORIGIN' in head:
+          del head['ORIGIN']
+        if 'CUNIT1' in head:
+          del head['CUNIT1']
+        if 'CUNIT2' in head:
+          del head['CUNIT2']
+
+      fits.writeto(filename,dat,head,overwrite=True)
+
 
     def image(num):
         key = 'image'
@@ -154,7 +178,7 @@ def worker(pipeline, recipe, config):
         imagename = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
         outmask = 'masking/{0:s}_{1:d}{2:s}-mask.fits'.format(prefix, num, mfsprefix)
         def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
-        
+   
         # user_kern = config[key].get('kernels', None)
         # if user_kern:
         #   for i in xrange(0,len(user_kern))
@@ -195,7 +219,20 @@ def worker(pipeline, recipe, config):
         if config[key].get('flag') :
           flags_sof = config[key].get('flagregion')
           image_opts.update({"flag.regions": flags_sof})
+        
         if config[key].get('inputmask') :
+          #change header of inputmask so it is the same as image
+          mask_name = pipeline.output+'/masking/'+config[key].get('inputmask')
+          headfile = pipeline.output+'/{0:s}_{1:d}{2:s}-image.fits'.format(prefix, num, mfsprefix)
+          recipe.add(change_header, 'correct header from CASA errors',
+          { 'filename' : mask_name,
+            'copy_head' : True,
+            'headfile' : headfile,
+          },
+          input=pipeline.input,
+          output=pipeline.output,
+          label='Header corrected')
+
           image_opts.update({"import.maskFile": config[key].get('inputmask')+':output/masking/'})
         
         recipe.add('cab/sofia', step,

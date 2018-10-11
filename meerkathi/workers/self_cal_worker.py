@@ -485,7 +485,7 @@ def worker(pipeline, recipe, config):
                 HolisticCheck=(drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
                               /(drweight+skewweight+kurtweight+meanweight+noiseweight)
                 if (1 - tolerance) < HolisticCheck:
-                    meerkathi.log.info('Stopping criterion: '+[' '+cc for cc in conv_crit])
+                    meerkathi.log.info('Stopping criterion: '+' '.join([cc for cc in conv_crit])
                     meerkathi.log.info('{:f} < {:f}'.format(1-tolerance, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
                     global self_cal_iter_counter

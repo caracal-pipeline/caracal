@@ -519,31 +519,30 @@ def worker(pipeline, recipe, config):
                 model.split()
             except NameError:
                 model = str(num)
-        # if we run vis_only we did not run pybdsm and so we do not have a tigger model
-        if config['calibrate'].get('model_mode') != 'vis_only':
-            tigmod = '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                prefix, num if num <= len(config['calibrate'].get('model', num))
-                else len(config['calibrate'].get('model', num)),
-                '-combined' if len(model.split('+')) >= 2 else '')
-        else:
-            tigmod = ''
 
         step = 'aimfast'
-        recipe.add('cab/aimfast', step,
-                {
-                    "tigger-model"         : tigmod,
+
+        aimfast_settings =  {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
                     "normality-model"      : config[step].get(
                                                  'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
-                },
-                input=pipeline.output,
-                output=pipeline.output,
-                label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(
-                          step, num, num))
+                }
+        # if we run not vis_only we want to use the pybdsm model as well.
+        if config['calibrate'].get('model_mode') != 'vis_only':
+            aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
+                prefix, num if num <= len(config['calibrate'].get('model', num))
+                else len(config['calibrate'].get('model', num)),
+                '-combined' if len(model.split('+')) >= 2 else '')})
+        recipe.add('cab/aimfast', step,
+            aimfast_settings,
+            input=pipeline.output,
+            output=pipeline.output,
+            label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
+        if config['calibrate'].get('model_mode') != 'vis_only':
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
     if calwith == 'meqtrees':

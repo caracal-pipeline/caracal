@@ -502,7 +502,7 @@ def worker(pipeline, recipe, config):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
         print( len(config['extract_sources'].get('thresh_pix', [])),num)
-        if len(config['extract_sources'].get('thresh_pix', [])) >= num+1:
+        if len(config['extract_sources'].get('thresh_pix', [])) >= num-1:
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')

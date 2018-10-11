@@ -425,7 +425,7 @@ def worker(pipeline, recipe, config):
             tolerance = config[key].get('tolerance', 0.02)
             fidelity_data = get_aimfast_data()
             conv_crit = config[key].get('convergence_criteria',["DR","SKEW","KURT","STDDev","MEAN"] )
-            print(config[key].get('convergence_criteria'))
+            print(conv_crit)
             exit()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:

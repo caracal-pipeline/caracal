@@ -439,6 +439,8 @@ def worker(pipeline, recipe, config):
                     drratio = 1
                     try:
                         conv_crit.remove("DR")
+                    except:
+                        pass
                 if any(cc == "DR" for cc in conv_crit):
                     drweight = 0.8
                 else:

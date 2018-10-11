@@ -426,7 +426,7 @@ def worker(pipeline, recipe, config):
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:
-                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDev", "MEAN"])
+                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"]).upper()
                 print(conv_crit)
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
@@ -470,7 +470,7 @@ def worker(pipeline, recipe, config):
                 # The noise should not change if the residuals are gaussian in n-1.
                 # However, they should decline in case the residuals are non-gaussian.
                 # We want a weight that goes to 0 in both cases
-                if any(cc == "STDDev" for cc in conv_crit):
+                if any(cc == "STDDEV" for cc in conv_crit):
                     if residual0['KURT']/6. < 0.52 and residual0['SKEW'] < 0.01:
                         noiseweight=abs(1.-noiseratio)
                     else:

@@ -306,7 +306,7 @@ masking:
     thresh_lev: 1.5e-3
   merge_with_extended:
     enable: true
-    extended_source_input: 'Fornaxa_vla.fits' #specify ouptut name of extended source mask if present in /input
+    extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input
     mask_with: 'thresh'
     thresh_lev: 8.e-4
 

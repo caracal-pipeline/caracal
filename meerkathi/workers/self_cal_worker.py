@@ -448,27 +448,33 @@ def worker(pipeline, recipe, config):
                     skewweight=residual1['SKEW']/0.01
                 else:
                     skewweight = 0.
-                print(skewweight,drweight)
-                exit()
                 kurtratio=residual1['KURT']/residual0['KURT']
                 # Kurtosis goes to 3 so this way it counts for 0.5 when normal distribution
-                kurtweight=residual1['KURT']/6.
+                if any(cc == "KURT" for cc in conv_crit):
+                    kurtweight=residual1['KURT']/6.
+                else:
+                    kurtweight = 0.
                 meanratio=residual1['MEAN']/residual0['MEAN']
                 # We only care about the mean when it is large compared to the noise
-                # When it deviates from zero more than 20% of the noise this is a problem 
-                meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
+                # When it deviates from zero more than 20% of the noise this is a problem
+                if any(cc == "MEAN" for cc in conv_crit):
+                    meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
+                else:
+                    meanweight = 0
                 noiseratio=residual1['STDDev']/residual0['STDDev']
                 # The noise should not change if the residuals are gaussian in n-1.
                 # However, they should decline in case the residuals are non-gaussian.
                 # We want a weight that goes to 0 in both cases
-                if residual0['KURT']/6. < 0.52 and residual0['SKEW'] < 0.01:
-                    noiseweight=abs(1.-noiseratio)
+                if any(cc == "STDDev" for cc in conv_crit):
+                    if residual0['KURT']/6. < 0.52 and residual0['SKEW'] < 0.01:
+                        noiseweight=abs(1.-noiseratio)
+                    else:
+                        # If declining then noiseratio is small and that's good, If rising it is a real bad thing.
+                        #  Hence we can just square the ratio
+                        noiseweight=noiseratio
                 else:
-                    # If declining then noiseratio is small and that's good, If rising it is a real bad thing.
-                    #  Hence we can just square the ratio
-                    noiseweight=noiseratio
-
-
+                    noiseweight = 0
+                print(drweight,skewweight,kurtweight,meanweight,noiseweight)
                 # These weights could be integrated with the ratios however while testing I
                 #  kept them separately such that the idea behind them is easy to interpret.
                 # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
@@ -478,7 +484,7 @@ def worker(pipeline, recipe, config):
                 HolisticCheck=(drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
                               /(drweight+skewweight+kurtweight+meanweight+noiseweight)
                 if (1 - tolerance) < HolisticCheck:
-                    meerkathi.log.info('Stopping criterion: Holistic Check')
+                    meerkathi.log.info('Stopping criterion: '+[' '+cc for cc in conv_crit])
                     meerkathi.log.info('{:f} < {:f}'.format(1-tolerance, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
                     global self_cal_iter_counter

@@ -311,8 +311,8 @@ def worker(pipeline, recipe, config):
                 stdw.write('0.0 -30.0 1e-99')
 
         for i,msname in enumerate(mslist):
-            gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',gsols[0])) else -1],
-                          config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',gsols[1])) else -1]]
+            gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
+                          config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)

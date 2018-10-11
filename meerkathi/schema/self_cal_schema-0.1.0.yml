@@ -62,14 +62,6 @@ mapping:
         type: int
         desc: Number of cleaning iterations
         required: true
-      img_auto_threshold:
-        type: float
-        desc: Estimate noise level using a robust estimator and stop at sigma x stddev.
-        required: true
-      img_auto_mask:
-        type: float
-        desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
-        required: true
       img_cleanborder:
         type: float
         desc: Clean border
@@ -90,20 +82,10 @@ mapping:
         type: int
         desc: Fit a polynomial over frequency to each clean component
         required: false
-      img_column:
-        type: str
-        enum: ["DATA", "CORRECTED_DATA"]
-        desc: Column to image
-        required: false
       img_pol:
         type: str
         desc: Stokes image to create
         required: true
-      cal_Gsols:
-        desc: Calibration solution intervals
-        seq:
-            - type: int
-        required: false
       cal_DDsols:
         desc: Calibration solution intervals
         seq:
@@ -116,14 +98,6 @@ mapping:
       cal_gain_amplitude_clip_high:
         type: float
         desc: Higher gain amplitude clipping
-        required: true
-      sf_thresh_pix:
-        type: int
-        desc: Source finder pixel threshold
-        required: true
-      sf_thresh_isl:
-        type: int
-        desc: Source finder island threshold
         required: true
       cal_niter:
         type: int
@@ -146,6 +120,11 @@ mapping:
             type: float
             desc: Relative change in weighted mean of several indicators from aimfast.
             required: true
+          convergence_criteria:
+            type: str
+            enum: ["DR","SKEW","KURT","STDDev","MEAN"]
+            required: false
+            desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Note that when calibrate model_mode = 'vis_only' DR is not an option.
           area_factor:
             type: float
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
@@ -154,7 +133,7 @@ mapping:
             type: str
             enum: ["normaltest", "shapiro"]
             desc: normality test model to use. Note that normaltest is the D'Agostino
-            required: true
+            required: false
 
       image:
         type: map
@@ -168,7 +147,7 @@ mapping:
             seq:
               - type: int 
             desc: Auto masking threshold
-            required: false
+            required: true
           auto_threshold:
             seq:
               - type: float
@@ -178,7 +157,7 @@ mapping:
             seq:
               - type: str
             desc: Column to image
-            required: false
+            required: true
           mask_from_sky:
             type: bool
             desc: switch on cleaning within mask from fits file
@@ -267,12 +246,12 @@ mapping:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
-            required: false
+            required: true
           Gsols_channel:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
-            required: false
+            required: true
 
       image_2:
         type: map

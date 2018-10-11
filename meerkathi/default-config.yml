@@ -334,30 +334,22 @@ self_cal:
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_auto_threshold: 3  
-  img_auto_mask: 5
   img_cleanborder: 0                        
   img_facets: 11
   img_nchans: 3
   img_joinchannels: true
   img_fit_spectral_pol: 1
-  img_column: CORRECTED_DATA 
   img_pol: I
   # Calibration settings
-  cal_Gsols: [1,0]
   cal_DDsols: []
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5
   # Source finding settings
-  sf_thresh_pix: 10
-  sf_thresh_isl: 8
   cal_niter: 4
   start_at_iter: 1
   aimfast:
     enable: true
-    tolerance: 0.01
-    normality_model: normaltest
-    area_factor: 10
+    tolerance: 0.02
   image:
     enable: true
     auto_mask: [40 , 30, 10, 5, 3]

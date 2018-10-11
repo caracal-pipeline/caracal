@@ -27,6 +27,7 @@ PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
 pip install -U -r ${WORKSPACE_ROOT}/projects/meerkathi/requirements.txt
 pip install -I ${WORKSPACE_ROOT}/projects/meerkathi
+pip install --force-reinstall -U git+https://github.com/SpheMakh/Stimela.git
 #put the necessary bits in input
 cd $TEST_OUTPUT_DIR
 mkdir input

@@ -130,7 +130,6 @@ flagging:
   flagging_summary:
     enable: true
 
-
 cross_cal:
   enable: true
   order: 4

@@ -542,7 +542,6 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
-        if config['calibrate'].get('model_mode') != 'vis_only':
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
     if calwith == 'meqtrees':

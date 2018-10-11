@@ -522,7 +522,6 @@ def worker(pipeline, recipe, config):
 
 		mosaic_regrid_casa = 'masking/mosaic_regrid.image'
 		mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
-	
 		mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
 
 		step =  '1'

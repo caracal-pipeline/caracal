@@ -425,8 +425,6 @@ def worker(pipeline, recipe, config):
             tolerance = config[key].get('tolerance', 0.02)
             fidelity_data = get_aimfast_data()
             conv_crit = config[key].get('convergence_criteria',["DR","SKEW","KURT","STDDev","MEAN"] )
-            print(conv_crit)
-            exit()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
@@ -435,7 +433,10 @@ def worker(pipeline, recipe, config):
                 if config['calibrate'].get('model_mode', '') == 'vis_only':
                     drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
                     # Dynamic range is important,
-                    drweight = 0.8
+                    if any(cc == "DR" for cc in conv_crit):
+                        drweight = 0.8
+                    else:
+                        drweight = 0.
                 else:
                     drratio = 1
                     drweight = 0.
@@ -443,7 +444,12 @@ def worker(pipeline, recipe, config):
                 skewratio=residual1['SKEW']/residual0['SKEW']
                 # We care about the skewness when it is large. What is large?
                 # Let's go with 0.005 at that point it's weight is 0.5
-                skewweight=residual1['SKEW']/0.01
+                if any(cc == "SKEW" for cc in conv_crit):
+                    skewweight=residual1['SKEW']/0.01
+                else:
+                    skewweight = 0.
+                print(skewweight,drweight)
+                exit()
                 kurtratio=residual1['KURT']/residual0['KURT']
                 # Kurtosis goes to 3 so this way it counts for 0.5 when normal distribution
                 kurtweight=residual1['KURT']/6.

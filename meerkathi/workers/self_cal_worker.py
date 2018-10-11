@@ -428,7 +428,6 @@ def worker(pipeline, recipe, config):
             if n>= 2:
                 conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"])
                 conv_crit= [cc.upper() for cc in conv_crit]
-                print(conv_crit)
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
@@ -553,22 +552,22 @@ def worker(pipeline, recipe, config):
     # selfcal loop
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
-    #if pipeline.enable_task(config, 'image'):
-    #    image(self_cal_iter_counter)
-    #if pipeline.enable_task(config, 'extract_sources'):
-    #    extract_sources(self_cal_iter_counter)
+    if pipeline.enable_task(config, 'image'):
+        image(self_cal_iter_counter)
+    if pipeline.enable_task(config, 'extract_sources'):
+        extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
     while quality_check(self_cal_iter_counter,
                         enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
-     #   if pipeline.enable_task(config, 'calibrate'):
-     #       calibrate(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'calibrate'):
+            calibrate(self_cal_iter_counter)
         self_cal_iter_counter += 1
-     #   if pipeline.enable_task(config, 'image'):
-    #        image(self_cal_iter_counter)
-      #  if pipeline.enable_task(config, 'extract_sources'):
-     #       extract_sources(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'image'):
+            image(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'extract_sources'):
+            extract_sources(self_cal_iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(self_cal_iter_counter)
 

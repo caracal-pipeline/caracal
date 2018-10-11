@@ -427,15 +427,18 @@ def worker(pipeline, recipe, config):
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:
                 conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDev", "MEAN"])
+                print(conv_crit)
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
                 drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
                     # Dynamic range is important,
+
                 if config['calibrate'].get('model_mode', '') == 'vis_only':
                     drratio = 1
-                    conv_crit.remove("DR")
+                    try:
+                        conv_crit.remove("DR")
                 if any(cc == "DR" for cc in conv_crit):
                     drweight = 0.8
                 else:
@@ -501,7 +504,6 @@ def worker(pipeline, recipe, config):
     def image_quality_assessment(num):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
-        print( len(config['extract_sources'].get('thresh_pix', [])),num)
         # This was based on thres_pix but change to model as when extract_sources = True is will take the last settings
         if len(config['calibrate'].get('model', [])) >= num:
             model = config['calibrate'].get('model', num)[num-1]

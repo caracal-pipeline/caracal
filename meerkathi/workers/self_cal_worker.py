@@ -297,22 +297,21 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/sofia', step,
           image_opts,
           input=pipeline.input,
-          output=pipeline.output,
+          output=pipeline.output+'/masking/',
           label='{0:s}:: Make SoFiA mask'.format(step))
         
 
-        step = '7'
-        name_sof_out = imagename.split('.fits')[0]
-        name_sof_out = name_sof_out+'_mask.fits'
-        print "XXXXXXXX"
-        print name_sof_out
-        recipe.add(cleanup_files, step,
-          {
-            'mask_name' : name_sof_out
-          },
-          input=pipeline.input,
-          output=pipeline.output,
-          label='{0:s}:: Make SoFiA mask'.format(step))
+        # step = '7'
+        # name_sof_out = imagename.split('.fits')[0]
+        # name_sof_out = name_sof_out+'_mask.fits'
+
+        # recipe.add(cleanup_files, step,
+        #   {
+        #     'mask_name' : name_sof_out
+        #   },
+        #   input=pipeline.input,
+        #   output=pipeline.output,
+        #   label='{0:s}:: Make SoFiA mask'.format(step))
 
 
     def make_cube(num, imtype='model'):

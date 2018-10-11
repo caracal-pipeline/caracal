@@ -424,21 +424,23 @@ def worker(pipeline, recipe, config):
             key = 'aimfast'
             tolerance = config[key].get('tolerance', 0.02)
             fidelity_data = get_aimfast_data()
-            conv_crit = config[key].get('convergence_criteria',["DR","SKEW","KURT","STDDev","MEAN"] )
             # Ensure atleast one iteration is ran to compare previous and subsequent images
+            if config['calibrate'].get('model_mode', '') == 'vis_only':
+                conv_crit.remove("DR")
             if n>= 2:
+                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDev", "MEAN"])
+                # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                if config['calibrate'].get('model_mode', '') != 'vis_only':
-                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+                drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
                     # Dynamic range is important,
-                    if any(cc == "DR" for cc in conv_crit):
-                        drweight = 0.8
-                    else:
-                        drweight = 0.
-                else:
+                if config['calibrate'].get('model_mode', '') == 'vis_only':
                     drratio = 1
+                    conv_crit.remove("DR")
+                if any(cc == "DR" for cc in conv_crit):
+                    drweight = 0.8
+                else:
                     drweight = 0.
                 # The other parameters should become smaller, hence n/n-1 < 1
                 skewratio=residual1['SKEW']/residual0['SKEW']

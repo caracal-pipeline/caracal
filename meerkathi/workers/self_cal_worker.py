@@ -286,7 +286,7 @@ def worker(pipeline, recipe, config):
             for i, msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
 
-            modelcolumn = ''
+            modelcolumn = 'MODEL_DATA'
         
         elif config[key].get('model_mode', None) == 'pybdsm_only':
             model = config[key].get('model', num)[num-1]
@@ -519,17 +519,19 @@ def worker(pipeline, recipe, config):
                 model.split()
             except NameError:
                 model = str(num)
+        # if we run vis_only we did not run pybdsm and so we do not have a tigger model
+        if config['calibrate'].get('model_mode') != 'vis_only':
+            tigmod = '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
+                prefix, num if num <= len(config['calibrate'].get('model', num))
+                else len(config['calibrate'].get('model', num)),
+                '-combined' if len(model.split('+')) >= 2 else '')
+        else:
+            tigmod = ''
 
-        #else:
-            # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.
-            #model = config['calibrate'].get('model', num)[len(config['extract_sources'].get('thresh_pix', thresh_pix))-1]
         step = 'aimfast'
         recipe.add('cab/aimfast', step,
                 {
-                    "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                                                 prefix, num if num <= len(config['calibrate'].get('model', num))
-                                                 else len(config['calibrate'].get('model', num)),
-                                                 '-combined' if len(model.split('+')) >= 2 else ''),
+                    "tigger-model"         : tigmod,
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
                     "normality-model"      : config[step].get(

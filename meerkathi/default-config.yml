@@ -73,7 +73,7 @@ observation_config:
 
 
 prepare_data:
-  enable: true
+  enable: false
   order: 2
   fixvis:
     enable: false
@@ -160,6 +160,7 @@ cross_cal:
     minsnr: 3
     solnorm: true
     solint: ""
+    set_refant: true
     plot: true
     remove_ph_time_var: false
   gain_cal_flux:
@@ -168,6 +169,7 @@ cross_cal:
     field: fcal
     minnrbl: 4
     minsnr: 3
+    set_refant: true
     plot: false
   gain_cal_gain:
     enable: true
@@ -175,6 +177,7 @@ cross_cal:
     field: gcal
     minnrbl: 4
     minsnr: 3
+    set_refant: true
     plot: true
   transfer_fluxscale:
     enable: true
@@ -397,31 +400,23 @@ image_HI:
   weight: 'briggs'
   robust: 0
   subtractmodelcol:
-    enable: false
-  uvcontsub: 
     enable: true
-    fitorder: 1
-    fitspw: null 
-  sunblocker: 
+  mstransform:
     enable: true
-    use_contsub: true
-    threshold: 4
-  doppler_corr:
-    enable: true
-    use_contsub: true
+    doppler: true
     telescope: meerkat
-    regrid: true
     mode: 'frequency'
-    nchan: 'all'
     outframe: 'bary' 
-    veltype: 'radio'
-    msuvcontsub: false
+    uvlin: true
     fitspw: null 
     fitorder: 1
+  sunblocker:
+    enable: false
+    use_mstransform: true
+    threshold: 4
   wsclean_image:
     enable: true
-    use_contsub: true
-    use_doppcorr: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -442,13 +437,13 @@ image_HI:
     make_cube: true
     make_mask: true
   rewsclean_image:
-    enable: true
+    enable: false
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
     niter: 10000000
     autothreshold: 0.5
   casa_image:
     enable: false
-    use_contsub: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -463,7 +458,7 @@ image_HI:
   freq_to_vel:
     enable: true
   sofia:
-    enable: true
+    enable: false
     rmsMode: 'mad'
     threshold: 4.0
     flag: false
@@ -476,4 +471,4 @@ image_HI:
     minSizeY: 3
     minSizeZ: 5
   flagging_summary:
-    enable: true 
+    enable: false

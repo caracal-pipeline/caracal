@@ -474,8 +474,6 @@ def worker(pipeline, recipe, config):
                         noiseweight=noiseratio
                 else:
                     noiseweight = 0.
-                print(drweight,skewweight,kurtweight,meanweight,noiseweight)
-                print(cal_niter,self_cal_iter_counter)
                 # These weights could be integrated with the ratios however while testing I
                 #  kept them separately such that the idea behind them is easy to interpret.
                 # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
@@ -503,7 +501,8 @@ def worker(pipeline, recipe, config):
     def image_quality_assessment(num):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
-        if len(config['extract_sources'].get('thresh_pix', [])) > num:
+        print( len(config['extract_sources'].get('thresh_pix', [])),num)
+        if len(config['extract_sources'].get('thresh_pix', [])) >= num:
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')

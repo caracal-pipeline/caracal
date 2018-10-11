@@ -36,6 +36,26 @@ mapping:
             desc: Frequency averaging
             type: int
             required: true
+          hires_split:
+            desc: Make a High frequency resolution version of the data
+            type: bool
+            required: true
+          hires_label:
+            desc: Label for the hi-res MS
+            type: str
+            required: true
+          hires_tav:
+            desc: Time averaging for high res MS
+            type: str
+            required: false
+          hires_fav:
+            desc: Frequency averaging for high res MS - use caution !
+            type: int
+            required: false
+          hires_spw:
+            desc: Spectral Window selection for Hi res MS
+            type: str
+            required: false 
       obsinfo:
         desc: Get observation information
         type: map

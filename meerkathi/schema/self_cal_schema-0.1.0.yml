@@ -16,6 +16,10 @@ mapping:
         type: str
         desc: Label to tag the output files
         required: true
+      hires_label:
+        type: str
+        desc: Label to tag the hires products
+        required: true
       order:
         type: int
         desc: Workers are executed in ascedning order based on this value
@@ -263,6 +267,13 @@ mapping:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
             required: True
+          hires_interpol:
+            type: bool
+            desc: Carry out gain interpolation with high resolution MS
+            required: True
+          apply_step:
+            type: str
+            desc: Apply gains from this step.
           add_vis_model:
             type: bool
             desc: Add/Use clean components from latest imaging step to/as sky model for calibation
@@ -277,357 +288,16 @@ mapping:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-
-      image_2:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
+          Bjones: 
+           type: bool
+           desc: Enable Bjones
+           required: True
+          Bsols:
             seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
 
-      extract_sources_2:
-        type: map
-        desc: Source finding parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          spi:
-            type: bool
-            desc: Extract source spectral index
-            required: false            # if not specified no spi will be determined
-          thresh_pix:
-            type: int
-            desc: Source finder pixel threshold
-            required: false
-          thresh_isl:
-            type: int
-            desc: Source finder island threshold
-            required: false
-
-      calibrate_2:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-
-      image_3:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
-      extract_sources_3:
-        type: map
-        desc: Source finding parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          spi:
-            type: bool
-            desc: Extract source spectral index
-            required: false            # if not specified no spi will be determined
-          thresh_pix:
-            type: int
-            desc: Source finder pixel threshold
-            required: false
-          thresh_isl:
-            type: int
-            desc: Source finder island threshold
-            required: false
-
-      calibrate_3:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-      
-      image_4:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
-      calibrate_4:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-      
-      image_5:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false             # If not specified, CORR_DATA column will be imaged
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
 
       restore_model:
         type: map

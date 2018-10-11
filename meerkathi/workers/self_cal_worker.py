@@ -47,9 +47,11 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-
+    label_hires = config.get('hires_label', 'hires')
     pipeline.set_cal_msnames(label)
+    pipeline.set_hires_msnames(label_hires)
     mslist = pipeline.cal_msnames
+    hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
@@ -369,15 +371,35 @@ def worker(pipeline, recipe, config):
 
     def calibrate_cubical(num):
         key = 'calibrate'
-        model = config[key].get('model', num)
-        if isinstance(model, str) and len(model.split('+'))>1:
-            mm = model.split('+')
-            calmodel, fits_model = combine_models(mm, num)
+        if num == cal_niter:
+            vismodel = config[key].get('add_vis_model', False)  
         else:
-            model = int(model)
-            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+            vismodel = False
+        #force to calibrate with model data column if specified by user
 
+        if config[key].get('model_mode', None) == 'pybdsm_vis':
+            vismodel = True
+            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
+            model = config[key].get('model', num)[num-1]
+            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+                stdw.write('#format: ra_d dec_d i\n')
+                stdw.write('0.0 -30.0 1e-99')
+            for i, msname in enumerate(mslist):
+                predict_from_fits(num, model, i)
+
+            modelcolumn = None
+        
+        elif config[key].get('model_mode', None) == 'pybdsm_only':
+            model = config[key].get('model', num)[num-1]
+            if isinstance(model, str) and len(model.split('+')) > 1:
+                mm = model.split('+')
+                calmodel, fits_model = combine_models(mm, num,
+                                           enable=False if pipeline.enable_task(
+                                           config, 'aimfast') else True)
+            else:
+                model = int(model)
+                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
         if config[key].get('Gsols', gsols) == [] or \
                        config[key].get('Bsols', gsols) == []:
             config[key]['Bjones'] = True
@@ -401,35 +423,153 @@ def worker(pipeline, recipe, config):
                 {   
                     "data-ms"          : msname, 
                     "data-column"      : 'DATA',
-                    "model-column"     : 'MODEL_DATA' if config[key].get('add_vis_model', False) else ' "" ',
-                    "j2-term-iters"    : 200,
+                    "sol-term-iters"   : '200',
+                   # "model-column"     : 'MODEL_DATA' if config[key].get('add_vis_model', False) else ' "" ',
+                   # "j2-term-iters"    : 200,
+                    "model-list"       : [calmodel, 'MODEL_DATA'] if (config[key].get('add_vis_model', False) and num == cal_niter) else [calmodel],
                     "data-time-chunk"  : time_chunk,
                     "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                     "dist-ncpu"        : ncpu,
                     "sol-jones"        : jones_chain,
-                    "model-lsm"        : calmodel,
                     "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
-                    "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')],
-                    "out-plots-show"   : False,
+                    "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
+                    "out-plots"        : True,
                     "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                     "montblanc-dtype"  : 'float',
-                    "j1-solvable"      : True,
-                    "j1-type"          : CUBICAL_MT[config[key].get('gain_matrix_type','Gain2x2')[num-1] if num <= len(config[key].get('gain_matrix_type','Gain2x2')) else 'Gain2x2'],
-                    "j1-time-int"      : gsols_[0],
-                    "j1-freq-int"      : gsols_[1],
-                    "j1-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                    "j1-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
-                    "j2-solvable"      : config[key].get('Bjones', bjones),
-                    "j2-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')],
-                    "j2-time-int"      : bsols_[0],
-                    "j2-freq-int"      : bsols_[1],
-                    "j2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                    "j2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "g-solvable"      : True,
+                    "g-type"          : CUBICAL_MT[config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+                    "g-time-int"      : gsols_[0],
+                    "g-freq-int"      : gsols_[1],
+                    "g-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "g-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                  #  "b-solvable"      : config[key].get('Bjones', bjones),
+                  #  "b-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+                  #  "b-time-int"      : bsols_[0],
+                  #  "b-freq-int"      : bsols_[1],
+                  #  "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                  #  "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "madmax-enable"   : config[key].get('madmax_flagging',True),
+                    "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
+                    "madmax-threshold" : config[key].get('madmax_flag_thresh', [0,10]),
+                    "madmax-estimate" : 'corr',
                 },  
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory='100Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
+
+    def apply_gains_to_fullres(num_iter, enable=True):
+        key = 'calibrate'
+        if num == cal_niter:
+            vismodel = config[key].get('add_vis_model', False)  
+        else:
+            vismodel = False
+        #force to calibrate with model data column if specified by user
+
+        if config[key].get('model_mode', None) == 'pybdsm_vis':
+            vismodel = True
+            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
+            model = config[key].get('model', num)[num-1]
+            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+                stdw.write('#format: ra_d dec_d i\n')
+                stdw.write('0.0 -30.0 1e-99')
+            for i, msname in enumerate(mslist):
+                predict_from_fits(num, model, i)
+
+            modelcolumn = None
+        
+        elif config[key].get('model_mode', None) == 'pybdsm_only':
+            model = config[key].get('model', num)[num-1]
+            if isinstance(model, str) and len(model.split('+')) > 1:
+                mm = model.split('+')
+                calmodel, fits_model = combine_models(mm, num,
+                                           enable=False if pipeline.enable_task(
+                                           config, 'aimfast') else True)
+            else:
+                model = int(model)
+                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+        calwith = config.get('calibrate_with', 'meqtrees').lower()
+        if(calwith=='meqtrees'):
+           enable = False
+           meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
+        hires_switch = config.get('hires_interpol', 'True')
+        if (hires_switch==False):
+            enable = False
+        if(enable==True):
+                model = config[key].get('model', num_iter)[-1]
+                if isinstance(model, str) and len(model.split('+'))>1:
+                    mod = model.split('+')
+                    calmodel, fits_model = combine_models(mod, num_iter)
+                else:
+                    model = int(model)
+                    calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+                    fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+
+
+                if config[key].get('Bjones', bjones):
+                    jones_chain = 'G,B'
+                else:
+                    jones_chain = 'G'
+
+                for i,himsname in enumerate(hires_mslist):
+
+                    step = 'apply_cubical_gains_{0:d}_{1:d}'.format(num_iter, i)
+                    recipe.add('cab/cubical', step,
+                        {
+                            "data-ms"          : himsname,
+                            "data-column"      : 'DATA',
+                            "data-time-chunk"  : time_chunk,
+                            "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
+                            "dist-ncpu"        : ncpu,
+                            "model-list"       : [calmodel, 'MODEL_DATA'] if config[key].get('add_vis_model', False) else [calmodel],
+                            "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num_iter),
+                            "out-mode"         : 'ac',
+                            "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
+                            "montblanc-dtype"  : 'float',
+                            "g-xfer-from"       : 'cubical_gaintab_gjones_{0:s}_{1:d}.parmdb:output'.format((himsname.replace(label_hires, label)).split('.ms')[0],num_iter),
+                    #        "b-xfer-from"       : 'cubical_gaintab_bjones_{0:s}_{1:d}.parmdb:output'.format((himsname.replace(label_hires, label)).split('.ms')[0],num_iter),
+                            "g-solvable"      : False,
+                   #         "b-solvable"      : False,
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        shared_memory='100Gb',
+                        label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
+                step = 'make_hires_image'
+                if(':' not in config['split_target'].get('hires_spw')):
+                   msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.prefix[0])     ##Assumes the number of channels are the same in all MSs.
+                   with open(msinfo, 'r') as stdr:
+                     nchans_full = yaml.load(stdr)['SPW']['NUM_CHAN']
+                else:
+                   chanst, chanend = ((config['split_target'].get('hires_spw')).split(":")[1]).split('~')
+                   nchans_full = (int(chanend)-int(chanst))+1
+                recipe.add('cab/wsclean', step,
+                  {
+                    "msname"    : hires_mslist,
+                    "column"    : 'CORRECTED_DATA',
+                    "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
+                    "npix"      : config[key].get('npix', npix),
+                    "trim"      : config[key].get('trim', trim),
+                    "scale"     : config[key].get('cell', cell),
+                    "prefix"    : '{0:s}_{1:d}'.format(prefix, label_hires),
+                    "niter"     : config[key].get('niter', niter),
+                    "mgain"     : config[key].get('mgain', mgain),
+                    "pol"       : config[key].get('pol', pol),
+                    "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
+                    "channelsout"     : nchans_full,
+                    "joinchannels"    : config[key].get('joinchannels', joinchannels),
+                    "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
+                    "auto-threshold": config[key].get('auto_threshold',[auto_thresh])[num-1 if len(config[key].get('auto_threshold', [auto_thresh])) >= num else -1],
+                    "multiscale" : config[key].get('multi_scale', False),
+                    "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
+                  },
+                  input=pipeline.input,
+                  output=pipeline.output,
+                  shared_memory='100Gb',
+                  label="{0:s}:: Make a high res image".format(step, himsname))
+
+
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
         "Extracts data from the json data file"
@@ -537,6 +677,10 @@ def worker(pipeline, recipe, config):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(iter_counter)
+    if config.get('hires_interpol'==True):
+        print "Interpolating gains"
+        substep = int(config.get('apply_step', cal_niter))
+        apply_gains_to_fullres(substep,enable=True if (config.get('hires_interpol')==True) else False)
 
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:

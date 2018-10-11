@@ -35,6 +35,8 @@ def freq_to_vel(filename):
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
+    if (config.get('hi_res_interpolation')==True):
+       mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]
     pipeline.prefixes = ['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq','1.420405752GHz')

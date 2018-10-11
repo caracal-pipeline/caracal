@@ -425,8 +425,6 @@ def worker(pipeline, recipe, config):
             tolerance = config[key].get('tolerance', 0.02)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if config['calibrate'].get('model_mode', '') == 'vis_only':
-                conv_crit.remove("DR")
             if n>= 2:
                 conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDev", "MEAN"])
                 # Ensure atleast one iteration is ran to compare previous and subsequent images

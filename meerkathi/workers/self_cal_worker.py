@@ -426,7 +426,8 @@ def worker(pipeline, recipe, config):
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n>= 2:
-                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"]).upper()
+                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"])
+                conv_crit= [cc.upper() for cc in conv_crit]
                 print(conv_crit)
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]

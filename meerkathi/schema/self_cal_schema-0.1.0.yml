@@ -121,10 +121,10 @@ mapping:
             desc: Relative change in weighted mean of several indicators from aimfast.
             required: true
           convergence_criteria:
-            type: str
-            enum: ["DR","SKEW","KURT","STDDev","MEAN"]
+            seq:
+              - type: str
             required: false
-            desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Note that when calibrate model_mode = 'vis_only' DR is not an option.
+            desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Options ["DR","SKEW","KURT","STDDev","MEAN"]. Note that when calibrate model_mode = 'vis_only' DR is not an option.
           area_factor:
             type: float
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af

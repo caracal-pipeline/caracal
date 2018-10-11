@@ -283,28 +283,29 @@ flagging__2:
     enable: true
 
 masking:
-  enable: yes
+  enable: true
   order: 11
-  centre_coord: ['',''] #HH:MM:SS.S,DD:MM:SS.S
+  centre_coord: ['03:18:0.000', '-37:27:0.000']
   mask_size: 3600      #must be the same as  im_npix in selfcal worker
   cell_size: 2         #this will ch
-  name_mask: '' #specify output name of catalog mask
+  name_mask: 'my_mask.fits' #specify output name of catalog mask
   query_catalog:
     enable: true
-    catalog: 'SUMSS'  #foor now only SUMSS available
-    width_image: '4d'
+    catalog: 'SUMSS'
+    width_image: '3d'
   pb_correction:
     enable: true
     frequency: 1.37031054688e9
   make_mask:
-    enable: yes
-    mask_with: 'thresh' #for now only thresh available (Sofia in the future)
-    input_image: 'pbcorr' #input image comes from pb correction (or from somewhere else)
-    thresh_lev: 4e-2  
+    enable: true
+    mask_with: 'thresh'
+    input_image: 'pbcorr'
+    thresh_lev: 1.5e-3
   merge_with_extended:
-    enable: yes
-    extended_source_input: '' #specify ouptut name of extended source mask if present in /input/fields/
-    thresh_lev: 1e-3  
+    enable: true
+    extended_source_input: 'Fornaxa_vla.fits' #specify ouptut name of extended source mask if present in /input
+    mask_with: 'thresh'
+    thresh_lev: 8.e-4
 
 
 self_cal:

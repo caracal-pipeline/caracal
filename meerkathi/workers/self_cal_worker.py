@@ -502,16 +502,19 @@ def worker(pipeline, recipe, config):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
         print( len(config['extract_sources'].get('thresh_pix', [])),num)
-        if len(config['extract_sources'].get('thresh_pix', [])) >= num:
+        # This was based on thres_pix but change to model as when extract_sources = True is will take the last settings
+        if len(config['calibrate'].get('model', [])) >= num:
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
                 combine_models(mm, num)
+        # in case we are in the last round, imaging has made a model that is longer then the expected model column
+        # Therefore we take this last model if model is not defined
         if num == cal_niter+1:
-            model = config['calibrate'].get('model', num)[-1]
-            if isinstance(model, str) and len(model.split('+')) == 2:
-                mm = model.split('+')
-                combine_models(mm, num)
+            try:
+                model.split()
+            except NameError:
+                model = str(num)
 
         #else:
             # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.

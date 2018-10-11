@@ -609,7 +609,7 @@ def worker(pipeline, recipe, config):
 
 		key='merge_with_extended'
 
-		ext_name = config[key].get('extended_source_input','Fornaxa_vla.fits')
+		ext_name = config[key].get('extended_source_input','Fornaxa_vla.FITS')
 		extended = 'fields/'+ext_name
 		extended_casa = 'masking/extended.image'
 		
@@ -644,7 +644,7 @@ def worker(pipeline, recipe, config):
 			output=pipeline.output,
 			label='Beam in casa format')
 
-		ext_name_root = ext_name.split('.fits')[0]
+		ext_name_root = ext_name.split('.')[0]
 		extended_pbcorr = 'masking/'+ext_name_root+'_pbcorr.fits'
 		extended_mask = '/masking/'+ext_name_root+'_mask.fits'
 

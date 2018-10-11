@@ -196,7 +196,7 @@ def worker(pipeline, recipe, config):
           flags_sof = config[key].get('flagregion')
           image_opts.update({"flag.regions": flags_sof})
         if config[key].get('inputmask') :
-          image_opts.update({"import.maskFile": config[key].get('inputmask')})
+          image_opts.update({"import.maskFile": config[key].get('inputmask')+':output/masking/'})
         
         recipe.add('cab/sofia', step,
           image_opts,

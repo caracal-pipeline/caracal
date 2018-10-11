@@ -30,7 +30,6 @@ def worker(pipeline, recipe, config):
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol', 'I')
-    column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     bsols = config.get('cal_Bsols', [])
@@ -58,7 +57,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
-                      "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
+                      "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
                       "trim"      : config[key].get('trim', trim),
@@ -110,7 +109,7 @@ def worker(pipeline, recipe, config):
         step = 'image_{}'.format(num)
         image_opts = {
                   "msname"    : mslist,
-                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
+                  "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),
@@ -287,7 +286,7 @@ def worker(pipeline, recipe, config):
             for i, msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
 
-            modelcolumn = None
+            modelcolumn = ''
         
         elif config[key].get('model_mode', None) == 'pybdsm_only':
             model = config[key].get('model', num)[num-1]
@@ -301,7 +300,7 @@ def worker(pipeline, recipe, config):
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-            modelcolumn = None
+            modelcolumn = ''
         
         elif  config[key].get('model_mode', None) == 'vis_only':
             vismodel = True

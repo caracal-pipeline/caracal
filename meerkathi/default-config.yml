@@ -314,7 +314,7 @@ masking:
 self_cal:
   enable: true
   label: corr
-  order: 11
+  order: 12
   primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
@@ -393,7 +393,7 @@ self_cal:
 
 image_HI:
   enable: true
-  order: 12
+  order: 13
   label: corr
   restfreq: '1.420405752GHz'
   npix: [1024]

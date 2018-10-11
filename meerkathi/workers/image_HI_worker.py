@@ -179,7 +179,7 @@ def worker(pipeline, recipe, config):
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0: nchans = 'all'
         if nchans=='all':
-          if config['wsclean_image']['use_doppcorr']: nchans=nchan_dopp
+          if config['wsclean_image']['use_mstransform']: nchans=nchan_dopp
           else: nchans=pipeline.nchans[0][spwid]
         firstchan = config['wsclean_image'].get('firstchan', 0)
         binchans  = config['wsclean_image'].get('binchans', 1)

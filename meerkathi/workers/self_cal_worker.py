@@ -430,7 +430,7 @@ def worker(pipeline, recipe, config):
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                if config['calibrate'].get('model_mode', '') == 'vis_only':
+                if config['calibrate'].get('model_mode', '') != 'vis_only':
                     drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
                     # Dynamic range is important,
                     if any(cc == "DR" for cc in conv_crit):
@@ -503,7 +503,7 @@ def worker(pipeline, recipe, config):
     def image_quality_assessment(num):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
-        if len(config['extract_sources'].get('thresh_pix', [])) >= num:
+        if len(config['extract_sources'].get('thresh_pix', [])) > num:
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')

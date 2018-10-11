@@ -133,7 +133,7 @@ def worker(pipeline, recipe, config):
         elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
-            image_opts.update({"auto-mask" : config[key].get('auto_mask',[auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) >= num else -1]})
+            image_opts.update({"auto-mask" : config[key].get('auto_mask',[])[num-1 if len(config[key].get('auto_mask', [])) >= num else -1]})
 
         recipe.add('cab/wsclean', step,
         image_opts,

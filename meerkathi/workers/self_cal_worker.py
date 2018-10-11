@@ -460,7 +460,7 @@ def worker(pipeline, recipe, config):
                 if any(cc == "MEAN" for cc in conv_crit):
                     meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
                 else:
-                    meanweight = 0
+                    meanweight = 0.
                 noiseratio=residual1['STDDev']/residual0['STDDev']
                 # The noise should not change if the residuals are gaussian in n-1.
                 # However, they should decline in case the residuals are non-gaussian.
@@ -473,8 +473,9 @@ def worker(pipeline, recipe, config):
                         #  Hence we can just square the ratio
                         noiseweight=noiseratio
                 else:
-                    noiseweight = 0
+                    noiseweight = 0.
                 print(drweight,skewweight,kurtweight,meanweight,noiseweight)
+                print(cal_niter,self_cal_iter_counter)
                 # These weights could be integrated with the ratios however while testing I
                 #  kept them separately such that the idea behind them is easy to interpret.
                 # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)

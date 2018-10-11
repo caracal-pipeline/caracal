@@ -527,21 +527,21 @@ def worker(pipeline, recipe, config):
     # selfcal loop
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
-    if pipeline.enable_task(config, 'image'):
+    #if pipeline.enable_task(config, 'image'):
     #    image(self_cal_iter_counter)
-    if pipeline.enable_task(config, 'extract_sources'):
+    #if pipeline.enable_task(config, 'extract_sources'):
     #    extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
     while quality_check(self_cal_iter_counter,
                         enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
-        if pipeline.enable_task(config, 'calibrate'):
+     #   if pipeline.enable_task(config, 'calibrate'):
      #       calibrate(self_cal_iter_counter)
         self_cal_iter_counter += 1
-        if pipeline.enable_task(config, 'image'):
+     #   if pipeline.enable_task(config, 'image'):
     #        image(self_cal_iter_counter)
-        if pipeline.enable_task(config, 'extract_sources'):
+      #  if pipeline.enable_task(config, 'extract_sources'):
      #       extract_sources(self_cal_iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(self_cal_iter_counter)

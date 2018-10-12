@@ -63,8 +63,8 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Split and make a high res copy of data ms={1:s}'.format(step, msname))
-
-
+                
+            pipeline.hires_spw = config['split_target'].get('hires_spw', '')  
 
     
         if pipeline.enable_task(config, 'prepms'):

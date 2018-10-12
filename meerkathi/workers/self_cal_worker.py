@@ -442,12 +442,12 @@ def worker(pipeline, recipe, config):
                     "g-freq-int"      : gsols_[1],
                     "g-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "g-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
-                  #  "b-solvable"      : config[key].get('Bjones', bjones),
-                  #  "b-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
-                  #  "b-time-int"      : bsols_[0],
-                  #  "b-freq-int"      : bsols_[1],
-                  #  "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                  #  "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "b-solvable"      : config[key].get('Bjones', bjones),
+                    "b-type"          : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+                    "b-time-int"      : bsols_[0],
+                    "b-freq-int"      : bsols_[1],
+                    "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                     "madmax-enable"   : config[key].get('madmax_flagging',True),
                     "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
                     "madmax-threshold" : config[key].get('madmax_flag_thresh', [0,10]),
@@ -523,27 +523,28 @@ def worker(pipeline, recipe, config):
                             "data-time-chunk"  : time_chunk,
                             "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                             "dist-ncpu"        : ncpu,
-                            "model-list"       : [calmodel, 'MODEL_DATA'] if config[key].get('add_vis_model', False) else [calmodel],
+                           # "model-list"       : [calmodel, 'MODEL_DATA'] if config[key].get('add_vis_model', False) else [calmodel],
                             "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num_iter),
                             "out-mode"         : 'ac',
                             "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                             "montblanc-dtype"  : 'float',
                             "g-xfer-from"       : 'cubical_gaintab_gjones_{0:s}_{1:d}.parmdb:output'.format((himsname.replace(label_hires, label)).split('.ms')[0],num_iter),
-                    #        "b-xfer-from"       : 'cubical_gaintab_bjones_{0:s}_{1:d}.parmdb:output'.format((himsname.replace(label_hires, label)).split('.ms')[0],num_iter),
+                            "b-xfer-from"       : 'cubical_gaintab_bjones_{0:s}_{1:d}.parmdb:output'.format((himsname.replace(label_hires, label)).split('.ms')[0],num_iter),
                             "g-solvable"      : False,
-                   #         "b-solvable"      : False,
+                            "b-solvable"      : False,
                         },
                         input=pipeline.input,
                         output=pipeline.output,
                         shared_memory='100Gb',
                         label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
                 step = 'make_hires_image'
-                if(':' not in config['split_target'].get('hires_spw')):
+              
+                if(':' not in pipeline.hires_spw):
                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.prefix[0])     ##Assumes the number of channels are the same in all MSs.
                    with open(msinfo, 'r') as stdr:
                      nchans_full = yaml.load(stdr)['SPW']['NUM_CHAN']
                 else:
-                   chanst, chanend = ((config['split_target'].get('hires_spw')).split(":")[1]).split('~')
+                   chanst, chanend = ((pipeline.hires_spw).split(":")[1]).split('~')
                    nchans_full = (int(chanend)-int(chanst))+1
                 recipe.add('cab/wsclean', step,
                   {
@@ -553,7 +554,7 @@ def worker(pipeline, recipe, config):
                     "npix"      : config[key].get('npix', npix),
                     "trim"      : config[key].get('trim', trim),
                     "scale"     : config[key].get('cell', cell),
-                    "prefix"    : '{0:s}_{1:d}'.format(prefix, label_hires),
+                    "prefix"    : '{0:s}_{1:s}'.format(prefix, label_hires),
                     "niter"     : config[key].get('niter', niter),
                     "mgain"     : config[key].get('mgain', mgain),
                     "pol"       : config[key].get('pol', pol),
@@ -561,7 +562,7 @@ def worker(pipeline, recipe, config):
                     "channelsout"     : nchans_full,
                     "joinchannels"    : config[key].get('joinchannels', joinchannels),
                     "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                    "auto-threshold": config[key].get('auto_threshold',[auto_thresh])[num-1 if len(config[key].get('auto_threshold', [auto_thresh])) >= num else -1],
+                    "auto-threshold": config[key].get('auto_threshold',[auto_thresh])[-1],
                     "multiscale" : config[key].get('multi_scale', False),
                     "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
                   },
@@ -661,6 +662,9 @@ def worker(pipeline, recipe, config):
     # selfcal loop
     iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
+        if config['calibrate'].get('hires_interpol')==True:
+            meerkathi.log.info("Interpolating gains")
+
         image(iter_counter)
     if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(iter_counter)
@@ -682,7 +686,7 @@ def worker(pipeline, recipe, config):
     if config['calibrate'].get('hires_interpol')==True:
         print "Interpolating gains"
         substep = int(config.get('apply_step', cal_niter))
-        apply_gains_to_fullres(substep,enable=True if (config.get('hires_interpol')==True) else False)
+        apply_gains_to_fullres(substep,enable=True if (config['calibrate'].get('hires_interpol')==True) else False)
 
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:

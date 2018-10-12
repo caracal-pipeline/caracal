@@ -62,9 +62,10 @@ class MeerKATHI(object):
     def __init__(self, config, workers_directory, 
             stimela_build=None, prefix=None, 
             add_all_first=False):
-
+        
         self.config = config
-
+        #print self.config
+        #sys.exit()
         self.add_all_first = add_all_first
 
         self.msdir = self.config['general']['msdir']

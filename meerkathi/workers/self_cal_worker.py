@@ -432,15 +432,19 @@ def worker(pipeline, recipe, config):
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
-                    # Dynamic range is important,
-
                 if config['calibrate'].get('model_mode', '') == 'vis_only':
                     drratio = 1
                     try:
                         conv_crit.remove("DR")
                     except:
                         pass
+                if any(cc == "DR" for cc in conv_crit):
+                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+                else:
+                    drratio = 1
+                    # Dynamic range is important,
+
+
                 if any(cc == "DR" for cc in conv_crit):
                     drweight = 0.8
                 else:

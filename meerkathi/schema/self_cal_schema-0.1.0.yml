@@ -188,6 +188,37 @@ mapping:
             desc: switch on local rms measurement for cleaning
             required: false
 
+      sofia_mask: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (yes/no)? Default is yes.
+            type: bool
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (yes/no)? Default is no.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          inputmask:
+            type: str
+            desc: input mask over which add Sofia's
+            required: false
+          kernels:
+            seq:
+              - type: int
+            desc: Kernels for mask
+            required: false
+
       extract_sources:
         type: map
         desc: Source finding parameters
@@ -210,6 +241,7 @@ mapping:
               - type: int
             desc: Source finder island threshold
             required: true
+
 
       calibrate:
         type: map
@@ -304,6 +336,32 @@ mapping:
             desc: switch on local rms measurement for cleaning
             required: false
 
+      sofia_mask_2: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (yes/no)? Default is yes.
+            type: bool
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (yes/no)? Default is no.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          inputmask:
+            type: str
+            desc: input mask over which add Sofia's
+            required: false
+
       extract_sources_2:
         type: map
         desc: Source finding parameters
@@ -355,10 +413,6 @@ mapping:
             enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
             desc: Gain matrix type
             required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
 
       image_3:
         type: map
@@ -409,6 +463,32 @@ mapping:
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
+            required: false
+
+      sofia_mask_3: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (yes/no)? Default is yes.
+            type: bool
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (yes/no)? Default is no.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          inputmask:
+            type: str
+            desc: input mask over which add Sofia's
             required: false
 
       extract_sources_3:
@@ -462,10 +542,6 @@ mapping:
             enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
             desc: Gain matrix type
             required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
       
       image_4:
         type: map
@@ -518,6 +594,32 @@ mapping:
             desc: switch on local rms measurement for cleaning
             required: false
 
+      sofia_mask_4: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (yes/no)? Default is yes.
+            type: bool
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (yes/no)? Default is no.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          inputmask:
+            type: str
+            desc: input mask over which add Sofia's
+            required: false
+
       calibrate_4:
         type: map
         desc: Calibration parameters
@@ -548,10 +650,6 @@ mapping:
             enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
             desc: Gain matrix type
             required: true
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
       
       image_5:
         type: map
@@ -620,6 +718,7 @@ mapping:
             type: str
             desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
+
       flagging_summary:
         type: map
         desc: Output the flagging summary

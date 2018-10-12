@@ -130,7 +130,6 @@ flagging:
   flagging_summary:
     enable: true
 
-
 cross_cal:
   enable: true
   order: 4
@@ -285,44 +284,36 @@ flagging__2:
   flagging_summary:
     enable: true
 
-mask_from_catalog:
-  enable: no
+masking:
+  enable: false
   order: 11
-  centre_coord: ['03:22:41.700', '-37:12:30.000']
-  catalog: 'SUMSS'
-  catalog_mask: ' ' #specify output name of catalog mask
-  fornaxa_finalmask: '' #specify ouptut name of FornaxA mask if present
-  final_mask: '' #specify name of final mask for continuum imaging
-  query_SUMSS:
-    enable: no
-    width_image: '4d'
-  build_beam:
-    enable: no
-    img_size: 3600      #must be the same as  im_npix in selfcal worker
-    cell_size: 2         #this will change and we will use the self_cal_3GC keywords
-    frequency: 1.37031054688e9
-    copyhead : yes
-    headname : '' #name of continuuum image 
-  make_mosaic:
-    enable: yes
-  casa_regrid:
-    enable: yes
+  centre_coord: ['03:18:0.000', '-37:27:0.000']
+  mask_size: 3600      #must be the same as  im_npix in selfcal worker
+  cell_size: 2         #this will ch
+  name_mask: 'my_mask.fits' #specify output name of catalog mask
+  query_catalog:
+    enable: true
+    catalog: 'SUMSS'
+    width_image: '3d'
   pb_correction:
-    enable:  yes
+    enable: true
+    frequency: 1.37031054688e9
   make_mask:
-    enable: yes
-    cutoff: 1.e-3
-  fornaxa_mask:
-    enable: yes
-    fornaxa_cutoff: 1.e-3
-  add_masks:
-    enable: yes
+    enable: true
+    mask_with: 'thresh'
+    input_image: 'pbcorr'
+    thresh_lev: 1.5e-3
+  merge_with_extended:
+    enable: true
+    extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input
+    mask_with: 'thresh'
+    thresh_lev: 8.e-4
 
 
 self_cal:
   enable: true
   label: corr
-  order: 11
+  order: 12
   primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
@@ -362,6 +353,12 @@ self_cal:
     local_rms: False
     no_update_model: False
     minuvw_m: 0
+  sofia_mask:
+    enable: true
+    inputmask: ''
+    flag: false
+    flagregion: []
+    threshold: 5
   extract_sources:
     enable: true
     spi: false
@@ -385,7 +382,7 @@ self_cal:
 
 image_HI:
   enable: true
-  order: 12
+  order: 13
   label: corr
   restfreq: '1.420405752GHz'
   npix: [1024]

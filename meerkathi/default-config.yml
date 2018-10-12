@@ -368,7 +368,6 @@ self_cal:
     flag: false
     flagregion: []
     threshold: 5
-    kernels: []
   extract_sources:
     enable: true
     spi: false

@@ -184,7 +184,7 @@ def worker(pipeline, recipe, config):
     def sofia_mask(num):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
-        imagename = '{0:s}_{1:d}{2:s}-image.fits'.format(prefix, num, mfsprefix)
+        imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
         def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
@@ -194,7 +194,7 @@ def worker(pipeline, recipe, config):
         #     def_kernels.concatenate(config[key].get('kernels'))
 
         image_opts =   {
-              "import.inFile"         : imagename+':output',
+              "import.inFile"         : imagename,
               "steps.doFlag"          : True,
               "steps.doScaleNoise"    : True,
               "steps.doSCfind"        : True,
@@ -292,11 +292,12 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='Extracted regridded mosaic')
 
-          image_opts.update({"import.maskFile": mask_name+':output'})
+          image_opts.update({"import.maskFile": mask_name})
+          image_opts.update({"import.inFile": imagename})
         
         recipe.add('cab/sofia', step,
           image_opts,
-          input=pipeline.input,
+          input=pipeline.output,
           output=pipeline.output+'/masking/',
           label='{0:s}:: Make SoFiA mask'.format(step))
         

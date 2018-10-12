@@ -126,6 +126,9 @@ mapping:
             type: str
             desc: Solution interval for delay-correction calibration.
             required: false
+          set_refant:
+            type: bool
+            desc: Should a reference antenna be used for this calibration
           plot: 
             type: bool
             desc: Enables plotting of bandpass solutions.
@@ -164,6 +167,9 @@ mapping:
             type: str
             desc: Time solution interval
             required: false
+          set_refant:
+            type: bool
+            desc: Should a reference antenna be used for this calibration
           plot: 
             type: bool
             desc: Enables plotting of gains.
@@ -198,6 +204,9 @@ mapping:
             type: str
             desc: Time solution interval
             required: false
+          set_refant:
+            type: bool
+            desc: Should a reference antenna be used for this calibration
           plot:
             type: bool
             desc: Enables plotting of gains.

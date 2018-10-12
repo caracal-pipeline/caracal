@@ -130,7 +130,6 @@ flagging:
   flagging_summary:
     enable: true
 
-
 cross_cal:
   enable: true
   order: 40
@@ -160,6 +159,7 @@ cross_cal:
     minsnr: 3
     solnorm: true
     solint: ""
+    set_refant: true
     plot: true
     remove_ph_time_var: false
   gain_cal_flux:
@@ -168,6 +168,7 @@ cross_cal:
     field: fcal
     minnrbl: 4
     minsnr: 3
+    set_refant: true
     plot: false
   gain_cal_gain:
     enable: true
@@ -175,6 +176,7 @@ cross_cal:
     field: gcal
     minnrbl: 4
     minsnr: 3
+    set_refant: true
     plot: true
   transfer_fluxscale:
     enable: true
@@ -286,8 +288,7 @@ flagging__2:
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
-
-
+    
 flagging__3:
   enable: true
   order: 80
@@ -299,40 +300,31 @@ flagging__3:
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
-
-
-mask_from_catalog:
-  enable: no
-  order: 90
-  centre_coord: ['03:22:41.700', '-37:12:30.000']
-  catalog: 'SUMSS'
-  catalog_mask: ' ' #specify output name of catalog mask
-  fornaxa_finalmask: '' #specify ouptut name of FornaxA mask if present
-  final_mask: '' #specify name of final mask for continuum imaging
-  query_SUMSS:
-    enable: no
-    width_image: '4d'
-  build_beam:
-    enable: no
-    img_size: 3600      #must be the same as  im_npix in selfcal worker
-    cell_size: 2         #this will change and we will use the self_cal_3GC keywords
-    frequency: 1.37031054688e9
-    copyhead : yes
-    headname : '' #name of continuuum image 
-  make_mosaic:
-    enable: yes
-  casa_regrid:
-    enable: yes
+    
+masking:
+  enable: false
+  order: 11
+  centre_coord: ['03:18:0.000', '-37:27:0.000']
+  mask_size: 3600      #must be the same as  im_npix in selfcal worker
+  cell_size: 2         #this will ch
+  name_mask: 'my_mask.fits' #specify output name of catalog mask
+  query_catalog:
+    enable: true
+    catalog: 'SUMSS'
+    width_image: '3d'
   pb_correction:
-    enable:  yes
+    enable: true
+    frequency: 1.37031054688e9
   make_mask:
-    enable: yes
-    cutoff: 1.e-3
-  fornaxa_mask:
-    enable: yes
-    fornaxa_cutoff: 1.e-3
-  add_masks:
-    enable: yes
+    enable: true
+    mask_with: 'thresh'
+    input_image: 'pbcorr'
+    thresh_lev: 1.5e-3
+  merge_with_extended:
+    enable: true
+    extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input
+    mask_with: 'thresh'
+    thresh_lev: 8.e-4
 
 
 self_cal:
@@ -388,6 +380,12 @@ self_cal:
     local_rms: False
     no_update_model: False
     minuvw_m: 0
+  sofia_mask:
+    enable: true
+    inputmask: ''
+    flag: false
+    flagregion: []
+    threshold: 5
   extract_sources:
     enable: true
     spi: false
@@ -423,31 +421,23 @@ image_HI:
   weight: 'briggs'
   robust: 0
   subtractmodelcol:
-    enable: false
-  uvcontsub: 
     enable: true
-    fitorder: 1
-    fitspw: null 
-  sunblocker: 
+  mstransform:
     enable: true
-    use_contsub: true
-    threshold: 4
-  doppler_corr:
-    enable: true
-    use_contsub: true
+    doppler: true
     telescope: meerkat
-    regrid: true
     mode: 'frequency'
-    nchan: 'all'
     outframe: 'bary' 
-    veltype: 'radio'
-    msuvcontsub: false
+    uvlin: true
     fitspw: null 
     fitorder: 1
+  sunblocker:
+    enable: false
+    use_mstransform: true
+    threshold: 4
   wsclean_image:
     enable: true
-    use_contsub: true
-    use_doppcorr: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -468,13 +458,13 @@ image_HI:
     make_cube: true
     make_mask: true
   rewsclean_image:
-    enable: true
+    enable: false
     fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
     niter: 10000000
     autothreshold: 0.5
   casa_image:
     enable: false
-    use_contsub: true
+    use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
@@ -489,7 +479,7 @@ image_HI:
   freq_to_vel:
     enable: true
   sofia:
-    enable: true
+    enable: false
     rmsMode: 'mad'
     threshold: 4.0
     flag: false
@@ -502,4 +492,4 @@ image_HI:
     minSizeY: 3
     minSizeZ: 5
   flagging_summary:
-    enable: true 
+    enable: false

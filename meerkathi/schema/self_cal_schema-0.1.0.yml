@@ -217,6 +217,37 @@ mapping:
             desc: switch on local rms measurement for cleaning
             required: false
 
+      sofia_mask: 
+        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia (yes/no)? Default is yes.
+            type: bool
+            required: false
+          threshold:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            type: float
+            required: false
+          flag:
+            desc: Use flag regions (yes/no)? Default is no.
+            type: bool
+            required: false
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
+            seq:
+              - type: int
+            required: false
+          inputmask:
+            type: str
+            desc: input mask over which add Sofia's
+            required: false
+          kernels:
+            seq:
+              - type: int
+            desc: Kernels for mask
+            required: false
+
       extract_sources:
         type: map
         desc: Source finding parameters
@@ -239,6 +270,7 @@ mapping:
               - type: int
             desc: Source finder island threshold
             required: true
+
 
       calibrate:
         type: map
@@ -298,7 +330,6 @@ mapping:
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
 
-
       restore_model:
         type: map
         desc: Restore modelled to final calibrated residual image
@@ -315,6 +346,7 @@ mapping:
             type: str
             desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
+
       flagging_summary:
         type: map
         desc: Output the flagging summary

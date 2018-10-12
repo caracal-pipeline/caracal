@@ -359,23 +359,23 @@ def worker(pipeline, recipe, config):
             blank_limit = 1e-9
         else:
             blank_limit = None
-        if config['calibrate'].get('model_mode', '') != 'vis_only':
-            recipe.add('cab/pybdsm', step,
-                {
-                    "image"         : im,
-                    "thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
-                    "thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-                    "outfile"       : '{:s}.fits:output'.format(calmodel),
-                    "blank_limit"   : sdm.dismissable(blank_limit),
-                    "adaptive_rms_box" : True,
-                    "port2tigger"   : True,
-                    "multi_chan_beam": spi_do,
-                    "spectralindex_do": spi_do,
-                    "detection_image": sdm.dismissable(detection_image),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Extract sources'.format(step))
+
+        recipe.add('cab/pybdsm', step,
+            {
+                "image"         : im,
+                "thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+                "thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
+                "outfile"       : '{:s}.fits:output'.format(calmodel),
+                "blank_limit"   : sdm.dismissable(blank_limit),
+                "adaptive_rms_box" : True,
+                "port2tigger"   : True,
+                "multi_chan_beam": spi_do,
+                "spectralindex_do": spi_do,
+                "detection_image": sdm.dismissable(detection_image),
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Extract sources'.format(step))
 
     def predict_from_fits(num, model, index):
         if isinstance(model, str) and len(model.split('+'))==2:
@@ -603,8 +603,7 @@ def worker(pipeline, recipe, config):
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                if config['calibrate'].get('model_mode', '') == 'vis_only':
-                    drratio = 1
+                if not extractsourcesset:
                     try:
                         conv_crit.remove("DR")
                     except:
@@ -705,8 +704,8 @@ def worker(pipeline, recipe, config):
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
                 }
-        # if we run not vis_only we want to use the pybdsm model as well.
-        if config['calibrate'].get('model_mode') != 'vis_only':
+        # if we run pybdsm we want to use the  model as well.
+        if extractsourcesset:
             aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
                 prefix, num if num <= len(config['calibrate'].get('model', num))
                 else len(config['calibrate'].get('model', num)),
@@ -724,12 +723,16 @@ def worker(pipeline, recipe, config):
     elif calwith == 'cubical':
         calibrate = calibrate_cubical
 
+    # if model_mode is vis only we do not want to run pybdsm
+    extractsourcesset = pipeline.enable_task(config, 'extract_sources')
+    if config['calibrate'].get('model_mode') == 'vis_only':
+        extractsourcesset = False
     # selfcal loop
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
         image(self_cal_iter_counter)
-    if pipeline.enable_task(config, 'extract_sources'):
+    if extractsourcesset:
         extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
@@ -741,7 +744,7 @@ def worker(pipeline, recipe, config):
         self_cal_iter_counter += 1
         if pipeline.enable_task(config, 'image'):
             image(self_cal_iter_counter)
-        if pipeline.enable_task(config, 'extract_sources'):
+        if extractsourcesset:
             extract_sources(self_cal_iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(self_cal_iter_counter)

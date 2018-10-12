@@ -1,10 +1,11 @@
-import os
+import os, shutil, glob
 import sys
 import yaml
 import json
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
+from astropy.io import fits as fits
 
 NAME = 'Self calibration loop'
 
@@ -54,6 +55,38 @@ def worker(pipeline, recipe, config):
 
     # Define image() extract_sources() calibrate()
     # functions for convience
+
+    def cleanup_files(mask_name):
+
+      if os.path.exists(pipeline.output+'/'+mask_name):
+          shutil.move(pipeline.output+'/'+mask_name,pipeline.output+'/masking/'+mask_name)
+
+      casafiles = glob.glob(pipeline.output+'/*.image')
+      for i in xrange(0,len(casafiles)):
+        shutil.rmtree(casafiles[i])
+
+
+    def change_header(filename,headfile,copy_head):
+      pblist = fits.open(filename)
+
+      dat = pblist[0].data
+
+      if copy_head == True:
+        hdrfile = fits.open(headfile)
+        head = hdrfile[0].header
+      elif copy_head == False:
+
+        head = pblist[0].header
+
+        if 'ORIGIN' in head:
+          del head['ORIGIN']
+        if 'CUNIT1' in head:
+          del head['CUNIT1']
+        if 'CUNIT2' in head:
+          del head['CUNIT2']
+
+      fits.writeto(filename,dat,head,overwrite=True)
+
 
     def image(num):
         key = 'image'
@@ -147,6 +180,140 @@ def worker(pipeline, recipe, config):
         input=pipeline.input,
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
+
+    def sofia_mask(num):
+        step = 'make_sofia_mask'
+        key = 'sofia_mask'
+        imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
+   
+        # user_kern = config[key].get('kernels', None)
+        # if user_kern:
+        #   for i in xrange(0,len(user_kern))
+        #     kern. 
+        #     def_kernels.concatenate(config[key].get('kernels'))
+
+        image_opts =   {
+              "import.inFile"         : imagename,
+              "steps.doFlag"          : True,
+              "steps.doScaleNoise"    : True,
+              "steps.doSCfind"        : True,
+              "steps.doMerge"         : True,
+              "steps.doReliability"   : False,
+              "steps.doParameterise"  : False,
+              "steps.doWriteMask"     : True,
+              "steps.doMom0"          : False,
+              "steps.doMom1"          : False,
+              "steps.doWriteCat"      : False, 
+              "SCfind.kernelUnit"     : 'pixel',
+              "SCfind.kernels"        : def_kernels,
+              "SCfind.threshold"      : config.get('threshold',4), 
+              "SCfind.rmsMode"        : 'mad',
+              "SCfind.edgeMode"       : 'constant',
+              "SCfind.fluxRange"      : 'all',
+              "scaleNoise.statistic"  : 'mad' ,
+              "scaleNoise.method"     : 'local',
+              "scaleNoise.scaleX"     : True,
+              "scaleNoise.scaleY"     : True,
+              "scaleNoise.scaleZ"     : False,
+              "merge.radiusX"         : 3, 
+              "merge.radiusY"         : 3,
+              "merge.radiusZ"         : 1,
+              "merge.minSizeX"        : 2,
+              "merge.minSizeY"        : 2, 
+              "merge.minSizeZ"        : 1,
+            }
+        if config[key].get('flag') :
+          flags_sof = config[key].get('flagregion')
+          image_opts.update({"flag.regions": flags_sof})
+        
+        if config[key].get('inputmask') :
+          #change header of inputmask so it is the same as image
+          mask_name = 'masking/'+config[key].get('inputmask')
+          
+          mask_name_casa = mask_name.split('.fits')[0]
+          mask_name_casa = mask_name_casa+'.image'
+
+          mask_regrid_casa = mask_name_casa+'_regrid.image'
+          
+          imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(prefix, num, mfsprefix)
+
+          recipe.add('cab/casa_importfits', step,
+            {
+              "fitsimage"         : imagename+':output',
+              "imagename"         : imagename_casa,
+              "overwrite"         : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Image in casa format')
+
+          recipe.add('cab/casa_importfits', step,
+            {
+              "fitsimage"         : mask_name+':output',
+              "imagename"         : mask_name_casa,
+              "overwrite"         : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Mask in casa format')
+          
+          step = '3'
+          recipe.add('cab/casa_imregrid', step,
+            {
+              "template"      : imagename_casa+':output',
+              "imagename"     : mask_name_casa+':output',
+              "output"        : mask_regrid_casa,
+              "overwrite"     : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Regridding mosaic to size and projection of dirty image')
+
+          step = '4'
+          recipe.add('cab/casa_exportfits', step,
+            {
+              "fitsimage"         : mask_name+':output',
+              "imagename"         : mask_regrid_casa+':output',
+              "overwrite"         : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Extracted regridded mosaic')
+          
+          step = '5'
+          recipe.add(change_header,step,
+            {
+              "filename"  : pipeline.output+'/'+mask_name,
+              "headfile"  : pipeline.output+'/'+imagename,
+              "copy_head" : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Extracted regridded mosaic')
+
+          image_opts.update({"import.maskFile": mask_name})
+          image_opts.update({"import.inFile": imagename})
+        
+        recipe.add('cab/sofia', step,
+          image_opts,
+          input=pipeline.output,
+          output=pipeline.output+'/masking/',
+          label='{0:s}:: Make SoFiA mask'.format(step))
+        
+
+        # step = '7'
+        # name_sof_out = imagename.split('.fits')[0]
+        # name_sof_out = name_sof_out+'_mask.fits'
+
+        # recipe.add(cleanup_files, step,
+        #   {
+        #     'mask_name' : name_sof_out
+        #   },
+        #   input=pipeline.input,
+        #   output=pipeline.output,
+        #   label='{0:s}:: Make SoFiA mask'.format(step))
+
 
     def make_cube(num, imtype='model'):
         im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
@@ -322,7 +489,6 @@ def worker(pipeline, recipe, config):
             config[key]['Bjones'] = True
 
         for i,msname in enumerate(mslist):
-            print(config[key].get('Gsols_time'))
             if not config[key].get('Gsols_time') or \
                        not config[key].get('Gsols_channel'):
                 gsols_ = gsols
@@ -521,6 +687,8 @@ def worker(pipeline, recipe, config):
     iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
         image(iter_counter)
+    if pipeline.enable_task(config, 'sofia_mask'):
+        sofia_mask(iter_counter)
     if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
@@ -533,6 +701,8 @@ def worker(pipeline, recipe, config):
         iter_counter += 1
         if pipeline.enable_task(config, 'image'):
             image(iter_counter)
+        if pipeline.enable_task(config, 'sofia_mask'):
+            sofia_mask(iter_counter)
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):

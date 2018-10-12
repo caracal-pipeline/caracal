@@ -460,7 +460,7 @@ def worker(pipeline, recipe, config):
 
     def apply_gains_to_fullres(num_iter, enable=True):
         key = 'calibrate'
-        if num == cal_niter:
+        if num_iter == cal_niter:
             vismodel = config[key].get('add_vis_model', False)  
         else:
             vismodel = False
@@ -479,21 +479,22 @@ def worker(pipeline, recipe, config):
             modelcolumn = None
         
         elif config[key].get('model_mode', None) == 'pybdsm_only':
-            model = config[key].get('model', num)[num-1]
+            model = config[key].get('model', num_iter)[num_iter-1]
             if isinstance(model, str) and len(model.split('+')) > 1:
-                mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num,
+                mm_f = model.split('+')
+                calmodel, fits_model = combine_models(mm_f, num_iter,
                                            enable=False if pipeline.enable_task(
                                            config, 'aimfast') else True)
             else:
                 model = int(model)
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+
         calwith = config.get('calibrate_with', 'meqtrees').lower()
         if(calwith=='meqtrees'):
            enable = False
            meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-        hires_switch = config.get('hires_interpol', 'True')
+        hires_switch = config['calibrate'].get('hires_interpol', 'True')
         if (hires_switch==False):
             enable = False
         if(enable==True):
@@ -677,7 +678,8 @@ def worker(pipeline, recipe, config):
             extract_sources(iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(iter_counter)
-    if config.get('hires_interpol'==True):
+
+    if config['calibrate'].get('hires_interpol')==True:
         print "Interpolating gains"
         substep = int(config.get('apply_step', cal_niter))
         apply_gains_to_fullres(substep,enable=True if (config.get('hires_interpol')==True) else False)

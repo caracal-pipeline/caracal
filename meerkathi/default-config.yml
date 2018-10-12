@@ -425,7 +425,7 @@ image_HI:
     pol: I
     spwid: 0
     nchans: 'all'
-    firstchan: 100
+    firstchan: 0
     binchans: 1
     npix: [1024]
     padding: 1.2

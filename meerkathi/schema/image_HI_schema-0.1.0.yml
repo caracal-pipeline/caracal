@@ -193,7 +193,7 @@ mapping:
             type: int
             required: false
           ownfitsmask:
-            desc: Accepts a 3D-mask cleaning mask in fits format. Mask from own. Default is ''
+            desc: Accepts a 3D-mask cleaning mask in fits format. Mask made by the user. Default is '' (an empty field)
             type: str
             required: false          
           automask: 

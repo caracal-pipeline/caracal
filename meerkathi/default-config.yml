@@ -418,11 +418,14 @@ image_HI:
     threshold: 4
   wsclean_image:
     enable: true
+    wscl_niter: 2
+    ownfitsmask:  # or own mask '<mask-name>.fits:output' 
+    rm_intcubes: true
     use_mstransform: true
     pol: I
     spwid: 0
     nchans: 'all'
-    firstchan: 0
+    firstchan: 100
     binchans: 1
     npix: [1024]
     padding: 1.2
@@ -433,16 +436,10 @@ image_HI:
     niter: 10000000
     mgain: 1.0
     automask: 5
-    autothreshold: 1
+    autothreshold: 0.5
     cleanborder: 0
     no_update_mod: true
     make_cube: true
-    make_mask: true
-  rewsclean_image:
-    enable: false
-    fitsmask: sofia_mask # or own mask '<mask-name>.fits:output' 
-    niter: 10000000
-    autothreshold: 0.5
   casa_image:
     enable: false
     use_mstransform: true

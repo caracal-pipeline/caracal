@@ -145,6 +145,13 @@ class MeerKATHI(object):
             if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
                 subprocess.check_call(["cp", "-r", f, self.input])
 
+        #Copy fields for masking in input/fields/.
+        log.info("Copying fields for masking into input folder")
+        for _f in os.listdir("{0:s}/data/meerkat_files/".format(pckgdir)):
+            f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
+            if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
+                subprocess.check_call(["cp", "-r", f, self.input])
+
     def enable_task(self, config, task):
         a = config.get(task, False)
         if a:

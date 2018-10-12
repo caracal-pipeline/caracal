@@ -129,7 +129,7 @@ def worker(pipeline, recipe, config):
                       "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
                       "spix"        : [model[a] for a in 'abcd'],
                       "scalebychan" : True,
-                      "usescratch"  : False,
+                      "usescratch"  : True,
                     }
                 elif standard: # NRAO model otherwise
                    opts = {

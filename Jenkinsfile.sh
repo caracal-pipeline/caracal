@@ -25,8 +25,9 @@ virtualenv ${WORKSPACE_ROOT}/projects/pyenv
 pip install pip setuptools wheel -U
 PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
-pip install --force-reinstall ${WORKSPACE_ROOT}/projects/meerkathi
 pip install -U -r ${WORKSPACE_ROOT}/projects/meerkathi/requirements.txt
+pip install -I ${WORKSPACE_ROOT}/projects/meerkathi
+pip install --force-reinstall -U git+https://github.com/SpheMakh/Stimela.git
 #put the necessary bits in input
 cd $TEST_OUTPUT_DIR
 mkdir input
@@ -34,6 +35,7 @@ cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/labe
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/1Apr2017_firstpass_strategy.rfis input/
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/30Mar2017_secondpass_strategy.rfis input/
 cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_misc/aoflagger_strategies/firstpass_HI_strat2.rfis input/
+#cp ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi_files/fields/*.FITS input/
 
 # Aim, fire!
 stimela pull

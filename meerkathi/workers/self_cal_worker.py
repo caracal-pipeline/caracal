@@ -234,7 +234,7 @@ def worker(pipeline, recipe, config):
                 "column"        : 'MODEL_DATA',
                 "img_nchan"     : nchans,
                 "img_chanstep"  : 1,
-                "nchan"         : pipeline.nchans[index][spwid],
+                "nchan"         : pipeline.nchans[index], #TODO: This should consider SPW IDs
                 "cellsize"      : cell,
                 "chanstep"      : 1,
         },

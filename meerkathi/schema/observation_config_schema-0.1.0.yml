@@ -23,11 +23,15 @@ mapping:
           listobs:
             desc: Run CASA listobs task to get observation information
             type: bool
-            required: true
+            required: false
           summary_json:
             desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
             type: bool
-            required: true
+            required: false
+          vampirisms:
+            desc: Returns sun free time range
+            type: bool
+            required: false
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
@@ -51,19 +55,19 @@ mapping:
       nchans:
         desc: Number of channels. If set to 0 then will automatically set using metadata file (only for meerkat data)
         type: int
-        required: true
+        required: false
       firstchanfreq:
         desc: First frequency channel. If set to 0 then will automatically set using metadata file (only for meerkat data)
         type: str
-        required: true
+        required: false
       lastchanfreq:
         desc: Last frequency. If set to 0 then will automatically set using metadata file (only for meerkat data)
         type: str
-        required: true
+        required: false
       chanwidth:
         desc: Channel width. If set to 0 then will automatically set using metadata file (only for meerkat data)
         type: str
-        required: true
+        required: false
       primary_beam:
         desc: Generate primary beam model
         type: map
@@ -75,16 +79,16 @@ mapping:
           freq:
             desc: A single freq, or the start, end freqs, and channel width in MHz
             type: str
-            required: true
+            required: false
           diameter:
             desc: Diameter of the required beam
             type: float
-            required: true
+            required: false
           pixels:
             desc: Number of pixels on one side
             type: int
-            required: true
+            required: false
           coefficients_file:
             desc: Coeficients file name
             type: str
-            required: true
+            required: false

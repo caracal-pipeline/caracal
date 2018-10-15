@@ -17,7 +17,7 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
    
     if pipeline.enable_task(config, 'obsinfo'):
-
+        print config['obsinfo'].get('listobs')
         for i in range(nobs):
             prefix = prefixes[i]
             msname = msnames[i]
@@ -65,13 +65,13 @@ def worker(pipeline, recipe, config):
     # itnitialse things
     for item in 'fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
         val = config.get(item, 'auto')
-        if val and not isinstance(config[item], list):
-            setattr(pipeline, item, [config[item]]*pipeline.nobs)
-        elif isinstance(config[item], list):
-            setattr(pipeline, item, config[item])
+        if val and not isinstance(val, list):
+            setattr(pipeline, item, [val]*pipeline.nobs)
+        elif isinstance(val, list):
+            setattr(pipeline, item, val)
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
-
+            
     setattr(pipeline, 'TRA', [None]*pipeline.nobs)
     setattr(pipeline, 'TDec', [None]*pipeline.nobs)
 
@@ -93,7 +93,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
 
         # Get channels in MS
-        if config['nchans'] == 0:
+        if config.get('nchans',0) == 0:
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 pipeline.nchans[i] = spw
@@ -169,8 +169,8 @@ def worker(pipeline, recipe, config):
             # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[i].split(',')[0] only
             targetinfo = yaml.load(stdr)['FIELD']
             targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(pipeline.target[i].split(',')[0])][0]
-            pipeline.TRA[i]  = targetpos[0]/np.pi*180
-            pipeline.TDec[i] = targetpos[1]/np.pi*180
+            pipeline.TRA[i]  = targetpos[0]/np.pi*180.
+            pipeline.TDec[i] = targetpos[1]/np.pi*180.
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
@@ -186,7 +186,7 @@ def worker(pipeline, recipe, config):
                 "diameter"          : config['primary_beam'].get('diameter', 6.0),
                 "pixels"            : config['primary_beam'].get('pixels', 256),
                 "freq"              : config['primary_beam'].get('freq', "855 1760 64"),
-                "coefficients-file" : config['primary_beam']['coefficients_file'],
+                "coefficients-file" : config['primary_beam'].get('coefficients_file', 'meerkat_coeff_dict.npy'),
                 "prefix"            : pipeline.prefix,
                 "output-eight"      : True,
             },

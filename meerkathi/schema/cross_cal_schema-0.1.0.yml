@@ -67,6 +67,14 @@ mapping:
             type: str
             desc: Solution interval for delay-correction calibration.
             required: false
+          minnrbl: 
+            type: int
+            desc: Minimum number of baselines required (per antenna) for solving. 
+            required: false
+          minsnr: 
+            type: int
+            desc: Minimum required SNR for solutions.
+            required: false 
           field:
             type: str
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      

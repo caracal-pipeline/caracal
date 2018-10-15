@@ -485,7 +485,6 @@ def worker(pipeline, recipe, config):
             gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
             bsols_ = config[key].get('Bsols', bsols)
-
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
@@ -589,6 +588,7 @@ def worker(pipeline, recipe, config):
 
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
+            
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []

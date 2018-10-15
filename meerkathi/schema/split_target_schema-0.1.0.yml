@@ -31,7 +31,7 @@ mapping:
           time_average:
             desc: Time averaging
             type: str
-            required: false
+            required: true
           freq_average:
             desc: Frequency averaging
             type: int

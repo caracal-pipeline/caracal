@@ -169,18 +169,21 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
-            if  config['delay_cal'].get('plot', True):
+            if config['delay_cal'].get('plot', True):
                 step = 'plot_delay_cal_{0:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                   {
-                    "command"   : 'plot_gains',
-                    "ctable"    : prefix+".K0:output",
-                    "tabtype"   : 'delay',
-                    "plot_file" : '{0:s}-K0'.format(prefix),
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+                table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : table,
+                     "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
+                     "field"        : config['delay_cal']['plot'].get('field', 0),
+                     "corr"         : config['delay_cal']['plot'].get('corr', 0),
+                     "htmlname"     : config['delay_cal']['plot'].get(
+                                        'htmlname', '{0:s}-K0'.format(prefix))
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         # Bandpass calibration
         if pipeline.enable_task(config, 'bp_cal'):
@@ -225,18 +228,20 @@ found in our database or in the CASA NRAO database'.format(field))
                 #    flag_gains('bp_cal', config['pre_bp_cal']['flag'])
 
                 if config['bp_cal'].get('plot', True):
-                     #for plot in 'amp','phase':
-                        step = 'plot_pre_bandpass_{0:d}'.format(i)
-                        recipe.add('cab/msutils', step,
-                           {
-                            "command"   : 'plot_gains',
-                            "ctable"  : prefix+".PREB0:output",
-                            "tabtype"   : 'bandpass',
-                            "plot_file"   : '{0:s}-PREB0'.format(prefix),
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".PREB0:output"))
+                    step = 'plot_pre_bandpass_{0:d}'.format(i)
+                    table = config['bp_cal']['plot'].get('table_name', prefix+".PREB0")
+                    recipe.add('cab/ragavi', step,
+                        {
+                         "table"        : table,
+                         "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
+                         "field"        : config['bp_cal']['plot'].get('field', 0),
+                         "corr"         : config['bp_cal']['plot'].get('corr', 0),
+                         "htmlname"     : config['bp_cal']['plot'].get(
+                                            'htmlname', '{0:s}-PREB0'.format(prefix))
+                        },
+                        input=pipeline.output,
+                        output=pipeline.output,
+                        label='{0:s}:: Plot pre bandpass calibration gain caltable={1:s}'.format(step, prefix+".PREB0"))
 
                 # Initial flux calibration ***on BPCAL field*** (will NOT combine scans even if requested for final flux calibration)
                 if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
@@ -266,18 +271,20 @@ found in our database or in the CASA NRAO database'.format(field))
                    label='{0:s}:: Pre gain calibration for bandpass ms={1:s}'.format(step, msname))
 
                 if config['gain_cal_flux'].get('plot', True):
-                    #for plot in 'amp','phase':
-                        step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
-                        recipe.add('cab/msutils', step,
-                           {
-                            "command"   : 'plot_gains',
-                            "ctable"  : prefix+".PREG0:output",
-                            "tabtype"   : 'gain',
-                            "plot_file"   : '{0:s}-PREG0-fcal'.format(prefix),
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
+                    step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
+                    table = config['gain_cal_flux']['plot'].get('table_name', prefix+".PREG0")
+                    recipe.add('cab/ragavi', step,
+                        {
+                         "table"        : table,
+                         "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
+                         "field"        : config['gain_cal_flux']['plot'].get('field', 0),
+                         "corr"         : config['gain_cal_flux']['plot'].get('corr', 0),
+                         "htmlname"     : config['gain_cal_flux']['plot'].get(
+                                            'htmlname', '{0:s}-PREG0-fcal'.format(prefix))
+                        },
+                        input=pipeline.output,
+                        output=pipeline.output,
+                        label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
 
                 # Flagging disabled on initial flux calibration solution
                 #if config['pre_gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
@@ -320,18 +327,20 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
             if config['bp_cal'].get('plot', True):
-                 #for plot in 'amp','phase':
-                    step = 'plot_bandpass_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".B0:output",
-                        "tabtype"   : 'bandpass',
-                        "plot_file"   : '{0:s}-B0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0:output"))
+                step = 'plot_bandpass_{0:d}'.format(i)
+                table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : table,
+                     "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
+                     "field"        : config['bp_cal']['plot'].get('field', 0),
+                     "corr"         : config['bp_cal']['plot'].get('corr', 0),
+                     "htmlname"     : config['bp_cal']['plot'].get(
+                                        'htmlname', '{0:s}-B0'.format(prefix))
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0"))
 
         # Final flux calibration
         if pipeline.enable_task(config, 'gain_cal_flux'):
@@ -362,18 +371,20 @@ found in our database or in the CASA NRAO database'.format(field))
                label='{0:s}:: Gain calibration for bandpass ms={1:s}'.format(step, msname))
 
             if config['gain_cal_flux'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_gain_cal_flux_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".G0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-G0-fcal'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+                step = 'plot_gain_cal_flux_{0:d}'.format(i)
+                table = config['gain_cal_flux']['plot'].get('table_name', prefix+".G0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : table,
+                     "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
+                     "field"        : config['gain_cal_flux']['plot'].get('field', 0),
+                     "corr"         : config['gain_cal_flux']['plot'].get('corr', 0),
+                     "htmlname"     : config['gain_cal_flux']['plot'].get(
+                                        'htmlname', '{0:s}-G0-fcal'.format(prefix))
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
             if config['gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
                 flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
@@ -411,18 +422,20 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
             if config['gain_cal_gain'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_gain_cal_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".G0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-G0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+                step = 'plot_gain_cal_{0:d}'.format(i)
+                table = config['gain_cal_gain']['plot'].get('table_name', prefix+".G0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : table,
+                     "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
+                     "field"        : config['gain_cal_gain']['plot'].get('field', 0),
+                     "corr"         : config['gain_cal_gain']['plot'].get('corr', 0),
+                     "htmlname"     : config['gain_cal_gain']['plot'].get(
+                                        'htmlname', '{0:s}-G0'.format(prefix))
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         # Flux scale transfer
         if pipeline.enable_task(config, 'transfer_fluxscale'):
@@ -431,7 +444,7 @@ found in our database or in the CASA NRAO database'.format(field))
             step = 'transfer_fluxscale_{0:d}'.format(i)
             recipe.add('cab/casa_fluxscale', step,
                {
-                "vis"          : msname,
+                "vis"           : msname,
                 "caltable"      : prefix+".G0:output",
                 "fluxtable"     : prefix+".F0:output",
                 "reference"     : [ref],
@@ -442,18 +455,20 @@ found in our database or in the CASA NRAO database'.format(field))
                label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
 
             if config['transfer_fluxscale'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_fluxscale_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".F0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-F0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+                step = 'plot_fluxscale_{0:d}'.format(i)
+                table = config['transfer_fluxscale']['plot'].get('table_name', prefix+".F0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : table,
+                     "gaintype"     : config['transfer_fluxscale']['plot'].get('gaintype', "G"),
+                     "field"        : config['transfer_fluxscale']['plot'].get('field', 0),
+                     "corr"         : config['transfer_fluxscale']['plot'].get('corr', 0),
+                     "htmlname"     : config['transfer_fluxscale']['plot'].get(
+                                        'htmlname', '{0:s}-F0'.format(prefix))
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         applied = []
         for ft in ['bpcal','gcal','target']:

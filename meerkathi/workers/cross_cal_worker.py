@@ -174,14 +174,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
                 recipe.add('cab/ragavi', step,
                     {
-                     "table"        : table,
+                     "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
                      "field"        : config['delay_cal']['plot'].get('field', 0),
                      "corr"         : config['delay_cal']['plot'].get('corr', 0),
                      "htmlname"     : config['delay_cal']['plot'].get(
                                         'htmlname', '{0:s}-K0'.format(prefix))
                     },
-                    input=pipeline.output,
+                    input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
@@ -232,14 +232,14 @@ found in our database or in the CASA NRAO database'.format(field))
                     table = config['bp_cal']['plot'].get('table_name', prefix+".PREB0")
                     recipe.add('cab/ragavi', step,
                         {
-                         "table"        : table,
+                         "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
                          "field"        : config['bp_cal']['plot'].get('field', 0),
                          "corr"         : config['bp_cal']['plot'].get('corr', 0),
                          "htmlname"     : config['bp_cal']['plot'].get(
                                             'htmlname', '{0:s}-PREB0'.format(prefix))
                         },
-                        input=pipeline.output,
+                        input=pipeline.input,
                         output=pipeline.output,
                         label='{0:s}:: Plot pre bandpass calibration gain caltable={1:s}'.format(step, prefix+".PREB0"))
 
@@ -275,14 +275,14 @@ found in our database or in the CASA NRAO database'.format(field))
                     table = config['gain_cal_flux']['plot'].get('table_name', prefix+".PREG0")
                     recipe.add('cab/ragavi', step,
                         {
-                         "table"        : table,
+                         "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
                          "field"        : config['gain_cal_flux']['plot'].get('field', 0),
                          "corr"         : config['gain_cal_flux']['plot'].get('corr', 0),
                          "htmlname"     : config['gain_cal_flux']['plot'].get(
                                             'htmlname', '{0:s}-PREG0-fcal'.format(prefix))
                         },
-                        input=pipeline.output,
+                        input=pipeline.input,
                         output=pipeline.output,
                         label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
 
@@ -331,14 +331,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
                 recipe.add('cab/ragavi', step,
                     {
-                     "table"        : table,
+                     "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
                      "field"        : config['bp_cal']['plot'].get('field', 0),
                      "corr"         : config['bp_cal']['plot'].get('corr', 0),
                      "htmlname"     : config['bp_cal']['plot'].get(
                                         'htmlname', '{0:s}-B0'.format(prefix))
                     },
-                    input=pipeline.output,
+                    input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0"))
 
@@ -375,14 +375,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 table = config['gain_cal_flux']['plot'].get('table_name', prefix+".G0")
                 recipe.add('cab/ragavi', step,
                     {
-                     "table"        : table,
+                     "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
                      "field"        : config['gain_cal_flux']['plot'].get('field', 0),
                      "corr"         : config['gain_cal_flux']['plot'].get('corr', 0),
                      "htmlname"     : config['gain_cal_flux']['plot'].get(
                                         'htmlname', '{0:s}-G0-fcal'.format(prefix))
                     },
-                    input=pipeline.output,
+                    input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
@@ -426,14 +426,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 table = config['gain_cal_gain']['plot'].get('table_name', prefix+".G0")
                 recipe.add('cab/ragavi', step,
                     {
-                     "table"        : table,
+                     "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
                      "field"        : config['gain_cal_gain']['plot'].get('field', 0),
                      "corr"         : config['gain_cal_gain']['plot'].get('corr', 0),
                      "htmlname"     : config['gain_cal_gain']['plot'].get(
                                         'htmlname', '{0:s}-G0'.format(prefix))
                     },
-                    input=pipeline.output,
+                    input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
@@ -459,14 +459,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 table = config['transfer_fluxscale']['plot'].get('table_name', prefix+".F0")
                 recipe.add('cab/ragavi', step,
                     {
-                     "table"        : table,
+                     "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['transfer_fluxscale']['plot'].get('gaintype', "G"),
                      "field"        : config['transfer_fluxscale']['plot'].get('field', 0),
                      "corr"         : config['transfer_fluxscale']['plot'].get('corr', 0),
                      "htmlname"     : config['transfer_fluxscale']['plot'].get(
                                         'htmlname', '{0:s}-F0'.format(prefix))
                     },
-                    input=pipeline.output,
+                    input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 

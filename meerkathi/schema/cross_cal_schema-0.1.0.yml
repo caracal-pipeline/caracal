@@ -72,9 +72,34 @@ mapping:
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      
             required: true
           plot:
-            type: bool
-            desc: Enables plotting dignostics plots for delay correction calibration.   
-            required: false
+            type: map
+            desc: Plotting dignostics plots for delay correction calibration.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+              table_name:
+                type: str
+                desc: "Table to plot"
+                required: false
+              gaintype:
+                type: str
+                desc: "Type of gain solution table"
+                required: true
+              field:
+                type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: true
+              corr:
+                type: int
+                desc: "Correlation index to plot. E.g. 0 or 1"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
+
           flag:
             type: map
             desc: Flagging based on delay correction solutions.
@@ -129,10 +154,34 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
-          plot: 
-            type: bool
-            desc: Enables plotting of bandpass solutions.
-            required: false
+          plot:
+            type: map
+            desc: Plotting dignostics plots for bandpass correction calibration.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+              table_name:
+                type: str
+                desc: "Table to plot"
+                required: false
+              gaintype:
+                type: str
+                desc: "Type of gain solution table"
+                required: true
+              field:
+                type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: true
+              corr:
+                type: int
+                desc: "Correlation index to plot. E.g. 0 or 1"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
           remove_ph_time_var:
             type: bool
             desc: Remove large temporal phase variations from bandpass calibrator before solving.
@@ -170,11 +219,35 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
-          plot: 
-            type: bool
-            desc: Enables plotting of gains.
-            required: false
-         
+          plot:
+            type: map
+            desc: Plotting dignostics plots for flux calibrator corrections.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+              table_name:
+                type: str
+                desc: "Table to plot"
+                required: false
+              gaintype:
+                type: str
+                desc: "Type of gain solution table"
+                required: true
+              field:
+                type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: true
+              corr:
+                type: int
+                desc: "Correlation index to plot. E.g. 0 or 1"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
+
       gain_cal_gain:
         type: map
         desc: Carry out gain calibration on the gain calibrator field.
@@ -207,10 +280,33 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
-          plot:
-            type: bool
-            desc: Enables plotting of gains.
-            required: false
+            type: map
+            desc: Plotting dignostics plots for gain calibrator corrections.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+              table_name:
+                type: str
+                desc: "Table to plot"
+                required: false
+              gaintype:
+                type: str
+                desc: "Type of gain solution table"
+                required: true
+              field:
+                type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: true
+              corr:
+                type: int
+                desc: "Correlation index to plot. E.g. 0 or 1"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
       
       transfer_fluxscale:    
         type: map
@@ -228,10 +324,34 @@ mapping:
             type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: true
-          plot: 
-            type: bool
+          plot:
+            type: map
             desc: Enables plotting gain amplitudes for Flux and Gain calibrator field.
-            required: false
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+              table_name:
+                type: str
+                desc: "Table to plot"
+                required: false
+              gaintype:
+                type: str
+                desc: "Type of gain solution table"
+                required: true
+              field:
+                type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: true
+              corr:
+                type: int
+                desc: "Correlation index to plot. E.g. 0 or 1"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
       
       apply_delay_cal:
         type: map

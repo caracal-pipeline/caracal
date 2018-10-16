@@ -714,13 +714,16 @@ def worker(pipeline, recipe, config):
                 '-combined' if len(model.split('+')) >= 2 else '')})
         else:
             # Use the image
-            if config[step].get('output_data')[num-1] == "CORR_DATA":
+            if config['calibrate'].get('output_data')[num-1] == "CORR_DATA":
                 aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
-                                                                prefix, num, mfsprefix)
+                                                                prefix, num, mfsprefix)})
             else:
-                im = config[step].get('output_data').index("CORR_RES")
+                try:
+                    im = config['calibrate'].get('output_data').index("CORR_RES") + 1
+                except ValueError:
+                    im = num
                 aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
-                                                                prefix, im, mfsprefix)
+                                                                prefix, im, mfsprefix)})
         recipe.add('cab/aimfast', step,
             aimfast_settings,
             input=pipeline.output,

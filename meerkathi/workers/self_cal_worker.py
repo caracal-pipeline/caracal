@@ -167,7 +167,7 @@ def worker(pipeline, recipe, config):
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
         if config[key].get('mask_from_sky', False):
-            fitmask = config[key].get('fits_mask', None)
+            fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
             fitmask_address = 'masking/'+str(fitmask)
             image_opts.update( {"fitsmask" : fitmask_address+':output'})
         elif mask:
@@ -184,7 +184,10 @@ def worker(pipeline, recipe, config):
     def sofia_mask(num):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
-        imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+        if config['img_joinchannels'] == True:
+          imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+        else:
+          imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
         def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
@@ -240,11 +243,11 @@ def worker(pipeline, recipe, config):
 
           recipe.add('cab/casa_importfits', step,
             {
-              "fitsimage"         : imagename+':output',
+              "fitsimage"         : imagename,
               "imagename"         : imagename_casa,
               "overwrite"         : True,
             },
-            input=pipeline.input,
+            input=pipeline.output,
             output=pipeline.output,
             label='Image in casa format')
 

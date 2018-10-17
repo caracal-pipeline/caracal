@@ -188,7 +188,8 @@ mapping:
             desc: switch on cleaning within mask from fits file
             required: false
           fits_mask:
-            type: str
+            seq:
+              - type: str
             desc: filename of fits mask (in output/masking folder)
             required: false
           multi_scale:

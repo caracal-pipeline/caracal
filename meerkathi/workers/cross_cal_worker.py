@@ -73,7 +73,7 @@ def worker(pipeline, recipe, config):
             if applyme == 'delay_cal':
                 return get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
             if applyme == 'bp_cal':
-                return get_field('bpcal')
+                return get_field(config['bp_cal'].get('field', 'bpcal'))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -159,6 +159,8 @@ found in our database or in the CASA NRAO database'.format(field))
                  "refant"       : refant,
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "combine"      : config['delay_cal'].get('combine', ''),
+                 "minsnr"       : config['delay_cal'].get('minsnr', 5),
+                 "minblperant"  : config['delay_cal'].get('minnrbl', 4),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },

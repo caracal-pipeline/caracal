@@ -429,9 +429,9 @@ def worker(pipeline, recipe, config):
 		step = '1' #set directories
 		recipe.add(set_mosaic_files, step,
 			{
-		    	'catalog_table': catalog_tab,
-		    	'mask_dir': mask_dir,
-		    	'fields_dir': fields_dir,
+				'catalog_table': catalog_tab,
+				'mask_dir': mask_dir,
+				'fields_dir': fields_dir,
 
 			},
 			input = pipeline.input,
@@ -441,7 +441,7 @@ def worker(pipeline, recipe, config):
 		step = '2'
 		recipe.add('cab/montage', step,
 			{
-		    	'input_dir': 'masking/formosaic'+':output',
+				'input_dir': 'masking/formosaic'+':output',
 			},
 			input = pipeline.input,
 			output = pipeline.output,
@@ -450,8 +450,8 @@ def worker(pipeline, recipe, config):
 		step = '5' #cleanup
 		recipe.add(move_files, step,
 			{
-			    'catalog_name': catalog_name,
-			    'mask_dir': mask_dir,
+				'catalog_name': catalog_name,
+				'mask_dir': mask_dir,
 			},
 			input = pipeline.input,
 			output = pipeline.output,
@@ -581,13 +581,13 @@ def worker(pipeline, recipe, config):
 
 	if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
 
+		if config['make_mask'].get('input_image', 'pbcorr') == 'pbcorr':
+			in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+		else:
+			in_image = 'masking/'+ config['make_mask'].get('input_image', 'pbcorr')
+	
 		if config['make_mask'].get('mask_with', 'thresh') == 'thresh':
 	
-			if config['make_mask'].get('input_image', 'pbcorr') == 'pbcorr':
-				in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
-			else:
-				in_image = 'masking/'+ config['make_mask'].get('input_image', 'pbcorr')
-
 			if pipeline.enable_task(config, 'merge_with_extended') == False:
 				cat_mask = final_mask
 			else:
@@ -602,7 +602,62 @@ def worker(pipeline, recipe, config):
 				input=pipeline.input,
 				output=pipeline.output,
 				label='Mask done')
-				
+		
+		elif config['make_mask'].get('mask_with', 'thresh') == 'sofia':
+
+			imagename = in_image
+			def_kernels = [[3, 3, 0, 'b'],  [6, 6, 0, 'b']]
+			image_opts =   {
+				"import.inFile"         : imagename,
+				"steps.doFlag"          : True,
+				"steps.doScaleNoise"    : True,
+				"steps.doSCfind"        : True,
+				"steps.doMerge"         : False,
+				"steps.doReliability"   : False,
+				"steps.doParameterise"  : False,
+				"steps.doWriteMask"     : True,
+				"steps.doMom0"          : False,
+				"steps.doMom1"          : False,
+				"steps.doWriteCat"      : False, 
+				"SCfind.kernelUnit"     : 'pixel',
+				"SCfind.kernels"        : def_kernels,
+				"SCfind.threshold"      : config[key].get('thresh_lev',5), 
+				"SCfind.rmsMode"        : 'mad',
+				"SCfind.edgeMode"       : 'constant',
+				"SCfind.fluxRange"      : 'all',
+				"scaleNoise.statistic"  : 'mad' ,
+				"scaleNoise.windowSpatial"	:151,
+				"scaleNoise.windowSpectral"	:	1,
+				"scaleNoise.method"     : 'local',
+				"scaleNoise.scaleX"     : True,
+				"scaleNoise.scaleY"     : True,
+				"scaleNoise.scaleZ"     : False,
+				"writeCat.basename"	    : str(config.get('name_mask', 'final_mask.fits').split('_mask.fits')[0]) ,
+				"merge.radiusX"         : 3, 
+				"merge.radiusY"         : 3,
+				"merge.radiusZ"         : 1,
+				"merge.minSizeX"        : 2,
+				"merge.minSizeY"        : 2, 
+				"merge.minSizeZ"        : 1,
+				}
+
+			recipe.add('cab/sofia', step,
+			  image_opts,
+			  input=pipeline.output,
+			  output=pipeline.output+'/masking/',
+			  label='{0:s}:: Make SoFiA mask'.format(step))
+
+			step = '5'
+			recipe.add(change_header,step,
+				{
+				  "filename"  : final_mask,
+				  "headfile"  : pipeline.output+'/'+imagename,
+				  "copy_head" : True,
+				},
+				input=pipeline.output,
+				output=pipeline.output,
+				label='Extracted regridded mosaic')
+
 
 	if pipeline.enable_task(config, 'merge_with_extended'):
 
@@ -658,28 +713,28 @@ def worker(pipeline, recipe, config):
 			output=pipeline.output,
 			label='Fornax A in casa format')
 		
- 		step = '2'    
- 		recipe.add('cab/casa_imregrid', step,
- 			{
- 				"imagename"         : extended_casa+":output",
- 				"template"          : beam_casa+":output",
- 				"output"            : extended_regrid_casa,
- 				"overwrite"         : True,
- 			},
- 			input=pipeline.input,
- 			output=pipeline.output,
- 			label='Regridding Fornax A')
+		step = '2'    
+		recipe.add('cab/casa_imregrid', step,
+			{
+				"imagename"         : extended_casa+":output",
+				"template"          : beam_casa+":output",
+				"output"            : extended_regrid_casa,
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Regridding Fornax A')
 
- 		step = '3'
- 		recipe.add('cab/casa_exportfits', step,
- 			{
- 				"fitsimage"         : extended_regrid+":output",
- 				"imagename"         : extended_regrid_casa+":output",
- 				"overwrite"         : True,
- 			},
- 			input=pipeline.input,
- 			output=pipeline.output,
- 			label='Extracted regridded Fornax A')
+		step = '3'
+		recipe.add('cab/casa_exportfits', step,
+			{
+				"fitsimage"         : extended_regrid+":output",
+				"imagename"         : extended_regrid_casa+":output",
+				"overwrite"         : True,
+			},
+			input=pipeline.input,
+			output=pipeline.output,
+			label='Extracted regridded Fornax A')
 
 
 		recipe.add(pbcorr, 'Correcting extended for primary beam',
@@ -714,14 +769,14 @@ def worker(pipeline, recipe, config):
 			input=pipeline.input,
 			output=pipeline.output,
 			label='Total mask done')
-	 		
+			
 
 	step = '10' #cleanup
 	recipe.add(cleanup_mosaic_files, step,
 		{
-	    	'catalog_name': catalog_name,
-	    	'mask_dir': mask_dir,
+			'catalog_name': catalog_name,
+			'mask_dir': mask_dir,
 		},
 		input = pipeline.input,
 		output = pipeline.output,
-	 	label='Cleanup folders')
+		label='Cleanup folders')

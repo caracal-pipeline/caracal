@@ -184,7 +184,7 @@ flagging__2:
   autoflag_rfi:
     enable: true
     column: DATA
-    fields: target
+    fields: 'null'
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
@@ -205,9 +205,9 @@ masking:
     frequency: 1.37031054688e9
   make_mask:
     enable: true
-    mask_with: 'thresh'
+    mask_with: 'sofia'
     input_image: 'pbcorr'
-    thresh_lev: 1.5e-3
+    thresh_lev: 7
   merge_with_extended:
     enable: true
     extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input

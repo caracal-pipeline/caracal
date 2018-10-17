@@ -184,11 +184,41 @@ def worker(pipeline, recipe, config):
     def sofia_mask(num):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
+
+        if config[key].get('fornax_special',False) == True:
+          forn_kernels_ = [[25, 25, 0, 'b']]
+   
+          image_opts_forn =  {
+              "import.inFile"         : imagename,
+              "steps.doFlag"          : True,
+              "steps.doScaleNoise"    : False,
+              "steps.doSCfind"        : True,
+              "steps.doMerge"         : True,
+              "steps.doReliability"   : False,
+              "steps.doParameterise"  : False,
+              "steps.doWriteMask"     : True,
+              "steps.doMom0"          : False,
+              "steps.doMom1"          : False,
+              "steps.doWriteCat"      : False, 
+              "SCfind.kernelUnit"     : 'pixel',
+              "SCfind.kernels"        : def_kernels,
+              "SCfind.threshold"      : config[key].get('threshold',6.5), 
+              "SCfind.rmsMode"        : 'mad',
+              "SCfind.edgeMode"       : 'constant',
+              "SCfind.fluxRange"      : 'all',
+              "merge.radiusX"         : 3, 
+              "merge.radiusY"         : 3,
+              "merge.radiusZ"         : 1,
+              "merge.minSizeX"        : 100,
+              "merge.minSizeY"        : 100, 
+              "merge.minSizeZ"        : 1,
+            }
+
         if config['img_joinchannels'] == True:
           imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
         else:
           imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
-        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
+        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b'], [25, 25, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
         # if user_kern:
@@ -201,7 +231,7 @@ def worker(pipeline, recipe, config):
               "steps.doFlag"          : True,
               "steps.doScaleNoise"    : True,
               "steps.doSCfind"        : True,
-              "steps.doMerge"         : True,
+              "steps.doMerge"         : False,
               "steps.doReliability"   : False,
               "steps.doParameterise"  : False,
               "steps.doWriteMask"     : True,
@@ -210,12 +240,14 @@ def worker(pipeline, recipe, config):
               "steps.doWriteCat"      : False, 
               "SCfind.kernelUnit"     : 'pixel',
               "SCfind.kernels"        : def_kernels,
-              "SCfind.threshold"      : config.get('threshold',4), 
+              "SCfind.threshold"      : config[key].get('threshold',5), 
               "SCfind.rmsMode"        : 'mad',
               "SCfind.edgeMode"       : 'constant',
               "SCfind.fluxRange"      : 'all',
               "scaleNoise.statistic"  : 'mad' ,
               "scaleNoise.method"     : 'local',
+              "scaleNoise.windowSpatial"  :151,
+              "scaleNoise.windowSpectral" : 1,
               "scaleNoise.scaleX"     : True,
               "scaleNoise.scaleY"     : True,
               "scaleNoise.scaleZ"     : False,

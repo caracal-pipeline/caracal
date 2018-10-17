@@ -93,7 +93,7 @@ mapping:
                 required: true
               corr:
                 type: str
-                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
+                desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
               htmlname:
                 type: str
@@ -176,7 +176,7 @@ mapping:
                 required: true
               corr:
                 type: str
-                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
+                desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
               htmlname:
                 type: str
@@ -241,7 +241,7 @@ mapping:
                 required: true
               corr:
                 type: str
-                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
+                desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
               htmlname:
                 type: str
@@ -301,7 +301,7 @@ mapping:
                 required: true
               corr:
                 type: str
-                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
+                desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
               htmlname:
                 type: str
@@ -346,7 +346,7 @@ mapping:
                 required: true
               corr:
                 type: str
-                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
+                desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
               htmlname:
                 type: str

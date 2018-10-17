@@ -92,8 +92,8 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: true
               corr:
-                type: int
-                desc: "Correlation index to plot. E.g. 0 or 1"
+                type: str
+                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
                 required: false
               htmlname:
                 type: str
@@ -175,8 +175,8 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: true
               corr:
-                type: int
-                desc: "Correlation index to plot. E.g. 0 or 1"
+                type: str
+                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
                 required: false
               htmlname:
                 type: str
@@ -240,8 +240,8 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: true
               corr:
-                type: int
-                desc: "Correlation index to plot. E.g. 0 or 1"
+                type: str
+                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
                 required: false
               htmlname:
                 type: str
@@ -300,8 +300,8 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: true
               corr:
-                type: int
-                desc: "Correlation index to plot. E.g. 0 or 1"
+                type: str
+                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
                 required: false
               htmlname:
                 type: str
@@ -345,8 +345,8 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: true
               corr:
-                type: int
-                desc: "Correlation index to plot. E.g. 0 or 1"
+                type: str
+                desc: "Correlation to plot. E.g. XX/YY or HH/VV"
                 required: false
               htmlname:
                 type: str

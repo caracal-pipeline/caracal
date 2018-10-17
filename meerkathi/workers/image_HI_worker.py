@@ -116,7 +116,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
-            col='data'
+            col=config['mstransform'].get('column', 'corrected')
 
             if config['mstransform'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
             else: nchan_mstr=min(nchan_dopp,config['mstransform'].get('nchan', nchan_dopp))

@@ -605,7 +605,7 @@ def worker(pipeline, recipe, config):
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
 
                 if not extractsourcesset:
-                    drratio=residual0['meerkathi_{0}-image'.format(n - 1)]['DR']/residual1['meerkathi_{0}-image'.format(n)]['DR']
+                    drratio=residual0['meerkathi_{0}-restored'.format(n - 1)]['DR']/residual1['meerkathi_{0}-restored'.format(n)]['DR']
                 else:
                     drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
 
@@ -691,7 +691,7 @@ def worker(pipeline, recipe, config):
 
         step = 'aimfast'
 
-        aimfast_settings =  {
+        aimfast_settings = {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
                     "normality-model"      : config[step].get(

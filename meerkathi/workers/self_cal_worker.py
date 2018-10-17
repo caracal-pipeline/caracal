@@ -605,7 +605,8 @@ def worker(pipeline, recipe, config):
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
 
                 if not extractsourcesset:
-                    drratio=residual0['meerkathi_{0}-restored'.format(n - 1)]['DR']/residual1['meerkathi_{0}-restored'.format(n)]['DR']
+                    drratio=fidelity_data['meerkathi_{0}-restored'.format(n - 1)]['DR']/fidelity_data[
+                                          'meerkathi_{0}-restored'.format(n)]['DR']
                 else:
                     drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
 

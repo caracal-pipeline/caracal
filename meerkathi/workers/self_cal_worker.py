@@ -603,11 +603,11 @@ def worker(pipeline, recipe, config):
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                if not extractsourcesset:
-                    try:
-                        conv_crit.remove("DR")
-                    except:
-                        pass
+                #if not extractsourcesset:
+                #    try:
+                #        conv_crit.remove("DR")
+                #    except:
+                #        pass
                 if any(cc == "DR" for cc in conv_crit):
                     drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
                 else:
@@ -704,8 +704,10 @@ def worker(pipeline, recipe, config):
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
                 }
-        # if we run pybdsm we want to use the  model as well.
-        if extractsourcesset:
+
+        # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
+        print(config['extract_sources'])
+        if pipeline.enable_task(config, 'extract_sources'):
             aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
                 prefix, num if num <= len(config['calibrate'].get('model', num))
                 else len(config['calibrate'].get('model', num)),
@@ -724,15 +726,16 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if model_mode is vis only we do not want to run pybdsm
-    extractsourcesset = pipeline.enable_task(config, 'extract_sources')
     if config['calibrate'].get('model_mode') == 'vis_only':
-        extractsourcesset = False
-    # selfcal loop
+        config['extract_sources']['enable'] = False
+    # if we do not run pybdsm we always need to output the corrected data column
+    if not pipeline.enable_task(config, 'extract_sources'):
+        config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
         image(self_cal_iter_counter)
-    if extractsourcesset:
+    if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
@@ -744,12 +747,12 @@ def worker(pipeline, recipe, config):
         self_cal_iter_counter += 1
         if pipeline.enable_task(config, 'image'):
             image(self_cal_iter_counter)
-        if extractsourcesset:
+        if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(self_cal_iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(self_cal_iter_counter)
 
-    if pipeline.enable_task(config, 'restore_model'):
+    if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']
             if isinstance(num, str) and len(num.split('+')) == 2:

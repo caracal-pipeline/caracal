@@ -65,6 +65,9 @@ class config_parser:
             default=DEFAULT_CONFIG,
             help='Pipeline configuration file (YAML/JSON format)')
 
+        add('-sid', '--singularity-image-dir',
+            help='Directory where stimela singularity images are stored')
+
         add('-gd', '--get-default',
             help='Name file where the configuration should be saved')
 

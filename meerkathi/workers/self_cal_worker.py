@@ -603,18 +603,14 @@ def worker(pipeline, recipe, config):
                 residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
-                #if not extractsourcesset:
-                #    try:
-                #        conv_crit.remove("DR")
-                #    except:
-                #        pass
-                if any(cc == "DR" for cc in conv_crit):
-                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+
+                if not extractsourcesset:
+                    drratio=fidelity_data['meerkathi_{0}-restored'.format(n - 1)]['DR']/fidelity_data[
+                                          'meerkathi_{0}-restored'.format(n)]['DR']
                 else:
-                    drratio = 1
-                    # Dynamic range is important,
+                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
 
-
+                # Dynamic range is important,
                 if any(cc == "DR" for cc in conv_crit):
                     drweight = 0.8
                 else:
@@ -696,7 +692,7 @@ def worker(pipeline, recipe, config):
 
         step = 'aimfast'
 
-        aimfast_settings =  {
+        aimfast_settings = {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
                     "normality-model"      : config[step].get(
@@ -712,6 +708,18 @@ def worker(pipeline, recipe, config):
                 prefix, num if num <= len(config['calibrate'].get('model', num))
                 else len(config['calibrate'].get('model', num)),
                 '-combined' if len(model.split('+')) >= 2 else '')})
+        else:
+            # Use the image
+            if config['calibrate'].get('output_data')[num-1] == "CORR_DATA":
+                aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
+                                                                prefix, num, mfsprefix)})
+            else:
+                try:
+                    im = config['calibrate'].get('output_data').index("CORR_RES") + 1
+                except ValueError:
+                    im = num
+                aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
+                                                                prefix, im, mfsprefix)})
         recipe.add('cab/aimfast', step,
             aimfast_settings,
             input=pipeline.output,

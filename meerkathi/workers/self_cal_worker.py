@@ -604,7 +604,7 @@ def worker(pipeline, recipe, config):
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
 
-                if not extractsourcesset:
+                if not pipeline.enable_task(config, 'extract_sources'):
                     drratio=fidelity_data['meerkathi_{0}-restored'.format(n - 1)]['DR']/fidelity_data[
                                           'meerkathi_{0}-restored'.format(n)]['DR']
                 else:

@@ -372,7 +372,7 @@ self_cal:
     Gsols_time: [15,15,15]
     Gsols_channel: [0,0,0]
     add_vis_model: true 
-    model_mode: 'pybdsm_only'
+    model_mode: 'vis_only'
   restore_model:
     enable: true
     model: '2+3'

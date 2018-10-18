@@ -93,6 +93,10 @@ mapping:
             type: float
             desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
+          scale_noise_window:
+            type: float
+            desc: window size where to measure local rms in pixels
+            required: false
 
       merge_with_extended:
         type: map

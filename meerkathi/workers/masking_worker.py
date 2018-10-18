@@ -60,6 +60,8 @@ def worker(pipeline, recipe, config):
 
 		return hh+mm+ss 
 
+
+
 	def nvss_pbcorr(ra_deg,dec_deg,centre,cell,imsize,obs_freq,flux):
 		'''
 		
@@ -281,10 +283,19 @@ def worker(pipeline, recipe, config):
 
 		pblist = fits.open(filename)
 		dat = pblist[0].data
-
+		print 'CHANGE THEE HEADER'
 		if copy_head == True:
 			hdrfile = fits.open(headfile)
 			head = hdrfile[0].header
+
+			if 'NAXIS3' in head:
+				del head['NAXIS3']
+
+			head['NAXIS'] = 2		
+			print head['NAXIS']
+			dat = np.squeeze(dat)
+			print dat.shape
+
 		elif copy_head == False:
 
 			head = pblist[0].header
@@ -606,7 +617,7 @@ def worker(pipeline, recipe, config):
 		elif config['make_mask'].get('mask_with', 'thresh') == 'sofia':
 
 			imagename = in_image
-			def_kernels = [[3, 3, 0, 'b'],  [6, 6, 0, 'b']]
+			def_kernels = [[6, 6, 0, 'b'], [15, 15, 0, 'b'], [25, 25, 0, 'b']]
 			image_opts =   {
 				"import.inFile"         : imagename,
 				"steps.doFlag"          : True,
@@ -621,24 +632,19 @@ def worker(pipeline, recipe, config):
 				"steps.doWriteCat"      : False, 
 				"SCfind.kernelUnit"     : 'pixel',
 				"SCfind.kernels"        : def_kernels,
-				"SCfind.threshold"      : config[key].get('thresh_lev',5), 
+				"SCfind.threshold"      : config['make_mask'].get('thresh_lev',5), 
 				"SCfind.rmsMode"        : 'mad',
 				"SCfind.edgeMode"       : 'constant',
 				"SCfind.fluxRange"      : 'all',
 				"scaleNoise.statistic"  : 'mad' ,
-				"scaleNoise.windowSpatial"	:151,
+				"scaleNoise.windowSpatial"	:config['make_mask'].get('scale_noise_window',51), 
 				"scaleNoise.windowSpectral"	:	1,
 				"scaleNoise.method"     : 'local',
+				"scaleNoise.fluxRange"	:	'all',
 				"scaleNoise.scaleX"     : True,
 				"scaleNoise.scaleY"     : True,
 				"scaleNoise.scaleZ"     : False,
 				"writeCat.basename"	    : str(config.get('name_mask', 'final_mask.fits').split('_mask.fits')[0]) ,
-				"merge.radiusX"         : 3, 
-				"merge.radiusY"         : 3,
-				"merge.radiusZ"         : 1,
-				"merge.minSizeX"        : 2,
-				"merge.minSizeY"        : 2, 
-				"merge.minSizeZ"        : 1,
 				}
 
 			recipe.add('cab/sofia', step,
@@ -646,7 +652,9 @@ def worker(pipeline, recipe, config):
 			  input=pipeline.output,
 			  output=pipeline.output+'/masking/',
 			  label='{0:s}:: Make SoFiA mask'.format(step))
-
+			print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa'
+			print final_mask
+			print pipeline.output+'/'+imagename
 			step = '5'
 			recipe.add(change_header,step,
 				{

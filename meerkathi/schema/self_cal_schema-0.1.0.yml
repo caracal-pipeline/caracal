@@ -244,6 +244,14 @@ mapping:
               - type: int
             desc: Kernels for mask
             required: false
+          fornax_special:
+            desc: Activates masking of Fornax A using Sofia
+            type: bool
+            required: False
+          scale_noise_window:
+            type: float
+            desc: window size where to measure local rms in pixels
+            required: false
 
       extract_sources:
         type: map

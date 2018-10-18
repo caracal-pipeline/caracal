@@ -185,8 +185,13 @@ def worker(pipeline, recipe, config):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
 
+        if config['img_joinchannels'] == True:
+          imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+        else:
+          imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
+
         if config[key].get('fornax_special',False) == True:
-          forn_kernels_ = [[25, 25, 0, 'b']]
+          forn_kernels = [[20, 20, 0, 'b']]
    
           image_opts_forn =  {
               "import.inFile"         : imagename,
@@ -201,11 +206,15 @@ def worker(pipeline, recipe, config):
               "steps.doMom1"          : False,
               "steps.doWriteCat"      : False, 
               "SCfind.kernelUnit"     : 'pixel',
-              "SCfind.kernels"        : def_kernels,
-              "SCfind.threshold"      : config[key].get('threshold',6.5), 
+              "SCfind.kernels"        : forn_kernels,
+              "SCfind.threshold"      : 7, 
               "SCfind.rmsMode"        : 'mad',
               "SCfind.edgeMode"       : 'constant',
               "SCfind.fluxRange"      : 'all',
+              "scaleNoise.method"     : 'local',
+              "scaleNoise.windowSpatial":51, 
+              "scaleNoise.windowSpectral" : 1,
+              "writeCat.basename"     : 'FornaxA_sofia' ,
               "merge.radiusX"         : 3, 
               "merge.radiusY"         : 3,
               "merge.radiusZ"         : 1,
@@ -214,10 +223,7 @@ def worker(pipeline, recipe, config):
               "merge.minSizeZ"        : 1,
             }
 
-        if config['img_joinchannels'] == True:
-          imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
-        else:
-          imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
+
         def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b'], [25, 25, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
@@ -231,7 +237,7 @@ def worker(pipeline, recipe, config):
               "steps.doFlag"          : True,
               "steps.doScaleNoise"    : True,
               "steps.doSCfind"        : True,
-              "steps.doMerge"         : False,
+              "steps.doMerge"         : True,
               "steps.doReliability"   : False,
               "steps.doParameterise"  : False,
               "steps.doWriteMask"     : True,
@@ -246,7 +252,7 @@ def worker(pipeline, recipe, config):
               "SCfind.fluxRange"      : 'all',
               "scaleNoise.statistic"  : 'mad' ,
               "scaleNoise.method"     : 'local',
-              "scaleNoise.windowSpatial"  :151,
+              "scaleNoise.windowSpatial"  :config[key].get('scale_noise_window',51),
               "scaleNoise.windowSpectral" : 1,
               "scaleNoise.scaleX"     : True,
               "scaleNoise.scaleY"     : True,
@@ -254,8 +260,8 @@ def worker(pipeline, recipe, config):
               "merge.radiusX"         : 3, 
               "merge.radiusY"         : 3,
               "merge.radiusZ"         : 1,
-              "merge.minSizeX"        : 2,
-              "merge.minSizeY"        : 2, 
+              "merge.minSizeX"        : 5,
+              "merge.minSizeY"        : 5, 
               "merge.minSizeZ"        : 1,
             }
         if config[key].get('flag') :
@@ -330,6 +336,18 @@ def worker(pipeline, recipe, config):
           image_opts.update({"import.maskFile": mask_name})
           image_opts.update({"import.inFile": imagename})
         
+        if config[key].get('fornax_special',False) == True:
+
+          recipe.add('cab/sofia', step,
+            image_opts_forn,
+            input=pipeline.output,
+            output=pipeline.output+'/masking/',
+            label='{0:s}:: Make SoFiA mask'.format(step)) 
+
+          fornax_namemask = 'masking/FornaxA_sofia_mask.fits'         
+          image_opts.update({"import.maskFile": fornax_namemask})
+
+
         recipe.add('cab/sofia', step,
           image_opts,
           input=pipeline.output,

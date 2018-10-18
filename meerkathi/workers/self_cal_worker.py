@@ -702,7 +702,7 @@ def worker(pipeline, recipe, config):
                 }
 
         # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
-        print(config['extract_sources'])
+
         if pipeline.enable_task(config, 'extract_sources'):
             aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
                 prefix, num if num <= len(config['calibrate'].get('model', num))
@@ -710,7 +710,7 @@ def worker(pipeline, recipe, config):
                 '-combined' if len(model.split('+')) >= 2 else '')})
         else:
             # Use the image
-            if config['calibrate'].get('output_data')[num-1] == "CORR_DATA":
+            if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data',[])) else -1] == "CORR_DATA":
                 aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
                                                                 prefix, num, mfsprefix)})
             else:

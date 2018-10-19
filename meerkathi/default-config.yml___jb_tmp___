@@ -31,7 +31,7 @@ get_data:
     data_url: ""    
     reset: false     
   h5toms:             
-    enable: true
+    enable: false
     channel_range: null 
     tar: true
     full_poll: true
@@ -139,7 +139,6 @@ cross_cal:
   set_model:
     enable: true
     no_verify: false
-    meerkathi_model: false
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
     threads: 8
   delay_cal:
@@ -147,10 +146,7 @@ cross_cal:
     combine: ""
     solint: "60s" # Useful diagnostic to keep track of system delays with time
     field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot:
-      enable: true
-      gaintype: 'K'
-      field: 0
+    plot: true
     flag:
       enable: true
       mode: clip
@@ -164,10 +160,7 @@ cross_cal:
     solnorm: true
     solint: ""
     set_refant: true
-    plot:
-      enable: true
-      gaintype: 'B'
-      field: 0
+    plot: true
     remove_ph_time_var: false
   gain_cal_flux:
     enable: true
@@ -176,10 +169,7 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     set_refant: true
-    plot:
-      enable: false
-      gaintype: 'G'
-      field: 0
+    plot: false
   gain_cal_gain:
     enable: true
     combine: ""
@@ -187,18 +177,12 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     set_refant: true
-    plot:
-      enable: true
-      gaintype: 'G'
-      field: 0
+    plot: true
   transfer_fluxscale:
     enable: true
     reference: fcal 
     transfer: gcal
-    plot:
-      enable: true
-      gaintype: 'G'
-      field: 0
+    plot: true
   apply_delay_cal:
     enable: true
     field: bpcal
@@ -416,7 +400,6 @@ image_HI:
     uvlin: true
     fitspw: null 
     fitorder: 1
-    column: corrected
   sunblocker:
     enable: false
     use_mstransform: true

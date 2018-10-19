@@ -9,6 +9,7 @@ except ImportError as e:
 
 requirements = [
 'ruamel.yaml==0.15.22',
+'stimela>=0.3.2',
 'numpy>=1.13.1',
 'stimela>=0.3.2',
 'scipy>=0.19.1',

@@ -213,7 +213,6 @@ masking:
     mask_with: 'thresh'
     thresh_lev: 8.e-4
 
-
 self_cal:
   enable: true
   label: corr
@@ -268,7 +267,7 @@ self_cal:
     minuvw_m: 0
   sofia_mask:
     enable: true
-    inputmask: ''
+    inputmask: ['']
     flag: false
     flagregion: []
     threshold: 5

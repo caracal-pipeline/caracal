@@ -9,7 +9,6 @@ general:
   prefix: meerkathi-pipeline
 
 get_data:
-  enable: true
   dataid: []                               
   order: 0
   mvtoms:             

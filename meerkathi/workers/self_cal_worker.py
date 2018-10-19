@@ -224,7 +224,7 @@ def worker(pipeline, recipe, config):
             }
 
 
-        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b'], [25, 25, 0, 'b']]
+        def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [10, 10, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
         # if user_kern:
@@ -260,8 +260,8 @@ def worker(pipeline, recipe, config):
               "merge.radiusX"         : 3, 
               "merge.radiusY"         : 3,
               "merge.radiusZ"         : 1,
-              "merge.minSizeX"        : 5,
-              "merge.minSizeY"        : 5, 
+              "merge.minSizeX"        : 3,
+              "merge.minSizeY"        : 3, 
               "merge.minSizeZ"        : 1,
             }
         if config[key].get('flag') :

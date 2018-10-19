@@ -250,7 +250,6 @@ self_cal:
     auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
     column: ["DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA"]
     mask_from_sky: False
-    fits_mask: '' #filename in output/masking/
     multi_scale: False
     multi_scale_scales: [0,40,80,150] #pixel
     local_rms: False
@@ -258,9 +257,7 @@ self_cal:
     minuvw_m: 0
   sofia_mask:
     enable: true
-    inputmask: ['']
     flag: false
-    flagregion: []
     threshold: 5
   extract_sources:
     enable: true

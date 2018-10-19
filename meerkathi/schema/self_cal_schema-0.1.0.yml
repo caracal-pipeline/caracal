@@ -119,7 +119,7 @@ mapping:
           tolerance:
             type: float
             desc: Relative change in weighted mean of several indicators from aimfast.
-            required: true
+            required: false
           convergence_criteria:
             seq:
               - type: str
@@ -196,7 +196,7 @@ mapping:
           enable:
             desc: Execute segment sofia (yes/no)? Default is yes.
             type: bool
-            required: false
+            required: true
           threshold:
             desc: SoFiA source finding threshold. Default is 4.0.
             type: float
@@ -227,6 +227,10 @@ mapping:
             type: float
             desc: window size where to measure local rms in pixels
             required: false
+          positivity:
+            type: bool
+            desc: merges only positive pixesl of sources in mask  
+            required: false
 
       extract_sources:
         type: map
@@ -244,12 +248,12 @@ mapping:
             seq:
               - type: int
             desc: Source finder pixel threshold
-            required: true
+            required: false
           thresh_isl:
             seq:
               - type: int
             desc: Source finder island threshold
-            required: true
+            required: false
 
 
       calibrate:

@@ -2,12 +2,16 @@ import os, shutil, glob
 import sys
 import yaml
 import json
+import os
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
 
 NAME = 'Self calibration loop'
+
+# self_cal_iter_counter is used as a global variable.
+
 
 CUBICAL_OUT = {
     "CORR_DATA"    : 'sc',
@@ -25,21 +29,14 @@ def worker(pipeline, recipe, config):
     npix = config['img_npix']
     trim = config['img_trim']
     spwid = config.get('spwid', 0)
-    cleanborder = 0
     cell = config['img_cell']
     mgain = config['img_mgain']
     niter = config['img_niter']
-    auto_thresh = config['img_auto_threshold']
-    auto_mask = config['img_auto_mask']
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol', 'I')
-    thresh_pix = config['sf_thresh_pix']
-    thresh_isl = config['sf_thresh_isl']
-    column = config['img_column']
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    gsols = config.get('cal_Gsols', [])
     bsols = config.get('cal_Bsols', [])
     taper = config.get('img_uvtaper', None)
     label = config['label']
@@ -97,7 +94,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
-                      "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
+                      "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
                       "trim"      : config[key].get('trim', trim),
@@ -149,7 +146,7 @@ def worker(pipeline, recipe, config):
         step = 'image_{}'.format(num)
         image_opts = {
                   "msname"    : mslist,
-                  "column"    : config[key].get('column', column)[num-1 if len(config[key].get('column')) >= num else -1],
+                  "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
                   "trim"      : config[key].get('trim', trim),
@@ -162,7 +159,7 @@ def worker(pipeline, recipe, config):
                   "channelsout"     : nchans,
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                  "auto-threshold": config[key].get('auto_threshold',[auto_thresh])[num-1 if len(config[key].get('auto_threshold', [auto_thresh])) >= num else -1],
+                  "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
@@ -173,7 +170,7 @@ def worker(pipeline, recipe, config):
         elif mask:
             image_opts.update( {"fitsmask" : '{0:s}_{1:d}-mask.fits:output'.format(prefix, num)} )
         else:
-            image_opts.update({"auto-mask" : config[key].get('auto_mask',[auto_mask])[num-1 if len(config[key].get('auto_mask', [auto_mask])) >= num else -1]})
+            image_opts.update({"auto-mask" : config[key].get('auto_mask',[])[num-1 if len(config[key].get('auto_mask', [])) >= num else -1]})
 
         recipe.add('cab/wsclean', step,
         image_opts,
@@ -415,23 +412,23 @@ def worker(pipeline, recipe, config):
             blank_limit = 1e-9
         else:
             blank_limit = None
-        if len(config[key].get('thresh_pix', thresh_pix)) >= num:
-            recipe.add('cab/pybdsm', step,
-                {
-                    "image"         : im,
-                    "thresh_pix"    : config[key].get('thresh_pix', thresh_pix)[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
-                    "thresh_isl"    : config[key].get('thresh_isl', thresh_isl)[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-                    "outfile"       : '{:s}.fits:output'.format(calmodel),
-                    "blank_limit"   : sdm.dismissable(blank_limit),
-                    "adaptive_rms_box" : True,
-                    "port2tigger"   : True,
-                    "multi_chan_beam": spi_do,
-                    "spectralindex_do": spi_do,
-                    "detection_image": sdm.dismissable(detection_image),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Extract sources'.format(step))
+
+        recipe.add('cab/pybdsm', step,
+            {
+                "image"         : im,
+                "thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+                "thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
+                "outfile"       : '{:s}.fits:output'.format(calmodel),
+                "blank_limit"   : sdm.dismissable(blank_limit),
+                "adaptive_rms_box" : True,
+                "port2tigger"   : True,
+                "multi_chan_beam": spi_do,
+                "spectralindex_do": spi_do,
+                "detection_image": sdm.dismissable(detection_image),
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Extract sources'.format(step))
 
     def predict_from_fits(num, model, index):
         if isinstance(model, str) and len(model.split('+'))==2:
@@ -461,7 +458,7 @@ def worker(pipeline, recipe, config):
                 "column"        : 'MODEL_DATA',
                 "img_nchan"     : nchans,
                 "img_chanstep"  : 1,
-                "nchan"         : pipeline.nchans[index][spwid],
+                "nchan"         : pipeline.nchans[index], #TODO: This should consider SPW IDs
                 "cellsize"      : cell,
                 "chanstep"      : 1,
         },
@@ -513,7 +510,7 @@ def worker(pipeline, recipe, config):
             for i, msname in enumerate(mslist):
                 predict_from_fits(num, model, i)
 
-            modelcolumn = None
+            modelcolumn = 'MODEL_DATA'
         
         elif config[key].get('model_mode', None) == 'pybdsm_only':
             model = config[key].get('model', num)[num-1]
@@ -527,7 +524,7 @@ def worker(pipeline, recipe, config):
                 calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
                 fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-            modelcolumn = None
+            modelcolumn = ''
         
         elif  config[key].get('model_mode', None) == 'vis_only':
             vismodel = True
@@ -537,19 +534,10 @@ def worker(pipeline, recipe, config):
                 stdw.write('#format: ra_d dec_d i\n')
                 stdw.write('0.0 -30.0 1e-99')
 
-        if config[key].get('Gsols', gsols) == [] or \
-                       config[key].get('Bsols', gsols) == []:
-            config[key]['Bjones'] = True
-
         for i,msname in enumerate(mslist):
-            if not config[key].get('Gsols_time') or \
-                       not config[key].get('Gsols_channel'):
-                gsols_ = gsols
-            else:
-                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
-                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
+            gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
+                          config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
             bsols_ = config[key].get('Bsols', bsols)
-
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             recipe.add('cab/calibrator', step,
                {
@@ -574,7 +562,6 @@ def worker(pipeline, recipe, config):
                  "Gjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "Bjones"                    : config[key].get('Bjones', False),
-                 "Bjones-ampl-clipping"      : True,
                  "Bjones-solution-intervals" : sdm.dismissable(bsols_ or None),
                  "Bjones-ampl-clipping"      : config[key].get('Bjones', bjones),
                  "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
@@ -597,22 +584,14 @@ def worker(pipeline, recipe, config):
             calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
             fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
-        if config[key].get('Gsols', gsols) == [] or \
-                       config[key].get('Bsols', gsols) == []:
-            config[key]['Bjones'] = True
-
         if config[key].get('Bjones', bjones):
             jones_chain = 'G,B'
         else:
             jones_chain = 'G' 
 
         for i,msname in enumerate(mslist):
-            if not config[key].get('Gsols_time') or \
-               not config[key].get('Gsols_channel'):
-                gsols_ = gsols
-            else:
-                gsols_ = [config[key].get('Gsols_time', gsols[0])[num-1] if num <= len(config[key].get('Gsols_time',gsols[0])) else gsols[0],
-                          config[key].get('Gsols_channel', gsols[1])[num-1] if num <= len(config[key].get('Gsols_channel',gsols[1])) else gsols[1]]
+            gsols_ = [config[key].get('Gsols_time', [])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
+                config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
             bsols_ = config[key].get('Bsols', bsols)
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
@@ -659,75 +638,146 @@ def worker(pipeline, recipe, config):
     def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
-        if n == cal_niter+1:
-           meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-           return False
+
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
+            
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
             key = 'aimfast'
-            dr_tolerance = config[key].get('dr_tolerance', 0.10)
-            normality_tolerance = config[key].get('normality_tolerance', 0.10)
+            tolerance = config[key].get('tolerance', 0.02)
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if n >= 2:
-                dr0 = fidelity_data['meerkathi_{0}-residual'.format(
-                        n-1)][
-                        'meerkathi_{0}-model'.format(n - 1)]['DR']
-                dr1 = fidelity_data['meerkathi_{0}-residual'.format(n)][
-                        'meerkathi_{0}-model'.format(n)]['DR']
-                dr_delta = (dr1 - dr0)/float(dr0)
-                # Confirm that previous image DR is smaller than subsequent image
-                # Also make sure the fractional difference is greater than the tolerance
-                if dr_delta < dr_tolerance:
-                    meerkathi.log.info('Stopping criterion: Dynamic range')
-                    meerkathi.log.info('{:f} < {:f}'.format(dr_delta, dr_tolerance))
-                    return False
-            if n >= 2:
-                residual0 = fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
+            if n>= 2:
+                conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"])
+                conv_crit= [cc.upper() for cc in conv_crit]
+                # Ensure atleast one iteration is ran to compare previous and subsequent images
+                residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
                 residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
-                normality_delta = residual0['NORM'][0] - residual1['NORM'][0]
-                # Confirm that previous image normality statistic is smaller than subsequent image
-                # Also make sure the difference is greater than the tolerance
-                if normality_delta < normality_tolerance*residual0['NORM'][0]:
-                    meerkathi.log.info('Stopping criterion: Normality test')
-                    meerkathi.log.info('{:f} < {:f}'.format(
-                        normality_delta, normality_tolerance*residual0['NORM'][0]))
+                # Unlike the other ratios DR should grow hence n-1/n < 1.
+
+                if not pipeline.enable_task(config, 'extract_sources'):
+                    drratio=fidelity_data['meerkathi_{0}-restored'.format(n - 1)]['DR']/fidelity_data[
+                                          'meerkathi_{0}-restored'.format(n)]['DR']
+                else:
+                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+
+                # Dynamic range is important,
+                if any(cc == "DR" for cc in conv_crit):
+                    drweight = 0.8
+                else:
+                    drweight = 0.
+                # The other parameters should become smaller, hence n/n-1 < 1
+                skewratio=residual1['SKEW']/residual0['SKEW']
+                # We care about the skewness when it is large. What is large?
+                # Let's go with 0.005 at that point it's weight is 0.5
+                if any(cc == "SKEW" for cc in conv_crit):
+                    skewweight=residual1['SKEW']/0.01
+                else:
+                    skewweight = 0.
+                kurtratio=residual1['KURT']/residual0['KURT']
+                # Kurtosis goes to 3 so this way it counts for 0.5 when normal distribution
+                if any(cc == "KURT" for cc in conv_crit):
+                    kurtweight=residual1['KURT']/6.
+                else:
+                    kurtweight = 0.
+                meanratio=residual1['MEAN']/residual0['MEAN']
+                # We only care about the mean when it is large compared to the noise
+                # When it deviates from zero more than 20% of the noise this is a problem
+                if any(cc == "MEAN" for cc in conv_crit):
+                    meanweight=residual1['MEAN']/(residual1['STDDev']*0.2)
+                else:
+                    meanweight = 0.
+                noiseratio=residual1['STDDev']/residual0['STDDev']
+                # The noise should not change if the residuals are gaussian in n-1.
+                # However, they should decline in case the residuals are non-gaussian.
+                # We want a weight that goes to 0 in both cases
+                if any(cc == "STDDEV" for cc in conv_crit):
+                    if residual0['KURT']/6. < 0.52 and residual0['SKEW'] < 0.01:
+                        noiseweight=abs(1.-noiseratio)
+                    else:
+                        # If declining then noiseratio is small and that's good, If rising it is a real bad thing.
+                        #  Hence we can just square the ratio
+                        noiseweight=noiseratio
+                else:
+                    noiseweight = 0.
+                # These weights could be integrated with the ratios however while testing I
+                #  kept them separately such that the idea behind them is easy to interpret.
+                # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
+                # it needs to be slightly lower to avoid keeping fitting without improvement
+                # Ok that is the wrong philosophy. Their weighted mean should be less than 1-tolerance that means improvement.
+                # And the weights control how important each parameter is.
+                HolisticCheck=(drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
+                              /(drweight+skewweight+kurtweight+meanweight+noiseweight)
+                if (1 - tolerance) < HolisticCheck:
+                    meerkathi.log.info('Stopping criterion: '+' '.join([cc for cc in conv_crit]))
+                    meerkathi.log.info('{:f} < {:f}'.format(1-tolerance, HolisticCheck))
+                #   If we stop we want change the final output model to the previous iteration
+                    global self_cal_iter_counter
+                    self_cal_iter_counter -= 1
+
+
                     return False
-        # If no condition is met return true to continue
+            # If we reach the number of iterations we want to stop.
+            if n == cal_niter + 1:
+                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+                return False
+            # If no condition is met return true to continue
         return True
 
     def image_quality_assessment(num):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
-        if len(config['extract_sources'].get('thresh_pix', thresh_pix)) >= num:
+        # This was based on thres_pix but change to model as when extract_sources = True is will take the last settings
+        if len(config['calibrate'].get('model', [])) >= num:
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
                 combine_models(mm, num)
-        #else:
-            # If the iterations go beyond the length of the thresh_pix array the sources are no longer extracted.
-            #model = config['calibrate'].get('model', num)[len(config['extract_sources'].get('thresh_pix', thresh_pix))-1]
+        # in case we are in the last round, imaging has made a model that is longer then the expected model column
+        # Therefore we take this last model if model is not defined
+        if num == cal_niter+1:
+            try:
+                model.split()
+            except NameError:
+                model = str(num)
+
         step = 'aimfast'
-        recipe.add('cab/aimfast', step,
-                {
-                    "tigger-model"         : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                                                 prefix, num if num <= len(config['calibrate'].get('model', num))
-                                                 else len(config['calibrate'].get('model', num)),
-                                                 '-combined' if len(model.split('+')) >= 2 else ''),
+
+        aimfast_settings = {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
                     "normality-model"      : config[step].get(
                                                  'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
-                },
-                input=pipeline.output,
-                output=pipeline.output,
-                label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(
-                          step, num, num))
+                }
+
+        # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
+
+        if pipeline.enable_task(config, 'extract_sources'):
+            aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
+                prefix, num if num <= len(config['calibrate'].get('model', num))
+                else len(config['calibrate'].get('model', num)),
+                '-combined' if len(model.split('+')) >= 2 else '')})
+        else:
+            # Use the image
+            if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data',[])) else -1] == "CORR_DATA":
+                aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
+                                                                prefix, num, mfsprefix)})
+            else:
+                try:
+                    im = config['calibrate'].get('output_data').index("CORR_RES") + 1
+                except ValueError:
+                    im = num
+                aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
+                                                                prefix, im, mfsprefix)})
+        recipe.add('cab/aimfast', step,
+            aimfast_settings,
+            input=pipeline.output,
+            output=pipeline.output,
+            label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
@@ -736,45 +786,47 @@ def worker(pipeline, recipe, config):
     elif calwith == 'cubical':
         calibrate = calibrate_cubical
 
-    # selfcal loop
-    iter_counter = config.get('start_at_iter', 1)
+    # if model_mode is vis only we do not want to run pybdsm
+    if config['calibrate'].get('model_mode') == 'vis_only':
+        config['extract_sources']['enable'] = False
+    # if we do not run pybdsm we always need to output the corrected data column
+    if not pipeline.enable_task(config, 'extract_sources'):
+        config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
+    global self_cal_iter_counter
+    self_cal_iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
-        image(iter_counter)
-    if pipeline.enable_task(config, 'sofia_mask'):
-        sofia_mask(iter_counter)
+        image(self_cal_iter_counter)
     if pipeline.enable_task(config, 'extract_sources'):
-        extract_sources(iter_counter)
+        extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
-        image_quality_assessment(iter_counter)
-    while quality_check(iter_counter,
+        image_quality_assessment(self_cal_iter_counter)
+    while quality_check(self_cal_iter_counter,
                         enable=True if pipeline.enable_task(
                             config, 'aimfast') else False):
         if pipeline.enable_task(config, 'calibrate'):
-            calibrate(iter_counter)
-        iter_counter += 1
+            calibrate(self_cal_iter_counter)
+        self_cal_iter_counter += 1
         if pipeline.enable_task(config, 'image'):
-            image(iter_counter)
-        if pipeline.enable_task(config, 'sofia_mask'):
-            sofia_mask(iter_counter)
+            image(self_cal_iter_counter)
         if pipeline.enable_task(config, 'extract_sources'):
-            extract_sources(iter_counter)
+            extract_sources(self_cal_iter_counter)
         if pipeline.enable_task(config, 'aimfast'):
-            image_quality_assessment(iter_counter)
+            image_quality_assessment(self_cal_iter_counter)
 
-    if pipeline.enable_task(config, 'restore_model'):
+    if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']
             if isinstance(num, str) and len(num.split('+')) == 2:
                 mm = num.split('+')
-                if int(mm[-1]) > iter_counter:
-                    num = str(iter_counter)
+                if int(mm[-1]) > self_cal_iter_counter:
+                    num = str(self_cal_iter_counter)
         else:
             extract_sources = len(config['extract_sources'].get(
-                                  'thresh_isl', [iter_counter]))
+                                  'thresh_isl', [self_cal_iter_counter]))
             if extract_sources > 1:
-                num = '{:d}+{:d}'.format(iter_counter-1, iter_counter)
+                num = '{:d}+{:d}'.format(self_cal_iter_counter-1, self_cal_iter_counter)
             else:
-                num = iter_counter
+                num = self_cal_iter_counter
 
         if isinstance(num, str) and len(num.split('+')) == 2:
             mm = num.split('+')
@@ -814,8 +866,8 @@ def worker(pipeline, recipe, config):
 
         if config['restore_model'].get('clean_model', None):
             num = int(config['restore_model'].get('clean_model', None))
-            if num > iter_counter:
-                num = iter_counter
+            if num > self_cal_iter_counter:
+                num = self_cal_iter_counter
 
             conv_model = prefix + '-convolved_model.fits:output'
             recipe.add('cab/fitstool', step,

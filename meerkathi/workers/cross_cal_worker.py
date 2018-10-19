@@ -73,7 +73,7 @@ def worker(pipeline, recipe, config):
             if applyme == 'delay_cal':
                 return get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
             if applyme == 'bp_cal':
-                return get_field('bpcal')
+                return get_field(config['bp_cal'].get('field', 'bpcal'))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -108,7 +108,9 @@ def worker(pipeline, recipe, config):
                 model = utils.find_in_native_calibrators(msinfo, field)
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
-                if isinstance(model, str): # use local sky model of calibrator field if exists
+                meerkathi_model = isinstance(model, str)
+                if config['set_model'].get('meerkathi_model', False) and meerkathi_model:
+                    # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel"  : model,
                         "msname"    : msname,
@@ -118,7 +120,7 @@ def worker(pipeline, recipe, config):
                         "tile-size" : 128,
                         "column"    : "MODEL_DATA",
                     }
-                elif model: # spectral model if specified in our standard
+                elif isinstance(model, dict): # spectral model if specified in our standard
                     opts = {
                       "vis"         : msname,
                       "field"       : field,
@@ -159,6 +161,8 @@ found in our database or in the CASA NRAO database'.format(field))
                  "refant"       : refant,
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "combine"      : config['delay_cal'].get('combine', ''),
+                 "minsnr"       : config['delay_cal'].get('minsnr', 5),
+                 "minblperant"  : config['delay_cal'].get('minnrbl', 4),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },

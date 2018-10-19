@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is a strategy configuration file for the AOFlagger RFI
+detector by André Offringa (offringa@gmail.com).
+Created by AOFlagger 2.9.0 (2016-12-20)
+-->
+<rfi-strategy format-version="3.7" reader-version-required="3.4">
+  <action type="Strategy">
+    <children>
+      <action type="SetImageAction">
+        <new-image>1</new-image>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>6</new-flagging>
+      </action>
+      <action type="ForEachPolarisationBlock">
+        <on-xx>1</on-xx>
+        <on-xy>0</on-xy>
+        <on-yx>0</on-yx>
+        <on-yy>1</on-yy>
+        <on-stokes-i>0</on-stokes-i>
+        <on-stokes-q>0</on-stokes-q>
+        <on-stokes-u>0</on-stokes-u>
+        <on-stokes-v>0</on-stokes-v>
+        <children>
+          <action type="ForEachComplexComponentAction">
+            <on-amplitude>1</on-amplitude>
+            <on-phase>0</on-phase>
+            <on-real>0</on-real>
+            <on-imaginary>0</on-imaginary>
+            <restore-from-amplitude>0</restore-from-amplitude>
+            <children>
+              <action type="IterationBlock">
+                <iteration-count>7</iteration-count>
+                <sensitivity-start>15.1</sensitivity-start>
+                <children>
+                  <action type="SumThresholdAction">
+                    <base-sensitivity>2.4</base-sensitivity>
+                    <time-direction-flagging>1</time-direction-flagging>
+                    <frequency-direction-flagging>1</frequency-direction-flagging>
+                  </action>
+                  <action type="CombineFlagResults">
+                    <children>
+                      <action type="FrequencySelectionAction">
+                        <threshold>3</threshold>
+                      </action>
+                      <action type="TimeSelectionAction">
+                        <threshold>2.2</threshold>
+                      </action>
+                    </children>
+                  </action>
+                  <action type="SetImageAction">
+                    <new-image>1</new-image>
+                  </action>
+                  <action type="ChangeResolutionAction">
+                    <time-decrease-factor>3</time-decrease-factor>
+                    <frequency-decrease-factor>1</frequency-decrease-factor>
+                    <restore-revised>1</restore-revised>
+                    <restore-masks>0</restore-masks>
+                    <children>
+                      <action type="HighPassFilterAction">
+                        <horizontal-kernel-sigma-sq>158.76</horizontal-kernel-sigma-sq>
+                        <vertical-kernel-sigma-sq>25</vertical-kernel-sigma-sq>
+                        <window-width>16</window-width>
+                        <window-height>11</window-height>
+                        <mode>1</mode>
+                      </action>
+                    </children>
+                  </action>
+                </children>
+              </action>
+              <action type="SumThresholdAction">
+                <base-sensitivity>1.2</base-sensitivity>
+                <time-direction-flagging>1</time-direction-flagging>
+                <frequency-direction-flagging>1</frequency-direction-flagging>
+              </action>
+            </children>
+          </action>
+        </children>
+      </action>
+      <action type="PlotAction">
+        <plot-kind>5</plot-kind>
+        <logarithmic-y-axis>0</logarithmic-y-axis>
+      </action>
+      <action type="TimeSelectionAction">
+        <threshold>4.5</threshold>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>4</new-flagging>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>6</new-flagging>
+      </action>
+    </children>
+  </action>
+</rfi-strategy>

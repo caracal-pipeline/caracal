@@ -176,7 +176,8 @@ def worker(pipeline, recipe, config):
                 {
                   "vis"         : msname,
                   "mode"        : 'manual',
-                  "antenna"     : config['flag_antennas']['antennas']
+                  "antenna"     : config['flag_antennas']['antennas'],
+                  "timerange"   : config['flag_antennas'].get('timerange',""),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -205,6 +206,7 @@ def worker(pipeline, recipe, config):
                not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
             def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+     
             fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
                      ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
 

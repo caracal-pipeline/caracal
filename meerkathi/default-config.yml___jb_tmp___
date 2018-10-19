@@ -31,7 +31,7 @@ get_data:
     data_url: ""    
     reset: false     
   h5toms:             
-    enable: true
+    enable: false
     channel_range: null 
     tar: true
     full_poll: true
@@ -139,7 +139,6 @@ cross_cal:
   set_model:
     enable: true
     no_verify: false
-    meerkathi_model: false
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
     threads: 8
   delay_cal:
@@ -401,7 +400,6 @@ image_HI:
     uvlin: true
     fitspw: null 
     fitorder: 1
-    column: corrected
   sunblocker:
     enable: false
     use_mstransform: true

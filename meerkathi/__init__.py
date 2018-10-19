@@ -278,7 +278,7 @@ def main(argv):
         except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
-
+   
     # Very good idea to print user options into the log before running:
     cp().log_options()
 

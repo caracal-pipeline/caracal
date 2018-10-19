@@ -61,11 +61,12 @@ log = create_logger()
 class MeerKATHI(object):
     def __init__(self, config, workers_directory, 
             stimela_build=None, prefix=None, 
-            add_all_first=False):
+            add_all_first=False, singularity_image_dir=None):
 
         self.config = config
 
         self.add_all_first = add_all_first
+        self.singularity_image_dir = singularity_image_dir
 
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
@@ -175,7 +176,8 @@ class MeerKATHI(object):
             # Also change logger name to avoid duplication of logging info
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir, 
                                loggername='STIMELA-{:d}'.format(i), 
-                               build_label=self.stimela_build)
+                               build_label=self.stimela_build,
+                               singularity_image_dir=self.singularity_image_dir)
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))
@@ -276,7 +278,7 @@ def main(argv):
         except KeyboardInterrupt, SystemExit:
             log.info("Interrupt received - shutting down web server. Goodbye!")
         return
-
+   
     # Very good idea to print user options into the log before running:
     cp().log_options()
 
@@ -291,7 +293,8 @@ def main(argv):
     try:
         pipeline = MeerKATHI(arg_groups,
                              args.workers_directory, stimela_build=args.stimela_build,
-                             add_all_first=args.add_all_first, prefix=args.general_prefix)
+                             add_all_first=args.add_all_first, prefix=args.general_prefix,
+                             singularity_image_dir=args.singularity_image_dir)
 
         pipeline.run_workers()
     except exceptions.SystemExit as e:

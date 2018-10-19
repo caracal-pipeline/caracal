@@ -139,7 +139,7 @@ mapping:
           antennas:
             desc: Antennas to flag. Follows the CASA Flagdata syntax. 
             type: str
-            required: true
+            required: false
 
       flag_scan:
         desc: Flag bad scans. Uses CASA Flagdata task.

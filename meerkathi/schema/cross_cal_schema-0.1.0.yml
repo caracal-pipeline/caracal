@@ -291,6 +291,7 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
+          plot:
             type: map
             desc: Plotting dignostics plots for gain calibrator corrections.
             mapping:

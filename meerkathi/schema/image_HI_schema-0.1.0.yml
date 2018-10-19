@@ -94,6 +94,10 @@ mapping:
             desc: Polynomial order for the continuum fits
             type: int
             required: false
+          column:
+            desc: Data column to use.
+            type: str
+            required: false
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map

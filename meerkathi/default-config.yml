@@ -139,6 +139,7 @@ cross_cal:
   set_model:
     enable: true
     no_verify: false
+    meerkathi_model: false
     field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
     threads: 8
   delay_cal:
@@ -400,6 +401,7 @@ image_HI:
     uvlin: true
     fitspw: null 
     fitorder: 1
+    column: corrected
   sunblocker:
     enable: false
     use_mstransform: true

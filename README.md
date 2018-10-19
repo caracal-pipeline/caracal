@@ -108,3 +108,6 @@ $ meerkathi -c <configuration file> -rv
 ## Help and descriptions
 For Stimela see https://github.com/SpheMakh/Stimela and wiki therein.
 For this pipeline and MeerKAT specific notes see [wiki](https://github.com/ska-sa/meerkathi/wiki) of this repository.
+
+## Singularity specific issues
+If you get a "Too many open files" error when running WSClean increase the system-wide max number of open files with "ulimit -n <max_number>". You can also add this command to the venv/bin/activate script so you don't have to do this manually every time.

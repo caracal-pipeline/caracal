@@ -40,7 +40,7 @@ corr_indexes = {'H'        : 0,
                 'X'        : 0,
                 'V'        : 1,
                 'Y'        : 1,
-                }
+}
 
 
 def worker(pipeline, recipe, config):

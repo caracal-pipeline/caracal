@@ -147,7 +147,10 @@ cross_cal:
     combine: ""
     solint: "60s" # Useful diagnostic to keep track of system delays with time
     field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot: true
+    plot:
+      enable: true
+      gaintype: 'K'
+      field: 0
     flag:
       enable: true
       mode: clip
@@ -161,7 +164,10 @@ cross_cal:
     solnorm: true
     solint: ""
     set_refant: true
-    plot: true
+    plot:
+      enable: true
+      gaintype: 'B'
+      field: 0
     remove_ph_time_var: false
   gain_cal_flux:
     enable: true
@@ -170,7 +176,10 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     set_refant: true
-    plot: false
+    plot:
+      enable: false
+      gaintype: 'G'
+      field: 0
   gain_cal_gain:
     enable: true
     combine: ""
@@ -178,12 +187,18 @@ cross_cal:
     minnrbl: 4
     minsnr: 3
     set_refant: true
-    plot: true
+    plot:
+      enable: true
+      gaintype: 'G'
+      field: 0
   transfer_fluxscale:
     enable: true
     reference: fcal 
     transfer: gcal
-    plot: true
+    plot:
+      enable: true
+      gaintype: 'G'
+      field: 0
   apply_delay_cal:
     enable: true
     field: bpcal

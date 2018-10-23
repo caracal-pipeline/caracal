@@ -41,10 +41,10 @@ Created by AOFlagger 2.8.0 (2016-06-21)
                   <action type="CombineFlagResults">
                     <children>
                       <action type="FrequencySelectionAction">
-                        <threshold>2.5</threshold>
+                        <threshold>2.0</threshold>
                       </action>
                       <action type="TimeSelectionAction">
-                        <threshold>2.2</threshold>
+                        <threshold>2.0</threshold>
                       </action>
                     </children>
                   </action>

@@ -89,7 +89,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -97,11 +97,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -176,7 +176,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -184,11 +184,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -239,7 +239,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -300,7 +300,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -308,11 +308,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -345,7 +345,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"

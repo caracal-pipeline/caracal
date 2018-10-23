@@ -179,7 +179,7 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
-            if config['delay_cal'].get('plot', True):
+            if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
                 recipe.add('cab/ragavi', step,
@@ -238,7 +238,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 #if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 #    flag_gains('bp_cal', config['pre_bp_cal']['flag'])
 
-                if config['bp_cal'].get('plot', True):
+                if pipeline.enable_task(config['bp_cal'],'plot'):
                     step = 'plot_pre_bandpass_{0:d}'.format(i)
                     table = config['bp_cal']['plot'].get('table_name', prefix+".PREB0")
                     recipe.add('cab/ragavi', step,
@@ -282,7 +282,7 @@ found in our database or in the CASA NRAO database'.format(field))
                    output=pipeline.output,
                    label='{0:s}:: Pre gain calibration for bandpass ms={1:s}'.format(step, msname))
 
-                if config['gain_cal_flux'].get('plot', True):
+                if pipeline.enable_task(config['gain_cal_flux'],'plot'):
                     step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
                     table = config['gain_cal_flux']['plot'].get('table_name', prefix+".PREG0")
                     recipe.add('cab/ragavi', step,
@@ -339,7 +339,7 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
-            if config['bp_cal'].get('plot', True):
+            if pipeline.enable_task(config['bp_cal'],'plot'):
                 step = 'plot_bandpass_{0:d}'.format(i)
                 table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
                 recipe.add('cab/ragavi', step,
@@ -384,7 +384,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Gain calibration for bandpass ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_flux'].get('plot', True):
+            if pipeline.enable_task(config['gain_cal_flux'],'plot'):
                 step = 'plot_gain_cal_flux_{0:d}'.format(i)
                 table = config['gain_cal_flux']['plot'].get('table_name', prefix+".G0")
                 recipe.add('cab/ragavi', step,
@@ -436,7 +436,7 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['gain_cal_gain'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
-            if config['gain_cal_gain'].get('plot', True):
+            if pipeline.enable_task(config['gain_cal_gain'],'plot'):
                 step = 'plot_gain_cal_{0:d}'.format(i)
                 table = config['gain_cal_gain']['plot'].get('table_name', prefix+".G0")
                 recipe.add('cab/ragavi', step,
@@ -470,7 +470,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
 
-            if config['transfer_fluxscale'].get('plot', True):
+            if pipeline.enable_task(config['transfer_fluxscale'],'plot'):
                 step = 'plot_fluxscale_{0:d}'.format(i)
                 table = config['transfer_fluxscale']['plot'].get('table_name', prefix+".F0")
                 recipe.add('cab/ragavi', step,

@@ -45,7 +45,7 @@ stimela build
 meerkathi --get_data_dataid 1477074305 \
           --general_data_path $TEST_DATA_DIR \
 	  --get_data_mvftoms_enable true \
-          --get_data_mvtoms_channel_range 2525,2781 \
+          --get_data_mvftoms_channel_range 2525,2781 \
           --self_cal_img_npix 4096 \
           --self_cal_cal_niter 3 \
           --self_cal_image_enable yes \

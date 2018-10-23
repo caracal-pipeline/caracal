@@ -16,48 +16,46 @@ def worker(pipeline, recipe, config):
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
    
-    if pipeline.enable_task(config, 'obsinfo'):
-        print config['obsinfo'].get('listobs')
-        for i in range(nobs):
-            prefix = prefixes[i]
-            msname = msnames[i]
-            if config['obsinfo'].get('listobs', True):
-                step = 'listobs_{:d}'.format(i)
-                recipe.add('cab/casa_listobs', step,
-                    {
-                      "vis"         : msname,
-                      "listfile"    : prefix+'-obsinfo.txt' ,
-                      "overwrite"   : True,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
-        
-            if config['obsinfo'].get('summary_json', True):
-                 step = 'summary_json_{:d}'.format(i)
-                 recipe.add('cab/msutils', step,
-                    {
-                      "msname"      : msname,
-                      "command"     : 'summary',
-                      "outfile"     : prefix+'-obsinfo.json',
-                    },
+    for i in range(nobs):
+        prefix = prefixes[i]
+        msname = msnames[i]
+        if config['obsinfo'].get('listobs', True):
+            step = 'listobs_{:d}'.format(i)
+            recipe.add('cab/casa_listobs', step,
+                {
+                  "vis"         : msname,
+                  "listfile"    : prefix+'-obsinfo.txt' ,
+                  "overwrite"   : True,
+                },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+    
+        if config['obsinfo'].get('summary_json', True):
+             step = 'summary_json_{:d}'.format(i)
+             recipe.add('cab/msutils', step,
+                {
+                  "msname"      : msname,
+                  "command"     : 'summary',
+                  "outfile"     : prefix+'-obsinfo.json',
+                },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-            if config['obsinfo'].get('vampirisms', False):
-                step = 'vampirisms_{0:d}'.format(i)
-                recipe.add('cab/sunblocker', step,
-                    {
-                        "command"     : 'vampirisms',
-                        "inset"       : msname,
-                        "dryrun"      : True,
-                        "nononsoleil" : True,
-                        "verb"        : True,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                label='{0:s}:: Note sunrise and sunset'.format(step))
+        if config['obsinfo'].get('vampirisms', False):
+            step = 'vampirisms_{0:d}'.format(i)
+            recipe.add('cab/sunblocker', step,
+                {
+                    "command"     : 'vampirisms',
+                    "inset"       : msname,
+                    "dryrun"      : True,
+                    "nononsoleil" : True,
+                    "verb"        : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+            label='{0:s}:: Note sunrise and sunset'.format(step))
 
         recipe.run()
         recipe.jobs = []

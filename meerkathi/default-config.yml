@@ -11,7 +11,7 @@ general:
 get_data:
   dataid: []                               
   order: 0
-  mvtoms:             
+  mvftoms:             
     enable: false
     channel_range: 'null' 
   untar:               

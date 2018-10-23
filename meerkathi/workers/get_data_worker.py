@@ -23,8 +23,8 @@ def worker(pipeline, recipe, config):
         else:
             data_path = pipeline.data_path
 
-        if pipeline.enable_task(config, 'mvtoms'):
-            step = 'mvtoms_{:d}'.format(i)
+        if pipeline.enable_task(config, 'mvftoms'):
+            step = 'mvftoms_{:d}'.format(i)
 
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
@@ -37,8 +37,8 @@ def worker(pipeline, recipe, config):
                     "tar"           : True,
                     "model-data"    : True,
                     "verbose"       : False,
-                    "channel-range" : sdm.dismissable(config['mvtoms'].get('channel_range', None)),
-                    "full-pol"      : config['mvtoms'].get('full_pol', False),
+                    "channel-range" : sdm.dismissable(config['mvftoms'].get('channel_range', None)),
+                    "full-pol"      : config['mvftoms'].get('full_pol', False),
                 },
                 input=data_path,
                 output=pipeline.output,

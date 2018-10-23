@@ -18,9 +18,9 @@ mapping:
         required: False
         desc: Basename of MS. For MeerKAT data to be downloaded by MeerKATHI, this should be the data ID of the observation
 
-      mvtoms:
+      mvftoms:
         type: map
-        desc: Convert HDF5 files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file. (This only works for MeerKAT HDF5 files)
+        desc: Convert HDF5/MVF files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file. (This only works for MeerKAT HDF5 files)
         mapping:
           enable:
             type: bool

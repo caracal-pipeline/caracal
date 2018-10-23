@@ -61,8 +61,7 @@ stimela build
 #          --self_cal_restore_model_clean_model 3          
 
 # New selfcal test once it goes in
-meerkathi --get_data_meerkat_query_available_poll_mode override \
-          --get_data_dataid 1477074305 \
+meerkathi --get_data_dataid 1477074305 \
           --general_data_path $TEST_DATA_DIR \
           --get_data_mvtoms_channel_range 2525,2781 \
           --self_cal_img_npix 4096 \

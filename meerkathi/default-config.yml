@@ -22,7 +22,7 @@ get_data:
 observation_config:
   order: 1
   obsinfo:
-    enable: true
+    enable: false
   target: auto
   fcal: auto
   bpcal: auto
@@ -41,7 +41,7 @@ prepare_data:
 
 
 flagging:
-  enable: true
+  enable: false
   order: 3
   label: ''
   autoflag_autocorr_powerspectra:
@@ -112,6 +112,10 @@ cross_cal:
   gain_cal_flux:
     enable: true
     combine: ""
+    plot:
+      enable: true
+      gaintype: 'G'
+      field: 0    
   gain_cal_gain:
     enable: true
     combine: ""

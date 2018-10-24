@@ -272,6 +272,7 @@ self_cal:
     enable: true
     flag: false
     threshold: 5
+    scale_noise_window: 51
   extract_sources:
     enable: true
     spi: false

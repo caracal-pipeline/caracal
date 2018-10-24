@@ -260,8 +260,6 @@ def worker(pipeline, recipe, config):
               "merge.minSizeX"        : 3,
               "merge.minSizeY"        : 3, 
               "merge.minSizeZ"        : 1,
-              "merge.positivity"      : config[key].get('positivity',False),
-
             }
         if config[key].get('flag') :
           flags_sof = config[key].get('flagregion')

@@ -196,7 +196,7 @@ flagging__2:
   autoflag_rfi:
     enable: true
     column: DATA
-    fields: 'null'
+    fields: auto
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true

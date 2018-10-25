@@ -2,6 +2,7 @@ import sys
 import os
 import warnings
 import stimela.dismissable as sdm
+import astropy
 from astropy.io import fits
 import meerkathi
 # Modules useful to calculate common barycentric frequency grid
@@ -84,6 +85,7 @@ def worker(pipeline, recipe, config):
                    obsstartdate = str(matches[0][0])
                    obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
                    targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
+                   meerkathi.log.info('Using astropy version {0:}'.format(astropy.__version__))
                    meerkathi.log.info('Passing the following arguments to targetpos.radial_velocity_correction: {0:}, {1:}'.format(Time(obsdate),telloc))
                    v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
                    meerkathi.log.info('Resulting v = {0:}'.format(v))

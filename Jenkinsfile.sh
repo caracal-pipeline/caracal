@@ -46,6 +46,15 @@ meerkathi --get_data_dataid 1477074305 \
           --general_data_path $TEST_DATA_DIR \
           --get_data_mvftoms_enable true \
           --get_data_mvftoms_channel_range 2525,2781 \
+          --flagging_enable false \
+          --cross_cal_enable false \
+          --inspect_data_enable false \
+          --flagging__2_enable false \
+          --self_cal_enable false \
+          --image_HI_subtractmodelcol_enable false \
+          --image_HI_mstransform_enable false \
+          --image_HI_enable false \
+          --image_HI_freq_to_vel_enable false \
 #          --self_cal_img_npix 4096 \
 #          --self_cal_cal_niter 3 \
 #          --self_cal_image_enable yes \
@@ -59,12 +68,3 @@ meerkathi --get_data_dataid 1477074305 \
 #          --image_HI_wsclean_image_npix 256 256 \
 #          --image_HI_flagging_summary_enable no \
 #          --self_cal_restore_model_clean_model 3 
-          --flagging_enable false \
-          --cross_cal_enable false \
-          --inspect_data_enable false \
-          --flagging__2_enable false \
-          --self_cal_enable false \
-          --image_HI_subtractmodelcol_enable false \
-          --image_HI_mstransform_enable false \
-          --image_HI_enable false \
-          --image_HI_freq_to_vel_enable false \

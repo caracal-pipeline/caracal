@@ -53,7 +53,7 @@ meerkathi --get_data_dataid 1477074305 \
           --self_cal_enable false \
           --image_HI_subtractmodelcol_enable false \
           --image_HI_mstransform_enable false \
-          --image_HI_enable false \
+          --image_HI_wsclean_image_enable false \
           --image_HI_freq_to_vel_enable false \
 #          --self_cal_img_npix 4096 \
 #          --self_cal_cal_niter 3 \

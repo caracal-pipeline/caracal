@@ -14,7 +14,6 @@ import re, datetime
 import numpy as np
 import yaml
 
-
 def freq_to_vel(filename):
     C = 2.99792458e+8 # m/s
     HI = 1.4204057517667e+9 # Hz
@@ -85,7 +84,7 @@ def worker(pipeline, recipe, config):
                    obsstartdate = str(matches[0][0])
                    obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
                    targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
-                   meerkathi.log.info('Using astropy version {0:}'.format(astropy.__version__))
+                   meerkathi.log.info('Using python, numpy, astropy version {0:}, {1:}, {2:}'.format(sys.version,np.__version__,astropy.__version__))
                    meerkathi.log.info('Passing the following arguments to SkyCoord: {0:}, {1:}'.format(RA[i],Dec[i]))
                    meerkathi.log.info('Passing the following arguments to targetpos.radial_velocity_correction: {0:}, {1:}'.format(Time(obsdate),telloc))
                    v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')

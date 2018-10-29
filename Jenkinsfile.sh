@@ -44,27 +44,18 @@ stimela build
 # New selfcal test once it goes in
 meerkathi --get_data_dataid 1477074305 \
           --general_data_path $TEST_DATA_DIR \
-          --get_data_mvftoms_enable true \
+	  --get_data_mvftoms_enable true \
           --get_data_mvftoms_channel_range 2525,2781 \
-          --flagging_enable false \
-          --cross_cal_enable false \
-          --inspect_data_enable false \
-          --flagging__2_enable false \
-          --self_cal_enable false \
-          --image_HI_subtractmodelcol_enable false \
-          --image_HI_mstransform_enable false \
-          --image_HI_wsclean_image_enable false \
-          --image_HI_freq_to_vel_enable false \
-#          --self_cal_img_npix 4096 \
-#          --self_cal_cal_niter 3 \
-#          --self_cal_image_enable yes \
-#          --self_cal_image_auto_mask 40 30 10 \
-#          --self_cal_image_auto_thresh 0.5 0.5 0.5 \
-#          --self_cal_extract_sources_enable yes \
-#          --self_cal_extract_sources_thresh_pix 10 10 10 \
-#          --self_cal_extract_sources_thresh_isl 8 8 5 \
-#          --self_cal_calibrate_enable yes \
-#          --self_cal_restore_model_clean_model 2 \
-#          --image_HI_wsclean_image_npix 256 256 \
-#          --image_HI_flagging_summary_enable no \
-#          --self_cal_restore_model_clean_model 3 
+          --self_cal_img_npix 4096 \
+          --self_cal_cal_niter 3 \
+          --self_cal_image_enable yes \
+          --self_cal_image_auto_mask 40 30 10 \
+          --self_cal_image_auto_thresh 0.5 0.5 0.5 \
+          --self_cal_extract_sources_enable yes \
+          --self_cal_extract_sources_thresh_pix 10 10 10 \
+          --self_cal_extract_sources_thresh_isl 8 8 5 \
+          --self_cal_calibrate_enable yes \
+          --self_cal_restore_model_clean_model 2 \
+          --image_HI_wsclean_image_npix 256 256 \
+          --image_HI_flagging_summary_enable no \
+          --self_cal_restore_model_clean_model 3 

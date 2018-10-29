@@ -22,7 +22,7 @@ requirements = [
 'jupyter>=1.0.0',
 'pykwalify>=1.6.0',
 'yamlordereddictloader',
-'astropy==3.0.4',
+'astropy<=3.0.4',
 'astroquery>=0.3.8',
 ]
 

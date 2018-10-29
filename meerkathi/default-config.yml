@@ -80,7 +80,7 @@ flagging:
 cross_cal:
   enable: true
   order: 40
-  otfdelay: false            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
@@ -133,7 +133,7 @@ cross_cal:
     field: bpcal
     applymode: calflag
   apply_gain_cal_gain:
-    enable: true
+    enable: false
     field: gcal
     applyto: bpcal,gcal,target
     applymode: calflag

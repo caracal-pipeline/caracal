@@ -13,7 +13,6 @@ import re, datetime
 import numpy as np
 import yaml
 
-# only change compared to master
 
 def freq_to_vel(filename):
     C = 2.99792458e+8 # m/s

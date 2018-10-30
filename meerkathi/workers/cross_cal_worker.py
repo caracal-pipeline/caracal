@@ -186,7 +186,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
-                     "field"        : config['delay_cal']['plot'].get('field', 0),
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes[config['delay_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['delay_cal']['plot'].get(
@@ -245,7 +245,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                         "field"        : config['bp_cal']['plot'].get('field', 0),
+                         "field"        : utils.get_field_id(msinfo, field),
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['bp_cal']['plot'].get(
@@ -289,7 +289,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                         "field"        : config['gain_cal_flux']['plot'].get('field', 0),
+                         "field"        : utils.get_field_id(msinfo, field),
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -346,7 +346,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                     "field"        : config['bp_cal']['plot'].get('field', 0),
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['bp_cal']['plot'].get(
@@ -391,7 +391,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                     "field"        : config['gain_cal_flux']['plot'].get('field', 0),
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -443,7 +443,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
-                     "field"        : config['gain_cal_gain']['plot'].get('field', 0),
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_gain']['plot'].get(
@@ -477,7 +477,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['transfer_fluxscale']['plot'].get('gaintype', "G"),
-                     "field"        : config['transfer_fluxscale']['plot'].get('field', 0),
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['transfer_fluxscale']['plot'].get(

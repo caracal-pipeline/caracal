@@ -719,11 +719,11 @@ def worker(pipeline, recipe, config):
 
 
                     return False
-            # If we reach the number of iterations we want to stop.
-            if n == cal_niter + 1:
-                meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
-                return False
-            # If no condition is met return true to continue
+        # If we reach the number of iterations we want to stop.
+        if n == cal_niter + 1:
+            meerkathi.log.info('Number of iterations reached: {:d}'.format(cal_niter))
+            return False
+        # If no condition is met return true to continue
         return True
 
     def image_quality_assessment(num):
@@ -825,6 +825,7 @@ def worker(pipeline, recipe, config):
                 image(kk)
             if pipeline.enable_task(config, 'sofia_mask'):
                 sofia_mask(kk)
+
 
     if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):
         if config['restore_model']['model']:

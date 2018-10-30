@@ -30,4 +30,5 @@ mapping:
         desc: Prefix for MeerKATHI output products
       init_pipeline:
         desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
+        required: false
         type: bool

@@ -33,10 +33,6 @@ mapping:
             desc: Enable addition of BITFLAG column to MS.
             type: bool
             required: false
-          add_imaging_cols:
-            desc: Adds imaging columns to the measurement set.
-            type: bool
-            required: false
 
       add_spectral_weights: 
         desc: Add spectral weights column to the measurement set.

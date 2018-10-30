@@ -18,11 +18,11 @@ mapping:
         desc: Workers are executed in ascending order based on this value. 
       otfdelay:  
         type: bool
-        required: false
+        required: true
         desc: Set whether to apply the delay calibration on the fly when solving for other calibration terms.
       uvrange: 
         type: str
-        required: false
+        required: true
         desc: Set the U-V range for data selection, e.g. '>50'. 
       label: 
         type: str
@@ -89,7 +89,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -97,11 +97,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -165,6 +165,10 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
+          remove_ph_time_var:
+            type: bool
+            desc: Remove large temporal phase variations from bandpass calibrator before solving.
+            required: true            
           plot:
             type: map
             desc: Plotting dignostics plots for bandpass correction calibration.
@@ -172,7 +176,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -180,11 +184,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -193,10 +197,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-          remove_ph_time_var:
-            type: bool
-            desc: Remove large temporal phase variations from bandpass calibrator before solving.
-            required: false
+
       
       gain_cal_flux:
         type: map
@@ -210,11 +211,11 @@ mapping:
             type: str
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field"]
-            required: false
+            required: true
           field: 
             type: str
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
-            required: true
+            required: false
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -230,6 +231,7 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
+            required: false
           plot:
             type: map
             desc: Plotting dignostics plots for flux calibrator corrections.
@@ -237,7 +239,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -245,11 +247,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -275,7 +277,7 @@ mapping:
           field:
             type: str
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
-            required: true
+            required: false
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -298,7 +300,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -306,11 +308,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -331,7 +333,7 @@ mapping:
           reference: 
             type: str
             desc: Field to transfer flux sale from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
-            required: true
+            required: false
           transfer:
             type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
@@ -343,7 +345,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: false
+                required: true
               table_name:
                 type: str
                 desc: "Table to plot"
@@ -351,11 +353,11 @@ mapping:
               gaintype:
                 type: str
                 desc: "Type of gain solution table"
-                required: true
+                required: false
               field:
                 type: int
                 desc: "Fields to plot. Specify by field id, index."
-                required: true
+                required: false
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -461,11 +463,11 @@ mapping:
           scan_to_scan_threshold: 
             type: int
             desc: Sigma spread above the rest of the scans per field per channel.
-            required: true
+            required: false
           baseline_to_group_threshold:           
             type: int
             desc: Sigma above array median phase spread per scan per field per channel.
-            required: true
+            required: false
           column: 
             type: str
             desc: MS column to use.

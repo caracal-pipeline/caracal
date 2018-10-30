@@ -164,7 +164,7 @@ def worker(pipeline, recipe, config):
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
               }
         if config[key].get('mask_from_sky', False):
-            fitmask = config[key].get('fits_mask', None)
+            fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
             fitmask_address = 'masking/'+str(fitmask)
             image_opts.update( {"fitsmask" : fitmask_address+':output'})
         elif mask:
@@ -181,8 +181,47 @@ def worker(pipeline, recipe, config):
     def sofia_mask(num):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
-        imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
-        def_kernels = [[0, 0, 0, 'b'], [3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
+
+        if config['img_joinchannels'] == True:
+          imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+        else:
+          imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
+
+        if config[key].get('fornax_special',False) == True:
+          forn_kernels = [[20, 20, 0, 'b']]
+   
+          image_opts_forn =  {
+              "import.inFile"         : imagename,
+              "steps.doFlag"          : True,
+              "steps.doScaleNoise"    : False,
+              "steps.doSCfind"        : True,
+              "steps.doMerge"         : True,
+              "steps.doReliability"   : False,
+              "steps.doParameterise"  : False,
+              "steps.doWriteMask"     : True,
+              "steps.doMom0"          : False,
+              "steps.doMom1"          : False,
+              "steps.doWriteCat"      : False, 
+              "SCfind.kernelUnit"     : 'pixel',
+              "SCfind.kernels"        : forn_kernels,
+              "SCfind.threshold"      : 7, 
+              "SCfind.rmsMode"        : 'mad',
+              "SCfind.edgeMode"       : 'constant',
+              "SCfind.fluxRange"      : 'all',
+              "scaleNoise.method"     : 'local',
+              "scaleNoise.windowSpatial":51, 
+              "scaleNoise.windowSpectral" : 1,
+              "writeCat.basename"     : 'FornaxA_sofia' ,
+              "merge.radiusX"         : 3, 
+              "merge.radiusY"         : 3,
+              "merge.radiusZ"         : 1,
+              "merge.minSizeX"        : 100,
+              "merge.minSizeY"        : 100, 
+              "merge.minSizeZ"        : 1,
+            }
+
+
+        def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [10, 10, 0, 'b']]
    
         # user_kern = config[key].get('kernels', None)
         # if user_kern:
@@ -204,20 +243,22 @@ def worker(pipeline, recipe, config):
               "steps.doWriteCat"      : False, 
               "SCfind.kernelUnit"     : 'pixel',
               "SCfind.kernels"        : def_kernels,
-              "SCfind.threshold"      : config.get('threshold',4), 
+              "SCfind.threshold"      : config[key].get('threshold',5), 
               "SCfind.rmsMode"        : 'mad',
               "SCfind.edgeMode"       : 'constant',
               "SCfind.fluxRange"      : 'all',
               "scaleNoise.statistic"  : 'mad' ,
               "scaleNoise.method"     : 'local',
+              "scaleNoise.windowSpatial"  :config[key].get('scale_noise_window',51),
+              "scaleNoise.windowSpectral" : 1,
               "scaleNoise.scaleX"     : True,
               "scaleNoise.scaleY"     : True,
               "scaleNoise.scaleZ"     : False,
               "merge.radiusX"         : 3, 
               "merge.radiusY"         : 3,
               "merge.radiusZ"         : 1,
-              "merge.minSizeX"        : 2,
-              "merge.minSizeY"        : 2, 
+              "merge.minSizeX"        : 3,
+              "merge.minSizeY"        : 3, 
               "merge.minSizeZ"        : 1,
             }
         if config[key].get('flag') :
@@ -237,11 +278,11 @@ def worker(pipeline, recipe, config):
 
           recipe.add('cab/casa_importfits', step,
             {
-              "fitsimage"         : imagename+':output',
+              "fitsimage"         : imagename,
               "imagename"         : imagename_casa,
               "overwrite"         : True,
             },
-            input=pipeline.input,
+            input=pipeline.output,
             output=pipeline.output,
             label='Image in casa format')
 
@@ -292,6 +333,18 @@ def worker(pipeline, recipe, config):
           image_opts.update({"import.maskFile": mask_name})
           image_opts.update({"import.inFile": imagename})
         
+        if config[key].get('fornax_special',False) == True:
+
+          recipe.add('cab/sofia', step,
+            image_opts_forn,
+            input=pipeline.output,
+            output=pipeline.output+'/masking/',
+            label='{0:s}:: Make SoFiA mask'.format(step)) 
+
+          fornax_namemask = 'masking/FornaxA_sofia_mask.fits'         
+          image_opts.update({"import.maskFile": fornax_namemask})
+
+
         recipe.add('cab/sofia', step,
           image_opts,
           input=pipeline.output,
@@ -747,19 +800,32 @@ def worker(pipeline, recipe, config):
         extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
-    while quality_check(self_cal_iter_counter,
-                        enable=True if pipeline.enable_task(
-                            config, 'aimfast') else False):
-        if pipeline.enable_task(config, 'calibrate'):
-            calibrate(self_cal_iter_counter)
-        self_cal_iter_counter += 1
-        print(self_cal_iter_counter)
-        if pipeline.enable_task(config, 'image'):
-            image(self_cal_iter_counter)
-        if pipeline.enable_task(config, 'extract_sources'):
-            extract_sources(self_cal_iter_counter)
-        if pipeline.enable_task(config, 'aimfast'):
-            image_quality_assessment(self_cal_iter_counter)
+
+        while quality_check(self_cal_iter_counter,
+                            enable=True if pipeline.enable_task(
+                                config, 'aimfast') else False):
+            if pipeline.enable_task(config, 'calibrate'):
+                calibrate(self_cal_iter_counter)
+            self_cal_iter_counter += 1
+            if pipeline.enable_task(config, 'image'):
+                image(self_cal_iter_counter)
+            if pipeline.enable_task(config, 'sofia_mask'):
+                sofia_mask(self_cal_iter_counter)
+            if pipeline.enable_task(config, 'extract_sources'):
+                extract_sources(self_cal_iter_counter)
+            if pipeline.enable_task(config, 'aimfast'):
+                image_quality_assessment(self_cal_iter_counter)
+
+    #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
+    else:
+       for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)):
+            if pipeline.enable_task(config, 'calibrate'):
+                calibrate(kk)
+            if pipeline.enable_task(config, 'image'):
+                image(kk)
+            if pipeline.enable_task(config, 'sofia_mask'):
+                sofia_mask(kk)
+
 
     if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):
         if config['restore_model']['model']:

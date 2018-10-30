@@ -2,6 +2,7 @@ import sys
 import os
 import warnings
 import stimela.dismissable as sdm
+import astropy
 from astropy.io import fits
 import meerkathi
 # Modules useful to calculate common barycentric frequency grid
@@ -12,7 +13,6 @@ from astropy import constants
 import re, datetime
 import numpy as np
 import yaml
-
 
 def freq_to_vel(filename):
     C = 2.99792458e+8 # m/s
@@ -84,7 +84,11 @@ def worker(pipeline, recipe, config):
                    obsstartdate = str(matches[0][0])
                    obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
                    targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
+                   meerkathi.log.info('Using python, numpy, astropy version {0:}, {1:}, {2:}'.format(sys.version,np.__version__,astropy.__version__))
+                   meerkathi.log.info('Passing the following arguments to SkyCoord: {0:}, {1:}'.format(RA[i],Dec[i]))
+                   meerkathi.log.info('Passing the following arguments to targetpos.radial_velocity_correction: {0:}, {1:}'.format(Time(obsdate),telloc))
                    v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
+                   meerkathi.log.info('Resulting v = {0:}'.format(v))
                    corr=np.sqrt((constants.c-v)/(constants.c+v))
                    firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
     # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!

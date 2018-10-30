@@ -7,95 +7,45 @@ general:
   input: input                    
   output: output                   
   prefix: meerkathi-pipeline
-  init_pipeline: true
-
 
 get_data:
-  enable: true
   dataid: []                               
   order: 0
-  meerkat_query_available:                              
-    enable: true
-    poll_mode: 'poll'                                   
-    query_url: 'http://192.168.1.50:8983/solr/kat_core' 
-    required_intents: ['gaincal','bpcal','target']      
-    product_type_name: 'MeerKATAR1TelescopeProduct'     
-    minimum_observation_duration: 2                    
-    product_num_channels: 32768
-    when_observed: '[NOW/DAY-7DAYS TO NOW/DAY]'
-    description_matches: '.*'
-    required_fields: [] 
-  download:                       
-    enable: true
-    download_mode: meerkat         
-    data_url: ""    
-    reset: false     
-  h5toms:             
-    enable: true
-    channel_range: null 
-    tar: true
-    full_poll: true
+  mvftoms:             
+    enable: false
+    channel_range: 'null' 
   untar:               
     enable: false
-    tar_options: xvf
   combine:
     enable: false
-    reset: true
-    tar:
-      enable: true
-      tar_options: cvf
-    untar:
-      enable: false
-      tar_options: xvf
-
 
 observation_config:
-  order: 1
+  order: 10
   obsinfo:
     enable: true
-    listobs: true
-    summary_json: true
   target: auto
   fcal: auto
   bpcal: auto
   gcal: auto
   reference_antenna: auto
-  nchans: 0
-  firstchanfreq: auto
-  lastchanfreq: auto
-  chanwidth: auto
   primary_beam:
     enable: false
-    freq: "856 1760 64"
-    diameter: 6 
-    pixels: 256
-    coefficients_file: meerkat_coeff_dict.npy
-
 
 prepare_data:
   enable: false
-  order: 2
-  fixvis:
-    enable: false
+  order: 20
   prepms:
     enable: false
-    add_imaging_cols: false
   add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
     enable: true
 
 
 flagging:
   enable: true
-  order: 3
+  order: 30
   label: ''
   autoflag_autocorr_powerspectra:
     enable: false
-    scan_to_scan_threshold: 3 # sigma above the rest of the scans per field per channel
-    antenna_to_group_threshold: 5 # sigma above array median power spectra per scan per field per channel
-    column: DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
   flag_autocorr:
     enable: true
   quack_flagging:
@@ -104,21 +54,18 @@ flagging:
     quackmode: beg
   flag_shadow:
     enable: false
-    tolerance: 0
-    include_full_mk64: false
   flag_spw:
     enable: true
     channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
-    ensure_valid_selection: false
   flag_time:
     enable: false
-    timerange: null # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+    timerange: 'null' # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
   flag_antennas:
     enable: false
-    antennas: null
+    antennas: 'null'
   flag_scan:
     enable: false
-    scans: null
+    scans: 'null'
   static_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
@@ -132,73 +79,49 @@ flagging:
 
 cross_cal:
   enable: true
-  order: 4
-  otfdelay: false            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
+  order: 40
+  otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
   set_model:
     enable: true
-    no_verify: false
-    meerkathi_model: false
-    field: fcal # This means use the flux calibrator field. You can also specify the field name or ID
-    threads: 8
+    field: fcal 
   delay_cal:
     enable: true
-    combine: ""
-    solint: "60s" # Useful diagnostic to keep track of system delays with time
-    field: bpcal,gcal # can use both the bandpass and gain calibrator to keep track of delays
+    combine: "scan"
+    solint: "inf" # Useful diagnostic to keep track of system delays with time
+    field: bpcal # can use both the bandpass and gain calibrator to keep track of delays
     plot:
       enable: true
-      gaintype: 'K'
-      field: 0
     flag:
-      enable: true
+      enable: false
       mode: clip
       clipminmax: [-60,60]
   bp_cal:
     enable: true
-    combine: ""
+    combine: "scan"
     field: bpcal
-    minnrbl: 4
-    minsnr: 3
-    solnorm: true
-    solint: ""
-    set_refant: true
+    solint: "inf"
+    remove_ph_time_var: false
     plot:
       enable: true
-      gaintype: 'B'
-      field: 0
-    remove_ph_time_var: false
   gain_cal_flux:
     enable: true
     combine: ""
-    field: fcal
-    minnrbl: 4
-    minsnr: 3
-    set_refant: true
     plot:
-      enable: false
-      gaintype: 'G'
-      field: 0
+      enable: true
   gain_cal_gain:
     enable: true
     combine: ""
     field: gcal
-    minnrbl: 4
-    minsnr: 3
-    set_refant: true
     plot:
       enable: true
-      gaintype: 'G'
-      field: 0
   transfer_fluxscale:
     enable: true
     reference: fcal 
     transfer: gcal
     plot:
       enable: true
-      gaintype: 'G'
-      field: 0
   apply_delay_cal:
     enable: true
     field: bpcal
@@ -221,61 +144,39 @@ cross_cal:
     applymode: calflag
   autoflag_closure_error:
     enable: false
-    scan_to_scan_threshold: 3 # spread sigma above the rest of the scans per field per channel
-    baseline_to_group_threshold: 3 # sigma above array median phase spread per scan per field per channel
     column: CORRECTED_DATA
     fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
     calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    threads: 8
   flagging_summary:
     enable: true
 
 
 inspect_data:
   enable: true
-  order: 5
+  order: 50
   label: 1gc1
   real_imag:
     enable: true
     fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
   amp_phase:
     enable: true
     fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
   amp_uvwave:
     enable: true
     fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
   amp_ant:
     enable: true
     fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
   phase_uvwave:
     enable: true
     fields: gcal,bpcal
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
   amp_scan:
     enable: true
     fields: gcal,bpcal,target
-    column: corrected
-    avgtime: '90'
-    avgchannel: '32'
-
 
 split_target:
   enable: true
-  order: 9
+  order: 60
   label: corr
   split_target:
     enable: true
@@ -290,19 +191,19 @@ split_target:
 
 flagging__2:
   enable: true
-  order: 10
+  order: 70
   label: corr
   autoflag_rfi:
     enable: true
     column: DATA
-    fields: target
+    fields: auto
     strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
 
 masking:
   enable: false
-  order: 11
+  order: 80
   centre_coord: ['03:18:0.000', '-37:27:0.000']
   mask_size: 3600      #must be the same as  im_npix in selfcal worker
   cell_size: 2         #this will ch
@@ -316,20 +217,19 @@ masking:
     frequency: 1.37031054688e9
   make_mask:
     enable: true
-    mask_with: 'thresh'
+    mask_with: 'sofia'
     input_image: 'pbcorr'
-    thresh_lev: 1.5e-3
+    thresh_lev: 7
   merge_with_extended:
     enable: true
     extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input
     mask_with: 'thresh'
     thresh_lev: 8.e-4
 
-
 self_cal:
   enable: true
   label: corr
-  order: 12
+  order: 90
   primary_beam: false
   calibrate_with: meqtrees
   spwid: 0
@@ -363,7 +263,6 @@ self_cal:
     auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
     column: ["DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA"]
     mask_from_sky: False
-    fits_mask: '' #filename in output/masking/
     multi_scale: False
     multi_scale_scales: [0,40,80,150] #pixel
     local_rms: False
@@ -371,10 +270,9 @@ self_cal:
     minuvw_m: 0
   sofia_mask:
     enable: true
-    inputmask: ''
     flag: false
-    flagregion: []
     threshold: 5
+    scale_noise_window: 51
   extract_sources:
     enable: true
     spi: false
@@ -398,7 +296,7 @@ self_cal:
 
 image_HI:
   enable: true
-  order: 13
+  order: 100
   label: corr
   restfreq: '1.420405752GHz'
   npix: [1024]

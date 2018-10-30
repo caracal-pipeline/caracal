@@ -49,11 +49,11 @@ def worker(pipeline, recipe, config):
                     "msname": msname,
                     "field": fields,
                     "cal_field": calfields,
-                    "scan_to_scan_threshold": config["autoflag_autocorr_powerspectra"]["scan_to_scan_threshold"],
-                    "antenna_to_group_threshold": config["autoflag_autocorr_powerspectra"]["antenna_to_group_threshold"],
+                    "scan_to_scan_threshold": config["autoflag_autocorr_powerspectra"].get("scan_to_scan_threshold",3),
+                    "antenna_to_group_threshold": config["autoflag_autocorr_powerspectra"].get("antenna_to_group_threshold",5),
 
-                    "dpi": config['autoflag_autocorr_powerspectra'].get('dpi', 300),
-                    "plot_size": config['autoflag_autocorr_powerspectra'].get('plot_size', 6),
+                    "dpi": 300,
+                    "plot_size": 6,
                     "nproc_threads": config['autoflag_autocorr_powerspectra'].get('threads', 8),
                     "data_column": config['autoflag_autocorr_powerspectra'].get('column', "DATA")
                 },

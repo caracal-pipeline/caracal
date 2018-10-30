@@ -36,7 +36,7 @@ mapping:
           column: 
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime: 
             type: str
             desc: Time to average for plotting, in seconds.
@@ -57,11 +57,11 @@ mapping:
           fields:
             type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:    
             type: str
             desc: Time to average for plotting, in seconds.
@@ -86,7 +86,7 @@ mapping:
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -112,7 +112,7 @@ mapping:
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -137,7 +137,7 @@ mapping:
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -162,7 +162,7 @@ mapping:
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.

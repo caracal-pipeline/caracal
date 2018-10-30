@@ -67,7 +67,6 @@ class MeerKATHI(object):
 
         self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
-
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']

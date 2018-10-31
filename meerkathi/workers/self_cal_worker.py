@@ -818,13 +818,13 @@ def worker(pipeline, recipe, config):
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     else:
-       for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)):
+       for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):
             if pipeline.enable_task(config, 'calibrate'):
                 calibrate(kk)
             if pipeline.enable_task(config, 'image'):
-                image(kk)
+                image(kk+1)
             if pipeline.enable_task(config, 'sofia_mask'):
-                sofia_mask(kk)
+                sofia_mask(kk+1)
 
 
     if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):

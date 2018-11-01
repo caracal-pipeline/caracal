@@ -85,7 +85,6 @@ def worker(pipeline, recipe, config):
                    obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
                    targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
                    v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
-                   meerkathi.log.info('Resulting v = {0:}'.format(v))
                    corr=np.sqrt((constants.c-v)/(constants.c+v))
                    firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
     # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!

@@ -801,30 +801,30 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter)
 
-        while quality_check(self_cal_iter_counter,
-                            enable=True if pipeline.enable_task(
-                                config, 'aimfast') else False):
-            if pipeline.enable_task(config, 'calibrate'):
-                calibrate(self_cal_iter_counter)
-            self_cal_iter_counter += 1
-            if pipeline.enable_task(config, 'image'):
-                image(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'sofia_mask'):
-                sofia_mask(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'extract_sources'):
-                extract_sources(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'aimfast'):
-                image_quality_assessment(self_cal_iter_counter)
+    while quality_check(self_cal_iter_counter,
+                        enable=True if pipeline.enable_task(
+                            config, 'aimfast') else False):
+        if pipeline.enable_task(config, 'calibrate'):
+            calibrate(self_cal_iter_counter)
+        self_cal_iter_counter += 1
+        if pipeline.enable_task(config, 'image'):
+            image(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'sofia_mask'):
+            sofia_mask(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'extract_sources'):
+            extract_sources(self_cal_iter_counter)
+        if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(self_cal_iter_counter)
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
-    else:
-       for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)):
-            if pipeline.enable_task(config, 'calibrate'):
-                calibrate(kk)
-            if pipeline.enable_task(config, 'image'):
-                image(kk)
-            if pipeline.enable_task(config, 'sofia_mask'):
-                sofia_mask(kk)
+    #else:
+    #   for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):
+    #        if pipeline.enable_task(config, 'calibrate'):
+    #            calibrate(kk)
+    #        if pipeline.enable_task(config, 'image'):
+    #            image(kk+1)
+    #        if pipeline.enable_task(config, 'sofia_mask'):
+    #            sofia_mask(kk+1)
 
 
     if pipeline.enable_task(config, 'restore_model') and pipeline.enable_task(config, 'extract_sources'):

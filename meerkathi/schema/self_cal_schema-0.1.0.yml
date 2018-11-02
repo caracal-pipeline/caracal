@@ -35,11 +35,11 @@ mapping:
         required: true
       img_npix:
         type: int
-        desc: Number of pixels to create an image (i.e. at very least 50% padding for alias protection)
-        required: true
-      img_trim:
-        type: int
         desc: Number of pixels in output image
+        required: true
+      img_padding:
+        type: float
+        desc: Padding
         required: true
       img_mgain:
         type: float

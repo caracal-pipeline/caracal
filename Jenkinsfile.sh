@@ -57,4 +57,4 @@ meerkathi --get_data_dataid 1477074305 \
           --finechanmod_chans 12 \
           --finechanmod_deconv_chans 3 \
           --finechanmod_fit_spectral_pol 1 \
-          --finechanmod_auto_mask 10 \
+          --finechanmod_auto_mask 10

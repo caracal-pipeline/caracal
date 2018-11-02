@@ -27,7 +27,7 @@ CUBICAL_MT = {
 
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
-    trim = config['img_trim']
+    padding = config['img_padding']
     spwid = config.get('spwid', 0)
     cell = config['img_cell']
     mgain = config['img_mgain']
@@ -97,7 +97,7 @@ def worker(pipeline, recipe, config):
                       "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
-                      "trim"      : config[key].get('trim', trim),
+                      "padding"   : config[key].get('padding', padding),
                       "scale"     : config[key].get('cell', cell),
                       "pol"       : config[key].get('pol', pol),
                       "channelsout"   : nchans,
@@ -149,7 +149,7 @@ def worker(pipeline, recipe, config):
                   "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
-                  "trim"      : config[key].get('trim', trim),
+                  "padding"   : config[key].get('padding', padding),
                   "scale"     : config[key].get('cell', cell),
                   "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                   "niter"     : config[key].get('niter', niter),
@@ -941,7 +941,7 @@ def worker(pipeline, recipe, config):
                   "column"    : config['finechanmod'].get('column', "CORRECTED_DATA"),
                   "weight"    : 'briggs {}'.format(config['finechanmod'].get('robust', robust)),
                   "npix"      : config['finechanmod'].get('npix', npix),
-                  "trim"      : config['finechanmod'].get('trim', trim),
+                  "padding"   : config['finechanmod'].get('padding', padding),
                   "scale"     : config['finechanmod'].get('cell', cell),
                   "prefix"    : '{0:s}_{1:s}'.format(prefix, 'fine'),
                   "niter"     : config['finechanmod'].get('niter', niter),

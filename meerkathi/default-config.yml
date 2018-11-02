@@ -293,6 +293,8 @@ self_cal:
     clean_model: '4'
   flagging_summary:
     enable: true
+  finechanmod:
+    enable: false
 
 image_HI:
   enable: true

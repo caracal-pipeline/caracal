@@ -298,423 +298,6 @@ mapping:
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: true
 
-      image_2:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
-      sofia_mask_2: 
-        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment sofia (yes/no)? Default is yes.
-            type: bool
-            required: false
-          threshold:
-            desc: SoFiA source finding threshold. Default is 4.0.
-            type: float
-            required: false
-          flag:
-            desc: Use flag regions (yes/no)? Default is no.
-            type: bool
-            required: false
-          flagregion:
-            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
-            seq:
-              - type: int
-            required: false
-          inputmask:
-            type: str
-            desc: input mask over which add Sofia's
-            required: false
-
-      extract_sources_2:
-        type: map
-        desc: Source finding parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          spi:
-            type: bool
-            desc: Extract source spectral index
-            required: false            # if not specified no spi will be determined
-          thresh_pix:
-            type: int
-            desc: Source finder pixel threshold
-            required: false
-          thresh_isl:
-            type: int
-            desc: Source finder island threshold
-            required: false
-
-      calibrate_2:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-
-      image_3:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
-      sofia_mask_3: 
-        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment sofia (yes/no)? Default is yes.
-            type: bool
-            required: false
-          threshold:
-            desc: SoFiA source finding threshold. Default is 4.0.
-            type: float
-            required: false
-          flag:
-            desc: Use flag regions (yes/no)? Default is no.
-            type: bool
-            required: false
-          flagregion:
-            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
-            seq:
-              - type: int
-            required: false
-          inputmask:
-            type: str
-            desc: input mask over which add Sofia's
-            required: false
-
-      extract_sources_3:
-        type: map
-        desc: Source finding parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          spi:
-            type: bool
-            desc: Extract source spectral index
-            required: false            # if not specified no spi will be determined
-          thresh_pix:
-            type: int
-            desc: Source finder pixel threshold
-            required: false
-          thresh_isl:
-            type: int
-            desc: Source finder island threshold
-            required: false
-
-      calibrate_3:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-      
-      image_4:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
-      sofia_mask_4: 
-        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment sofia (yes/no)? Default is yes.
-            type: bool
-            required: false
-          threshold:
-            desc: SoFiA source finding threshold. Default is 4.0.
-            type: float
-            required: false
-          flag:
-            desc: Use flag regions (yes/no)? Default is no.
-            type: bool
-            required: false
-          flagregion:
-            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...]. Default is [].
-            seq:
-              - type: int
-            required: false
-          inputmask:
-            type: str
-            desc: input mask over which add Sofia's
-            required: false
-
-      calibrate_4:
-        type: map
-        desc: Calibration parameters
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          model:
-            type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
-            required: false
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: True
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-          output_data:
-            type: str
-            enum: ["CORR_RES", "CORR_DATA"]
-            desc: Data to output after calibration
-            required: true
-          gain_matrix_type:
-            type: str
-            enum: ["GainDiagPhase", "GainDiag", "Gain2x2"]
-            desc: Gain matrix type
-            required: true
-      
-      image_5:
-        type: map
-        desc: Imaging parameter
-        mapping:
-          enable:
-            type: bool
-            desc: Execute this segment
-            required: true
-          auto_mask:
-            type: int
-            desc: Auto masking threshold
-            required: false
-          auto_threshold:
-            type: float
-            desc: Auto clean threshold
-            required: true
-          column:
-            type: str
-            enum: ["DATA", "CORRECTED_DATA"]
-            desc: Column to image
-            required: false             # If not specified, CORR_DATA column will be imaged
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-          fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false          
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc]
-            required: false 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false                
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-
       restore_model:
         type: map
         desc: Restore modelled to final calibrated residual image
@@ -740,3 +323,50 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
+
+      finechanmod:
+        type: map
+        desc: Make final image and model at best freq res
+        mapping:
+          enable:
+            type: bool
+            desc: Esecute this segment
+            required: true
+          chans:
+            type: int
+            desc: output continuum channels
+            required: false
+          deconv_chans:
+            type: int
+            desc: nr of channels used for deconvolution (grouping together output continuum channels)
+            required: false
+          fit_spectral_pol:
+            type: int
+            desc: How many terms for the spectral polynomial fit of each clean component
+            required: false
+          auto_mask:
+            type: int
+            desc: Auto masking threshold
+            required: false
+          auto_threshold:
+            type: float
+            desc: Auto clean threshold
+            required: false
+          column:
+            type: str
+            desc: Column to image
+            required: false
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false
+          local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false
+

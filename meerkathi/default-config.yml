@@ -274,21 +274,21 @@ self_cal:
     threshold: 5
     scale_noise_window: 51
   extract_sources:
-    enable: true
+    enable: false
     spi: false
     thresh_pix: [10, 10, 10]
     thresh_isl: [8, 8, 5]
   calibrate:
     enable: true
-    model: ['1', '2', '2+3', '2+3']
-    output_data: ["CORR_DATA", "CORR_RES","CORR_RES","CORR_RES"]
+    model: ['1', '2', '3', '4']
+    output_data: ["CORR_DATA"]
     gain_matrix_type: ["GainDiagPhase","GainDiag","GainDiag","GainDiag"]
     Gsols_time: [15,15,15]
     Gsols_channel: [0,0,0]
     add_vis_model: true 
     model_mode: 'vis_only'
   restore_model:
-    enable: true
+    enable: false
     model: '2+3'
     clean_model: '4'
   flagging_summary:

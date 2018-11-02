@@ -53,8 +53,8 @@ meerkathi --get_data_dataid 1477074305 \
           --image_HI_wsclean_image_npix 256 256 \
           --image_HI_flagging_summary_enable no \
           --self_cal_restore_model_clean_model 3 \
-          --finechanmod_enable yes \
-          --finechanmod_chans 12 \
-          --finechanmod_deconv_chans 3 \
-          --finechanmod_fit_spectral_pol 1 \
-          --finechanmod_auto_mask 10
+          --self_cal_finechanmod_enable yes \
+          --self_cal_finechanmod_chans 12 \
+          --self_cal_finechanmod_deconv_chans 3 \
+          --self_cal_finechanmod_fit_spectral_pol 1 \
+          --self_cal_finechanmod_auto_mask 10

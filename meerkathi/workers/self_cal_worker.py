@@ -27,7 +27,7 @@ CUBICAL_MT = {
 
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
-    trim = config['img_trim']
+    padding = config['img_padding']
     spwid = config.get('spwid', 0)
     cell = config['img_cell']
     mgain = config['img_mgain']
@@ -97,7 +97,7 @@ def worker(pipeline, recipe, config):
                       "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                       "weight"    : 'briggs {}'.format(config.get('robust', robust)),
                       "npix"      : config[key].get('npix', npix),
-                      "trim"      : config[key].get('trim', trim),
+                      "padding"   : config[key].get('padding', padding),
                       "scale"     : config[key].get('cell', cell),
                       "pol"       : config[key].get('pol', pol),
                       "channelsout"   : nchans,
@@ -149,7 +149,7 @@ def worker(pipeline, recipe, config):
                   "column"    : config[key].get('column', "CORRECTED_DATA")[num-1 if len(config[key].get('column')) >= num else -1],
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
-                  "trim"      : config[key].get('trim', trim),
+                  "padding"   : config[key].get('padding', padding),
                   "scale"     : config[key].get('cell', cell),
                   "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
                   "niter"     : config[key].get('niter', niter),
@@ -918,14 +918,67 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Add extracted skymodel'.format(step))
 
-        for i,msname in enumerate(mslist):
-            if pipeline.enable_task(config, 'flagging_summary'):
-                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
-                recipe.add('cab/casa_flagdata', step,
-                    {
-                      "vis"         : msname,
-                      "mode"        : 'summary',
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+    for i,msname in enumerate(mslist):
+        if pipeline.enable_task(config, 'flagging_summary'):
+            step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+            recipe.add('cab/casa_flagdata', step,
+                {
+                  "vis"         : msname,
+                  "mode"        : 'summary',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+
+    if pipeline.enable_task(config, 'finechanmod'):
+        # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
+        for i, prfx in enumerate(['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]):
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
+            with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
+        step = 'finechanmodel'
+        image_opts = {
+                  "msname"    : mslist,
+                  "column"    : config['finechanmod'].get('column', "CORRECTED_DATA"),
+                  "weight"    : 'briggs {}'.format(config['finechanmod'].get('robust', robust)),
+                  "npix"      : config['finechanmod'].get('npix', npix),
+                  "padding"   : config['finechanmod'].get('padding', padding),
+                  "scale"     : config['finechanmod'].get('cell', cell),
+                  "prefix"    : '{0:s}_{1:s}'.format(prefix, 'fine'),
+                  "niter"     : config['finechanmod'].get('niter', niter),
+                  "mgain"     : config['finechanmod'].get('mgain', mgain),
+                  "pol"       : config['finechanmod'].get('pol', pol),
+                  "taper-gaussian"         : sdm.dismissable(config['finechanmod'].get('uvtaper', taper)),
+                  "deconvolution-channels" : config['finechanmod'].get('deconv_chans',nchans),
+                  "channelsout"            : config['finechanmod'].get('chans',pipeline.nchans[0][0]),
+                  "joinchannels"           : True,
+                  "fit-spectral-pol"       : config['finechanmod'].get('fit_spectral_pol', 1),
+                  "auto-mask"              : config['finechanmod'].get('auto_mask',5),
+                  "auto-threshold"         : config['finechanmod'].get('auto_threshold',0.5),
+                  "multiscale"             : config['finechanmod'].get('multi_scale', False),
+                  "multiscale-scales"      : sdm.dismissable(config['finechanmod'].get('multi_scale_scales', None)),
+              }
+
+        recipe.add('cab/wsclean', step,
+        image_opts,
+        input=pipeline.input,
+        output=pipeline.output,
+        label='{:s}:: Make image and model at fine frequency resolution'.format(step))
+
+        if not config['finechanmod'].get('niter', niter): imagetype=['image','dirty']
+        else:
+            imagetype=['image','dirty','psf','residual','model']
+            if config['finechanmod'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
+        for mm in imagetype:
+            step = 'finechancontcube'
+            recipe.add('cab/fitstool', step,
+                {
+                   "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['finechanmod'].get('chans',pipeline.nchans[0][0]))],
+                   "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
+                   "stack"    : True,
+                   "delete-files" : True,
+                   "fits-axis": 'FREQ',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+

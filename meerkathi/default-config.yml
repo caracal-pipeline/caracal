@@ -295,6 +295,9 @@ self_cal:
     enable: true
   finechanmod:
     enable: false
+    chans: 12
+    deconv_chans: 3
+    fit_spectral_pol: 2
 
 image_HI:
   enable: true

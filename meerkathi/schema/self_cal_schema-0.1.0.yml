@@ -330,20 +330,20 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Esecute this segment
+            desc: Execute this segment
             required: true
           chans:
             type: int
             desc: output continuum channels
-            required: false
+            required: true
           deconv_chans:
             type: int
-            desc: nr of channels used for deconvolution (grouping together output continuum channels)
-            required: false
+            desc: nr of channels used for deconvolution grouping together output continuum channels
+            required: true
           fit_spectral_pol:
             type: int
             desc: How many terms for the spectral polynomial fit of each clean component
-            required: false
+            required: true
           auto_mask:
             type: int
             desc: Auto masking threshold

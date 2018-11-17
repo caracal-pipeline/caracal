@@ -182,6 +182,10 @@ split_target:
     enable: true
     time_average: ''
     freq_average: 1
+  changecentre:
+    enable: false
+    ra: ''
+    dec: ''
   obsinfo: 
     enable: true
     listobs: true

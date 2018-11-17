@@ -1,5 +1,6 @@
 import os
 import sys
+import meerkathi
 
 NAME = 'Split and average target data'
 
@@ -26,7 +27,7 @@ def worker(pipeline, recipe, config):
                     "outputvis"     : tms,
                     "timebin"       : config['split_target'].get('time_average', ''),
                     "width"         : config['split_target'].get('freq_average', 1),
-                    "datacolumn"    : 'corrected',
+                    "datacolumn"    : config['split_target'].get('column', 'corrected'),
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,
@@ -45,6 +46,22 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
+
+        if pipeline.enable_task(config, 'changecentre'):
+            if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
+                meerkathi.log.info('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
+                meerkathi.log.info('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
+                sys.exit(1)
+            step = 'changecentre_{:d}'.format(i)
+            recipe.add('cab/casa_fixvis', step,
+                {
+                  "msname"  : tms,
+                  "outputvis": tms,
+                  "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo'].get('listobs', True):

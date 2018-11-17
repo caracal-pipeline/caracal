@@ -146,7 +146,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'sunblocker'):
-            if config['sunblocker']['use_mstransform']: msnamesb = msname_mst
+            if config['sunblocker'].get('use_mstransform',True): msnamesb = msname_mst
             else: msnamesb = msname
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step, 
@@ -170,7 +170,7 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Block out sun'.format(step)) 
 
     if pipeline.enable_task(config, 'wsclean_image'):
-        if config['wsclean_image']['use_mstransform']:
+        if config['wsclean_image'].get('use_mstransform',True):
             mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
         else:
             mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
@@ -475,11 +475,11 @@ def worker(pipeline, recipe, config):
                      
                                             
            for j in range(wscl_niter):
-              if config['wsclean_image']['rm_intcubes']:
+              if config['wsclean_image'].get('rm_intcubes',True):
                 for ss in ['dirty','psf','residual','model','image']:
                   cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
                   HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
-                  if os.path.exists(cubename):  # or own mask '<mask-name>.fits:output' 
+                  if os.path.exists(cubename):
                    os.remove(cubename)
                   if os.path.exists(HIclean_mask):                
                    os.remove(HIclean_mask)

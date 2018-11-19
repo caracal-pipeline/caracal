@@ -67,7 +67,7 @@ flagging:
     enable: false
     scans: 'null'
   static_mask:
-    enable: true
+    enable: false
     mask: labelled_rfimask.pickle.npy
   autoflag_rfi:
     enable: true

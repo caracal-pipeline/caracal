@@ -158,6 +158,7 @@ def worker(pipeline, recipe, config):
                   "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
                   "channelsout"     : nchans,
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
+                  "local-rms"    : config[key].get('local_rms', False),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
@@ -187,9 +188,10 @@ def worker(pipeline, recipe, config):
         else:
           imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
 
-        if config[key].get('fornax_special',False) == True:
-          forn_kernels = [[20, 20, 0, 'b']]
-   
+        if config[key].get('fornax_special',False) == True and config[key].get('use_sofia',False) == True:
+          forn_kernels = [[80, 80, 0, 'b']]
+          forn_thresh = config[key].get('fornax_thresh',5)[num-1 if len(config[key].get('fornax_thresh', None)) >= num else -1]
+          
           image_opts_forn =  {
               "import.inFile"         : imagename,
               "steps.doFlag"          : True,
@@ -204,7 +206,7 @@ def worker(pipeline, recipe, config):
               "steps.doWriteCat"      : False, 
               "SCfind.kernelUnit"     : 'pixel',
               "SCfind.kernels"        : forn_kernels,
-              "SCfind.threshold"      : 7, 
+              "SCfind.threshold"      : forn_thresh, 
               "SCfind.rmsMode"        : 'mad',
               "SCfind.edgeMode"       : 'constant',
               "SCfind.fluxRange"      : 'all',
@@ -333,7 +335,7 @@ def worker(pipeline, recipe, config):
           image_opts.update({"import.maskFile": mask_name})
           image_opts.update({"import.inFile": imagename})
         
-        if config[key].get('fornax_special',False) == True:
+        if config[key].get('fornax_special',False) == True and config[key].get('use_sofia',False) == True:
 
           recipe.add('cab/sofia', step,
             image_opts_forn,
@@ -343,6 +345,79 @@ def worker(pipeline, recipe, config):
 
           fornax_namemask = 'masking/FornaxA_sofia_mask.fits'         
           image_opts.update({"import.maskFile": fornax_namemask})
+
+        elif config[key].get('fornax_special',False) == True and config[key].get('use_sofia',False) == False:
+
+
+          #this mask should be regridded to correct f.o.v.
+
+          fornax_namemask = 'masking/Fornaxa_vla_mask_doped.fits'         
+          fornax_namemask_regr = 'masking/Fornaxa_vla_mask_doped_regr.fits'         
+          
+          mask_name_casa = fornax_namemask.split('.fits')[0]
+          mask_name_casa = fornax_namemask+'.image'
+
+          mask_regrid_casa = fornax_namemask+'_regrid.image'
+          
+          imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(prefix, num, mfsprefix)
+
+
+          recipe.add('cab/casa_importfits', step,
+            {
+              "fitsimage"         : imagename,
+              "imagename"         : imagename_casa,
+              "overwrite"         : True,
+            },
+            input=pipeline.output,
+            output=pipeline.output,
+            label='Image in casa format')
+
+          recipe.add('cab/casa_importfits', step,
+            {
+              "fitsimage"         : fornax_namemask+':output',
+              "imagename"         : mask_name_casa,
+              "overwrite"         : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Mask in casa format')
+          
+          step = '3'
+          recipe.add('cab/casa_imregrid', step,
+            {
+              "template"      : imagename_casa+':output',
+              "imagename"     : mask_name_casa+':output',
+              "output"        : mask_regrid_casa,
+              "overwrite"     : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Regridding mosaic to size and projection of dirty image')
+
+          step = '4'
+          recipe.add('cab/casa_exportfits', step,
+            {
+              "fitsimage"         : fornax_namemask_regr+':output',
+              "imagename"         : mask_regrid_casa+':output',
+              "overwrite"         : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Extracted regridded mosaic')
+          
+          step = '5'
+          recipe.add(change_header,step,
+            {
+              "filename"  : pipeline.output+'/'+fornax_namemask_regr,
+              "headfile"  : pipeline.output+'/'+imagename,
+              "copy_head" : True,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='Extracted regridded mosaic')
+ 
+          
+          image_opts.update({"import.maskFile": fornax_namemask_regr})
 
 
         recipe.add('cab/sofia', step,
@@ -796,6 +871,8 @@ def worker(pipeline, recipe, config):
     self_cal_iter_counter = config.get('start_at_iter', 1)
     if pipeline.enable_task(config, 'image'):
         image(self_cal_iter_counter)
+    if pipeline.enable_task(config, 'sofia_mask'):
+            sofia_mask(self_cal_iter_counter)        
     if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):

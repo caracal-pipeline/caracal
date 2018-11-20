@@ -223,6 +223,15 @@ mapping:
             desc: Activates masking of Fornax A using Sofia
             type: bool
             required: False
+          fornax_thresh:
+            desc: SoFiA source finding threshold. Default is 4.0.
+            seq:
+              - type: float
+            required: false
+          use_sofia:
+            type: bool
+            desc: use sofia for mask of Fornax A instead of Fomalont mask  
+            required: false
           scale_noise_window:
             type: float
             desc: window size where to measure local rms in pixels

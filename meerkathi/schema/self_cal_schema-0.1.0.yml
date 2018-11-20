@@ -344,9 +344,13 @@ mapping:
             type: int
             desc: How many terms for the spectral polynomial fit of each clean component
             required: true
+          fits_mask:
+            desc: filename of fits mask (including folder if not input), default None
+            type: str
+            required: false
           auto_mask:
-            type: int
-            desc: Auto masking threshold
+            type: float
+            desc: Auto masking threshold, default None
             required: false
           auto_threshold:
             type: float

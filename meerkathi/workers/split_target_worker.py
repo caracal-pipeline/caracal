@@ -27,6 +27,7 @@ def worker(pipeline, recipe, config):
                     "outputvis"     : tms,
                     "timebin"       : config['split_target'].get('time_average', ''),
                     "width"         : config['split_target'].get('freq_average', 1),
+                    "spw"           : config['split_target'].get('spw', ''),
                     "datacolumn"    : config['split_target'].get('column', 'corrected'),
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),

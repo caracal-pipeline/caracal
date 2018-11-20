@@ -40,6 +40,14 @@ mapping:
             desc: Column to split, default is 'corrected'
             type: str
             required: false
+          correlation:
+            desc: Select correlations, default is '' = all
+            type: str
+            required: false
+          spw:
+            desc: Select spectral windows and channels, default is '' = all
+            type: str
+            required: false
       changecentre:
         desc: changes the hase centre
         type: map

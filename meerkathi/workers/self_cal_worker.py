@@ -162,6 +162,7 @@ def worker(pipeline, recipe, config):
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
+                  #"savesourcelist": True,
               }
         if config[key].get('mask_from_sky', False):
             fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
@@ -937,25 +938,26 @@ def worker(pipeline, recipe, config):
             with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
         step = 'finechanmodel'
         image_opts = {
-                  "msname"    : mslist,
-                  "column"    : config['finechanmod'].get('column', "CORRECTED_DATA"),
-                  "weight"    : 'briggs {}'.format(config['finechanmod'].get('robust', robust)),
-                  "npix"      : config['finechanmod'].get('npix', npix),
-                  "padding"   : config['finechanmod'].get('padding', padding),
-                  "scale"     : config['finechanmod'].get('cell', cell),
-                  "prefix"    : '{0:s}_{1:s}'.format(prefix, 'fine'),
-                  "niter"     : config['finechanmod'].get('niter', niter),
-                  "mgain"     : config['finechanmod'].get('mgain', mgain),
-                  "pol"       : config['finechanmod'].get('pol', pol),
+                  "msname"                 : mslist,
+                  "column"                 : config['finechanmod'].get('column', "CORRECTED_DATA"),
+                  "weight"                 : 'briggs {}'.format(config['finechanmod'].get('robust', robust)),
+                  "npix"                   : config['finechanmod'].get('npix', npix),
+                  "padding"                : config['finechanmod'].get('padding', padding),
+                  "scale"                  : config['finechanmod'].get('cell', cell),
+                  "prefix"                 : '{0:s}_{1:s}'.format(prefix, 'fine'),
+                  "niter"                  : config['finechanmod'].get('niter', niter),
+                  "mgain"                  : config['finechanmod'].get('mgain', mgain),
+                  "pol"                    : config['finechanmod'].get('pol', pol),
                   "taper-gaussian"         : sdm.dismissable(config['finechanmod'].get('uvtaper', taper)),
                   "deconvolution-channels" : config['finechanmod'].get('deconv_chans',nchans),
                   "channelsout"            : config['finechanmod'].get('chans',pipeline.nchans[0][0]),
                   "joinchannels"           : True,
                   "fit-spectral-pol"       : config['finechanmod'].get('fit_spectral_pol', 1),
-                  "auto-mask"              : config['finechanmod'].get('auto_mask',5),
+                  "auto-mask"              : sdm.dismissable(config['finechanmod'].get('auto_mask', None)),
                   "auto-threshold"         : config['finechanmod'].get('auto_threshold',0.5),
                   "multiscale"             : config['finechanmod'].get('multi_scale', False),
                   "multiscale-scales"      : sdm.dismissable(config['finechanmod'].get('multi_scale_scales', None)),
+                  "fitsmask"               : sdm.dismissable(config['finechanmod'].get('fits_mask', None)),
               }
 
         recipe.add('cab/wsclean', step,

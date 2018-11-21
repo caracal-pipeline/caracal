@@ -1031,7 +1031,7 @@ def worker(pipeline, recipe, config):
                   "joinchannels"           : True,
                   "fit-spectral-pol"       : config['finechanmod'].get('fit_spectral_pol', 1),
                   "auto-mask"              : sdm.dismissable(config['finechanmod'].get('auto_mask', None)),
-                  "auto-threshold"         : config['finechanmod'].get('auto_threshold',0.5),
+                  "auto-threshold"         : config['finechanmod'].get('auto_threshold', 10),
                   "multiscale"             : config['finechanmod'].get('multi_scale', False),
                   "multiscale-scales"      : sdm.dismissable(config['finechanmod'].get('multi_scale_scales', None)),
                   "fitsmask"               : sdm.dismissable(config['finechanmod'].get('fits_mask', None)),

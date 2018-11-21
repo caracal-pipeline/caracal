@@ -335,7 +335,7 @@ mapping:
 
       finechanmod:
         type: map
-        desc: Make final image and model at best freq res
+        desc: Make final image and model at higher freq res
         mapping:
           enable:
             type: bool
@@ -363,7 +363,7 @@ mapping:
             required: false
           auto_threshold:
             type: float
-            desc: Auto clean threshold
+            desc: Auto clean threshold, default 10
             required: false
           column:
             type: str

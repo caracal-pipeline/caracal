@@ -297,7 +297,7 @@ self_cal:
     clean_model: '4'
   flagging_summary:
     enable: true
-  finechanmod:
+  highfreqres_contim:
     enable: false
     chans: 12
     deconv_chans: 3

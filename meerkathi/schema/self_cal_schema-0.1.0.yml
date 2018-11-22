@@ -333,9 +333,9 @@ mapping:
             desc: Execute this segment
             required: true
 
-      finechanmod:
+      highfreqres_contim:
         type: map
-        desc: Make final image and model at higher freq res
+        desc: Make final continuum image and model at higher freq res, ideally using a clean mask based on the last round of continuum imging
         mapping:
           enable:
             type: bool

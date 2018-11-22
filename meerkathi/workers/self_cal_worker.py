@@ -163,6 +163,7 @@ def worker(pipeline, recipe, config):
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
+                  #"savesourcelist": True,
               }
         if config[key].get('mask_from_sky', False):
             fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
@@ -1007,32 +1008,33 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-    if pipeline.enable_task(config, 'finechanmod'):
+    if pipeline.enable_task(config, 'highfreqres_contim'):
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
         for i, prfx in enumerate(['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
             with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
-        step = 'finechanmodel'
+        step = 'highfreqres_contim'
         image_opts = {
-                  "msname"    : mslist,
-                  "column"    : config['finechanmod'].get('column', "CORRECTED_DATA"),
-                  "weight"    : 'briggs {}'.format(config['finechanmod'].get('robust', robust)),
-                  "npix"      : config['finechanmod'].get('npix', npix),
-                  "padding"   : config['finechanmod'].get('padding', padding),
-                  "scale"     : config['finechanmod'].get('cell', cell),
-                  "prefix"    : '{0:s}_{1:s}'.format(prefix, 'fine'),
-                  "niter"     : config['finechanmod'].get('niter', niter),
-                  "mgain"     : config['finechanmod'].get('mgain', mgain),
-                  "pol"       : config['finechanmod'].get('pol', pol),
-                  "taper-gaussian"         : sdm.dismissable(config['finechanmod'].get('uvtaper', taper)),
-                  "deconvolution-channels" : config['finechanmod'].get('deconv_chans',nchans),
-                  "channelsout"            : config['finechanmod'].get('chans',pipeline.nchans[0][0]),
+                  "msname"                 : mslist,
+                  "column"                 : config['highfreqres_contim'].get('column', "CORRECTED_DATA"),
+                  "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
+                  "npix"                   : config['highfreqres_contim'].get('npix', npix),
+                  "padding"                : config['highfreqres_contim'].get('padding', padding),
+                  "scale"                  : config['highfreqres_contim'].get('cell', cell),
+                  "prefix"                 : '{0:s}_{1:s}'.format(prefix, 'fine'),
+                  "niter"                  : config['highfreqres_contim'].get('niter', niter),
+                  "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
+                  "pol"                    : config['highfreqres_contim'].get('pol', pol),
+                  "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
+                  "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
+                  "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
                   "joinchannels"           : True,
-                  "fit-spectral-pol"       : config['finechanmod'].get('fit_spectral_pol', 1),
-                  "auto-mask"              : config['finechanmod'].get('auto_mask',5),
-                  "auto-threshold"         : config['finechanmod'].get('auto_threshold',0.5),
-                  "multiscale"             : config['finechanmod'].get('multi_scale', False),
-                  "multiscale-scales"      : sdm.dismissable(config['finechanmod'].get('multi_scale_scales', None)),
+                  "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol', 1),
+                  "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask', None)),
+                  "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold', 10),
+                  "multiscale"             : config['highfreqres_contim'].get('multi_scale', False),
+                  "multiscale-scales"      : sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales', None)),
+                  "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask', None)),
               }
 
         recipe.add('cab/wsclean', step,
@@ -1041,15 +1043,15 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
-        if not config['finechanmod'].get('niter', niter): imagetype=['image','dirty']
+        if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
         else:
             imagetype=['image','dirty','psf','residual','model']
-            if config['finechanmod'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
+            if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
         for mm in imagetype:
             step = 'finechancontcube'
             recipe.add('cab/fitstool', step,
                 {
-                   "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['finechanmod'].get('chans',pipeline.nchans[0][0]))],
+                   "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
                    "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
                    "stack"    : True,
                    "delete-files" : True,

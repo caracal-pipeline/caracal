@@ -298,7 +298,7 @@ def main(argv):
         pipeline.run_workers()
     except exceptions.SystemExit as e:
         if e.code != 0:
-            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:d} shutdown. This is likely a bug, please report.".format(e.code))
+            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
             log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
             sys.exit(1) #indicate failure
         else:

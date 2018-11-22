@@ -36,6 +36,34 @@ mapping:
             desc: Frequency averaging
             type: int
             required: true
+          column:
+            desc: Column to split, default is 'corrected'
+            type: str
+            required: false
+          correlation:
+            desc: Select correlations, default is '' = all
+            type: str
+            required: false
+          spw:
+            desc: Select spectral windows and channels, default is '' = all
+            type: str
+            required: false
+      changecentre:
+        desc: changes the hase centre
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: true
+          ra:
+            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            type: str
+            required: true
+          dec:
+            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            type: str
+            required: true
       obsinfo:
         desc: Get observation information
         type: map

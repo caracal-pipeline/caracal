@@ -70,16 +70,16 @@ mapping:
             desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
             type: str
             required: false
-          nchan:
-            desc: Number of channels to regrid, 'all' is for all channels or an integer number. Default is 'all'
-            type: text
-            required: false
           outframe:
             desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'. Defaut is 'BARY'
             type: str
             required: false
           veltype:
             desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
+            type: str
+            required: false
+          outchangrid:
+            desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above)
             type: str
             required: false
           uvlin:

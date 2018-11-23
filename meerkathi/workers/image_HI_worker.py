@@ -48,6 +48,7 @@ def worker(pipeline, recipe, config):
     # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        meerkathi.log.info('Updating info from {0:s}'.format(msinfo))
         with open(msinfo, 'r') as stdr:
             spw = yaml.load(stdr)['SPW']['NUM_CHAN']
             pipeline.nchans[i] = spw
@@ -64,35 +65,58 @@ def worker(pipeline, recipe, config):
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
 
-    # Find common barycentric frequency grid for all input .MS
-    firstchanfreq=pipeline.firstchanfreq
-    chanw=pipeline.chanwidth
-    lastchanfreq=pipeline.lastchanfreq
-    RA=pipeline.TRA
-    Dec=pipeline.TDec
-    teldict={'meerkat':[21.4430,-30.7130],'gmrt':[73.9723, 19.1174],'vla':[-107.6183633,34.0783584],'wsrt':[52.908829698,6.601997592],'atca':[-30.307665436,149.550164466]}
-    tellocation=teldict[config.get('telescope','meerkat')]
-    telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
-    firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
-    for i, prefix in enumerate(prefixes):
-        msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, prefix)
-        with open(msinfo, 'r') as searchfile:
-            for longdatexp in searchfile:
-               if "Observed from" in longdatexp:
-                   dates   = longdatexp
-                   matches = re.findall('(\d{2}[- ](\d{2}|January|Jan|February|Feb|March|Mar|April|Apr|May|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)[\- ]\d{2,4})', dates)
-                   obsstartdate = str(matches[0][0])
-                   obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
-                   targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
-                   v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
-                   corr=np.sqrt((constants.c-v)/(constants.c+v))
-                   firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
-    # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
-    comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
-    comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
-    comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
-    nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
-    meerkathi.log.info('Found common barycentric frequency grid for all input .MS: {0:d} channels starting at {1:.3f} Hz and with channel width {2:.3f} Hz.'.format(nchan_dopp,comfreq0,comchanw))
+    # Find common barycentric frequency grid for all input .MS, or set it as requested in the config file
+    if pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')=='auto':
+        firstchanfreq=pipeline.firstchanfreq
+        chanw=pipeline.chanwidth
+        lastchanfreq=pipeline.lastchanfreq
+        RA=pipeline.TRA
+        Dec=pipeline.TDec
+        teldict={
+            'meerkat':[21.4430,-30.7130],
+            'gmrt':[73.9723, 19.1174],
+            'vla':[-107.6183633,34.0783584],
+            'wsrt':[52.908829698,6.601997592],
+            'atca':[-30.307665436,149.550164466],
+            'askap':[116.5333,-16.9833],
+                }
+        tellocation=teldict[config.get('telescope','meerkat')]
+        telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
+        firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
+        for i, prefix in enumerate(prefixes):
+            msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, prefix)
+            with open(msinfo, 'r') as searchfile:
+                for longdatexp in searchfile:
+                   if "Observed from" in longdatexp:
+                       dates   = longdatexp
+                       matches = re.findall('(\d{2}[- ](\d{2}|January|Jan|February|Feb|March|Mar|April|Apr|May|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|Decem    ber|Dec)[\- ]\d{2,4})', dates)
+                       obsstartdate = str(matches[0][0])
+                       obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
+                       targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
+                       v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
+                       corr=np.sqrt((constants.c-v)/(constants.c+v))
+                       firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
+        # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
+        comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
+        comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+        comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+        nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
+        comfreq0='{0:.3f}Hz'.format(comfreq0)
+        comchanw='{0:.3f}Hz'.format(comchanw)
+        meerkathi.log.info('Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(nchan_dopp,comfreq0,comchanw))
+
+    elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')!='auto':
+        if len(config['mstransform']['outchangrid'].split(','))!=3:
+            meerkathi.log.error('Wrong format for mstransform:outchangrid in the .yml config file.')
+            meerkathi.log.error('Current setting is mstransform:outchangrid:"{0:s}"'.format(config['mstransform']['outchangrid']))
+            meerkathi.log.error('It must be "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
+            sys.exit(1)
+        nchan_dopp,comfreq0,comchanw=config['mstransform']['outchangrid'].split(',')
+        nchan_dopp=int(nchan_dopp)
+        meerkathi.log.info('Set requested Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(nchan_dopp,comfreq0,comchanw))
+
+    elif pipeline.enable_task(config, 'mstransform'):
+        nchan_dopp,comfreq0,comchanw=None,None,None
 
     for i, msname in enumerate(mslist):
         prefix = '{0:s}_{1:d}'.format(pipeline.prefix, i)
@@ -117,10 +141,6 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
             col=config['mstransform'].get('column', 'corrected')
-
-            if config['mstransform'].get('nchan', nchan_dopp)=='all': nchan_mstr=nchan_dopp
-            else: nchan_mstr=min(nchan_dopp,config['mstransform'].get('nchan', nchan_dopp))
-
             step = 'mstransform_{:d}'.format(i)
             recipe.add('cab/casa_mstransform', step,
                 {
@@ -128,9 +148,9 @@ def worker(pipeline, recipe, config):
                     "outputvis" : msname_mst,
                     "regridms"  : config['mstransform'].get('doppler', True),
                     "mode"      : config['mstransform'].get('mode', 'frequency'),
-                    "nchan"     : nchan_mstr,
-                    "start"     : '{0:.3f}Hz'.format(comfreq0),
-                    "width"     : '{0:.3f}Hz'.format(comchanw),
+                    "nchan"     : sdm.dismissable(nchan_dopp),
+                    "start"     : sdm.dismissable(comfreq0),
+                    "width"     : sdm.dismissable(comchanw),
                     "interpolation" : 'nearest',
                     "datacolumn" : col,
                     "restfreq"  :restfreq,

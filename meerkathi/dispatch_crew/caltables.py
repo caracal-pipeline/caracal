@@ -22,6 +22,6 @@ def calibrator_database():
     meerkathi.log.info("Obtaining divine knowledge from: %s" % __DB_FILENAME)
 
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
-    meerkathi.log.info("\n" + str(__CALIBRATOR_DB))
+    #meerkathi.log.info("\n" + str(__CALIBRATOR_DB))
     return __CALIBRATOR_DB
 

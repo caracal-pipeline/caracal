@@ -50,8 +50,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'changecentre'):
             if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
-                meerkathi.log.info('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                meerkathi.log.info('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
+                meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
+                meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
                 sys.exit(1)
             step = 'changecentre_{:d}'.format(i)
             recipe.add('cab/casa_fixvis', step,

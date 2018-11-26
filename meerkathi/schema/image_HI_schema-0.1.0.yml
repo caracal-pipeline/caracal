@@ -9,7 +9,7 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute segment image_HI (yes/no). Default is yes. 
+        desc: Execute segment image_HI (yes/no). Default is yes.
         type: bool
         required: true
       order:
@@ -59,7 +59,7 @@ mapping:
             required: true
           telescope:
             desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
-            enum: ['meerkat','vla','gmrt', 'wsrt', 'atca']
+            enum: ['meerkat','vla','gmrt', 'wsrt', 'atca', 'askap']
             type: str
             required: false
           doppler:
@@ -188,7 +188,7 @@ mapping:
             desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
             type: str
             required: false
-          robust: 
+          robust:
             desc: Robust parameter in case of Briggs weighting. Default is 2.
             type: float
             required: false
@@ -203,13 +203,13 @@ mapping:
           ownfitsmask:
             desc: Accepts a 3D-mask cleaning mask in fits format. Mask made by the user. Default is '' (an empty field)
             type: str
-            required: false          
-          automask: 
+            required: false
+          automask:
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             type: float
             required: false
           autothreshold:
-            desc: Estimate noise level using a robust estimator and stop at sigma x stddev 
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
             required: false
           cleanborder:
@@ -221,7 +221,7 @@ mapping:
             type: bool
             required: false
           no_update_mod:
-            desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
+            desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI.
             type: bool
             required: false
       casa_image:
@@ -305,7 +305,7 @@ mapping:
             desc: Execute conversion. Default is true
             type: bool
             required: true
-      sofia: 
+      sofia:
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
         mapping:
@@ -338,11 +338,11 @@ mapping:
             desc: Merge-'radius' in x-direction. Default is 2
             type: int
             required: false
-          mergeY: 
+          mergeY:
             desc: Merge-'radius' in y-direction. Default is 2
             type: int
             required: false
-          mergeZ: 
+          mergeZ:
             desc: Merge-'radius' in z-direction (velocity direction). Default is 3
             type: int
             required: false
@@ -355,7 +355,7 @@ mapping:
             type: int
             required: false
           minSizeZ:
-            desc: Minimum size in y-direction. Default is 5.      
+            desc: Minimum size in y-direction. Default is 5.
             type: int
             required: false
       flagging_summary:

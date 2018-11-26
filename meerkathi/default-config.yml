@@ -366,6 +366,10 @@ image_HI:
     niter: 0
     threshold: '10mJy'
     port2fits: True
+  remove_stokes_axis:
+    enable: true
+  pb_cube:
+    enable: false
   freq_to_vel:
     enable: true
   sofia:

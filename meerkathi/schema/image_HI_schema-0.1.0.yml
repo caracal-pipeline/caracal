@@ -98,6 +98,10 @@ mapping:
             desc: Data column to use.
             type: str
             required: false
+          obsinfo:
+            desc: Create obsinfo.txt and obsinfo.json of MS file created by mstransform. Default true
+            type: bool
+            required: false
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map
@@ -277,14 +281,30 @@ mapping:
             desc: Port output to fits files if yes. Default is yes.
             type: bool
             required: false
-      freq_to_vel:
-        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed. Default is true.
+      remove_stokes_axis:
+        desc: Remove Stokes axis from HI cube
         type: map
         mapping:
           enable:
-            desc: Execute conversion.
+            desc: Execute this segment. Default is true
             type: bool
-            required: false
+            required: true
+      pb_cube:
+        desc: Make primary beam cube
+        type: map
+        mapping:
+          enable:
+            desc: Execute this segment. Default is false
+            type: bool
+            required: true
+      freq_to_vel:
+        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed.
+        type: map
+        mapping:
+          enable:
+            desc: Execute conversion. Default is true
+            type: bool
+            required: true
       sofia: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map

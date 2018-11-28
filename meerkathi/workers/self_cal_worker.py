@@ -855,6 +855,22 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
+    # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
+    if config.get('undo_subtractmodelcol', False):
+        for i,msname in enumerate(mslist):
+            step = 'undo_modelsub_{:d}'.format(i)
+            recipe.add('cab/msutils', step,
+                {
+                    "command"  : 'sumcols',
+                    "msname"   : msname,
+                    "col1"     : 'CORRECTED_DATA',
+                    "col2"     : 'MODEL_DATA',
+                    "column"   : 'CORRECTED_DATA'
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Add model column to corrected column'.format(step))
+
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
     if calwith == 'meqtrees':

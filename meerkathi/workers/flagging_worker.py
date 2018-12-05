@@ -14,7 +14,8 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
+    if config['label']: 
+        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]

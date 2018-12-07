@@ -27,7 +27,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
-  reference_antenna: auto
+  reference_antenna: '0'
   primary_beam:
     enable: false
 
@@ -73,7 +73,7 @@ flagging:
     enable: true
     column: DATA
     fields: fcal,bpcal,gcal
-    strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+    strategy: firstpass_QUV.rfis # Default for MeerKAT data
   flagging_summary:
     enable: true
 
@@ -208,7 +208,7 @@ flagging__2:
     enable: true
     column: DATA
     fields: auto
-    strategy: firstpass_HI_strat2.rfis # This has to be in the pipeline input folder
+    strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
   flagging_summary:
     enable: true
 

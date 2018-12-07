@@ -18,7 +18,7 @@ def worker(pipeline, recipe, config):
     if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
     if config.get('hires_flag'): 
         print "Flagging Full Resolution Data"
-    #    msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
+        msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]

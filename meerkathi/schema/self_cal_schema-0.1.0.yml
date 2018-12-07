@@ -86,6 +86,14 @@ mapping:
         type: str
         desc: Stokes image to create
         required: true
+      bjones:
+        type: bool
+        desc: Enable Bjones.
+        required: true
+      ddjones:
+        type: bool
+        desc: Enable direction dependent calibration, currently experimental.
+        required: true
       cal_DDsols:
         desc: Calibration solution intervals
         seq:
@@ -332,7 +340,18 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
-
+      gain_interpolation:
+        type: map
+        desc: Interpolate gains over the high frequency resolution data
+        mapping:
+          enable: 
+            type: bool
+            desc: Execute this segment
+            required: true
+          hires_label:
+            type: str
+            desc: label for high resolution data products in selfcal
+            required: false
       highfreqres_contim:
         type: map
         desc: Make final continuum image and model at higher freq res, ideally using a clean mask based on the last round of continuum imging

@@ -20,6 +20,7 @@ mapping:
         desc: Label for new data set
         type: str
         required: true
+
       split_target:
         desc: Split data
         type: map
@@ -48,8 +49,26 @@ mapping:
             desc: Select spectral windows and channels, default is '' = all
             type: str
             required: false
+
+      hires_split:
+        desc: Splits data while keeping the frequency resolution
+        type: map
+        mapping:
+          enable: 
+            desc: Execute this section
+            type: bool
+            required: true
+          hires_label:
+            desc: Label for high resolution data set
+            type: str
+            required: false
+          hires_spw:
+            desc: SPW for full resolution data.
+            type: str
+            required: false
+    
       changecentre:
-        desc: changes the hase centre
+        desc: changes the phase centre
         type: map
         mapping:
           enable:

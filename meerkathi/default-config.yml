@@ -266,7 +266,7 @@ self_cal:
   cal_gain_amplitude_clip_high: 1.5
   # Source finding settings
   cal_niter: 4
-  start_at_iter: 
+  start_at_iter: 1
   aimfast:
     enable: true
     tolerance: 0.02

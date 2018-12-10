@@ -1000,7 +1000,10 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(self_cal_iter_counter)
     if pipeline.enable_task(config, 'gain_interpolation'):
-        apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
+        if (self_cal_iter_counter > cal_niter):
+            apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
+        else:
+            apply_gains_to_fullres(self_cal_iter_counter, enable=True)
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:
     #   for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):

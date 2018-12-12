@@ -22,7 +22,7 @@ get_data:
 observation_config:
   order: 10
   obsinfo:
-    enable: false
+    enable: true
   target: auto
   fcal: auto
   bpcal: auto
@@ -310,7 +310,7 @@ self_cal:
     enable: true
     hires_label: hires
   highfreqres_contim:
-    enable: false
+    enable: true
     chans: 12
     deconv_chans: 3
     fit_spectral_pol: 2

@@ -62,6 +62,10 @@ mapping:
             desc: Label for high resolution data set
             type: str
             required: false
+          hires_spwid:
+            desc: SPW ID for full resolution data.
+            type: int
+            required: false
           hires_spw:
             desc: SPW for full resolution data.
             type: str

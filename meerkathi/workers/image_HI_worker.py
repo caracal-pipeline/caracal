@@ -118,7 +118,6 @@ def worker(pipeline, recipe, config):
 
 
         lastchanfreq=pipeline.lastchanfreq
-        print("What is happening frqe {} chanwidth {} lastfreq {}".format(firstchanfreq,chanw,lastchanfreq))
         RA=pipeline.TRA
         Dec=pipeline.TDec
         teldict={
@@ -155,8 +154,6 @@ def worker(pipeline, recipe, config):
                                 firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i] * corr, chanw_dopp[i] * corr, lastchanfreq_dopp[i] * corr
                         else:
                             firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
-        print("What is happening dopp frqe {} chanwidth {} lastfreq {}".format(firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp))
-        print("This correction {}".format(corr))
         # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
         if np.min(chanw_dopp) < 0:
             comfreq0,comfreql,comchanw = np.min(firstchanfreq_dopp), np.max(lastchanfreq_dopp), -1*np.max(np.abs(chanw_dopp))
@@ -166,9 +163,7 @@ def worker(pipeline, recipe, config):
             comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
             comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
             comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
-        print("These dopplers frq0 {} freqlast{}".format(comfreq0,comfreql))
         nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
-        print(nchan_dopp)
         comfreq0='{0:.3f}Hz'.format(comfreq0)
         comchanw='{0:.3f}Hz'.format(comchanw)
         meerkathi.log.info('Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(nchan_dopp,comfreq0,comchanw))

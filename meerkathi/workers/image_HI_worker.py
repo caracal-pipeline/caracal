@@ -611,8 +611,7 @@ def worker(pipeline, recipe, config):
         nchans = config['casa_image'].get('nchans', 0)
         if nchans == 0:
             nchans=pipeline.nchans[0][spwid]
-        recipe.add('cab/casa_clean', step,
-            {
+        image_opts = {
                  "msname"         :    mslist,
                  "prefix"         :    pipeline.prefix+'_HI',
 #                 "field"          :    target,
@@ -621,7 +620,6 @@ def worker(pipeline, recipe, config):
                  "start"          :    config['casa_image'].get('startchan', 0,),
                  "interpolation"  :    'nearest',
                  "niter"          :    config['casa_image'].get('niter', 1000000),
-                 "uvtaper"        :    config['casa_image'].get('taper', ''),
                  "psfmode"        :    'hogbom',
                  "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
                  "npix"           :    config['casa_image'].get('npix', npix),
@@ -632,7 +630,13 @@ def worker(pipeline, recipe, config):
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,
-            },
+            }
+        if config['casa_image'].get('taper', '') != '':
+            image_opts.update({
+                "uvtaper"         : True,
+                "outertaper"      : config['casa_image'].get('taper', ''),
+            })
+        recipe.add('cab/casa_clean', step, image_opts,
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Image HI'.format(step))

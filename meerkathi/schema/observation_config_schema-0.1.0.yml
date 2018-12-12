@@ -32,6 +32,10 @@ mapping:
             desc: Returns sun free time range
             type: bool
             required: false
+      Check_Cals:
+        desc: Should the calibrators be checked or only the target. Default True
+        type: bool
+        required: false
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str

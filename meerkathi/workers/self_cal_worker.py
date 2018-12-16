@@ -765,11 +765,7 @@ def worker(pipeline, recipe, config):
             modellist = [calmodel]
         if config[key].get('model_mode', None) == 'vis_only':
             modellist = ['MODEL_DATA']
-            
-        if config[key].get('bjones'):
-        #if config[key].get('Gsols', gsols) == [] or \
-        #               config[key].get('Bsols', gsols) == []:
-        #    config[key]['Bjones'] = True
+     
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
         if config[key].get('two_step', False):
             matrix_type = 'Gain2x2'

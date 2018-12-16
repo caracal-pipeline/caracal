@@ -820,7 +820,6 @@ def worker(pipeline, recipe, config):
                     "g2-type"          : CUBICAL_MT[matrix_type],
                     "g2-time-int"      : gsols_[0]*10,
                     "g2-freq-int"      : gsols_[1],
-                    "g2-save-to"       : "g2-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                     "g2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "g2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                 })

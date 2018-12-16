@@ -76,7 +76,10 @@ def make_pb_cube(filename):
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
-    if config['label'] == '':
+    if config.get('use_hires_data', True):
+        mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]
+        pipeline.prefixes = ['meerkathi-{0:s}-{1:s}'.format(did,config['hires_label']) for did in pipeline.dataid]
+    elif config['label'] == '':
         mslist = ['{0:s}.ms'.format(did) for did in pipeline.dataid]
         pipeline.prefixes = ['meerkathi-{0:s}'.format(did) for did in pipeline.dataid]
     else:
@@ -94,6 +97,8 @@ def worker(pipeline, recipe, config):
     # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        if config.get('use_hires_data', True):
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         meerkathi.log.info('Updating info from {0:s}'.format(msinfo))
         with open(msinfo, 'r') as stdr:
             spw = yaml.load(stdr)['SPW']['NUM_CHAN']
@@ -278,10 +283,13 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'wsclean_image'):
         if config['wsclean_image'].get('use_mstransform',True):
-            if config['label'] == '':
+            if config.get('use_hires_data', True):
+                mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['hires_label']) for did in pipeline.dataid]
+            elif config['label'] == '':
                 mslist = ['{0:s}_mst.ms'.format(did) for did in pipeline.dataid]
             else:
                 mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
+
             # Upate pipeline attributes (useful if, e.g., the channelisation was changed by mstransform during this or a previous pipeline run)
             for i, prefix in enumerate(prefixes):
                 # If channelisation changed during a previous pipeline run as stored in the obsinfo.json file
@@ -307,7 +315,9 @@ def worker(pipeline, recipe, config):
                     pipeline.nchans[i] = [nchan_dopp for kk in pipeline.nchans[i]]
 
         else:
-            if config['label'] == '':
+            if config.get('use_hires_data', True):
+                mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]
+            elif config['label'] == '':
                 mslist = ['{0:s}.ms'.format(did) for did in pipeline.dataid]
             else:
                 mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
@@ -597,7 +607,9 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_mstransform']:
-            if config['label'] == '':
+            if config.get('use_hires_data', True):
+                mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['hires_label']) for did in pipeline.dataid]
+            elif config['label'] == '':
                 mslist = ['{0:s}_mst.ms'.format(did) for did in pipeline.dataid]
             else:
                 mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]

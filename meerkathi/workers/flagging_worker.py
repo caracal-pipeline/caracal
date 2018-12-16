@@ -3,6 +3,7 @@ NAME = 'Pre-calibration flagging'
 import sys
 import meerkathi
 import yaml
+import stimela.dismissable as sdm
 
 
 def worker(pipeline, recipe, config):
@@ -14,8 +15,10 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    if config['label']: 
-        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
+    if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
+    if config.get('hires_flag'): 
+        print "Flagging Full Resolution Data"
+        msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]

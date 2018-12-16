@@ -32,7 +32,7 @@ observation_config:
     enable: false
 
 prepare_data:
-  enable: false
+  enable: true
   order: 20
   prepms:
     enable: false
@@ -67,7 +67,7 @@ flagging:
     enable: false
     scans: 'null'
   static_mask:
-    enable: false
+    enable: true
     mask: labelled_rfimask.pickle.npy
   autoflag_rfi:
     enable: true
@@ -182,6 +182,11 @@ split_target:
     enable: true
     time_average: ''
     freq_average: 1
+  hires_split:
+    enable: true
+    hires_label: hires
+    hires_spwid: 0
+    hires_spw: 'null'
   changecentre:
     enable: false
     ra: ''
@@ -197,6 +202,8 @@ flagging__2:
   enable: true
   order: 70
   label: corr
+  hires_label: hires
+  hires_flag: true
   autoflag_rfi:
     enable: true
     column: DATA
@@ -235,7 +242,7 @@ self_cal:
   label: corr
   order: 90
   primary_beam: false
-  calibrate_with: meqtrees
+  calibrate_with: cubical
   spwid: 0
   # Imaging settings
   img_npix: 5540
@@ -253,6 +260,8 @@ self_cal:
   img_pol: I
   # Calibration settings
   cal_DDsols: []
+  bjones: false
+  ddjones: false
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5
   # Source finding settings
@@ -297,8 +306,11 @@ self_cal:
     clean_model: '4'
   flagging_summary:
     enable: true
+  gain_interpolation:
+    enable: true
+    hires_label: hires
   highfreqres_contim:
-    enable: false
+    enable: true
     chans: 12
     deconv_chans: 3
     fit_spectral_pol: 2
@@ -307,6 +319,8 @@ image_HI:
   enable: true
   order: 100
   label: corr
+  hires_label: hires
+  use_hires_data: true
   restfreq: '1.420405752GHz'
   npix: [1024]
   cell: 7

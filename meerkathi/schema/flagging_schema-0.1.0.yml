@@ -20,7 +20,14 @@ mapping:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
         required: false
-
+      hires_label:
+        desc: Label for high frequency resolution data.
+        type: str
+        required: false
+      hires_flag:
+        desc: Enables AOFlagger run on high frequency resolution data.
+        type: bool
+        required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map

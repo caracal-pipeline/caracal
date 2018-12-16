@@ -111,6 +111,7 @@ class MeerKATHI(object):
         self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.hires_msnames = ['{:s}_hires.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'input msdir output'.split():
@@ -129,6 +130,12 @@ class MeerKATHI(object):
             self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
         else:
             self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3], "-"+label if label else "") for msname in self.msnames]
+
+    def set_hires_msnames(self, label):
+        if self.virtconcat:
+            self.hires_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
+        else:
+            self.hires_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
     def init_pipeline(self):
         # First create input folders if they don't exist

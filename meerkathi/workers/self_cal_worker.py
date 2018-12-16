@@ -752,35 +752,9 @@ def worker(pipeline, recipe, config):
             mm = model.split('+')
             calmodel, fits_model = combine_models(mm, num)
         else:
-            vismodel = False
-        #force to calibrate with model data column if specified by user
-
-        if config[key].get('model_mode', None) == 'pybdsm_vis':
-            vismodel = True
-            calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
-            model = config[key].get('model', num)[num-1]
-            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
-                stdw.write('#format: ra_d dec_d i\n')
-                stdw.write('0.0 -30.0 1e-99')
-            for i, msname in enumerate(mslist):
-                predict_from_fits(num, model, i)
-
-            modelcolumn = None
-        
-        elif config[key].get('model_mode', None) == 'pybdsm_only':
-            model = config[key].get('model', num)[num-1]
-            if isinstance(model, str) and len(model.split('+')) > 1:
-                mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num,
-                                           enable=False if pipeline.enable_task(
-                                           config, 'aimfast') else True)
-            else:
-                model = int(model)
-                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
-        if config[key].get('Gsols', gsols) == [] or \
-                       config[key].get('Bsols', gsols) == []:
-            config[key]['Bjones'] = True
+            model = int(model)
+            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
+            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
         if config[key].get('model_mode', None) == 'pybdsm_vis':
             if (num==cal_niter): 
@@ -796,20 +770,18 @@ def worker(pipeline, recipe, config):
         #if config[key].get('Gsols', gsols) == [] or \
         #               config[key].get('Bsols', gsols) == []:
         #    config[key]['Bjones'] = True
-        matrix_type = config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]
+        matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
+        if config[key].get('two_step', False):
+            matrix_type = 'Gain2x2'
+
+        jones_chain = 'G'
+        if config[key].get('two_step', False):
+            jones_chain += ',G2'
         if config[key].get('Bjones', bjones):
-            jones_chain = 'G,B'
-            if config[key].get('two_step', False):
-                matrix_type= 'Gain2x2'
-                jones_chain = 'G,G2,B'
-        else:
-            jones_chain = 'G' 
+            jones_chain += ',B'
         if config[key].get('ddjones', False):
             jones_chain+= ',dE'
-            jones_chain = 'G'
-            if config[key].get('two_step', False):
-                matrix_type= 'Gain2x2'
-                jones_chain = 'G,G2'
+
 
         for i,msname in enumerate(mslist):
             gsols_ = [config[key].get('Gsols_time', [])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
@@ -832,7 +804,7 @@ def worker(pipeline, recipe, config):
                   "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
-                  "g-type"          : CUBICAL_MT[config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+                  "g-type"          : CUBICAL_MT[matrix_type],
                   "g-time-int"      : gsols_[0],
                   "g-freq-int"      : gsols_[1],
                   "g-save-to"       : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
@@ -844,6 +816,18 @@ def worker(pipeline, recipe, config):
                   "madmax-estimate" : 'corr',
 
                 }
+            if config[key].get('two_step', False):
+                cubical_opts.update({
+                    "g-update-type"   : 'phase-diag',
+                    "g2-update-type"   : 'amp-diag',
+                    "g2-solvable"      : True,
+                    "g2-type"          : CUBICAL_MT[matrix_type],
+                    "g2-time-int"      : gsols_[0]*10,
+                    "g2-freq-int"      : gsols_[1],
+                    "g2-save-to"       : "g2-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
+                    "g2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "g2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                })
             if config[key].get('Bjones'):
                cubical_opts.update({"b-solvable": True,
                                     "b-time-int": config[key].get('Bsols', bsols)[0],
@@ -862,18 +846,6 @@ def worker(pipeline, recipe, config):
                                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                                     "dd-dd-term":   True,
                                     "dd-save-to": "dE-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),})
-
-            if config[key].get('two_step', False):
-                cubical_opts.update({
-                    "g-update-type"   : 'phase-diag',
-                    "g2-solvable"      : True,
-                    "g2-type"          : 'complex-2x2',
-                    "g2-update-type"   : 'amp-diag',
-                    "g2-time-int"      : gsols_[0]*10,
-                    "g2-freq-int"      : gsols_[1],
-                    "g2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                    "g2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
-                })
             recipe.add('cab/cubical', step, cubical_opts,  
                 input=pipeline.input,
                 output=pipeline.output,

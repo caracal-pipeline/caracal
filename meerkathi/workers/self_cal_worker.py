@@ -765,7 +765,7 @@ def worker(pipeline, recipe, config):
             modellist = [calmodel]
         if config[key].get('model_mode', None) == 'vis_only':
             modellist = ['MODEL_DATA']
-     
+
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
         if config[key].get('two_step', False):
             matrix_type = 'Gain2x2'
@@ -1136,7 +1136,8 @@ def worker(pipeline, recipe, config):
                 extract_sources(self_cal_iter_counter)
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(self_cal_iter_counter)
-	if pipeline.enable_task(config, 'gain_interpolation'):
+
+    if pipeline.enable_task(config, 'gain_interpolation'):
         if (self_cal_iter_counter > cal_niter):
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
         else:

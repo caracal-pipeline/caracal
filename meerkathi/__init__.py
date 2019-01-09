@@ -106,7 +106,7 @@ class MeerKATHI(object):
             general fields that must be propagated
         """
         self.dataid = dataid
-        self.nobs = len(self.dataid)
+        self.nobs = nobs = len(self.dataid)
         self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
         self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
@@ -292,8 +292,9 @@ def main(argv):
     cdb = mkct.calibrator_database()
 
     if args.print_calibrator_standard:
-        meerkathi.log.info("Found the following reference calibrators (in CASA format):")
-        meerkathi.log.info(cdb)
+        log.info("Found the following reference calibrators (in CASA format):")
+        log.info(cdb)
+        return
 
     import exceptions
     try:

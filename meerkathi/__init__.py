@@ -50,10 +50,25 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.dispatch_crew import worker_help
 import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
+from meerkathi.view_controllers import event_loop
 
-def main(argv):
-    args = cp(argv).args
-    arg_groups = cp(argv).arg_groups
+def print_worker_help(args, schema_version):
+    schema = os.path.join(pckgdir, "schema",
+            "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
+    with open(schema, "r") as f:
+        worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+
+    helper = worker_help.worker_options(args.worker_help, worker_dict["mapping"][args.worker_help])
+    helper.print_worker()
+
+def get_default(to):
+    log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
+    os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
+
+def start_viewer(args):
+    log.info("Entering interactive mode as requested: MEERKATHI report viewer")
+    port = args.interactive_port
+    web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
 
     def __host():
         httpd = HTTPServer(("", port), hndl)
@@ -62,6 +77,27 @@ def main(argv):
             httpd.serve_forever()
         except KeyboardInterrupt, SystemExit:
             httpd.shutdown()
+
+    if not os.path.exists(web_dir):
+        log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
+        return
+    log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+                (port, web_dir))
+    log.info("Press Ctrl-C to exit")
+    hndl = SimpleHTTPRequestHandler
+
+    wt = Process(target = __host)
+    try:
+        wt.start()
+        webbrowser.open("http://localhost:%d/" % port)
+        wt.join()
+    except KeyboardInterrupt, SystemExit:
+        log.info("Interrupt received - shutting down web server. Goodbye!")
+    return
+
+def main(argv):
+    args = cp(argv).args
+    arg_groups = cp(argv).arg_groups
 
     if args.schema:
         schema = {}
@@ -77,13 +113,11 @@ def main(argv):
         schema_version = tmp["schema_version"]
 
     if args.worker_help:
-        schema = os.path.join(pckgdir, "schema",
-                "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
-        with open(schema, "r") as f:
-            worker_dict = cfg_txt = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+        print_worker_help(args, schema_version)
+        return
 
-        helper = worker_help.worker_options(args.worker_help, worker_dict["mapping"][args.worker_help])
-        helper.print_worker()
+    if not args.no_interactive:
+        event_loop().run()
 
     log.info("")
 
@@ -101,29 +135,9 @@ def main(argv):
 
     # User requests default config => dump and exit
     if args.get_default:
-        log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(args.get_default))
-        os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, args.get_default))
-        return
+        get_default(args.get_default)
     elif args.report_viewer:
-        log.info("Entering interactive mode as requested: MEERKATHI report viewer")
-        port = args.interactive_port
-        web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
-        if not os.path.exists(web_dir):
-            log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
-            return
-        log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
-                 (port, web_dir))
-        log.info("Press Ctrl-C to exit")
-        hndl = SimpleHTTPRequestHandler
-
-        wt = Process(target = __host)
-        try:
-            wt.start()
-            webbrowser.open("http://localhost:%d/" % port)
-            wt.join()
-        except KeyboardInterrupt, SystemExit:
-            log.info("Interrupt received - shutting down web server. Goodbye!")
-        return
+        start_viewer(args)
    
     # Very good idea to print user options into the log before running:
     cp().log_options()

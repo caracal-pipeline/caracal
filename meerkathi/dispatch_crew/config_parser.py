@@ -27,7 +27,7 @@ class config_parser:
 
         if cls.__ARGS is not None:
             meerkathi.log.warn("Replacing existing stored arguments '{}'"
-                               "with '{}'.", __ARGS, args)
+                               "with '{}'.".format(cls.__ARGS, args))
 
         cls.__ARGS = args
         cls.__GROUPS = arg_groups
@@ -86,6 +86,10 @@ class config_parser:
 
         add('-pcs', '--print-calibrator-standard',
             help='Prints auxilary calibrator standard into the log',
+            action='store_true')
+
+        add('--no-interactive',
+            help='Disable interactivity',
             action='store_true')
 
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),

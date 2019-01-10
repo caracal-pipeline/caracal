@@ -1,5 +1,6 @@
 import npyscreen
 import exceptions
+from collections import OrderedDict
 
 import meerkathi
 from meerkathi.view_controllers.meerkathi_theme import meerkathi_theme
@@ -42,13 +43,32 @@ class option_editor(npyscreen.FormBaseNew):
 
     def create(self):
         self.btn_load = self.add(npyscreen.ButtonPress, name = "Back",
+                                 relx=-40,
                                  when_pressed_function=self.on_back_pressed)
         self.btn_edit = self.add(npyscreen.ButtonPress, name = "Load",
+                                 relx=-40,
                                  when_pressed_function=lambda: self.on_load())
         self.btn_edit = self.add(npyscreen.ButtonPress, name = "Store",
+                                 relx=-40,
                                  when_pressed_function=lambda: self.on_save())
 
+        self.edt_treeval = self.add(npyscreen.TitleText, name = "Value", hidden=True, )
         
+        self.trv_options = self.add(npyscreen.MLTree, rely=2, width=100)
+        def __populate_tree(groups, tree=None):
+            """ Depth first populate tree with dictionary of options """
+            if tree is None:
+                tree = npyscreen.NPSTreeData(content='Root', selectable=False,ignoreRoot=True)
+            for k, v in groups.iteritems():
+                if isinstance(groups[k], dict) or isinstance(groups[k], OrderedDict):
+                    subtree = tree.newChild(content=k, selectable=False)
+                    __populate_tree(groups[k], subtree)
+                else:
+                    subtree = tree.newChild(content=k, selectable=True)
+            return tree
+        self.trv_options.values = __populate_tree(cp().arg_groups)
+        self.trv_options.get_selected_objects()
+
         # t  = F.add(npyscreen.TitleText, name = "Text:",)
         # fn = F.add(npyscreen.TitleFilename, name = "Filename:")
         # fn2 = F.add(npyscreen.TitleFilenameCombo, name="Filename2:")

@@ -8,12 +8,15 @@ class input_box(npyscreen.ActionPopup):
         self.__event_loop = event_loop
         self.__on_ok = on_ok
         self.__on_cancel = on_cancel
+        kwargs['color'] = 'MBOXDEFAULT'
+        kwargs['labelcolor'] = 'MBOXDEFAULT'
         npyscreen.ActionPopup.__init__(self, *args, name="User input", lines=lines, **kwargs)
         
 
     def create(self):
-        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue)
-        
+        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue,
+                                color='MBOXDEFAULT', labelcolor='MBOXDEFAULT')
+
     def afterEditing(self):
         self.__event_loop.switchFormPrevious()
     
@@ -32,10 +35,13 @@ class message_box(npyscreen.Popup):
         self.__title = title
         self.__editvalue = editvalue
         self.__event_loop = event_loop
+        kwargs['color'] = 'MBOXDEFAULT'
+        kwargs['labelcolor'] = 'MBOXDEFAULT'
         npyscreen.Popup.__init__(self, *args, name=self.__title, lines=lines, **kwargs)
 
     def create(self):
-        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue)
+        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue,
+                                color='MBOXDEFAULT', labelcolor='MBOXDEFAULT')
         self.edt_val.editable=False
         
     def afterEditing(self):

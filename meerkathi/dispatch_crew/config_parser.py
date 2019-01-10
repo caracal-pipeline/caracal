@@ -42,6 +42,45 @@ class config_parser:
 
         return copy.deepcopy(cls.__GROUPS)
 
+    def update_key(self, chain, new_value):
+        """ Update a single value given a chain of keys """
+        cls = self.__class__
+        if cls.__GROUPS is None:
+            raise ValueError("Please call store_args first.")
+        def __walk_down_set(groups, chain, new_value):
+            if len(chain) > 1:
+                k = chain[0]
+                if k not in groups:
+                    raise KeyError("{} not a valid key for update rule".format(k))
+                __walk_down_set(groups[k], chain[1:], new_value)
+            else:
+                groups[chain[0]] = new_value
+        __walk_down_set(self.__GROUPS, chain, new_value)
+        self.update_args_key(chain, new_value)
+
+    def update_args_key(self, chain, new_value):
+        cls = self.__class__
+        if cls.__GROUPS is None:
+            raise ValueError("Please call store_args first.")
+        setattr(self.__ARGS, "_".join(chain), new_value)
+        
+
+    def get_key(self, chain):
+        """ Update a single value given a chain of keys """
+        cls = self.__class__
+        if cls.__GROUPS is None:
+            raise ValueError("Please call store_args first.")
+        def __walk_down_get(groups, chain):
+            if len(chain) > 1:
+                k = chain[0]
+                if k not in groups:
+                    raise KeyError("{} not a valid key for lookup rule".format(k))
+                return __walk_down_get(groups[k], chain[1:])
+            else:
+                return groups[chain[0]]
+
+        return __walk_down_get(cls.__GROUPS, chain)
+      
     @property
     def args(self):
         """ Retrieve stored arguments """
@@ -254,8 +293,14 @@ class config_parser:
                 assert (("seq" in schema_sections["mapping"][opt]) and ("type" in schema_sections["mapping"][opt]["seq"][0])) or \
                         "type" in schema_sections["mapping"][opt], "Option %s missing type in schema" % option_name
 
-                if update_only:
+                if update_only == "defaults and args":
                     parser.set_defaults(**{option_name: default})
+                    
+                    setattr(args, option_name, default)
+                    groups[opt] = default
+                elif update_only == "defaults":
+                    parser.set_defaults(**{option_name: default})
+                    
                     groups[opt] = getattr(args, option_name)
                 else:
                     _option_factory(schema_sections["mapping"][opt]["type"] if "seq" not in schema_sections["mapping"][opt] else \
@@ -271,8 +316,9 @@ class config_parser:
         return groups
 
     @classmethod
-    def update_config(cls, args):
+    def update_config(cls, args = None, update_mode="defaults"):
         """ Updates argument parser with values from config file """
+        args = cls.__ARGS if not args else args
         parser = cls.__primary_parser()
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
@@ -292,12 +338,20 @@ class config_parser:
             schema_fn = os.path.join(meerkathi.pckgdir,
                                       "schema", "{0:s}_schema-{1:s}.yml".format(_key,
                                                                                 schema_version))
+            if update_mode == "defaults and args": # new parset, re-validate
+                source_data = {
+                            _key : worker,
+                            "schema_version" : schema_version,
+                }
+                c = Core(source_data=source_data, schema_files=[schema_fn])
+                cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
+
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             groups[key] = cls._subparser_tree(cls.__validated_schema[key],
                                               schema["mapping"][_key],
                                               base_section=key,
-                                              update_only=True,
+                                              update_only=update_mode,
                                               args=args,
                                               parser=parser)
         cls.__store_args(args, groups)

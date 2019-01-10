@@ -51,28 +51,15 @@ class entry_form(npyscreen.FormBaseNew):
         self.add(npyscreen.TitleText, editable=False, name="\t")
         self.add(npyscreen.TitleText, editable=False, name="\t")
         self.add(npyscreen.TitleText, editable=False, name="\t")
-        self.btn_run = self.add(npyscreen.ButtonPress, name = "> Run pipeline",
+        self.btn_run = self.add(npyscreen.ButtonPress, name = "Run pipeline",
                                 when_pressed_function=self.on_run_pressed)
-        self.btn_edit = self.add(npyscreen.ButtonPress, name = "> Edit pipeline configuration",
+        self.btn_edit = self.add(npyscreen.ButtonPress, name = "Edit pipeline configuration",
                                  when_pressed_function=self.on_edit_pressed)
-        self.btn_default = self.add(npyscreen.ButtonPress, name = "> Dump default configuration",
+        self.btn_default = self.add(npyscreen.ButtonPress, name = "Dump default configuration",
                                     when_pressed_function=lambda: self.on_input_default_parset())
         self.add(npyscreen.TitleText, editable=False, name="\t")
-        self.btn_quit = self.add(npyscreen.ButtonPress, name = "> Quit to MS-DOS",
+        self.btn_quit = self.add(npyscreen.ButtonPress, name = "Quit to MS-DOS",
                                  when_pressed_function=self.on_quit_pressed)
 
-        
-        # t  = F.add(npyscreen.TitleText, name = "Text:",)
-        # fn = F.add(npyscreen.TitleFilename, name = "Filename:")
-        # fn2 = F.add(npyscreen.TitleFilenameCombo, name="Filename2:")
-        # dt = F.add(npyscreen.TitleDateCombo, name = "Date:")
-        # s  = F.add(npyscreen.TitleSlider, out_of=12, name = "Slider")
-        # ml = F.add(npyscreen.MultiLineEdit,
-        #        value = """try typing here!\nMutiline text, press ^R to reformat.\n""",
-        #        max_height=5, rely=9)
-        # ms = F.add(npyscreen.TitleSelectOne, max_height=4, value = [1,], name="Pick One",
-        #         values = ["Option1","Option2","Option3"], scroll_exit=True)
-        # ms2= F.add(npyscreen.TitleMultiSelect, max_height =-2, value = [1,], name="Pick Several",
-        #         values = ["Option1","Option2","Option3"], scroll_exit=True)
 
 

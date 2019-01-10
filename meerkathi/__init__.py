@@ -116,8 +116,11 @@ def main(argv):
         print_worker_help(args, schema_version)
         return
 
-    if not args.no_interactive:
-        event_loop().run()
+    if not args.no_interactive and args.config == DEFAULT_CONFIG:
+        try:
+            event_loop().run()
+        except KeyboardInterrupt:
+            return
 
     log.info("")
 

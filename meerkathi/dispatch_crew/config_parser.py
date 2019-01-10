@@ -59,7 +59,9 @@ class config_parser:
                     raise KeyError("{} not a valid key for update rule".format(k))
                 __walk_down_set(groups[k], chain[1:], new_value)
             else:
-                if chain[0] not in groups:
+                if chain[0] == "enable" and chain[0] not in groups:
+                    raise ValueError("This is a compulsory section and cannot be switched off")
+                elif chain[0] not in groups:
                     raise KeyError("{} not a valid key for update rule".format(chain[0]))
                 groups[chain[0]] = new_value
         __walk_down_set(self.__GROUPS, chain, new_value)
@@ -84,7 +86,9 @@ class config_parser:
                     raise KeyError("{} not a valid key for lookup rule".format(k))
                 return __walk_down_get(groups[k], chain[1:])
             else:
-                if chain[0] not in groups:
+                if chain[0] == "enable" and chain[0] not in groups:
+                    return True
+                elif chain[0] not in groups:
                     raise KeyError("{} not a valid key for lookup rule".format(chain[0]))
                 return groups[chain[0]]
 
@@ -104,7 +108,20 @@ class config_parser:
                 return __walk_down_get(child, chain[1:])
             else:
                 k = chain[0]
-                if k not in schema and not ("mapping" in schema and k in schema["mapping"]):
+                if k == "enable" and k not in schema and not ("mapping" in schema and k in schema["mapping"]):
+                    if attr == "desc":
+                        return "Section enabled or not"
+                    elif attr == "type":
+                        return "bool"
+                    elif attr == "required":
+                        return True
+                    elif attr == "mapping":
+                        return None
+                    elif attr == "enum":
+                        return [True, False]
+                    elif attr == "seq":
+                        return None
+                elif k not in schema and not ("mapping" in schema and k in schema["mapping"]):
                     raise KeyError("{} not a valid key for lookup rule".format(k))
                 child = schema[k] if k in schema else schema["mapping"][k]
                 return child.get(attr, None)

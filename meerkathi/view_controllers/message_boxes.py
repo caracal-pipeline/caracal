@@ -53,6 +53,8 @@ class message_box(npyscreen.Popup):
         self.__event_loop = event_loop
         kwargs['color'] = 'MBOXDEFAULT'
         kwargs['labelcolor'] = 'MBOXDEFAULT'
+        min_width = max(len(self.__labeltext) + len(self.__editvalue), len(title)) + 20
+        kwargs['columns'] = kwargs['minimum_columns'] = min_width
         npyscreen.Popup.__init__(self, *args, name=self.__title, lines=lines, **kwargs)
 
     def create(self):

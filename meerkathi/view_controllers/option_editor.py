@@ -19,7 +19,9 @@ class opt_treeview(npyscreen.MLTree):
             keys = []
             if node._parent is not None:
                 keys = keys + __walk_up(node._parent)
-            return keys + ([node.key_val] if node.key_val is not None else [])
+            return keys + ([node.key_val[1:]] if node.key_val is not None and node.key_val[0] == "@" else
+                           [node.key_val] if node.key_val is not None else 
+                           [])
         helpstr = "\n".join(textwrap.wrap(cp().get_schema_help(__walk_up(sel)), 70))
         
         self.parent.lbl_help.value = helpstr
@@ -41,7 +43,10 @@ class opt_treeview(npyscreen.MLTree):
             keys = []
             if node._parent is not None:
                 keys = keys + __walk_up(node._parent)
-            return keys + ([node.key_val] if node.key_val is not None else [])
+            keys = [k for k in keys if k != "enable"]
+            return keys + ([node.key_val[1:], "enable"] if node.key_val is not None and node.key_val[0] == "@" else
+                           [node.key_val] if node.key_val is not None else
+                           [])
 
         def __uinput_factory(chain, db):
             val_type = cp().get_schema_type(chain)
@@ -120,7 +125,7 @@ class opt_treeview(npyscreen.MLTree):
                         self.parent.rebuild_opt_tree()
                         self.display()
                     except ValueError as e:
-                        instance = error_box(self.parent.event_loop, str(e))
+                        instance = error_box(self.parent.event_loop, str(e), minimum_columns=90, columns=90)
                         self.parent.event_loop.registerForm("MESSAGEBOX", instance)
                         self.parent.event_loop.switchForm("MESSAGEBOX")
                 
@@ -134,8 +139,14 @@ class opt_treeview(npyscreen.MLTree):
                 self.parent.event_loop.switchForm("INPUTBOX")
 
             if val_type == "bool":
-                db.update_key(chain, 
-                              not db.get_key(chain))
+                try:
+                    db.update_key(chain, 
+                                  not db.get_key(chain))
+                except ValueError as e:
+                    instance = error_box(self.parent.event_loop, str(e))
+                    self.parent.event_loop.registerForm("MESSAGEBOX", instance)
+                    self.parent.event_loop.switchForm("MESSAGEBOX")
+ 
                 self.parent.rebuild_opt_tree()
                 self.display()
             elif val_type == "float" or val_type == "int": 
@@ -144,9 +155,20 @@ class opt_treeview(npyscreen.MLTree):
                 __list_input(seq, chain, db, valid_options, is_required)
             elif val_type == "text" or val_type == "str": # string or string equivalent
                 __string_input(val_type, chain, db, valid_options, is_required)
-
-        __uinput_factory(__walk_up(sel), cp())
+            else:
+                raise RuntimeError(chain)
+        chain = __walk_up(sel)
+        __uinput_factory(chain, cp())
         
+class annotated_tree_data(npyscreen.NPSTreeData):
+    def __init__(self, key_val=None, *args, **kwargs):
+                 self.__key_val = key_val
+                 npyscreen.NPSTreeData.__init__(self, *args, **kwargs)
+    @property
+    def key_val(self):
+        return self.__key_val
+
+
 
 class option_editor(npyscreen.FormBaseNew):
     def __init__(self, event_loop):
@@ -189,13 +211,6 @@ class option_editor(npyscreen.FormBaseNew):
         def __populate_tree(groups, tree=None, level=1, level_label=1):
             """ Depth first populate tree with dictionary of options """
             __isdict = lambda x: isinstance(x, dict) or isinstance(x, OrderedDict)
-            class annotated_tree_data(npyscreen.NPSTreeData):
-                def __init__(self, key_val=None, *args, **kwargs):
-                    self.__key_val = key_val
-                    npyscreen.NPSTreeData.__init__(self, *args, **kwargs)
-                @property
-                def key_val(self):
-                    return self.__key_val
 
             if tree is None:
                 if not __isdict(groups):
@@ -206,17 +221,15 @@ class option_editor(npyscreen.FormBaseNew):
             for k, v in groups.iteritems():
                 if __isdict(groups[k]) and groups[k].get('enable', True):
                     label = "■ {}. {}".format(ki, k) if level == 1 else "■ {}.{} {}".format(level_label, ki, k)
-                    subtree = tree.newChild(k, content=label, selectable=False)
+                    subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     __populate_tree(groups[k], subtree, level=level+1, level_label=ki)
                     ki += 1
                 elif __isdict(groups[k]) and not groups[k].get('enable', True):
                     label = "Ø {}. {}".format(ki, k) if level == 1 else "Ø {}.{} {}".format(level_label, ki, k)
-                    subtree = tree.newChild(k, content=label, selectable=False)
-                    if 'enable' in groups[k]:
-                        subtree = subtree.newChild('enable', content='enable = False', selectable=True)
+                    subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     ki += 1
                 else:
-                    if k != "order":                        
+                    if k not in ["order", "enable"]:
                         subtree = tree.newChild(k, content="{} = {}".format(k, v), selectable=True)        
             return tree
 
@@ -234,8 +247,9 @@ class option_editor(npyscreen.FormBaseNew):
                                  when_pressed_function=self.on_back_pressed)
         
         self.box_help = self.add(npyscreen.BoxBasic, name="Help", max_width=85, rely=4, relx=-89, max_height=20, editable=False)
-        msg = "\n".join(textwrap.wrap("Scroll down the tree and hit return to edit values", width=70))
+        msg = "\n".join(textwrap.wrap("Scroll down the tree and hit return to edit values. Sections marked '■' are enabled, "
+                                      "while those marked 'Ø' are disabled. Hit enter to toggle them on or off. Certain sections, "
+                                      "like the 'general' section, cannot be switched off.", width=70))
         self.lbl_help = self.add(npyscreen.MultiLineEdit, value=msg, max_width=80, rely=6, relx=-83, max_height=16, editable=False)                        
         self.trv_options = self.add(opt_treeview, rely=4, width=80, exit_right=True, scroll_exit=True)
         self.rebuild_opt_tree()
-

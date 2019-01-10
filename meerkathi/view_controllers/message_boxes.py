@@ -1,16 +1,19 @@
 import npyscreen
+import re
 
 class input_box(npyscreen.ActionPopup):
-    def __init__(self, event_loop, labeltype, labeltext, editvalue, on_ok=None, on_cancel=None, lines=5, *args, **kwargs):
+    def __init__(self, event_loop, labeltype, labeltext, editvalue, on_ok=None, on_cancel=None, lines=5, title="User input", *args, **kwargs):
         self.__labeltype = labeltype
-        self.__labeltext = labeltext
+        self.__labeltext = re.sub("[-_]", "", labeltext)
         self.__editvalue = editvalue
         self.__event_loop = event_loop
         self.__on_ok = on_ok
         self.__on_cancel = on_cancel
         kwargs['color'] = 'MBOXDEFAULT'
         kwargs['labelcolor'] = 'MBOXDEFAULT'
-        npyscreen.ActionPopup.__init__(self, *args, name="User input", lines=lines, **kwargs)
+        min_width = max(len(self.__labeltext) + len(self.__editvalue), len(title)) + 20
+        kwargs['columns'] = kwargs['minimum_columns'] = min_width
+        npyscreen.ActionPopup.__init__(self, *args, name=title, lines=lines, **kwargs)
         
 
     def create(self):
@@ -27,6 +30,19 @@ class input_box(npyscreen.ActionPopup):
     def on_cancel(self):
         if self.__on_cancel is not None:
             self.__on_cancel()
+
+class optioned_input_box(input_box):
+    def __init__(self, event_loop, labeltext, editvalues, defaultvalue, on_ok=None, on_cancel=None, *args, **kwargs):
+        self.__labeltext = labeltext
+        self.__editvalue = editvalues
+        self.__defaultvalue = defaultvalue
+        min_width = max(len(self.__labeltext) + len(self.__defaultvalue), len(kwargs.get('title', ""))) + 20
+        kwargs['columns'] = kwargs['minimum_columns'] = min_width
+        input_box.__init__(self, event_loop, npyscreen.TitleSelectOne, labeltext, editvalues, on_ok, on_cancel, lines=len(self.__editvalue)+4, *args, **kwargs)
+    def create(self):
+        self.edt_val = self.add(npyscreen.TitleSelectOne, hidden=False, name=self.__labeltext, values=self.__editvalue, 
+                                value=[self.__editvalue.index(self.__defaultvalue)], color='MBOXDEFAULT', labelcolor='MBOXDEFAULT', 
+                                scroll_exit=True, max_height=len(self.__editvalue))
 
 class message_box(npyscreen.Popup):
     def __init__(self, event_loop, editvalue, lines=5, labeltext="(i)\t", title="INFO", *args, **kwargs):

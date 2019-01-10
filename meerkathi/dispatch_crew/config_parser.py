@@ -32,6 +32,11 @@ class config_parser:
         cls.__ARGS = args
         cls.__GROUPS = arg_groups
 
+    @classmethod
+    def __store_global_schema(cls, schema):
+        """ Store arguments for later retrieval """
+        cls.__GLOBAL_SCHEMA = schema
+
     @property
     def arg_groups(self):
         """ Retrieve groups """
@@ -54,6 +59,8 @@ class config_parser:
                     raise KeyError("{} not a valid key for update rule".format(k))
                 __walk_down_set(groups[k], chain[1:], new_value)
             else:
+                if chain[0] not in groups:
+                    raise KeyError("{} not a valid key for update rule".format(chain[0]))
                 groups[chain[0]] = new_value
         __walk_down_set(self.__GROUPS, chain, new_value)
         self.update_args_key(chain, new_value)
@@ -66,7 +73,7 @@ class config_parser:
         
 
     def get_key(self, chain):
-        """ Update a single value given a chain of keys """
+        """ Get value given a chain of keys """
         cls = self.__class__
         if cls.__GROUPS is None:
             raise ValueError("Please call store_args first.")
@@ -77,10 +84,61 @@ class config_parser:
                     raise KeyError("{} not a valid key for lookup rule".format(k))
                 return __walk_down_get(groups[k], chain[1:])
             else:
+                if chain[0] not in groups:
+                    raise KeyError("{} not a valid key for lookup rule".format(chain[0]))
                 return groups[chain[0]]
 
         return __walk_down_get(cls.__GROUPS, chain)
-      
+    
+    def __get_schema_attr(self, chain, attr="desc"):
+        """ Get schema attribute given a chain of keys """
+        cls = self.__class__
+        if cls.__GROUPS is None:
+            raise ValueError("Please call store_args first.")
+        def __walk_down_get(schema, chain):
+            if len(chain) > 1:
+                k = chain[0]
+                if k not in schema and not ("mapping" in schema and k in schema["mapping"]):
+                    raise KeyError("{} not a valid key for lookup rule".format(k))
+                child = schema[k] if k in schema else schema["mapping"][k]
+                return __walk_down_get(child, chain[1:])
+            else:
+                k = chain[0]
+                if k not in schema and not ("mapping" in schema and k in schema["mapping"]):
+                    raise KeyError("{} not a valid key for lookup rule".format(k))
+                child = schema[k] if k in schema else schema["mapping"][k]
+                return child.get(attr, None)
+
+        return __walk_down_get(cls.__GLOBAL_SCHEMA, chain)
+
+    def get_schema_help(self, chain):
+        """ Get schema help string """
+        return self.__get_schema_attr(chain, attr="desc")
+
+    def get_schema_type(self, chain):
+        """ Get schema type """
+        return self.__get_schema_attr(chain, attr="type")
+
+    def get_schema_required(self, chain):
+        """ Get schema type """
+        return self.__get_schema_attr(chain, attr="required")
+
+    def is_schema_endnode(self, chain):
+        """ checks if key has children """
+        return self.__get_schema_attr(chain, attr="mapping") is not None
+        
+    def get_schema_enum(self, chain):
+        """ get enum of schema key if exists otherwise None """
+        return self.__get_schema_attr(chain, attr="enum")
+
+    def get_schema_seq(self, chain):
+        """ get enum of schema key if exists otherwise None """
+        is_seq = self.__get_schema_attr(chain, attr="seq") is not None
+        if is_seq:
+            return self.__get_schema_attr(chain, attr="seq")[0]["type"]
+        else:
+            return None
+    
     @property
     def args(self):
         """ Retrieve stored arguments """
@@ -90,6 +148,14 @@ class config_parser:
                              "Please call store_args first.")
 
         return copy.deepcopy(cls.__ARGS)
+
+    @property
+    def global_schema(self):
+        cls = self.__class__
+        if cls.__GLOBAL_SCHEMA is None:
+            raise ValueError("No schemas were parsed. "
+                             "Please call store_global_schama first.")
+        return copy.deepcopy(cls.__GLOBAL_SCHEMA)
 
     @classmethod
     def __primary_parser(cls, add_help=False):
@@ -325,6 +391,7 @@ class config_parser:
             schema_version = tmp["schema_version"]
 
         groups = OrderedDict()
+        global_schema = OrderedDict()
         if not cls.__validated_schema:
             raise RuntimeError("Must init singleton before running this method")
 
@@ -354,8 +421,10 @@ class config_parser:
                                               update_only=update_mode,
                                               args=args,
                                               parser=parser)
+            global_schema[key] = schema["mapping"][_key]
         cls.__store_args(args, groups)
-    
+        cls.__store_global_schema(global_schema)
+
     @classmethod
     def save_options(cls, filename):
         """ Save configuration options to yaml """

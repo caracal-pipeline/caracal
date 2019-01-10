@@ -6,6 +6,8 @@ import exceptions
 import meerkathi
 from meerkathi.view_controllers.meerkathi_theme import meerkathi_theme
 from meerkathi.view_controllers.message_boxes import input_box, message_box, warning_box, error_box
+from meerkathi.view_controllers.option_editor import option_editor
+from meerkathi.dispatch_crew.config_parser import config_parser as cp
 
 class entry_form(npyscreen.FormBaseNew):
     def __init__(self, event_loop):
@@ -19,9 +21,9 @@ class entry_form(npyscreen.FormBaseNew):
         raise exceptions.SystemExit(0)
 
     def on_edit_pressed(self):
-        instance = error_box(self.__event_loop, editvalue="UNIMPLEMENTED: TODO")
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+        instance = option_editor(self.__event_loop)
+        self.__event_loop.registerForm("OPTIONEDITOR", instance)
+        self.__event_loop.switchForm("OPTIONEDITOR")
 
     def on_run_pressed(self):
         self.__event_loop.switchForm(None)    

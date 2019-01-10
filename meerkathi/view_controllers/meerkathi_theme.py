@@ -48,3 +48,4 @@ class meerkathi_theme(npyscreen.ThemeManager):
      ('YELLOW_WHITE',     curses.COLOR_YELLOW,     curses.COLOR_WHITE),
      ('WHITE_YELLOW',     curses.COLOR_WHITE,     curses.COLOR_YELLOW),
     )
+

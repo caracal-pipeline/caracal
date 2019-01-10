@@ -127,7 +127,68 @@ class config_parser:
         parser  = cls.__primary_parser()
 
         # Lambda for transforming sections and options
+
+        # Parse user commandline options, loading defaults either from the default pipeline or user-supplied pipeline
+        args_bak = copy.deepcopy(args)
+        args, remainder = parser.parse_known_args(args_bak)
+        cls.__validated_schema = {}
+        if args.schema:
+            _schema = {}
+            for item in args.schema:
+                _name, __schema = item.split(",")
+                _schema[_name] = __schema
+            args.schema = _schema
+        else:
+            args.schema = {}
+
+        with open(args.config, 'r') as f:
+            tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            schema_version = tmp["schema_version"]
+
+        # Validate each worker section against the schema and
+        # parse schema to extract types and set up cmd argument parser
+        parser = cls.__primary_parser(add_help=True)
+        for key,worker in tmp.iteritems():
+            if key=="schema_version":
+                continue
+            elif worker.get("enable", True) is False:
+                continue
+            _key = key.split("__")[0]
+            schema_fn = os.path.join(meerkathi.pckgdir,
+                                     "schema", "{0:s}_schema-{1:s}.yml".format(_key,
+                                                                               schema_version))
+            source_data = {
+                            _key : worker,
+                            "schema_version" : schema_version,
+            }
+            c = Core(source_data=source_data, schema_files=[schema_fn])
+            cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
+            with open(schema_fn, 'r') as f:
+                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            cls._subparser_tree(self.__validated_schema[key],
+                                schema["mapping"][_key],
+                                base_section=key,
+                                parser=parser)
+
+        # finally parse remaining args and update parameter tree with user-supplied commandline arguments
+        args, remainder = parser.parse_known_args(args_bak)
+        if len(remainder) > 0:
+            raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
+
+        self.update_config(args)
+
+
+    @classmethod
+    def _subparser_tree(cls,
+                        sections,
+                        schema_sections,
+                        base_section="",
+                        update_only = False,
+                        args = None,
+                        parser = None):
+        """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
+
         def _str2bool(v):
             if v.upper() in ("YES","TRUE"):
                 return True
@@ -167,107 +228,60 @@ class config_parser:
                 raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
 
 
+        groups = OrderedDict()
 
-        def _subparser_tree(sections,
-                            schema_sections,
-                            base_section="",
-                            update_only = False,
-                            args = None,
-                            parser = None):
-            """ Recursively creates subparser tree for the config """
-            groups = OrderedDict()
+        if sections is None:
+            return groups
 
-            if sections is None:
-                return groups
+        sec_defaults = {xformer(k): v for k,v in sections.iteritems()}
 
-            sec_defaults = {xformer(k): v for k,v in sections.iteritems()}
-
-            # Transform keys
-            # Add subsection / update when necessary
-            assert isinstance(schema_sections, dict)
-            assert schema_sections["type"] == "map"
-            assert isinstance(schema_sections["mapping"], dict)
-            for opt, default in sec_defaults.iteritems():
-                option_name = base_section + "_" + opt if base_section != "" else opt
-                assert opt in schema_sections["mapping"], "%s does not define a type in schema" % opt
-                if isinstance(default, dict):
-                    groups[opt] = _subparser_tree(default,
+        # Transform keys
+        # Add subsection / update when necessary
+        assert isinstance(schema_sections, dict)
+        assert schema_sections["type"] == "map"
+        assert isinstance(schema_sections["mapping"], dict)
+        for opt, default in sec_defaults.iteritems():
+            option_name = base_section + "_" + opt if base_section != "" else opt
+            assert opt in schema_sections["mapping"], "%s does not define a type in schema" % opt
+            if isinstance(default, dict):
+                groups[opt] = cls._subparser_tree(default,
                                                   schema_sections["mapping"][opt],
                                                   base_section=option_name,
                                                   update_only=update_only,
                                                   args=args,
                                                   parser=parser)
+            else:
+                assert (("seq" in schema_sections["mapping"][opt]) and ("type" in schema_sections["mapping"][opt]["seq"][0])) or \
+                        "type" in schema_sections["mapping"][opt], "Option %s missing type in schema" % option_name
+
+                if update_only:
+                    parser.set_defaults(**{option_name: default})
+                    groups[opt] = getattr(args, option_name)
                 else:
-                    assert (("seq" in schema_sections["mapping"][opt]) and ("type" in schema_sections["mapping"][opt]["seq"][0])) or \
-                            "type" in schema_sections["mapping"][opt], "Option %s missing type in schema" % option_name
+                    _option_factory(schema_sections["mapping"][opt]["type"] if "seq" not in schema_sections["mapping"][opt] else \
+                                                            schema_sections["mapping"][opt]["seq"][0]["type"],
+                                    "seq" in schema_sections["mapping"][opt],
+                                    option_name,
+                                    schema_sections["mapping"][opt].get("required", False),
+                                    schema_sections["mapping"][opt].get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
+                                    schema_sections["mapping"][opt].get("enum", None),
+                                    default,
+                                    parser)
+                    groups[opt] = default
+        return groups
 
-                    if update_only:
-                        parser.set_defaults(**{option_name: default})
-                        groups[opt] = getattr(args, option_name)
-                    else:
-                        _option_factory(schema_sections["mapping"][opt]["type"] if "seq" not in schema_sections["mapping"][opt] else \
-                                                                schema_sections["mapping"][opt]["seq"][0]["type"],
-                                        "seq" in schema_sections["mapping"][opt],
-                                        option_name,
-                                        schema_sections["mapping"][opt].get("required", False),
-                                        schema_sections["mapping"][opt].get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
-                                        schema_sections["mapping"][opt].get("enum", None),
-                                        default,
-                                        parser)
-                        groups[opt] = default
-            return groups
-
-        # Parse user commandline options, loading defaults either from the default pipeline or user-supplied pipeline
-        args_bak = copy.deepcopy(args)
-        args, remainder = parser.parse_known_args(args_bak)
-        file_config = {}
-        if args.schema:
-            _schema = {}
-            for item in args.schema:
-                _name, __schema = item.split(",")
-                _schema[_name] = __schema
-            args.schema = _schema
-        else:
-            args.schema = {}
-
-
-        config_file = args.config if args.config else DEFAULT_CONFIG
-
+    @classmethod
+    def update_config(cls, args):
+        """ Updates argument parser with values from config file """
+        parser = cls.__primary_parser()
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             schema_version = tmp["schema_version"]
 
-        # Validate each worker section against the schema and
-        # parse schema to extract types and set up cmd argument parser
-        parser = cls.__primary_parser(add_help=True)
-        for key,worker in tmp.iteritems():
-            if key=="schema_version":
-                continue
-            elif worker.get("enable", True) is False:
-                continue
-            _key = key.split("__")[0]
-            schema_fn = os.path.join(meerkathi.pckgdir,
-                                     "schema", "{0:s}_schema-{1:s}.yml".format(_key,
-                                                                               schema_version))
-            source_data = {
-                            _key : worker,
-                            "schema_version" : schema_version,
-            }
-            c = Core(source_data=source_data, schema_files=[schema_fn])
-            file_config[key] = c.validate(raise_exception=True)[_key]
-            with open(schema_fn, 'r') as f:
-                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-            _subparser_tree(file_config[key],
-                            schema["mapping"][_key],
-                            base_section=key,
-                            parser=parser)
-
-        # finally parse remaining args and update parameter tree with user-supplied commandline arguments
-        args, remainder = parser.parse_known_args(args_bak)
-        if len(remainder) > 0:
-            raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
-
         groups = OrderedDict()
+        if not cls.__validated_schema:
+            raise RuntimeError("Must init singleton before running this method")
+
         for key,worker in tmp.iteritems():
             if key=="schema_version":
                 continue
@@ -280,13 +294,24 @@ class config_parser:
                                                                                 schema_version))
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-            groups[key] = _subparser_tree(file_config[key],
-                                          schema["mapping"][_key],
-                                          base_section=key,
-                                          update_only=True,
-                                          args=args,
-                                          parser=parser)
+            groups[key] = cls._subparser_tree(cls.__validated_schema[key],
+                                              schema["mapping"][_key],
+                                              base_section=key,
+                                              update_only=True,
+                                              args=args,
+                                              parser=parser)
         cls.__store_args(args, groups)
+    
+    @classmethod
+    def save_options(cls, filename):
+        """ Save configuration options to yaml """
+        if not cls.__GROUPS:
+            raise RuntimeError("Singleton must be initialized before this method is called")
+        dictovals = copy.deepcopy(cls.__GROUPS)
+        dictovals["schema_version"] = "0.1.0"
+
+        with open(filename, 'w') as f:
+            f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))
 
     @classmethod
     def log_options(cls):

@@ -6,7 +6,6 @@ class input_box(npyscreen.ActionPopup):
         self.__labeltext = labeltext
         self.__editvalue = editvalue
         self.__event_loop = event_loop
-        self.__event_loop.setNextFormPrevious()
         self.__on_ok = on_ok
         self.__on_cancel = on_cancel
         npyscreen.ActionPopup.__init__(self, *args, name="User input", lines=lines, **kwargs)
@@ -16,16 +15,15 @@ class input_box(npyscreen.ActionPopup):
         self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue)
         
     def afterEditing(self):
-        pass
+        self.__event_loop.switchFormPrevious()
     
     def on_ok(self):
         if self.__on_ok is not None:
             self.__on_ok(self.edt_val.value)
-    
+
     def on_cancel(self):
         if self.__on_cancel is not None:
             self.__on_cancel()
-        self.__event_loop.switchFormPrevious()
 
 class message_box(npyscreen.Popup):
     def __init__(self, event_loop, editvalue, lines=5, labeltext="(i)\t", title="INFO", *args, **kwargs):
@@ -34,7 +32,6 @@ class message_box(npyscreen.Popup):
         self.__title = title
         self.__editvalue = editvalue
         self.__event_loop = event_loop
-        self.__event_loop.setNextFormPrevious()
         npyscreen.Popup.__init__(self, *args, name=self.__title, lines=lines, **kwargs)
 
     def create(self):

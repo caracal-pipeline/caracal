@@ -33,7 +33,7 @@ mapping:
           channel_range:
             type: str
             desc: Only exctract channels in this range (0-based, inclusive; comma seperated string)
-            required: True
+            required: False
           full_poll:
             type: bool
             desc: Extract all four correlations instead of only the XX,YY

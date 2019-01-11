@@ -40,10 +40,12 @@ def create_logger():
 
     log.addHandler(console)
 
-    return log
+    return log, filehandler, console
+def remove_log_handler(hndl):
+    log.removeHandler(hndl)
 
 # Create the log object
-log = create_logger()
+log, log_filehandler, log_console_handler = create_logger()
 
 # MeerKATHI imports
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
@@ -66,9 +68,13 @@ def get_default(to):
     os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
 
 def start_viewer(args):
-    log.info("Entering interactive mode as requested: MEERKATHI report viewer")
     port = args.interactive_port
     web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
+
+    log.info("Entering interactive mode as requested: MEERKATHI report viewer")
+    log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
+              (port, web_dir))
+    log.info("Press Ctrl-C to exit")
 
     def __host():
         httpd = HTTPServer(("", port), hndl)
@@ -77,13 +83,9 @@ def start_viewer(args):
             httpd.serve_forever()
         except KeyboardInterrupt, SystemExit:
             httpd.shutdown()
-
     if not os.path.exists(web_dir):
-        log.error("Reports directory '%s' does not yet exist. Has the pipeline been run here?" % web_dir)
-        return
-    log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
-                (port, web_dir))
-    log.info("Press Ctrl-C to exit")
+        raise RuntimeError("Reports directory {} does not yet exist. Has the pipeline been run here?".format(web_dir))
+
     hndl = SimpleHTTPRequestHandler
 
     wt = Process(target = __host)
@@ -116,7 +118,11 @@ def main(argv):
         print_worker_help(args, schema_version)
         return
 
-    if not args.no_interactive and args.config == DEFAULT_CONFIG:
+    if not args.no_interactive and \
+       args.config == DEFAULT_CONFIG and \
+       not args.get_default and \
+       not args.report_viewer:
+        remove_log_handler(log_console_handler)
         try:
             event_loop().run()
         except KeyboardInterrupt:
@@ -139,8 +145,10 @@ def main(argv):
     # User requests default config => dump and exit
     if args.get_default:
         get_default(args.get_default)
+        return
     elif args.report_viewer:
         start_viewer(args)
+        return
    
     # Very good idea to print user options into the log before running:
     cp().log_options()

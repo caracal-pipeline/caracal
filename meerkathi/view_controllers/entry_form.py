@@ -38,6 +38,11 @@ class entry_form(npyscreen.FormBaseNew):
         instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
         self.__event_loop.registerForm("INPUTBOX", instance)
         self.__event_loop.switchForm("INPUTBOX")
+
+    def on_report_view_pressed(self):
+        self.__event_loop.switchForm(None)
+        meerkathi.start_viewer(cp().args)
+        self.__event_loop.switchForm("MAIN")
         
     def create(self):
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
@@ -55,9 +60,14 @@ class entry_form(npyscreen.FormBaseNew):
                                 when_pressed_function=self.on_run_pressed)
         self.btn_edit = self.add(npyscreen.ButtonPress, name = "Edit pipeline configuration",
                                  when_pressed_function=self.on_edit_pressed)
+        self.btn_report = self.add(npyscreen.ButtonPress, name = "View reports from previous runs",
+                                   when_pressed_function=self.on_report_view_pressed)
+        self.add(npyscreen.TitleText, editable=False, name="\t")
+
         self.btn_default = self.add(npyscreen.ButtonPress, name = "Dump default configuration",
                                     when_pressed_function=lambda: self.on_input_default_parset())
         self.add(npyscreen.TitleText, editable=False, name="\t")
+
         self.btn_quit = self.add(npyscreen.ButtonPress, name = "Quit to MS-DOS",
                                  when_pressed_function=self.on_quit_pressed)
 

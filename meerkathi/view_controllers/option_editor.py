@@ -33,6 +33,7 @@ class opt_treeview(npyscreen.MLTree):
         return npyscreen.MLTree.h_cursor_line_down(self, x)
 
     def h_cursor_line_up(self, x):
+        """ when hover over """
         self.update_help(updown=-1)
         return npyscreen.MLTree.h_cursor_line_up(self, x)
 
@@ -171,19 +172,16 @@ class annotated_tree_data(npyscreen.NPSTreeData):
 
 
 class option_editor(npyscreen.FormBaseNew):
-    def __init__(self, event_loop):
+    def __init__(self, *args, **kwargs):
         npyscreen.setTheme(meerkathi_theme)
-        self.__event_loop = event_loop
-        self.__event_loop.setNextFormPrevious()
-
-        npyscreen.FormBaseNew.__init__(self, name="Pipeline configuration editor")
+        npyscreen.FormBaseNew.__init__(self, *args, **kwargs)
         
     @property
     def event_loop(self):
-        return self.__event_loop
+        return self.parentApp
 
     def on_back_pressed(self):
-        self.__event_loop.switchFormPrevious()
+        self.event_loop.switchFormPrevious()
 
         
     def on_load(self, labeltype=npyscreen.TitleFilenameCombo, labeltext="Filename", editvalue=cp().args.config):
@@ -192,20 +190,20 @@ class option_editor(npyscreen.FormBaseNew):
             cp().update_config(update_mode="defaults and args")
             self.rebuild_opt_tree()
 
-        instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, columns=100, on_ok=on_confirm_load)
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+        instance = input_box(self.event_loop, labeltype, labeltext, editvalue, columns=100, on_ok=on_confirm_load)
+        self.event_loop.registerForm("INPUTBOX", instance)
+        self.event_loop.switchForm("INPUTBOX")
 
     def on_save(self, labeltype=npyscreen.TitleFilename, labeltext="Filename", editvalue="./CustomParset.yaml"):
         def on_confirm_default_parset(filename):
             cp().save_options(filename)
-            instance = message_box(self.__event_loop, "Successfully written out default parset settings to {}".format(filename),
+            instance = message_box(self.event_loop, "Successfully written out default parset settings to {}".format(filename),
                                    minimum_columns=150, columns=120)
-            self.__event_loop.registerForm("MESSAGEBOX", instance)
-            self.__event_loop.switchForm("MESSAGEBOX")
-        instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+            self.event_loop.registerForm("MESSAGEBOX", instance)
+            self.event_loop.switchForm("MESSAGEBOX")
+        instance = input_box(self.event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
+        self.event_loop.registerForm("INPUTBOX", instance)
+        self.event_loop.switchForm("INPUTBOX")
   
     def rebuild_opt_tree(self):                
         def __populate_tree(groups, tree=None, level=1, level_label=1):
@@ -241,11 +239,11 @@ class option_editor(npyscreen.FormBaseNew):
         self.trv_options.values = __populate_tree(cp().arg_groups)
 
     def create(self):
-        self.btn_edit = self.add(npyscreen.ButtonPress, name = "Store",
-                                 relx=-31, rely=2,
+        self.btn_edit = self.add(npyscreen.ButtonPress, name = "Write to disk",
+                                 relx=-51, rely=2,
                                  when_pressed_function=lambda: self.on_save())
-        self.btn_load = self.add(npyscreen.ButtonPress, name = "Load",
-                                 relx=-21, rely=2,
+        self.btn_load = self.add(npyscreen.ButtonPress, name = "Load from disk",
+                                 relx=-31, rely=2,
                                  when_pressed_function=lambda: self.on_load())
         self.btn_back = self.add(npyscreen.ButtonPress, name = "Back",
                                  relx=-11, rely=2,

@@ -24,7 +24,8 @@ requirements = [
 'yamlordereddictloader',
 'astropy',
 'astroquery>=0.3.8',
-'npyscreen>=4.10.5'
+'npyscreen>=4.10.5',
+'ipdb>=0.11'
 ]
 
 PACKAGE_NAME = 'meerkathi'

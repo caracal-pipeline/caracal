@@ -9,6 +9,7 @@ from meerkathi.view_controllers.message_boxes import input_box, message_box, war
 from meerkathi.view_controllers.option_editor import option_editor
 from meerkathi.view_controllers.web_serve_form import web_serve_form
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
+from meerkathi.view_controllers.misc_opts_form import misc_opts_form
 
 class entry_form(npyscreen.FormBaseNew):
     def __init__(self, event_loop):
@@ -43,6 +44,11 @@ class entry_form(npyscreen.FormBaseNew):
         instance = web_serve_form(self.__event_loop)
         self.__event_loop.registerForm("WEBSERVEFORM", instance)
         self.__event_loop.switchForm("WEBSERVEFORM")
+
+    def on_misc_opts_edit_pressed(self):
+        instance = misc_opts_form(self.__event_loop)
+        self.__event_loop.registerForm("ADVOPTIONEDITOR", instance)
+        self.__event_loop.switchForm("ADVOPTIONEDITOR")
         
     def create(self):
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
@@ -66,6 +72,8 @@ class entry_form(npyscreen.FormBaseNew):
 
         self.btn_default = self.add(npyscreen.ButtonPress, name = "Dump default configuration",
                                     when_pressed_function=lambda: self.on_input_default_parset())
+        self.btn_misc_opts = self.add(npyscreen.ButtonPress, name = "Edit advanced configuration options",
+                                      when_pressed_function=lambda: self.on_misc_opts_edit_pressed())
         self.add(npyscreen.TitleText, editable=False, name="\t")
 
         self.btn_quit = self.add(npyscreen.ButtonPress, name = "Quit to MS-DOS",

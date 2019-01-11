@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Standard imports
+#############################################################################
+#  Standard imports
+#############################################################################
 import pkg_resources
 import os
 import sys
@@ -8,11 +10,16 @@ import ruamel.yaml
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from multiprocessing import Process
-import webbrowser
+import webbrowser 
+import subprocess
 import traceback
 import logging
 import signal
+import StringIO
 
+##############################################################################
+# Globals
+##############################################################################
 # Distutils standard  way to do version numbering
 try:
     __version__ = pkg_resources.require("meerkathi")[0].version
@@ -25,6 +32,9 @@ MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
 DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
+################################################################################
+# Logging and IO steam handling section
+################################################################################
 def create_logger():
     """ Create a console logger """
     log = logging.getLogger(__name__)
@@ -42,20 +52,44 @@ def create_logger():
     log.addHandler(console)
 
     return log, filehandler, console
+
 def remove_log_handler(hndl):
     log.removeHandler(hndl)
+
+def add_log_handler(hndl):
+    log.addHandler(hndl)
 
 # Create the log object
 log, log_filehandler, log_console_handler = create_logger()
 
+# redirect std streams
+default_stdout = sys.stdout
+default_stderr = sys.stderr
+gobbled_stdout = StringIO.StringIO()
+gobbled_stderr = StringIO.StringIO()
+
+def restore_default_stdstreams():
+    sys.stdout, sys.stderr = default_stdout, default_stderr
+
+def redirect_stdstreams():
+    sys.stdout, sys.stderr = gobbled_stdout, gobbled_stderr
+
+####################################################################
 # MeerKATHI imports
+####################################################################
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.dispatch_crew import worker_help
 import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
 from meerkathi.view_controllers import event_loop
 
+####################################################################
+# Runtime routines
+####################################################################
 def print_worker_help(args, schema_version):
+    """
+    worker help
+    """
     schema = os.path.join(pckgdir, "schema",
             "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
     with open(schema, "r") as f:
@@ -65,10 +99,17 @@ def print_worker_help(args, schema_version):
     helper.print_worker()
 
 def get_default(to):
+    """
+    Get default parset copy
+    """
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
     os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
 
 def start_viewer(args, timeout=None, open_webbrowser=True):
+    """
+    Starts HTTP service and opens default system webpager
+    for report viewing
+    """
     port = args.interactive_port
     web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
 
@@ -77,13 +118,21 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
     log.info("Press Ctrl-C to exit")
 
     def __host():
-        httpd = HTTPServer(("", port), hndl)
-        os.chdir(web_dir)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt, SystemExit:
-            httpd.shutdown()
-            
+        with open(os.devnull, "w") as the_void:
+            stdout_bak = sys.stdout
+            stderr_bak = sys.stderr
+            sys.stdout = the_void
+            sys.stderr = the_void
+            httpd = HTTPServer(("", port), hndl)
+            os.chdir(web_dir)
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt, SystemExit:
+                httpd.shutdown()
+            finally:
+                sys.stdout = stdout_bak
+                sys.stderr = stderr_bak
+                
     if not os.path.exists(web_dir):
         raise RuntimeError("Reports directory {} does not yet exist. Has the pipeline been run here?".format(web_dir))
 
@@ -106,12 +155,23 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
     try:
         wt.start()
         if open_webbrowser:
-            webbrowser.open("http://localhost:{}/".format(port))
+            # suppress webbrowser output
+            savout = os.dup(1)
+            os.close(1)
+            os.open(os.devnull, os.O_RDWR)
+            try:
+                webbrowser.open('http://localhost:{}'.format(port))
+            finally:
+                os.dup2(savout, 1)
+
         wt.join(timeout=timeout)
     except KeyboardInterrupt, SystemExit:
         log.info("Interrupt received - shutting down web server. Goodbye!")
     return wt
 
+############################################################################
+# Driver entrypoint
+############################################################################
 def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
@@ -140,11 +200,12 @@ def main(argv):
        args.config == DEFAULT_CONFIG and \
        not args.get_default and \
        not args.report_viewer:
-        remove_log_handler(log_console_handler)
+        remove_log_handler(log_console_handler) 
         try:
             event_loop().run()
         except KeyboardInterrupt:
             return
+        add_log_handler(log_console_handler)
 
     log.info("")
 

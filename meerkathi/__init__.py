@@ -9,22 +9,48 @@ import sys
 import ruamel.yaml
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
-from multiprocessing import Process
+
 import webbrowser 
 import subprocess
 import traceback
+import pdb
 import logging
-import signal
 import StringIO
+import exceptions
 
 ##############################################################################
 # Globals
 ##############################################################################
-# Distutils standard  way to do version numbering
-try:
-    __version__ = pkg_resources.require("meerkathi")[0].version
-except pkg_resources.DistributionNotFound:
-    __version__ = "dev"
+
+def report_version():
+    # Distutils standard  way to do version numbering
+    try:
+        __version__ = pkg_resources.require("meerkathi")[0].version
+    except pkg_resources.DistributionNotFound:
+        __version__ = "dev"
+    # perhaps we are in a github with tags; in that case return describe
+    path = os.path.dirname(os.path.abspath(__file__))
+    try:
+        # work round possible unavailability of git -C
+        result = subprocess.check_output('cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip()
+    except subprocess.CalledProcessError:
+        result = None
+    if result is not None and 'fatal' not in result:
+        # will succeed if tags exist
+        return result
+    else:
+        # perhaps we are in a github without tags? Cook something up if so
+        try:
+            result = subprocess.check_output('cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip()
+        except subprocess.CalledProcessError:
+            result = None
+        if result is not None and 'fatal' not in result:
+            return __version__+'-'+result
+        else:
+            # we are probably in an installed version
+            return __version__
+
+__version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
@@ -51,7 +77,7 @@ def create_logger():
 
     log.addHandler(console)
 
-    return log, filehandler, console
+    return log, filehandler, console, cfmt
 
 def remove_log_handler(hndl):
     log.removeHandler(hndl)
@@ -60,7 +86,7 @@ def add_log_handler(hndl):
     log.addHandler(hndl)
 
 # Create the log object
-log, log_filehandler, log_console_handler = create_logger()
+log, log_filehandler, log_console_handler, log_formatter = create_logger()
 
 # redirect std streams
 default_stdout = sys.stdout
@@ -82,6 +108,7 @@ from meerkathi.dispatch_crew import worker_help
 import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
 from meerkathi.view_controllers import event_loop
+from meerkathi.dispatch_crew.interruptable_process import interruptable_process
 
 ####################################################################
 # Runtime routines
@@ -132,24 +159,11 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
             finally:
                 sys.stdout = stdout_bak
                 sys.stderr = stderr_bak
-                
+
     if not os.path.exists(web_dir):
         raise RuntimeError("Reports directory {} does not yet exist. Has the pipeline been run here?".format(web_dir))
 
     hndl = SimpleHTTPRequestHandler
-    class interruptable_process(Process):
-        def __init__(self, target):
-            self.__pid = 0
-            def __run(target_proc):
-                self.__pid = os.getpid()
-                target_proc()
-            Process.__init__(self, target = lambda: __run(target))
-        
-        def interrupt(self):
-            try:
-                os.kill(self.__pid, signal.SIGINT)
-            except KeyboardInterrupt:
-                pass
 
     wt = interruptable_process(target = __host)
     try:
@@ -169,6 +183,72 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
         log.info("Interrupt received - shutting down web server. Goodbye!")
     return wt
 
+def log_logo():
+    """ Some nicities """
+    log.info("")
+
+    log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
+    log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
+    log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
+    log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
+    log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
+    log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
+    log.info("")
+    # parse config file and set up command line argument override parser
+    log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
+    log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
+    log.info("")
+
+def execute_pipeline(args, arg_groups, block):
+    # setup piping infractructure to send messages to the parent
+    def __run():
+        """ Executes pipeline """
+        try:
+            log_logo()
+            # Very good idea to print user options into the log before running:
+            cp().log_options()
+
+            # Obtain some divine knowledge
+            cdb = mkct.calibrator_database()
+
+            raise SystemExit(5)
+
+            if args.print_calibrator_standard:
+                log.info("Found the following reference calibrators (in CASA format):")
+                log.info(cdb)
+
+        
+            pipeline = mwa(arg_groups,
+                        args.workers_directory, stimela_build=args.stimela_build,
+                        add_all_first=args.add_all_first, prefix=args.general_prefix,
+                        singularity_image_dir=args.singularity_image_dir)
+
+            pipeline.run_workers()
+        except exceptions.SystemExit as e:
+            if e.code != 0:
+                log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
+                log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
+                sys.exit(1) #indicate failure
+            else:
+                log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
+        except KeyboardInterrupt:
+            log.info("Interrupt request received from user - gracefully shutting down. Goodbye!")
+        except Exception as e:
+            log.error("An unhandled exeption occured. If you think this is a bug please report it.")
+            log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
+            log.error("You are running version: {0:s}".format(str(__version__)))
+            log.error(traceback.format_exc())
+            sys.exit(1) #indicate failure
+    
+    # now fork and block or continue depending on whether interaction is wanted
+    try:
+        wt = interruptable_process(target=__run)
+        wt.start()
+        wt.join(None if block else 0)
+    except KeyboardInterrupt:
+        wt.interrupt()
+    return wt
+        
 ############################################################################
 # Driver entrypoint
 ############################################################################
@@ -196,68 +276,31 @@ def main(argv):
     if not args.no_interactive and args.report_viewer:
         raise ValueError("Incompatible options: --no-interactive and --report-viewer")
 
+    # User requests default config => dump and exit
+    if args.get_default:
+        log_logo()
+        get_default(args.get_default)
+        return
+    
+    # standalone report hosting
+    if args.report_viewer:
+        log_logo()
+        start_viewer(args)
+        return
+    
     if not args.no_interactive and \
        args.config == DEFAULT_CONFIG and \
        not args.get_default and \
        not args.report_viewer:
+       # Run interactively
         remove_log_handler(log_console_handler) 
         try:
             event_loop().run()
         except KeyboardInterrupt:
             return
-        add_log_handler(log_console_handler)
-
-    log.info("")
-
-    log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
-    log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
-    log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
-    log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
-    log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
-    log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
-    log.info("")
-    # parse config file and set up command line argument override parser
-    log.info("Module installed at: {0:s} (version {1:s})".format(pckgdir, str(__version__)))
-    log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
-    log.info("")
-
-    # User requests default config => dump and exit
-    if args.get_default:
-        get_default(args.get_default)
-        return
-    elif args.report_viewer:
-        start_viewer(args)
-        return
-   
-    # Very good idea to print user options into the log before running:
-    cp().log_options()
-
-    # Obtain some divine knowledge
-    cdb = mkct.calibrator_database()
-
-    if args.print_calibrator_standard:
-        log.info("Found the following reference calibrators (in CASA format):")
-        log.info(cdb)
-        return
-
-    import exceptions
-    try:
-        pipeline = mwa(arg_groups,
-                       args.workers_directory, stimela_build=args.stimela_build,
-                       add_all_first=args.add_all_first, prefix=args.general_prefix,
-                       singularity_image_dir=args.singularity_image_dir)
-
-        pipeline.run_workers()
-    except exceptions.SystemExit as e:
-        if e.code != 0:
-            log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
-            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
-            sys.exit(1) #indicate failure
-        else:
-            log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
-    except:
-        log.error("Whoops... big explosion - you sent pipes flying all over the show! Time to call in the monkeywrenchers.")
-        log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
-        tb = traceback.format_exc()
-        log.error(tb)
-        sys.exit(1) #indicate failure
+    else:
+       # Run non-interactively
+       p = execute_pipeline(args, arg_groups, block=True)
+    
+    return p
+    

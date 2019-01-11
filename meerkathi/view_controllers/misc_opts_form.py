@@ -7,15 +7,14 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.view_controllers.message_boxes import input_box, message_box, warning_box, error_box
 
 class misc_opts_form(npyscreen.Form):
-    def __init__(self, event_loop):
+    def __init__(self, *args, **kwargs):
         npyscreen.setTheme(meerkathi_theme)
 
-        self.__event_loop = event_loop
-        npyscreen.Form.__init__(self, name="Advanced options")
+        npyscreen.Form.__init__(self, *args, **kwargs)
 
     @property
     def event_loop(self):
-        return self.__event_loop
+        return self.parentApp
 
     def afterEditing(self):
         self.event_loop.setNextFormPrevious()

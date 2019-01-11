@@ -8,15 +8,14 @@ from meerkathi.view_controllers.message_boxes import input_box, message_box, war
 from meerkathi.view_controllers.option_editor import option_editor
 
 class web_serve_form(npyscreen.FormBaseNew):
-    def __init__(self, event_loop):
+    def __init__(self, *args, **kwargs):
         npyscreen.setTheme(meerkathi_theme)
-        self.__event_loop = event_loop
         self.__wt_proc = None
-        npyscreen.FormBaseNew.__init__(self, name="HTTP server")
+        npyscreen.FormBaseNew.__init__(self, *args, **kwargs)
 
     @property
     def event_loop(self):
-        return self.__event_loop
+        return self.parentApp
 
     def on_stop_pressed(self):
         if self.__wt_proc is not None:
@@ -25,9 +24,7 @@ class web_serve_form(npyscreen.FormBaseNew):
             self.enable_ctrls()
 
     def on_cfg_editor_pressed(self):
-        instance = option_editor(self.__event_loop)
-        self.__event_loop.registerForm("OPTIONEDITOR", instance)
-        self.__event_loop.switchForm("OPTIONEDITOR")
+        self.event_loop.switchForm("OPTIONEDITOR")
 
     def on_edit_port(self, widget):
         try:
@@ -67,7 +64,7 @@ class web_serve_form(npyscreen.FormBaseNew):
         self.btn_stop = self.add(npyscreen.ButtonPress, name = "Stop serving", relx=-21, rely=3,
                                 when_pressed_function=self.on_stop_pressed, hidden=True)
         self.btn_back = self.add(npyscreen.ButtonPress, name = "Back", relx=-21, rely=4,
-                                 when_pressed_function=lambda: self.on_stop_pressed() or self.__event_loop.switchFormPrevious(), hidden=False)
+                                 when_pressed_function=lambda: self.on_stop_pressed() or self.event_loop.switchFormPrevious(), hidden=False)
         self.add(npyscreen.BoxBasic, editable=False, name="Additional options", rely=6, max_height=12)
         self.red_webbrowser = self.add(npyscreen.TitleMultiSelect, max_height=3, rely=8, relx=5, max_width=30, 
                                        name="Open default external webbrowser (may require X11)", value=[0,],
@@ -92,8 +89,8 @@ class web_serve_form(npyscreen.FormBaseNew):
                 self.event_loop.registerForm("MESSAGEBOX", instance)
                 self.event_loop.switchForm("MESSAGEBOX")
         except RuntimeError as e:
-            instance = error_box(self.__event_loop, str(e))
-            self.__event_loop.registerForm("MESSAGEBOX", instance)
-            self.__event_loop.switchForm("MESSAGEBOX")
+            instance = error_box(self.event_loop, str(e))
+            self.event_loop.registerForm("MESSAGEBOX", instance)
+            self.event_loop.switchForm("MESSAGEBOX")
             self.enable_ctrls()
         

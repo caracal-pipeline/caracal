@@ -10,45 +10,43 @@ from meerkathi.view_controllers.option_editor import option_editor
 from meerkathi.view_controllers.web_serve_form import web_serve_form
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.view_controllers.misc_opts_form import misc_opts_form
+from meerkathi.view_controllers.execution_form import execution_form
 
 class entry_form(npyscreen.FormBaseNew):
-    def __init__(self, event_loop):
-        npyscreen.setTheme(meerkathi_theme)
-        self.__event_loop = event_loop
-        npyscreen.FormBaseNew.__init__(self, name="MeerKATHI -- Prototype science pipeline for MeerKAT")
+    def __init__(self, *args, **kwargs):
+        npyscreen.setTheme(meerkathi_theme) 
+        npyscreen.FormBaseNew.__init__(self, *args, **kwargs)
         
+    @property
+    def event_loop(self):
+        return self.parentApp
 
     def on_quit_pressed(self):
-        self.__event_loop.switchForm(None)
+        self.event_loop.switchForm(None)
         raise exceptions.SystemExit(0)
 
     def on_edit_pressed(self):
-        instance = option_editor(self.__event_loop)
-        self.__event_loop.registerForm("OPTIONEDITOR", instance)
-        self.__event_loop.switchForm("OPTIONEDITOR")
+        self.event_loop.switchForm("OPTIONEDITOR")
 
     def on_run_pressed(self):
-        self.__event_loop.switchForm(None)    
-        
+        self.event_loop["EXECUTIONVIEW"].start_pipeline_next_draw = True
+        self.event_loop.switchForm("EXECUTIONVIEW")
+
     def on_input_default_parset(self, labeltype=npyscreen.TitleFilename, labeltext="Filename", editvalue="./DefaultParset.yaml"):
         def on_confirm_default_parset(filename):
             meerkathi.get_default(filename)
-            instance = message_box(self.__event_loop, "Successfully written out default parset settings to {}".format(filename))
-            self.__event_loop.registerForm("MESSAGEBOX", instance)
-            self.__event_loop.switchForm("MESSAGEBOX")
-        instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+            instance = message_box(self.event_loop, "Successfully written out default parset settings to {}".format(filename))
+            self.event_loop.registerForm("MESSAGEBOX", instance)
+            self.event_loop.switchForm("MESSAGEBOX")
+        instance = input_box(self.event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
+        self.event_loop.registerForm("INPUTBOX", instance)
+        self.event_loop.switchForm("INPUTBOX")
 
     def on_report_view_pressed(self):
-        instance = web_serve_form(self.__event_loop)
-        self.__event_loop.registerForm("WEBSERVEFORM", instance)
-        self.__event_loop.switchForm("WEBSERVEFORM")
+        self.event_loop.switchForm("WEBSERVEFORM")
 
     def on_misc_opts_edit_pressed(self):
-        instance = misc_opts_form(self.__event_loop)
-        self.__event_loop.registerForm("ADVOPTIONEDITOR", instance)
-        self.__event_loop.switchForm("ADVOPTIONEDITOR")
+        self.event_loop.switchForm("ADVOPTIONEDITOR")
         
     def create(self):
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")

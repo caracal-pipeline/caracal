@@ -172,18 +172,16 @@ class annotated_tree_data(npyscreen.NPSTreeData):
 
 
 class option_editor(npyscreen.FormBaseNew):
-    def __init__(self, event_loop):
+    def __init__(self, *args, **kwargs):
         npyscreen.setTheme(meerkathi_theme)
-        self.__event_loop = event_loop
-
-        npyscreen.FormBaseNew.__init__(self, name="Pipeline configuration editor")
+        npyscreen.FormBaseNew.__init__(self, *args, **kwargs)
         
     @property
     def event_loop(self):
-        return self.__event_loop
+        return self.parentApp
 
     def on_back_pressed(self):
-        self.__event_loop.switchFormPrevious()
+        self.event_loop.switchFormPrevious()
 
         
     def on_load(self, labeltype=npyscreen.TitleFilenameCombo, labeltext="Filename", editvalue=cp().args.config):
@@ -192,20 +190,20 @@ class option_editor(npyscreen.FormBaseNew):
             cp().update_config(update_mode="defaults and args")
             self.rebuild_opt_tree()
 
-        instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, columns=100, on_ok=on_confirm_load)
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+        instance = input_box(self.event_loop, labeltype, labeltext, editvalue, columns=100, on_ok=on_confirm_load)
+        self.event_loop.registerForm("INPUTBOX", instance)
+        self.event_loop.switchForm("INPUTBOX")
 
     def on_save(self, labeltype=npyscreen.TitleFilename, labeltext="Filename", editvalue="./CustomParset.yaml"):
         def on_confirm_default_parset(filename):
             cp().save_options(filename)
-            instance = message_box(self.__event_loop, "Successfully written out default parset settings to {}".format(filename),
+            instance = message_box(self.event_loop, "Successfully written out default parset settings to {}".format(filename),
                                    minimum_columns=150, columns=120)
-            self.__event_loop.registerForm("MESSAGEBOX", instance)
-            self.__event_loop.switchForm("MESSAGEBOX")
-        instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
-        self.__event_loop.registerForm("INPUTBOX", instance)
-        self.__event_loop.switchForm("INPUTBOX")
+            self.event_loop.registerForm("MESSAGEBOX", instance)
+            self.event_loop.switchForm("MESSAGEBOX")
+        instance = input_box(self.event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
+        self.event_loop.registerForm("INPUTBOX", instance)
+        self.event_loop.switchForm("INPUTBOX")
   
     def rebuild_opt_tree(self):                
         def __populate_tree(groups, tree=None, level=1, level_label=1):

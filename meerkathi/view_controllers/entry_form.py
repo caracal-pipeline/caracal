@@ -7,6 +7,7 @@ import meerkathi
 from meerkathi.view_controllers.meerkathi_theme import meerkathi_theme
 from meerkathi.view_controllers.message_boxes import input_box, message_box, warning_box, error_box
 from meerkathi.view_controllers.option_editor import option_editor
+from meerkathi.view_controllers.web_serve_form import web_serve_form
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 
 class entry_form(npyscreen.FormBaseNew):
@@ -31,8 +32,7 @@ class entry_form(npyscreen.FormBaseNew):
     def on_input_default_parset(self, labeltype=npyscreen.TitleFilename, labeltext="Filename", editvalue="./DefaultParset.yaml"):
         def on_confirm_default_parset(filename):
             meerkathi.get_default(filename)
-            instance = message_box(self.__event_loop, "Successfully written out default parset settings to {}".format(filename),
-                                   minimum_columns=150, columns=120)
+            instance = message_box(self.__event_loop, "Successfully written out default parset settings to {}".format(filename))
             self.__event_loop.registerForm("MESSAGEBOX", instance)
             self.__event_loop.switchForm("MESSAGEBOX")
         instance = input_box(self.__event_loop, labeltype, labeltext, editvalue, on_ok=on_confirm_default_parset)
@@ -40,9 +40,9 @@ class entry_form(npyscreen.FormBaseNew):
         self.__event_loop.switchForm("INPUTBOX")
 
     def on_report_view_pressed(self):
-        self.__event_loop.switchForm(None)
-        meerkathi.start_viewer(cp().args)
-        self.__event_loop.switchForm("MAIN")
+        instance = web_serve_form(self.__event_loop)
+        self.__event_loop.registerForm("WEBSERVEFORM", instance)
+        self.__event_loop.switchForm("WEBSERVEFORM")
         
     def create(self):
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")

@@ -11,6 +11,7 @@ from multiprocessing import Process
 import webbrowser
 import traceback
 import logging
+import signal
 
 # Distutils standard  way to do version numbering
 try:
@@ -67,13 +68,12 @@ def get_default(to):
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
     os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
 
-def start_viewer(args):
+def start_viewer(args, timeout=None, open_webbrowser=True):
     port = args.interactive_port
     web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
 
     log.info("Entering interactive mode as requested: MEERKATHI report viewer")
-    log.info("Starting HTTP web server, listening on port %d and hosting directory %s" %
-              (port, web_dir))
+    log.info("Starting HTTP web server, listening on port {} and hosting directory {}".format(port, web_dir))
     log.info("Press Ctrl-C to exit")
 
     def __host():
@@ -83,19 +83,34 @@ def start_viewer(args):
             httpd.serve_forever()
         except KeyboardInterrupt, SystemExit:
             httpd.shutdown()
+            
     if not os.path.exists(web_dir):
         raise RuntimeError("Reports directory {} does not yet exist. Has the pipeline been run here?".format(web_dir))
 
     hndl = SimpleHTTPRequestHandler
+    class interruptable_process(Process):
+        def __init__(self, target):
+            self.__pid = 0
+            def __run(target_proc):
+                self.__pid = os.getpid()
+                target_proc()
+            Process.__init__(self, target = lambda: __run(target))
+        
+        def interrupt(self):
+            try:
+                os.kill(self.__pid, signal.SIGINT)
+            except KeyboardInterrupt:
+                pass
 
-    wt = Process(target = __host)
+    wt = interruptable_process(target = __host)
     try:
         wt.start()
-        webbrowser.open("http://localhost:%d/" % port)
-        wt.join()
+        if open_webbrowser:
+            webbrowser.open("http://localhost:{}/".format(port))
+        wt.join(timeout=timeout)
     except KeyboardInterrupt, SystemExit:
         log.info("Interrupt received - shutting down web server. Goodbye!")
-    return
+    return wt
 
 def main(argv):
     args = cp(argv).args
@@ -117,6 +132,9 @@ def main(argv):
     if args.worker_help:
         print_worker_help(args, schema_version)
         return
+
+    if not args.no_interactive and args.report_viewer:
+        raise ValueError("Incompatible options: --no-interactive and --report-viewer")
 
     if not args.no_interactive and \
        args.config == DEFAULT_CONFIG and \

@@ -33,6 +33,7 @@ class opt_treeview(npyscreen.MLTree):
         return npyscreen.MLTree.h_cursor_line_down(self, x)
 
     def h_cursor_line_up(self, x):
+        """ when hover over """
         self.update_help(updown=-1)
         return npyscreen.MLTree.h_cursor_line_up(self, x)
 
@@ -174,7 +175,6 @@ class option_editor(npyscreen.FormBaseNew):
     def __init__(self, event_loop):
         npyscreen.setTheme(meerkathi_theme)
         self.__event_loop = event_loop
-        self.__event_loop.setNextFormPrevious()
 
         npyscreen.FormBaseNew.__init__(self, name="Pipeline configuration editor")
         
@@ -241,11 +241,11 @@ class option_editor(npyscreen.FormBaseNew):
         self.trv_options.values = __populate_tree(cp().arg_groups)
 
     def create(self):
-        self.btn_edit = self.add(npyscreen.ButtonPress, name = "Store",
-                                 relx=-31, rely=2,
+        self.btn_edit = self.add(npyscreen.ButtonPress, name = "Write to disk",
+                                 relx=-51, rely=2,
                                  when_pressed_function=lambda: self.on_save())
-        self.btn_load = self.add(npyscreen.ButtonPress, name = "Load",
-                                 relx=-21, rely=2,
+        self.btn_load = self.add(npyscreen.ButtonPress, name = "Load from disk",
+                                 relx=-31, rely=2,
                                  when_pressed_function=lambda: self.on_load())
         self.btn_back = self.add(npyscreen.ButtonPress, name = "Back",
                                  relx=-11, rely=2,

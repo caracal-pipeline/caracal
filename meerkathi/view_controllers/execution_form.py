@@ -24,6 +24,7 @@ class execution_form(npyscreen.FormBaseNew):
     def on_pipeline_complete(self, proc):
         self.lbl_successfailure.value = "Execution {}".format("finished SUCCESSFULLY" if not proc.exitcode else 
                                                               "FAILED! See log for details")
+        self.lbl_successfailure.color = "STANDOUT" if proc.exitcode != 0 else "SAFE"
         self.btn_back.hidden = False
         self.btn_back.display()
         self.lbl_successfailure.display()
@@ -43,6 +44,7 @@ class execution_form(npyscreen.FormBaseNew):
         if not self.start_pipeline_next_draw:
             self.btn_back.hidden = True
             self.lbl_successfailure.value = "Executing"
+            self.lbl_successfailure.color = "DEFAULT"
         self.__initial_display = val
 
     def display(self, clear=False):
@@ -53,16 +55,18 @@ class execution_form(npyscreen.FormBaseNew):
         npyscreen.FormBaseNew.display(self, clear)
 
     def create(self):
+        self.box_logger = self.add(npyscreen.BoxBasic, name="Log tail", max_width=-5, max_height=-3, editable=False)
+        self.lvw_logger = self.add(log_view, editable=False, value="", max_width=-10, max_height=-5, relx=5, rely=4)
+        self.lvw_logger.color = "GOOD"
+        self.lvw_logger.widgets_inherit_color = True
+        self.lbl_successfailure = self.add(npyscreen.Textfield, editable=False, 
+                                           value="Executing", rely=-4, max_width=80)
         
 
-        self.lvw_logger = self.add(log_view, editable=False, value="", max_width=-10, max_height=-5, relx=5, rely=4)
-        self.lbl_successfailure = self.add(npyscreen.TitleText, editable=False, 
-                                           name="Status", value="Executing", rely=-4, max_width=80)
-
-        self.btn_back = self.add(npyscreen.ButtonPress, name = "Back to main screen", hidden=True, editable=True, relx=-31, rely=-5,
+        self.btn_back = self.add(npyscreen.ButtonPress, name = "Back to main screen", hidden=True, editable=True, relx=-31, rely=-4,
                                  when_pressed_function=self.on_back_pressed)
         
-        self.add(npyscreen.ButtonPress, name="", rely=-6, width=0, height=0) ##BUG in npyscreen last thing must be enabled and visible
+        self.add(npyscreen.ButtonPress, name="", rely=-3, width=0, height=0) ##BUG in npyscreen last thing must be enabled and visible
         
         
     def start_pipeline(self):

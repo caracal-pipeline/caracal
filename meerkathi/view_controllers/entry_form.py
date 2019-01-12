@@ -74,7 +74,7 @@ class entry_form(npyscreen.FormBaseNew):
                                       when_pressed_function=lambda: self.on_misc_opts_edit_pressed())
         self.add(npyscreen.TitleText, editable=False, name="\t")
 
-        self.btn_quit = self.add(npyscreen.ButtonPress, name = "Quit to MS-DOS",
+        self.btn_quit = self.add(npyscreen.ButtonPress, name = "Quit to command line",
                                  when_pressed_function=self.on_quit_pressed)
 
 

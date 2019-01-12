@@ -12,8 +12,8 @@ class event_loop(npyscreen.NPSAppManaged):
         return self._Forms[key]
 
     def onStart(self):
-        self.addForm("MAIN", entry_form, name="MeerKATHI -- Prototype science pipeline for MeerKAT")
-        self.addForm("EXECUTIONVIEW", execution_form, name="Pipeline executing...")
+        self.addForm("MAIN", entry_form, name="Welcome")
+        self.addForm("EXECUTIONVIEW", execution_form, name="Pipeline execution")
         self.addForm("ADVOPTIONEDITOR", misc_opts_form, name="Advanced options")
         self.addForm("OPTIONEDITOR", option_editor, name="Pipeline configuration editor")
         self.addForm("WEBSERVEFORM", web_serve_form, name="HTTP server")

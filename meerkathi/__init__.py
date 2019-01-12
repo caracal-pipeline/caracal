@@ -59,7 +59,7 @@ DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
 ################################################################################
-# Logging and IO steam handling section
+# Logging 
 ################################################################################
 def create_logger():
     """ Create a console logger """
@@ -88,18 +88,6 @@ def add_log_handler(hndl):
 # Create the log object
 log, log_filehandler, log_console_handler, log_formatter = create_logger()
 
-# redirect std streams
-default_stdout = sys.stdout
-default_stderr = sys.stderr
-gobbled_stdout = StringIO.StringIO()
-gobbled_stderr = StringIO.StringIO()
-
-def restore_default_stdstreams():
-    sys.stdout, sys.stderr = default_stdout, default_stderr
-
-def redirect_stdstreams():
-    sys.stdout, sys.stderr = gobbled_stdout, gobbled_stderr
-
 ####################################################################
 # MeerKATHI imports
 ####################################################################
@@ -109,6 +97,7 @@ import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
 from meerkathi.view_controllers import event_loop
 from meerkathi.dispatch_crew.interruptable_process import interruptable_process
+from meerkathi.dispatch_crew.stream_director import stream_director
 
 ####################################################################
 # Runtime routines
@@ -203,42 +192,40 @@ def execute_pipeline(args, arg_groups, block):
     # setup piping infractructure to send messages to the parent
     def __run():
         """ Executes pipeline """
-        try:
-            log_logo()
-            # Very good idea to print user options into the log before running:
-            cp().log_options()
+        with stream_director(log) as director: #stdout and stderr needs to go to the log as well            
+            try:
+                log_logo()
+                # Very good idea to print user options into the log before running:
+                cp().log_options()
 
-            # Obtain some divine knowledge
-            cdb = mkct.calibrator_database()
+                # Obtain some divine knowledge
+                cdb = mkct.calibrator_database()
 
-            raise SystemExit(5)
+                if args.print_calibrator_standard:
+                    log.info("Found the following reference calibrators (in CASA format):")
+                    log.info(cdb)
+                
+                pipeline = mwa(arg_groups,
+                            args.workers_directory, stimela_build=args.stimela_build,
+                            add_all_first=args.add_all_first, prefix=args.general_prefix,
+                            singularity_image_dir=args.singularity_image_dir)
 
-            if args.print_calibrator_standard:
-                log.info("Found the following reference calibrators (in CASA format):")
-                log.info(cdb)
-
-        
-            pipeline = mwa(arg_groups,
-                        args.workers_directory, stimela_build=args.stimela_build,
-                        add_all_first=args.add_all_first, prefix=args.general_prefix,
-                        singularity_image_dir=args.singularity_image_dir)
-
-            pipeline.run_workers()
-        except exceptions.SystemExit as e:
-            if e.code != 0:
-                log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
-                log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
+                pipeline.run_workers()
+            except exceptions.SystemExit as e:
+                if e.code != 0:
+                    log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
+                    log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))
+                    sys.exit(1) #indicate failure
+                else:
+                    log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
+            except KeyboardInterrupt:
+                log.info("Interrupt request received from user - gracefully shutting down. Goodbye!")
+            except Exception as e:
+                log.error("An unhandled exeption occured. If you think this is a bug please report it.")
+                log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
+                log.error("You are running version: {0:s}".format(str(__version__)))
+                log.error(traceback.format_exc())
                 sys.exit(1) #indicate failure
-            else:
-                log.info("One or more pipeline workers requested graceful shutdown. Goodbye!")
-        except KeyboardInterrupt:
-            log.info("Interrupt request received from user - gracefully shutting down. Goodbye!")
-        except Exception as e:
-            log.error("An unhandled exeption occured. If you think this is a bug please report it.")
-            log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
-            log.error("You are running version: {0:s}".format(str(__version__)))
-            log.error(traceback.format_exc())
-            sys.exit(1) #indicate failure
     
     # now fork and block or continue depending on whether interaction is wanted
     try:
@@ -302,5 +289,5 @@ def main(argv):
        # Run non-interactively
        p = execute_pipeline(args, arg_groups, block=True)
     
-    return p
+    return p.exitcode
     

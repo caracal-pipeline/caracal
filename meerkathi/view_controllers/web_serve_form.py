@@ -76,6 +76,7 @@ class web_serve_form(npyscreen.FormBaseNew):
                                    rely=13, relx=5, max_width=120, value=os.path.abspath(os.path.join(cp().args.general_output, "report")))
         self.edt_output_hint = self.add(npyscreen.TitleText, editable=False, name="\t", 
                                         rely=14, relx=5, max_width=80,  value="(change general->output directory from option_editor to edit)")
+        
         self.btn_config_editor = self.add(npyscreen.ButtonPress, name = "Config editor", rely=12, relx=-25,
                                           when_pressed_function=self.on_cfg_editor_pressed)
 

@@ -253,6 +253,7 @@ class option_editor(npyscreen.FormBaseNew):
         msg = "\n".join(textwrap.wrap("Scroll down the tree and hit return to edit values. Sections marked '■' are enabled, "
                                       "while those marked 'Ø' are disabled. Hit enter to toggle them on or off. Certain sections, "
                                       "like the 'general' section, cannot be switched off.", width=70))
-        self.lbl_help = self.add(npyscreen.MultiLineEdit, value=msg, max_width=80, rely=6, relx=-83, max_height=16, editable=False)                        
+        self.lbl_help = self.add(npyscreen.MultiLineEdit, value=msg, max_width=80, rely=6, relx=-83, max_height=16, editable=False)
+        self.lbl_help.color = "SAFE"                        
         self.trv_options = self.add(opt_treeview, rely=4, width=80, exit_right=True, scroll_exit=True)
         self.rebuild_opt_tree()

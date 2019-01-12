@@ -197,7 +197,7 @@ class option_editor(npyscreen.FormBaseNew):
     def on_save(self, labeltype=npyscreen.TitleFilename, labeltext="Filename", editvalue="./CustomParset.yaml"):
         def on_confirm_default_parset(filename):
             cp().save_options(filename)
-            instance = message_box(self.event_loop, "Successfully written out default parset settings to {}".format(filename),
+            instance = message_box(self.event_loop, "Successfully written out user modified parset settings to {}".format(filename),
                                    minimum_columns=150, columns=120)
             self.event_loop.registerForm("MESSAGEBOX", instance)
             self.event_loop.switchForm("MESSAGEBOX")

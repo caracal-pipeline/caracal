@@ -5,11 +5,11 @@ mapping:
     required: true
 
   flagging:
-    desc: Pre-calibration flagging of the data.
+    desc: Flagging of the data.
     type: map
     mapping:
       enable: 
-        desc: Execute pre-calibration flagging of the data.
+        desc: Execute flagging of the data.
         type: bool
         required: true
       order:

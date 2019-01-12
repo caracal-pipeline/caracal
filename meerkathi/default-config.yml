@@ -86,6 +86,7 @@ cross_cal:
   set_model:
     enable: true
     field: fcal 
+    meerkathi_model: true
   delay_cal:
     enable: true
     combine: "scan"

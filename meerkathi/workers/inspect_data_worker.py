@@ -28,7 +28,7 @@ def worker(pipeline, recipe, config):
         label = config.get('label', '')
 
         if pipeline.enable_task(config, 'real_imag'):
-            fields = config['real_imag'].get('fields', 'gcal,bpcal').split(',')
+            fields = config['real_imag'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
@@ -60,7 +60,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Plot imag vs real for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_phase'):
-            fields = config['amp_phase'].get('fields', 'gcal,bpcal').split(',')
+            fields = config['amp_phase'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
@@ -92,7 +92,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = config['amp_uvwave'].get('fields', 'gcal,bpcal').split(',')
+            fields = config['amp_uvwave'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -123,7 +123,7 @@ def worker(pipeline, recipe, config):
                    label='{0:s}:: Plot uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_ant'):
-            fields = config['amp_ant'].get('fields', 'gcal,bpcal').split(',')
+            fields = config['amp_ant'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -154,7 +154,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'phase_uvwave'):
-            fields = config['phase_uvwave'].get('fields', 'gcal,bpcal').split(',')
+            fields = config['phase_uvwave'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'phase_uvwave_{0:d}'.format(i)
@@ -186,7 +186,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'amp_scan'):
-            fields = config['amp_scan'].get('fields', 'gcal,target,bpcal').split(',')
+            fields = config['amp_scan'].get('fields', ['gcal','target','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_ampscan_{0:d}'.format(i)

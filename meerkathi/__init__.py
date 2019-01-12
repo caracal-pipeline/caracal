@@ -200,10 +200,6 @@ def execute_pipeline(args, arg_groups, block):
 
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
-
-                if args.print_calibrator_standard:
-                    log.info("Found the following reference calibrators (in CASA format):")
-                    log.info(cdb)
                 
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
@@ -273,6 +269,12 @@ def main(argv):
     if args.report_viewer:
         log_logo()
         start_viewer(args)
+        return
+
+    if args.print_calibrator_standard:
+        cdb = mkct.calibrator_database()
+        log.info("Found the following reference calibrators (in CASA format):")
+        log.info(cdb)
         return
     
     if not args.no_interactive and \

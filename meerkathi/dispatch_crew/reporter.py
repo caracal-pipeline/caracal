@@ -26,18 +26,21 @@ class reporter:
         """ generate an html report for every ms in the pipeline """
         report_names = [os.path.join(self.__report_dir, 
                 "%s.report.html" % os.path.basename(ms)) for ms in self.__ms]
-        for ms, rep in zip(self.__ms, report_names):
-            meerkathi.log.info("Creating a report for dataset id '%s'. "
-                               "The report will be dumped here: '%s'." % (ms, rep))
+        for msi, (ms, rep) in enumerate(zip(self.__ms, report_names)):
+            meerkathi.log.info("Creating a report for dataset id '{}'. "
+                               "The report will be dumped here: '{}'.".format(ms, rep))
             # grab a fresh template
             ms_rep = nbformat.reads(self.__rep_template, as_version=4)
 
             def __customize(s):
                 s = re.sub(r'msname\s*=\s*\S*',
-                           'msname = \'%s\'' % os.path.splitext(os.path.basename(ms))[0],
+                           'msname = \'{s}\''.format(os.path.splitext(os.path.basename(ms))[0]),
                            s)
                 s = re.sub(r'outputdir\s*=\s*\S*',
-                           'outputdir = \'%s\'' % os.path.abspath(self.__outputdir),
+                           'outputdir = \'{s}\''.format(os.path.abspath(self.__outputdir)),
+                           s)
+                s = re.sub(r'msindex\s*=\s*\S*',
+                           'msindex = \'{d}\''.format(msi),
                            s)
                 return s
 
@@ -50,8 +53,8 @@ class reporter:
                 ep.preprocess(ms_rep, {'metadata': {'path': os.path.abspath(self.__outputdir)}})
             except CellExecutionError: # reporting error is non-fatal
                 out = None
-                msg = 'Error executing the notebook for "%s".\n\n' % ms
-                msg += 'See notebook "%s" for the traceback.' % rep
+                msg = 'Error executing the notebook for "{}".\n\n'.format(ms)
+                msg += 'See notebook "{}" for the traceback.'.format(rep)
                 meerkathi.log.error(msg)
             finally:
                 #export to static HTML

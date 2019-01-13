@@ -231,7 +231,7 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_flagging_{0:d}'.format(i)
+            step = 'flagging_summary_flagging_{0:d}_{1:s}'.format(i, config.get('label', '0gc'))
             recipe.add('cab/casa_flagdata', step,
                 {
                   "vis"         : msname,
@@ -239,4 +239,4 @@ def worker(pipeline, recipe, config):
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+                label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label', '0gc'), msname))

@@ -290,6 +290,7 @@ def main(argv):
     else:
        # Run non-interactively
        p = execute_pipeline(args, arg_groups, block=True)
+       log.info("PIPELINER EXITS WITH RETURN CODE {d}".format(p.exitcode))
+       sys.exit(p.exitcode) # must return exit code when non-interactive
     
-    return p.exitcode
     

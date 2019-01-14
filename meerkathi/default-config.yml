@@ -83,14 +83,25 @@ cross_cal:
   otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
+  clear_cal:
+    enable: true
+    field:
+      - bpcal
+      - fcal
+      - target
+      - gcal
+    addmodel: true
   set_model:
     enable: true
-    field: fcal 
+    field: 
+      - fcal 
+    meerkathi_model: false # this is WRONG as it disables the option to use PKS0407-65
   delay_cal:
     enable: true
     combine: "scan"
     solint: "inf" # Useful diagnostic to keep track of system delays with time
-    field: bpcal # can use both the bandpass and gain calibrator to keep track of delays
+    field: 
+      - bpcal # can use both the bandpass and gain calibrator to keep track of delays
     plot:
       enable: true
     flag:
@@ -100,7 +111,8 @@ cross_cal:
   bp_cal:
     enable: true
     combine: "scan"
-    field: bpcal
+    field: 
+      - bpcal
     solint: "inf"
     remove_ph_time_var: false
     plot:
@@ -113,40 +125,61 @@ cross_cal:
   gain_cal_gain:
     enable: true
     combine: ""
-    field: gcal
+    field: 
+      - gcal
     plot:
       enable: true
   transfer_fluxscale:
     enable: true
-    reference: fcal 
-    transfer: gcal
+    reference: 
+      - fcal 
+    transfer: 
+      - gcal
     plot:
       enable: true
   apply_delay_cal:
     enable: true
-    field: bpcal
-    applyto: bpcal,gcal,target
+    field: 
+      - bpcal
+    applyto: 
+      - bpcal
+      - gcal
+      - target
     applymode: calflag
   apply_bp_cal:
     enable: true
-    applyto: bpcal,gcal,target
-    field: bpcal
+    applyto: 
+      - bpcal
+      - gcal
+      - target
+    field: 
+      - bpcal
     applymode: calflag
   apply_gain_cal_gain:
     enable: false
-    field: gcal
-    applyto: bpcal,gcal,target
+    field: 
+      - gcal
+    applyto: 
+      - bpcal
+      - gcal
+      - target
     applymode: calflag
   apply_transfer_fluxscale:
     enable: true
-    field: gcal
-    applyto: bpcal,gcal,target
+    field: 
+      - gcal
+    applyto: 
+      - bpcal
+      - gcal
+      - target
     applymode: calflag
   autoflag_closure_error:
     enable: false
     column: CORRECTED_DATA
     fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
     calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+    baseline_to_group_threshold: 10
+    scan_to_scan_threshold: 10
   flagging_summary:
     enable: true
 
@@ -157,22 +190,35 @@ inspect_data:
   label: 1gc1
   real_imag:
     enable: true
-    fields: gcal,bpcal
+    fields: 
+      - gcal
+      - bpcal
   amp_phase:
     enable: true
-    fields: gcal,bpcal
+    fields: 
+      - gcal
+      - bpcal
   amp_uvwave:
     enable: true
-    fields: gcal,bpcal
+    fields: 
+      - gcal
+      - bpcal
   amp_ant:
     enable: true
-    fields: gcal,bpcal
+    fields: 
+      - gcal
+      - bpcal
   phase_uvwave:
     enable: true
-    fields: gcal,bpcal
+    fields: 
+      - gcal
+      - bpcal
   amp_scan:
     enable: true
-    fields: gcal,bpcal,target
+    fields: 
+      - gcal
+      - bpcal
+      - target
 
 split_target:
   enable: true

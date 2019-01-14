@@ -9,16 +9,14 @@ class input_box(npyscreen.ActionPopup):
         self.__event_loop = event_loop
         self.__on_ok = on_ok
         self.__on_cancel = on_cancel
-        kwargs['color'] = 'MBOXDEFAULT'
-        kwargs['labelcolor'] = 'MBOXDEFAULT'
+
         min_width = max(len(self.__labeltext) + len(self.__editvalue), len(title)) + 20
         kwargs['columns'] = kwargs['minimum_columns'] = min_width
         npyscreen.ActionPopup.__init__(self, *args, name=title, lines=lines, **kwargs)
         
 
     def create(self):
-        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue,
-                                color='MBOXDEFAULT', labelcolor='MBOXDEFAULT')
+        self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue)
 
     def afterEditing(self):
         self.__event_loop.switchFormPrevious()
@@ -39,23 +37,30 @@ class optioned_input_box(input_box):
         min_width = max(len(self.__labeltext) + len(self.__defaultvalue), len(kwargs.get('title', ""))) + 20
         kwargs['columns'] = kwargs['minimum_columns'] = min_width
         input_box.__init__(self, event_loop, npyscreen.TitleSelectOne, labeltext, editvalues, on_ok, on_cancel, lines=len(self.__editvalue)+4, *args, **kwargs)
+
     def create(self):
         self.edt_val = self.add(npyscreen.TitleSelectOne, hidden=False, name=self.__labeltext, values=self.__editvalue, 
-                                value=[self.__editvalue.index(self.__defaultvalue)], color='MBOXDEFAULT', labelcolor='MBOXDEFAULT', 
+                                value=[self.__editvalue.index(self.__defaultvalue)], 
                                 scroll_exit=True, max_height=len(self.__editvalue))
 
-class message_box(npyscreen.Popup):
-    def __init__(self, event_loop, editvalue, lines=5, labeltext="(i)\t", title="INFO", *args, **kwargs):
+class action_popup_okonly(npyscreen.ActionPopup):
+    def create_control_buttons(self):
+        npyscreen.ActionPopup.create_control_buttons(self)
+        self._widgets__[2].hidden = True
+
+class message_box(action_popup_okonly):
+    def __init__(self, event_loop, editvalue, lines=5, labeltext="(i)\t", title="INFO", on_ok=None, *args, **kwargs):
         self.__labeltype = npyscreen.TitleText
         self.__labeltext = labeltext
         self.__title = title
         self.__editvalue = editvalue
         self.__event_loop = event_loop
+        self.__on_ok = on_ok
         kwargs['color'] = 'MBOXDEFAULT'
         kwargs['labelcolor'] = 'MBOXDEFAULT'
         min_width = max(len(self.__labeltext) + len(self.__editvalue), len(title)) + 20
         kwargs['columns'] = kwargs['minimum_columns'] = min_width
-        npyscreen.Popup.__init__(self, *args, name=self.__title, lines=lines, **kwargs)
+        action_popup_okonly.__init__(self, *args, name=self.__title, lines=lines, **kwargs)
 
     def create(self):
         self.edt_val = self.add(self.__labeltype, hidden=False, name=self.__labeltext, value=self.__editvalue,
@@ -64,6 +69,10 @@ class message_box(npyscreen.Popup):
         
     def afterEditing(self):
         self.__event_loop.switchFormPrevious()
+    
+    def on_ok(self):
+        if self.__on_ok is not None:
+            self.__on_ok()
 
 class warning_box(message_box):
     def __init__(self,  event_loop, editvalue, lines=5, labeltext="(!!!)\t", title="WARNING", *args, **kwargs):

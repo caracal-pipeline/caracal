@@ -194,7 +194,7 @@ class config_parser:
             help='Name file where the configuration should be saved')
 
         add('-aaf', '--add-all-first', action='store_true',
-            help='Add steps from all workers to pipeline before exucting. Default is execute each workers as they are encountered.')
+            help='Add steps from all workers to pipeline before execucting. Default is execute each workers as they are encountered.')
 
         add('-bl', '--stimela-build',
             help='Label of stimela build to use',

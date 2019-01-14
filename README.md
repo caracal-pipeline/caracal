@@ -89,9 +89,9 @@ $ meerkathi --help
 ```
 $ meerkathi -ce
 ```
-5. An existing configuration file can be edited as follows:
+5. An existing configuration file can be edited as from the gui (ie. don't specify -c):
 ```
-$ meerkathi -c <configuration file> -ce
+$ meerkathi
 ```
 6. (Alternatively) dump a copy of the default configuration file to the current directory:
 ```

@@ -2,6 +2,7 @@
 
 import npyscreen
 import exceptions
+import os
 
 import meerkathi
 from meerkathi.view_controllers.meerkathi_theme import meerkathi_theme
@@ -57,7 +58,7 @@ class entry_form(npyscreen.FormBaseNew):
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="Module installed at: {0:s} (version {1:s})".format(meerkathi.pckgdir, str(meerkathi.__version__)))
         self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="A logfile will be dumped here: {0:s}".format(meerkathi.MEERKATHI_LOG))
-        self.add(npyscreen.TitleText, editable=False, name="\t")
+        self.add(npyscreen.TitleText, editable=False, name="\t\t\t", value="Current working directory: {0:s}".format(os.getcwd()))
         self.add(npyscreen.TitleText, editable=False, name="\t")
         self.add(npyscreen.TitleText, editable=False, name="\t")
         self.btn_run = self.add(npyscreen.ButtonPress, name = "Run pipeline",

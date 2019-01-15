@@ -34,13 +34,13 @@ class reporter:
 
             def __customize(s):
                 s = re.sub(r'msname\s*=\s*\S*',
-                           'msname = \'{s}\''.format(os.path.splitext(os.path.basename(ms))[0]),
+                           'msname = \'{}\''.format(os.path.splitext(os.path.basename(ms))[0]),
                            s)
                 s = re.sub(r'outputdir\s*=\s*\S*',
-                           'outputdir = \'{s}\''.format(os.path.abspath(self.__outputdir)),
+                           'outputdir = \'{}\''.format(os.path.abspath(self.__outputdir)),
                            s)
                 s = re.sub(r'msindex\s*=\s*\S*',
-                           'msindex = \'{d}\''.format(msi),
+                           'msindex = {}'.format(msi),
                            s)
                 return s
 

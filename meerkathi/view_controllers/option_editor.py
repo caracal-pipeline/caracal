@@ -22,7 +22,9 @@ class opt_treeview(npyscreen.MLTree):
             return keys + ([node.key_val[1:]] if node.key_val is not None and node.key_val[0] == "@" else
                            [node.key_val] if node.key_val is not None else 
                            [])
-        helpstr = "\n".join(textwrap.wrap(cp().get_schema_help(__walk_up(sel)), 70))
+        helpstr = cp().get_schema_help(__walk_up(sel))
+        helpstr = "NO HELP FOR THIS PARAMATER -- PLEASE REPORT" if helpstr == None else helpstr
+        helpstr = "\n".join(textwrap.wrap(helpstr, 70))
         
         self.parent.lbl_help.value = helpstr
         self.parent.lbl_help.display()

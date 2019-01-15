@@ -95,7 +95,7 @@ cross_cal:
     enable: true
     field: 
       - fcal 
-    meerkathi_model: true
+    meerkathi_model: false # this is WRONG as it disables the option to use PKS0407-65
   delay_cal:
     enable: true
     combine: "scan"

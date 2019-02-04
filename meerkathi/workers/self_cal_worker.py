@@ -97,15 +97,17 @@ def worker(pipeline, recipe, config):
         else:
             matrix_type = 'null'
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
-        if matrix_type == 'GainDiag' and config[key].get('two_step', False):
-            imcolumn = "CORRECTED_DATA"
+        if config.get('calibrate_with', 'cubical').lower() == 'meqtrees':
+            if matrix_type == 'GainDiag' and config[key].get('two_step', False):
+                imcolumn = "CORRECTED_DATA"
             # If we do not have gaindiag but do have two step selfcal check against stupidity and that we are actually ending with ampphase cal and written to a special phase column
-        elif config[key_mt].get('gain_matrix_type', 'GainDiagPhase')[-1] == 'GainDiag' and config[key_mt].get('two_step', False) and matrix_type != 'null':
-            imcolumn = 'CORRECTED_DATA_PHASE'
+            elif config[key_mt].get('gain_matrix_type', 'GainDiagPhase')[-1] == 'GainDiag' and config[key_mt].get('two_step', False) and matrix_type != 'null':
+                imcolumn = 'CORRECTED_DATA_PHASE'
             # If none of these apply then do our normal sefcal
+            else:
+                imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
         else:
             imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
-
         if config[key].get('peak_based_mask_on_dirty', False):
             mask = True
             step = 'image_{}_dirty'.format(num)
@@ -771,13 +773,13 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         jones_chain = 'G'
-        if config[key].get('two_step', False):
-            jones_chain += ',G2'
+        if config[key].get('two_step', False) or config[key].get('ddjones', False) :
+            jones_chain += ',dE'
+        elif config[key].get('ddjones', False) and onfig[key].get('two_step', False):
+             raise ValueError('You cannot do a DD-gain calibration and a split amplitude-phase calibration all at once')
         if config[key].get('Bjones', bjones):
             jones_chain += ',B'
-        if config[key].get('ddjones', False):
-            jones_chain+= ',dE'
-
+ 
 
         for i,msname in enumerate(mslist):
             gsols_ = [config[key].get('Gsols_time', [])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
@@ -813,15 +815,18 @@ def worker(pipeline, recipe, config):
 
                 }
             if config[key].get('two_step', False):
+                amp_time = gsols_[0]*10
                 cubical_opts.update({
-                    "g-update-type"   : 'phase-diag',
-                    "g2-update-type"   : 'amp-diag',
-                    "g2-solvable"      : True,
-                    "g2-type"          : CUBICAL_MT[matrix_type],
-                    "g2-time-int"      : gsols_[0]*10,
-                    "g2-freq-int"      : gsols_[1],
-                    "g2-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                    "g2-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "dd-update-type"   : 'phase-diag',
+                    "dd-update-type"   : 'amp-diag',
+                    "dd-solvable"      : True,
+                    "dd-type"          : CUBICAL_MT[matrix_type],
+                    "dd-dd-term"       : False,
+                    "dd-time-int"      : amp_time,
+                    "dd-freq-int"      : gsols_[1],
+                    "dd-save-to"       : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
+                    "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
+                    "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                 })
             if config[key].get('Bjones'):
                cubical_opts.update({"b-solvable": True,

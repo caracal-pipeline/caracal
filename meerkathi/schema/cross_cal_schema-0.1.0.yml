@@ -28,7 +28,23 @@ mapping:
         type: str
         required: true
         desc: Label for output files.
-    
+      clear_cal:
+        type: map
+        desc: Initializes dataset for calibration using CASA
+        mapping:
+          enable:
+            type: bool
+            desc: Execute intialization step
+            required: true
+          field:
+            seq:
+                - type: str
+            desc: "fields to initialize"
+            required: true
+          addmodel:
+            type: bool
+            desc: "Intializes scratch MODEL_DATA column"
+            required: true
       set_model:
         type: map
         desc: Essentially setjy task from CASA.
@@ -40,12 +56,14 @@ mapping:
           meerkathi_model:
             type: bool
             required: false
+            desc: Force disable built-in models in MeerKATHI (NOT RECOMMENDED!)
           no_verify:
             type: bool
             desc: Enables setting standard manually.
             required: false
           field:
-            type: str 
+            seq: 
+              - type: str 
             desc: Set the field to carry out setjy on. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.   
             required: true
           threads:
@@ -79,7 +97,8 @@ mapping:
             desc: Minimum required SNR for solutions.
             required: false 
           field:
-            type: str
+            seq: 
+              - type: str 
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      
             required: true
           plot:
@@ -99,7 +118,8 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
               field:
-                type: int
+                seq: 
+                - type: int 
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
               corr:
@@ -143,7 +163,8 @@ mapping:
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
           field: 
-            type: str
+            seq: 
+              - type: str 
             desc: Set the field to estimate the bandpass from. Specify either the field number, name or even as 'bpcal' corresponding to field specification in observation config.
             required: true
           minnrbl: 
@@ -186,7 +207,8 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
               field:
-                type: int
+                seq: 
+                - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
               corr:
@@ -213,7 +235,8 @@ mapping:
             enum: ["","obs", "scan", "spw", "field"]
             required: true
           field: 
-            type: str
+            seq: 
+              - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
           minnrbl: 
@@ -249,7 +272,8 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
               field:
-                type: int
+                seq: 
+                - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
               corr:
@@ -275,7 +299,8 @@ mapping:
             enum: ["","obs", "scan", "spw", "field"]
             required: false
           field:
-            type: str
+            seq: 
+              - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: false
           minnrbl: 
@@ -310,7 +335,8 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
               field:
-                type: int
+                seq: 
+                - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
               corr:
@@ -331,11 +357,13 @@ mapping:
             desc: Executes transferring flux scale.
             required: true
           reference: 
-            type: str
+            seq:
+              - type: str
             desc: Field to transfer flux sale from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: false
           transfer:
-            type: str
+            seq:
+              - type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: true
           plot:
@@ -355,7 +383,8 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
               field:
-                type: int
+                seq: 
+                - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
               corr:
@@ -376,11 +405,13 @@ mapping:
             desc: Executes application of delay correction calibration table.
             required: true
           field: 
-            type: str
+            seq: 
+              - type: str 
             desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
             required: true
           applyto: 
-            type: str
+            seq: 
+              - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
           applymode: 
@@ -398,10 +429,12 @@ mapping:
             desc: Executes application of bandpass table.
             required: true
           field:
-            type: str
+            seq: 
+              - type: str 
             desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
           applyto:
-            type: str
+            seq:
+              - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
           applymode:
@@ -419,10 +452,12 @@ mapping:
             desc: Executes application of gain calibration table.
             required: true
           field:
-            type: str
+            seq: 
+              - type: str 
             desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
           applyto:
-            type: str
+            seq: 
+              - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
           applymode:
@@ -440,10 +475,12 @@ mapping:
             desc: Executes application of fluxscale table.
             required: true
           field:
-            type: str
+            seq: 
+              - type: str 
             desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
           applyto:
-            type: str
+            seq: 
+              - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
           applymode:
@@ -463,11 +500,11 @@ mapping:
           scan_to_scan_threshold: 
             type: int
             desc: Sigma spread above the rest of the scans per field per channel.
-            required: false
+            required: true
           baseline_to_group_threshold:           
             type: int
             desc: Sigma above array median phase spread per scan per field per channel.
-            required: false
+            required: true
           column: 
             type: str
             desc: MS column to use.

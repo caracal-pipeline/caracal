@@ -5,11 +5,11 @@ mapping:
     required: true
 
   flagging:
-    desc: Pre-calibration flagging of the data.
+    desc: Flagging of the data.
     type: map
     mapping:
       enable: 
-        desc: Execute pre-calibration flagging of the data.
+        desc: Execute flagging of the data.
         type: bool
         required: true
       order:
@@ -146,7 +146,7 @@ mapping:
           antennas:
             desc: Antennas to flag. Follows the CASA Flagdata syntax. 
             type: str
-            required: true
+            required: false
           timerange: 
             desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
@@ -163,7 +163,7 @@ mapping:
           scans: 
             desc: Scans to flag. CASA flagdata syntax.
             type: str
-            required: true
+            required: false
 
       static_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 

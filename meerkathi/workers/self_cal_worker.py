@@ -37,10 +37,8 @@ def worker(pipeline, recipe, config):
     pol = config.get('img_pol', 'I')
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    bsols = config.get('cal_Bsols', [])
     taper = config.get('img_uvtaper', None)
     label = config['label']
-    bjones = config.get('cal_Bjones', False)
     time_chunk = config.get('cal_time_chunk', 128)
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
@@ -653,14 +651,14 @@ def worker(pipeline, recipe, config):
             gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
              # If we have a two_step selfcal  we will calculate the intervals
-            if config[key].get('two_step', False):
+            if config[key].get('DDjones', False):
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
                 else:
                     matrix_type= trace_matrix[num-2]
                     SN = trace_SN[num-2]
-                fidelity_data = get_aimfast_data()
+                #fidelity_data = get_aimfast_data()
                 obs_data = get_obs_data()
                 int_time =  obs_data['EXPOSURE']
                 tot_time=0.
@@ -668,6 +666,7 @@ def worker(pipeline, recipe, config):
                     tot_time += obs_data['SCAN']['0'][scan_key]
                 no_ant=len(obs_data['ANT']['DISH_DIAMETER'])
                 DR=fidelity_data['meerkathi_{0}-residual'.format(num)]['meerkathi_{0}-model'.format(num)]['DR']
+                DR = 10
                 Noise= fidelity_data['meerkathi_{0}-residual'.format(num)]['STDDev']
                 flux=DR*Noise
                 solvetime = int(Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
@@ -701,14 +700,15 @@ def worker(pipeline, recipe, config):
                 trace_SN.append(SN)
                 global trace_matrix
                 trace_matrix.append(matrix_type)
-                if matrix_type =='GainDiagPhase':
-                    outcolumn = "CORRECTED_DATA_PHASE"
-                    incolumn = "DATA"
-                else:
-                    outcolumn = "CORRECTED_DATA"
-                    incolumn = "CORRECTED_DATA_PHASE"
+            if matrix_type =='GainDiagPhase':
+                outcolumn = "CORRECTED_DATA_PHASE"
+                incolumn = "DATA"
+            else:
+                outcolumn = "CORRECTED_DATA"
+                incolumn = "CORRECTED_DATA_PHASE"
 
-            bsols_ = config[key].get('Bsols', bsols)
+            bsols_ = [config[key].get('Bsols_time',[])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
+                          config[key].get('Bsols_channel', [])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
             print(gsols_)
             recipe.add('cab/calibrator', step,
@@ -769,22 +769,32 @@ def worker(pipeline, recipe, config):
             modellist = ['MODEL_DATA']
 
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-        if config[key].get('two_step', False):
-            matrix_type = 'Gain2x2'
-
+        print(matrix_type)
+        if matrix_type == 'GainDiagPhase' or config[key].get('two_step', False):
+            gupdate = 'phase-diag'
+            bupdate = 'phase-diag'
+            dupdate = 'phase-diag'
+        else:
+            gupdate = 'full'
+            bupdate = 'full'
+            dupdate = 'full'
         jones_chain = 'G'
         if config[key].get('two_step', False) or config[key].get('ddjones', False) :
-            jones_chain += ',dE'
+            jones_chain += ',DD'
+            matrix_type = 'Gain2x2'
         elif config[key].get('ddjones', False) and onfig[key].get('two_step', False):
              raise ValueError('You cannot do a DD-gain calibration and a split amplitude-phase calibration all at once')
-        if config[key].get('Bjones', bjones):
+        if config[key].get('Bjones', False):
             jones_chain += ',B'
- 
+            matrix_type = 'Gain2x2'
 
         for i,msname in enumerate(mslist):
             gsols_ = [config[key].get('Gsols_time', [])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
                 config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
-            bsols_ = sdm.dismissable(config[key].get('Bsols', bsols))
+            bsols_ = [config[key].get('Bsols_time', [0])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
+                config[key].get('Bsols_channel', [0])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
+            ddsols_ = [config[key].get('DDsols_time', [0])[num-1 if num <= len(config[key].get('DDsols_time',[])) else -1],
+                config[key].get('DDsols_channel', [0])[num-1 if num <= len(config[key].get('DDsols_channel',[])) else -1]]
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
@@ -795,7 +805,7 @@ def worker(pipeline, recipe, config):
                   "data-time-chunk"  : time_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
-                  "sol-jones"        : jones_chain,
+                  "sol-jones"        : '"'+jones_chain+'"',
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -815,33 +825,35 @@ def worker(pipeline, recipe, config):
 
                 }
             if config[key].get('two_step', False):
-                amp_time = gsols_[0]*10
                 cubical_opts.update({
-                    "dd-update-type"   : 'phase-diag',
+                    "g-update-type"    : gupdate,
                     "dd-update-type"   : 'amp-diag',
                     "dd-solvable"      : True,
                     "dd-type"          : CUBICAL_MT[matrix_type],
-                    "dd-dd-term"       : False,
-                    "dd-time-int"      : amp_time,
-                    "dd-freq-int"      : gsols_[1],
+                    "dd-time-int"      : ddsols_[0],
+                    "dd-freq-int"      : ddsols_[1],
                     "dd-save-to"       : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                     "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                 })
             if config[key].get('Bjones'):
-               cubical_opts.update({"b-solvable": True,
-                                    "b-time-int": config[key].get('Bsols', bsols)[0],
-                                    "b-freq-int":config[key].get('Bsols', bsols)[1],
-                                    "b-type" : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+               cubical_opts.update({"g-update-type"   : gupdate,
+                                    "b-update-type"   : bupdate,
+                                    "b-solvable": True,
+                                    "b-time-int": bsols_[0],
+                                    "b-freq-int": bsols_[1],
+                                    "b-type" : CUBICAL_MT[matrix_type],
                                     "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                                     "b-save-to": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                                     "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5)})
                                             
             if config[key].get('DDjones'):
-               cubical_opts.update({"dd-solvable": True,
-                                    "dd-time-int": config[key].get('dEsols', gsols_[0])[0],
-                                    "dd-freq-int":config[key].get('dEsols', gsols_[1])[1],
-                                    "dd-type" : CUBICAL_MT[config[key].get('gain_matrix_type', 'Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]],
+               cubical_opts.update({"g-update-type"   : gupdate,
+                                    "dd-update-type"   : dupdate,
+                                    "dd-solvable": True,
+                                    "dd-time-int": ddsols_[0],
+                                    "dd-freq-int": ddsols_[1],
+                                    "dd-type" : CUBICAL_MT[matrix_type],
                                     "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                                     "dd-dd-term":   True,
@@ -1042,7 +1054,7 @@ def worker(pipeline, recipe, config):
         aimfast_settings = {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
-                    "normality-model"      : config[step].get(
+                    "normality-test"      : config[step].get(
                                                  'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),
@@ -1097,8 +1109,8 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if we use the new two_step analysis aimfast has to be run
-    if config['calibrate'].get('two_step'):
-        config['aimfast']['enable'] = True
+    #if config['calibrate'].get('two_step') and calwith == 'meqtrees':
+    #    config['aimfast']['enable'] = True
     # if model_mode is vis only we do not want to run pybdsm
     if config['calibrate'].get('model_mode') == 'vis_only':
         config['extract_sources']['enable'] = False

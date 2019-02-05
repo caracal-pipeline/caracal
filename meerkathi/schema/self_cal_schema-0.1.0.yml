@@ -37,6 +37,10 @@ mapping:
         type: int
         desc: Provide spectral window id
         required: true
+      ncpu:
+        type: int
+        desc: number of cpu's to use
+        required: false
       img_npix:
         type: int
         desc: Number of pixels in output image
@@ -90,19 +94,6 @@ mapping:
         type: str
         desc: Stokes image to create
         required: true
-      bjones:
-        type: bool
-        desc: Enable Bjones.
-        required: true
-      ddjones:
-        type: bool
-        desc: Enable direction dependent calibration, currently experimental.
-        required: true
-      cal_DDsols:
-        desc: Calibration solution intervals
-        seq:
-            - type: int
-        required: false
       cal_gain_amplitude_clip_low:
         type: float
         desc: Lower gain amplitude clipping
@@ -306,7 +297,7 @@ mapping:
             required: True
           two_step:
             type: bool
-            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal
+            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and parameters gain be used with DDsols parameters. Keep DDjones to false though
             required: false
           add_vis_model:
             type: bool
@@ -326,12 +317,30 @@ mapping:
            type: bool
            desc: Enable Bjones
            required: True
-          Bsols:
+          Bsols_time:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+          Bsols_channel:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+          DDjones:
+            type: bool
+            desc: Enable direction dependent calibration, currently experimental.
             required: true
-
+          DDsols_time:
+            desc: Calibration solution intervals
+            seq:
+              - type: float
+            required: false
+          DDsols_channel:
+            desc: Calibration solution intervals
+            seq:
+              - type: float
+            required: false
       restore_model:
         type: map
         desc: Restore modelled to final calibrated residual image

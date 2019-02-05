@@ -651,14 +651,15 @@ def worker(pipeline, recipe, config):
             gsols_ = [config[key].get('Gsols_time',[])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
              # If we have a two_step selfcal  we will calculate the intervals
-            if config[key].get('DDjones', False):
+            matrix_type = config[key].get('gain_matrix_type', 'GainDiag')[num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
+            if config[key].get('DDJones', False):
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
                 else:
                     matrix_type= trace_matrix[num-2]
                     SN = trace_SN[num-2]
-                #fidelity_data = get_aimfast_data()
+                fidelity_data = get_aimfast_data()
                 obs_data = get_obs_data()
                 int_time =  obs_data['EXPOSURE']
                 tot_time=0.
@@ -666,7 +667,6 @@ def worker(pipeline, recipe, config):
                     tot_time += obs_data['SCAN']['0'][scan_key]
                 no_ant=len(obs_data['ANT']['DISH_DIAMETER'])
                 DR=fidelity_data['meerkathi_{0}-residual'.format(num)]['meerkathi_{0}-model'.format(num)]['DR']
-                DR = 10
                 Noise= fidelity_data['meerkathi_{0}-residual'.format(num)]['STDDev']
                 flux=DR*Noise
                 solvetime = int(Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
@@ -700,17 +700,16 @@ def worker(pipeline, recipe, config):
                 trace_SN.append(SN)
                 global trace_matrix
                 trace_matrix.append(matrix_type)
-            if matrix_type =='GainDiagPhase':
+            if matrix_type == 'GainDiagPhase' and config[key].get('two_step', False):
                 outcolumn = "CORRECTED_DATA_PHASE"
                 incolumn = "DATA"
-            else:
+            elif config[key].get('two_step', False):
                 outcolumn = "CORRECTED_DATA"
                 incolumn = "CORRECTED_DATA_PHASE"
 
-            bsols_ = [config[key].get('Bsols_time',[])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
-                          config[key].get('Bsols_channel', [])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
+            bsols_ = [config[key].get('Bsols_time',[0])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
+                          config[key].get('Bsols_channel', [0])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)
-            print(gsols_)
             recipe.add('cab/calibrator', step,
                {
                  "skymodel"             : calmodel,  
@@ -735,7 +734,7 @@ def worker(pipeline, recipe, config):
                  "Gjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "Bjones"                    : config[key].get('Bjones', False),
                  "Bjones-solution-intervals" : sdm.dismissable(bsols_ or None),
-                 "Bjones-ampl-clipping"      : config[key].get('Bjones', bjones),
+                 "Bjones-ampl-clipping"      : config[key].get('Bjones', False),
                  "Bjones-ampl-clipping-low"  : config.get('cal_gain_amplitude_clip_low', 0.5),
                  "Bjones-ampl-clipping-high" : config.get('cal_gain_amplitude_clip_high', 1.5),
                  "make-plots"           : True,

@@ -94,18 +94,20 @@ def worker(pipeline, recipe, config):
             matrix_type = config[key_mt].get('gain_matrix_type', 'GainDiag')[num - 2 if len(config[key_mt].get('gain_matrix_type')) >= num else -1]
         else:
             matrix_type = 'null'
+        print(matrix_type, num)
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
-        if config.get('calibrate_with', 'cubical').lower() == 'meqtrees':
-            if matrix_type == 'GainDiag' and config[key].get('two_step', False):
+        if config.get('calibrate_with', 'cubical').lower() == 'meqtrees' and config[key_mt].get('two_step', False):
+            if matrix_type == 'GainDiag':
                 imcolumn = "CORRECTED_DATA"
             # If we do not have gaindiag but do have two step selfcal check against stupidity and that we are actually ending with ampphase cal and written to a special phase column
-            elif config[key_mt].get('gain_matrix_type', 'GainDiagPhase')[-1] == 'GainDiag' and config[key_mt].get('two_step', False) and matrix_type != 'null':
+            elif matrix_type == 'GainDiagPhase' and config[key_mt].get('gain_matrix_type', 'GainDiag')[-1] == 'GainDiag':
                 imcolumn = 'CORRECTED_DATA_PHASE'
             # If none of these apply then do our normal sefcal
             else:
                 imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
         else:
             imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
+        print(imcolumn)
         if config[key].get('peak_based_mask_on_dirty', False):
             mask = True
             step = 'image_{}_dirty'.format(num)

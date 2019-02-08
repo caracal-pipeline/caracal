@@ -94,7 +94,6 @@ def worker(pipeline, recipe, config):
             matrix_type = config[key_mt].get('gain_matrix_type', 'GainDiag')[num - 2 if len(config[key_mt].get('gain_matrix_type')) >= num else -1]
         else:
             matrix_type = 'null'
-        print(matrix_type, num)
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
         if config.get('calibrate_with', 'cubical').lower() == 'meqtrees' and config[key_mt].get('two_step', False):
             if matrix_type == 'GainDiag':
@@ -780,7 +779,18 @@ def worker(pipeline, recipe, config):
             bupdate = 'full'
             dupdate = 'full'
         jones_chain = 'G'
-        if config[key].get('two_step', False) or config[key].get('ddjones', False) :
+        gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
+                  config[key].get('Gsols_channel', [])[
+                      num - 1 if num <= len(config[key].get('Gsols_channel', [])) else -1]]
+        bsols_ = [config[key].get('Bsols_time', [0])[num - 1 if num <= len(config[key].get('Bsols_time', [])) else -1],
+                  config[key].get('Bsols_channel', [0])[
+                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+        ddsols_ = [
+            config[key].get('DDsols_time', [0])[num - 1 if num <= len(config[key].get('DDsols_time', [])) else -1],
+            config[key].get('DDsols_channel', [0])[
+                num - 1 if num <= len(config[key].get('DDsols_channel', [])) else -1]]
+
+        if (config[key].get('two_step', False) and ddsols_[0] != -1) or config[key].get('ddjones', False) :
             jones_chain += ',DD'
             matrix_type = 'Gain2x2'
         elif config[key].get('ddjones', False) and onfig[key].get('two_step', False):
@@ -790,12 +800,6 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         for i,msname in enumerate(mslist):
-            gsols_ = [config[key].get('Gsols_time', [])[num-1 if num <= len(config[key].get('Gsols_time',[])) else -1],
-                config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
-            bsols_ = [config[key].get('Bsols_time', [0])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
-                config[key].get('Bsols_channel', [0])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
-            ddsols_ = [config[key].get('DDsols_time', [0])[num-1 if num <= len(config[key].get('DDsols_time',[])) else -1],
-                config[key].get('DDsols_channel', [0])[num-1 if num <= len(config[key].get('DDsols_channel',[])) else -1]]
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
@@ -825,7 +829,7 @@ def worker(pipeline, recipe, config):
                   "madmax-estimate" : 'corr',
 
                 }
-            if config[key].get('two_step', False):
+            if config[key].get('two_step', False) and ddsols_[0] != -1:
                 cubical_opts.update({
                     "g-update-type"    : gupdate,
                     "dd-update-type"   : 'amp-diag',

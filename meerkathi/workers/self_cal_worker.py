@@ -866,8 +866,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/cubical', step, cubical_opts,  
                 input=pipeline.input,
                 output=pipeline.output,
-                #shared_memory='100Gb',
-                shared_memory = '10Gb',
+                shared_memory= config[key].get('shared_memory','100Gb'),
+                #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     

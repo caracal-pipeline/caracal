@@ -295,9 +295,13 @@ mapping:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
             required: True
+          shared_memory:
+            type: str
+            desc: Set the amount of shared memory for cubical. Default '100Gb'
+            required: False
           two_step:
             type: bool
-            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and parameters gain be used with DDsols parameters. Keep DDjones to false though
+            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false.
             required: false
           add_vis_model:
             type: bool

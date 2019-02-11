@@ -20,6 +20,10 @@ mapping:
         type: str
         desc: Lable for output products (plots etc.) for this step.
         required: true
+      correlation: 
+        type: str
+        desc: Lable specyfying the correlations used XX,YY is default
+        required: false
 
       real_imag:
         type: map

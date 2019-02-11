@@ -106,7 +106,7 @@ def worker(pipeline, recipe, config):
                 imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
         else:
             imcolumn = config[key].get('column', "CORRECTED_DATA")[num - 1 if len(config[key].get('column')) >= num else -1]
-        print(imcolumn)
+      
         if config[key].get('peak_based_mask_on_dirty', False):
             mask = True
             step = 'image_{}_dirty'.format(num)

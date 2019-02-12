@@ -320,7 +320,7 @@ mapping:
           Bjones: 
            type: bool
            desc: Enable Bjones
-           required: True
+           required: false
           Bsols_time:
             seq:
               - type: float
@@ -334,7 +334,7 @@ mapping:
           DDjones:
             type: bool
             desc: Enable direction dependent calibration, currently experimental.
-            required: true
+            required: false
           DDsols_time:
             desc: Calibration solution intervals
             seq:

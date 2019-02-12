@@ -33,7 +33,7 @@ mapping:
             type: bool
             required: false
       Check_Cals:
-        desc: Should the calibrators be checked or only the target. Default True
+        desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
         type: bool
         required: false
       target:

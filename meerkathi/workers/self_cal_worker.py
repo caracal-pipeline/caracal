@@ -653,7 +653,7 @@ def worker(pipeline, recipe, config):
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
              # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key].get('gain_matrix_type', 'GainDiag')[num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-            if config[key].get('DDJones', False):
+            if config[key].get('two_step', False):
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
@@ -701,12 +701,12 @@ def worker(pipeline, recipe, config):
                 trace_SN.append(SN)
                 global trace_matrix
                 trace_matrix.append(matrix_type)
-            if matrix_type == 'GainDiagPhase' and config[key].get('two_step', False):
-                outcolumn = "CORRECTED_DATA_PHASE"
-                incolumn = "DATA"
-            elif config[key].get('two_step', False):
-                outcolumn = "CORRECTED_DATA"
-                incolumn = "CORRECTED_DATA_PHASE"
+                if matrix_type == 'GainDiagPhase' and config[key].get('two_step', False):
+                    outcolumn = "CORRECTED_DATA_PHASE"
+                    incolumn = "DATA"
+                elif config[key].get('two_step', False):
+                    outcolumn = "CORRECTED_DATA"
+                    incolumn = "CORRECTED_DATA_PHASE"
 
             bsols_ = [config[key].get('Bsols_time',[0])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
                           config[key].get('Bsols_channel', [0])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
@@ -793,7 +793,7 @@ def worker(pipeline, recipe, config):
         if (config[key].get('two_step', False) and ddsols_[0] != -1) or config[key].get('ddjones', False) :
             jones_chain += ',DD'
             matrix_type = 'Gain2x2'
-        elif config[key].get('ddjones', False) and onfig[key].get('two_step', False):
+        elif config[key].get('DDjones', False) and config[key].get('two_step', False):
              raise ValueError('You cannot do a DD-gain calibration and a split amplitude-phase calibration all at once')
         if config[key].get('Bjones', False):
             jones_chain += ',B'
@@ -841,7 +841,7 @@ def worker(pipeline, recipe, config):
                     "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                 })
-            if config[key].get('Bjones'):
+            if config[key].get('Bjones', False):
                cubical_opts.update({"g-update-type"   : gupdate,
                                     "b-update-type"   : bupdate,
                                     "b-solvable": True,
@@ -852,7 +852,7 @@ def worker(pipeline, recipe, config):
                                     "b-save-to": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                                     "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5)})
                                             
-            if config[key].get('DDjones'):
+            if config[key].get('DDjones', False):
                cubical_opts.update({"g-update-type"   : gupdate,
                                     "dd-update-type"   : dupdate,
                                     "dd-solvable": True,
@@ -883,12 +883,12 @@ def worker(pipeline, recipe, config):
         hires_switch = config['calibrate'].get('hires_interpol', 'True')
         if (hires_switch==False):
             enable = False
-        if config[key].get('bjones',False):
+        if config[key].get('Bjones',False):
             jones_chain = 'G,B'
         else:
             jones_chain = 'G'
-        if config[key].get('ddjones', False):
-            jones_chain+= ',dE'
+        if config[key].get('DDjones', False):
+            jones_chain+= ',DD'
         for i,himsname in enumerate(hires_mslist):
             cubical_gain_interp_opts = {
                "data-ms"          : himsname,
@@ -901,9 +901,9 @@ def worker(pipeline, recipe, config):
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
                "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
-            if config[key].get('ddjones', False):          
+            if config[key].get('DDjones', False):
                cubical_gain_interp_opts.update({"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
-            if config[key].get('bjones', False):          
+            if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update({"dd-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
             step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,

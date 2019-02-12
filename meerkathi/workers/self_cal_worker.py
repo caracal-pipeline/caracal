@@ -653,7 +653,7 @@ def worker(pipeline, recipe, config):
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
              # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key].get('gain_matrix_type', 'GainDiag')[num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-            if config[key].get('two_step', False):
+            if config[key].get('two_step', False) and config[key].get('aimfast', False) :
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
@@ -705,6 +705,13 @@ def worker(pipeline, recipe, config):
                     outcolumn = "CORRECTED_DATA_PHASE"
                     incolumn = "DATA"
                 elif config[key].get('two_step', False):
+                    outcolumn = "CORRECTED_DATA"
+                    incolumn = "CORRECTED_DATA_PHASE"
+            elif config[key].get('two_step', False):
+                if matrix_type == 'GainDiagPhase':
+                    outcolumn = "CORRECTED_DATA_PHASE"
+                    incolumn = "DATA"
+                else:
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
 
@@ -759,15 +766,13 @@ def worker(pipeline, recipe, config):
             fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
         if config[key].get('model_mode', None) == 'pybdsm_vis':
-            if (num==cal_niter): 
-                  modellist = [calmodel, 'MODEL_DATA']
-            else:
-                  modellist = [calmodel]
+            modellist = [calmodel,'MODEL_DATA']
+            # This is incorrect and will result in the lsm being used in the first direction and the model_data in the others. They need to be added as + however that messes up the output identifier structure
         if config[key].get('model_mode', None) == 'pybdsm_only':
             modellist = [calmodel]
         if config[key].get('model_mode', None) == 'vis_only':
             modellist = ['MODEL_DATA']
-
+        print(modellist)
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
         print(matrix_type)
         if matrix_type == 'GainDiagPhase' or config[key].get('two_step', False):
@@ -829,6 +834,8 @@ def worker(pipeline, recipe, config):
                   "madmax-estimate" : 'corr',
 
                 }
+            print(cubical_opts)
+
             if config[key].get('two_step', False) and ddsols_[0] != -1:
                 cubical_opts.update({
                     "g-update-type"    : gupdate,
@@ -842,7 +849,8 @@ def worker(pipeline, recipe, config):
                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
                 })
             if config[key].get('Bjones', False):
-               cubical_opts.update({"g-update-type"   : gupdate,
+               cubical_opts.update({
+                                    "g-update-type"   : gupdate,
                                     "b-update-type"   : bupdate,
                                     "b-solvable": True,
                                     "b-time-int": bsols_[0],

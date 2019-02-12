@@ -508,7 +508,6 @@ def worker(pipeline, recipe, config):
             blank_limit = 1e-9
         else:
             blank_limit = None
-
         recipe.add('cab/pybdsm', step,
             {
                 "image"         : im,
@@ -516,7 +515,7 @@ def worker(pipeline, recipe, config):
                 "thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
                 "outfile"       : '{:s}.fits:output'.format(calmodel),
                 "blank_limit"   : sdm.dismissable(blank_limit),
-                "adaptive_rms_box" : True,
+                "adaptive_rms_box" : False,
                 "port2tigger"   : True,
                 "multi_chan_beam": spi_do,
                 "spectralindex_do": spi_do,
@@ -766,15 +765,16 @@ def worker(pipeline, recipe, config):
             fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
 
         if config[key].get('model_mode', None) == 'pybdsm_vis':
-            modellist = [calmodel,'MODEL_DATA']
+            if (num == cal_niter):
+                modellist = [calmodel, 'MODEL_DATA']
+            else:
+                modellist = [calmodel]
             # This is incorrect and will result in the lsm being used in the first direction and the model_data in the others. They need to be added as + however that messes up the output identifier structure
         if config[key].get('model_mode', None) == 'pybdsm_only':
             modellist = [calmodel]
         if config[key].get('model_mode', None) == 'vis_only':
             modellist = ['MODEL_DATA']
-        print(modellist)
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-        print(matrix_type)
         if matrix_type == 'GainDiagPhase' or config[key].get('two_step', False):
             gupdate = 'phase-diag'
             bupdate = 'phase-diag'
@@ -834,7 +834,6 @@ def worker(pipeline, recipe, config):
                   "madmax-estimate" : 'corr',
 
                 }
-            print(cubical_opts)
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
                 cubical_opts.update({
@@ -1144,7 +1143,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info("Interpolating gains")
         image(self_cal_iter_counter)
     if pipeline.enable_task(config, 'sofia_mask'):
-        sofia_mask(self_cal_iter_counter)        
+        sofia_mask(self_cal_iter_counter)
     if pipeline.enable_task(config, 'extract_sources'):
         extract_sources(self_cal_iter_counter)
     if pipeline.enable_task(config, 'aimfast'):

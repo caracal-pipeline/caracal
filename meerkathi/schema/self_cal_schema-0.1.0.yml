@@ -66,6 +66,10 @@ mapping:
         type: float
         desc: Briggs robust value
         required: false
+      img_uvtaper:
+        type: str
+        desc: Taper for imaging
+        required: false
       img_niter:
         type: int
         desc: Number of cleaning iterations

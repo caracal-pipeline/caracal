@@ -25,7 +25,8 @@ requirements = [
 'astropy',
 'astroquery>=0.3.8',
 'npyscreen>=4.10.5',
-'ipdb>=0.11'
+'ipdb>=0.11',
+'python-casacore>=2.2.0'
 ]
 
 PACKAGE_NAME = 'meerkathi'

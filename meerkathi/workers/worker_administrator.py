@@ -16,7 +16,7 @@ import base64
 from urllib import urlencode
 import ruamel.yaml
 import json
-from meerkathi.dispatch_crew.reporter import reporter as mrr
+from meerkathi.scripts import reporter as mrr
 import subprocess
 from meerkathi.dispatch_crew import worker_help
 
@@ -83,7 +83,7 @@ class worker_administrator(object):
             if value:
                 setattr(self, item, value)
 
-        for item in 'data_path reference_antenna fcal bpcal gcal target'.split():
+        for item in 'data_path reference_antenna fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
             if value and len(value)==1:
                 value = value*nobs

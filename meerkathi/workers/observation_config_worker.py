@@ -62,8 +62,8 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-    # itnitialse things
-    for item in 'fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
+    # initialse things
+    for item in 'xcal fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
         val = config.get(item, 'auto')
         if val and not isinstance(val, list):
             setattr(pipeline, item, [val]*pipeline.nobs)
@@ -79,7 +79,7 @@ def worker(pipeline, recipe, config):
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
     pipeline.dish_diameter = config.get('dish_diameter', 13.5)
 
-    for item in 'fcal bpcal gcal target'.split():
+    for item in 'xcal fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
 
     for i, prefix in enumerate(prefixes):
@@ -111,14 +111,22 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
 
         #Auto select some/all fields if user didn't manually override all of them
-        if 'auto' in [config[item] for item in 'fcal bpcal gcal target'.split()]:
+        if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
             intents = utils.categorize_fields(msinfo)
             # Get fields and their purposes
             fcals = intents['fcal'][-1]
             gcals = intents['gcal'][-1]
             bpcals = intents['bpcal'][-1]
             targets = intents['target'][-1]
-
+            xcals = []
+            # Set crosshand angle calibrator
+            if config.get('xcal', 'auto') == 'auto':
+                if len(intents['xcal']) > 0:
+                    pipeline.gcal[i] = intents['xcal'][-1] # last on the list if auto
+                else:
+                    meerkathi.log.warn("No crosshand angle reference calibrator specified. This calibration will not be performed.")
+            else:
+                pipeline.xcal[i] = config['xcal'] # user specified
             # Set gain calibrator
             if config['gcal'] == 'auto':
                 pipeline.gcal[i] = utils.select_gcal(msinfo, targets, gcals, mode='nearest')
@@ -174,7 +182,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
-        for item in 'fcal bpcal gcal target'.split():
+        for item in 'xcal fcal bpcal gcal target'.split():
             flds =  getattr(pipeline, item)[i].split(',') \
                         if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
             getattr(pipeline, item + "_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))

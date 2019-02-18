@@ -27,6 +27,7 @@ observation_config:
   fcal: auto
   bpcal: auto
   gcal: auto
+  xcal: auto
   reference_antenna: '0'
   primary_beam:
     enable: false
@@ -183,6 +184,29 @@ cross_cal:
   flagging_summary:
     enable: true
 
+polcal:
+  enable: true
+  order: 45
+  label: crosshand_cal
+  solve_uvdist: 150~10000000000m
+  preaverage_time: 32s
+  preaverage_freq: 4 #quarterband
+  timesol_solfreqsel: 1.3~1.45GHz
+  timesol_soltime: inf #one per scan
+  freqsol_soltime: inf #all time to ensure SNR
+  feed_angle_rotation: -90 #MEERKAT X and Y are flipped
+  do_dump_precalibration_leakage_reports: true
+  set_model:
+    enable: true
+    meerkathi_model: true
+    threads: 24
+  do_solve_crosshand_slope: true
+  do_solve_crosshand_phase: true
+  do_solve_leakages: true
+  do_apply_XD: true
+  do_dump_postcalibration_leakage_reports: true
+  flagging_summary_crosshand_cal:
+    enable: true
 
 inspect_data:
   enable: true

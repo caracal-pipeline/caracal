@@ -10,7 +10,7 @@ import ruamel.yaml
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
-import webbrowser 
+import webbrowser
 import subprocess
 import traceback
 import pdb

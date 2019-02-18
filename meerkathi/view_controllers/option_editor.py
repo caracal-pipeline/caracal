@@ -220,7 +220,7 @@ class option_editor(npyscreen.FormBaseNew):
             ki = 1
             for k, v in groups.iteritems():
                 if __isdict(groups[k]) and groups[k].get('enable', True):
-                    label = "■ {}. {}".format(ki, k) if level == 1 else "■ {}.{} {}".format(level_label, ki, k)
+                    label = "(X) {}. {}".format(ki, k) if level == 1 else "(X) {}.{} {}".format(level_label, ki, k)
                     subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     __populate_tree(groups[k], 
                                     subtree, 
@@ -228,7 +228,7 @@ class option_editor(npyscreen.FormBaseNew):
                                     level_label='.'.join([str(x) for x in ([level_label, ki] if level > 1 else [ki])]))
                     ki += 1
                 elif __isdict(groups[k]) and not groups[k].get('enable', True):
-                    label = "Ø {}. {}".format(ki, k) if level == 1 else "Ø {}.{} {}".format(level_label, ki, k)
+                    label = "( ) {}. {}".format(ki, k) if level == 1 else "( ) {}.{} {}".format(level_label, ki, k)
                     subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     ki += 1
                 else:

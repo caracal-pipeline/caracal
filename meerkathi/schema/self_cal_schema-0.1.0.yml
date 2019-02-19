@@ -256,6 +256,10 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
+          local_rms:
+            type: bool
+            desc: Execute this segment
+            required: false
           spi:
             type: bool
             desc: Extract source spectral index

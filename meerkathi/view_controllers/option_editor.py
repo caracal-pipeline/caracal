@@ -218,7 +218,7 @@ class option_editor(npyscreen.FormBaseNew):
                 tree = annotated_tree_data(key_val=None, content='Root', selectable=False,ignoreRoot=True)
             
             ki = 1
-            for k, v in groups.iteritems():
+            for k, v in sorted(groups.iteritems(), key=lambda (k, v): v.get("order", 0) if hasattr(v, "get") else 0):
                 if __isdict(groups[k]) and groups[k].get('enable', True):
                     label = "(X) {}. {}".format(ki, k) if level == 1 else "(X) {}.{} {}".format(level_label, ki, k)
                     subtree = tree.newChild("@{}".format(k), content=label, selectable=True)

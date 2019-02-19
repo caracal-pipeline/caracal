@@ -122,7 +122,7 @@ def worker(pipeline, recipe, config):
             # Set crosshand angle calibrator
             if config.get('xcal', 'auto') == 'auto':
                 if len(intents['xcal']) > 0:
-                    pipeline.gcal[i] = intents['xcal'][-1] # last on the list if auto
+                    pipeline.xcal[i] = intents['xcal'][-1] # last on the list if auto
                 else:
                     meerkathi.log.warn("No crosshand angle reference calibrator specified. This calibration will not be performed.")
             else:

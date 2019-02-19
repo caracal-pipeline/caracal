@@ -3,7 +3,8 @@ import os
 from meerkathi import log
 import meerkathi.dispatch_crew.utils as utils
 import yaml
-import stimela.dismissable as sdm
+from stimela.dismissable import dismissable as sdm
+import stimela
 from meerkathi.scripts import reporter as mrr
 
 NAME = "Crosshand calibration"
@@ -70,7 +71,7 @@ def worker(pipeline, recipe, config):
         polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
         # only 1934 is really unpolarized, don't recommend anything else 
         # 0407-65 is very partially polarized (< 1%), so it is probably okish as leakage calibrator
-        unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341","PKS 1934-638", "PKS 1934-63", "PKS1934-63",
+        unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341","PKS 1934-638", "PKS 1934-63", "PKS1934-638",
                                    "PKS0407-65", "0408-65", "J0407-6552"]
 
         def get_field(field):
@@ -92,27 +93,26 @@ def worker(pipeline, recipe, config):
             log.warn("SEVERE: No crosshand calibrators set. Cannot calibrate U -> V rotation. You will have an arbitrary "
                      "instrumental polarization angle in your data! DO NOT TAKE ANGLE MEASUREMENTS")
 
-        if not set(",".split(get_field("xcal"))) <= set(polarized_calibrators.keys()):
+        if get_field("xcal") not in set(polarized_calibrators.keys()):
             raise RuntimeError("Field(s) {0:s} not recognized crosshand calibrators. Unset xcal marked sources to disable X Jones calibration."
                                "Currently the following are recognized "
-                               "crosshand phase calibrators: {1:s}".format(get_field("xcal"), ",".join(polarized_calibrators.keys())))
+                               "crosshand phase calibrators: {1:s}".format(get_field("xcal"), ", ".join(polarized_calibrators.keys())))
 
-        if not set(",".split(get_field("fcal"))) <= set(unpolarized_calibrators):
+        if get_field("fcal") not in set(unpolarized_calibrators):
             raise RuntimeError("Field(s) {0:s} not recognized leakage calibrators. Currently the following are recognized "
-                               "leakage calibrators: {1:s}".format(get_field("fcal"), ",".join(unpolarized_calibrators)))
+                               "leakage calibrators: {1:s}".format(get_field("fcal"), ", ".join(unpolarized_calibrators)))
 
         def __check_linear_feeds(ms):
             from pyrap.tables import table as tbl
             import numpy as np
-            with tbl("%s::FEED" % ms, readonly=False) as t:
-                ptype = np.as_array(t.getcol("POLARIZATION_TYPE"))
-                feed_types = set(list(ptype.flatten()))
-                if set("X", "Y") != feed_types:
+            with tbl("%s::FEED" % os.path.join(MSDIR, ms), readonly=False, ack=False) as t:
+                ptype = t.getcol("POLARIZATION_TYPE")["array"]
+                feed_types = set(ptype)
+                if set(["X", "Y"]) != feed_types:
                     raise RuntimeError("Only linear feed systems supported at the moment. Cannot proceed with crosshand calibration.")
 
         __check_linear_feeds(msname)
 
-        recipe = stimela.Recipe("Linear crosshand calibration")
         # Need to average down the calibrators to get enough SNR on the crosshands
         # for solving
         recipe.add("cab/casa_oldsplit", "split_avg_data", {
@@ -129,9 +129,9 @@ def worker(pipeline, recipe, config):
 
         if config.get('do_dump_precalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_precal", {
-                      "ms": os.path.abspath(os.path.join(MSDIR, avgmsname)),
-                      "rep": os.path.join(OUTPUT, "precal_polleakage_{0:s}.ipynb.html".format(avgmsname)),
-                      "field": get_field(fcal)
+                      "ms": os.path.abspath(os.path.join(MSDIR, msname)),
+                      "rep": "precal_polleakage_{0:s}.ipynb.html".format(msname),
+                      "field": get_field("fcal")
             },
             input=INPUT, output=OUTPUT, label="precal_polleak_rep")
 
@@ -141,7 +141,7 @@ def worker(pipeline, recipe, config):
         def __correct_feed_convention(ms):
             from pyrap.tables import table as tbl
             import numpy as np
-            with tbl("%s::FEED" % ms, readonly=False) as t:
+            with tbl("%s::FEED" % os.path.join(MSDIR, ms), readonly=False) as t:
                 ang = t.getcol("RECEPTOR_ANGLE")
                 ang[:,0] = np.deg2rad(config.get("feed_angle_rotation", -90))
                 ang[:,1] = np.deg2rad(config.get("feed_angle_rotation", -90))
@@ -161,18 +161,18 @@ def worker(pipeline, recipe, config):
         # Set model
         # First do all the polarized calibrators
         if config['set_model'].get('enable', True):
-            for icf, cf in enumerate(list(set(",".split(get_field("xcal"))))):
-                recipe.add("cab/casa_setjy", "set_model_calms_%d" % icf, {
-                           "msname": avgmsname,
-                           "field": cf,
-                           "standard": polarized_calibrators[cf]["standard"],
-                           "fluxdensity": sdm(polarized_calibrators[cf]["fluxdensity"]),
-                           "spix": sdm(polarized_calibrators[cf]["spix"]),
-                           "reffreq": sdm(polarized_calibrators[cf]["reffreq"]),
-                           "polindex": sdm(polarized_calibrators[cf]["polindex"]),
-                           "polangle": sdm(polarized_calibrators[cf]["polangle"]),
-                },
-                input=INPUT, output=OUTPUT, label="set_model_calms_%d" % icf)
+            cf = get_field('xcal')
+            recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
+                       "msname": avgmsname,
+                       "field": cf,
+                       "standard": polarized_calibrators[cf]["standard"],
+                       "fluxdensity": sdm(polarized_calibrators[cf]["fluxdensity"]),
+                       "spix": sdm(polarized_calibrators[cf]["spix"]),
+                       "reffreq": sdm(polarized_calibrators[cf]["reffreq"]),
+                       "polindex": sdm(polarized_calibrators[cf]["polindex"]),
+                       "polangle": sdm(polarized_calibrators[cf]["polangle"]),
+            },
+            input=INPUT, output=OUTPUT, label="set_model_calms_%d" % 0)
 
             # now set the fluxscale reference
             field = get_field('fcal')
@@ -229,7 +229,7 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/casa_gaincal", "crosshand_delay", {
                     "vis": avgmsname,
                     "caltable": KX,
-                    "field": ",".join([bp for bp in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "refant": REFANT,
                     "solint": time_solint,
                     "combine": "",
@@ -245,7 +245,7 @@ def worker(pipeline, recipe, config):
                     "caltable": "%s:output" % KX,
                     "xaxis": "time",
                     "yaxis": "delay",
-                    "field": ",".join([dc for dc in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "plotsymbol": "o",
                     "figfile": PREFIX+".KX.png",
                     "showgui": False
@@ -264,7 +264,7 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/casa_polcal", "crosshand_phase_ref", {
                     "vis": avgmsname,
                     "caltable": Xref,
-                    "field": ",".join([bp for bp in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "solint": time_solint,
                     "combine": "",
                     "poltype": "Xf",
@@ -282,7 +282,7 @@ def worker(pipeline, recipe, config):
                     "overwrite": True,
                     "showgui": False,
                     "vis": "%s:output" % Xref,
-                    "field": ",".join([dc for dc in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "plotfile": PREFIX+".Xref.png",
                     "showgui": False
                 },
@@ -291,7 +291,7 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/casa_polcal", "crosshand_phase_freq", {
                     "vis": avgmsname,
                     "caltable": Xf,
-                    "field": ",".join([bp for bp in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "solint": freq_solint, #solint to obtain SNR on solutions
                     "combine": "scan",
                     "poltype": "Xf",
@@ -306,7 +306,7 @@ def worker(pipeline, recipe, config):
                     "caltable": "%s:output" % Xf,
                     "xaxis": "freq",
                     "yaxis": "phase",
-                    "field": ",".join([dc for dc in polarized_calibrators]),
+                    "field": get_field("xcal"),
                     "subplot": 111,
                     "plotsymbol": "o",
                     "figfile": PREFIX+".Xf.png",
@@ -346,7 +346,7 @@ def worker(pipeline, recipe, config):
                 input=INPUT, output=OUTPUT, label="leakage_ref_plot")
 
             recipe.add("cab/casa_polcal", "leakage_freq", {
-                    "vis": BP_CAL_MS,
+                    "vis": avgmsname,
                     "caltable": Df,
                     "field": field,
                     "solint": freq_solint, # ensure SNR criterion is met
@@ -362,7 +362,7 @@ def worker(pipeline, recipe, config):
                     "caltable": "%s:output" % Df,
                     "xaxis": "freq",
                     "yaxis": "amp",
-                    "field": ",".join([dc for dc in bp_calibrators]),
+                    "field": field,
                     "subplot": 441,
                     "iteration": "antenna",
                     "plotsymbol": "o",
@@ -373,12 +373,14 @@ def worker(pipeline, recipe, config):
 
         if config.get('do_apply_XD', True):
             # Before application lets transfer KGB corrected data to DATA and backup DATA
-            recipe.add("cab/msutil", "backup_raw", {
+            recipe.add("cab/msutils", "backup_raw", {
+                "command"           : "copycol",
                 "fromcol": "DATA",
                 "tocol": "RAWBACKUP",
                 "msname": msname,
             }, input=INPUT, output=OUTPUT, label="backup_raw_visibilities")
-            recipe.add("cab/msutil", "corr2data", {
+            recipe.add("cab/msutils", "corr2data", {
+                "command"           : "copycol",
                 "fromcol": "CORRECTED_DATA",
                 "tocol": "DATA",
                 "msname": msname,
@@ -401,7 +403,8 @@ def worker(pipeline, recipe, config):
                 input=INPUT, output=OUTPUT, label="apply_polcal_solutions")
 
             # Finally restore raw data
-            recipe.add("cab/msutil", "restore_raw", {
+            recipe.add("cab/msutils", "restore_raw", {
+                "command"           : "copycol",
                 "tocol": "DATA",
                 "fromcol": "RAWBACKUP",
                 "msname": msname,
@@ -421,8 +424,8 @@ def worker(pipeline, recipe, config):
         if config.get('do_dump_postcalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_postcal", {
                       "ms": os.path.abspath(os.path.join(MSDIR, avgmsname)),
-                      "rep": os.path.join(OUTPUT, "postcal_polleakage_{0:s}.ipynb.html".format(avgmsname)),
-                      "field": get_field(fcal)
+                      "rep": "postcal_polleakage_{0:s}.ipynb.html".format(avgmsname),
+                      "field": get_field("fcal"),
             },
             input=INPUT, output=OUTPUT, label="precal_polleak_rep")
 

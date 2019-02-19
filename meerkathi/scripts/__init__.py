@@ -25,7 +25,7 @@ class reporter:
         if not os.path.exists(self.__report_dir):
             os.mkdir(self.__report_dir)
 
-    def generate_calsolutions_report(rep, output="output"):
+    def generate_calsolutions_report(self, rep, output="output"):
         # read template
         with open(SOLUTIONS_TEMPLATE) as f:
             rep_template = f.read()
@@ -59,11 +59,11 @@ class reporter:
             html_exporter = HTMLExporter()
             #html_exporter.template_file = 'basic'
             (body, resources) = html_exporter.from_notebook_node(sols_rep)
-            with open(rep, 'w+') as f:
+            with open(str(rep), 'w+') as f:
                 f.write(body)
 
 
-    def generate_leakage_report(ms, rep, field="PKS1934-638"):
+    def generate_leakage_report(self, ms, rep, field="PKS1934-638"):
         rep = os.path.join(self.__report_dir, rep)
         # read template
         with open(LEAKAGE_TEMPLATE) as f:
@@ -106,7 +106,7 @@ class reporter:
 
     def generate_reports(self):
         self.pipeline_overview()
-        self.generate_calsolutions_report(output=self.__outputdir)
+        #self.generate_calsolutions_report(output=self.__outputdir)
 
     def pipeline_overview(self):
         """ generate an html report for every ms in the pipeline """

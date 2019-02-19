@@ -38,7 +38,7 @@ def categorize_fields(msinfo):
         'gcal' : (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
         'bpcal': (['CALIBRATE_BANDPASS'], []),
         'target': (['TARGET'], []),
-        'xcal' : (['CALIBRATE_POLARIZATION'])
+        'xcal' : (['CALIBRATE_POLARIZATION'], [])
     }
 
     for i, field in enumerate(names):

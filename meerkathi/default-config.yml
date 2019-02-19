@@ -1,473 +1,466 @@
-## Default meerkathi pipeline 
-schema_version: 0.1.0
+!!omap
+- image_HI:
+    sunblocker:
+      enable: false
+      use_mstransform: true
+      threshold: 4
+    enable: true
+    remove_stokes_axis:
+      enable: true
+    weight: briggs
+    pb_cube:
+      enable: false
+    npix: [1024]
+    sofia:
+      enable: false
+      rmsMode: mad
+      threshold: 4.0
+      flag: false
+      flagregion: []
+      merge: true
+      mergeX: 2
+      mergeY: 2
+      mergeZ: 3
+      minSizeX: 3
+      minSizeY: 3
+      minSizeZ: 5
+    freq_to_vel:
+      enable: true
+    hires_label: hires
+    label: corr
+    cell: 7
+    wsclean_image:
+      enable: true
+      wscl_niter: 2
+      ownfitsmask: # or own mask '<mask-name>.fits:output' 
+      rm_intcubes: true
+      use_mstransform: true
+      pol: I
+      spwid: 0
+      nchans: all
+      firstchan: 0
+      binchans: 1
+      npix: [1024]
+      padding: 1.2
+      cell: 7
+      weight: briggs
+      robust: 2
+      taper: 0
+      niter: 10000000
+      mgain: 1.0
+      automask: 5
+      autothreshold: 0.5
+      cleanborder: 0
+      no_update_mod: true
+      make_cube: true
+    mstransform:
+      enable: true
+      doppler: true
+      telescope: meerkat
+      mode: frequency
+      outframe: bary
+      uvlin: true
+      fitspw:
+      fitorder: 1
+      column: corrected
+    restfreq: 1.420405752GHz
+    robust: 0
+    flagging_summary:
+      enable: false
+    casa_image:
+      enable: false
+      use_mstransform: true
+      pol: I
+      spwid: 0
+      nchans: all
+      startchan: 0
+      npix: [1024]
+      cell: 7
+      weight: briggs
+      robust: 2
+      niter: 0
+      threshold: 10mJy
+      port2fits: true
+    order: 100
+    use_hires_data: true
+    subtractmodelcol:
+      enable: true
+- self_cal:
+    cal_gain_amplitude_clip_high: 1.5
+    img_pol: I
+    image:
+      enable: true
+      auto_mask: [40, 30, 10, 5, 3]
+      auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
+      column: [DATA, CORRECTED_DATA, CORRECTED_DATA, CORRECTED_DATA, CORRECTED_DATA]
+      mask_from_sky: false
+      multi_scale: false
+      multi_scale_scales: [0, 40, 80, 150] #pixel
+      local_rms: false
+      no_update_model: false
+      minuvw_m: 0
+    gain_interpolation:
+      enable: true
+      hires_label: hires
+    cal_DDsols: []
+    img_npix: 5540
+    calibrate:
+      enable: true
+      model: ['1', '2', '3', '4']
+      output_data: [CORR_DATA]
+      gain_matrix_type: [GainDiagPhase, GainDiag, GainDiag, GainDiag]
+      Gsols_time: [15, 15, 15]
+      Gsols_channel: [0, 0, 0]
+      add_vis_model: true
+      model_mode: vis_only
+    cal_gain_amplitude_clip_low: 0.5
+    sofia_mask:
+      enable: true
+      flag: false
+      threshold: 5
+      scale_noise_window: 51
+    aimfast:
+      enable: true
+      tolerance: 0.02
+    label: corr
+    img_niter: 1000000
+    img_cleanborder: 0
+    enable: true
+    img_robust: -1.5
+    spwid: 0
+    start_at_iter: 1
+    ddjones: false
+    extract_sources:
+      enable: false
+      spi: false
+      thresh_pix: [10, 10, 10]
+      thresh_isl: [8, 8, 5]
+    img_padding: 1.3
+    primary_beam: false
+    highfreqres_contim:
+      enable: true
+      chans: 12
+      deconv_chans: 3
+      fit_spectral_pol: 2
 
-general:
-  data_path: input/data         
-  msdir: msdir                   
-  input: input                    
-  output: output                   
-  prefix: meerkathi-pipeline
+    img_facets: 11
+    img_joinchannels: true
+    flagging_summary:
+      enable: true
+    img_nchans: 3
+    restore_model:
+      enable: false
+      model: 2+3
+      clean_model: '4'
+    undo_subtractmodelcol: false
+    calibrate_with: cubical
+    img_mgain: 0.9
+    img_cell: 1.3
+    bjones: false
+    cal_niter: 4
+    img_fit_spectral_pol: 1
+    img_weight: briggs
+    order: 90
+- inspect_data:
+    enable: true
+    real_imag:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+    amp_uvwave:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+    amp_phase:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+    amp_ant:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+    phase_uvwave:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+    label: 1gc1
+    order: 50
+    amp_scan:
+      enable: true
+      fields:
+      - gcal
+      - bpcal
+      - target
 
-get_data:
-  dataid: []                               
-  order: 0
-  mvftoms:             
-    enable: false
-    channel_range: 'null' 
-  untar:               
-    enable: false
-  combine:
-    enable: false
+- get_data:
+    dataid: []
+    untar:
+      enable: false
+    combine:
+      enable: false
 
-observation_config:
-  order: 10
-  obsinfo:
+    order: 0
+    mvftoms:
+      enable: false
+      channel_range: 'null'
+- cross_cal:
+    gain_cal_gain:
+      enable: true
+      combine: ''
+      field:
+      - gcal
+      plot:
+        enable: true
     enable: true
-  target: auto
-  fcal: auto
-  bpcal: auto
-  gcal: auto
-  xcal: auto
-  reference_antenna: '0'
-  primary_beam:
-    enable: false
+    gain_cal_flux:
+      enable: true
+      combine: ''
+      plot:
+        enable: true
+    bp_cal:
+      enable: true
+      combine: scan
+      field:
+      - bpcal
+      solint: inf
+      remove_ph_time_var: false
+      plot:
+        enable: true
+    flagging_summary:
+      enable: true
 
-prepare_data:
-  enable: true
-  order: 20
-  prepms:
-    enable: false
-  add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
-    enable: true
-
-
-flagging:
-  enable: true
-  order: 30
-  label: ''
-  autoflag_autocorr_powerspectra:
-    enable: false
-  flag_autocorr:
-    enable: true
-  quack_flagging:
-    enable: false
-    quackinterval: 10
-    quackmode: beg
-  flag_shadow:
-    enable: false
-  flag_spw:
-    enable: true
-    channels: "*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz" #band-rolloffs and Milkyway
-  flag_time:
-    enable: false
-    timerange: 'null' # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
-  flag_antennas:
-    enable: false
-    antennas: 'null'
-  flag_scan:
-    enable: false
-    scans: 'null'
-  static_mask:
-    enable: true
-    mask: labelled_rfimask.pickle.npy
-  autoflag_rfi:
-    enable: true
-    column: DATA
-    fields: fcal,bpcal,gcal
-    strategy: firstpass_QUV.rfis # Default for MeerKAT data
-  flagging_summary:
-    enable: true
-
-cross_cal:
-  enable: true
-  order: 40
-  otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
-  uvrange: ">50"
-  label: 1gc1
-  clear_cal:
-    enable: true
-    field:
+    apply_transfer_fluxscale:
+      enable: true
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - target
+      applymode: calflag
+    label: 1gc1
+    autoflag_closure_error:
+      enable: false
+      column: CORRECTED_DATA
+      fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
+      calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
+      baseline_to_group_threshold: 10
+      scan_to_scan_threshold: 10
+    delay_cal:
+      enable: true
+      combine: scan
+      solint: inf # Useful diagnostic to keep track of system delays with time
+      field:
+      - bpcal # can use both the bandpass and gain calibrator to keep track of delays
+      plot:
+        enable: true
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [-60, 60]
+    transfer_fluxscale:
+      enable: true
+      reference:
+      - fcal
+      transfer:
+      - gcal
+      plot:
+        enable: true
+    apply_delay_cal:
+      enable: true
+      field:
+      - bpcal
+      applyto:
+      - bpcal
+      - gcal
+      - target
+      applymode: calflag
+    uvrange: '>50'
+    apply_gain_cal_gain:
+      enable: false
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - target
+      applymode: calflag
+    apply_bp_cal:
+      enable: true
+      applyto:
+      - bpcal
+      - gcal
+      - target
+      field:
+      - bpcal
+      applymode: calflag
+    otfdelay: true
+    set_model:
+      enable: true
+      field:
+      - fcal
+      meerkathi_model: false # this is WRONG as it disables the option to use PKS0407-65
+    order: 40
+    clear_cal:
+      enable: true
+      field:
       - bpcal
       - fcal
       - target
       - gcal
-    addmodel: true
-  set_model:
-    enable: true
-    field: 
-      - fcal 
-    meerkathi_model: false # this is WRONG as it disables the option to use PKS0407-65
-  delay_cal:
-    enable: true
-    combine: "scan"
-    solint: "inf" # Useful diagnostic to keep track of system delays with time
-    field: 
-      - bpcal # can use both the bandpass and gain calibrator to keep track of delays
-    plot:
+      addmodel: true
+- general:
+    data_path: input/data
+    prefix: meerkathi-pipeline
+    msdir: msdir
+    init_pipeline: true
+    output: output
+    input: input
+- masking:
+    make_mask:
       enable: true
-    flag:
+      mask_with: sofia
+      input_image: pbcorr
+      thresh_lev: 7
+    cell_size: 2
+    enable: false
+    name_mask: my_mask.fits
+    final_mask: 'final_mask.fits'
+    centre_coord: [03:18:0.000, -37:27:0.000]
+    pb_correction:
+      enable: true
+      frequency: 1.37031054688e9
+    mask_size: 3600
+    extended_source_input: 'Fornaxa_vla.FITS'
+    query_catalog:
+      enable: true
+      catalog: SUMSS
+      width_image: 3d
+    merge_with_extended:
+      enable: true
+      extended_source_input: Fornaxa_vla.FITS #specify ouptut name of extended source mask if present in /input
+      mask_with: thresh
+      thresh_lev: 8.e-4
+
+    order: 80
+- prepare_data:
+    prepms:
       enable: false
-      mode: clip
-      clipminmax: [-60,60]
-  bp_cal:
-    enable: true
-    combine: "scan"
-    field: 
-      - bpcal
-    solint: "inf"
-    remove_ph_time_var: false
-    plot:
+    add_spectral_weights: # Estimate spectral weights from spec. sensitivity 
       enable: true
-  gain_cal_flux:
+
+
     enable: true
-    combine: ""
-    plot:
+    order: 20
+    fixvis:
+      enable: false
+- polcal:
+    feed_angle_rotation: -90
+    enable: true
+    set_model:
       enable: true
-  gain_cal_gain:
-    enable: true
-    combine: ""
-    field: 
-      - gcal
-    plot:
+      meerkathi_model: true
+      threads: 24
+    preaverage_time: 32s
+    timesol_soltime: inf
+    flagging_summary_crosshand_cal:
       enable: true
-  transfer_fluxscale:
-    enable: true
-    reference: 
-      - fcal 
-    transfer: 
-      - gcal
-    plot:
+
+    do_solve_leakages: true
+    preaverage_freq: 4
+    label: crosshand_cal
+    do_solve_crosshand_slope: true
+    do_dump_postcalibration_leakage_reports: true
+    do_solve_crosshand_phase: true
+    timesol_solfreqsel: 1.3~1.45GHz
+    solve_uvdist: 150~10000000000m
+    do_apply_XD: true
+    do_dump_precalibration_leakage_reports: true
+    order: 45
+    freqsol_soltime: inf
+- flagging:
+    hires_flag: true
+    autoflag_rfi:
       enable: true
-  apply_delay_cal:
+      column: DATA
+      fields: fcal,bpcal,gcal
+      strategy: firstpass_QUV.rfis # Default for MeerKAT data
     enable: true
-    field: 
-      - bpcal
-    applyto: 
-      - bpcal
-      - gcal
-      - target
-    applymode: calflag
-  apply_bp_cal:
-    enable: true
-    applyto: 
-      - bpcal
-      - gcal
-      - target
-    field: 
-      - bpcal
-    applymode: calflag
-  apply_gain_cal_gain:
-    enable: false
-    field: 
-      - gcal
-    applyto: 
-      - bpcal
-      - gcal
-      - target
-    applymode: calflag
-  apply_transfer_fluxscale:
-    enable: true
-    field: 
-      - gcal
-    applyto: 
-      - bpcal
-      - gcal
-      - target
-    applymode: calflag
-  autoflag_closure_error:
-    enable: false
-    column: CORRECTED_DATA
-    fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
-    calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
-    baseline_to_group_threshold: 10
-    scan_to_scan_threshold: 10
-  flagging_summary:
-    enable: true
+    autoflag_autocorr_powerspectra:
+      enable: false
+    flag_spw:
+      enable: true
+      channels: '*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz' #band-rolloffs and Milkyway
+    hires_label: 'hires'
+    flag_shadow:
+      enable: false
+    label: ''
+    quack_flagging:
+      enable: false
+      quackinterval: 10
+      quackmode: beg
+    flag_scan:
+      enable: false
+      scans: 'null'
+    static_mask:
+      enable: true
+      mask: labelled_rfimask.pickle.npy
+    flag_time:
+      enable: false
+      timerange: 'null' # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
+    flagging_summary:
+      enable: true
 
-polcal:
-  enable: true
-  order: 45
-  label: crosshand_cal
-  solve_uvdist: 150~10000000000m
-  preaverage_time: 32s
-  preaverage_freq: 4 #quarterband
-  timesol_solfreqsel: 1.3~1.45GHz
-  timesol_soltime: inf #one per scan
-  freqsol_soltime: inf #all time to ensure SNR
-  feed_angle_rotation: -90 #MEERKAT X and Y are flipped
-  do_dump_precalibration_leakage_reports: true
-  set_model:
+    flag_autocorr:
+      enable: true
+    flag_antennas:
+      enable: false
+      antennas: 'null'
+    order: 30
+- split_target:
+    obsinfo:
+      enable: true
+      listobs: true
+      summary_json: true
     enable: true
-    meerkathi_model: true
-    threads: 24
-  do_solve_crosshand_slope: true
-  do_solve_crosshand_phase: true
-  do_solve_leakages: true
-  do_apply_XD: true
-  do_dump_postcalibration_leakage_reports: true
-  flagging_summary_crosshand_cal:
-    enable: true
+    changecentre:
+      enable: false
+      ra: ''
+      dec: ''
+    prepms:
+      enable: false
 
-inspect_data:
-  enable: true
-  order: 50
-  label: 1gc1
-  real_imag:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-  amp_phase:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-  amp_uvwave:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-  amp_ant:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-  phase_uvwave:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-  amp_scan:
-    enable: true
-    fields: 
-      - gcal
-      - bpcal
-      - target
+    label: corr
+    split_target:
+      enable: true
+      time_average: ''
+      freq_average: 1
+    order: 60
+    hires_split:
+      enable: true
+      hires_label: hires
+      hires_spwid: 0
+      hires_spw: 'null'
+- observation_config:
+    obsinfo:
+      enable: true
+    target: auto
+    gcal: auto
+    xcal: auto
+    lastchanfreq: '0'
+    nchans: 0
+    bpcal: auto
+    primary_beam:
+      enable: false
 
-split_target:
-  enable: true
-  order: 60
-  label: corr
-  split_target:
-    enable: true
-    time_average: ''
-    freq_average: 1
-  hires_split:
-    enable: true
-    hires_label: hires
-    hires_spwid: 0
-    hires_spw: 'null'
-  changecentre:
-    enable: false
-    ra: ''
-    dec: ''
-  obsinfo: 
-    enable: true
-    listobs: true
-    summary_json: true
-  prepms:
-    enable: false
-
-flagging__2:
-  enable: true
-  order: 70
-  label: corr
-  hires_label: hires
-  hires_flag: true
-  autoflag_rfi:
-    enable: true
-    column: DATA
-    fields: auto
-    strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
-  flagging_summary:
-    enable: true
-
-masking:
-  enable: false
-  order: 80
-  centre_coord: ['03:18:0.000', '-37:27:0.000']
-  mask_size: 3600      #must be the same as  im_npix in selfcal worker
-  cell_size: 2         #this will ch
-  name_mask: 'my_mask.fits' #specify output name of catalog mask
-  query_catalog:
-    enable: true
-    catalog: 'SUMSS'
-    width_image: '3d'
-  pb_correction:
-    enable: true
-    frequency: 1.37031054688e9
-  make_mask:
-    enable: true
-    mask_with: 'sofia'
-    input_image: 'pbcorr'
-    thresh_lev: 7
-  merge_with_extended:
-    enable: true
-    extended_source_input: 'Fornaxa_vla.FITS' #specify ouptut name of extended source mask if present in /input
-    mask_with: 'thresh'
-    thresh_lev: 8.e-4
-
-self_cal:
-  enable: true
-  label: corr
-  order: 90
-  primary_beam: false
-  calibrate_with: cubical
-  spwid: 0
-  # Imaging settings
-  img_npix: 5540
-  img_padding: 1.3
-  img_mgain: 0.9
-  img_cell: 1.3
-  img_weight: briggs
-  img_robust: -1.5
-  img_niter: 1000000
-  img_cleanborder: 0                        
-  img_facets: 11
-  img_nchans: 3
-  img_joinchannels: true
-  img_fit_spectral_pol: 1
-  img_pol: I
-  # Calibration settings
-  cal_DDsols: []
-  bjones: false
-  ddjones: false
-  cal_gain_amplitude_clip_low: 0.5 
-  cal_gain_amplitude_clip_high: 1.5
-  # Source finding settings
-  cal_niter: 4
-  start_at_iter: 1
-  aimfast:
-    enable: true
-    tolerance: 0.02
-  image:
-    enable: true
-    auto_mask: [40 , 30, 10, 5, 3]
-    auto_threshold: [0.5, 0.5, 0.5, 0.25, 0.25]
-    column: ["DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA","CORRECTED_DATA"]
-    mask_from_sky: False
-    multi_scale: False
-    multi_scale_scales: [0,40,80,150] #pixel
-    local_rms: False
-    no_update_model: False
-    minuvw_m: 0
-  sofia_mask:
-    enable: true
-    flag: false
-    threshold: 5
-    scale_noise_window: 51
-  extract_sources:
-    enable: false
-    spi: false
-    thresh_pix: [10, 10, 10]
-    thresh_isl: [8, 8, 5]
-  calibrate:
-    enable: true
-    model: ['1', '2', '3', '4']
-    output_data: ["CORR_DATA"]
-    gain_matrix_type: ["GainDiagPhase","GainDiag","GainDiag","GainDiag"]
-    Gsols_time: [15,15,15]
-    Gsols_channel: [0,0,0]
-    add_vis_model: true 
-    model_mode: 'vis_only'
-  restore_model:
-    enable: false
-    model: '2+3'
-    clean_model: '4'
-  flagging_summary:
-    enable: true
-  gain_interpolation:
-    enable: true
-    hires_label: hires
-  highfreqres_contim:
-    enable: true
-    chans: 12
-    deconv_chans: 3
-    fit_spectral_pol: 2
-
-image_HI:
-  enable: true
-  order: 100
-  label: corr
-  hires_label: hires
-  use_hires_data: true
-  restfreq: '1.420405752GHz'
-  npix: [1024]
-  cell: 7
-  weight: 'briggs'
-  robust: 0
-  subtractmodelcol:
-    enable: true
-  mstransform:
-    enable: true
-    doppler: true
-    telescope: meerkat
-    mode: 'frequency'
-    outframe: 'bary' 
-    uvlin: true
-    fitspw: null 
-    fitorder: 1
-    column: corrected
-  sunblocker:
-    enable: false
-    use_mstransform: true
-    threshold: 4
-  wsclean_image:
-    enable: true
-    wscl_niter: 2
-    ownfitsmask:  # or own mask '<mask-name>.fits:output' 
-    rm_intcubes: true
-    use_mstransform: true
-    pol: I
-    spwid: 0
-    nchans: 'all'
-    firstchan: 0
-    binchans: 1
-    npix: [1024]
-    padding: 1.2
-    cell: 7
-    weight: briggs
-    robust: 2
-    taper: 0
-    niter: 10000000
-    mgain: 1.0
-    automask: 5
-    autothreshold: 0.5
-    cleanborder: 0
-    no_update_mod: true
-    make_cube: true
-  casa_image:
-    enable: false
-    use_mstransform: true
-    pol: I
-    spwid: 0
-    nchans: 'all'
-    startchan: 0
-    npix: [1024]
-    cell: 7
-    weight: briggs
-    robust: 2
-    niter: 0
-    threshold: '10mJy'
-    port2fits: True
-  remove_stokes_axis:
-    enable: true
-  pb_cube:
-    enable: false
-  freq_to_vel:
-    enable: true
-  sofia:
-    enable: false
-    rmsMode: 'mad'
-    threshold: 4.0
-    flag: false
-    flagregion: []
-    merge: true
-    mergeX: 2
-    mergeY: 2
-    mergeZ: 3
-    minSizeX: 3
-    minSizeY: 3
-    minSizeZ: 5
-  flagging_summary:
-    enable: false
+    reference_antenna: '0'
+    firstchanfreq: '0'
+    order: 10
+    fcal: auto
+    chanwidth: '0'
+- schema_version: 0.1.0

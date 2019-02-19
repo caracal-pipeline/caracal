@@ -377,7 +377,7 @@
     do_solve_crosshand_slope: true
     do_dump_postcalibration_leakage_reports: true
     do_solve_crosshand_phase: true
-    timesol_solfreqsel: 
+    timesol_solfreqsel: '' 
     solve_uvdist: 150~10000000000m
     do_apply_XD: true
     do_dump_precalibration_leakage_reports: true

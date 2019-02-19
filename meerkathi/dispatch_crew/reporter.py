@@ -19,7 +19,7 @@ class reporter:
         with open(REPORT_TEMPLATE) as f:
             self.__rep_template = f.read()
         self.__report_dir = os.path.join(self.__outputdir, "reports")
-        if not os.path.exists(self.__report_dir):
+	if not os.path.exists(self.__report_dir):
             os.mkdir(self.__report_dir)
 
     def generate_reports(self):
@@ -43,7 +43,7 @@ class reporter:
                            'msindex = {}'.format(msi),
                            s)
                 return s
-
+ 
             # modify template to add the output directory and ms name
             ms_rep.cells[0]['source'] = '\n'.join(map(__customize, ms_rep.cells[0]['source'].split('\n')))
 

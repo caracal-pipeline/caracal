@@ -6,7 +6,7 @@ mapping:
 
   masking:
     type: map
-    desc: Create mask from catalog / merge with mask of extended source
+    desc: Create mask from catalog and/ormerge with mask of extended source
     mapping:
       enable:
         type: bool
@@ -23,20 +23,20 @@ mapping:
         desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"] 
       mask_size: 
         type: int
-        desc: Number of pixels in the mask (must be the same as img_npix in selfcal)
+        desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
         required: true
       cell_size:
         type: float
-        desc: Size fo pixel in the mask (arcsecm, must be the same as img_cell in selfcal)
+        desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
         required: true
       name_mask:
         type: str
         required: false
-        desc: Name of the output mask from SUMSS catalog
+        desc: Name of the output mask generated from catalog
       extended_source_input: 
         type: str
         required: false
-        desc: Name of the output mask of Fornax A          
+        desc: Name of the input mask for particularly extended sources in the field          
       final_mask:
         type: str
         required: false
@@ -53,7 +53,7 @@ mapping:
           catalog:
             type: str
             required: True
-            desc: Name of catalog to query, either NVSS or SUMSS
+            desc: Name of catalog to query [NVSS/SUMSS]
           width_image:  
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
@@ -61,7 +61,7 @@ mapping:
 
       pb_correction:
         type: map
-        desc: Correct image for primary beam before exctracting mask
+        desc: Correct input image for primary beam before exctracting mask
         mapping:
           enable:
             type: bool
@@ -69,12 +69,12 @@ mapping:
             required: true
           frequency:   
             type: float
-            desc: Primary beam size changes with frequency, provide central frequency of dataset
+            desc: Primary beam size changes with frequency, provide central frequency of considered dataset
             required: false
 
       make_mask:
         type: map
-        desc: Build mask from existing images
+        desc: Build mask from existing image using SoFiA and/or threshold cutoff
         mapping:
           enable:
             type: bool
@@ -87,7 +87,7 @@ mapping:
           input_image:
             type: str
             enum: ["pbcorr", "path_to_mask"]
-            desc: Input image where to create mask
+            desc: Input image where to create mask ???? what is this ???
             required: true
           thresh_lev:
             type: float
@@ -95,19 +95,19 @@ mapping:
             required: false
           scale_noise_window:
             type: float
-            desc: window size where to measure local rms in pixels
+            desc: window size where SoFiA measures the local rms, units of pixels
             required: false
 
       merge_with_extended:
         type: map
-        desc: Merge with extedned map
+        desc: Merge with mask of extended source
         mapping:
           enable:
             type: bool
             desc: Execute this worker
           extended_source_input:
             type: str
-            desc: name of image of extended source
+            desc: name of image of extended source to merge with current image
             required: false
           mask_with:
             type: str

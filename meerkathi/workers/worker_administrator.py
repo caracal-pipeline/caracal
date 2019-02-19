@@ -165,11 +165,11 @@ class worker_administrator(object):
                 recipe.run()
 
         # Execute all workers if they saved for later execution
-        try:
+	try:
             if self.add_all_first:
                 for worker in self.workers:
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
         finally: # write reports even if the pipeline only runs partially
-            reporter = mrr(self)
+	    reporter = mrr(self)
             reporter.generate_reports()

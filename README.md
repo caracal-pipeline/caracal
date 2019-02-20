@@ -1,4 +1,7 @@
-## Install
+## Download & Install
+
+### On Linux
+
 0. Clone this repository
 Use https and your github credentials, then go to the pipeline folder 'meerkathi'.
 ```
@@ -30,7 +33,7 @@ $ export PYTHONPATH='' # Ensure that you use venv Python
 $ stimela build
 ```
 
-### Install on Mac
+### On Mac
 
 0. create a python environment
 

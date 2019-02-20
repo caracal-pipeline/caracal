@@ -17,50 +17,80 @@ REPORT_TEMPLATE = os.path.join(__path__[0], "obs_report", "Observation Report.ip
 class reporter:
     def __init__(self, pipeline):
         """ Process and dump a static html report for each ms in the pipeline """
-        self.__ms = copy.deepcopy(pipeline.msnames)
-        self.__outputdir = pipeline.output
+        self.__ms = copy.deepcopy(filter(lambda x:isinstance(x, str), pipeline.msnames))
+        self.__outputdir = os.path.abspath(pipeline.output)
         with open(REPORT_TEMPLATE) as f:
             self.__rep_template = f.read()
         self.__report_dir = os.path.join(self.__outputdir, "reports")
         if not os.path.exists(self.__report_dir):
             os.mkdir(self.__report_dir)
 
-    def generate_calsolutions_report(self, rep, output="output"):
-        # read template
-        with open(SOLUTIONS_TEMPLATE) as f:
-            rep_template = f.read()
+    def generate_calsolutions_report(self, output="output"):
+        for ms in self.__ms:
+            msbase = os.path.splitext(os.path.basename(ms))[0]
+            rep = os.path.join(output, "reports", msbase + "_calsolutions" + ".ipynb.html")
+            # read template
+            with open(SOLUTIONS_TEMPLATE) as f:
+                rep_template = f.read()
 
-        meerkathi.log.info("Creating a report of polarization solutions. "
-                             "The report will be dumped here: '%s'." % (rep))
+            meerkathi.log.info("Creating a report of polarization solutions. "
+                                 "The report will be dumped here: '%s'." % (rep))
 
-        # grab a fresh template
-        sols_rep = nbformat.reads(rep_template, as_version=4)
+            # grab a fresh template
+            sols_rep = nbformat.reads(rep_template, as_version=4)
 
-        def __customize(s):
-            s = re.sub(r'OUTPUT\s*=\s*\S*',
-                       'OUTPUT = \'%s\'' % output,
-                       s)
-            return s
+            def __customize(s):
+                s = re.sub(r'OUTPUT\s*=\s*\S*',
+                           'OUTPUT = \'%s\'' % output,
+                           s)
+                s = re.sub(r'K0\s*=\s*\S*',
+                           'K0 = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-1gc1.K0" % msbase),
+                           s)
+                s = re.sub(r'G0\s*=\s*\S*',
+                           'G0 = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-1gc1.G0" % msbase),
+                           s)
+                s = re.sub(r'G1\s*=\s*\S*',
+                           'G1 = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-1gc1.G0" % msbase),
+                           s)
+                s = re.sub(r'B0\s*=\s*\S*',
+                           'B0 = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-1gc1.B0" % msbase),
+                           s)
+                s = re.sub(r'KX\s*=\s*\S*',
+                           'KX = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-crosshand_cal.KX" % msbase),
+                           s)
+                s = re.sub(r'Xref\s*=\s*\S*',
+                           'Xref = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-crosshand_cal.Xref" % msbase),
+                           s)
+                s = re.sub(r'Xfreq\s*=\s*\S*',
+                           'Xfreq = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-crosshand_cal.Xf" % msbase),
+                           s)
+                s = re.sub(r'Dref\s*=\s*\S*',
+                           'Dref = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-crosshand_cal.Dref" % msbase),
+                           s)
+                s = re.sub(r'Dfreq\s*=\s*\S*',
+                           'Dfreq = \'%s\'' % os.path.join(self.__outputdir, "meerkathi-%s-crosshand_cal.Df" % msbase),
+                           s)
+                return s
 
-        # modify template to add the output directory
-        sols_rep.cells[0]['source'] = '\n'.join(map(__customize, sols_rep.cells[0]['source'].split('\n')))
+            # modify template to add the output directory
+            sols_rep.cells[0]['source'] = '\n'.join(map(__customize, sols_rep.cells[0]['source'].split('\n')))
 
-        # roll
-        ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
-        try:
-            ep.preprocess(sols_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
-        except CellExecutionError: # reporting error is non-fatal
-            out = None
-            msg = 'Error executing the solution notebook.\n\n'
-            msg += 'See notebook "%s" for the traceback.' % rep
-            meerkathi.log.error(msg)
-        finally:
-            #export to static HTML
-            html_exporter = HTMLExporter()
-            #html_exporter.template_file = 'basic'
-            (body, resources) = html_exporter.from_notebook_node(sols_rep)
-            with open(str(rep), 'w+') as f:
-                f.write(body)
+            # roll
+            ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+            try:
+                ep.preprocess(sols_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
+            except CellExecutionError: # reporting error is non-fatal
+                out = None
+                msg = 'Error executing the solution notebook.\n\n'
+                msg += 'See notebook "%s" for the traceback.' % rep
+                meerkathi.log.error(msg)
+            finally:
+                #export to static HTML
+                html_exporter = HTMLExporter()
+                #html_exporter.template_file = 'basic'
+                (body, resources) = html_exporter.from_notebook_node(sols_rep)
+                with open(str(rep), 'w+') as f:
+                    f.write(body)
 
 
     def generate_leakage_report(self, ms, rep, field="PKS1934-638"):
@@ -106,7 +136,7 @@ class reporter:
 
     def generate_reports(self):
         self.pipeline_overview()
-        #self.generate_calsolutions_report(output=self.__outputdir)
+        self.generate_calsolutions_report(output=os.path.abspath(self.__outputdir))
 
     def pipeline_overview(self):
         """ generate an html report for every ms in the pipeline """

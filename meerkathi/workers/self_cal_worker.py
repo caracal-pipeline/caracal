@@ -484,7 +484,7 @@ def worker(pipeline, recipe, config):
             im = make_cube(num, 'image')
         else:
             im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
-
+       
         step = 'extract_{0:d}'.format(num)
         calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
         if detection_image:

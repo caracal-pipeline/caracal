@@ -6,7 +6,7 @@ mapping:
 
   masking:
     type: map
-    desc: Create mask from catalog and/ormerge with mask of extended source
+    desc: Create mask from catalog and/or merge with mask of extended source
     mapping:
       enable:
         type: bool

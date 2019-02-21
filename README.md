@@ -1,3 +1,4 @@
+[![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/)
 ## Install
 0. Clone this repository
 Use https and your github credentials, then go to the pipeline folder 'meerkathi'.

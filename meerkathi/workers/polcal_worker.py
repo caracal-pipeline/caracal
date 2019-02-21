@@ -88,7 +88,7 @@ def worker(pipeline, recipe, config):
                                 field.split(',') if isinstance(field, str) else field))
 
         DISABLE_CROSSHAND_PHASE_CAL = False
-        if len(list(set(",".split(get_field("xcal"))))) == 0:
+        if get_field("xcal") == "":
             DISABLE_CROSSHAND_PHASE_CAL = True
             log.warn("SEVERE: No crosshand calibrators set. Cannot calibrate U -> V rotation. You will have an arbitrary "
                      "instrumental polarization angle in your data! DO NOT TAKE ANGLE MEASUREMENTS")

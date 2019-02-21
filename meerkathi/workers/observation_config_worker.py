@@ -124,6 +124,7 @@ def worker(pipeline, recipe, config):
                 if len(intents['xcal']) > 0:
                     pipeline.xcal[i] = intents['xcal'][-1] # last on the list if auto
                 else:
+                    pipeline.xcal[i] = "" # empty string to be picked up as no cross phase calibrator
                     meerkathi.log.warn("No crosshand angle reference calibrator specified. This calibration will not be performed.")
             else:
                 pipeline.xcal[i] = config['xcal'] # user specified

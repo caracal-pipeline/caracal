@@ -969,7 +969,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/aimfast', step,
                 {
                      "compare-models"     : models,
-                     "area-factor"        : 1
+                     "area-factor"        : config['aimfast'].get('area_factor', 2)
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -981,7 +981,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/aimfast', step,
                 {
                      "compare-residuals"  : residuals,
-                     "area-factor"        : 2,
+                     "area-factor"        : config['aimfast'].get('area_factor', 2),
                      "data-points"        : 100
                 },
                 input=pipeline.input,
@@ -994,13 +994,12 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/aimfast', step,
                 {
                      "compare-residuals"  : residuals,
-                     "area-factor"        : 2,
+                     "area-factor"        : config['aimfast'].get('area_factor', 2),
                      "tigger-model"       : '{:s}:output'.format(model_files[-1].split('/')[-1])
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
-
 
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):

@@ -263,7 +263,7 @@ mapping:
             required: true
           sourcefinder:
             type: str
-            desc: choose your favorite sourcefinder
+            desc: choose your favorite sourcefinder pybdsm, (pybdsf), sofia
             required: true
           spi:
             type: bool

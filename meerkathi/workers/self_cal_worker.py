@@ -486,7 +486,7 @@ def worker(pipeline, recipe, config):
             detection_image = None
 
         sourcefinder = config[key].get('sourcefinder','pybdsm')
-        if sourcefinder == 'pybdsm':
+        if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
 		spi_do = config[key].get('spi', False)
 		if spi_do:
 		    im = make_cube(num, 'image')
@@ -518,6 +518,8 @@ def worker(pipeline, recipe, config):
 		    label='{0:s}:: Extract sources'.format(step))
 	       
 	elif sourcefinder == 'sofia':
+#                recipe.add('cab/tigger_convert', 
+
 
 		print 'are u crazy ?'
 		print '############################################'

@@ -103,7 +103,6 @@ mapping:
         type: map
         desc: Plot data amplitde v/s antenna.
         mapping: 
-          mapping:
           enable:
             type: bool
             desc: Executes plotting data amplitude v/s antennas.

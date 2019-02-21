@@ -929,7 +929,7 @@ def worker(pipeline, recipe, config):
         aimfast_settings = {
                     "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
                                                  prefix, num, mfsprefix),
-                    "normality-model"      : config[step].get(
+                    "normality-test"       : config[step].get(
                                                  'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
                     "label"                : "meerkathi_{}".format(num),

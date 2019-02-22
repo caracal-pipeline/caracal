@@ -232,7 +232,6 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'rfinder'):
             step = 'rfinder'
-            import IPython; IPython.embed()
             recipe.add('cab/rfinder', 'rfinder',
                 {
                   "msname"             : [msname],

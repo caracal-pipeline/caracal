@@ -122,6 +122,7 @@
     aimfast:
       enable: true
       tolerance: 0.02
+      plot: true
     label: corr
     img_niter: 1000000
     img_cleanborder: 0

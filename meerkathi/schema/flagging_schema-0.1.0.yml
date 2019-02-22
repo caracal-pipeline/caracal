@@ -222,7 +222,7 @@ mapping:
           field:
             desc: Field ID of target
             type: int
-            require: false
+            required: false
           spw_enable:
             desc: Enable spw for rebinning
             type: bool
@@ -230,7 +230,7 @@ mapping:
           spw_width:
             desc: Channel width of rebinned output table (MHz)
             type: int
-            require: false
+            required: false
           time_enable:
             desc: Enable time chunking
             type: bool

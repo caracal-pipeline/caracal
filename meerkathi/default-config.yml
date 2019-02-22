@@ -255,6 +255,13 @@ flagging__2:
     column: DATA
     fields: auto
     strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
+  rfinder:
+    enable: true
+    field: 1
+    spw_enable: true
+    spw_width: 10
+    time_enable: true
+    time_step: 10
   flagging_summary:
     enable: true
 

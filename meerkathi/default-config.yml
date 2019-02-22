@@ -305,16 +305,13 @@ self_cal:
   img_fit_spectral_pol: 1
   img_pol: I
   # Calibration settings
-  cal_DDsols: []
-  bjones: false
-  ddjones: false
   cal_gain_amplitude_clip_low: 0.5 
   cal_gain_amplitude_clip_high: 1.5
   # Source finding settings
   cal_niter: 4
   start_at_iter: 1
   aimfast:
-    enable: true
+    enable: false
     tolerance: 0.02
     plot: true
   image:

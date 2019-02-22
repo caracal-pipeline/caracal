@@ -37,6 +37,10 @@ mapping:
         type: int
         desc: Provide spectral window id
         required: true
+      ncpu:
+        type: int
+        desc: number of cpu's to use
+        required: false
       img_npix:
         type: int
         desc: Number of pixels in output image
@@ -61,6 +65,10 @@ mapping:
       img_robust:
         type: float
         desc: Briggs robust value
+        required: false
+      img_uvtaper:
+        type: str
+        desc: Taper for imaging
         required: false
       img_niter:
         type: int
@@ -90,19 +98,6 @@ mapping:
         type: str
         desc: Stokes image to create
         required: true
-      bjones:
-        type: bool
-        desc: Enable Bjones.
-        required: true
-      ddjones:
-        type: bool
-        desc: Enable direction dependent calibration, currently experimental.
-        required: true
-      cal_DDsols:
-        desc: Calibration solution intervals
-        seq:
-            - type: int
-        required: false
       cal_gain_amplitude_clip_low:
         type: float
         desc: Lower gain amplitude clipping
@@ -269,6 +264,10 @@ mapping:
             type: str
             desc: choose your favorite sourcefinder pybdsm, (pybdsf), sofia
             required: true
+          local_rms:
+            type: bool
+            desc: Execute this segment
+            required: false
           spi:
             type: bool
             desc: Extract source spectral index
@@ -312,6 +311,14 @@ mapping:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
             required: True
+          shared_memory:
+            type: str
+            desc: Set the amount of shared memory for cubical. Default '100Gb'
+            required: False
+          two_step:
+            type: bool
+            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false.
+            required: false
           add_vis_model:
             type: bool
             desc: Add/Use clean components from latest imaging step to/as sky model for calibation
@@ -325,8 +332,35 @@ mapping:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
-            required: true
-
+            required: false
+          Bjones: 
+           type: bool
+           desc: Enable Bjones
+           required: false
+          Bsols_time:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+          Bsols_channel:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+          DDjones:
+            type: bool
+            desc: Enable direction dependent calibration, currently experimental.
+            required: false
+          DDsols_time:
+            desc: Calibration solution intervals
+            seq:
+              - type: float
+            required: false
+          DDsols_channel:
+            desc: Calibration solution intervals
+            seq:
+              - type: float
+            required: false
       restore_model:
         type: map
         desc: Restore modelled to final calibrated residual image

@@ -524,7 +524,7 @@ def worker(pipeline, recipe, config):
 				"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
 				"outfile"       : '{:s}.fits:output'.format(calmodel),
 				"blank_limit"   : sdm.dismissable(blank_limit),
-				"adaptive_rms_box" : config[key].get('local_rms', True)
+				"adaptive_rms_box" : config[key].get('local_rms', True),
 				"port2tigger"   : True,
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,

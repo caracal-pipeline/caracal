@@ -265,6 +265,10 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
+          sourcefinder:
+            type: str
+            desc: choose your favorite sourcefinder pybdsm, (pybdsf), sofia
+            required: true
           spi:
             type: bool
             desc: Extract source spectral index

@@ -207,7 +207,10 @@ def worker(pipeline, recipe, config):
               "steps.doWriteMask"     : True,
               "steps.doMom0"          : False,
               "steps.doMom1"          : False,
-              "steps.doWriteCat"      : False, 
+              "steps.doWriteCat"      : False,
+              "parameters.dilateMask" : False,
+              "parameters.fitBusyFunction":False,
+              "parameters.optimiseMask":False ,
               "SCfind.kernelUnit"     : 'pixel',
               "SCfind.kernels"        : forn_kernels,
               "SCfind.threshold"      : forn_thresh, 
@@ -242,11 +245,17 @@ def worker(pipeline, recipe, config):
               "steps.doSCfind"        : True,
               "steps.doMerge"         : True,
               "steps.doReliability"   : False,
-              "steps.doParameterise"  : False,
+              "steps.doParameterise"  : True,
               "steps.doWriteMask"     : True,
               "steps.doMom0"          : False,
               "steps.doMom1"          : False,
-              "steps.doWriteCat"      : False, 
+              "steps.doWriteCat"      : True, 
+              "writeCat.writeASCII"   : True,
+              "writeCat.writeSQL"     : False,
+              "writeCat.writeXML"     : False,
+              "parameters.dilateMask" : False,
+              "parameters.fitBusyFunction":False,
+              "parameters.optimiseMask":False ,
               "SCfind.kernelUnit"     : 'pixel',
               "SCfind.kernels"        : def_kernels,
               "SCfind.threshold"      : config[key].get('threshold',5), 
@@ -423,26 +432,23 @@ def worker(pipeline, recipe, config):
           
           image_opts.update({"import.maskFile": fornax_namemask_regr})
 
-
         recipe.add('cab/sofia', step,
           image_opts,
           input=pipeline.output,
           output=pipeline.output+'/masking/',
           label='{0:s}:: Make SoFiA mask'.format(step))
-        
 
-        # step = '7'
-        # name_sof_out = imagename.split('.fits')[0]
-        # name_sof_out = name_sof_out+'_mask.fits'
+#        step = '7'
+#        name_sof_out = imagename.split('.fits')[0]
+#        name_sof_out = name_sof_out+'_mask.fits'
 
-        # recipe.add(cleanup_files, step,
-        #   {
-        #     'mask_name' : name_sof_out
-        #   },
-        #   input=pipeline.input,
-        #   output=pipeline.output,
-        #   label='{0:s}:: Make SoFiA mask'.format(step))
-
+#        recipe.add(cleanup_files, step,
+#          {
+#           'mask_name' : name_sof_out,
+#          },
+#          input=pipeline.input,
+#          output=pipeline.output,
+#          label='{0:s}:: Cleanup SoFiA masks'.format(step))
 
     def make_cube(num, imtype='model'):
         im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
@@ -479,35 +485,44 @@ def worker(pipeline, recipe, config):
         else:
             detection_image = None
 
-        spi_do = config[key].get('spi', False)
-        if spi_do:
-            im = make_cube(num, 'image')
-        else:
-            im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
+        sourcefinder = config[key].get('sourcefinder','pybdsm')
+        if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
+		spi_do = config[key].get('spi', False)
+		if spi_do:
+		    im = make_cube(num, 'image')
+		else:
+		    im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
+	       
+		step = 'extract_{0:d}'.format(num)
+		calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
+		if detection_image:
+		    blank_limit = 1e-9
+		else:
+		    blank_limit = None
 
-        step = 'extract_{0:d}'.format(num)
-        calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
-        if detection_image:
-            blank_limit = 1e-9
-        else:
-            blank_limit = None
+		recipe.add('cab/pybdsm', step,
+		    {
+			"image"         : im,
+			"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+			"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
+			"outfile"       : '{:s}.fits:output'.format(calmodel),
+			"blank_limit"   : sdm.dismissable(blank_limit),
+			"adaptive_rms_box" : True,
+			"port2tigger"   : True,
+			"multi_chan_beam": spi_do,
+			"spectralindex_do": spi_do,
+			"detection_image": sdm.dismissable(detection_image),
+		    },
+		    input=pipeline.input,
+		    output=pipeline.output,
+		    label='{0:s}:: Extract sources'.format(step))
+	       
+	elif sourcefinder == 'sofia':
+#                recipe.add('cab/tigger_convert', 
 
-        recipe.add('cab/pybdsm', step,
-            {
-                "image"         : im,
-                "thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
-                "thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-                "outfile"       : '{:s}.fits:output'.format(calmodel),
-                "blank_limit"   : sdm.dismissable(blank_limit),
-                "adaptive_rms_box" : True,
-                "port2tigger"   : True,
-                "multi_chan_beam": spi_do,
-                "spectralindex_do": spi_do,
-                "detection_image": sdm.dismissable(detection_image),
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='{0:s}:: Extract sources'.format(step))
+
+		print 'are u crazy ?'
+		print '############################################'
 
     def predict_from_fits(num, model, index):
         if isinstance(model, str) and len(model.split('+'))==2:
@@ -1025,8 +1040,11 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if model_mode is vis only we do not want to run pybdsm
-    if config['calibrate'].get('model_mode') == 'vis_only':
-        config['extract_sources']['enable'] = False
+    # this is outdated: we want to run aimfast also having if using vis_only
+
+    #if config['calibrate'].get('model_mode') == 'vis_only':
+    #    config['extract_sources']['enable'] = False
+
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
         config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
@@ -1091,6 +1109,7 @@ def worker(pipeline, recipe, config):
 
         if isinstance(num, str) and len(num.split('+')) == 2:
             mm = num.split('+')
+
             models = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
                       prefix, m) for m in mm]
             final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)

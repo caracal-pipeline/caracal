@@ -313,6 +313,7 @@ self_cal:
   aimfast:
     enable: false
     tolerance: 0.02
+    plot: true
   image:
     enable: true
     auto_mask: [40 , 30, 10, 5, 3]
@@ -331,6 +332,7 @@ self_cal:
     scale_noise_window: 51
   extract_sources:
     enable: false
+    sourcefinder: 'pybdsm'
     spi: false
     thresh_pix: [10, 10, 10]
     thresh_isl: [8, 8, 5]

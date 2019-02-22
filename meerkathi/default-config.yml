@@ -132,6 +132,7 @@
     ddjones: false
     extract_sources:
       enable: false
+      sourcefinder: 'pybdsm'
       spi: false
       thresh_pix: [10, 10, 10]
       thresh_isl: [8, 8, 5]
@@ -147,8 +148,6 @@
     img_joinchannels: true
     flagging_summary:
       enable: true
-    img_nchans: 3
-    restore_model:
       enable: false
       model: 2+3
       clean_model: '4'

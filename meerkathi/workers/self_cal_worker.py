@@ -960,6 +960,62 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
+    def aimfast_plotting():
+        """Plot comparisons of catalogs and residuals"""
+
+        out_dir = pipeline.output
+        # Get residuals to compare
+        res_files = sorted(glob.glob("{:s}/{:s}_?-MFS-residual.fits".format(out_dir, prefix)))
+        residuals = []
+        for i, r in enumerate(res_files):
+            if i < len(res_files) - 1:
+                residuals.append("{:s}:{:s}:output".format(r.split('/')[-1], res_files[i+1].split('/')[-1]))
+
+        # Get models to compare
+        model_files = sorted(glob.glob("{:s}/{:s}_*.lsm.html".format(out_dir, prefix)))
+        models = []
+        for i, m in enumerate(model_files):
+            if i < len(model_files) - 1:
+                models.append("{:s}:{:s}:output".format(m.split('/')[-1], model_files[i+1].split('/')[-1]))
+
+        if len(model_files) > 1:
+            step = "aimfast_comparing_models"
+
+            recipe.add('cab/aimfast', step,
+                {
+                     "compare-models"     : models,
+                     "area-factor"        : config['aimfast'].get('area_factor', 2)
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="Plotting model comparisons")
+
+        if len(res_files) > 1:
+            step = "aimfast_comparing_random_residuals"
+
+            recipe.add('cab/aimfast', step,
+                {
+                     "compare-residuals"  : residuals,
+                     "area-factor"        : config['aimfast'].get('area_factor', 2),
+                     "data-points"        : 100
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="Plotting random residuals comparisons")
+
+        if len(res_files) > 1 and len(model_files) > 1:
+            step = "aimfast_comparing_source_residuals"
+
+            recipe.add('cab/aimfast', step,
+                {
+                     "compare-residuals"  : residuals,
+                     "area-factor"        : config['aimfast'].get('area_factor', 2),
+                     "tigger-model"       : '{:s}:output'.format(model_files[-1].split('/')[-1])
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="Plotting source residuals comparisons")
+
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):
         for i,msname in enumerate(mslist):
@@ -1004,8 +1060,8 @@ def worker(pipeline, recipe, config):
         image_quality_assessment(self_cal_iter_counter)
 
     while quality_check(self_cal_iter_counter,
-                        enable=True if pipeline.enable_task(
-                            config, 'aimfast') else False):
+                        enable=pipeline.enable_task(
+                            config, 'aimfast')):
         if pipeline.enable_task(config, 'calibrate'):
             calibrate(self_cal_iter_counter)
         self_cal_iter_counter += 1
@@ -1022,6 +1078,9 @@ def worker(pipeline, recipe, config):
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
         else:
             apply_gains_to_fullres(self_cal_iter_counter, enable=True)
+    if config['aimfast']['plot']:
+        aimfast_plotting()
+
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:
     #   for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):

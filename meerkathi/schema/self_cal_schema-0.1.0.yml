@@ -200,7 +200,7 @@ mapping:
             type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-
+	    
       sofia_mask: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map

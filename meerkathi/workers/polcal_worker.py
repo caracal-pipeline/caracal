@@ -162,7 +162,8 @@ def worker(pipeline, recipe, config):
         # First do all the polarized calibrators
         if config['set_model'].get('enable', True):
             cf = get_field('xcal')
-            recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
+            if not DISABLE_CROSSHAND_PHASE_CAL:
+                recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
                        "msname": avgmsname,
                        "field": cf,
                        "standard": polarized_calibrators[cf]["standard"],
@@ -171,8 +172,8 @@ def worker(pipeline, recipe, config):
                        "reffreq": sdm(polarized_calibrators[cf]["reffreq"]),
                        "polindex": sdm(polarized_calibrators[cf]["polindex"]),
                        "polangle": sdm(polarized_calibrators[cf]["polangle"]),
-            },
-            input=INPUT, output=OUTPUT, label="set_model_calms_%d" % 0)
+                },
+                input=INPUT, output=OUTPUT, label="set_model_calms_%d" % 0)
 
             # now set the fluxscale reference
             field = get_field('fcal')

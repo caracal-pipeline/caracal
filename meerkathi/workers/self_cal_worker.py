@@ -504,20 +504,20 @@ def worker(pipeline, recipe, config):
 
         sourcefinder = config[key].get('sourcefinder','pybdsm')
         if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
-			spi_do = config[key].get('spi', False)
-			if spi_do:
-		    	im = make_cube(num, 'image')
-			else:
-		    	im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
+            spi_do = config[key].get('spi', False)
+            if spi_do:
+                im = make_cube(num, 'image')
+            else:
+                im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
 	       
-			step = 'extract_{0:d}'.format(num)
-			calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
-			if detection_image:
-		    	blank_limit = 1e-9
-			else:
-		    	blank_limit = None
+            step = 'extract_{0:d}'.format(num)
+            calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
+            if detection_image:
+                blank_limit = 1e-9
+            else:
+                blank_limit = None
 
-			recipe.add('cab/pybdsm', step,
+            recipe.add('cab/pybdsm', step,
 		    	{
 				"image"         : im,
 				"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
@@ -534,12 +534,12 @@ def worker(pipeline, recipe, config):
 		    	output=pipeline.output,
 		    	label='{0:s}:: Extract sources'.format(step))
 	       
-		elif sourcefinder == 'sofia':
+        elif sourcefinder == 'sofia':
 #                recipe.add('cab/tigger_convert', 
 
 
 			print 'are u crazy ?'
-			print '############################################'
+            print '############################################'
 
     def predict_from_fits(num, model, index):
         if isinstance(model, str) and len(model.split('+'))==2:

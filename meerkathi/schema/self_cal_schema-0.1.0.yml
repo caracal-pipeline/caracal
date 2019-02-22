@@ -146,6 +146,10 @@ mapping:
             enum: ["normaltest", "shapiro"]
             desc: normality test model to use. Note that normaltest is the D'Agostino
             required: false
+          plot:
+            type: bool
+            desc: Generate html plots for comparing catalogs and residuals
+            required: false
 
       image:
         type: map
@@ -260,6 +264,10 @@ mapping:
           enable:
             type: bool
             desc: Execute this segment
+            required: true
+          sourcefinder:
+            type: str
+            desc: choose your favorite sourcefinder pybdsm, (pybdsf), sofia
             required: true
           spi:
             type: bool

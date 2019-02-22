@@ -148,6 +148,7 @@
     img_joinchannels: true
     flagging_summary:
       enable: true
+    restore_model:
       enable: false
       model: 2+3
       clean_model: '4'

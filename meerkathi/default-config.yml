@@ -380,7 +380,7 @@ direction_dependent_calibration:
     enable: true
     dist_ncpu: 50
     ddsols: [100,0]
-    de_sources: ["0 -30 1e-9"]  
+    de_sources: ["0.0 -30.0 1.0e-9"]  
     
 image_HI:
   enable: true

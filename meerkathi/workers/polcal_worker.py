@@ -93,7 +93,7 @@ def worker(pipeline, recipe, config):
             log.warn("SEVERE: No crosshand calibrators set. Cannot calibrate U -> V rotation. You will have an arbitrary "
                      "instrumental polarization angle in your data! DO NOT TAKE ANGLE MEASUREMENTS")
 
-        if get_field("xcal") not in set(polarized_calibrators.keys()):
+        if not DISABLE_CROSSHAND_PHASE_CAL and get_field("xcal") not in set(polarized_calibrators.keys()):
             raise RuntimeError("Field(s) {0:s} not recognized crosshand calibrators. Unset xcal marked sources to disable X Jones calibration."
                                "Currently the following are recognized "
                                "crosshand phase calibrators: {1:s}".format(get_field("xcal"), ", ".join(polarized_calibrators.keys())))

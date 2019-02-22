@@ -119,7 +119,7 @@ def worker(pipeline, recipe, config):
             "vis": msname,
             "outputvis": avgmsname,
             "datacolumn": "corrected",
-            "field": get_field("bpcal,gcal,fcal,xcal"),
+            "field": get_field("bpcal,gcal,fcal,xcal") if not DISABLE_CROSSHAND_PHASE_CAL else get_field("bpcal,gcal,fcal"),
             "timebin": pol_mstimeavg,
             "width": pol_solchanavg,
         },

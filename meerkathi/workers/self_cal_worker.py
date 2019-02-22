@@ -533,12 +533,8 @@ def worker(pipeline, recipe, config):
 		    	input=pipeline.input,
 		    	output=pipeline.output,
 		    	label='{0:s}:: Extract sources'.format(step))
-	       
-        elif sourcefinder == 'sofia':
-#                recipe.add('cab/tigger_convert', 
-
-
-			print 'are u crazy ?'
+        elif sourcefinder == 'sofia': 
+            print 'are u crazy ?'
             print '############################################'
 
     def predict_from_fits(num, model, index):

@@ -361,6 +361,27 @@ self_cal:
     deconv_chans: 3
     fit_spectral_pol: 2
 
+
+direction_dependent_calibration:
+  enable: true
+  order: 99
+  init:
+    enable: true
+  restore:
+    enable: true
+  image_dd:
+    enable: true
+    npix: 3600
+    cell: 1.3
+    niter: 100000
+    robust: -1.5
+    nchans: 5
+  calibrate_dd:
+    enable: true
+    dist_ncpu: 50
+    ddsols: [100,0]
+    de_sources: ["0 -30 1e-9"]  
+    
 image_HI:
   enable: true
   order: 100

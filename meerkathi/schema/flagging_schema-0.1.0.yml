@@ -223,6 +223,11 @@ mapping:
             desc: Field ID of target
             type: int
             required: false
+          polarisation:
+            desc:  Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS)
+            type: str
+            enum: ['xx', 'XX', 'yy', 'YY', 'xy', 'XY', 'yx', 'YX', 'q', 'Q']
+            required: false
           spw_enable:
             desc: Enable spw for rebinning
             type: bool

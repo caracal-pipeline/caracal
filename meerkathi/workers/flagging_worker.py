@@ -238,7 +238,7 @@ def worker(pipeline, recipe, config):
                   "field"              : config[step].get('field', 1),
                   "plot_noise"         : "noise",
                   "RFInder_mode"       : "use_flags",
-                  "polarisation"       : config[step].get('polarisaion', 'Q'),
+                  "polarization"       : config[step].get('polarization', 'Q'),
                   "spw_width"          : config[step].get('spw_width', 10),
                   "time_step"          : config[step].get('time_step', 10),
                   "time_enable"        : config[step].get('time_enable', True),

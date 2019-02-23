@@ -258,7 +258,7 @@ flagging__2:
   rfinder:
     enable: true
     field: 1
-    polarisation: Q
+    polarization: Q
     spw_enable: true
     spw_width: 10
     time_enable: true

@@ -884,7 +884,7 @@ def worker(pipeline, recipe, config):
                                     "b-update-type"   : bupdate,
                                     "b-solvable": True,
                                     "b-time-int": bsols_[0],
-                                    "b-freq-int": bsols_["g-diag-diag"      : take_diag_terms,1],
+                                    "b-freq-int": bsols_[1],
                                     "b-type" : CUBICAL_MT[matrix_type],
                                     "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                                     "b-save-to": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),

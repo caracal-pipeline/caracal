@@ -39,7 +39,7 @@ mapping:
         required: true
       ncpu:
         type: int
-        desc: number of cpu's to use
+        desc: number of cpu's to use. Default 9
         required: false
       img_npix:
         type: int
@@ -60,31 +60,23 @@ mapping:
       img_weight:
         type: str
         enum: ["briggs", "uniform", "natural"]
-        desc: Image weighting type
-        required: true
+        desc: Image weighting type. !!!!! Always briggs.
+        required: false
       img_robust:
         type: float
-        desc: Briggs robust value
+        desc: Briggs robust value. Default = 0.0
         required: false
       img_uvtaper:
         type: str
-        desc: Taper for imaging
+        desc: Taper for imaging. Default None
         required: false
       img_niter:
         type: int
         desc: Number of cleaning iterations
         required: true
-      img_cleanborder:
-        type: float
-        desc: Clean border
-        required: false
-      img_facets:
-        type: int
-        desc: Number facet to image
-        required: false
       img_nchans:
         type: int
-        desc: Number of channesls in output image
+        desc: Number of channels in output image. Default = 1
         required: false
       img_joinchannels:
         type: bool
@@ -92,27 +84,31 @@ mapping:
         required: true
       img_fit_spectral_pol:
         type: int
-        desc: Fit a polynomial over frequency to each clean component
+        desc: Fit a polynomial over frequency to each clean component. default = 0
         required: false
       img_pol:
         type: str
-        desc: Stokes image to create
-        required: true
+        desc: Stokes image to create, Default 'I'
+        required: false
       cal_gain_amplitude_clip_low:
         type: float
-        desc: Lower gain amplitude clipping
-        required: true
+        desc: Lower gain amplitude clipping. Default 0.5
+        required: false
       cal_gain_amplitude_clip_high:
         type: float
-        desc: Higher gain amplitude clipping
-        required: true
+        desc: Higher gain amplitude clipping. Default 1.5
+        required: false
       cal_niter:
         type: int
         desc: Number of self-calibration iterations to perform
         required: true
+      cal_time_chunk:
+        type: int
+        desc: Size of time chunk. Default 128
+        required: false
       start_at_iter:
         type: int
-        desc: Start self-cal iteration loop at this start value
+        desc: Start self-cal iteration loop at this start value, default = 1
         required: false
 
       aimfast:
@@ -143,7 +139,7 @@ mapping:
             required: false
           plot:
             type: bool
-            desc: Generate html plots for comparing catalogs and residuals
+            desc: Generate html plots for comparing catalogs and residuals. Default = False
             required: false
 
       image:
@@ -266,11 +262,11 @@ mapping:
             required: true
           local_rms:
             type: bool
-            desc: Execute this segment
+            desc: Use local area for rms calculation or not. Default = True
             required: false
           spi:
             type: bool
-            desc: Extract source spectral index
+            desc: Extract source spectral index. Default = False
             required: false            # if not specified no spi will be determined
           thresh_pix:
             seq:
@@ -317,47 +313,47 @@ mapping:
             required: False
           two_step:
             type: bool
-            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false.
+            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false. Default =False
             required: false
           add_vis_model:
             type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
+            desc: Add/Use clean components from latest imaging step to/as sky model for calibation. Default = False
             required: false
           Gsols_time:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Time intervals for individual calibration steps for gain calibrations. 0 indicates average all.
             required: true
           Gsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
-            required: false
+            desc: Channel intervals for individual calibration steps for gain calibrations. 0 indicates average all.
+            required: true
           Bjones: 
            type: bool
-           desc: Enable Bjones
+           desc: Enable Bjones. default = False
            required: false
           Bsols_time:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Time intervals for individual calibration steps for B jones calibrations. 0 indicates average all. Default 0
             required: false
           Bsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Channel intervals for individual calibration steps for B jones calibrations. 0 indicates average all. Default 0
             required: false
           DDjones:
             type: bool
-            desc: Enable direction dependent calibration, currently experimental.
+            desc: Enable direction dependent calibration, currently experimental. Default False
             required: false
           DDsols_time:
-            desc: Calibration solution intervals
+            desc:  Time intervals for individual calibration steps for DD jones calibrations. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false
           DDsols_channel:
-            desc: Calibration solution intervals
+            desc: Time intervals for individual calibration steps for DD jones calibrations. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false

@@ -20,7 +20,7 @@ CUBICAL_OUT = {
 
 CUBICAL_MT = {
     "Gain2x2"      : 'complex-2x2',
-    "GainDiag"      : 'complex-2x2',  #TODO:: Change this. Ask cubical to support this mode
+    "GainDiag"      : 'complex-diag',
     "GainDiagPhase": 'phase-diag',
 }
 
@@ -32,11 +32,11 @@ def worker(pipeline, recipe, config):
     cell = config['img_cell']
     mgain = config['img_mgain']
     niter = config['img_niter']
-    robust = config['img_robust']
-    nchans = config['img_nchans']
+    robust = config.get('img_robust',0.0)
+    nchans = config.get('img_nchans',1)
     pol = config.get('img_pol', 'I')
     joinchannels = config['img_joinchannels']
-    fit_spectral_pol = config['img_fit_spectral_pol']
+    fit_spectral_pol = config.get('img_fit_spectral_pol',0)
     taper = config.get('img_uvtaper', None)
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
@@ -787,14 +787,32 @@ def worker(pipeline, recipe, config):
         if config[key].get('model_mode', None) == 'vis_only':
             modellist = ['MODEL_DATA']
         matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-        if matrix_type == 'GainDiagPhase' or config[key].get('two_step', False):
-            gupdate = 'phase-diag'
-            bupdate = 'phase-diag'
-            dupdate = 'phase-diag'
+        if matrix_type == 'Gain2x2':
+            take_diag_terms = False
         else:
-            gupdate = 'full'
-            bupdate = 'full'
-            dupdate = 'full'
+            take_diag_terms = True
+        if config[key].get('DDjones', False) or config[key].get('two_step', False) or config[key].get('Bjones', False):
+            if matrix_type == 'GainDiagPhase':
+                gupdate = 'phase-diag'
+                bupdate = 'phase-diag'
+                dupdate = 'phase-diag'
+            elif matrix_type == 'GainDiagAmp':
+                gupdate = 'amp-diag'
+                bupdate = 'amp-diag'
+                dupdate = 'amp-diag'
+            elif matrix_type == 'GainDiag':
+                gupdate = 'diag'
+                bupdate = 'diag'
+                dupdate = 'diag'
+            elif matrix_type == 'Gain2x2':
+                gupdate = 'full'
+                bupdate = 'full'
+                dupdate = 'full'
+            else:
+                raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
+            if config[key].get('two_step', False):
+                gupdate= 'phase-diag'
+
         jones_chain = 'G'
         gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
                   config[key].get('Gsols_channel', [])[
@@ -828,6 +846,7 @@ def worker(pipeline, recipe, config):
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
                   "sol-jones"        : '"'+jones_chain+'"',
+                  "sol-diag-diag"    : take_diag_terms,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -865,7 +884,7 @@ def worker(pipeline, recipe, config):
                                     "b-update-type"   : bupdate,
                                     "b-solvable": True,
                                     "b-time-int": bsols_[0],
-                                    "b-freq-int": bsols_[1],
+                                    "b-freq-int": bsols_["g-diag-diag"      : take_diag_terms,1],
                                     "b-type" : CUBICAL_MT[matrix_type],
                                     "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                                     "b-save-to": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
@@ -873,7 +892,7 @@ def worker(pipeline, recipe, config):
                                             
             if config[key].get('DDjones', False):
                cubical_opts.update({"g-update-type"   : gupdate,
-                                    "dd-update-type"   : dupdate,
+                                    "dd-update-type"  : dupdate,
                                     "dd-solvable": True,
                                     "dd-time-int": ddsols_[0],
                                     "dd-freq-int": ddsols_[1],
@@ -1241,7 +1260,7 @@ def worker(pipeline, recipe, config):
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
         else:
             apply_gains_to_fullres(self_cal_iter_counter, enable=True)
-    if config['aimfast']['plot']:
+    if config['aimfast'].get('plot',False):
         aimfast_plotting()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!

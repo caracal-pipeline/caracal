@@ -298,8 +298,6 @@ self_cal:
   img_weight: briggs
   img_robust: -1.5
   img_niter: 1000000
-  img_cleanborder: 0                        
-  img_facets: 11
   img_nchans: 3
   img_joinchannels: true
   img_fit_spectral_pol: 1

@@ -9,9 +9,9 @@ def worker(pipeline, recipe, config):
     label = config['label']
     pipeline.set_cal_msnames(label)
     hires_label = config['hires_split'].get('hires_label', 'hires')
-    print hires_label
+    print(hires_label)
     if pipeline.enable_task(config, 'hires_split'):
-       print "Setting Full Resolution Data Names..."
+       print("Setting Full Resolution Data Names...")
        pipeline.set_hires_msnames(hires_label)
                                    
 

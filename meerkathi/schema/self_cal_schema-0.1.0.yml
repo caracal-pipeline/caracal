@@ -111,6 +111,34 @@ mapping:
         desc: Start self-cal iteration loop at this start value, default = 1
         required: false
 
+      create_averaged:
+        type: map
+        desc: Module to switch to averaged calibration with high resolution data after split
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment
+            required: False
+          time_average:
+            desc: Time averaging. Default = 0
+            type: str
+          freq_average:
+            desc: Frequency averaging. Default = 5
+            type: int
+            required: false
+          column:
+            desc: Column to split, default is 'data'
+            type: str
+            required: false
+          correlation:
+            desc: Select correlations, default is '' = all
+            type: str
+            required: false
+          spw:
+            desc: Select spectral windows and channels, default is '' = all
+            type: str
+            required: false
+
       aimfast:
         type: map
         desc: Quality assessment parameter

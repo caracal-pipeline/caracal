@@ -925,29 +925,42 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G,B'
         else:
             jones_chain = 'G'
-        if config[key].get('DDjones', False):
+        if config[key].get('DDjones', False) or (config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1):
             jones_chain+= ',DD'
         for i,himsname in enumerate(hires_mslist):
             cubical_gain_interp_opts = {
                "data-ms"          : himsname,
                "data-column"      : 'DATA',
                "data-time-chunk"  : time_chunk,
+               "sol-jones"        : jones_chain,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : ncpu,
                "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
                "out-mode"         : 'ac',
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
+               "g-solvable"       : False,
                "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
             if config[key].get('DDjones', False):
-               cubical_gain_interp_opts.update({"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
+               cubical_gain_interp_opts.update(
+                   {"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
+                    "dd-solvable" : False
+                    })
             if config[key].get('Bjones', False):
-               cubical_gain_interp_opts.update({"dd-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
+               cubical_gain_interp_opts.update(
+                   {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
+                    "b-solvable" : False
+                    })
+            if config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1:
+               cubical_gain_interp_opts.update(
+                   {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
+                    "dd-solvable" : False
+                    })
             step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                 input=pipeline.input,
                 output=pipeline.output,
-                shared_memory='100Gb',
+                shared_memory=config[key].get('shared_memory','100Gb'),
                 label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
 
 
@@ -1183,6 +1196,33 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
+    def create_averaged():
+        for i,msname in enumerate(mslist):
+            # first we rename the input to the hiresnames
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, hires_mslist[i])):
+                raise ValueError("Your high resolution file already exists. We will not overwrite.")
+            else:
+                os.system('mv '+msname+' '+hires_mslist[i])
+                step = 'average_target_{:d}'.format(i)
+                recipe.add('cab/casa_split', step,
+                {
+                    "vis"           : hires_mslist[i],
+                    "outputvis"     : msname,
+                    "timebin"       : config['create_averaged'].get('time_average', ''),
+                    "width"         : config['create_averaged'].get('freq_average', 5),
+                    "spw"           : config['create_averaged'].get('spw', ''),
+                    "datacolumn"    : config['create_averaged'].get('column', 'data'),
+                    "correlation"   : config['create_averaged'].get('correlation', ''),
+                    "field"         : '0',
+                    "keepflags"     : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
+                # run recipe
+        recipe.run()
+        print(hires_mslist)
+        exit()
 
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):
@@ -1227,9 +1267,17 @@ def worker(pipeline, recipe, config):
     trace_SN = []
     global trace_matrix
     trace_matrix = []
+    # if we want to run the hires modules and run selfcal on an averaged input set but forgot to create it at split or wanted to flag first we first want to copy the input ms to the correct hires set and then average the low res set
+    if pipeline.enable_task(config, 'create_averaged'):
+        if pipeline.enable_task(config, 'gain_interpolation'):
+            create_averaged()
+        else:
+            raise ValueError("Why create an averaged set but then not apply the calibrations to the full data set?")
+
+
 
     if pipeline.enable_task(config, 'image'):
-        if config['calibrate'].get('hires_interpol')==True:
+        if pipeline.enable_task(config, 'gain_interpolation'):
             meerkathi.log.info("Interpolating gains")
         image(self_cal_iter_counter)
     if pipeline.enable_task(config, 'sofia_mask'):
@@ -1402,7 +1450,7 @@ def worker(pipeline, recipe, config):
                   "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
                   "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
                   "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
-                  "joinchannels"           : True,
+                  "joinchannels"           : config['image'].get('joinchannels', joinchannels),
                   "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol', 1),
                   "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask', None)),
                   "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold', 10),
@@ -1421,17 +1469,18 @@ def worker(pipeline, recipe, config):
         else:
             imagetype=['image','dirty','psf','residual','model']
             if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
-        for mm in imagetype:
-            step = 'finechancontcube'
-            recipe.add('cab/fitstool', step,
-                {
-                   "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
-                   "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
-                   "stack"    : True,
-                   "delete-files" : True,
-                   "fits-axis": 'FREQ',
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+        if config['highfreqres_contim'].get('chans', pipeline.nchans[0][0]) > 1:
+            for mm in imagetype:
+                step = 'finechancontcube'
+                recipe.add('cab/fitstool', step,
+                    {
+                    "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
+                    "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
+                    "stack"    : True,
+                    "delete-files" : True,
+                    "fits-axis": 'FREQ',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 

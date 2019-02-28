@@ -43,14 +43,17 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    hires_label = config['gain_interpolation'].get('hires_label', 'hires')
     gain_interpolation = config.get('gain_interpolation', False)
+    if gain_interpolation:
+        hires_label = config['gain_interpolation'].get('to_label', label)
+        label = config['gain_interpolation'].get('from_label',label+'-avg')
+        pipeline.set_hires_msnames(hires_label)
+        hires_mslist = pipeline.hires_msnames
     pipeline.set_cal_msnames(label)
-    pipeline.set_hires_msnames(hires_label)
     mslist = pipeline.cal_msnames
-    hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
-
+    #print(hires_mslist,mslist)
+    #exit()
     # Define image() extract_sources() calibrate()
     # functions for convience
 
@@ -916,11 +919,9 @@ def worker(pipeline, recipe, config):
 
         calwith = config.get('calibrate_with', 'meqtrees').lower()
         if(calwith=='meqtrees'):
-           enable = False
            meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-        hires_switch = config['calibrate'].get('hires_interpol', 'True')
-        if (hires_switch==False):
-            enable = False
+           raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
+
         if config[key].get('Bjones',False):
             jones_chain = 'G,B'
         else:
@@ -1197,17 +1198,16 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
     def create_averaged():
-        for i,msname in enumerate(mslist):
-            # first we rename the input to the hiresnames
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, hires_mslist[i])):
-                raise ValueError("Your high resolution file already exists. We will not overwrite.")
+        for i,msname in enumerate(hires_mslist):
+            print(msname,mslist[i])
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, mslist[i])):
+                raise ValueError("Your low resolution file already exists. We will not overwrite.")
             else:
-                os.system('mv '+msname+' '+hires_mslist[i])
                 step = 'average_target_{:d}'.format(i)
                 recipe.add('cab/casa_split', step,
                 {
-                    "vis"           : hires_mslist[i],
-                    "outputvis"     : msname,
+                    "vis"           : msname,
+                    "outputvis"     : mslist[i],
                     "timebin"       : config['create_averaged'].get('time_average', ''),
                     "width"         : config['create_averaged'].get('freq_average', 5),
                     "spw"           : config['create_averaged'].get('spw', ''),
@@ -1221,8 +1221,8 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
                 # run recipe
         recipe.run()
-        print(hires_mslist)
-        exit()
+        # Empty job que after execution
+        recipe.jobs = []
 
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):

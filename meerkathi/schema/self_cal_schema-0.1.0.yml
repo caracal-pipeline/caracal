@@ -113,7 +113,7 @@ mapping:
 
       create_averaged:
         type: map
-        desc: Module to switch to averaged calibration with high resolution data after split
+        desc: Module to switch to averaged calibration with high resolution data after split. It will create an averaged data set from the to label into the from label in the gain_interpolation scheme. This will only work when the gain interpolation scheme is running.
         mapping:
           enable:
             type: bool
@@ -417,10 +417,14 @@ mapping:
           enable: 
             type: bool
             desc: Execute this segment
-            required: true
-          hires_label:
+            required: false
+          to_label:
             type: str
             desc: label for high resolution data products in selfcal
+            required: false
+          from_label:
+            type: str
+            desc: label for low resolution data products that are use to do the self calibration
             required: false
       highfreqres_contim:
         type: map

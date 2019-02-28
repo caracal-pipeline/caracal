@@ -365,6 +365,7 @@ self_cal:
 direction_dependent_calibration:
   enable: true
   order: 99
+  label: corr
   init:
     enable: true
   restore:

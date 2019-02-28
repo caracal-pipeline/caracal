@@ -1,0 +1,90 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+  
+  direction_dependent_calibration:
+    type: map
+    desc: Perform direction dependent calibration on the data
+    mapping:
+     enable: 
+       type: bool
+       desc: Execute this statement
+       required: true
+     order:
+        type: int
+        desc: Workers are executed in ascedning order based on this value
+        required: true
+     label:
+        type: str
+        desc: Label to tag the output files
+        required: true 
+     init:
+       type: map
+       desc: Save flags from the last DI selfcal iteration
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this section
+           required: true
+     restore:
+       type: map
+       desc: Restore data to last DI selfcal iteration
+       mapping:
+         enable: 
+           type: bool
+           desc: Execute this section
+           required: true
+     image_dd:
+       type: map
+       desc: Imaging parameters for DD cal loop
+       mapping:
+         enable: 
+           type: bool
+           desc: Execute this section.
+           required: true
+         npix:
+           type: int
+           desc: Number of pixels in the image
+           required: true
+         cell:
+           type: float
+           desc: Pixel size in arcsec
+           required: true
+         niter:
+           type: int
+           desc: Number of clean iterations
+           required: true
+         robust:
+           type: float
+           desc: Robust parameter for imaging
+           required: true
+         nchans:
+           type: int
+           desc: Number of channels for the output image cube.
+           required: true
+     calibrate_dd: 
+       type: map
+       desc: Direction dependent calibration parameters
+       mapping: 
+         enable: 
+           type: bool
+           desc: Execute this section.
+           required: true
+         dist_ncpu:
+           type: int
+           desc: Number of cpus
+           required: true
+         ddsols:
+           seq:
+              - type: int
+           desc: Solution intervals for ddjones in time
+           required: true
+         de_sources:
+           seq:
+              - type: str
+           desc: List of sources to tag for DD calibration. In "RA(deg), DEC(deg), FLux Density(Jy)" format.
+           required: true
+         
+

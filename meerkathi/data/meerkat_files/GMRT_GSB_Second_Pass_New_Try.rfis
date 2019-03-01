@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This is a strategy configuration file for the AOFlagger RFI
 detector by André Offringa (offringa@gmail.com).
-Created by AOFlagger 2.10.0 (2018-02-06)
+Created by AOFlagger 2.13.0 (2018-11-07)
 -->
-<rfi-strategy format-version="3.8" reader-version-required="3.8">
+<rfi-strategy format-version="3.91" reader-version-required="3.91">
   <action type="Strategy">
     <children>
       <action type="SetFlaggingAction">
@@ -31,17 +31,19 @@ Created by AOFlagger 2.10.0 (2018-02-06)
                 <sensitivity-start>8</sensitivity-start>
                 <children>
                   <action type="SumThresholdAction">
-                    <base-sensitivity>1</base-sensitivity>
+                    <time-direction-sensitivity>1.4</time-direction-sensitivity>
+                    <frequency-direction-sensitivity>1.4</frequency-direction-sensitivity>
                     <time-direction-flagging>1</time-direction-flagging>
                     <frequency-direction-flagging>1</frequency-direction-flagging>
+                    <exclude-original-flags>0</exclude-original-flags>
                   </action>
                   <action type="CombineFlagResults">
                     <children>
                       <action type="FrequencySelectionAction">
-                        <threshold>3</threshold>
+                        <threshold>3.5</threshold>
                       </action>
                       <action type="TimeSelectionAction">
-                        <threshold>3.5</threshold>
+                        <threshold>3</threshold>
                       </action>
                     </children>
                   </action>
@@ -66,14 +68,16 @@ Created by AOFlagger 2.10.0 (2018-02-06)
                 </children>
               </action>
               <action type="SumThresholdAction">
-                <base-sensitivity>1</base-sensitivity>
+                <time-direction-sensitivity>1.4</time-direction-sensitivity>
+                <frequency-direction-sensitivity>1.4</frequency-direction-sensitivity>
                 <time-direction-flagging>1</time-direction-flagging>
                 <frequency-direction-flagging>1</frequency-direction-flagging>
+                <exclude-original-flags>0</exclude-original-flags>
               </action>
               <action type="SlidingWindowFitAction">
                 <frequency-direction-kernel-size>7.7</frequency-direction-kernel-size>
                 <frequency-direction-window-size>20</frequency-direction-window-size>
-                <method>4</method>
+                <method>3</method>
                 <time-direction-kernel-size>7.7</time-direction-kernel-size>
                 <time-direction-window-size>20</time-direction-window-size>
               </action>
@@ -94,8 +98,9 @@ Created by AOFlagger 2.10.0 (2018-02-06)
         <min-available-frequencies-ratio>0</min-available-frequencies-ratio>
         <min-available-times-ratio>0</min-available-times-ratio>
         <min-available-tf-ratio>0</min-available-tf-ratio>
-        <minimum-good-frequency-ratio>0.2</minimum-good-frequency-ratio>
-        <minimum-good-time-ratio>0.2</minimum-good-time-ratio>
+        <minimum-good-frequency-ratio>0.106</minimum-good-frequency-ratio>
+        <minimum-good-time-ratio>0.304</minimum-good-time-ratio>
+        <exclude-original-flags>1</exclude-original-flags>
       </action>
       <action type="TimeSelectionAction">
         <threshold>4</threshold>

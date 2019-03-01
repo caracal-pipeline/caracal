@@ -941,21 +941,25 @@ def worker(pipeline, recipe, config):
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
                "g-solvable"       : False,
+               "g-save-to"        : None,
                "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
             if config[key].get('DDjones', False):
                cubical_gain_interp_opts.update(
                    {"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "dd-solvable" : False
+                    "dd-solvable" : False,
+                    "dd-save-to"  : None
                     })
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(
                    {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "b-solvable" : False
+                    "b-solvable" : False,
+                    "b-save-to"  : None
                     })
             if config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1:
                cubical_gain_interp_opts.update(
                    {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "dd-solvable" : False
+                    "dd-solvable" : False,
+                    "dd-save-to"  : None
                     })
             step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,

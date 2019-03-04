@@ -119,7 +119,7 @@
       threshold: 5
       scale_noise_window: 51
     aimfast:
-      enable: true
+      enable: false
       tolerance: 0.02
       plot: true
     label: corr
@@ -144,6 +144,7 @@
       fit_spectral_pol: 2
 
     img_facets: 11
+    img_nchans: 3
     img_joinchannels: true
     flagging_summary:
       enable: true
@@ -244,7 +245,7 @@
       applymode: calflag
     label: 1gc1
     autoflag_closure_error:
-      enable: true
+      enable: false
       column: CORRECTED_DATA
       fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
       calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
@@ -306,7 +307,7 @@
       enable: true
       field:
       - fcal
-      meerkathi_model: false # this is WRONG as it disables the option to use PKS0407-65
+      meerkathi_model: true
     order: 40
     clear_cal:
       enable: true

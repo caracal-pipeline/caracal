@@ -156,6 +156,15 @@ def worker(pipeline, recipe, config):
                   "ms": os.path.abspath(os.path.join(pipeline.msdir, avgmsname)),
         },
         input=INPUT, output=OUTPUT, label="correct_feed_convention_avg")
+        step = 'clearcal_{:d}'.format(i)
+        recipe.add('cab/casa_clearcal', step,
+                   {
+                       "vis": avgmsname,
+                       "addmodel": True
+                   },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label="INIT averaged dataset for cross hand cal")
 
         step = 'summary_avg_json_{:d}'.format(i)
         recipe.add('cab/msutils', step,
@@ -184,6 +193,7 @@ def worker(pipeline, recipe, config):
             if not DISABLE_CROSSHAND_PHASE_CAL:
                 recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
                        "msname": avgmsname,
+                       "usescratch": True,
                        "field": cf,
                        "standard": polarized_calibrators[cf]["standard"],
                        "fluxdensity": sdm(polarized_calibrators[cf]["fluxdensity"]),
@@ -205,7 +215,7 @@ def worker(pipeline, recipe, config):
                 # use local sky model of calibrator field if exists
                 opts = {
                     "skymodel"  : model,
-                    "msname"    : msname,
+                    "msname"    : avgmsname,
                     "field-id"  : utils.get_field_id(msinfo, field)[0],
                     "threads"   : config["set_model"].get('threads', 8),
                     "mode"      : "simulate",
@@ -214,7 +224,7 @@ def worker(pipeline, recipe, config):
                 }
             elif isinstance(model, dict): # spectral model if specified in our standard
                 opts = {
-                  "vis"         : msname,
+                  "vis"         : avgmsname,
                   "field"       : field,
                   "standard"    : "manual",
                   "fluxdensity" : model['I'],
@@ -225,7 +235,7 @@ def worker(pipeline, recipe, config):
                 }
             elif standard: # NRAO model otherwise
                opts = {
-                  "vis"         : msname,
+                  "vis"         : avgmsname,
                   "field"       : field,
                   "standard"    : config['set_model'].get('standard', standard),
                   "usescratch"  : False,
@@ -245,7 +255,7 @@ def worker(pipeline, recipe, config):
         # Solve for X slope
         # of the form [e^{2pi.i.a\nu} 0 0 1]
         toapply = []
-        if config.get('do_solve_crosshand_slope', True):
+        if config.get('do_solve_crosshand_slope', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_gaincal", "crosshand_delay", {
                     "vis": avgmsname,
                     "caltable": KX,
@@ -280,7 +290,7 @@ def worker(pipeline, recipe, config):
         # possibly joining scans to solve for per-frequency solutions
         # a strongly polarized source is needed with known properties
         # to limit the amount of PA coverage needed
-        if config.get('do_solve_crosshand_slope', True) and not DISABLE_CROSSHAND_PHASE_CAL:
+        if config.get('do_solve_crosshand_phase', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_polcal", "crosshand_phase_ref", {
                     "vis": avgmsname,
                     "caltable": Xref,
@@ -410,7 +420,7 @@ def worker(pipeline, recipe, config):
                     "vis": avgmsname,
                     "field": "",
                     "parang": True, #P Jones is autoenabled in the polarization calibration, ensure it is enabled now
-                    "gaintable": ["%s:output" % ct for ct in [KX, Xref, Xf, Dref, Df]]
+                    "gaintable": ["%s:output" % ct for ct in toapply]
                 },
                 input=INPUT, output=OUTPUT, label="apply_polcal_solutions_to_avg")
 
@@ -418,7 +428,7 @@ def worker(pipeline, recipe, config):
                     "vis": msname,
                     "field": "",
                     "parang": True, # Keep copy in SKY_FRAME_CORRECTED for imaging
-                    "gaintable": ["%s:output" % ct for ct in [KX, Xref, Xf, Dref, Df]]
+                    "gaintable": ["%s:output" % ct for ct in toapply]
                 },
                 input=INPUT, output=OUTPUT, label="apply_polcal_solutions")
 
@@ -433,7 +443,7 @@ def worker(pipeline, recipe, config):
                     "vis": msname,
                     "field": "",
                     "parang": False, # Keep CORRECTED_DATA in FEED frame for further calibration
-                    "gaintable": ["%s:output" % ct for ct in [KX, Xref, Xf, Dref, Df]]
+                    "gaintable": ["%s:output" % ct for ct in toapply]
                 },
                 input=INPUT, output=OUTPUT, label="apply_polcal_sols_feed")
 

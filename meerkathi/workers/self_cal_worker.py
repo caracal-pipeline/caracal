@@ -43,7 +43,7 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    gain_interpolation = config.get('gain_interpolation', False)
+    gain_interpolation = pipeline.enable_task(config, 'gain_interpolation')
     if gain_interpolation:
         hires_label = config['gain_interpolation'].get('to_label', label)
         label = config['gain_interpolation'].get('from_label',label+'-avg')

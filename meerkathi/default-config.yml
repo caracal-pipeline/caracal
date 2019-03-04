@@ -243,10 +243,11 @@
       - bpcal
       - gcal
       - target
+      - xcal
       applymode: calflag
     label: 1gc1
     autoflag_closure_error:
-      enable: false
+      enable: true
       column: CORRECTED_DATA
       fields: auto # auto or comma-seperated keys (keys in gcal, bpcal, target)
       calibrator_fields: auto #auto or comma-seperated keys (keys in gcal, bpcal, target)
@@ -258,6 +259,8 @@
       solint: inf # Useful diagnostic to keep track of system delays with time
       field:
       - bpcal # can use both the bandpass and gain calibrator to keep track of delays
+      - xcal
+      - gcal
       plot:
         enable: true
       flag:
@@ -280,6 +283,7 @@
       - bpcal
       - gcal
       - target
+      - xcal
       applymode: calflag
     uvrange: '>50'
     apply_gain_cal_gain:
@@ -290,6 +294,7 @@
       - bpcal
       - gcal
       - target
+      - xcal
       applymode: calflag
     apply_bp_cal:
       enable: true
@@ -297,6 +302,7 @@
       - bpcal
       - gcal
       - target
+      - xcal
       field:
       - bpcal
       applymode: calflag
@@ -314,6 +320,7 @@
       - fcal
       - target
       - gcal
+      - xcal
       addmodel: true
 - general:
     data_path: input/data

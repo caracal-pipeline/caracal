@@ -70,11 +70,11 @@ def worker(pipeline, recipe, config):
                     field: list of ids or comma-seperated list of ids where
                            ids are in bpcal, gcal, target, fcal or an actual field name
             """
-            return ','.join(map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
                                                 if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
                                               if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
                                               else x.split(','),
-                                field.split(',') if isinstance(field, str) else field))
+                                field.split(',') if isinstance(field, str) else field)))
 
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':

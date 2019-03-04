@@ -183,11 +183,15 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
-        for item in 'xcal fcal bpcal gcal target'.split():
-            flds =  getattr(pipeline, item)[i].split(',') \
-                        if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
-            getattr(pipeline, item + "_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
-
+        if config.get('Check_Cals',True):
+            for item in 'xcal fcal bpcal gcal target'.split():
+                flds =  getattr(pipeline, item)[i].split(',') \
+                            if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
+                getattr(pipeline, item + "_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
+        else:
+            flds =  getattr(pipeline, 'target')[i].split(',') \
+                        if isinstance(getattr(pipeline, 'target')[i], str) else getattr(pipeline, 'target')[i]
+            getattr(pipeline, "target_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
     if pipeline.enable_task(config, 'primary_beam'):
         meerkathi.log.info('Generating primary beam')
         recipe.add('cab/eidos', 'primary_beam',

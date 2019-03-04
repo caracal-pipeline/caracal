@@ -32,6 +32,10 @@ mapping:
             desc: Returns sun free time range
             type: bool
             required: false
+      Check_Cals:
+        desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
+        type: bool
+        required: false
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str

@@ -102,7 +102,6 @@
     gain_interpolation:
       enable: true
       hires_label: hires
-    cal_DDsols: []
     img_npix: 5540
     calibrate:
       enable: true
@@ -130,7 +129,6 @@
     img_robust: -1.5
     spwid: 0
     start_at_iter: 1
-    ddjones: false
     extract_sources:
       enable: false
       sourcefinder: 'pybdsm'
@@ -157,7 +155,6 @@
     calibrate_with: cubical
     img_mgain: 0.9
     img_cell: 1.3
-    bjones: false
     cal_niter: 4
     img_fit_spectral_pol: 1
     img_weight: briggs

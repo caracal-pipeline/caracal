@@ -246,6 +246,10 @@ mapping:
             desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations). Default is I.
             type: str
             required: false
+          taper:
+            desc: uvtaper as in casa clean either in arcsec of klambda.
+            type: str
+            required: false
           spwid:
             desc: Spectral window to use. Default is 0.
             type: int

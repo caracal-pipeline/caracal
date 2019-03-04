@@ -113,27 +113,26 @@ def worker(pipeline, recipe, config):
 
         __check_linear_feeds(msname)
 
+        ######################################################################################################################
+        #
+        # Prepare crosshand data for calibration
+        #
+        ######################################################################################################################
+        global_recipe = recipe
+        recipe = stimela.Recipe("Prepare crosshand calibration data", ms_dir=pipeline.msdir)
+
         # Need to average down the calibrators to get enough SNR on the crosshands
         # for solving
         recipe.add("cab/casa_oldsplit", "split_avg_data", {
             "vis": msname,
             "outputvis": avgmsname,
             "datacolumn": "corrected",
+            # KEEP fieldIDs the same for now
             "field": get_field("bpcal,gcal,fcal,xcal") if not DISABLE_CROSSHAND_PHASE_CAL else get_field("bpcal,gcal,fcal"),
             "timebin": pol_mstimeavg,
             "width": pol_solchanavg,
         },
         input=INPUT, output=OUTPUT, label="split_avg_data")
-
-        rep = mrr(pipeline)
-
-        if config.get('do_dump_precalibration_leakage_reports', True):
-            recipe.add(rep.generate_leakage_report, "polarization_leakage_precal", {
-                      "ms": os.path.abspath(os.path.join(MSDIR, msname)),
-                      "rep": "precal_polleakage_{0:s}.ipynb.html".format(msname),
-                      "field": get_field("fcal")
-            },
-            input=INPUT, output=OUTPUT, label="precal_polleak_rep")
 
         # First solve for crosshand delays with respect to the refant
         # A stronly polarized source is needed for SNR purposes
@@ -158,6 +157,26 @@ def worker(pipeline, recipe, config):
         },
         input=INPUT, output=OUTPUT, label="correct_feed_convention_avg")
 
+        step = 'summary_avg_json_{:d}'.format(i)
+        recipe.add('cab/msutils', step,
+            {
+                "msname"      : msname,
+                "command"     : 'summary',
+                "outfile"     : avgmsname+'-obsinfo.json',
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, avgmsname))
+        msinfo = os.path.abspath(os.path.join(pipeline.output, avgmsname+'-obsinfo.json'))
+
+        ######################################################################################################################
+        #
+        # Crosshand calibration procedure for linear feeds
+        #
+        ######################################################################################################################
+        recipe.run()
+        recipe = global_recipe
+
         # Set model
         # First do all the polarized calibrators
         if config['set_model'].get('enable', True):
@@ -174,9 +193,9 @@ def worker(pipeline, recipe, config):
                        "polangle": sdm(polarized_calibrators[cf]["polangle"]),
                 },
                 input=INPUT, output=OUTPUT, label="set_model_calms_%d" % 0)
-
             # now set the fluxscale reference
             field = get_field('fcal')
+            assert len(utils.get_field_id(msinfo, field)) == 1, "Only one fcal may be set"
             model = utils.find_in_native_calibrators(msinfo, field)
             standard = utils.find_in_casa_calibrators(msinfo, field)
             # Prefer our standard over the NRAO standard
@@ -187,7 +206,7 @@ def worker(pipeline, recipe, config):
                 opts = {
                     "skymodel"  : model,
                     "msname"    : msname,
-                    "field-id"  : utils.get_field_id(msinfo, field),
+                    "field-id"  : utils.get_field_id(msinfo, field)[0],
                     "threads"   : config["set_model"].get('threads', 8),
                     "mode"      : "simulate",
                     "tile-size" : 128,
@@ -398,10 +417,26 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/casa_applycal", "apply_polcal_sols", {
                     "vis": msname,
                     "field": "",
-                    "parang": True, #P Jones is autoenabled in the polarization calibration, ensure it is enabled now
+                    "parang": True, # Keep copy in SKY_FRAME_CORRECTED for imaging
                     "gaintable": ["%s:output" % ct for ct in [KX, Xref, Xf, Dref, Df]]
                 },
                 input=INPUT, output=OUTPUT, label="apply_polcal_solutions")
+
+            recipe.add("cab/msutils", "copy_corrected_to_skyframe_corrected", {
+                "command"           : "copycol",
+                "tocol": "SKY_FRAME_CORRECTED",
+                "fromcol": "CORRECTED_DATA",
+                "msname": msname,
+            }, input=INPUT, output=OUTPUT, label="copy_corrected_to_skyframe_corrected")
+
+            recipe.add("cab/casa_applycal", "apply_polcal_sols_feed", {
+                    "vis": msname,
+                    "field": "",
+                    "parang": False, # Keep CORRECTED_DATA in FEED frame for further calibration
+                    "gaintable": ["%s:output" % ct for ct in [KX, Xref, Xf, Dref, Df]]
+                },
+                input=INPUT, output=OUTPUT, label="apply_polcal_sols_feed")
+
 
             # Finally restore raw data
             recipe.add("cab/msutils", "restore_raw", {
@@ -421,6 +456,17 @@ def worker(pipeline, recipe, config):
                   "ms": os.path.abspath(os.path.join(pipeline.msdir, msname)),
         },
         input=INPUT, output=OUTPUT, label="delete_backup_raw")
+
+        rep = mrr(pipeline)
+
+        if config.get('do_dump_precalibration_leakage_reports', True):
+            recipe.add(rep.generate_leakage_report, "polarization_leakage_precal", {
+                      "ms": os.path.abspath(os.path.join(MSDIR, msname)),
+                      "rep": "precal_polleakage_{0:s}.ipynb.html".format(msname),
+                      "field": get_field("fcal")
+            },
+            input=INPUT, output=OUTPUT, label="precal_polleak_rep")
+
 
         if config.get('do_dump_postcalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_postcal", {

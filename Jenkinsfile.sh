@@ -25,7 +25,7 @@ virtualenv ${WORKSPACE_ROOT}/projects/pyenv
 pip install pip setuptools wheel -U
 PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
-pip install ${WORKSPACE_ROOT}/projects/meerkathi
+pip install ${WORKSPACE_ROOT}/projects/meerkathi\[extra_diagnostics\]
 pip install --force-reinstall -U git+https://github.com/SpheMakh/Stimela.git
 #put the necessary bits in input
 cd $TEST_OUTPUT_DIR

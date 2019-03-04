@@ -256,8 +256,6 @@
       solint: inf # Useful diagnostic to keep track of system delays with time
       field:
       - bpcal # can use both the bandpass and gain calibrator to keep track of delays
-      - xcal
-      - gcal
       plot:
         enable: true
       flag:

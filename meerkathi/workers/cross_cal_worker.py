@@ -1,6 +1,7 @@
 import sys
 import os
 import meerkathi.dispatch_crew.utils as utils
+import meerkathi
 import yaml
 import stimela.dismissable as sdm
 
@@ -118,6 +119,8 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'set_model'):
             # Set model
             field = get_field(config['set_model'].get('field', ['fcal']))
+            assert len(utils.get_field_id(msinfo, field)) == 1, "Only one fcal should be set"
+
             if config['set_model'].get('no_verify', False):
                 opts = {
                     "vis"        : msname,
@@ -130,13 +133,12 @@ def worker(pipeline, recipe, config):
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
                 meerkathi_model = isinstance(model, str)
-
                 if config['set_model'].get('meerkathi_model', True) and meerkathi_model:
                     # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel"  : model,
                         "msname"    : msname,
-                        "field-id"  : utils.get_field_id(msinfo, field),
+                        "field-id"  : utils.get_field_id(msinfo, field)[0],
                         "threads"   : config["set_model"].get('threads', 8),
                         "mode"      : "simulate",
                         "tile-size" : 128,
@@ -194,7 +196,6 @@ found in our database or in the CASA NRAO database'.format(field))
 
             if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
-
             if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
@@ -202,7 +203,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['delay_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['delay_cal']['plot'].get(
@@ -261,7 +262,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                         "field"        : utils.get_field_id(msinfo, field),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['bp_cal']['plot'].get(
@@ -305,7 +306,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                         "field"        : utils.get_field_id(msinfo, field),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -362,7 +363,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['bp_cal']['plot'].get(
@@ -407,7 +408,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -459,7 +460,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_gain']['plot'].get(

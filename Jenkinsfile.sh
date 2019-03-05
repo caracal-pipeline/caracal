@@ -52,5 +52,6 @@ meerkathi --get_data_dataid 1477074305 \
           --self_cal_highfreqres_contim_chans 9 \
           --self_cal_highfreqres_contim_deconv_chans 3 \
           --self_cal_highfreqres_contim_fit_spectral_pol 1 \
+	  --polcal_enable true \
           --no-interactive
 

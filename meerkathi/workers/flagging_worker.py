@@ -4,7 +4,7 @@ import sys
 import meerkathi
 import yaml
 import stimela.dismissable as sdm
-
+from meerkathi.dispatch_crew import utils
 
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:
@@ -19,9 +19,26 @@ def worker(pipeline, recipe, config):
     if config.get('hires_flag'): 
         print "Flagging Full Resolution Data"
         msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
+
+    def get_field(field):
+        """
+            gets field ids parsed previously in the pipeline 
+            params:
+                field: list of ids or comma-seperated list of ids where
+                       ids are in bpcal, gcal, target, fcal or an actual field name
+        """
+        return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+                                            if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
+                                          if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
+                                          else x.split(','),
+                            field.split(',') if isinstance(field, str) else field)))
+
+
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
         # not field structure dependent, since it is just based on the DC of the field
@@ -30,8 +47,8 @@ def worker(pipeline, recipe, config):
         # This should catch any antenna with severe temperature problems
         if pipeline.enable_task(config, 'autoflag_autocorr_powerspectra'):
             step = 'autoflag_autocorr_spectra_{0:d}'.format(i)
-            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
-            def_calfields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+            def_fields = ",".join(map(str,utils.get_field_id(msinfo, get_field("bpcal,gcal,target,xcal").split(","))))
+            def_calfields = ",".join(map(str, utils.get_field_id(msinfo, get_field("bpcal,gcal,xcal").split(","))))
             if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') != 'auto' and \
                not set(config['autoflag_autocorr_powerspectra'].get('fields', 'auto').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
                 raise KeyError("autoflag on powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
@@ -40,9 +57,9 @@ def worker(pipeline, recipe, config):
                 raise KeyError("autoflag on powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
 
             fields = def_fields if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') == 'auto' else \
-                     ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
+                     ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
             calfields = def_calfields if config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto') == 'auto' else \
-                     ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
+                     ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
 
             
             fields = ",".join(set(fields.split(",")))

@@ -274,8 +274,8 @@ class config_parser:
         for key,worker in tmp.iteritems():
             if key=="schema_version":
                 continue
-            elif worker.get("enable", True) is False:
-                continue
+            #elif worker.get("enable", True) is False:
+            #    continue
             _key = key.split("__")[0]
             schema_fn = os.path.join(meerkathi.pckgdir,
                                      "schema", "{0:s}_schema-{1:s}.yml".format(_key,
@@ -416,8 +416,8 @@ class config_parser:
         for key,worker in tmp.iteritems():
             if key=="schema_version":
                 continue
-            elif worker.get("enable", True) is False:
-                continue
+            #elif worker.get("enable", True) is False:
+            #    continue
 
             _key = key.split("__")[0]
             schema_fn = os.path.join(meerkathi.pckgdir,

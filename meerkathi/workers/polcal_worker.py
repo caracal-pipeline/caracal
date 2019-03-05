@@ -44,6 +44,7 @@ def worker(pipeline, recipe, config):
         # we'll calibrate the crosshand slope and phase
         # if we have SNR on the crosshands (e.g 3C286)
         # this will calibrate out rotation of U into V
+        G1 = PREFIX + ".G1"
         KX = PREFIX + ".KX"
         Xref = PREFIX + ".Xref"
         Xf = PREFIX + ".Xf"
@@ -253,9 +254,31 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
+        toapply = []
+
+        # Phaseup diagonal of crosshand cal if available
+        if config.get('do_phaseup_crosshand_calibrator', True) and not DISABLE_CROSSHAND_PHASE_CAL:
+            recipe.add("cab/casa_gaincal", "crosshand_phaseup", {
+                    "vis": avgmsname,
+                    "caltable": G1,
+                    "field": get_field("xcal"),
+                    "refant": REFANT,
+                    "solint": time_solint,
+                    "combine": "",
+                    "parang": True,
+                    "gaintype": "G",
+                    "calmode": "p",
+                    "spw": time_solfreqsel,
+                    "uvrange": solve_uvdist, # EXCLUDE RFI INFESTATION!
+                    "gaintable": ["%s:output" % ct for ct in toapply],
+                    "parang": True,
+            },
+            input=INPUT, output=OUTPUT, label="crosshand_phaseup")
+            toapply += [G1]
+
+
         # Solve for X slope
         # of the form [e^{2pi.i.a\nu} 0 0 1]
-        toapply = []
         if config.get('do_solve_crosshand_slope', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_gaincal", "crosshand_delay", {
                     "vis": avgmsname,

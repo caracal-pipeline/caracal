@@ -378,6 +378,7 @@
     do_solve_leakages: true
     preaverage_freq: 4
     label: crosshand_cal
+    do_phaseup_crosshand_calibrator: true
     do_solve_crosshand_slope: true
     do_dump_postcalibration_leakage_reports: true
     do_solve_crosshand_phase: true

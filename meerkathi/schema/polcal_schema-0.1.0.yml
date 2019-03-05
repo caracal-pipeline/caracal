@@ -68,6 +68,10 @@ mapping:
             type: int
             required: false
             desc: When predicting full sky model (lsm) use these many threads in MeqServer
+      do_phaseup_crosshand_calibrator:
+        type: bool
+        desc: Phaseup diagonal of calibrator that is used to calibrate crosshand phase prior to solving for slope and offset in crosshand phase
+        required: false
       do_solve_crosshand_slope:
         type: bool
         desc: Solve for a frequency slope (X-Y digitizer delay) on the crosshand. This requires SNR on the crosshands.

@@ -2,7 +2,6 @@ import os, shutil, glob
 import sys
 import yaml
 import json
-import os
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -17,7 +16,6 @@ def worker(pipeline, recipe, config):
     robust = config['image_dd'].get('robust')
     nchans = config['image_dd'].get('nchans')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
-   # gsols = config['calibrate_dd'].get('gsols', [])
     ddsols = config['calibrate_dd'].get('ddsols', [])
     dist_ncpu = config['calibrate_dd'].get('dist_ncpu', [50])
     label = config.get('label')
@@ -28,7 +26,8 @@ def worker(pipeline, recipe, config):
     prefix = pipeline.prefix
     INPUT=pipeline.input
     OUTPUT=pipeline.output
-    
+    DDF_LSM = "DDF_lsm.lsm.html"
+
     def init():
         #This belongs in the self-cal worker
         flagms_opts = {
@@ -79,7 +78,7 @@ def worker(pipeline, recipe, config):
         "prefix"  : prefix,
         "pixels"  : 256,
         "freq"    : "850 1715 30",
-        "diameter" : 3.0,
+        "diameter" : 4.0,
         "coefficients-file": "meerkat_coeff_dict.npy",}
 
         recipe.add("cab/eidos", "make_primary_beam", eidos_opts,
@@ -88,7 +87,7 @@ def worker(pipeline, recipe, config):
         label="make_primary_beam:: Generate beams from Eidos",)
 
     def dd_precal_image():
-        dd_image_opts = {
+        dd_precal_image_opts = {
         "Data-MS"        : mslist,
         "Data-ColName"   : "CORRECTED_DATA",
         "Image-NPix"     : npix,
@@ -125,7 +124,7 @@ def worker(pipeline, recipe, config):
         "Log-Memory"            : True,
         "Log-Boring"            : True, }
 
-        recipe.add("cab/ddfacet", "ddf_image_1", dd_image_opts,
+        recipe.add("cab/ddfacet", "ddf_image_1", dd_precal_image_opts,
         input=INPUT,
         output=OUTPUT,
         label="ddf:: Primary beam corrected image",
@@ -196,38 +195,97 @@ def worker(pipeline, recipe, config):
           output=OUTPUT,
           label="intrinsic_sky_model:: Find sources in the beam-corrected image")
  
-    def tag_sources():
+    def dagga():
+        "function to tag sources for dd calibration, very smoky"
         key = 'calibrate_dd'
         #make a skymodel with only dE taggable sources.
         de_only_model = 'de-only-model.txt'
-        de_sources = config[key].get('de_sources')
-        with open(os.path.join(pipeline.input, de_only_model), 'w') as stdw:
-                stdw.write('#format: ra_d dec_d i tags...\n')
-                for i in range(len(de_sources)):
-                    de_str =  de_sources[i]+"  dE"
-                    print "de_str=", de_str
-                    stdw.write(de_str)
-        recipe.add('cab/tigger_tag', 'transfer_tags', {
-           "skymodel" : de_only_model,
-           "output-skymodel" : 'DDF_lsm.lsm.html:output',
-           "tag"    : "dE",
-           "force"  : True,
-           "transfer-tags" : True,
-           "tolerance" : 5,
-           },
-           input=INPUT,
-           output=OUTPUT,
-           label="transfer_tags: Transfer dE tags to the complete lsm")
+        de_sources_mode = config[key].get('de_sources_mode', 'auto')
+        distance_from_phase_centre = config[key].get('de_avoid_pix',1000)
+        print 'de_sources_mode:', de_sources_mode
+        if de_sources_mode is 'auto': 
+           meerkathi.log.info('Carrying out automatic dE tagging')
+           daggerline = "dagger --input-lsm"+pipeline.output+"/"+de_only_model+" --psf-image"+pipeline.output+"/"+prefix+"-DD-precal.psf.fits"+" --remove-tagged-dE-components-from-model-images"+pipeline.output+"/"+prefix+"-DD-precal.int.model.fits"+" --min-distance-from-tracking-centre"+str(distance_from_phase_centre)+" --only-dEs-in-lsm"+"-s 4.5"+" "+pipeline.output+"/"+prefix+"-DD-precal.app.residual.fits"
+           os.system(daggerline)
+           #re-predict the dE-subtracted Model Data
+           dd_precal_image_opts = {
+           "Data-MS"        : mslist,
+           "Data-ColName"   : "CORRECTED_DATA",
+           "Image-NPix"     : npix,
+           "Image-Cell"     : cell,
+           "Weight-ColName" : "WEIGHT",
+           "Output-Name"    : prefix+"-DD-precal",
+           "Facets-NFacets" : 17,
+           "Weight-Mode"    : "Briggs",
+           "Weight-Robust"  : robust,
+           "Output-Cubes"          : 'all',
+           "Freq-NBand"     : nchans,
+           "Freq-NDegridBand" : 12,  
+           "Deconv-FluxThreshold"  : 0.0,
+           "Beam-Model"            : "FITS",
+           "Beam-FITSFile"         : prefix+"'_$(corr)_$(reim).fits':output",
+           "Beam-FITSLAxis"        : "-px",
+           "Beam-FITSMAxis"        : "py",
+           "Data-ChunkHours"       : 0.5,
+           "Deconv-PeakFactor"     : 0.35,
+           "Predict-ColName"       : "MODEL_DATA",
+           "Parallel-NCPU"         : 32,
+           "Output-Mode"           : "Predict",
+           "Deconv-CycleFactor"    : 0,
+           "Deconv-MaxMajorIter"   : 25,
+           "Deconv-MaxMinorIter"   : niter,
+           "Deconv-Mode"           : "Hogbom",
+           "Output-Also"           : "all",
+           "Facets-PSFOversize"    : 1.5,
+           "SSDClean-NEnlargeData" : False,
+           "Deconv-RMSFactor"      : 3.000000,
+           "Data-Sort"             : True,
+          # "Mask-Auto"             : False,
+           "Cache-Reset"           : False,
+           "Log-Memory"            : True, 
+           "Log-Boring"            : True, }
+
+           for ms in mslist:
+               mspref = ms.split('.ms')[0].replace('-','_')
+               step = "repredict_{0:s}".format(mspref)
+               recipe.add('cab/ddfacet',step,dd_precal_image_opts,input=INPUT,
+               output=OUTPUT,
+               label="repredict_{0:s}:: Primary beam corrected image".format(mspref),
+               shared_memory="400gb")
+
+        else:
+           de_sources_manual = config[key].get('de_sources_manual')
+           with open(os.path.join(pipeline.input, de_only_model), 'w') as stdw:
+                   stdw.write('#format: ra_d dec_d i tags...\n')
+                   for i in range(len(de_sources_manual)):
+                       de_str =  de_sources[i]+"  dE"
+                       print "de_str=", de_str
+                       stdw.write(de_str)
+           recipe.add('cab/tigger_tag', 'transfer_tags', {
+              "skymodel" : de_only_model,
+              "output-skymodel" : 'DDF_lsm.lsm.html:output',
+              "tag"    : "dE",
+              "force"  : True,
+              "transfer-tags" : True,
+              "tolerance" : 5,
+              },
+              input=INPUT,
+              output=OUTPUT,
+              label="transfer_tags: Transfer dE tags to the complete lsm")
         
       
     def dd_calibrate():
         key = 'calibrate_dd'
-        DDF_LSM = "DDF_lsm.lsm.html"
         flagms_postcal_opts = {
          "create"  : True,
          "flag"    : "final_3gc_flags",
          "flagged-any": ["+L"],}
-
+        DDF_LSM = "DDF_lsm.lsm.html"
+        de_sources_mode = config[key].get('de_sources_mode', 'auto')
+        model_list = [DDF_LSM+"@dE"]
+        if de_sources_mode is 'auto':
+           DDF_LSM = "DDF_lsm.lsm.html.de_tagged.lsm.html"
+           model_list = [MODEL_DATA,DDF_LSM+"@dE"]
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'dd_calibrate_{0:s}'.format(mspref)
@@ -261,7 +319,7 @@ def worker(pipeline, recipe, config):
               "dd-dd-term"        : True,
               "dd-fix-dirs"       : "0",
               "out-subtract-dirs" : "1:",
-              "model-list"        : [DDF_LSM+"@dE"],
+              "model-list"        : model_list,
               "out-name"          : prefix + "dE_sub",
               "out-mode"          : 'sr',
               "data-freq-chunk"   : 4*ddsols[1],
@@ -279,10 +337,10 @@ def worker(pipeline, recipe, config):
                output=OUTPUT,
                label='dd_calibrate_{0:s}:: Carry out DD calibration'.format(mspref))
            flagms_postcal_opts.update({"msname" : ms})
-#           recipe.add("cab/flagms", "save_3gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
-#              input=INPUT,
-#              output=OUTPUT,
-#              label="save_3gc_flags_{0:s}:: Save 3GC flags".format(mspref))
+           recipe.add("cab/flagms", "save_3gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
+              input=INPUT,
+              output=OUTPUT,
+              label="save_3gc_flags_{0:s}:: Save 3GC flags".format(mspref))
              
     if pipeline.enable_task(config, 'init'):
        init()
@@ -291,6 +349,6 @@ def worker(pipeline, recipe, config):
     make_primary_beam()
     dd_precal_image()
     sfind_intrinsic()
-    tag_sources()
+    dagga()
     dd_calibrate()
     dd_postcal_image()

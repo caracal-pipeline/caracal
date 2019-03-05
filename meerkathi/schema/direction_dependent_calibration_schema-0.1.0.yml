@@ -81,10 +81,17 @@ mapping:
               - type: int
            desc: Solution intervals for ddjones in time
            required: true
-         de_sources:
+         de_sources_mode:
+           type: str
+           desc: Mode in which dE sources are tagged. 'auto' uses catdagger, while in 'manual' mode, one needs to give a list of sources.
+           required: true
+         de_sources_manual:
            seq:
               - type: str
            desc: List of sources to tag for DD calibration. In "RA(deg), DEC(deg), FLux Density(Jy)" format.
            required: true
-         
-
+         de_avoid_pix:
+           type: int
+           desc: distance from the phase centre below which to avoid tagging sources with dE. Use with caution.
+           required: true
+            

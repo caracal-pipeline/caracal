@@ -35,7 +35,7 @@ prepare_data:
   enable: true
   order: 20
   prepms:
-    enable: false
+    enable: true
   add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
     enable: true
 
@@ -380,7 +380,10 @@ direction_dependent_calibration:
     enable: true
     dist_ncpu: 50
     ddsols: [100,0]
-    de_sources: ["0.0 -30.0 1.0e-9"]  
+    de_sources_mode: 'auto'
+    de_avoid_pix: 1000
+    de_sources_manual: [] #Give a list of strings in format "ra dec flux density", ra/dec in degrees, flux density in Jy.
+    de_avoid_pix: 1000
     
 image_HI:
   enable: true

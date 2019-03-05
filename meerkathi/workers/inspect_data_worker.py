@@ -21,12 +21,12 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-
+    
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
         label = config.get('label', '')
-
+        corr =  config.get('correlation', 'XX,YY')
         if pipeline.enable_task(config, 'real_imag'):
             fields = config['real_imag'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
@@ -37,7 +37,7 @@ def worker(pipeline, recipe, config):
                        {
                         "vis"           : msname,
                         "field"         : field,
-                        "correlation"   : 'XX,YY',
+                        "correlation"   : corr,
                         "timerange"     : '',
                         "antenna"       : '',
                         "xaxis"         : 'imag',
@@ -69,7 +69,7 @@ def worker(pipeline, recipe, config):
                        {
                         "vis"           : msname,
                         "field"         : field,
-                        "correlation"   : 'XX,YY',
+                        "correlation"   : corr,
                         "timerange"     : '',
                         "antenna"       : '',
                         "xaxis"         : 'phase',
@@ -100,7 +100,7 @@ def worker(pipeline, recipe, config):
                    {
                     "vis"           : msname,
                     "field"         : field,
-                    "correlation"   : 'XX,YY',
+                    "correlation"   : corr,
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
@@ -131,7 +131,7 @@ def worker(pipeline, recipe, config):
                    {
                     "vis"           : msname,
                     "field"         : field,
-                    "correlation"   : 'XX,YY',
+                    "correlation"   : corr,
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'antenna1',
@@ -162,7 +162,7 @@ def worker(pipeline, recipe, config):
                    {
                     "vis"           : msname,
                     "field"         : field,
-                    "correlation"   : 'XX,YY',
+                    "correlation"   : corr,
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
@@ -194,7 +194,7 @@ def worker(pipeline, recipe, config):
                    {
                     "vis"           : msname,
                     "field"         : field,
-                    "correlation"   : 'XX,YY',
+                    "correlation"   : corr,
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'scan',

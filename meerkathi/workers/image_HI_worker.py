@@ -28,7 +28,12 @@ def freq_to_vel(filename):
             if 'FREQ' in headcube['ctype3']:
                 headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
                 headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
-                headcube['ctype3'] = 'VELO-HEL'
+                # The technically  correct way to this would be
+                headcube['ctype3'] = 'VRAD'
+                # VELO-HEL indicates a relativistic transform in the HELIOCENTRIC frame. The default in the imput yaml is barycentric
+                # additionally an extra keyword 'SPECSYS3 should be specified which identifies the refererence frame, see  https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
+                # This should be done when making the cube
+                # For heliocentric its value would be HELIOCEN and for barycentric BARYCENT
                 if 'cunit3' in headcube: del headcube['cunit3']
             else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
 
@@ -122,28 +127,45 @@ def worker(pipeline, recipe, config):
         tellocation=teldict[config.get('telescope','meerkat')]
         telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
         firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
+        corr_order= False
+        if len(chanw) > 1:
+            if np.max(chanw) > 0 and np.min(chanw) < 0:
+                corr_order = True
         for i, prefix in enumerate(prefixes):
             msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, prefix)
             with open(msinfo, 'r') as searchfile:
                 for longdatexp in searchfile:
                    if "Observed from" in longdatexp:
-                       dates   = longdatexp
-                       matches = re.findall('(\d{2}[- ](\d{2}|January|Jan|February|Feb|March|Mar|April|Apr|May|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|Decem    ber|Dec)[\- ]\d{2,4})', dates)
-                       obsstartdate = str(matches[0][0])
-                       obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
-                       targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
-                       v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
-                       corr=np.sqrt((constants.c-v)/(constants.c+v))
-                       firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
+                        dates   = longdatexp
+                        matches = re.findall('(\d{2}[- ](\d{2}|January|Jan|February|Feb|March|Mar|April|Apr|May|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|Decem    ber|Dec)[\- ]\d{2,4})', dates)
+                        obsstartdate = str(matches[0][0])
+                        obsdate = datetime.datetime.strptime(obsstartdate, '%d-%b-%Y').strftime('%Y-%m-%d')
+                        targetpos = SkyCoord(RA[i], Dec[i], frame='icrs', unit='deg')
+                        v=targetpos.radial_velocity_correction(kind='barycentric',obstime=Time(obsdate), location=telloc).to('km/s')
+                        corr=np.sqrt((constants.c-v)/(constants.c+v))
+                        if corr_order:
+                            if chanw_dopp[i][0] > 0.:
+                                firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = lastchanfreq_dopp[i] * corr, chanw_dopp[i] * corr, firstchanfreq_dopp[i] * corr
+                            else:
+                                firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i] * corr, chanw_dopp[i] * corr, lastchanfreq_dopp[i] * corr
+                        else:
+                            firstchanfreq_dopp[i], chanw_dopp[i], lastchanfreq_dopp[i] = firstchanfreq_dopp[i]*corr, chanw_dopp[i]*corr, lastchanfreq_dopp[i]*corr  #Hz, Hz, Hz
         # WARNING: the following line assumes a single SPW for the HI line data being processed by this worker!
-        comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
-        comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
-        comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+        if np.min(chanw_dopp) < 0:
+            comfreq0,comfreql,comchanw = np.min(firstchanfreq_dopp), np.max(lastchanfreq_dopp), -1*np.max(np.abs(chanw_dopp))
+            comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+            comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+        else:
+            comfreq0,comfreql,comchanw = np.max(firstchanfreq_dopp), np.min(lastchanfreq_dopp), np.max(chanw_dopp)
+            comfreq0+=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
+            comfreql-=comchanw # safety measure to avoid wrong Doppler settings due to change of Doppler correction during a day
         nchan_dopp=int(np.floor(((comfreql - comfreq0)/comchanw)))+1
         comfreq0='{0:.3f}Hz'.format(comfreq0)
         comchanw='{0:.3f}Hz'.format(comchanw)
         meerkathi.log.info('Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(nchan_dopp,comfreq0,comchanw))
-
+        if pipeline.enable_task(config, 'wsclean_image') and corr_order:
+            meerkathi.log.info('wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image' )
+            sys.exit(1)
     elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')!='auto':
         if len(config['mstransform']['outchangrid'].split(','))!=3:
             meerkathi.log.error('Wrong format for mstransform:outchangrid in the .yml config file.')
@@ -252,9 +274,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'wsclean_image'):
         if config['wsclean_image'].get('use_mstransform',True):
-            #mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
             mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['hires_label']) for did in pipeline.dataid]  if config.get('use_hires_data', True) else ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]
-
             # Upate pipeline attributes (useful if, e.g., the channelisation was changed by mstransform during this or a previous pipeline run)
             for i, prefix in enumerate(prefixes):
                 # If channelisation changed during a previous pipeline run as stored in the obsinfo.json file
@@ -280,9 +300,7 @@ def worker(pipeline, recipe, config):
                     pipeline.nchans[i] = [nchan_dopp for kk in pipeline.nchans[i]]
 
         else:
-            #mslist = ['{0:s}-{1:s}.ms'.format(did, config['label']) for did in pipeline.dataid]
             mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]  if config.get('use_hires_data', True) else ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
-
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0 or nchans == 'all': nchans=pipeline.nchans[0][spwid]
@@ -558,16 +576,13 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_mstransform']:
-            #mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
             mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['hires_label']) for did in pipeline.dataid]  if config.get('use_hires_data', True) else ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]
-
         step = 'casa_image_HI'
         spwid = config['casa_image'].get('spwid', 0)
         nchans = config['casa_image'].get('nchans', 0)
         if nchans == 0:
             nchans=pipeline.nchans[0][spwid]
-        recipe.add('cab/casa_clean', step,
-            {
+        image_opts = {
                  "msname"         :    mslist,
                  "prefix"         :    pipeline.prefix+'_HI',
 #                 "field"          :    target,
@@ -586,7 +601,13 @@ def worker(pipeline, recipe, config):
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,
-            },
+            }
+        if config['casa_image'].get('taper', '') != '':
+            image_opts.update({
+                "uvtaper"         : True,
+                "outertaper"      : config['casa_image'].get('taper', ''),
+            })
+        recipe.add('cab/casa_clean', step, image_opts,
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Image HI'.format(step))

@@ -50,7 +50,7 @@
       strategy: firstpass_QUV.rfis # Default for MeerKAT data
     enable: true
     autoflag_autocorr_powerspectra:
-      enable: false
+      enable: true
     flag_spw:
       enable: true
       channels: '*:856~880MHz,*:1658~1800MHz,*:1419.8~1421.3MHz' #band-rolloffs and Milkyway

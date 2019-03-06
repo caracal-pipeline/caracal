@@ -1,6 +1,7 @@
 import sys
 import os
 import meerkathi.dispatch_crew.utils as utils
+import meerkathi
 import yaml
 import stimela.dismissable as sdm
 
@@ -69,15 +70,15 @@ def worker(pipeline, recipe, config):
                     field: list of ids or comma-seperated list of ids where
                            ids are in bpcal, gcal, target, fcal or an actual field name
             """
-            return ','.join(map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                                if isinstance(getattr(pipeline, x)[i], str) else getattr(pipeline, x)[i])
-                                              if x in ['bpcal', 'gcal', 'target', 'fcal']
+            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
+                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
                                               else x.split(','),
-                                field.split(',') if isinstance(field, str) else field))
+                                field.split(',') if isinstance(field, str) else field)))
 
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['delay_cal'].get('field', ['bpcal','gcal']))
+                return get_field(config['delay_cal'].get('field', ['bpcal','gcal','xcal']))
             if applyme == 'bp_cal':
                 return get_field(config['bp_cal'].get('field', ['bpcal']))
             if applyme == 'gain_cal_flux':
@@ -118,6 +119,8 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'set_model'):
             # Set model
             field = get_field(config['set_model'].get('field', ['fcal']))
+            assert len(utils.get_field_id(msinfo, field)) == 1, "Only one fcal should be set"
+
             if config['set_model'].get('no_verify', False):
                 opts = {
                     "vis"        : msname,
@@ -130,13 +133,12 @@ def worker(pipeline, recipe, config):
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
                 meerkathi_model = isinstance(model, str)
-
                 if config['set_model'].get('meerkathi_model', True) and meerkathi_model:
                     # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel"  : model,
                         "msname"    : msname,
-                        "field-id"  : utils.get_field_id(msinfo, field),
+                        "field-id"  : utils.get_field_id(msinfo, field)[0],
                         "threads"   : config["set_model"].get('threads', 8),
                         "mode"      : "simulate",
                         "tile-size" : 128,
@@ -180,7 +182,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "vis"          : msname,
                  "caltable"     : prefix+".K0",
                  "field"        : field,
-                 "refant"       : refant,
+                 "refant"       : refant, #this reference must be used throughout in the way casa solves the RIME to avoid creating an ambituity in the crosshand phase
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "combine"      : config['delay_cal'].get('combine', ''),
                  "minsnr"       : config['delay_cal'].get('minsnr', 5),
@@ -194,7 +196,6 @@ found in our database or in the CASA NRAO database'.format(field))
 
             if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
-
             if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
@@ -202,7 +203,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['delay_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['delay_cal']['plot'].get(
@@ -234,7 +235,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "vis"          : msname,
                      "caltable"     : prefix+'.PREB0',
                      "field"        : field,
-                     "refant"       : refant if config['bp_cal'].get('set_refant', True) else '',
+                     "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
                      "solint"       : config['bp_cal'].get('solint', 'inf'),
                      "combine"      : '',
                      "bandtype"     : "B",
@@ -261,7 +262,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                         "field"        : utils.get_field_id(msinfo, field),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['bp_cal']['plot'].get(
@@ -283,7 +284,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "vis"          : msname,
                      "caltable"     : prefix+".PREG0:output",
                      "field"        : field,
-                     "refant"       : refant if config['gain_cal_flux'].get('set_refant', False) else '',
+                     "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['gain_cal_flux'].get('set_refant', False) else '',
                      "solint"       : config['gain_cal_flux'].get('solint', 'inf'),
                      "combine"      : '',
                      "gaintype"     : "G",
@@ -305,7 +306,7 @@ found in our database or in the CASA NRAO database'.format(field))
                         {
                          "table"        : '{:s}:{:s}'.format(table, 'output'),
                          "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                         "field"        : utils.get_field_id(msinfo, field),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                             'corr', 'X')],
                          "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -336,7 +337,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "vis"          : msname,
                  "caltable"     : prefix+'.B0',
                  "field"        : field,
-                 "refant"       : refant if config['bp_cal'].get('set_refant', True) else '',
+                 "refant"       : refant, #must use the reference to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
                  "solint"       : config['bp_cal'].get('solint', 'inf'),
                  "combine"      : config['bp_cal'].get('combine', ''),
                  "bandtype"     : "B",
@@ -362,7 +363,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['bp_cal']['plot'].get(
@@ -385,7 +386,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "vis"          : msname,
                  "caltable"     : prefix+".G0:output",
                  "field"        : field,
-                 "refant"       : refant if config['gain_cal_flux'].get('set_refant', True) else '',
+                 "refant"       : refant, #must use the reference to avoid creating an ambiguity in the crosshand phase if config['gain_cal_flux'].get('set_refant', True) else '',
                  "solint"       : config['gain_cal_flux'].get('solint', 'inf'),
                  "combine"      : config['gain_cal_flux'].get('combine', ''),
                  "gaintype"     : "G",
@@ -407,7 +408,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_flux']['plot'].get(
@@ -433,7 +434,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "vis"          : msname,
                  "caltable"     : prefix+".G0:output",
                  "field"        : field,
-                 "refant"       : refant if config['gain_cal_gain'].get('set_refant', True) else '',
+                 "refant"       : refant, # must use reference to avoid creating an ambiguity in crosshand phase if config['gain_cal_gain'].get('set_refant', True) else '',
                  "solint"       : config['gain_cal_gain'].get('solint', 'inf'),
                  "combine"      : config['gain_cal_gain'].get('combine', ''),
                  "gaintype"     : "G",
@@ -459,7 +460,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['gain_cal_gain']['plot'].get(
@@ -493,7 +494,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{:s}:{:s}'.format(table, 'output'),
                      "gaintype"     : config['transfer_fluxscale']['plot'].get('gaintype', "G"),
-                     "field"        : utils.get_field_id(msinfo, field),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get(
                                         'corr', 'X')],
                      "htmlname"     : config['transfer_fluxscale']['plot'].get(

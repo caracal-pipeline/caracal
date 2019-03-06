@@ -1,5 +1,11 @@
 [![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/)
+
 ## Install
+
+## Download & Install
+
+### On Linux
+
 0. Clone this repository
 Use https and your github credentials, then go to the pipeline folder 'meerkathi'.
 ```
@@ -23,15 +29,16 @@ $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 ```
 4. Install meerKATHI
 ```
-$ pip install <absolute path to meerkathi folder>
+$ pip install <absolute path to meerkathi folder>[extra_diagnostics]
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
+If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
 5. Build Stimela
 ```
 $ stimela build
 ```
 
-### Install on Mac
+### On Mac
 
 0. create a python environment
 

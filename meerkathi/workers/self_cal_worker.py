@@ -768,6 +768,10 @@ def worker(pipeline, recipe, config):
 
     def calibrate_cubical(num):
         key = 'calibrate'
+        flagms_postcal_opts = {
+         "create"  : True,
+         "flag"    : "final_2gc_flags",
+         "flagged-any": ["+L"],}
 
         modellist = []
         model = config[key].get('model', num)[num-1]
@@ -836,7 +840,7 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         for i,msname in enumerate(mslist):
-
+            mspref = msname.split('.ms')[0].replace('-', '_')
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
                   "data-ms"          : msname,
@@ -897,7 +901,11 @@ def worker(pipeline, recipe, config):
                 shared_memory= config[key].get('shared_memory','100Gb'),
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-
+            flagms_postcal_opts.update({"msname" : msname})
+            recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
+                 input=INPUT,
+                 output=OUTPUT,
+                 label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
     
     def apply_gains_to_fullres(apply_iter, enable=True):
 
@@ -922,7 +930,7 @@ def worker(pipeline, recipe, config):
                "data-time-chunk"  : time_chunk,
                "sol-jones"        : jones_chain,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
-               "dist-ncpu"        : ncpu,
+               "dist-ncpu"        : 1,
                "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
                "out-mode"         : 'ac',
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
@@ -950,7 +958,6 @@ def worker(pipeline, recipe, config):
                 label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
 
     def restore(apply_iter, enable=True):
-
         key = 'calibrate'
         if config[key].get('Bjones',False):
             jones_chain = 'G,B'
@@ -959,13 +966,22 @@ def worker(pipeline, recipe, config):
         if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
             jones_chain+= ',DD'
         for i,msname in enumerate(mslist):
+            mspref = ms.split(".ms")[0].replace("-", "_")
+            recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                       {
+                           "msname": ms,
+                           "remove": "final_2gc_flags",
+                       },
+                       input=INPUT,
+                       output=OUTPUT,
+                       label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
             cubical_gain_interp_opts = {
                "data-ms"          : msname,
                "data-column"      : 'DATA',
                "data-time-chunk"  : time_chunk,
                "sol-jones"        : jones_chain,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
-               "dist-ncpu"        : ncpu,
+               "dist-ncpu"        : 1,
                "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
                "out-mode"         : 'ac',
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
@@ -991,6 +1007,9 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 shared_memory=config[key].get('shared_memory','100Gb'),
                 label="{0:s}:: restore cubical gains ms={1:s}".format(step, himsname))
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
 
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):

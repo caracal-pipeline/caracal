@@ -47,10 +47,13 @@ def worker(pipeline, recipe, config):
     if gain_interpolation:
         hires_label = config['gain_interpolation'].get('to_label', label)
         label = config['gain_interpolation'].get('from_label',label+'-avg')
-        pipeline.set_hires_msnames(hires_label)
-        hires_mslist = pipeline.hires_msnames
+    else
+        # As restoring the calibration step goes through the hires nomenclature we want to set hires_list to mslist
+        hires_label = config['label']
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
+    pipeline.set_hires_msnames(hires_label)
+    hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
     #print(hires_mslist,mslist)
     #exit()
@@ -1278,7 +1281,11 @@ def worker(pipeline, recipe, config):
         else:
             raise ValueError("Why create an averaged set but then not apply the calibrations to the full data set?")
 
-
+    if self_cal_iter_counter != 1:
+        if calwith == 'meqtrees':
+            raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+        else
+            apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):

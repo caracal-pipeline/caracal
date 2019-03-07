@@ -794,7 +794,7 @@ def worker(pipeline, recipe, config):
             take_diag_terms = False
         else:
             take_diag_terms = True
-        if config[key].get('DDjones', False) or config[key].get('two_step', False) or config[key].get('Bjones', False):
+        if config[key].get('two_step', False) or config[key].get('Bjones', False):
             if matrix_type == 'GainDiagPhase':
                 gupdate = 'phase-diag'
                 bupdate = 'phase-diag'
@@ -823,16 +823,14 @@ def worker(pipeline, recipe, config):
         bsols_ = [config[key].get('Bsols_time', [0])[num - 1 if num <= len(config[key].get('Bsols_time', [])) else -1],
                   config[key].get('Bsols_channel', [0])[
                       num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
-        ddsols_ = [
-            config[key].get('DDsols_time', [0])[num - 1 if num <= len(config[key].get('DDsols_time', [])) else -1],
-            config[key].get('DDsols_channel', [0])[
-                num - 1 if num <= len(config[key].get('DDsols_channel', [])) else -1]]
+        gasols_ = [
+            config[key].get('GAsols_time', [0])[num - 1 if num <= len(config[key].get('GAsols_time', [])) else -1],
+            config[key].get('GAsols_channel', [0])[
+                num - 1 if num <= len(config[key].get('GAsols_channel', [])) else -1]]
 
-        if (config[key].get('two_step', False) and ddsols_[0] != -1) or config[key].get('ddjones', False) :
+        if (config[key].get('two_step', False) and gasols_[0] != -1):
             jones_chain += ',DD'
             matrix_type = 'Gain2x2'
-        elif config[key].get('DDjones', False) and config[key].get('two_step', False):
-             raise ValueError('You cannot do a DD-gain calibration and a split amplitude-phase calibration all at once')
         if config[key].get('Bjones', False):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
@@ -869,14 +867,14 @@ def worker(pipeline, recipe, config):
 
                 }
 
-            if config[key].get('two_step', False) and ddsols_[0] != -1:
+            if config[key].get('two_step', False) and gasols_[0] != -1:
                 cubical_opts.update({
                     "g-update-type"    : gupdate,
                     "dd-update-type"   : 'amp-diag',
                     "dd-solvable"      : True,
                     "dd-type"          : CUBICAL_MT[matrix_type],
-                    "dd-time-int"      : ddsols_[0],
-                    "dd-freq-int"      : ddsols_[1],
+                    "dd-time-int"      : gasols_[0],
+                    "dd-freq-int"      : gasols_[1],
                     "dd-save-to"       : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                     "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                     "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
@@ -892,18 +890,7 @@ def worker(pipeline, recipe, config):
                                     "b-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
                                     "b-save-to": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                                     "b-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5)})
-                                            
-            if config[key].get('DDjones', False):
-               cubical_opts.update({"g-update-type"   : gupdate,
-                                    "dd-update-type"  : dupdate,
-                                    "dd-solvable": True,
-                                    "dd-time-int": ddsols_[0],
-                                    "dd-freq-int": ddsols_[1],
-                                    "dd-type" : CUBICAL_MT[matrix_type],
-                                    "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                                    "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
-                                    "dd-dd-term":   True,
-                                    "dd-save-to": "dE-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),})
+
             recipe.add('cab/cubical', step, cubical_opts,  
                 input=pipeline.input,
                 output=pipeline.output,
@@ -926,7 +913,7 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G,B'
         else:
             jones_chain = 'G'
-        if config[key].get('DDjones', False) or (config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1):
+        if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
             jones_chain+= ',DD'
         for i,himsname in enumerate(hires_mslist):
             cubical_gain_interp_opts = {
@@ -943,19 +930,13 @@ def worker(pipeline, recipe, config):
                "g-solvable"       : False,
                "g-save-to"        : None,
                "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
-            if config[key].get('DDjones', False):
-               cubical_gain_interp_opts.update(
-                   {"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "dd-solvable" : False,
-                    "dd-save-to"  : None
-                    })
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(
                    {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
                     "b-solvable" : False,
                     "b-save-to"  : None
                     })
-            if config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1:
+            if config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1:
                cubical_gain_interp_opts.update(
                    {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
                     "dd-solvable" : False,
@@ -968,13 +949,14 @@ def worker(pipeline, recipe, config):
                 shared_memory=config[key].get('shared_memory','100Gb'),
                 label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
 
-    def apply_gains_prev_step(apply_iter, enable=True):
+    def restore(apply_iter, enable=True):
+
         key = 'calibrate'
         if config[key].get('Bjones',False):
             jones_chain = 'G,B'
         else:
             jones_chain = 'G'
-        if config[key].get('DDjones', False) or (config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1):
+        if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
             jones_chain+= ',DD'
         for i,msname in enumerate(mslist):
             cubical_gain_interp_opts = {
@@ -990,32 +972,25 @@ def worker(pipeline, recipe, config):
                "montblanc-dtype"  : 'float',
                "g-solvable"       : False,
                "g-save-to"        : None,
-               "g-load-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0]))}
-            if config[key].get('DDjones', False):
-               cubical_gain_interp_opts.update(
-                   {"dd-load-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
-                    "dd-solvable" : False,
-                    "dd-save-to"  : None
-                    })
+               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0]))}
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(
-                   {"b-load-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                   {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
                     "b-solvable" : False,
                     "b-save-to"  : None
                     })
-            if config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1:
+            if config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1:
                cubical_gain_interp_opts.update(
-                   {"dd-load-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                   {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
                     "dd-solvable" : False,
                     "dd-save-to"  : None
                     })
-            step = 'Reapply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
+            step = 'restore_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory=config[key].get('shared_memory','100Gb'),
-                label="{0:s}:: Reapply cubical gains ms={1:s}".format(step, msname))
-     
+                label="{0:s}:: restore cubical gains ms={1:s}".format(step, himsname))
 
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
@@ -1328,7 +1303,7 @@ def worker(pipeline, recipe, config):
         if calwith == 'meqtrees':
             raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         else:
-            apply_gains_prev_step(self_cal_iter_counter-1, enable=True)
+            restore(self_cal_iter_counter-1, enable=True)
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):

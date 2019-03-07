@@ -371,17 +371,13 @@ mapping:
               - type: float
             desc: Channel intervals for individual calibration steps for B jones calibrations. 0 indicates average all. Default 0
             required: false
-          DDjones:
-            type: bool
-            desc: Enable direction dependent calibration, currently experimental. Default False
-            required: false
-          DDsols_time:
-            desc:  Time intervals for individual calibration steps for DD jones calibrations. 0 indicates average all. Default 0
+          GAsols_time:
+            desc:  Time intervals for amplitude calibration in two_time scale procedure for phase vs amp. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false
-          DDsols_channel:
-            desc: Time intervals for individual calibration steps for DD jones calibrations. 0 indicates average all. Default 0
+          GAsols_channel:
+            desc: Time intervals for amplitude calibration in two_time scale procedure for phase vs amp. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false

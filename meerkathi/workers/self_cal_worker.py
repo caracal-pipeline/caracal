@@ -47,13 +47,10 @@ def worker(pipeline, recipe, config):
     if gain_interpolation:
         hires_label = config['gain_interpolation'].get('to_label', label)
         label = config['gain_interpolation'].get('from_label',label+'-avg')
-    else:
-        # As restoring the calibration step goes through the hires nomenclature we want to set hires_list to mslist
-        hires_label = config['label']
+        pipeline.set_hires_msnames(hires_label)
+        hires_mslist = pipeline.hires_msnames
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
-    pipeline.set_hires_msnames(hires_label)
-    hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
     #print(hires_mslist,mslist)
     #exit()
@@ -971,7 +968,53 @@ def worker(pipeline, recipe, config):
                 shared_memory=config[key].get('shared_memory','100Gb'),
                 label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
 
-
+    def apply_gains_prev_step(apply_iter, enable=True):
+        key = 'calibrate'
+        if config[key].get('Bjones',False):
+            jones_chain = 'G,B'
+        else:
+            jones_chain = 'G'
+        if config[key].get('DDjones', False) or (config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1):
+            jones_chain+= ',DD'
+        for i,msname in enumerate(mslist):
+            cubical_gain_interp_opts = {
+               "data-ms"          : msname,
+               "data-column"      : 'DATA',
+               "data-time-chunk"  : time_chunk,
+               "sol-jones"        : jones_chain,
+               "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
+               "dist-ncpu"        : ncpu,
+               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
+               "out-mode"         : 'ac',
+               "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
+               "montblanc-dtype"  : 'float',
+               "g-solvable"       : False,
+               "g-save-to"        : None,
+               "g-load-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0]))}
+            if config[key].get('DDjones', False):
+               cubical_gain_interp_opts.update(
+                   {"dd-load-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                    "dd-solvable" : False,
+                    "dd-save-to"  : None
+                    })
+            if config[key].get('Bjones', False):
+               cubical_gain_interp_opts.update(
+                   {"b-load-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                    "b-solvable" : False,
+                    "b-save-to"  : None
+                    })
+            if config[key].get('two_step',False) and config[key].get('DDsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('DDsols_time', [])) else -1] != -1:
+               cubical_gain_interp_opts.update(
+                   {"dd-load-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                    "dd-solvable" : False,
+                    "dd-save-to"  : None
+                    })
+            step = 'Reapply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
+            recipe.add('cab/cubical', step, cubical_gain_interp_opts,
+                input=pipeline.input,
+                output=pipeline.output,
+                shared_memory=config[key].get('shared_memory','100Gb'),
+                label="{0:s}:: Reapply cubical gains ms={1:s}".format(step, msname))
      
 
 
@@ -1285,7 +1328,7 @@ def worker(pipeline, recipe, config):
         if calwith == 'meqtrees':
             raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         else:
-            apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
+            apply_gains_prev_step(self_cal_iter_counter-1, enable=True)
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):

@@ -24,6 +24,7 @@ name=PKS1934-63 epoch=1994 ra=19h39m25.0s dec=-63d42m46s a=-30.7667 b=26.4908 c=
 alias src=PKS1934-63 dest=PKS 1934-63
 alias src=PKS1934-63 dest=PKS 1934-638
 alias src=PKS1934-63 dest=PKS1934-638
+alias src=PKS1934-63 dest=J1938-6341
 lsm name=PKS1934-63 epoch=2017 pks1934-638.lsm
 name=0410-752 epoch=2016 ra=04h08m48.5s dec=-75d07m19s a=8.1443 b=-5.2122 c=1.4472 d=-0.1584
 name=0420-625 epoch=2016 ra=04h20m56.0s dec=-62d23m40s a=4.7772 b=-2.1190 c=0.3788 d=-0.0433

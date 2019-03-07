@@ -9,23 +9,27 @@ except ImportError as e:
 
 requirements = [
 'ruamel.yaml>=0.15.22',
-'stimela>=0.3.2',
 'numpy>=1.13.1,<=1.15.2',
 'stimela>=0.3.2',
 'scipy>=0.19.1',
 'pysolr>=3.4.0',
 'progressbar2>=3.11.0',
-'nbconvert>=5.3.1',
-'aplpy>=1.1.1',
-'matplotlib>=2.1.0',
-'tornado>=4.0.0,<5.0.0',
-'jupyter>=1.0.0',
 'pykwalify>=1.6.0',
 'yamlordereddictloader',
-'astropy',
 'astroquery>=0.3.8',
 'npyscreen>=4.10.5',
-'ipdb>=0.11'
+'ipdb>=0.11',
+]
+
+# these are only there for diagnostics, make them optional
+extra_diagnostics = [
+    'python-casacore>=2.2.0',
+    'astropy<3.1.2',
+    'matplotlib>=2.1.0',
+    'tornado>=4.0.0,<5.0.0',
+    'jupyter>=1.0.0',
+    'aplpy>=1.1.1',
+    'nbconvert>=5.3.1',
 ]
 
 PACKAGE_NAME = 'meerkathi'
@@ -39,6 +43,9 @@ setup(name = PACKAGE_NAME,
     url = "https://github.com/ska-sa/meerkathi",
     packages=[PACKAGE_NAME], 
     install_requires = requirements,
+    extras_require = {
+        'extra_diagnostics': extra_diagnostics
+    },
     include_package_data = True,
     ##package_data - any binary or meta data files should go into MANIFEST.in
     scripts = ["bin/" + j for j in os.listdir("bin")],

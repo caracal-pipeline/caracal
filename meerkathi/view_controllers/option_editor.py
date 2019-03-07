@@ -218,9 +218,9 @@ class option_editor(npyscreen.FormBaseNew):
                 tree = annotated_tree_data(key_val=None, content='Root', selectable=False,ignoreRoot=True)
             
             ki = 1
-            for k, v in groups.iteritems():
+            for k, v in sorted(groups.iteritems(), key=lambda (k, v): v.get("order", 0) if hasattr(v, "get") else 0):
                 if __isdict(groups[k]) and groups[k].get('enable', True):
-                    label = "■ {}. {}".format(ki, k) if level == 1 else "■ {}.{} {}".format(level_label, ki, k)
+                    label = "(X) {}. {}".format(ki, k) if level == 1 else "(X) {}.{} {}".format(level_label, ki, k)
                     subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     __populate_tree(groups[k], 
                                     subtree, 
@@ -228,7 +228,7 @@ class option_editor(npyscreen.FormBaseNew):
                                     level_label='.'.join([str(x) for x in ([level_label, ki] if level > 1 else [ki])]))
                     ki += 1
                 elif __isdict(groups[k]) and not groups[k].get('enable', True):
-                    label = "Ø {}. {}".format(ki, k) if level == 1 else "Ø {}.{} {}".format(level_label, ki, k)
+                    label = "( ) {}. {}".format(ki, k) if level == 1 else "( ) {}.{} {}".format(level_label, ki, k)
                     subtree = tree.newChild("@{}".format(k), content=label, selectable=True)
                     ki += 1
                 else:
@@ -252,8 +252,8 @@ class option_editor(npyscreen.FormBaseNew):
                                  when_pressed_function=self.on_back_pressed)
         
         self.box_help = self.add(npyscreen.BoxBasic, name="Help", max_width=85, rely=4, relx=-89, max_height=20, editable=False)
-        msg = "\n".join(textwrap.wrap("Scroll down the tree and hit return to edit values. Sections marked '■' are enabled, "
-                                      "while those marked 'Ø' are disabled. Hit enter to toggle them on or off. Certain sections, "
+        msg = "\n".join(textwrap.wrap("Scroll down the tree and hit return to edit values. Sections marked (X) are enabled, "
+                                      "while those marked ( ) are disabled. Hit enter to toggle them on or off. Certain sections, "
                                       "like the 'general' section, cannot be switched off.", width=70))
         self.lbl_help = self.add(npyscreen.MultiLineEdit, value=msg, max_width=80, rely=6, relx=-83, max_height=16, editable=False)
         self.lbl_help.color = "SAFE"                        

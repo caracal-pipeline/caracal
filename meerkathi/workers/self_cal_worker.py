@@ -1284,7 +1284,7 @@ def worker(pipeline, recipe, config):
     if self_cal_iter_counter != 1:
         if calwith == 'meqtrees':
             raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-        else
+        else:
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
 
     if pipeline.enable_task(config, 'image'):

@@ -47,7 +47,7 @@ def worker(pipeline, recipe, config):
     if gain_interpolation:
         hires_label = config['gain_interpolation'].get('to_label', label)
         label = config['gain_interpolation'].get('from_label',label+'-avg')
-    else
+    else:
         # As restoring the calibration step goes through the hires nomenclature we want to set hires_list to mslist
         hires_label = config['label']
     pipeline.set_cal_msnames(label)

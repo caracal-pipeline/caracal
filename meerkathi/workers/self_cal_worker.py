@@ -910,8 +910,8 @@ def worker(pipeline, recipe, config):
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             flagms_postcal_opts.update({"msname" : msname})
             recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
-                 input=INPUT,
-                 output=OUTPUT,
+                 input=pipeline.input,
+                 output=pipeline.output,
                  label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
     
     def apply_gains_to_fullres(apply_iter, enable=True):
@@ -979,8 +979,8 @@ def worker(pipeline, recipe, config):
                            "msname": ms,
                            "remove": "final_2gc_flags",
                        },
-                       input=INPUT,
-                       output=OUTPUT,
+                       input=pipeline.input,
+                       output=pipeline.output,
                        label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
             cubical_gain_interp_opts = {
                "data-ms"          : msname,

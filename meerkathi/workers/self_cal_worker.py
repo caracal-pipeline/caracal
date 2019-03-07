@@ -1206,6 +1206,12 @@ def worker(pipeline, recipe, config):
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
         config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
+
+    if pipeline.enable_task(config, 'aimfast'):
+        # If aimfast plotting is enabled run source finder
+        if config['aimfast'].get('plot'):
+            config['extract_sources']['enable'] = True
+
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
     global reset_cal
@@ -1247,8 +1253,10 @@ def worker(pipeline, recipe, config):
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
         else:
             apply_gains_to_fullres(self_cal_iter_counter, enable=True)
-    if config['aimfast']['plot']:
-        aimfast_plotting()
+
+    if pipeline.enable_task(config, 'aimfast'):
+        if config['aimfast']['plot']:
+            aimfast_plotting()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:

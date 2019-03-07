@@ -973,10 +973,10 @@ def worker(pipeline, recipe, config):
         if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
             jones_chain+= ',DD'
         for i,msname in enumerate(mslist):
-            mspref = ms.split(".ms")[0].replace("-", "_")
+            mspref = msname.split(".ms")[0].replace("-", "_")
             recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
                        {
-                           "msname": ms,
+                           "msname": msname,
                            "remove": "final_2gc_flags",
                        },
                        input=pipeline.input,
@@ -1013,7 +1013,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory=config[key].get('shared_memory','100Gb'),
-                label="{0:s}:: restore cubical gains ms={1:s}".format(step, himsname))
+                label="{0:s}:: restore cubical gains ms={1:s}".format(step, msname))
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []

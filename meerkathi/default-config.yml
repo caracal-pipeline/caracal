@@ -86,12 +86,20 @@
       combine: ''
       field:
       - gcal
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
       plot:
         enable: true
     enable: true
     gain_cal_flux:
       enable: true
       combine: ''
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
       plot:
         enable: true
     bp_cal:
@@ -101,11 +109,14 @@
       - bpcal
       solint: inf
       remove_ph_time_var: false
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
       plot:
         enable: true
     flagging_summary:
       enable: true
-
     apply_transfer_fluxscale:
       enable: true
       field:

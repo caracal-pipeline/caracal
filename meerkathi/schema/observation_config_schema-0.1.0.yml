@@ -55,7 +55,7 @@ mapping:
       xcal:
         desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
         type: str
-        required: true
+        required: false
       reference_antenna:
         desc: Reference antenna. If set to 'auto' then will automatically set using metadata file (only for meerkat data)
         type: str

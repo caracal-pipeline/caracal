@@ -809,19 +809,15 @@ def worker(pipeline, recipe, config):
             if matrix_type == 'GainDiagPhase':
                 gupdate = 'phase-diag'
                 bupdate = 'phase-diag'
-                dupdate = 'phase-diag'
             elif matrix_type == 'GainDiagAmp':
                 gupdate = 'amp-diag'
                 bupdate = 'amp-diag'
-                dupdate = 'amp-diag'
             elif matrix_type == 'GainDiag':
                 gupdate = 'diag'
                 bupdate = 'diag'
-                dupdate = 'diag'
             elif matrix_type == 'Gain2x2':
                 gupdate = 'full'
                 bupdate = 'full'
-                dupdate = 'full'
             else:
                 raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
             if config[key].get('two_step', False):
@@ -909,115 +905,151 @@ def worker(pipeline, recipe, config):
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             flagms_postcal_opts.update({"msname" : msname})
+            # Save the flags that were added in the calibration
             recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
                  input=pipeline.input,
                  output=pipeline.output,
                  label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
-    
-    def apply_gains_to_fullres(apply_iter, enable=True):
-
-        key = 'calibrate'
 
 
+    def restore(num, enable_inter=True):
         calwith = config.get('calibrate_with', 'meqtrees').lower()
-        if(calwith=='meqtrees'):
-           meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-           raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
+        # First check we are using Cubical
+        if (calwith == 'meqtrees'):
+            if enable_inter:
+                meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
+                raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
+            else:
+                meerkathi.log.info("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+                raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
 
-        if config[key].get('Bjones',False):
-            jones_chain = 'G,B'
-        else:
-            jones_chain = 'G'
-        if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
-            jones_chain+= ',DD'
-        for i,himsname in enumerate(hires_mslist):
-            cubical_gain_interp_opts = {
-               "data-ms"          : himsname,
-               "data-column"      : 'DATA',
-               "data-time-chunk"  : time_chunk,
-               "sol-jones"        : jones_chain,
-               "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
-               "dist-ncpu"        : 1,
-               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
-               "out-mode"         : 'ac',
-               "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
-               "montblanc-dtype"  : 'float',
-               "g-solvable"       : False,
-               "g-save-to"        : None,
-               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
-            if config[key].get('Bjones', False):
-               cubical_gain_interp_opts.update(
-                   {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "b-solvable" : False,
-                    "b-save-to"  : None
-                    })
-            if config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1:
-               cubical_gain_interp_opts.update(
-                   {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label)),
-                    "dd-solvable" : False,
-                    "dd-save-to"  : None
-                    })
-            step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
-            recipe.add('cab/cubical', step, cubical_gain_interp_opts,
-                input=pipeline.input,
-                output=pipeline.output,
-                shared_memory=config[key].get('shared_memory','100Gb'),
-                label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
-
-    def restore(apply_iter, enable=True):
         key = 'calibrate'
-        if config[key].get('Bjones',False):
-            jones_chain = 'G,B'
+        #to achieve accurate restauration we need to reset all parameters properly
+        matrix_type = config[key].get('gain_matrix_type', 'Gain2x2')[
+            num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
+        #Decide if take diagonal terms into account
+        if matrix_type == 'Gain2x2':
+            take_diag_terms = False
         else:
-            jones_chain = 'G'
-        if (config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1):
-            jones_chain+= ',DD'
-        for i,msname in enumerate(mslist):
-            mspref = msname.split(".ms")[0].replace("-", "_")
-            recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
-                       {
-                           "msname": msname,
-                           "remove": "final_2gc_flags",
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+            take_diag_terms = True
+         #Decide the update type
+        if config[key].get('two_step', False) or config[key].get('Bjones', False):
+            if matrix_type == 'GainDiagPhase':
+                gupdate = 'phase-diag'
+                bupdate = 'phase-diag'
+            elif matrix_type == 'GainDiagAmp':
+                gupdate = 'amp-diag'
+                bupdate = 'amp-diag'
+            elif matrix_type == 'GainDiag':
+                gupdate = 'diag'
+                bupdate = 'diag'
+            elif matrix_type == 'Gain2x2':
+                gupdate = 'full'
+                bupdate = 'full'
+            else:
+                raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
+            if config[key].get('two_step', False):
+                gupdate = 'phase-diag'
+        #Always g in the jones chain
+        jones_chain = 'G'
+        # Determine solution intervals
+        gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
+                  config[key].get('Gsols_channel', [])[
+                      num - 1 if num <= len(config[key].get('Gsols_channel', [])) else -1]]
+        bsols_ = [config[key].get('Bsols_time', [0])[num - 1 if num <= len(config[key].get('Bsols_time', [])) else -1],
+                  config[key].get('Bsols_channel', [0])[
+                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+        gasols_ = [
+            config[key].get('GAsols_time', [0])[num - 1 if num <= len(config[key].get('GAsols_time', [])) else -1],
+            config[key].get('GAsols_channel', [0])[
+                num - 1 if num <= len(config[key].get('GAsols_channel', [])) else -1]]
+        # If we want to interpolate our frequency interval is always 1 no matter what
+        if enable_inter:
+            gsols_[1]=1
+            bsols_[1]=1
+            gasols_[1]=1
+        # expand the Jones chain if necessary, for multiple Jones terms we always need matrix complex2x2
+        if (config[key].get('two_step', False) and gasols_[0] != -1):
+            jones_chain += ',DD'
+            matrix_type = 'Gain2x2'
+        if config[key].get('Bjones', False):
+            jones_chain += ',B'
+            matrix_type = 'Gain2x2'
+        # select the right datasets
+        if enable_inter:
+            inlist=hires_mslist
+        else:
+            inlist=mslist
+        # loop through measurement sets
+        for i,msname in enumerate(inlist):
+            #If we are restoring a step we need to remove the flags of the 2gc process
+            if not enable_inter:
+                mspref = msname.split(".ms")[0].replace("-", "_")
+                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                          {
+                               "msname": msname,
+                               "remove": "final_2gc_flags",
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+            # build cubical commands
             cubical_gain_interp_opts = {
                "data-ms"          : msname,
                "data-column"      : 'DATA',
                "data-time-chunk"  : time_chunk,
                "sol-jones"        : jones_chain,
+               "sol-diag-diag"    : take_diag_terms,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : 1,
-               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
+               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                "out-mode"         : 'ac',
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
                "g-solvable"       : False,
+               "g-type"           : CUBICAL_MT[matrix_type],
+               "g-time-int"       : gsols_[0],
+               "g-freq-int"       : gsols_[1],
                "g-save-to"        : None,
-               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0]))}
+               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0]))}
+            # expand
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(
-                   {"b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                   {"g-update-type"    : gupdate,
+                    "b-update-type"    : bupdate,
+                    "b-type"           : CUBICAL_MT[matrix_type],
+                    "b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0])),
+                    "b-time-int"       : bsols_[0],
+                    "b-freq-int"       : bsols_[1],
                     "b-solvable" : False,
                     "b-save-to"  : None
                     })
-            if config[key].get('two_step',False) and config[key].get('GAsols_time', [0])[apply_iter - 1 if apply_iter <= len(config[key].get('GAsols_time', [])) else -1] != -1:
+            if config[key].get('two_step',False) and gasols_[0] != -1:
                cubical_gain_interp_opts.update(
-                   {"dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname.split('.ms')[0])),
+                   {"g-update-type"    : gupdate,
+                    "dd-update-type"   : 'amp-diag',
+                    "dd-type"          : CUBICAL_MT[matrix_type],
+                    "dd-xfer-from"     : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0])),
+                    "dd-time-int"      : gasols_[0],
+                    "dd-freq-int"      : gasols_[1],
                     "dd-solvable" : False,
                     "dd-save-to"  : None
                     })
-            step = 'restore_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
+            # ensure proper logging for restore or interpolation
+            if not enable_inter:
+                step = 'restore_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname)
+            else:
+                step = 'apply_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory=config[key].get('shared_memory','100Gb'),
-                label="{0:s}:: restore cubical gains ms={1:s}".format(step, msname))
+                label=stim_label)
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
-
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
         "Extracts data from the json data file"
@@ -1324,12 +1356,10 @@ def worker(pipeline, recipe, config):
             create_averaged()
         else:
             raise ValueError("Why create an averaged set but then not apply the calibrations to the full data set?")
-
+    # When we do not start at iteration 1 we need to restore the data set
     if self_cal_iter_counter != 1:
-        if calwith == 'meqtrees':
-            raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-        else:
-            restore(self_cal_iter_counter-1, enable=True)
+        restore(self_cal_iter_counter-1, enable_inter=False)
+
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):
@@ -1360,9 +1390,9 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'gain_interpolation'):
         if (self_cal_iter_counter > cal_niter):
-            apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
+            restore(self_cal_iter_counter-1, enable_inter=True)
         else:
-            apply_gains_to_fullres(self_cal_iter_counter, enable=True)
+            restore(self_cal_iter_counter, enable_inter=True)
     if config['aimfast'].get('plot',False):
         aimfast_plotting()
 

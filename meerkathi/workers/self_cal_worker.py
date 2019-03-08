@@ -49,18 +49,13 @@ def worker(pipeline, recipe, config):
         label = config['gain_interpolation'].get('from_label',label+'-avg')
         pipeline.set_hires_msnames(hires_label)
         hires_mslist = pipeline.hires_msnames
-        hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
-    	hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
 
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
-    mslist = filter(lambda ms: isinstance(ms, str), mslist)
-    mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), mslist)
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
   
     prefix = pipeline.prefix
-    #print(hires_mslist,mslist)
-    #exit()
+
     # Define image() extract_sources() calibrate()
     # functions for convience
 
@@ -1282,7 +1277,6 @@ def worker(pipeline, recipe, config):
                 label="Plotting source residuals comparisons")
     def create_averaged():
         for i,msname in enumerate(hires_mslist):
-            print(msname,mslist[i])
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, mslist[i])):
                 raise ValueError("Your low resolution file already exists. We will not overwrite.")
             else:

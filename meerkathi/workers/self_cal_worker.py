@@ -52,6 +52,8 @@ def worker(pipeline, recipe, config):
 
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
+    #As avg sets can be created within this worker you cannot check for existence of the sets here.
+
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
   
     prefix = pipeline.prefix
@@ -60,7 +62,7 @@ def worker(pipeline, recipe, config):
     # functions for convience
 
     def cleanup_files(mask_name):
-
+      #This function is never used, is it truly required?
       if os.path.exists(pipeline.output+'/'+mask_name):
           shutil.move(pipeline.output+'/'+mask_name,pipeline.output+'/masking/'+mask_name)
 
@@ -543,6 +545,7 @@ def worker(pipeline, recipe, config):
             print '############################################'
 
     def predict_from_fits(num, model, index):
+        #This function is never used. Is it truly required?
         if isinstance(model, str) and len(model.split('+'))==2:
             combine = True
             mm = model.split('+')
@@ -1051,6 +1054,7 @@ def worker(pipeline, recipe, config):
         with open(filename) as f:
             data = json.load(f)
         return data
+
     def get_obs_data(filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[0])):
         "Extracts data from the json data file"
         if label:
@@ -1058,6 +1062,7 @@ def worker(pipeline, recipe, config):
         with open(filename) as f:
             data = json.load(f)
         return data
+
     def quality_check(n, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
@@ -1275,6 +1280,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
+
     def create_averaged():
         for i,msname in enumerate(hires_mslist):
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, mslist[i])):
@@ -1300,7 +1306,7 @@ def worker(pipeline, recipe, config):
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []
-
+    # Main worker starts here
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):
         for i,msname in enumerate(mslist):
@@ -1325,8 +1331,8 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if we use the new two_step analysis aimfast has to be run
-    #if config['calibrate'].get('two_step') and calwith == 'meqtrees':
-    #    config['aimfast']['enable'] = True
+    if config['calibrate'].get('two_step') and calwith == 'meqtrees':
+        config['aimfast']['enable'] = True
     # if model_mode is vis only we do not want to run pybdsm
     # this is outdated: we want to run aimfast also having if using vis_only
 
@@ -1389,21 +1395,6 @@ def worker(pipeline, recipe, config):
             restore(self_cal_iter_counter, enable_inter=True)
     if config['aimfast'].get('plot',False):
         aimfast_plotting()
-
-    #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
-    #else:
-    #   for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):
-    #        if pipeline.enable_task(config, 'calibrate'):
-    #            calibrate(kk)
-    #        if pipeline.enable_task(config, 'image'):
-    #            image(kk+1)
-    #        if pipeline.enable_task(config, 'sofia_mask'):
-    #            sofia_mask(kk+1)
-
-    if config['calibrate'].get('hires_interpol')==True:
-        print "Interpolating gains"
-        substep = int(config.get('apply_step', cal_niter))
-        apply_gains_to_fullres(substep,enable=True if (config['calibrate'].get('hires_interpol')==True) else False)
 
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:

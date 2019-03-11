@@ -843,16 +843,20 @@ def worker(pipeline, recipe, config):
 
         for i,msname in enumerate(mslist):
             mspref = msname.split(".ms")[0].replace("-", "_")
-            #Cubical is weird with the flagging lets remove the flags from a previous run manually
-            if num > 1:
-                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
-                            {
-                               "msname": msname,
-                               "remove": "final_2gc_flags",
-                            },
-                            input=pipeline.input,
-                            output=pipeline.output,
-                            label="remove_2gc_flags_{0:s}:: Remove 2GC flags step{1:d}".format(mspref,num))
+            #-Cubical does not restore the flagging to original as flags seep into legacy
+            # No idea wether it is a feature or a bug
+            #I guess the CORR_RES people would like to keep their incremental flags though.
+            if num > 1 and config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1] != 'CORR_RES':
+                mspref = msname.split(".ms")[0].replace("-", "_")
+                recipe.add("cab/casa_flagmanager", "restore_1gc_flags_{0:s}".format(mspref), {
+                    "vis": msname,
+                    "mode": 'restore',
+                    "versionname": "final_1gc_flags"
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="restore_1gc_flags_{0:s}:: Restore 1GC flags ".format(mspref))
+
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
                   "data-ms"          : msname,
@@ -880,8 +884,8 @@ def worker(pipeline, recipe, config):
                   "madmax-enable"   : config[key].get('madmax_flagging',True),
                   "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
                   "madmax-threshold" : config[key].get('madmax_flag_thresh', [0,10]),
-                  "madmax-estimate" : 'corr',
-
+                  "madmax-estimate" : 'diag',
+                  "madmax-offdiag"  : False,
                 }
 
             if config[key].get('two_step', False) and gasols_[0] != -1:
@@ -914,12 +918,16 @@ def worker(pipeline, recipe, config):
                 shared_memory= config[key].get('shared_memory','100Gb'),
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-            flagms_postcal_opts.update({"msname" : msname})
-            # Save the flags that were added in the calibration
-            recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),flagms_postcal_opts,
-                 input=pipeline.input,
-                 output=pipeline.output,
-                 label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
+            # We need a version of the flags to restore to at every step
+            recipe.add("cab/casa_flagmanager", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num), {
+                "vis": msname,
+                "mode": 'save',
+                "versionname": "step_{0:d}_2gc_flags".format(num)
+            },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label="save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num))
+
 
 
     def restore(num, enable_inter=True):
@@ -1001,17 +1009,19 @@ def worker(pipeline, recipe, config):
 
         # loop through measurement sets
         for i,msname in enumerate(inlist):
-            #If we are restoring a step we need to remove the flags of the 2gc process
+            #If we are restoring a step we need to restore the flags of the 2gc process
             if not enable_inter:
                 mspref = msname.split(".ms")[0].replace("-", "_")
-                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
-                          {
-                               "msname": msname,
-                               "remove": "final_2gc_flags",
-                           },
+                # We need a version of the flags to restore to at every step
+                recipe.add("cab/casa_flagmanager", "restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num), {
+                    "vis": msname,
+                    "mode": 'restore',
+                    "versionname": "step_{0:d}_2gc_flags".format(num)
+                },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+                           label="restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num))
+
             # build cubical commands
             cubical_gain_interp_opts = {
                "data-ms"          : msname,
@@ -1381,7 +1391,19 @@ def worker(pipeline, recipe, config):
     # When we do not start at iteration 1 we need to restore the data set
     if self_cal_iter_counter != 1:
         restore(self_cal_iter_counter-1, enable_inter=False)
-
+    else:
+        # If we do start from the first iteration lets save the flags as they are now.
+        # flagms needs a bitflag column nonsense and has no restore function lets use good old casa
+        for i,msname in enumerate(mslist):
+            mspref = msname.split(".ms")[0].replace("-", "_")
+            recipe.add("cab/casa_flagmanager", "save_1gc_flags_{0:s}".format(mspref), {
+                "vis": msname,
+                "mode": 'save',
+                "versionname": "final_1gc_flags"
+            },
+                input=pipeline.input,
+                output=pipeline.output,
+                label="save_1gc_flags_{0:s}:: Save 1GC flags ".format(mspref))
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):

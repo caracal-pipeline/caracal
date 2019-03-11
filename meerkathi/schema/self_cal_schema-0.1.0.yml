@@ -106,6 +106,10 @@ mapping:
         type: int
         desc: Size of time chunk. Default 128
         required: false
+      cal_freq_chunk:
+          type: int
+          desc: Size of time chunk. Default 128
+          required: false
       start_at_iter:
         type: int
         desc: Start self-cal iteration loop at this start value, default = 1

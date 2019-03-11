@@ -40,6 +40,7 @@ def worker(pipeline, recipe, config):
     taper = config.get('img_uvtaper', None)
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
+    freq_chunk = config.get('cal_freq_chunk', 32)
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
@@ -841,7 +842,17 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         for i,msname in enumerate(mslist):
-            mspref = msname.split('.ms')[0].replace('-', '_')
+            mspref = msname.split(".ms")[0].replace("-", "_")
+            #Cubical is weird with the flagging lets remove the flags from a previous run manually
+            if num > 1:
+                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                            {
+                               "msname": msname,
+                               "remove": "final_2gc_flags",
+                            },
+                            input=pipeline.input,
+                            output=pipeline.output,
+                            label="remove_2gc_flags_{0:s}:: Remove 2GC flags step{1:d}".format(mspref,num))
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
                   "data-ms"          : msname,
@@ -849,6 +860,7 @@ def worker(pipeline, recipe, config):
                   "sol-term-iters"   : '50',
                   "model-list"       : modellist,
                   "data-time-chunk"  : time_chunk,
+                  "data-freq-chunk"  : freq_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
                   "sol-jones"        : '"'+jones_chain+'"',
@@ -976,8 +988,17 @@ def worker(pipeline, recipe, config):
         # select the right datasets
         if enable_inter:
             inlist=hires_mslist
+            #Cubical messes up when a whole area is flagged as it will flag the full frequency range of a freq-chunk the freq chunk should be much larger in applying
+            chunky = 0
+            apmode= 'ac'
         else:
             inlist=mslist
+            chunky = 0
+            if  CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]] == 'sr':
+                apmode = 'ar'
+            else:
+                apmode = 'ac'
+
         # loop through measurement sets
         for i,msname in enumerate(inlist):
             #If we are restoring a step we need to remove the flags of the 2gc process
@@ -998,10 +1019,11 @@ def worker(pipeline, recipe, config):
                "data-time-chunk"  : time_chunk,
                "sol-jones"        : jones_chain,
                "sol-diag-diag"    : take_diag_terms,
+               "data-freq-chunk"  : chunky,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : 1,
-               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
-               "out-mode"         : 'ac',
+               "out-name"         : '{0:s}-{1:d}_restore_cubical'.format(pipeline.dataid[i], num),
+               "out-mode"         : apmode,
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
                "g-solvable"       : False,

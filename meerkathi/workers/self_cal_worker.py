@@ -774,10 +774,7 @@ def worker(pipeline, recipe, config):
 
     def calibrate_cubical(num):
         key = 'calibrate'
-        flagms_postcal_opts = {
-         "create"  : True,
-         "flag"    : "final_2gc_flags",
-         "flagged-any": ["+L"],}
+      
 
         modellist = []
         model = config[key].get('model', num)[num-1]
@@ -846,16 +843,16 @@ def worker(pipeline, recipe, config):
             #-Cubical does not restore the flagging to original as flags seep into legacy
             # No idea wether it is a feature or a bug
             #I guess the CORR_RES people would like to keep their incremental flags though.
-            if num > 1 and config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1] != 'CORR_RES':
-                mspref = msname.split(".ms")[0].replace("-", "_")
-                recipe.add("cab/casa_flagmanager", "restore_1gc_flags_{0:s}".format(mspref), {
-                    "vis": msname,
-                    "mode": 'restore',
-                    "versionname": "final_1gc_flags"
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label="restore_1gc_flags_{0:s}:: Restore 1GC flags ".format(mspref))
+            #if num > 1 and config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1] != 'CORR_RES':
+                #mspref = msname.split(".ms")[0].replace("-", "_")
+                #recipe.add("cab/casa_flagmanager", "restore_1gc_flags_{0:s}".format(mspref), {
+                #    "vis": msname,
+                #    "mode": 'restore',
+                #    "versionname": "final_1gc_flags"
+                #},
+                #input=pipeline.input,
+                #output=pipeline.output,
+                #label="restore_1gc_flags_{0:s}:: Restore 1GC flags ".format(mspref))
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
@@ -919,14 +916,24 @@ def worker(pipeline, recipe, config):
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             # We need a version of the flags to restore to at every step
-            recipe.add("cab/casa_flagmanager", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num), {
-                "vis": msname,
-                "mode": 'save',
-                "versionname": "step_{0:d}_2gc_flags".format(num)
-            },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label="save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num))
+            #recipe.add("cab/casa_flagmanager", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num), {
+            #    "vis": msname,
+            #    "mode": 'save',
+            #    "versionname": "step_{0:d}_2gc_flags".format(num)
+            #},
+            #           input=pipeline.input,
+            #           output=pipeline.output,
+            #           label="save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num))
+            recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),
+                       {
+                           "msname": msname,
+                           "create": True,
+                           "flag": "final_2gc_flags",
+                           "flagged-any": ["+L"]
+                       },
+                 input=pipeline.input,
+                 output=pipeline.output,
+                 label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
 
 
 
@@ -1011,16 +1018,25 @@ def worker(pipeline, recipe, config):
         for i,msname in enumerate(inlist):
             #If we are restoring a step we need to restore the flags of the 2gc process
             if not enable_inter:
-                mspref = msname.split(".ms")[0].replace("-", "_")
+                #mspref = msname.split(".ms")[0].replace("-", "_")
                 # We need a version of the flags to restore to at every step
-                recipe.add("cab/casa_flagmanager", "restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num), {
-                    "vis": msname,
-                    "mode": 'restore',
-                    "versionname": "step_{0:d}_2gc_flags".format(num)
-                },
+                #recipe.add("cab/casa_flagmanager", "restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num), {
+                #    "vis": msname,
+                #    "mode": 'restore',
+                #    "versionname": "step_{0:d}_2gc_flags".format(num)
+                #},
+                #           input=pipeline.input,
+                #           output=pipeline.output,
+                #           label="restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num))
+                mspref = msname.split(".ms")[0].replace("-", "_")
+                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                           {
+                               "msname": msname,
+                               "remove": "final_2gc_flags",
+                           },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label="restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num))
+                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
 
             # build cubical commands
             cubical_gain_interp_opts = {
@@ -1335,6 +1351,14 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
                 # run recipe
+                recipe.add('cab/msutils', 'prep_avgms_{:d}'.format(i),
+                           {
+                               "msname": msname,
+                               "command": 'prep',
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='prep_avgms_{:d}:: Add BITFLAG column ms={1:s}'.format(i, msname))
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []
@@ -1391,19 +1415,19 @@ def worker(pipeline, recipe, config):
     # When we do not start at iteration 1 we need to restore the data set
     if self_cal_iter_counter != 1:
         restore(self_cal_iter_counter-1, enable_inter=False)
-    else:
+    #else:
         # If we do start from the first iteration lets save the flags as they are now.
         # flagms needs a bitflag column nonsense and has no restore function lets use good old casa
-        for i,msname in enumerate(mslist):
-            mspref = msname.split(".ms")[0].replace("-", "_")
-            recipe.add("cab/casa_flagmanager", "save_1gc_flags_{0:s}".format(mspref), {
-                "vis": msname,
-                "mode": 'save',
-                "versionname": "final_1gc_flags"
-            },
-                input=pipeline.input,
-                output=pipeline.output,
-                label="save_1gc_flags_{0:s}:: Save 1GC flags ".format(mspref))
+        #for i,msname in enumerate(mslist):
+            #mspref = msname.split(".ms")[0].replace("-", "_")
+            #recipe.add("cab/casa_flagmanager", "save_1gc_flags_{0:s}".format(mspref), {
+            #    "vis": msname,
+            #    "mode": 'save',
+            #    "versionname": "final_1gc_flags"
+            #},
+            #    input=pipeline.input,
+            #    output=pipeline.output,
+            #    label="save_1gc_flags_{0:s}:: Save 1GC flags ".format(mspref))
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):

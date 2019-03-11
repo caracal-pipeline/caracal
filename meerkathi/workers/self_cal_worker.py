@@ -774,7 +774,7 @@ def worker(pipeline, recipe, config):
 
     def calibrate_cubical(num):
         key = 'calibrate'
-      
+
 
         modellist = []
         model = config[key].get('model', num)[num-1]
@@ -1358,7 +1358,7 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='prep_avgms_{:d}:: Add BITFLAG column ms={1:s}'.format(i, msname))
+                           label='prep_avgms_{0:d}:: Add BITFLAG column ms={1:s}'.format(i, msname))
         recipe.run()
         # Empty job que after execution
         recipe.jobs = []

@@ -1028,15 +1028,18 @@ def worker(pipeline, recipe, config):
                 #           input=pipeline.input,
                 #           output=pipeline.output,
                 #           label="restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num))
-                mspref = msname.split(".ms")[0].replace("-", "_")
-                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
-                           {
-                               "msname": msname,
-                               "remove": "final_2gc_flags",
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+                fromname=msname
+                #mspref = msname.split(".ms")[0].replace("-", "_")
+                #recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                #          {
+                #               "msname": msname,
+                #               "remove": "final_2gc_flags",
+                #           },
+                #           input=pipeline.input,
+                #           output=pipeline.output,
+                #           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+            else:
+                fromname = mslist[i]
 
             # build cubical commands
             cubical_gain_interp_opts = {
@@ -1057,14 +1060,14 @@ def worker(pipeline, recipe, config):
                "g-time-int"       : gsols_[0],
                "g-freq-int"       : gsols_[1],
                "g-save-to"        : None,
-               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0]))}
+               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0]))}
             # expand
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(
                    {"g-update-type"    : gupdate,
                     "b-update-type"    : bupdate,
                     "b-type"           : CUBICAL_MT[matrix_type],
-                    "b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0])),
+                    "b-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0])),
                     "b-time-int"       : bsols_[0],
                     "b-freq-int"       : bsols_[1],
                     "b-solvable" : False,
@@ -1075,7 +1078,7 @@ def worker(pipeline, recipe, config):
                    {"g-update-type"    : gupdate,
                     "dd-update-type"   : 'amp-diag',
                     "dd-type"          : CUBICAL_MT[matrix_type],
-                    "dd-xfer-from"     : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,(msname.split('.ms')[0])),
+                    "dd-xfer-from"     : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0])),
                     "dd-time-int"      : gasols_[0],
                     "dd-freq-int"      : gasols_[1],
                     "dd-solvable" : False,

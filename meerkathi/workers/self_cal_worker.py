@@ -919,7 +919,7 @@ def worker(pipeline, recipe, config):
             cubical_gain_interp_opts = {
                "data-ms"          : himsname,
                "data-column"      : 'DATA',
-               "sol-jones"        : soljones,
+               "sol-jones"        : jones_chain,
                "data-time-chunk"  : time_chunk,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : ncpu,

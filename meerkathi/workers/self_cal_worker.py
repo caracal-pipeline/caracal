@@ -801,6 +801,7 @@ def worker(pipeline, recipe, config):
             gupdate = 'full'
             bupdate = 'full'
             dupdate = 'full'
+
         jones_chain = 'G'
         gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
                   config[key].get('Gsols_channel', [])[
@@ -833,7 +834,7 @@ def worker(pipeline, recipe, config):
                   "data-time-chunk"  : time_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
-                  "sol-jones"        : '"'+jones_chain+'"',
+                  "sol-jones"        : jones_chain,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -913,11 +914,12 @@ def worker(pipeline, recipe, config):
         else:
             jones_chain = 'G'
         if config[key].get('DDjones', False):
-            jones_chain+= ',DD'
+            jones_chain += ',DD'
         for i,himsname in enumerate(hires_mslist):
             cubical_gain_interp_opts = {
                "data-ms"          : himsname,
                "data-column"      : 'DATA',
+               "sol-jones"        : jones_chain,
                "data-time-chunk"  : time_chunk,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : ncpu,

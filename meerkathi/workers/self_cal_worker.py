@@ -924,16 +924,16 @@ def worker(pipeline, recipe, config):
             #           input=pipeline.input,
             #           output=pipeline.output,
             #           label="save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num))
-            recipe.add("cab/flagms", "save_2gc_flags_{0:s}".format(mspref),
+            recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
                        {
                            "msname": msname,
                            "create": True,
-                           "flag": "final_2gc_flags",
+                           "flag": "step_{0:d}_2gc_flags".format(num),
                            "flagged-any": ["+L"]
                        },
                  input=pipeline.input,
                  output=pipeline.output,
-                 label="save_2gc_flags_{0:s}:: Save 2GC flags step {1:d} ".format(mspref, num))
+                 label="save_2gc_flags_{0:s}_step_{1:d}:: Save 2GC flags step {1:d} ".format(mspref, num))
 
 
 
@@ -1018,26 +1018,23 @@ def worker(pipeline, recipe, config):
         for i,msname in enumerate(inlist):
             #If we are restoring a step we need to restore the flags of the 2gc process
             if not enable_inter:
-                #mspref = msname.split(".ms")[0].replace("-", "_")
-                # We need a version of the flags to restore to at every step
-                #recipe.add("cab/casa_flagmanager", "restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num), {
-                #    "vis": msname,
-                #    "mode": 'restore',
-                #    "versionname": "step_{0:d}_2gc_flags".format(num)
-                #},
-                #           input=pipeline.input,
-                #           output=pipeline.output,
-                #           label="restore_2gc_flags_{0:s}_step_{1:d}".format(mspref, num))
                 fromname=msname
-                #mspref = msname.split(".ms")[0].replace("-", "_")
-                #recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
-                #          {
-                #               "msname": msname,
-                #               "remove": "final_2gc_flags",
-                #           },
-                #           input=pipeline.input,
-                #           output=pipeline.output,
-                #           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+                # First remove the later flags
+                counter = num + 1
+                remainder_flags = "step_{0:d}_2gc_flags".format(counter)
+
+                while counter < cal_niter:
+                    counter += 1
+                    remainder_flags += ",step_{0:d}_2gc_flags".format(counter)
+                mspref = msname.split(".ms")[0].replace("-", "_")
+                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                           {
+                               "msname": msname,
+                               "remove": remainder_flags,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
             else:
                 fromname = mslist[i]
 
@@ -1060,7 +1057,12 @@ def worker(pipeline, recipe, config):
                "g-time-int"       : gsols_[0],
                "g-freq-int"       : gsols_[1],
                "g-save-to"        : None,
-               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0]))}
+               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0])),
+               "madmax-enable": config[key].get('madmax_flagging', True),
+               "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
+               "madmax-threshold": config[key].get('madmax_flag_thresh', [0, 10]),
+               "madmax-estimate": 'diag',
+               "madmax-offdiag": False,}
             # expand
             if config[key].get('Bjones', False):
                cubical_gain_interp_opts.update(

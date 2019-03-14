@@ -1,4 +1,6 @@
 !!omap
+- schema_version: 0.1.0
+
 - general:
     data_path: input/data
     prefix: meerkathi-pipeline
@@ -6,6 +8,7 @@
     init_pipeline: true
     output: output
     input: input
+
 - get_data:
     dataid: []
     untar:
@@ -16,6 +19,7 @@
     mvftoms:
       enable: false
       channel_range: 'null'
+
 - observation_config:
     obsinfo:
       enable: true
@@ -32,23 +36,25 @@
     order: 10
     fcal: auto
     chanwidth: '0'
+
 - prepare_data:
+    enable: true
     prepms:
       enable: false
     add_spectral_weights: # Estimate spectral weights from spec. sensitivity 
       enable: true
-    enable: true
     order: 20
     fixvis:
       enable: false
+
 - flagging:
+    enable: true
     hires_flag: true
     autoflag_rfi:
       enable: true
       column: DATA
       fields: fcal,bpcal,gcal
       strategy: firstpass_QUV.rfis # Default for MeerKAT data
-    enable: true
     autoflag_autocorr_powerspectra:
       enable: true
     flag_spw:
@@ -73,14 +79,15 @@
       timerange: 'null' # "YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS"
     flagging_summary:
       enable: true
-
     flag_autocorr:
       enable: true
     flag_antennas:
       enable: false
       antennas: 'null'
     order: 30
+
 - cross_cal:
+    enable: true
     gain_cal_gain:
       enable: true
       combine: ''
@@ -92,7 +99,6 @@
         clipminmax: [0.1, 10]
       plot:
         enable: true
-    enable: true
     gain_cal_flux:
       enable: true
       combine: ''
@@ -202,9 +208,10 @@
       - gcal
       - xcal
       addmodel: true
+
 - polcal:
-    feed_angle_rotation: -90
     enable: false
+    feed_angle_rotation: -90
     set_model:
       enable: true
       meerkathi_model: true
@@ -227,6 +234,7 @@
     do_dump_precalibration_leakage_reports: true
     order: 45
     freqsol_soltime: inf
+
 - inspect_data:
     enable: true
     real_imag:
@@ -262,19 +270,19 @@
       - gcal
       - bpcal
       - target
+
 - split_target:
+    enable: true
     obsinfo:
       enable: true
       listobs: true
       summary_json: true
-    enable: true
     changecentre:
       enable: false
       ra: ''
       dec: ''
     prepms:
       enable: false
-
     label: corr
     split_target:
       enable: true
@@ -286,14 +294,15 @@
       hires_label: hires
       hires_spwid: 0
       hires_spw: 'null'
+
 - masking:
+    enable: false
     make_mask:
       enable: true
       mask_with: sofia
       input_image: pbcorr
       thresh_lev: 7
     cell_size: 2
-    enable: false
     name_mask: my_mask.fits
     final_mask: 'final_mask.fits'
     centre_coord: [03:18:0.000, -37:27:0.000]
@@ -312,7 +321,9 @@
       mask_with: thresh
       thresh_lev: 8.e-4
     order: 80
+
 - self_cal:
+    enable: true
     cal_gain_amplitude_clip_high: 1.5
     img_pol: I
     image:
@@ -352,7 +363,6 @@
     label: corr
     img_niter: 1000000
     img_cleanborder: 0
-    enable: true
     img_robust: -1.5
     spwid: 0
     start_at_iter: 1
@@ -387,12 +397,13 @@
     img_fit_spectral_pol: 1
     img_weight: briggs
     order: 90
+
 - image_HI:
+    enable: true
     sunblocker:
       enable: false
       use_mstransform: true
       threshold: 4
-    enable: true
     remove_stokes_axis:
       enable: true
     weight: briggs
@@ -474,4 +485,3 @@
     subtractmodelcol:
       enable: true
 
-- schema_version: 0.1.0

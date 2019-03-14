@@ -38,7 +38,7 @@ def worker(pipeline, recipe, config):
                     "model-data"    : True,
                     "verbose"       : False,
                     "channel-range" : sdm.dismissable(config['mvftoms'].get('channel_range', None)),
-                    "full-pol"      : config['mvftoms'].get('full_pol', False),
+                    "full-pol"      : config['mvftoms'].get('full_pol', True),
                 },
                 input=data_path,
                 output=pipeline.output,

@@ -93,7 +93,8 @@ def worker(pipeline, recipe, config):
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
-            step = 'plot_{0:s}_{1:d}'.format(cal, i)
+            if 'enable' in opts: del(opts['enable'])
+            step = 'flag_{0:s}_{1:d}'.format(cal, i)
             opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
             opts["datacolumn"] = datacolumn
             recipe.add('cab/casa_flagdata', step, opts,
@@ -186,7 +187,6 @@ found in our database or in the CASA NRAO database'.format(field))
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "combine"      : config['delay_cal'].get('combine', ''),
                  "minsnr"       : config['delay_cal'].get('minsnr', 5),
-                 "minblperant"  : config['delay_cal'].get('minnrbl', 4),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },
@@ -194,8 +194,9 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Delay calibration ms={1:s}'.format(step, msname))
 
-            if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['delay_cal'],'flag'):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
+
             if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
@@ -250,10 +251,6 @@ found in our database or in the CASA NRAO database'.format(field))
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Pre bandpass calibration ms={1:s}'.format(step, msname))
-
-                # Flagging disabled on initial bandpass solution
-                #if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
-                #    flag_gains('bp_cal', config['pre_bp_cal']['flag'])
 
                 if pipeline.enable_task(config['bp_cal'],'plot'):
                     step = 'plot_pre_bandpass_{0:d}'.format(i)
@@ -316,10 +313,6 @@ found in our database or in the CASA NRAO database'.format(field))
                         output=pipeline.output,
                         label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
 
-                # Flagging disabled on initial flux calibration solution
-                #if config['pre_gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
-                #    flag_gains('pre_gain_cal_flux', config['pre_gain_cal_flux']['flag'])
-
             # Final bandpass calibration
             if config.get('otfdelay', True):
                 gaintables,interpolations=[prefix+'.K0:output'],['nearest']
@@ -353,7 +346,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Bandpass calibration ms={1:s}'.format(step, msname))
 
-            if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['bp_cal'],'flag'):
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
             if pipeline.enable_task(config['bp_cal'],'plot'):
@@ -418,7 +411,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     output=pipeline.output,
                     label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
+            if pipeline.enable_task(config['gain_cal_flux'],'flag'):
                 flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
 
         # Gain calibration for Gaincal field
@@ -450,7 +443,7 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_gain'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['gain_cal_gain'],'flag'):
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
             if pipeline.enable_task(config['gain_cal_gain'],'plot'):

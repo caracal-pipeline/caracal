@@ -88,10 +88,6 @@ mapping:
             type: str
             desc: Solution interval for delay-correction calibration.
             required: false
-          minnrbl: 
-            type: int
-            desc: Minimum number of baselines required (per antenna) for solving. 
-            required: false
           minsnr: 
             type: int
             desc: Minimum required SNR for solutions.
@@ -130,7 +126,6 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-
           flag:
             type: map
             desc: Flagging based on delay correction solutions.
@@ -190,6 +185,24 @@ mapping:
             type: bool
             desc: Remove large temporal phase variations from bandpass calibrator before solving.
             required: true            
+          flag:
+            type: map
+            desc: Flagging based on bandpass amplitude solutions.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
+                required: true
+              mode:
+                type: str
+                desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
+                enum: ['list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'antint','extend', 'unflag', 'summary']
+                required: false
+              clipminmax:
+                seq:
+                  - type: float
+                desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
+                required: false
           plot:
             type: map
             desc: Plotting dignostics plots for bandpass correction calibration.
@@ -255,6 +268,24 @@ mapping:
             type: bool
             desc: Should a reference antenna be used for this calibration
             required: false
+          flag:
+            type: map
+            desc: Flagging based on flux-scale amplitude solutions.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
+                required: true
+              mode:
+                type: str
+                desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
+                enum: ['list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'antint','extend', 'unflag', 'summary']
+                required: false
+              clipminmax:
+                seq:
+                  - type: float
+                desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
+                required: false
           plot:
             type: map
             desc: Plotting dignostics plots for flux calibrator corrections.
@@ -318,6 +349,24 @@ mapping:
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
+          flag:
+            type: map
+            desc: Flagging based on gain amplitudes.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
+                required: true
+              mode:
+                type: str
+                desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
+                enum: ['list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'antint','extend', 'unflag', 'summary']
+                required: false
+              clipminmax:
+                seq:
+                  - type: float
+                desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
+                required: false
           plot:
             type: map
             desc: Plotting dignostics plots for gain calibrator corrections.

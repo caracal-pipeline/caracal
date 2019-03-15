@@ -801,6 +801,7 @@ def worker(pipeline, recipe, config):
             gupdate = 'full'
             bupdate = 'full'
             dupdate = 'full'
+
         jones_chain = 'G'
         gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
                   config[key].get('Gsols_channel', [])[
@@ -833,7 +834,7 @@ def worker(pipeline, recipe, config):
                   "data-time-chunk"  : time_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
-                  "sol-jones"        : '"'+jones_chain+'"',
+                  "sol-jones"        : jones_chain,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -913,11 +914,12 @@ def worker(pipeline, recipe, config):
         else:
             jones_chain = 'G'
         if config[key].get('DDjones', False):
-            jones_chain+= ',DD'
+            jones_chain += ',DD'
         for i,himsname in enumerate(hires_mslist):
             cubical_gain_interp_opts = {
                "data-ms"          : himsname,
                "data-column"      : 'DATA',
+               "sol-jones"        : jones_chain,
                "data-time-chunk"  : time_chunk,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : ncpu,
@@ -1206,6 +1208,12 @@ def worker(pipeline, recipe, config):
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
         config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
+
+    if pipeline.enable_task(config, 'aimfast'):
+        # If aimfast plotting is enabled run source finder
+        if config['aimfast'].get('plot'):
+            config['extract_sources']['enable'] = True
+
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
     global reset_cal
@@ -1247,8 +1255,10 @@ def worker(pipeline, recipe, config):
             apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
         else:
             apply_gains_to_fullres(self_cal_iter_counter, enable=True)
-    if config['aimfast']['plot']:
-        aimfast_plotting()
+
+    if pipeline.enable_task(config, 'aimfast'):
+        if config['aimfast']['plot']:
+            aimfast_plotting()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:

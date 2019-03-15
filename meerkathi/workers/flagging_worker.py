@@ -251,7 +251,7 @@ def worker(pipeline, recipe, config):
             step = 'rfinder'
             recipe.add('cab/rfinder', 'rfinder',
                 {
-                  "msname"             : [msname],
+                  "msname"             : msname,
                   "field"              : config[step].get('field', 1),
                   "plot_noise"         : "noise",
                   "RFInder_mode"       : "use_flags",

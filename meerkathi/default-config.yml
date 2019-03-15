@@ -486,6 +486,7 @@
       minSizeZ: 5
     freq_to_vel:
       enable: true
+      reverse: false
     remove_stokes_axis:
       enable: true
     pb_cube:

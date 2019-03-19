@@ -376,12 +376,12 @@ mapping:
             desc: Channel intervals for individual calibration steps for B jones calibrations. 0 indicates average all. Default 0
             required: false
           GAsols_time:
-            desc:  Time intervals for amplitude calibration in two_time scale procedure for phase vs amp. 0 indicates average all. Default 0
+            desc:  Time intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false
           GAsols_channel:
-            desc: Time intervals for amplitude calibration in two_time scale procedure for phase vs amp. 0 indicates average all. Default 0
+            desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all. Default 0
             seq:
               - type: float
             required: false

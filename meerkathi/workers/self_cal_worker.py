@@ -839,20 +839,6 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         for i,msname in enumerate(mslist):
-            mspref = msname.split(".ms")[0].replace("-", "_")
-            #-Cubical does not restore the flagging to original as flags seep into legacy
-            # No idea wether it is a feature or a bug
-            #I guess the CORR_RES people would like to keep their incremental flags though.
-            #if num > 1 and config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1] != 'CORR_RES':
-                #mspref = msname.split(".ms")[0].replace("-", "_")
-                #recipe.add("cab/casa_flagmanager", "restore_1gc_flags_{0:s}".format(mspref), {
-                #    "vis": msname,
-                #    "mode": 'restore',
-                #    "versionname": "final_1gc_flags"
-                #},
-                #input=pipeline.input,
-                #output=pipeline.output,
-                #label="restore_1gc_flags_{0:s}:: Restore 1GC flags ".format(mspref))
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
             cubical_opts= {
@@ -916,15 +902,7 @@ def worker(pipeline, recipe, config):
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             # We need a version of the flags to restore to at every step
-            #recipe.add("cab/casa_flagmanager", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num), {
-            #    "vis": msname,
-            #    "mode": 'save',
-            #    "versionname": "step_{0:d}_2gc_flags".format(num)
-            #},
-            #           input=pipeline.input,
-            #           output=pipeline.output,
-            #           label="save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num))
-            recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
+           recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
                        {
                            "msname": msname,
                            "create": True,
@@ -1043,9 +1021,6 @@ def worker(pipeline, recipe, config):
                "data-ms"          : msname,
                "data-column"      : 'DATA',
                "data-time-chunk"  : time_chunk,
-               "sol-jones"        : jones_chain,
-               "sol-diag-diag"    : take_diag_terms,
-               "data-freq-chunk"  : chunky,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : 1,
                "out-name"         : '{0:s}-{1:d}_restore_cubical'.format(pipeline.dataid[i], num),
@@ -1403,6 +1378,12 @@ def worker(pipeline, recipe, config):
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
         config['calibrate']['output_data'] = [k.replace('CORR_RES','CORR_DATA') for k in config['calibrate'].get('output_data')]
+
+    if pipeline.enable_task(config, 'aimfast'):
+        # If aimfast plotting is enabled run source finder
+        if config['aimfast'].get('plot'):
+            config['extract_sources']['enable'] = True
+
     global self_cal_iter_counter
     self_cal_iter_counter = config.get('start_at_iter', 1)
     global reset_cal
@@ -1420,19 +1401,6 @@ def worker(pipeline, recipe, config):
     # When we do not start at iteration 1 we need to restore the data set
     if self_cal_iter_counter != 1:
         restore(self_cal_iter_counter-1, enable_inter=False)
-    #else:
-        # If we do start from the first iteration lets save the flags as they are now.
-        # flagms needs a bitflag column nonsense and has no restore function lets use good old casa
-        #for i,msname in enumerate(mslist):
-            #mspref = msname.split(".ms")[0].replace("-", "_")
-            #recipe.add("cab/casa_flagmanager", "save_1gc_flags_{0:s}".format(mspref), {
-            #    "vis": msname,
-            #    "mode": 'save',
-            #    "versionname": "final_1gc_flags"
-            #},
-            #    input=pipeline.input,
-            #    output=pipeline.output,
-            #    label="save_1gc_flags_{0:s}:: Save 1GC flags ".format(mspref))
 
     if pipeline.enable_task(config, 'image'):
         if pipeline.enable_task(config, 'gain_interpolation'):
@@ -1466,6 +1434,7 @@ def worker(pipeline, recipe, config):
             restore(self_cal_iter_counter-1, enable_inter=True)
         else:
             restore(self_cal_iter_counter, enable_inter=True)
+            
     if config['aimfast'].get('plot',False):
         aimfast_plotting()
 

@@ -14,7 +14,7 @@ import re, datetime
 import numpy as np
 import yaml
 
-def freq_to_vel(filename):
+def freq_to_vel(filename,reverse):
     C = 2.99792458e+8 # m/s
     HI = 1.4204057517667e+9 # Hz
     filename=filename.split(':')
@@ -25,7 +25,7 @@ def freq_to_vel(filename):
             headcube = cube[0].header
             if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
             else: restfreq = HI
-            if 'FREQ' in headcube['ctype3']:
+            if 'FREQ' in headcube['ctype3'] and not reverse:
                 headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
                 headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
                 # The technically  correct way to this would be
@@ -35,7 +35,14 @@ def freq_to_vel(filename):
                 # This should be done when making the cube
                 # For heliocentric its value would be HELIOCEN and for barycentric BARYCENT
                 if 'cunit3' in headcube: del headcube['cunit3']
-            else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
+            elif 'VEL' in headcube['ctype3'] and reverse:
+                headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
+                headcube['crval3'] =  restfreq * (1-float(headcube['crval3'])/C)
+                headcube['ctype3'] = 'FREQ'
+                if 'cunit3' in headcube: del headcube['cunit3']
+            else:
+                if not reverse: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
+                else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in velocity.'.format(filename))
 
 def remove_stokes_axis(filename):
     filename=filename.split(':')
@@ -566,7 +573,8 @@ def worker(pipeline, recipe, config):
                                cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                                recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                           {
-                           'filename' : cubename,
+                                           'filename' : cubename,
+                                           'reverse'  : config['freq_to_vel'].get('reverse', False)
                                           },
                                           input=pipeline.input,
                                           output=pipeline.output,
@@ -581,7 +589,6 @@ def worker(pipeline, recipe, config):
                    os.remove(cubename)
                   if os.path.exists(HIclean_mask):
                    os.remove(HIclean_mask)
-
 
 
     if pipeline.enable_task(config, 'casa_image'):
@@ -649,6 +656,7 @@ def worker(pipeline, recipe, config):
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {
                            'filename' : cubename,
+                           'reverse'  : config['freq_to_vel'].get('reverse', False)
                        },
                        input=pipeline.input,
                        output=pipeline.output,

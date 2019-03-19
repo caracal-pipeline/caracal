@@ -3,6 +3,7 @@ import yaml
 import meerkathi
 import sys
 import numpy as np
+from os import path
 
 NAME = 'Automatically catergorize observed fields'
 
@@ -63,7 +64,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # initialse things
-    for item in 'xcal fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
+    for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
         val = config.get(item, 'auto')
         if val and not isinstance(val, list):
             setattr(pipeline, item, [val]*pipeline.nobs)
@@ -71,9 +72,13 @@ def worker(pipeline, recipe, config):
             setattr(pipeline, item, val)
         else:
             setattr(pipeline, item, [None]*pipeline.nobs)
-            
+
     setattr(pipeline, 'TRA', [None]*pipeline.nobs)
     setattr(pipeline, 'TDec', [None]*pipeline.nobs)
+    setattr(pipeline, 'nchans', [None]*pipeline.nobs)
+    setattr(pipeline, 'firstchanfreq', [None]*pipeline.nobs)
+    setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
+    setattr(pipeline, 'chanwidth', [None]*pipeline.nobs)
 
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
@@ -84,20 +89,24 @@ def worker(pipeline, recipe, config):
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
+        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json (if present) and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
 
         # get reference antenna
         if config.get('reference_antenna', 'auto') == 'auto':
             msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
-            pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
-            meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
+            if path.exists(msmeta):
+                pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
+                meerkathi.log.info('Auto selecting reference antenna as {:s}'.format(pipeline.reference_antenna[i]))
+            else:
+                meerkathi.log.error('Cannot auto select reference antenna because the file {0:s} does not exist.'.format(msmeta))
+                meerkathi.log.error('Please set the reference antenna manually in the config file and try again.')
+                sys.exit(1)
 
         # Get channels in MS
-        if config.get('nchans',0) == 0:
-            with open(msinfo, 'r') as stdr:
-                spw = yaml.load(stdr)['SPW']['NUM_CHAN']
-                pipeline.nchans[i] = spw
-            meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
+        with open(msinfo, 'r') as stdr:
+            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            pipeline.nchans[i] = spw
+        meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         with open(msinfo, 'r') as stdr:

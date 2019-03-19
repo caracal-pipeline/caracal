@@ -316,6 +316,10 @@ mapping:
             desc: Execute conversion. Default is true
             type: bool
             required: true
+          reverse:
+            desc: Perform the inverse transformation and change the cube 3rd axis from velocity to frequency. Default is false.
+            type: bool
+            required: false
       sofia:
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map

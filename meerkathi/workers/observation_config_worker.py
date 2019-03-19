@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # initialse things
-    for item in 'xcal fcal bpcal gcal target reference_antenna nchans firstchanfreq lastchanfreq chanwidth'.split():
+    for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
         val = config.get(item, 'auto')
         if val and not isinstance(val, list):
             setattr(pipeline, item, [val]*pipeline.nobs)
@@ -75,6 +75,10 @@ def worker(pipeline, recipe, config):
 
     setattr(pipeline, 'TRA', [None]*pipeline.nobs)
     setattr(pipeline, 'TDec', [None]*pipeline.nobs)
+    setattr(pipeline, 'nchans', [None]*pipeline.nobs)
+    setattr(pipeline, 'firstchanfreq', [None]*pipeline.nobs)
+    setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
+    setattr(pipeline, 'chanwidth', [None]*pipeline.nobs)
 
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
@@ -99,11 +103,10 @@ def worker(pipeline, recipe, config):
                 sys.exit(1)
 
         # Get channels in MS
-        if config.get('nchans',0) == 0:
-            with open(msinfo, 'r') as stdr:
-                spw = yaml.load(stdr)['SPW']['NUM_CHAN']
-                pipeline.nchans[i] = spw
-            meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
+        with open(msinfo, 'r') as stdr:
+            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            pipeline.nchans[i] = spw
+        meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         with open(msinfo, 'r') as stdr:

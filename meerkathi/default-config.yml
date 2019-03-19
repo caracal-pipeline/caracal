@@ -29,10 +29,6 @@
     gcal: auto
     xcal: auto
     target: auto
-    nchans: 0
-    firstchanfreq: '0'
-    lastchanfreq: '0'
-    chanwidth: '0'
     reference_antenna: '0'
     primary_beam:
       enable: false

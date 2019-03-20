@@ -153,18 +153,18 @@
       - fcal
       transfer:
       - gcal
-    plot:
-      enable: true
+      plot:
+        enable: true
     apply_delay_cal:
       enable: true
       field:
-        - bpcal
+      - bpcal
       applyto:
-        - bpcal
-        - gcal
-        - xcal
-        - target
-        applymode: calflag
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
     apply_bp_cal:
       enable: true
       field:

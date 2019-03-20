@@ -902,6 +902,7 @@ def worker(pipeline, recipe, config):
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             # We need a version of the flags to restore to at every step
+            mspref = msname.split(".ms")[0].replace("-", "_")
             recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
                        {
                            "msname": msname,

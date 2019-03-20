@@ -155,16 +155,16 @@
       - gcal
     plot:
       enable: true
-  apply_delay_cal:
-    enable: true
-    field: 
-      - bpcal
-    applyto: 
-      - bpcal
-      - gcal
-      - xcal
-      - target
-      applymode: calflag
+    apply_delay_cal:
+      enable: true
+      field:
+        - bpcal
+      applyto:
+        - bpcal
+        - gcal
+        - xcal
+        - target
+        applymode: calflag
     apply_bp_cal:
       enable: true
       field:

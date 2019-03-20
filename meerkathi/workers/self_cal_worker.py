@@ -1025,6 +1025,7 @@ def worker(pipeline, recipe, config):
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : 1,
                "out-name"         : '{0:s}-{1:d}_restore_cubical'.format(pipeline.dataid[i], num),
+               "data-freq-chunk"  : 0,
                "out-mode"         : apmode,
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',

@@ -837,6 +837,11 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones', False):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
+        flags_to_ignore = '-cubical'
+        counter = 1
+        while counter < num:
+            counter += 1
+            flags_to_ignore +=",step_{0: d}_2gc_flags".format(counter)
 
         for i,msname in enumerate(mslist):
 
@@ -850,6 +855,7 @@ def worker(pipeline, recipe, config):
                   "data-freq-chunk"  : freq_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
+                  "flags-apply"      : flags_to_ignore,
                   "sol-jones"        : '"'+jones_chain+'"',
                   "sol-diag-diag"    : take_diag_terms,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),

@@ -837,12 +837,11 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones', False):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        flags_to_ignore = '-cubical'
-        counter = 1
-        while counter < num:
-            counter += 1
-            flags_to_ignore +=",step_{0: d}_2gc_flags".format(counter)
 
+        if config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]  == 'CORR_DATA':
+            flags= 'legacy'
+        else:
+            flags='-cubical'
         for i,msname in enumerate(mslist):
 
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
@@ -855,7 +854,7 @@ def worker(pipeline, recipe, config):
                   "data-freq-chunk"  : freq_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
-                  "flags-apply"      : flags_to_ignore,
+                  "flags-apply"      : flags,
                   "sol-jones"        : '"'+jones_chain+'"',
                   "sol-diag-diag"    : take_diag_terms,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),

@@ -409,7 +409,7 @@
     enable: true
     order: 100
     label: corr
-    use_hires_data: true
+    use_hires_data: false
     hires_label: hires
     restfreq: 1.420405752GHz
     npix: [1024]

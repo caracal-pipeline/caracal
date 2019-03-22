@@ -199,12 +199,6 @@ found in our database or in the CASA NRAO database'.format(field))
             if pipeline.enable_task(config['delay_cal'],'flag'):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
-#            if pipeline.enable_task(config['delay_cal'], 'plot') or pipeline.enable_task(config['bp_cal'], 'plot') or pipeline.enable_task(config['gain_cal_flux'], 'plot') or pipeline.enable_task(config['gain_cal_gain'], 'plot') or pipeline.enable_task(config['transfer_fluxscale'], 'plot'):
-#                plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'crosscal')
-#                if not os.path.exists(plot_path):
-#                    os.mkdir(plot_path)
-
-
             if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = config['delay_cal']['plot'].get('table_name', prefix+".K0")

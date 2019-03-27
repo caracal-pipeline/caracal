@@ -3,6 +3,9 @@ import os
 
 NAME = 'Inspect data'
 
+# E.g. to split out continuum/<dir> from output/continuum/dir
+get_dir_path = lambda string,pipeline : string.split(pipeline.output)[1][1:]
+
 def worker(pipeline, recipe, config):
 
     def get_field(field):
@@ -21,12 +24,18 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    
+
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
         label = config.get('label', '')
         corr =  config.get('correlation', 'XX,YY')
+
+        if pipeline.enable_task(config, 'real_imag') or pipeline.enable_task(config, 'amp_phase') or pipeline.enable_task(config, 'amp_uvwave') or pipeline.enable_task(config, 'amp_ant') or pipeline.enable_task(config, 'phase_uvwave') or pipeline.enable_task(config, 'amp_scan'):
+                plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'crosscal')
+                if not os.path.exists(plot_path):
+                    os.mkdir(plot_path)
+
         if pipeline.enable_task(config, 'real_imag'):
             fields = config['real_imag'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
@@ -48,7 +57,7 @@ def worker(pipeline, recipe, config):
                         "avgchannel"    : config['real_imag'].get('avgchannel', '32'),
                         "coloraxis"     : col,
                         "iteraxis"      : 'corr',
-                        "plotfile"      : '{0:s}-{1:s}-{2:s}-{3:s}-reim.png'.format(prefix, label, field_, col),
+                        "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-{4:s}-reim.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_, col),
                         "expformat"     : 'png',
                         "exprange"      : 'all',
                         "overwrite"     : True,
@@ -80,7 +89,7 @@ def worker(pipeline, recipe, config):
                         "avgchannel"    : config['amp_phase'].get('avgchannel', '32'),
                         "coloraxis"     : col,
                         "iteraxis"      : 'corr',
-                        "plotfile"      : '{0:s}-{1:s}-{2:s}-{3:s}-ap.png'.format(prefix, label, field_, col),
+                        "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-{4:s}-ap.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_, col),
                         "expformat"     : 'png',
                         "exprange"      : 'all',
                         "overwrite"     : True,
@@ -113,7 +122,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampuvwave.png'.format(prefix, label, field_),
+                    "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-ampuvwave.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -143,7 +152,7 @@ def worker(pipeline, recipe, config):
                     "coloraxis"     : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampant.png'.format(prefix, label, field_),
+                    "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-ampant.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -175,7 +184,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-{2:s}-phaseuvwave.png'.format(prefix, label, field_),
+                    "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-phaseuvwave.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,
@@ -207,7 +216,7 @@ def worker(pipeline, recipe, config):
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
-                    "plotfile"      : '{0:s}-{1:s}-{2:s}-ampscan.png'.format(prefix, label, field_),
+                    "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-ampscan.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
                     "overwrite"     : True,
                     "showgui"       : False,
                     "uvrange"       : uvrange,

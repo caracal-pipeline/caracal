@@ -22,8 +22,8 @@ class reporter:
         with open(REPORT_TEMPLATE) as f:
             self.__rep_template = f.read()
         self.__report_dir = os.path.join(self.__outputdir, "reports")
-        if not os.path.exists(self.__report_dir):
-            os.mkdir(self.__report_dir)
+#        if not os.path.exists(self.__report_dir):
+#            os.mkdir(self.__report_dir)
 
     def generate_calsolutions_report(self, output="output"):
         for ms in self.__ms:
@@ -140,7 +140,7 @@ class reporter:
 
     def pipeline_overview(self):
         """ generate an html report for every ms in the pipeline """
-        report_names = [os.path.join(self.__report_dir, 
+        report_names = [os.path.join(self.__report_dir,
                 "%s.report.html" % os.path.basename(ms)) for ms in self.__ms]
         for msi, (ms, rep) in enumerate(zip(self.__ms, report_names)):
             meerkathi.log.info("Creating a report for dataset id '{}'. "

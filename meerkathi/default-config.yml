@@ -298,7 +298,7 @@
     cell_size: 2
     name_mask: my_mask.fits
     final_mask: 'final_mask.fits'
-    centre_coord: [03:18:0.000, -37:27:0.000]
+    centre_coord: ['03:18:0.000', '-37:27:0.000']
     mask_size: 3600
     extended_source_input: 'Fornaxa_vla.FITS'
     query_catalog:

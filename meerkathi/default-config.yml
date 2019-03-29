@@ -445,6 +445,8 @@
       cleanborder: 0
       no_update_mod: true
       make_cube: true
+      multi_scale: false
+      multi_scale_scales: [0, 40, 80, 150] #pixel
     casa_image:
       enable: false
       use_mstransform: true

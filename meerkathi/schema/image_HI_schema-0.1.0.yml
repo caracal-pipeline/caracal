@@ -231,6 +231,16 @@ mapping:
             desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI.
             type: bool
             required: false
+          multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
+            required: false
+
       casa_image:
         desc: Use CASA to create line data cube.
         type: map

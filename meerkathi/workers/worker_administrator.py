@@ -23,8 +23,8 @@ from meerkathi.dispatch_crew import worker_help
 from meerkathi import log, pckgdir
 
 class worker_administrator(object):
-    def __init__(self, config, workers_directory, 
-            stimela_build=None, prefix=None, 
+    def __init__(self, config, workers_directory,
+            stimela_build=None, prefix=None,
             add_all_first=False, singularity_image_dir=None):
 
         self.config = config
@@ -34,6 +34,13 @@ class worker_administrator(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.logs = self.config['general']['output'] + '/logs'
+        self.reports = self.config['general']['output'] + '/reports'
+        self.diagnostic_plots = self.config['general']['output'] + '/diagnostic_plots'
+        self.caltables = self.config['general']['output'] + '/caltables'
+        self.masking = self.config['general']['output'] + '/masking'
+        self.continuum = self.config['general']['output'] + '/continuum'
+        self.cubes = self.config['general']['output'] + '/cubes'
         self.data_path = self.config['general']['data_path']
         self.virtconcat = False
         self.workers_directory = workers_directory
@@ -66,7 +73,7 @@ class worker_administrator(object):
             self.init_pipeline()
 
     def init_names(self, dataid):
-        """ iniitalize names to be used throughout the pipeline and associated 
+        """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
         self.dataid = dataid
@@ -105,8 +112,24 @@ class worker_administrator(object):
         # First create input folders if they don't exist
         if not os.path.exists(self.input):
             os.mkdir(self.input)
+        if not os.path.exists(self.output):
+            os.mkdir(self.output)
         if not os.path.exists(self.data_path):
             os.mkdir(self.data_path)
+        if not os.path.exists(self.logs):
+            os.mkdir(self.logs)
+        if not os.path.exists(self.reports):
+            os.mkdir(self.reports)
+        if not os.path.exists(self.diagnostic_plots):
+            os.mkdir(self.diagnostic_plots)
+        if not os.path.exists(self.caltables):
+            os.mkdir(self.caltables)
+        if not os.path.exists(self.masking):
+            os.mkdir(self.masking)
+        if not os.path.exists(self.continuum):
+            os.mkdir(self.continuum)
+        if not os.path.exists(self.cubes):
+            os.mkdir(self.cubes)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -144,8 +167,8 @@ class worker_administrator(object):
                 continue
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
-            recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir, 
-                               loggername='STIMELA-{:d}'.format(i), 
+            recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,
+                               loggername='STIMELA-{:d}'.format(i),
                                build_label=self.stimela_build,
                                singularity_image_dir=self.singularity_image_dir)
             # Don't allow pipeline-wide resume

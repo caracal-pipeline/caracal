@@ -13,7 +13,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'hires_split'):
        print "Setting Full Resolution Data Names..."
        pipeline.set_hires_msnames(hires_label)
-                                   
+
 
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
@@ -43,11 +43,12 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
-            
+
         if pipeline.enable_task(config, 'hires_split'):
+            step = 'hires_split_{:d}'.format(i) # added this
             fms = pipeline.hires_msnames[i]
             flagf = fms + '.flagversions'
-     
+
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, fms)) or \
                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagf)):
                    os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, fms, flagv))   #Delet the previous split ms and flagversions.
@@ -72,7 +73,7 @@ def worker(pipeline, recipe, config):
 
 
 
- 
+
         if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -130,7 +131,7 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
-    
+
             if config['obsinfo'].get('summary_json', True):
                  step = 'summary_json_{:d}'.format(i)
                  recipe.add('cab/msutils', step,

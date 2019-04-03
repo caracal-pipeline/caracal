@@ -24,6 +24,11 @@ CUBICAL_MT = {
     "GainDiagPhase": 'phase-diag',
 }
 
+corr_indexes = {'H'        : 0,
+                'X'        : 0,
+                'V'        : 1,
+                'Y'        : 1,
+}
 
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
@@ -838,6 +843,7 @@ def worker(pipeline, recipe, config):
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
+                  "out-casa-gaintables" : True,
                   "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
@@ -1173,6 +1179,40 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
 
+    def ragavi_plotting_cubical_tables():
+        """Plot self-cal gain tables"""
+
+        B_tables = glob.glob('{}/g-gains*B.casa'.format(pipeline.output))
+        if len(B_tables) > 1:
+            step = 'plot_G_gain_table'
+            recipe.add('cab/ragavi', step,
+                {
+                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables]),
+                 "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
+                 "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
+                 "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
+                 "htmlname"     : '{:s}_self-cal_G_gain_plots'.format(prefix)
+                 },
+                 input=pipeline.input,
+                 output=pipeline.output,
+                 label='{0:s}:: Plot gaincal phase : {1:s}'.format(step, ' '.join(B_tables)))
+
+        D_tables = glob.glob('{}/g-gains*D.casa'.format(pipeline.output))
+        if len(D_tables) > 1:
+            step = 'plot_D_gain_table'
+            recipe.add('cab/ragavi', step,
+                {
+                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables]),
+                 "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
+                 "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
+                 "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
+                 "htmlname"     : '{:s}_self-cal_D_gain_plots'.format(prefix)
+                 },
+                 input=pipeline.input,
+                 output=pipeline.output,
+                 label='{0:s}:: Plot gain tables : {1:s}'.format(step, ' '.join(D_tables)))
+
+
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):
         for i,msname in enumerate(mslist):
@@ -1259,6 +1299,10 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'aimfast'):
         if config['aimfast']['plot']:
             aimfast_plotting()
+
+    if pipeline.enable_task(config, 'calibrate'):
+        if config['calibrate']['ragavi_plot']['enable']:
+            ragavi_plotting_cubical_tables()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:

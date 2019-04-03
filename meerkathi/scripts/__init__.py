@@ -13,6 +13,7 @@ from nbconvert.preprocessors import CellExecutionError
 LEAKAGE_TEMPLATE=os.path.join(os.path.dirname(__file__), "obs_report", "Polarization.ipynb")
 SOLUTIONS_TEMPLATE=os.path.join(os.path.dirname(__file__), "obs_report", "Polcal solutions.ipynb")
 REPORT_TEMPLATE = os.path.join(__path__[0], "obs_report", "Observation Report.ipynb")
+SELFCAL_TEMPLATE = os.path.join(os.path.dirname(__file__), "obs_report", "SelfCal Diagnostics.ipynb")
 
 class reporter:
     def __init__(self, pipeline):
@@ -134,8 +135,55 @@ class reporter:
             with open(rep, 'w+') as f:
                 f.write(body)
 
+    def generate_selfcal_dqa_report(self):
+        # read template
+        with open(SELFCAL_TEMPLATE) as f:
+            rep_template = f.read()
+
+        report_names = [os.path.join(self.__report_dir,
+                "%s.seflcal-diagnostics.html" % os.path.basename(ms)) for ms in self.__ms]
+        for msi, (ms, rep) in enumerate(zip(self.__ms, report_names)):
+            meerkathi.log.info("Creating a report for dataset id '{}'. "
+                               "The report will be dumped here: '{}'.".format(ms, rep))
+            # grab a fresh template
+            ms_rep = nbformat.reads(rep_template, as_version=4)
+
+            def __customize(s):
+                s = re.sub(r'msname\s*=\s*\S*',
+                           'msname = \'{}\''.format(os.path.splitext(os.path.basename(ms))[0]),
+                           s)
+                s = re.sub(r'outputdir\s*=\s*\S*',
+                           'outputdir = \'{}\''.format(os.path.abspath(self.__outputdir)),
+                           s)
+                s = re.sub(r'msindex\s*=\s*\S*',
+                           'msindex = {}'.format(msi),
+                           s)
+                return s
+
+            # modify template to add the output directory and ms name
+            ms_rep.cells[0]['source'] = '\n'.join(map(__customize, ms_rep.cells[0]['source'].split('\n')))
+
+            # roll
+            ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+
+        try:
+            ep.preprocess(ms_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
+        except CellExecutionError: # reporting error is non-fatal
+            out = None
+            msg = 'Error executing the notebook for "%s".\n\n' % ms
+            msg += 'See notebook "%s" for the traceback.' % rep
+            meerkathi.log.error(msg)
+        finally:
+            #export to static HTML
+            html_exporter = HTMLExporter()
+            #html_exporter.template_file = 'basic'
+            (body, resources) = html_exporter.from_notebook_node(ms_rep)
+            with open(rep, 'w+') as f:
+                f.write(body)
+
     def generate_reports(self):
         self.pipeline_overview()
+        self.generate_selfcal_dqa_report()
         self.generate_calsolutions_report(output=os.path.abspath(self.__outputdir))
 
     def pipeline_overview(self):

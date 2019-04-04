@@ -20,7 +20,7 @@ CUBICAL_OUT = {
 
 CUBICAL_MT = {
     "Gain2x2"      : 'complex-2x2',
-    "GainDiag"      : 'complex-diag',
+    "GainDiag"      :'complex-diag',
     "GainDiagPhase": 'phase-diag',
 }
 
@@ -58,7 +58,7 @@ def worker(pipeline, recipe, config):
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
   
     prefix = pipeline.prefix
-
+    print(pipeline.prefixes)
     # Define image() extract_sources() calibrate()
     # functions for convience
 
@@ -801,23 +801,23 @@ def worker(pipeline, recipe, config):
             take_diag_terms = False
         else:
             take_diag_terms = True
-        if config[key].get('two_step', False) or config[key].get('Bjones', False):
-            if matrix_type == 'GainDiagPhase':
-                gupdate = 'phase-diag'
-                bupdate = 'phase-diag'
-            elif matrix_type == 'GainDiagAmp':
-                gupdate = 'amp-diag'
-                bupdate = 'amp-diag'
-            elif matrix_type == 'GainDiag':
-                gupdate = 'diag'
-                bupdate = 'diag'
-            elif matrix_type == 'Gain2x2':
-                gupdate = 'full'
-                bupdate = 'full'
-            else:
-                raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
-            if config[key].get('two_step', False):
-                gupdate= 'phase-diag'
+
+        if matrix_type == 'GainDiagPhase':
+            gupdate = 'phase-diag'
+            bupdate = 'phase-diag'
+        elif matrix_type == 'GainDiagAmp':
+            gupdate = 'amp-diag'
+            bupdate = 'amp-diag'
+        elif matrix_type == 'GainDiag':
+            gupdate = 'diag'
+            bupdate = 'diag'
+        elif matrix_type == 'Gain2x2':
+            gupdate = 'full'
+            bupdate = 'full'
+        else:
+            raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
+        if config[key].get('two_step', False):
+            gupdate= 'phase-diag'
 
         jones_chain = 'G'
         gsols_ = [config[key].get('Gsols_time', [])[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
@@ -864,6 +864,7 @@ def worker(pipeline, recipe, config):
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
                   "g-type"          : CUBICAL_MT[matrix_type],
+                  "g-update-type"    : gupdate,
                   "g-time-int"      : gsols_[0],
                   "g-freq-int"      : gsols_[1],
                   "g-save-to"       : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
@@ -878,7 +879,6 @@ def worker(pipeline, recipe, config):
 
             if config[key].get('two_step', False) and gasols_[0] != -1:
                 cubical_opts.update({
-                    "g-update-type"    : gupdate,
                     "dd-update-type"   : 'amp-diag',
                     "dd-solvable"      : True,
                     "dd-type"          : CUBICAL_MT[matrix_type],
@@ -890,7 +890,6 @@ def worker(pipeline, recipe, config):
                 })
             if config[key].get('Bjones', False):
                cubical_opts.update({
-                                    "g-update-type"   : gupdate,
                                     "b-update-type"   : bupdate,
                                     "b-solvable": True,
                                     "b-time-int": bsols_[0],

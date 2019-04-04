@@ -166,20 +166,20 @@ class reporter:
             # roll
             ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
 
-        try:
-            ep.preprocess(ms_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
-        except CellExecutionError: # reporting error is non-fatal
-            out = None
-            msg = 'Error executing the notebook for "%s".\n\n' % ms
-            msg += 'See notebook "%s" for the traceback.' % rep
-            meerkathi.log.error(msg)
-        finally:
-            #export to static HTML
-            html_exporter = HTMLExporter()
-            #html_exporter.template_file = 'basic'
-            (body, resources) = html_exporter.from_notebook_node(ms_rep)
-            with open(rep, 'w+') as f:
-                f.write(body)
+            try:
+                ep.preprocess(ms_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
+            except CellExecutionError: # reporting error is non-fatal
+                out = None
+                msg = 'Error executing the notebook for "%s".\n\n' % ms
+                msg += 'See notebook "%s" for the traceback.' % rep
+                meerkathi.log.error(msg)
+            finally:
+                #export to static HTML
+                html_exporter = HTMLExporter()
+                #html_exporter.template_file = 'basic'
+                (body, resources) = html_exporter.from_notebook_node(ms_rep)
+                with open(rep, 'w+') as f:
+                    f.write(body)
 
     def generate_reports(self):
         self.pipeline_overview()

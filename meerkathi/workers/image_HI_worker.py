@@ -14,7 +14,7 @@ import re, datetime
 import numpy as np
 import yaml
 
-def freq_to_vel(filename):
+def freq_to_vel(filename,reverse):
     C = 2.99792458e+8 # m/s
     HI = 1.4204057517667e+9 # Hz
     filename=filename.split(':')
@@ -25,7 +25,7 @@ def freq_to_vel(filename):
             headcube = cube[0].header
             if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
             else: restfreq = HI
-            if 'FREQ' in headcube['ctype3']:
+            if 'FREQ' in headcube['ctype3'] and not reverse:
                 headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
                 headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
                 # The technically  correct way to this would be
@@ -35,7 +35,14 @@ def freq_to_vel(filename):
                 # This should be done when making the cube
                 # For heliocentric its value would be HELIOCEN and for barycentric BARYCENT
                 if 'cunit3' in headcube: del headcube['cunit3']
-            else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
+            elif 'VEL' in headcube['ctype3'] and reverse:
+                headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
+                headcube['crval3'] =  restfreq * (1-float(headcube['crval3'])/C)
+                headcube['ctype3'] = 'FREQ'
+                if 'cunit3' in headcube: del headcube['cunit3']
+            else:
+                if not reverse: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
+                else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in velocity.'.format(filename))
 
 def remove_stokes_axis(filename):
     filename=filename.split(':')
@@ -312,7 +319,6 @@ def worker(pipeline, recipe, config):
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
-        
         wscl_niter = config['wsclean_image'].get('wscl_niter', 2)
         j = 1
         HIclean_mask=pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits:output'
@@ -369,9 +375,11 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config,'freq_to_vel'):
                     for ss in ['dirty','psf','residual','model','image']:
                         cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                        MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                         recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                   {
                                   'filename' : cubename,
+                                  'reverse'  : config['freq_to_vel'].get('reverse', False) 
                                    },
                                    input=pipeline.input,
                                    output=pipeline.output,
@@ -397,16 +405,16 @@ def worker(pipeline, recipe, config):
                 "steps.doMom0"          : False,
                 "steps.doMom1"          : False,
                 "steps.doWriteCat"      : False,
-                "flag.regions"          : config['sofia'].get('flagregion', []),
-                "scaleNoise.statistic"  : config['sofia'].get('rmsMode', 'mad'),
-                "SCfind.threshold"      : config['sofia'].get('threshold', 4),
-                "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
-                "merge.radiusX"         : config['sofia'].get('mergeX', 2),
-                "merge.radiusY"         : config['sofia'].get('mergeY', 2),
-                "merge.radiusZ"         : config['sofia'].get('mergeZ', 3),
-                "merge.minSizeX"        : config['sofia'].get('minSizeX', 3),
-                "merge.minSizeY"        : config['sofia'].get('minSizeY', 3),
-                "merge.minSizeZ"        : config['sofia'].get('minSizeZ', 3),
+                "flag.regions"          : [],
+                "scaleNoise.statistic"  : 'mad' ,
+                "SCfind.threshold"      : 4,
+                "SCfind.rmsMode"        : 'mad',
+                "merge.radiusX"         : 2,
+                "merge.radiusY"         : 2,
+                "merge.radiusZ"         : 2,
+                "merge.minSizeX"        : 2,
+                "merge.minSizeY"        : 2,
+                "merge.minSizeZ"        : 2,
                 "writeCat.basename"     : outmask,
                       },
                      input=pipeline.input,
@@ -471,9 +479,11 @@ def worker(pipeline, recipe, config):
                     if pipeline.enable_task(config,'freq_to_vel'):
                         for ss in ['dirty','psf','residual','model','image']:
                             cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                       {
                                   'filename' : cubename,
+                                  'reverse'  : config['freq_to_vel'].get('reverse', False)
                                       },
                                        input=pipeline.input,
                                        output=pipeline.output,
@@ -486,10 +496,15 @@ def worker(pipeline, recipe, config):
                     finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI.'+ss+'.fits')
                     HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
                     finalHIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI.image_clean_mask.fits')
+                    MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                    MFSfinalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI'+'-MFS-'+ss+'.fits')
                 if os.path.exists(cubename):
                     os.rename(cubename,finalcubename)
                 if os.path.exists(HIclean_mask):
                     os.rename(HIclean_mask,finalHIclean_mask)
+                if os.path.exists(MFScubename):
+                    os.rename(MFScubename,MFSfinalcubename)
+
             j+=1   
 
         for j in range(1,wscl_niter+1):               
@@ -497,13 +512,14 @@ def worker(pipeline, recipe, config):
                 for ss in ['dirty','psf','residual','model','image']:
                     cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
                     HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
+                    MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                     if os.path.exists(cubename):
                         os.remove(cubename)
                     if os.path.exists(HIclean_mask):
                         os.remove(HIclean_mask)
+                    if os.path.exists(MFScubename):
+                        os.remove(MFScubename)
 
-
-            
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_mstransform']:
@@ -570,6 +586,7 @@ def worker(pipeline, recipe, config):
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {
                            'filename' : cubename,
+                           'reverse'  : config['freq_to_vel'].get('reverse', False)
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -596,10 +613,10 @@ def worker(pipeline, recipe, config):
             "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
             "merge.radiusX"         : config['sofia'].get('mergeX', 2),
             "merge.radiusY"         : config['sofia'].get('mergeY', 2),
-            "merge.radiusZ"         : config['sofia'].get('mergeZ', 3),
-            "merge.minSizeX"        : config['sofia'].get('minSizeX', 3),
-            "merge.minSizeY"        : config['sofia'].get('minSizeY', 3),
-            "merge.minSizeZ"        : config['sofia'].get('minSizeZ', 5),
+            "merge.radiusZ"         : config['sofia'].get('mergeZ', 2),
+            "merge.minSizeX"        : config['sofia'].get('minSizeX', 2),
+            "merge.minSizeY"        : config['sofia'].get('minSizeY', 2),
+            "merge.minSizeZ"        : config['sofia'].get('minSizeZ', 2),
             },
             input=pipeline.input,
             output=pipeline.output,

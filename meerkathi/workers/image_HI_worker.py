@@ -463,7 +463,6 @@ def worker(pipeline, recipe, config):
             j+=1   
 
         j-=1
-        print j,'blah blah'
         for ss in ['dirty','psf','residual','model','image']:
             cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
             finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI.'+ss+'.fits')

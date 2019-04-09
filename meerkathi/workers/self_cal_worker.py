@@ -1187,7 +1187,7 @@ def worker(pipeline, recipe, config):
             step = 'plot_G_gain_table'
             recipe.add('cab/ragavi', step,
                 {
-                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables]),
+                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables]) + ":output",
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
@@ -1202,7 +1202,7 @@ def worker(pipeline, recipe, config):
             step = 'plot_D_gain_table'
             recipe.add('cab/ragavi', step,
                 {
-                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables]),
+                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables]) + ":output",
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],

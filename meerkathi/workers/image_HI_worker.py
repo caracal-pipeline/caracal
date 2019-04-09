@@ -353,45 +353,14 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{:s}:: Image HI'.format(step))
 
-                if config['wsclean_image']['make_cube']:
-                     if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
-                     else:
-                         imagetype=['image','dirty','psf','residual','model']
-                         if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
-                     for mm in imagetype:
-                         step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
-                         recipe.add('cab/fitstool', step,
-                             {
-                        "image"    : [pipeline.prefix+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                        "output"   : pipeline.prefix+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
-                        "stack"    : True,
-                        "delete-files" : True,
-                        "fits-axis": 'FREQ',
-                             },
-                         input=pipeline.input,
-                         output=pipeline.output,
-                         label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
-
-                if pipeline.enable_task(config,'freq_to_vel'):
-                    for ss in ['dirty','psf','residual','model','image']:
-                        cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                        MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
-                        recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
-                                  {
-                                  'filename' : cubename,
-                                  'reverse'  : config['freq_to_vel'].get('reverse', False) 
-                                   },
-                                   input=pipeline.input,
-                                   output=pipeline.output,
-                                   label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
 
             else:
                 step = 'make_sofia_mask_'+str(j-1)
-                HIclean_mask=pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits:output'
-                HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
+                HIclean_mask=pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits:output'
+                HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
 
                 cubename = pipeline.prefix+'_HI_'+str(j-1)+'.image.fits:output'
-                outmask = pipeline.prefix+'_HI_'+str(j-1)+'.image_clean'
+                outmask = pipeline.prefix+'_HI_'+str(j)+'.image_clean'
                 recipe.add('cab/sofia', step,
                      {
                 "import.inFile"         : cubename,
@@ -425,12 +394,12 @@ def worker(pipeline, recipe, config):
                 recipe.jobs=[]
 
                 if not os.path.exists(HIclean_mask_path):
-                    meerkathi.log.info('Initial sofia mask_'+str(j-1)+' was not found. Exiting and saving the cube') 
+                    meerkathi.log.info('Initial sofia mask_'+str(j)+' was not found. Exiting and saving the cube') 
                     break
-                else:                 
-                    step = 'Sofia_mask_found_running_wsclean_image_HI_loop_'+str(j)
-                    recipe.add('cab/wsclean', step,
-                               {
+                                
+                step = 'Sofia_mask_found_running_wsclean_image_HI_loop_'+str(j)
+                recipe.add('cab/wsclean', step,
+                           {
                                "msname"    : mslist,
                                "prefix"    : pipeline.prefix+'_HI_'+str(j),
                                "weight"    : weight,
@@ -448,70 +417,73 @@ def worker(pipeline, recipe, config):
                                "multiscale" : config['wsclean_image'].get('multi_scale', False),
                                "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales', None)),
                                "no-update-model-required": config['wsclean_image'].get('no_update_mod', True)
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{:s}:: re-Image HI_'+str(j).format(step))
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{:s}:: re-Image HI_'+str(j).format(step))
 
             
 
-                    if config['wsclean_image']['make_cube']:
-                        if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
-                    else:
-                        imagetype=['image','dirty','psf','residual','model']
-                        if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
-                    for mm in imagetype:
-                        step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
-                        recipe.add('cab/fitstool', step,
-                            {
+            if config['wsclean_image']['make_cube']:
+                if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
+                else:
+                    imagetype=['image','dirty','psf','residual','model']
+                    if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
+                for mm in imagetype:
+                    step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
+                    recipe.add('cab/fitstool', step,
+                        {
                         "image"    : [pipeline.prefix+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
                         "output"   : pipeline.prefix+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
                         "stack"    : True,
                         "delete-files" : True,
                         "fits-axis": 'FREQ',
-                            },
-                        input=pipeline.input,
-                        output=pipeline.output,
-                        label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+                        },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 
 
 
-                    if pipeline.enable_task(config,'freq_to_vel'):
-                        for ss in ['dirty','psf','residual','model','image']:
-                            cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
-                            recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
-                                      {
+            if pipeline.enable_task(config,'freq_to_vel'):
+                for ss in ['dirty','psf','residual','model','image']:
+            	    cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                    MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                    recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
+                              {
                                   'filename' : cubename,
                                   'reverse'  : config['freq_to_vel'].get('reverse', False)
-                                      },
-                                       input=pipeline.input,
-                                       output=pipeline.output,
-                                       label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
+                              },
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
             recipe.run()
             recipe.jobs=[]               
-            if j==wscl_niter:
-                for ss in ['dirty','psf','residual','model','image']:
-                    cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
-                    finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI.'+ss+'.fits')
-                    HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
-                    finalHIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI.image_clean_mask.fits')
-                    MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
-                    MFSfinalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI'+'-MFS-'+ss+'.fits')
-                if os.path.exists(cubename):
-                    os.rename(cubename,finalcubename)
-                if os.path.exists(HIclean_mask):
-                    os.rename(HIclean_mask,finalHIclean_mask)
-                if os.path.exists(MFScubename):
-                    os.rename(MFScubename,MFSfinalcubename)
 
             j+=1   
 
-        for j in range(1,wscl_niter+1):               
+        j-=1
+        print j,'blah blah'
+        for ss in ['dirty','psf','residual','model','image']:
+            cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
+            finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI.'+ss+'.fits')
+            HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
+            finalHIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI.image_clean_mask.fits')
+            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+            MFSfinalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI'+'-MFS-'+ss+'.fits')
+            if os.path.exists(cubename):
+                os.rename(cubename,finalcubename)
+            if os.path.exists(HIclean_mask):
+                os.rename(HIclean_mask,finalHIclean_mask)
+            if os.path.exists(MFScubename):
+                os.rename(MFScubename,MFSfinalcubename)
+
+
+        for j in range(1,wscl_niter):               
             if config['wsclean_image'].get('rm_intcubes',True):
                 for ss in ['dirty','psf','residual','model','image']:
                     cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
-                    HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
+                    HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
                     MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                     if os.path.exists(cubename):
                         os.remove(cubename)

@@ -12,4 +12,4 @@ astroquery>=0.3.8
 pykwalify>=1.6.0
 yamlordereddictloader
 astropy
-git+https://github.com/SpheMakh/Stimela.git/@master#egg=Stimela
+stimela>=1.0.1

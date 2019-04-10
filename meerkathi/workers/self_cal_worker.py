@@ -1185,9 +1185,11 @@ def worker(pipeline, recipe, config):
         B_tables = glob.glob('{}/g-gains*B.casa'.format(pipeline.output))
         if len(B_tables) > 1:
             step = 'plot_G_gain_table'
+
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables])
             recipe.add('cab/ragavi', step,
                 {
-                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables]) + ":output",
+                 "table"        : [tab+":output" for tab in gain_table_name],
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
@@ -1200,9 +1202,11 @@ def worker(pipeline, recipe, config):
         D_tables = glob.glob('{}/g-gains*D.casa'.format(pipeline.output))
         if len(D_tables) > 1:
             step = 'plot_D_gain_table'
+
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables])
             recipe.add('cab/ragavi', step,
                 {
-                 "table"        : config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables]) + ":output",
+                 "table"        : [tab+":output" for tab in gain_table_name],
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],

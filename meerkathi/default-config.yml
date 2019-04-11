@@ -387,6 +387,8 @@
       Gsols_channel: [0, 0, 0]
       add_vis_model: true
       model_mode: vis_only
+      ragavi_plot:
+        enable: true
     restore_model:
       enable: false
       model: 2+3

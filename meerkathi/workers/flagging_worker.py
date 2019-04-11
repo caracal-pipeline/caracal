@@ -247,6 +247,29 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
 
+        if pipeline.enable_task(config, 'rfinder'):
+            step = 'rfinder'
+            recipe.add('cab/rfinder', 'rfinder',
+                {
+                  "msname"             : msname,
+                  "field"              : config[step].get('field', 1),
+                  "plot_noise"         : "noise",
+                  "RFInder_mode"       : "use_flags",
+                  "outlabel"           : '_{}'.format(i),  # The output will be rfi_<pol>_<outlabel>
+                  "polarization"       : config[step].get('polarization', 'Q'),
+                  "spw_width"          : config[step].get('spw_width', 10),
+                  "time_step"          : config[step].get('time_step', 10),
+                  "time_enable"        : config[step].get('time_enable', True),
+                  "spw_enable"         : config[step].get('spw_enable', True),
+                  "1d_gif"             : config[step].get('time_enable', True),
+                  "2d_gif"             : config[step].get('time_enable', True),
+                  "altaz_gif"          : config[step].get('spw_enable', True),
+                  "movies_in_report"   : config[step].get('time_enable', True) or config.get('spw_enable', True)
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
+
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_flagging_{0:d}_{1:s}'.format(i, config.get('label', '0gc'))
             recipe.add('cab/casa_flagdata', step,

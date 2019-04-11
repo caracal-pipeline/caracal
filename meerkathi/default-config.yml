@@ -74,6 +74,14 @@
     static_mask:
       enable: true
       mask: labelled_rfimask.pickle.npy
+    rfinder:
+      enable: true
+      field: 1
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
     autoflag_rfi:
       enable: true
       column: DATA

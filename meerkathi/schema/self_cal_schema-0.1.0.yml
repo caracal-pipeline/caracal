@@ -361,6 +361,37 @@ mapping:
             seq:
               - type: float
             required: false
+          ragavi_plot:
+            type: map
+            desc: Plotting dignostics plots for delay correction calibration.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: true
+              table_name:
+                seq:
+                - type: str
+                desc: "List of gain tables to plot"
+                required: false
+              gaintype:
+                seq:
+                - type: str
+                desc: "List of gain solution types"
+                required: false
+              field:
+                seq:
+                - type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: false
+              corr:
+                type: str
+                desc: "Correlation to plot. E.g. X/Y or H/V"
+                required: false
+              htmlname:
+                type: str
+                desc: "Output HTML file name"
+                required: false
       restore_model:
         type: map
         desc: Restore modelled to final calibrated residual image

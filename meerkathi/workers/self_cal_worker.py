@@ -875,6 +875,8 @@ def worker(pipeline, recipe, config):
                   "madmax-threshold" : config[key].get('madmax_flag_thresh', [0,10]),
                   "madmax-estimate" : 'diag',
                   "madmax-offdiag"  : False,
+                  "dd-dd-term"       : False,
+                  "model-ddes"      : 'never',
                 }
 
             if config[key].get('two_step', False) and gasols_[0] != -1:
@@ -886,7 +888,7 @@ def worker(pipeline, recipe, config):
                     "dd-freq-int"      : gasols_[1],
                     "dd-save-to"       : "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                     "dd-clip-low"      : config.get('cal_gain_amplitude_clip_low', 0.5),
-                    "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),
+                    "dd-clip-high"     : config.get('cal_gain_amplitude_clip_high', 1.5),                  
                 })
             if config[key].get('Bjones', False):
                cubical_opts.update({

@@ -19,6 +19,7 @@ requirements = [
 'astroquery>=0.3.8',
 'npyscreen>=4.10.5',
 'ipdb>=0.11',
+'nbconvert>=5.3.1',
 ]
 
 # these are only there for diagnostics, make them optional
@@ -29,7 +30,6 @@ extra_diagnostics = [
     'tornado>=4.0.0,<5.0.0',
     'jupyter>=1.0.0',
     'aplpy>=1.1.1',
-    'nbconvert>=5.3.1',
 ]
 
 PACKAGE_NAME = 'meerkathi'

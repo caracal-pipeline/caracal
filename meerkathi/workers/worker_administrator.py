@@ -7,7 +7,6 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
-import meerkathi.scripts as scripts
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from multiprocessing import Process
@@ -16,11 +15,17 @@ import base64
 from urllib import urlencode
 import ruamel.yaml
 import json
-from meerkathi.scripts import reporter as mrr
 import subprocess
 from meerkathi.dispatch_crew import worker_help
 
 from meerkathi import log, pckgdir
+
+try:
+    import meerkathi.scripts as scripts
+    from meerkathi.scripts import reporter as mrr
+except ImportError:
+    log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
+
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,

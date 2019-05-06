@@ -40,6 +40,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : msname,
                       "command"     : 'summary',
+                      "display"     : False,
                       "outfile"     : prefix+'-obsinfo.json',
                     },
                 input=pipeline.input,

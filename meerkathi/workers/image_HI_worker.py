@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import EarthLocation
 from astropy import constants
+import astropy.units as asunits
 import re, datetime
 import numpy as np
 import yaml
@@ -261,19 +262,22 @@ def worker(pipeline, recipe, config):
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step,
                 {
-                    "command"   : "phazer",
-                    "inset"     : msnamesb,
-                    "outset"    : msnamesb,
-                    "imsize"    : config['sunblocker'].get('imsize', max(npix)),
-                    "cell"      : config['sunblocker'].get('cell', cell),
-                    "pol"       : 'i',
-                    "threshold" : config['sunblocker'].get('threshold', 4),
-                    "mode"      : 'all',
-                    "radrange"  : 0,
-                    "angle"     : 0,
-                    "show"      : prefix + '.sunblocker.pdf',
-                    "verb"      : True,
-                    "dryrun"    : False,
+                    "command"    : "phazer",
+                    "inset"      : msnamesb,
+                    "outset"     : msnamesb,
+                    "imsize"     : config['sunblocker'].get('imsize', max(npix)),
+                    "cell"       : config['sunblocker'].get('cell', cell),
+                    "pol"        : 'i',
+                    "threshold"  : config['sunblocker'].get('threshold', 4),
+                    "mode"       : 'all',
+                    "radrange"   : 0,
+                    "angle"      : 0,
+                    "show"       : prefix + '.sunblocker.pdf',
+                    "verb"       : True,
+                    "dryrun"     : False,
+                    "uvmax"      : 2000,
+                    "uvmin"      : 0,
+                    "vampirisms" : True
                 },
                 input=pipeline.input,
                 output=pipeline.output,

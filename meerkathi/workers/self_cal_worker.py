@@ -194,7 +194,7 @@ def worker(pipeline, recipe, config):
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
-                  #"savesourcelist": True,
+                  "savesourcelist": True,
               }
         if config[key].get('mask_from_sky', False):
             fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]

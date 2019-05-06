@@ -430,6 +430,8 @@
     sunblocker:
       enable: false
       use_mstransform: true
+      vampirisms: true
+      uvmax: 2000
       threshold: 4
     wsclean_image:
       enable: true

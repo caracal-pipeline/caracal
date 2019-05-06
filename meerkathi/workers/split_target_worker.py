@@ -164,7 +164,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : fms,
                       "command"     : 'summary',
-                      "display      : False,
+                      "display"     : False,
                       "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, hires_label),
                     },
                 input=pipeline.input,

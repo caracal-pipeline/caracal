@@ -138,6 +138,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : tms,
                       "command"     : 'summary',
+                      "display"     : False,
                       "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, label),
                     },
                 input=pipeline.input,
@@ -163,6 +164,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : fms,
                       "command"     : 'summary',
+                      "display      : False,
                       "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, hires_label),
                     },
                 input=pipeline.input,

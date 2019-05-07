@@ -393,11 +393,16 @@
       enable: false
       model: 2+3
       clean_model: '4'
-    gain_interpolation:
-      enable: true
-      hires_label: hires
+    transfer_apply_gains:
+      enable: false
+      transfer_to_label: hires
+    transfer_model:
+      enable: false
+      transfer_to_label: hires
+      model: auto
+      spectra: false
     highfreqres_contim:
-      enable: true
+      enable: false
       chans: 12
       deconv_chans: 3
       fit_spectral_pol: 2

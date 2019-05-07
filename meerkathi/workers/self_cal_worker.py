@@ -1317,11 +1317,6 @@ def worker(pipeline, recipe, config):
     #        if pipeline.enable_task(config, 'sofia_mask'):
     #            sofia_mask(kk+1)
 
-    #if config['calibrate'].get('hires_interpol')==True:
-    #    print "Interpolating gains"
-    #    substep = int(config.get('apply_step', cal_niter))
-    #    apply_gains_to_fullres(substep,enable=True if (config['calibrate'].get('hires_interpol')==True) else False)
-
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
             num = config['restore_model']['model']

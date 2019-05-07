@@ -24,22 +24,25 @@ def freq_to_vel(filename,reverse):
         with fits.open(filename, mode='update') as cube:
             headcube = cube[0].header
             if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
-            else: restfreq = HI
-            if 'FREQ' in headcube['ctype3'] and not reverse:
+            else:
+                restfreq = HI
+                headcube['restfreq'] = restfreq
+            if 'FREQ' in headcube['ctype3'] and not reverse: # convert from frequency to radio velocity
                 headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
                 headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
-                # The technically  correct way to this would be
                 headcube['ctype3'] = 'VRAD'
+                if 'cunit3' in headcube: del headcube['cunit3'] # because we adopt the default units = m/s
+
                 # VELO-HEL indicates a relativistic transform in the HELIOCENTRIC frame. The default in the imput yaml is barycentric
                 # additionally an extra keyword 'SPECSYS3 should be specified which identifies the refererence frame, see  https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
                 # This should be done when making the cube
                 # For heliocentric its value would be HELIOCEN and for barycentric BARYCENT
-                if 'cunit3' in headcube: del headcube['cunit3']
-            elif 'VEL' in headcube['ctype3'] and reverse:
+
+            elif 'VRAD' in headcube['ctype3'] and reverse: # convert from radio velocity to frequency
                 headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
                 headcube['crval3'] =  restfreq * (1-float(headcube['crval3'])/C)
                 headcube['ctype3'] = 'FREQ'
-                if 'cunit3' in headcube: del headcube['cunit3']
+                if 'cunit3' in headcube: del headcube['cunit3'] # because we adopt the default units = Hz
             else:
                 if not reverse: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
                 else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in velocity.'.format(filename))
@@ -446,6 +449,8 @@ def worker(pipeline, recipe, config):
 
 
             if pipeline.enable_task(config,'freq_to_vel'):
+                if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
+                else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
                 for ss in ['dirty','psf','residual','model','image']:
             	    cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                     MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
@@ -552,7 +557,9 @@ def worker(pipeline, recipe, config):
                    label='Make primary beam cube for {0:s}'.format(cubename))
 
     if pipeline.enable_task(config,'freq_to_vel'):
-        for ss in ['dirty','psf','residual','model','image','pb']:
+         if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
+         else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
+         for ss in ['dirty','psf','residual','model','image','pb']:
             cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {

@@ -63,6 +63,17 @@ def remove_stokes_axis(filename):
                 if 'cunit4' in headcube: del headcube['cunit4']
             else: meerkathi.log.info('Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
+def fix_specsys(filename,specframe):
+    specsys3 = {3:'BARYCENT', 5:'TOPOCENT'}[np.unique(np.array(specframe))[0]]
+    filename=filename.split(':')
+    filename='{0:s}/{1:s}'.format(filename[1],filename[0])
+    if not os.path.exists(filename): meerkathi.log.info('Skipping SPECSYS fix for {0:s}. File does not exist.'.format(filename))
+    else:
+        with fits.open(filename, mode='update') as cube:
+            headcube = cube[0].header
+            if 'specsys' in headcube: del headcube['specsys']
+            headcube['specsys3']=specsys3
+
 def make_pb_cube(filename):
     filename=filename.split(':')
     filename='{0:s}/{1:s}'.format(filename[1],filename[0])
@@ -118,6 +129,7 @@ def worker(pipeline, recipe, config):
             pipeline.lastchanfreq[i]  = lastchanfreq
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
+
 
     # Find common barycentric frequency grid for all input .MS, or set it as requested in the config file
     if pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')=='auto':
@@ -305,9 +317,13 @@ def worker(pipeline, recipe, config):
                         pipeline.lastchanfreq[i]  = lastchanfreq
                         pipeline.chanwidth[i] = chanwidth
                     meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
+                    with open(msinfo, 'r') as stdr:
+                        pipeline.specframe[i] = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+                    meerkathi.log.info('The spectral reference frame is {0:}'.format(pipeline.specframe[i]))
                 # If channelisation changed during this run
                 elif config['mstransform'].get('doppler', True):
                     pipeline.nchans[i] = [nchan_dopp for kk in pipeline.nchans[i]]
+                    pipeline.specframe[i]=[{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe', 'bary')] for kk in pipeline.nchans[i]]
 
         else:
             mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]  if config.get('use_hires_data', True) else ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
@@ -424,9 +440,7 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{:s}:: re-Image HI_'+str(j).format(step))
-
-            
-
+ 
             if config['wsclean_image']['make_cube']:
                 if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
                 else:
@@ -446,8 +460,18 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 
-
-
+            for ss in ['dirty','psf','residual','model','image']:
+                cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
+                          {
+                              'filename' : cubename,
+                              'specframe': pipeline.specframe,
+                          },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Fix spectral reference frame for cube {0:s}'.format(cubename))
+            
             if pipeline.enable_task(config,'freq_to_vel'):
                 if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
                 else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
@@ -556,6 +580,18 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='Make primary beam cube for {0:s}'.format(cubename))
 
+    for ss in ['dirty','psf','residual','model','image','pb']:
+        cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+        MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+        recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
+                  {
+                      'filename' : cubename,
+                      'specframe': pipeline.specframe,
+                  },
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='Fix spectral reference frame for cube {0:s}'.format(cubename))
+        
     if pipeline.enable_task(config,'freq_to_vel'):
          if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
          else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')

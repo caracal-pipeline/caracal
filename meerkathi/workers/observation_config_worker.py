@@ -80,6 +80,7 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'firstchanfreq', [None]*pipeline.nobs)
     setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
     setattr(pipeline, 'chanwidth', [None]*pipeline.nobs)
+    setattr(pipeline, 'specframe', [None]*pipeline.nobs)
 
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
@@ -119,6 +120,10 @@ def worker(pipeline, recipe, config):
             pipeline.lastchanfreq[i]  = lastchanfreq
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
+
+        # Get spectral frame
+        with open(msinfo, 'r') as stdr:
+            pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
 
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:

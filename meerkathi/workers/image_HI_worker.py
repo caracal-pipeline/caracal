@@ -15,7 +15,7 @@ import numpy as np
 import yaml
 
 def freq_to_vel(filename,reverse):
-    C = 2.99792458e+8 # m/s
+    C = 2.99792458e+8       # m/s
     HI = 1.4204057517667e+9 # Hz
     filename=filename.split(':')
     filename='{0:s}/{1:s}'.format(filename[1],filename[0])
@@ -26,23 +26,19 @@ def freq_to_vel(filename,reverse):
             if 'restfreq' in headcube: restfreq = float(headcube['restfreq'])
             else:
                 restfreq = HI
-                headcube['restfreq'] = restfreq
-            if 'FREQ' in headcube['ctype3'] and not reverse: # convert from frequency to radio velocity
+                headcube['restfreq'] = restfreq                 # add rest frequency to FITS header
+
+            if 'FREQ' in headcube['ctype3'] and not reverse:    # convert from frequency to radio velocity
                 headcube['cdelt3'] = -C * float(headcube['cdelt3'])/restfreq
                 headcube['crval3'] =  C * (1-float(headcube['crval3'])/restfreq)
-                headcube['ctype3'] = 'VRAD'
-                if 'cunit3' in headcube: del headcube['cunit3'] # because we adopt the default units = m/s
+                headcube['ctype3'] = 'VRAD'                     # FITS standard for radio velocity as per https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
+                if 'cunit3' in headcube: del headcube['cunit3'] # delete cunit3 because we adopt the default units = m/s
 
-                # VELO-HEL indicates a relativistic transform in the HELIOCENTRIC frame. The default in the imput yaml is barycentric
-                # additionally an extra keyword 'SPECSYS3 should be specified which identifies the refererence frame, see  https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
-                # This should be done when making the cube
-                # For heliocentric its value would be HELIOCEN and for barycentric BARYCENT
-
-            elif 'VRAD' in headcube['ctype3'] and reverse: # convert from radio velocity to frequency
+            elif 'VRAD' in headcube['ctype3'] and reverse:      # convert from radio velocity to frequency
                 headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
                 headcube['crval3'] =  restfreq * (1-float(headcube['crval3'])/C)
                 headcube['ctype3'] = 'FREQ'
-                if 'cunit3' in headcube: del headcube['cunit3'] # because we adopt the default units = Hz
+                if 'cunit3' in headcube: del headcube['cunit3'] # delete cunit3 because we adopt the default units = Hz
             else:
                 if not reverse: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
                 else: meerkathi.log.info('Skipping conversion for {0:s}. Input cube not in velocity.'.format(filename))
@@ -64,7 +60,9 @@ def remove_stokes_axis(filename):
             else: meerkathi.log.info('Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
 def fix_specsys(filename,specframe):
-    specsys3 = {3:'BARYCENT', 5:'TOPOCENT'}[np.unique(np.array(specframe))[0]]
+    # Reference frame codes below from from http://www.eso.org/~jagonzal/telcal/Juan-Ramon/SDMTables.pdf, Sec. 2.50 and 
+    # FITS header notation from https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
+    specsys3 = {0:'LSRD', 1:'LSRK', 2:'GALACTOC', 3:'BARYCENT', 4:'GEOCENTR', 5:'TOPOCENT'}[np.unique(np.array(specframe))[0]]
     filename=filename.split(':')
     filename='{0:s}/{1:s}'.format(filename[1],filename[0])
     if not os.path.exists(filename): meerkathi.log.info('Skipping SPECSYS fix for {0:s}. File does not exist.'.format(filename))

@@ -15,9 +15,11 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    if config['label']: msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
+    if config['label']:
+        msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
+        prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
     if config.get('hires_flag'): 
-        print "Flagging Full Resolution Data"
+        print("Flagging Full Resolution Data")
         msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
 
     def get_field(field):
@@ -227,9 +229,10 @@ def worker(pipeline, recipe, config):
                not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
             def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+            usr_fields = ','.join([getattr(pipeline, key)[i] for key in config['autoflag_rfi'].get('fields').split(',')])
      
-            fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else \
-                     ",".join([getattr(pipeline, key + "_id")[i] for key in config['autoflag_rfi'].get('fields').split(',')])
+            fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else\
+                     ",".join(map(str,utils.get_field_id(msinfo, usr_fields)))
 
             # Make sure no field IDs are duplicated
             fields = ",".join(set(fields.split(",")))

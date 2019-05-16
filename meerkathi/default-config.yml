@@ -300,6 +300,20 @@
       listobs: true
       summary_json: true
 
+- flagging__2:
+    enable: true
+    order: 70
+    label: corr
+    hires_flag: true
+    hires_label: hires
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: target
+      strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
+    flagging_summary:
+      enable: true
+
 - masking:
     enable: false
     order: 80

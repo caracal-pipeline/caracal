@@ -20,7 +20,14 @@ def worker(pipeline, recipe, config):
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
     if config.get('hires_flag'): 
         print("Flagging Full Resolution Data")
-        msnames.append([mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames])
+        if config['label']:
+            msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
+            prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
+            p_nobs = iter(range(pipeline.nobs))
+        else:
+            msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
+            prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
+        nobs=len(msnames)
 
     def get_field(field):
         """
@@ -29,8 +36,8 @@ def worker(pipeline, recipe, config):
                 field: list of ids or comma-seperated list of ids where
                        ids are in bpcal, gcal, target, fcal or an actual field name
         """
-        return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                            if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
+        return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[p_nob].split(',')
+                                            if isinstance(getattr(pipeline, x)[p_nob], str) and getattr(pipeline, x)[p_nob] != "" else getattr(pipeline, x)[p_nob])
                                           if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
                                           else x.split(','),
                             field.split(',') if isinstance(field, str) else field)))
@@ -40,6 +47,19 @@ def worker(pipeline, recipe, config):
         msname = msnames[i]
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+ 
+        # Since the nobs are now equal to the length of the msnames if hires flagging is activated
+        # It is important to have a p_nob that will look-up sources based on the original unique ms names in `pipeline`
+        # Note: Flagging is still perfomed on all msnames using index i
+        if config['label'] and config['hires_flag']:
+            p_prefix = pipeline.prefixes
+            if config['label'] in prefix:
+                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
+            elif config['hires_label'] in prefix:
+                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
+        else:
+            p_nob = i
+
 
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
@@ -59,9 +79,9 @@ def worker(pipeline, recipe, config):
                 raise KeyError("autoflag on powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
 
             fields = def_fields if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') == 'auto' else \
-                     ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
+                     ",".join([getattr(pipeline, key + "_id")[p_nob][0] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
             calfields = def_calfields if config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto') == 'auto' else \
-                     ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
+                     ",".join([getattr(pipeline, key + "_id")[p_nob][0] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
 
             
             fields = ",".join(set(fields.split(",")))
@@ -228,10 +248,11 @@ def worker(pipeline, recipe, config):
             if config['autoflag_rfi'].get('calibrator_fields', 'auto') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
-            def_fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
-     
-            fields = def_fields if config['autoflag_rfi'].get('fields', 'auto') == 'auto' else\
-                     ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
+
+            if config['autoflag_rfi'].get('fields', 'auto') is 'auto':
+                fields = ','.join([pipeline.bpcal_id[nob], pipeline.gcal_id[nob]])
+            else:
+                fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
 
             # Make sure no field IDs are duplicated
             fields = ",".join(set(fields.split(",")))

@@ -249,7 +249,7 @@ def worker(pipeline, recipe, config):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
 
             if config['autoflag_rfi'].get('fields', 'auto') is 'auto':
-                fields = ','.join([pipeline.bpcal_id[nob], pipeline.gcal_id[nob]])
+                fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
             else:
                 fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
 

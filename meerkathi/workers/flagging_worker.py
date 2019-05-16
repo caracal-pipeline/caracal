@@ -23,7 +23,6 @@ def worker(pipeline, recipe, config):
         if config['label']:
             msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
             prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
-            p_nobs = iter(range(pipeline.nobs))
         else:
             msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
             prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]

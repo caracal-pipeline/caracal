@@ -304,7 +304,7 @@
     enable: true
     order: 70
     label: corr
-    hires_flag: true
+    hires_flag: false
     hires_label: hires
     autoflag_rfi:
       enable: true

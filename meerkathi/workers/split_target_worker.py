@@ -13,7 +13,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'hires_split'):
        print "Setting Full Resolution Data Names..."
        pipeline.set_hires_msnames(hires_label)
-
+                                   
 
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
@@ -21,49 +21,28 @@ def worker(pipeline, recipe, config):
         prefix = pipeline.prefixes[i]
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
-        if pipeline.enable_task(config, 'split_target'):
-            step = 'split_target_{:d}'.format(i)
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
-                   os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-
-                os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
-
-            recipe.add('cab/casa_split', step,
-                {
-                    "vis"           : msname,
-                    "outputvis"     : tms,
-                    "timebin"       : config['split_target'].get('time_average', ''),
-                    "width"         : config['split_target'].get('freq_average', 1),
-                    "spw"           : config['split_target'].get('spw', ''),
-                    "datacolumn"    : config['split_target'].get('column', 'corrected'),
-                    "correlation"   : config['split_target'].get('correlation', ''),
-                    "field"         : str(target),
-                    "keepflags"     : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
-
         if pipeline.enable_task(config, 'hires_split'):
-            step = 'hires_split_{:d}'.format(i) # added this
+            step = 'split_target_{:d}'.format(i)
             fms = pipeline.hires_msnames[i]
             flagf = fms + '.flagversions'
-
+     
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, fms)) or \
                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagf)):
                    os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, fms, flagv))   #Delet the previous split ms and flagversions.
 
-            recipe.add('cab/casa_split', step,
+            recipe.add('cab/casa_mstransform', step,
                 {
                     "vis"           : msname,
                     "outputvis"     : fms,
                     "timebin"       : sdm.dismissable(config['hires_split'].get('hires_tav', '')),
                     "width"         : sdm.dismissable(config['hires_split'].get('hires_fav', 1)),
                     "spw"           : sdm.dismissable(config['hires_split'].get('hires_spw', '')),
-                    "datacolumn"    : 'corrected',
+                    "datacolumn"    : 'data',
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,
+                    "docallib"      : True,
+                    "callib"        : 'callib_target.txt',
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -71,9 +50,55 @@ def worker(pipeline, recipe, config):
 
             pipeline.hires_spw = sdm.dismissable(config['split_target'].get('hires_spw', ''))                ##Need to add this to the init file.
 
+            if pipeline.enable_task(config, 'split_target'):
+                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
+                      os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
+
+                    os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
+
+                recipe.add('cab/casa_mstransform', step,
+                    {
+                        "vis"           : fms,
+                        "outputvis"     : tms,
+                        "timebin"       : config['split_target'].get('time_average', ''),
+                        "width"         : config['split_target'].get('freq_average', 1),
+                        "spw"           : config['split_target'].get('spw', ''),
+                        "datacolumn"    : config['split_target'].get('column', 'data'),
+                        "correlation"   : config['split_target'].get('correlation', ''),
+                        "field"         : str(target),
+                        "keepflags"     : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
+
+        if pipeline.enable_task(config, 'split_target') and not pipeline.enable_task(config, 'hires_split'):
+            step = 'split_target_{:d}'.format(i)
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
+                   os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
+
+                os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
+
+            recipe.add('cab/casa_mstransform', step,
+                {
+                    "vis"           : msname,
+                    "outputvis"     : tms,
+                    "timebin"       : config['split_target'].get('time_average', ''),
+                    "width"         : config['split_target'].get('freq_average', 1),
+                    "spw"           : config['split_target'].get('spw', ''),
+                    "datacolumn"    : config['split_target'].get('column', 'data'),
+                    "correlation"   : config['split_target'].get('correlation', ''),
+                    "field"         : str(target),
+                    "keepflags"     : True,
+                    "docallib"      : True,
+                    "callib"        : 'callib_target.txt',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
 
 
-
+ 
         if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -120,7 +145,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'obsinfo'):
-            if config['obsinfo'].get('listobs', True):
+            if (config['obsinfo'].get('listobs', True) and pipeline.enable_task(config, 'split_target')):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                     {
@@ -131,8 +156,8 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
-
-            if config['obsinfo'].get('summary_json', True):
+    
+            if (config['obsinfo'].get('summary_json', True) and pipeline.enable_task(config, 'split_target')):
                  step = 'summary_json_{:d}'.format(i)
                  recipe.add('cab/msutils', step,
                     {

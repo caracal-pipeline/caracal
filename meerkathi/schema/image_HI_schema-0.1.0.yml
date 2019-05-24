@@ -133,6 +133,18 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
+          vampirisms:
+            desc: Apply only to data taken during day time (defaults to true)
+            type: bool
+            required: false
+          uvmax:
+            desc: Maximum uvdistance in wavelength to be analysed (defaults to 2000)
+            type: float
+            required: false
+          uvmin:
+            desc: Minimum uvdistance in wavelength to be analysed (defaults to 0)
+            type: float
+            required: false
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map

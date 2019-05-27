@@ -534,32 +534,6 @@ found in our database or in the CASA NRAO database'.format(field))
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
-	    
-        
-
-	#write calibration library file for OTF cal in split_target_worker.py
-	import getpass
-	uname = getpass.getuser()
-	gaintablelist,gainfieldlist,interplist = [],[],[]
-
-	for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-		if not pipeline.enable_task(config, 'apply_'+applyme):
-                   continue
-                suffix = table_suffix[applyme]
-                interp = applycal_interp_rules['target'][applyme]
-                gainfield = get_gain_field(applyme, 'target')
-                gaintablelist.append('{0:s}/{1:s}.{2:s}:output'.format(get_dir_path(pipeline.caltables, pipeline), prefix, suffix))
-                gainfieldlist.append(gainfield)
-                interplist.append(interp)
-
-	with open(os.path.join(pipeline.output, 'callib_target.txt'), 'w') as stdw:
-		for j in range(len(gaintablelist)):
-       			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j][:-7])+'\'')
-			stdw.write(' calwt=False')
-			stdw.write(' tinterp=\''+str(interplist[j])+'\'')
-			stdw.write(' finterp=\'linear\'')
-			stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
-
 
         # auto flag closure errors and systematic issues based on calibrated calibrator phase (chi-squared thresholds)
         # Physical assertion: Expect calibrator phase == 0 (calibrator at phase centre). Corrected phases should be at phase centre

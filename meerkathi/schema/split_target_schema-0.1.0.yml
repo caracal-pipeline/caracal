@@ -16,8 +16,12 @@ mapping:
         desc: Order of worker in queue
         type: int
         required: true
-      label:
-        desc: Label for new data set
+      label_in:
+        desc: Label of the input dataset
+        type: str
+        required: true
+      label_out:
+        desc: Label of the output dataset
         type: str
         required: true
 
@@ -28,14 +32,6 @@ mapping:
           enable:
             desc: Execute this section
             type: bool
-            required: true
-          label_in:
-            desc: Label of the input ms
-            type: str
-            required: true
-          label_out:
-            desc: Label of the output ms
-            type: str
             required: true
           time_average:
             desc: Time averaging

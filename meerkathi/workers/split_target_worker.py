@@ -55,12 +55,13 @@ def worker(pipeline, recipe, config):
                 return get_field('gcal')
 
 
-    label = config['label']
+    label = config['label_out']
+    label_in = config['label_in']
     pipeline.set_cal_msnames(label)
+    pipeline.set_hires_msnames(label_in)
+
 #    hires_label = config['hires_split'].get('hires_label', 'hires')
 #    print hires_label
-    label_in = config['split_target'].get('label_in', '')
-    label_out = config['split_target'].get('label_out', 'corr')
 #    pipeline.set_hires_msnames(label_out)
 #    if pipeline.enable_task(config, 'otfcal'):
 #       print "OTF calibartion enabled"
@@ -68,7 +69,8 @@ def worker(pipeline, recipe, config):
 
 
     for i in range(pipeline.nobs):
-        msname = pipeline.msnames[i]
+#        msname = pipeline.msnames[i]
+        fms = pipeline.hires_msnames[i]
         target = pipeline.target[0]
         prefix = pipeline.prefixes[i]
         tms = pipeline.cal_msnames[i]
@@ -109,7 +111,7 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/casa_mstransform', step,
                 {
-                    "vis"           : msname,
+                    "vis"           : fms,
                     "outputvis"     : tms,
                     "timebin"       : config['split_target'].get('time_average', ''),
                     "width"         : config['split_target'].get('freq_average', 1),
@@ -123,7 +125,7 @@ def worker(pipeline, recipe, config):
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
+                label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
 
 
  

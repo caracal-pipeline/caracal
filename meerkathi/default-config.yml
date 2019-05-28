@@ -279,16 +279,32 @@
 - split_target:
     enable: true
     order: 60
-    label: corr
+    label_in: ''
+    label_out: corr
     split_target:
       enable: true
       time_average: ''
       freq_average: 1
-    hires_split:
-      enable: true
-      hires_label: hires
-      hires_spwid: 0
-      hires_spw: 'null'
+      spw: ''
+      otfcal:
+        enable: true
+        callabel: 1gc1
+        apply_delay_cal:
+          enable: true
+          field:
+           - bpcal
+        apply_bp_cal:
+          enable: true
+          field:
+           - bpcal
+        apply_gain_cal_gain:
+          enable: false
+          field:
+           - gcal
+        apply_transfer_fluxscale:
+          enable: true
+          field:
+           - gcal
     prepms:
       enable: false
     changecentre:
@@ -299,6 +315,7 @@
       enable: true
       listobs: true
       summary_json: true
+
 
 - masking:
     enable: false

@@ -54,71 +54,69 @@ mapping:
             type: str
             required: false
 
-      otfcal:
-        desc: Apply OTF calibration
-        type: map
-        mapping:
-          enable:
-            desc: Execute this section
-            type: bool
-            required: true
-          callabel:
-            desc: Label of calibration tables to be used
-            type: str
-            required: true
+          otfcal:
+            desc: Apply OTF calibration
+            type: map
+            mapping:
+              enable:
+                desc: Execute this section
+                type: bool
+                required: true
+              callabel:
+                desc: Label of calibration tables to be used
+                type: str
+                required: true
 
-      apply_delay_cal:
-        type: map
-        desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
-        mapping: 
-          enable: 
-            desc: Executes application of delay correction calibration table.
-            type: bool
-            required: true
-          field: 
-            seq: 
-             - type: str 
-            desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
-            required: true
-                           
-      apply_bp_cal:
-        type: map
-        desc: Apply the bandpass table to specified fields via the CASA applycal task.
-        mapping:
-          enable:
-            type: bool
-            desc: Executes application of bandpass table.
-            required: true
-          field:
-            seq: 
-             - type: str 
-            desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
+              apply_delay_cal:
+                type: map
+                desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
+                mapping: 
+                  enable: 
+                    desc: Executes application of delay correction calibration table.
+                    type: bool
+                    required: true
+                  field: 
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
+              apply_bp_cal:
+                type: map
+                desc: Apply the bandpass table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of bandpass table.
+                    required: true
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
 
-      apply_gain_cal_gain:    
-        type: map
-        desc: Apply the gain calibration table to specified fields via the CASA applycal task.
-        mapping:
-           enable:
-             type: bool
-             desc: Executes application of gain calibration table.
-             required: true
-           field:
-             seq: 
-              - type: str 
-             desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+              apply_gain_cal_gain:    
+                type: map
+                desc: Apply the gain calibration table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of gain calibration table.
+                    required: true
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
         
-      apply_transfer_fluxscale:
-        type: map
-        desc: Apply the fluxscale table to specified fields via the CASA applycal task.
-        mapping:
-          enable:
-            type: bool
-            desc: Executes application of fluxscale table.
-            required: true
-          field:
-            seq: 
-             - type: str 
-            desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+              apply_transfer_fluxscale:
+                type: map
+                desc: Apply the fluxscale table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of fluxscale table.
+                    required: true
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
 
       changecentre:
         desc: changes the phase centre

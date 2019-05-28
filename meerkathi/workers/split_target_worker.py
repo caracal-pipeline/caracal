@@ -76,13 +76,13 @@ def worker(pipeline, recipe, config):
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
 
-        if pipeline.enable_task(config, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
+        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
             
 	    import getpass
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
-
-            calprefix = '{0:s}-{1:s}'.format(prefix, config['otfcal'].get('callabel', ''))            
+            callabel = config['split_target']['otfcal'].get('callabel', '')
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)            
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
 		if not pipeline.enable_task(config, 'apply_'+applyme):
@@ -94,7 +94,7 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
 
-            with open(os.path.join(pipeline.output, 'callib_target.txt'), 'w') as stdw:
+            with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
 		for j in range(len(gaintablelist)):
        			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
 			stdw.write(' calwt=False')
@@ -120,8 +120,8 @@ def worker(pipeline, recipe, config):
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,
-                    "docallib"      : config['otfcal'].get('enable', False),
-                    "callib"        : 'callib_target.txt',
+                    "docallib"      : config['split_target']['otfcal'].get('enable', False),
+                    "callib"        : 'callib_target_'+callabel+'.txt',
                 },
                 input=pipeline.input,
                 output=pipeline.output,

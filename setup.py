@@ -16,7 +16,7 @@ requirements = [
 'progressbar2>=3.11.0',
 'pykwalify>=1.6.0',
 'yamlordereddictloader',
-'astroquery>=0.3.8',
+'astroquery>0.3.8',
 'npyscreen>=4.10.5',
 'ipdb>=0.11',
 ]

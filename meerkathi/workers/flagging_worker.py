@@ -271,10 +271,11 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'rfinder'):
             step = 'rfinder'
+            field = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['rfinder'].get('field')).split(","))))
             recipe.add('cab/rfinder', 'rfinder',
                 {
                   "msname"             : msname,
-                  "field"              : config[step].get('field', 1),
+                  "field"              : int(field),
                   "plot_noise"         : "noise",
                   "RFInder_mode"       : "use_flags",
                   "outlabel"           : '_{}'.format(i),  # The output will be rfi_<pol>_<outlabel>

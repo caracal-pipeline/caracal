@@ -72,14 +72,6 @@
     static_mask:
       enable: true
       mask: labelled_rfimask.pickle.npy
-    rfinder:
-      enable: true
-      field: 1
-      polarization: Q
-      spw_enable: true
-      spw_width: 10
-      time_enable: true
-      time_step: 10
     autoflag_rfi:
       enable: true
       column: DATA
@@ -234,7 +226,7 @@
     uvrange: '>50'
     otfdelay: true
     clear_cal:
-      enable: true
+      enable: false
       field:
       - bpcal
       - fcal
@@ -387,6 +379,14 @@
       column: DATA
       fields: target
       strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
+    rfinder:
+      enable: true
+      field: target
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
     flagging_summary:
       enable: true
 

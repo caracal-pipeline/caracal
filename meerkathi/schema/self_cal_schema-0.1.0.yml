@@ -447,8 +447,36 @@ mapping:
             required: true
           spectra:
             type: bool
-            desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model. Default is False.
-            required: true
+            desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model. Default is True.
+            required: false
+          row-chunks:
+            type: int
+            desc: Number of rows of input .MS that are processed in a single chunk. Default is 100.
+            required: false
+          model-chunks:
+            type: int
+            desc: Number of sky model components that are processed in a single chunk. Default is 100.
+            required: false
+          invert-uvw:
+            type: bool
+            desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees. Default is True.
+            required: false
+          within:
+            type: str
+            desc: Give JS9 region file. Only sources within those regions will be included. Default is None.
+            required: false
+          points-only:
+            type: bool
+            desc: Select only point-type sources. Defailt is False.
+            required: false
+          num-sources:
+            type: int
+            desc: Select only N brightest sources. Default is None
+            required: false
+          num-workers:
+            type: int
+            desc: Explicitly set the number of worker threads. Default is None
+            required: false
       highfreqres_contim:
         type: map
         desc: Make final continuum image and model at higher freq res, ideally using a clean mask based on the last round of continuum imging

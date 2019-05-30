@@ -16,7 +16,7 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-   
+
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]

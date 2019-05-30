@@ -400,7 +400,6 @@
       enable: false
       transfer_to_label: hires
       model: auto
-      spectra: false
     highfreqres_contim:
       enable: false
       chans: 12

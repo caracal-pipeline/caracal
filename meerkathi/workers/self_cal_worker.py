@@ -1429,9 +1429,16 @@ def worker(pipeline, recipe, config):
             step = 'transfer_model_{0:d}'.format(i)
             recipe.add('cab/crystalball', step,
                 {
-                  "ms"         : msname,
-                  "sky-model"  : crystalball_model+':output',
-                  "spectra"    : config['transfer_model'].get('spectra', False)
+                  "ms"           : msname,
+                  "sky-model"    : crystalball_model+':output',
+                  "spectra"      : config['transfer_model'].get('spectra', True),
+                  "row-chunks"   : config['transfer_model'].get('row-chunks', 100),
+                  "model-chunks" : config['transfer_model'].get('model-chunks', 100),
+                  "invert-uvw"   : config['transfer_model'].get('invert-uvw', True),
+                  "within"       : sdm.dismissable(config['transfer_model'].get('within', None)),
+                  "points-only"  : config['transfer_model'].get('points-only', False),
+                  "num-sources"  : sdm.dismissable(config['transfer_model'].get('num-sources', None)),
+                  "num-workers"  : sdm.dismissable(config['transfer_model'].get('num-workers', None)),
                 },
                 input=pipeline.input,
                 output=pipeline.output,

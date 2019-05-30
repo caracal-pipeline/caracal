@@ -394,10 +394,10 @@
       model: 2+3
       clean_model: '4'
     transfer_apply_gains:
-      enable: false
+      enable: true
       transfer_to_label: hires
     transfer_model:
-      enable: false
+      enable: true
       transfer_to_label: hires
       model: auto
     highfreqres_contim:
@@ -411,8 +411,8 @@
 - image_HI:
     enable: true
     order: 100
-    label: corr
-    use_hires_data: true
+    label: hires
+    use_hires_data: false
     hires_label: hires
     restfreq: 1.420405752GHz
     npix: [1024]

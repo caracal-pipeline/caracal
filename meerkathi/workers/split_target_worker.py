@@ -44,9 +44,9 @@ def worker(pipeline, recipe, config):
 
     def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['apply_delay_cal'].get('field', ['bpcal','gcal','xcal']))
+                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field', ['bpcal','gcal','xcal']))
             if applyme == 'bp_cal':
-                return get_field(config['apply_bp_cal'].get('field', ['bpcal']))
+                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field', ['bpcal']))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -60,16 +60,7 @@ def worker(pipeline, recipe, config):
     pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(label_in)
 
-#    hires_label = config['hires_split'].get('hires_label', 'hires')
-#    print hires_label
-#    pipeline.set_hires_msnames(label_out)
-#    if pipeline.enable_task(config, 'otfcal'):
-#       print "OTF calibartion enabled"
-#       pipeline.set_hires_msnames(hires_label)
-
-
     for i in range(pipeline.nobs):
-#        msname = pipeline.msnames[i]
         fms = pipeline.hires_msnames[i]
         target = pipeline.target[0]
         prefix = pipeline.prefixes[i]
@@ -85,7 +76,8 @@ def worker(pipeline, recipe, config):
             calprefix = '{0:s}-{1:s}'.format(prefix, callabel)            
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-		if not pipeline.enable_task(config, 'apply_'+applyme):
+                #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
+		if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
                    continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules['target'][applyme]
@@ -94,6 +86,7 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
 
+            meerkathi.log.info('#################################### {0:}'.format(gaintablelist))
             with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
 		for j in range(len(gaintablelist)):
        			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
@@ -121,7 +114,7 @@ def worker(pipeline, recipe, config):
                     "field"         : str(target),
                     "keepflags"     : True,
                     "docallib"      : config['split_target']['otfcal'].get('enable', False),
-                    "callib"        : 'callib_target_'+callabel+'.txt',
+                    "callib"        : 'callib_target_'+callabel+'.txt:output',
                 },
                 input=pipeline.input,
                 output=pipeline.output,

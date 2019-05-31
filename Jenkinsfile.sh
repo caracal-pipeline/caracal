@@ -47,10 +47,6 @@ meerkathi --get_data_dataid 1477074305 \
           --self_cal_calibrate_enable yes \
           --image_HI_wsclean_image_npix 256 256 \
           --image_HI_flagging_summary_enable no \
-          --self_cal_highfreqres_contim_enable yes \
-          --self_cal_highfreqres_contim_chans 9 \
-          --self_cal_highfreqres_contim_deconv_chans 3 \
-          --self_cal_highfreqres_contim_fit_spectral_pol 1 \
           --polcal_enable true \
           --no-interactive
 

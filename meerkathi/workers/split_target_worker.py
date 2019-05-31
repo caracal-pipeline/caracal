@@ -114,7 +114,7 @@ def worker(pipeline, recipe, config):
                     "field"         : str(target),
                     "keepflags"     : True,
                     "docallib"      : config['split_target']['otfcal'].get('enable', False),
-                    "callib"        : 'callib_target_'+callabel+'.txt:output',
+                    "callib"        : sdm.dismissable('callib_target_'+callabel+'.txt:output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                 },
                 input=pipeline.input,
                 output=pipeline.output,

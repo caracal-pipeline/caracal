@@ -220,8 +220,8 @@ mapping:
             type: str
             required: false
           field:
-            desc: Field ID of target
-            type: int
+            desc: Field to get flag stats. Given as a key (key in [gcal, bpcal, target]).
+            type: str
             required: false
           polarization:
             desc:  Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS)

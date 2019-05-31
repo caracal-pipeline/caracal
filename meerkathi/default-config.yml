@@ -47,8 +47,6 @@
     enable: true
     order: 30
     label: ''
-    hires_flag: true
-    hires_label: 'hires'
     autoflag_autocorr_powerspectra:
       enable: true
     flag_autocorr:
@@ -74,14 +72,6 @@
     static_mask:
       enable: true
       mask: labelled_rfimask.pickle.npy
-    rfinder:
-      enable: true
-      field: 1
-      polarization: Q
-      spw_enable: true
-      spw_width: 10
-      time_enable: true
-      time_step: 10
     autoflag_rfi:
       enable: true
       column: DATA
@@ -215,6 +205,145 @@
     flagging_summary:
       enable: true
 
+# flag calibrated data
+- flagging__2:
+    enable: true
+    order: 41
+    label: ''
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: fcal,bpcal,gcal,target
+      strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
+    flagging_summary:
+      enable: true
+      
+# recalibrate reflagged data to improve K and G solutions
+- cross_cal__2:
+    enable: true
+    order: 42
+    label: 1gc1
+    uvrange: '>50'
+    otfdelay: true
+    clear_cal:
+      enable: false
+      field:
+      - bpcal
+      - fcal
+      - target
+      - gcal
+      - xcal
+      addmodel: true
+    set_model:
+      enable: true
+      field:
+      - fcal
+      meerkathi_model: true
+    delay_cal:
+      enable: true
+      combine: scan
+      solint: inf
+      field:
+      - bpcal
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [-60, 60]
+      plot:
+        enable: true
+    bp_cal:
+      enable: true
+      combine: scan
+      solint: inf
+      remove_ph_time_var: false
+      field:
+      - bpcal
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    gain_cal_flux:
+      enable: true
+      combine: ''
+      field:
+      - fcal
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    gain_cal_gain:
+      enable: true
+      combine: ''
+      field:
+      - gcal
+      flag:
+        enable: false
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    transfer_fluxscale:
+      enable: true
+      reference:
+      - fcal
+      transfer:
+      - gcal
+      plot:
+        enable: true
+    apply_delay_cal:
+      enable: true
+      field:
+      - bpcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_bp_cal:
+      enable: true
+      field:
+      - bpcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_gain_cal_gain:
+      enable: false
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_transfer_fluxscale:
+      enable: true
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    autoflag_closure_error:
+      enable: false
+      column: CORRECTED_DATA
+      fields: auto
+      calibrator_fields: auto
+      baseline_to_group_threshold: 10
+      scan_to_scan_threshold: 10
+    flagging_summary:
+      enable: true
+      
 - polcal:
     enable: false
     order: 45
@@ -239,6 +368,27 @@
     do_apply_XD: true
     do_dump_precalibration_leakage_reports: true
     freqsol_soltime: inf
+
+# flag only target data
+- flagging__3:
+    enable: true
+    order: 47
+    label: ''
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: target
+      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
+    rfinder:
+      enable: true
+      field: target
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
+    flagging_summary:
+      enable: true
 
 - inspect_data:
     enable: true

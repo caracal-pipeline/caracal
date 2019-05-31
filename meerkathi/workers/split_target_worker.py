@@ -4,23 +4,104 @@ import meerkathi
 import stimela.dismissable as sdm
 
 NAME = 'Split and average target data'
+# Rules for interpolation mode to use when applying calibration solutions
+applycal_interp_rules = {
+   'target'   :  {
+                  'delay_cal'      : 'linear',
+                  'bp_cal'         : 'linear',
+                  'transfer_fluxscale': 'linear',
+                  'gain_cal_gain'  : 'linear',
+                 },
+}
+
+get_dir_path = lambda string,pipeline : string.split(pipeline.output)[1][1:]
+
+table_suffix = {
+    "delay_cal"             : 'K0',
+    "bp_cal"                : 'B0',
+    "gain_cal_gain"         : 'G0',
+    "gain_cal_flux"         : 'G0',
+    "transfer_fluxscale"    : 'F0',
+}
+
+# Check if field was specified as known key, else return the
+# same value.
 
 def worker(pipeline, recipe, config):
-    label = config['label']
+
+    def get_field(field):
+            """
+                gets field ids parsed previously in the pipeline
+                params:
+                    field: list of ids or comma-seperated list of ids where
+                           ids are in bpcal, gcal, target, fcal or an actual field name
+            """
+            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
+                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
+                                              else x.split(','),
+                                field.split(',') if isinstance(field, str) else field)))
+
+    def get_gain_field(applyme, applyto=None):
+            if applyme == 'delay_cal':
+                return get_field(config['apply_delay_cal'].get('field', ['bpcal','gcal','xcal']))
+            if applyme == 'bp_cal':
+                return get_field(config['apply_bp_cal'].get('field', ['bpcal']))
+            if applyme == 'gain_cal_flux':
+                return get_field('fcal')
+            if applyme == 'gain_cal_gain':
+                return get_field('gcal')
+            if applyme == 'transfer_fluxscale':
+                return get_field('gcal')
+
+
+    label = config['label_out']
+    label_in = config['label_in']
     pipeline.set_cal_msnames(label)
-    hires_label = config['hires_split'].get('hires_label', 'hires')
-    print hires_label
-    if pipeline.enable_task(config, 'hires_split'):
-       print "Setting Full Resolution Data Names..."
-       pipeline.set_hires_msnames(hires_label)
+    pipeline.set_hires_msnames(label_in)
+
+#    hires_label = config['hires_split'].get('hires_label', 'hires')
+#    print hires_label
+#    pipeline.set_hires_msnames(label_out)
+#    if pipeline.enable_task(config, 'otfcal'):
+#       print "OTF calibartion enabled"
+#       pipeline.set_hires_msnames(hires_label)
 
 
     for i in range(pipeline.nobs):
-        msname = pipeline.msnames[i]
+#        msname = pipeline.msnames[i]
+        fms = pipeline.hires_msnames[i]
         target = pipeline.target[0]
         prefix = pipeline.prefixes[i]
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
+
+        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
+            
+	    import getpass
+	    uname = getpass.getuser()
+	    gaintablelist,gainfieldlist,interplist = [],[],[]
+            callabel = config['split_target']['otfcal'].get('callabel', '')
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)            
+
+	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
+		if not pipeline.enable_task(config, 'apply_'+applyme):
+                   continue
+                suffix = table_suffix[applyme]
+                interp = applycal_interp_rules['target'][applyme]
+                gainfield = get_gain_field(applyme, 'target')
+                gaintablelist.append('{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), calprefix, suffix))
+                gainfieldlist.append(gainfield)
+                interplist.append(interp)
+
+            with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
+		for j in range(len(gaintablelist)):
+       			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
+			stdw.write(' calwt=False')
+			stdw.write(' tinterp=\''+str(interplist[j])+'\'')
+			stdw.write(' finterp=\'linear\'')
+			stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
+
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
@@ -28,52 +109,26 @@ def worker(pipeline, recipe, config):
 
                 os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
 
-            recipe.add('cab/casa_split', step,
+            recipe.add('cab/casa_mstransform', step,
                 {
-                    "vis"           : msname,
+                    "vis"           : fms,
                     "outputvis"     : tms,
                     "timebin"       : config['split_target'].get('time_average', ''),
                     "width"         : config['split_target'].get('freq_average', 1),
                     "spw"           : config['split_target'].get('spw', ''),
-                    "datacolumn"    : config['split_target'].get('column', 'corrected'),
+                    "datacolumn"    : config['split_target'].get('column', 'data'),
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,
+                    "docallib"      : config['split_target']['otfcal'].get('enable', False),
+                    "callib"        : 'callib_target_'+callabel+'.txt',
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='{0:s}:: Split and average data ms={1:s}'.format(step, msname))
-
-        if pipeline.enable_task(config, 'hires_split'):
-            step = 'hires_split_{:d}'.format(i) # added this
-            fms = pipeline.hires_msnames[i]
-            flagf = fms + '.flagversions'
-
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, fms)) or \
-                       os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagf)):
-                   os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, fms, flagv))   #Delet the previous split ms and flagversions.
-
-            recipe.add('cab/casa_split', step,
-                {
-                    "vis"           : msname,
-                    "outputvis"     : fms,
-                    "timebin"       : sdm.dismissable(config['hires_split'].get('hires_tav', '')),
-                    "width"         : sdm.dismissable(config['hires_split'].get('hires_fav', 1)),
-                    "spw"           : sdm.dismissable(config['hires_split'].get('hires_spw', '')),
-                    "datacolumn"    : 'corrected',
-                    "correlation"   : config['split_target'].get('correlation', ''),
-                    "field"         : str(target),
-                    "keepflags"     : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Split and make a high res copy of data ms={1:s}'.format(step, msname))
-
-            pipeline.hires_spw = sdm.dismissable(config['split_target'].get('hires_spw', ''))                ##Need to add this to the init file.
+                label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
 
 
-
-
+ 
         if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -120,7 +175,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'obsinfo'):
-            if config['obsinfo'].get('listobs', True):
+            if (config['obsinfo'].get('listobs', True) and pipeline.enable_task(config, 'split_target')):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                     {
@@ -131,8 +186,8 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
-
-            if config['obsinfo'].get('summary_json', True):
+    
+            if (config['obsinfo'].get('summary_json', True) and pipeline.enable_task(config, 'split_target')):
                  step = 'summary_json_{:d}'.format(i)
                  recipe.add('cab/msutils', step,
                     {

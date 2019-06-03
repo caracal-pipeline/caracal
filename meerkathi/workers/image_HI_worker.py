@@ -94,6 +94,18 @@ def make_pb_cube(filename):
             fits.writeto(filename.replace('image.fits','pb.fits'),datacube,header=headcube,overwrite=True)
             meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(filename.replace('image.fits','pb.fits')))
 
+
+def calc_rms(filename):
+    #filename=filename.split(':')
+    #filename='{0:s}/{1:s}'.format(filename[1],filename[0])
+    if not os.path.exists(filename): meerkathi.log.info('Noise not determined in cube for {0:s}. File does not exist.'.format(filename))
+    else:
+        with fits.open(filename) as cube:
+            headcube = cube[0].header
+            datacube = cube[0].data
+            y = datacube[~np.isnan(datacube)]
+	    return np.sqrt(np.sum(y * y, dtype=np.float64) / y.size)
+
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['hires_label']) for did in pipeline.dataid]  if config.get('use_hires_data', True) else ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
@@ -343,8 +355,10 @@ def worker(pipeline, recipe, config):
             weight = config['wsclean_image'].get('weight', weight)
         wscl_niter = config['wsclean_image'].get('wscl_niter', 2)
         j = 1
+        tol = config['wsclean_image'].get('tol', 0.5)
         HIclean_mask=pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits:output'
         HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image_clean_mask.fits')
+        
         
         while j<= wscl_niter:# and (os.path.exists(HIclean_mask_path)):
             if j==1:
@@ -398,11 +412,11 @@ def worker(pipeline, recipe, config):
                 "steps.doWriteCat"      : False,
                 "flag.regions"          : [],
                 "scaleNoise.statistic"  : 'mad' ,
-                "SCfind.threshold"      : 4,
+                "SCfind.threshold"      : 5,
                 "SCfind.rmsMode"        : 'mad',
-                "merge.radiusX"         : 2,
-                "merge.radiusY"         : 2,
-                "merge.radiusZ"         : 2,
+                "merge.radiusX"         : 3,
+                "merge.radiusY"         : 3,
+                "merge.radiusZ"         : 3,
                 "merge.minSizeX"        : 2,
                 "merge.minSizeY"        : 2,
                 "merge.minSizeZ"        : 2,
@@ -489,8 +503,18 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
+
+
             recipe.run()
-            recipe.jobs=[]               
+            recipe.jobs=[] 
+             
+            cubename1=os.path.join(pipeline.output,pipeline.prefix+'_HI_1.image.fits')
+            rms_old=calc_rms(cubename1)
+            rms_new=rms_old
+            print 'blah1',cubename1,rms_new, j
+
+ #           recipe.run()
+ #           recipe.jobs=[]               
 
             j+=1   
 

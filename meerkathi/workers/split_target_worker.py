@@ -106,8 +106,10 @@ def worker(pipeline, recipe, config):
                 {
                     "vis"           : fms,
                     "outputvis"     : tms,
+                    "timeaverage"   : True if (config['split_target'].get('time_average', '') != '' and config['split_target'].get('time_average', '') != '0s') else False,
                     "timebin"       : config['split_target'].get('time_average', ''),
-                    "width"         : config['split_target'].get('freq_average', 1),
+                    "chanaverage"   : True if config['split_target'].get('freq_average', 1) > 1 else False,
+                    "chanbin"       : config['split_target'].get('freq_average', 1),
                     "spw"           : config['split_target'].get('spw', ''),
                     "datacolumn"    : config['split_target'].get('column', 'data'),
                     "correlation"   : config['split_target'].get('correlation', ''),

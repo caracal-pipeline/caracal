@@ -62,9 +62,7 @@ def worker(pipeline, recipe, config):
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
-    # functions for convience
-
-    print "Sarah rulz !!"
+    # functions for convenience
 
 
     def cleanup_files(mask_name):

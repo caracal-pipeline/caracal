@@ -64,6 +64,9 @@ def worker(pipeline, recipe, config):
     # Define image() extract_sources() calibrate()
     # functions for convience
 
+    print "Sarah rulz !!"
+
+
     def cleanup_files(mask_name):
 
       if os.path.exists(pipeline.output+'/'+mask_name):

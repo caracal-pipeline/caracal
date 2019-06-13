@@ -18,14 +18,14 @@ def worker(pipeline, recipe, config):
     if config['label']:
         msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
-    if config.get('hires_flag'): 
-        print("Flagging Full Resolution Data")
-        if config['label']:
-            msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
-            prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
-        else:
-            msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
-            prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
+    #if config.get('hires_flag'): 
+    #    print("Flagging Full Resolution Data")
+    #    if config['label']:
+    #        msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
+    #        prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
+    #    else:
+    #        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
+    #        prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
         nobs=len(msnames)
 
     def get_field(field):
@@ -50,14 +50,14 @@ def worker(pipeline, recipe, config):
         # Since the nobs are now equal to the length of the msnames if hires flagging is activated
         # It is important to have a p_nob that will look-up sources based on the original unique ms names in `pipeline`
         # Note: Flagging is still perfomed on all msnames using index i
-        if config['label'] and config['hires_flag']:
-            p_prefix = pipeline.prefixes
-            if config['label'] in prefix:
-                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
-            elif config['hires_label'] in prefix:
-                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
-        else:
-            p_nob = i
+        #if config['label'] and config['hires_flag']:
+        #    p_prefix = pipeline.prefixes
+        #    if config['label'] in prefix:
+        #        p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
+        #    elif config['hires_label'] in prefix:
+        #        p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
+        #else:
+        p_nob = i
 
 
         # flag antennas automatically based on drifts in the scan average of the 

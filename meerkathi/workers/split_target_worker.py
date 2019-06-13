@@ -89,7 +89,10 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('#################################### {0:}'.format(gaintablelist))
             with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
 		for j in range(len(gaintablelist)):
-       			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
+			if pipeline.singularity_image_dir:
+                            stdw.write('caltable=\'/scratch/output/'+gaintablelist[j]+'\'')
+                        else:
+                            stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
 			stdw.write(' calwt=False')
 			stdw.write(' tinterp=\''+str(interplist[j])+'\'')
 			stdw.write(' finterp=\'linear\'')

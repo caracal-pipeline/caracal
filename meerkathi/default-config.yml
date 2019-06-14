@@ -577,9 +577,7 @@
 - image_HI:
     enable: true
     order: 100
-    label: corr
-    use_hires_data: false
-    hires_label: hires
+    label: hires
     restfreq: 1.420405752GHz
     npix: [1024]
     cell: 7

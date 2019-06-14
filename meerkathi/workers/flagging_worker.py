@@ -50,13 +50,13 @@ def worker(pipeline, recipe, config):
         # Since the nobs are now equal to the length of the msnames if hires flagging is activated
         # It is important to have a p_nob that will look-up sources based on the original unique ms names in `pipeline`
         # Note: Flagging is still perfomed on all msnames using index i
-        #if config['label'] and config['hires_flag']:
-        #    p_prefix = pipeline.prefixes
-        #    if config['label'] in prefix:
-        #        p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
-        #    elif config['hires_label'] in prefix:
-        #        p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
-        #else:
+#        if config['label'] and config['hires_flag']:
+#            p_prefix = pipeline.prefixes
+#            if config['label'] in prefix:
+#                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
+#            elif config['hires_label'] in prefix:
+#                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
+#        else:
         p_nob = i
 
 

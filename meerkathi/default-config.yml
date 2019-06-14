@@ -579,8 +579,6 @@
     enable: true
     order: 100
     label: hires
-    use_hires_data: false
-    hires_label: hires
     restfreq: 1.420405752GHz
     npix: [1024]
     cell: 7

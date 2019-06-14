@@ -20,13 +20,6 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
         required: false
-      hires_label:
-        desc: Label of names of High frequency resolution MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is hires.
-        type: str
-      use_hires_data:
-        desc: Make use of high resolution data for HI imaging
-        type: bool 
-        required: true
       restfreq:
         desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
         type: str

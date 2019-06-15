@@ -114,7 +114,7 @@ def worker(pipeline, recipe, config):
                     "chanaverage"   : True if config['split_target'].get('freq_average', 1) > 1 else False,
                     "chanbin"       : config['split_target'].get('freq_average', 1),
                     "spw"           : config['split_target'].get('spw', ''),
-                    "datacolumn"    : config['split_target'].get('column', 'data'),
+                    "datacolumn"    : config['split_target'].get('column', 'corrected_data'),
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : str(target),
                     "keepflags"     : True,

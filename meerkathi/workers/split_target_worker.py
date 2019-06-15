@@ -89,7 +89,10 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('#################################### {0:}'.format(gaintablelist))
             with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
 		for j in range(len(gaintablelist)):
-       			stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
+			if pipeline.singularity_image_dir:
+                            stdw.write('caltable=\'/scratch/output/'+gaintablelist[j]+'\'')
+                        else:
+                            stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
 			stdw.write(' calwt=False')
 			stdw.write(' tinterp=\''+str(interplist[j])+'\'')
 			stdw.write(' finterp=\'linear\'')
@@ -151,24 +154,6 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
-
-        if (pipeline.enable_task(config, 'changecentre') and pipeline.enable_task(config, 'hires_split')):
-            if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
-                meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
-                sys.exit(1)
-            step = 'changecentre_{:d}_hires'.format(i)
-            recipe.add('cab/casa_fixvis', step,
-                {
-                  "msname"  : fms,
-                  "outputvis": fms,
-                  "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Change phase centre ms={1:s}'.format(step, fms))
-
-
         if pipeline.enable_task(config, 'obsinfo'):
             if (config['obsinfo'].get('listobs', True) and pipeline.enable_task(config, 'split_target')):
                 step = 'listobs_{:d}'.format(i)
@@ -194,29 +179,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
-
-        if (pipeline.enable_task(config, 'obsinfo') and pipeline.enable_task(config, 'hires_split')):
-            if config['obsinfo'].get('listobs', True):
-                step = 'listobs_{:d}_hires'.format(i)
-                recipe.add('cab/casa_listobs', step,
-                    {
-                      "vis"         : fms,
-                      "listfile"    : '{0:s}-{1:s}-obsinfo.txt'.format(prefix, hires_label),
-                      "overwrite"   : True,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
-
-            if (config['obsinfo'].get('summary_json', True) and pipeline.enable_task(config, 'hires_split')):
-                 step = 'summary_json_{:d}_hires'.format(i)
-                 recipe.add('cab/msutils', step,
-                    {
-                      "msname"      : fms,
-                      "command"     : 'summary',
-                      "display"     : False,
-                      "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, hires_label),
-                    },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, fms))

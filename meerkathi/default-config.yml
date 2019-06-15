@@ -48,7 +48,7 @@
     order: 30
     label: ''
     autoflag_autocorr_powerspectra:
-      enable: true
+      enable: false
     flag_autocorr:
       enable: true
     quack_flagging:
@@ -107,7 +107,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [-60, 60]
       plot:
@@ -120,7 +120,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -131,7 +131,7 @@
       field:
       - fcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -142,7 +142,7 @@
       field:
       - gcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -213,7 +213,7 @@
     autoflag_rfi:
       enable: true
       column: DATA
-      fields: fcal,bpcal,gcal,target
+      fields: fcal,bpcal,gcal
       strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
     flagging_summary:
       enable: true
@@ -246,7 +246,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [-60, 60]
       plot:
@@ -259,7 +259,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -270,7 +270,7 @@
       field:
       - fcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -281,7 +281,7 @@
       field:
       - gcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -369,27 +369,6 @@
     do_dump_precalibration_leakage_reports: true
     freqsol_soltime: inf
 
-# flag only target data
-- flagging__3:
-    enable: true
-    order: 47
-    label: ''
-    autoflag_rfi:
-      enable: true
-      column: DATA
-      fields: target
-      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
-    rfinder:
-      enable: true
-      field: target
-      polarization: Q
-      spw_enable: true
-      spw_width: 10
-      time_enable: true
-      time_step: 10
-    flagging_summary:
-      enable: true
-
 - inspect_data:
     enable: true
     order: 50
@@ -466,7 +445,27 @@
       listobs: true
       summary_json: true
 
-
+# flag only target data
+- flagging__3:
+    enable: true
+    order: 74
+    label: 'corr'
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: target
+      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
+    rfinder:
+      enable: true
+      field: target
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
+    flagging_summary:
+      enable: true
+      
 - masking:
     enable: false
     order: 80

@@ -373,7 +373,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'wsclean_image'):
         if config['wsclean_image'].get('use_mstransform',True):
-            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]            
+            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]
             # Upate pipeline attributes (useful if, e.g., the channelisation was changed by mstransform during this or a previous pipeline run)
             for i, prefix in enumerate(prefixes):
                 # If channelisation changed during a previous pipeline run as stored in the obsinfo.json file
@@ -403,7 +403,7 @@ def worker(pipeline, recipe, config):
                     pipeline.specframe[i]=[{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe', 'bary')] for kk in pipeline.nchans[i]]
 
         else:
-             mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]            
+            mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
         spwid = config['wsclean_image'].get('spwid', 0)
         nchans = config['wsclean_image'].get('nchans',0)
         if nchans == 0 or nchans == 'all': nchans=pipeline.nchans[0][spwid]
@@ -669,7 +669,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'casa_image'):
         if config['casa_image']['use_mstransform']:
-            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label'])for did in pipeline.dataid]            
+            mslist = ['{0:s}-{1:s}_mst.ms'.format(did, config['label']) for did in pipeline.dataid]
         step = 'casa_image_HI'
         spwid = config['casa_image'].get('spwid', 0)
         nchans = config['casa_image'].get('nchans', 0)

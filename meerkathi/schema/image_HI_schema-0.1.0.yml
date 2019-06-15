@@ -150,6 +150,10 @@ mapping:
             desc: Maximum number of rewsclean iterations to perform. Default is 2 # for now .
             type: int
             required: false
+          tol:
+            type: float
+            desc: Relative change in the noise.
+            required: false
           rm_intcubes:
             desc: If set to true it deletes intermediate cubes from the output directory, if set to false it keeps all the cubes from the wsclean loops
             type: bool

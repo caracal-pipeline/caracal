@@ -604,6 +604,7 @@
     wsclean_image:
       enable: true
       wscl_niter: 2
+      tol: 0.01
       ownfitsmask: # or own mask '<mask-name>.fits:output' 
       rm_intcubes: true
       use_mstransform: true

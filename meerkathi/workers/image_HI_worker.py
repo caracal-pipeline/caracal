@@ -488,7 +488,7 @@ def worker(pipeline, recipe, config):
                 "steps.doFlag"          : False,
                 "steps.doScaleNoise"    : True,
                 "steps.doSCfind"        : True,
-                "steps.doMerge"         : False,
+                "steps.doMerge"         : True,
                 "steps.doReliability"   : False,
                 "steps.doParameterise"  : False,
        	        "steps.doWriteMask"     : True,

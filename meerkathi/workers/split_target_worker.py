@@ -58,6 +58,7 @@ def worker(pipeline, recipe, config):
     label = config['label_out']
     label_in = config['label_in']
     pipeline.set_hires_msnames(label_in)
+    pipeline.set_cal_msnames(label)
 
     for i in range(pipeline.nobs):
         fms = pipeline.hires_msnames[i]
@@ -74,8 +75,7 @@ def worker(pipeline, recipe, config):
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)          
-            pipeline.set_cal_msnames(callabel)  
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel) 
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))

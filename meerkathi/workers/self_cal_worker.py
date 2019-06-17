@@ -49,17 +49,20 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    gain_interpolation = pipeline.enable_task(config, 'gain_interpolation')
+    gain_interpolation = pipeline.enable_task(config, 'transfer_apply_gains')
     if gain_interpolation:
-        hires_label = config['gain_interpolation'].get('to_label', label)
-        label = config['gain_interpolation'].get('from_label',label+'-avg')
+        hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
         pipeline.set_hires_msnames(hires_label)
         hires_mslist = pipeline.hires_msnames
+ 		hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
+    	hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
 
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
     #As avg sets can be created within this worker you cannot check for existence of the sets here.
-
+    mslist = filter(lambda ms: isinstance(ms, str), mslist)
+    mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), mslist)
+   
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
   
     prefix = pipeline.prefix
@@ -196,7 +199,7 @@ def worker(pipeline, recipe, config):
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
-                  #"savesourcelist": True,
+                  "savesourcelist": True,
               }
         if config[key].get('mask_from_sky', False):
             fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
@@ -1455,7 +1458,7 @@ def worker(pipeline, recipe, config):
         restore(self_cal_iter_counter-1, enable_inter=False)
 
     if pipeline.enable_task(config, 'image'):
-        if pipeline.enable_task(config, 'gain_interpolation'):
+        if pipeline.enable_task(config, 'transfer_apply_gains'):
             meerkathi.log.info("Interpolating gains")
         image(self_cal_iter_counter)
     if pipeline.enable_task(config, 'sofia_mask'):
@@ -1481,7 +1484,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(self_cal_iter_counter)
 
-    if pipeline.enable_task(config, 'gain_interpolation'):
+    if pipeline.enable_task(config, 'transfer_apply_gains'):
         if (self_cal_iter_counter > cal_niter):
             restore(self_cal_iter_counter-1, enable_inter=True)
         else:
@@ -1598,6 +1601,29 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
+    if pipeline.enable_task(config, 'transfer_model'):
+        meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
+        crystalball_model=config['transfer_model'].get('model','auto')
+        if crystalball_model=='auto': crystalball_model='{0:s}_{1:d}-sources.txt'.format(prefix,self_cal_iter_counter)
+        for i,msname in enumerate(hires_mslist):
+            step = 'transfer_model_{0:d}'.format(i)
+            recipe.add('cab/crystalball', step,
+                {
+                  "ms"           : msname,
+                  "sky-model"    : crystalball_model+':output',
+                  "spectra"      : config['transfer_model'].get('spectra', True),
+                  "row-chunks"   : config['transfer_model'].get('row-chunks', 100),
+                  "model-chunks" : config['transfer_model'].get('model-chunks', 100),
+                  "invert-uvw"   : config['transfer_model'].get('invert-uvw', True),
+                  "within"       : sdm.dismissable(config['transfer_model'].get('within', None)),
+                  "points-only"  : config['transfer_model'].get('points-only', False),
+                  "num-sources"  : sdm.dismissable(config['transfer_model'].get('num-sources', None)),
+                  "num-workers"  : sdm.dismissable(config['transfer_model'].get('num-workers', None)),
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+
     if pipeline.enable_task(config, 'highfreqres_contim'):
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
         for i, prfx in enumerate(['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]):
@@ -1605,7 +1631,7 @@ def worker(pipeline, recipe, config):
             with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
         step = 'highfreqres_contim'
         image_opts = {
-                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'gain_interpolation') else mslist,
+                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
                   "column"                 : config['highfreqres_contim'].get('column', "CORRECTED_DATA"),
                   "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
                   "npix"                   : config['highfreqres_contim'].get('npix', npix),

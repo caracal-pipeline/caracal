@@ -72,14 +72,6 @@
     static_mask:
       enable: true
       mask: labelled_rfimask.pickle.npy
-    rfinder:
-      enable: true
-      field: 1
-      polarization: Q
-      spw_enable: true
-      spw_width: 10
-      time_enable: true
-      time_step: 10
     autoflag_rfi:
       enable: true
       column: DATA
@@ -115,7 +107,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [-60, 60]
       plot:
@@ -128,7 +120,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -139,7 +131,7 @@
       field:
       - fcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -150,7 +142,7 @@
       field:
       - gcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -213,6 +205,145 @@
     flagging_summary:
       enable: true
 
+# flag calibrated data
+- flagging__2:
+    enable: true
+    order: 41
+    label: ''
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: fcal,bpcal,gcal
+      strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
+    flagging_summary:
+      enable: true
+      
+# recalibrate reflagged data to improve K and G solutions
+- cross_cal__2:
+    enable: true
+    order: 42
+    label: 1gc1
+    uvrange: '>50'
+    otfdelay: true
+    clear_cal:
+      enable: false
+      field:
+      - bpcal
+      - fcal
+      - target
+      - gcal
+      - xcal
+      addmodel: true
+    set_model:
+      enable: true
+      field:
+      - fcal
+      meerkathi_model: true
+    delay_cal:
+      enable: true
+      combine: scan
+      solint: inf
+      field:
+      - bpcal
+      flag:
+        enable: true
+        mode: clip
+        clipminmax: [-60, 60]
+      plot:
+        enable: true
+    bp_cal:
+      enable: true
+      combine: scan
+      solint: inf
+      remove_ph_time_var: false
+      field:
+      - bpcal
+      flag:
+        enable: true
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    gain_cal_flux:
+      enable: true
+      combine: ''
+      field:
+      - fcal
+      flag:
+        enable: true
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    gain_cal_gain:
+      enable: true
+      combine: ''
+      field:
+      - gcal
+      flag:
+        enable: true
+        mode: clip
+        clipminmax: [0.1, 10]
+      plot:
+        enable: true
+    transfer_fluxscale:
+      enable: true
+      reference:
+      - fcal
+      transfer:
+      - gcal
+      plot:
+        enable: true
+    apply_delay_cal:
+      enable: true
+      field:
+      - bpcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_bp_cal:
+      enable: true
+      field:
+      - bpcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_gain_cal_gain:
+      enable: false
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    apply_transfer_fluxscale:
+      enable: true
+      field:
+      - gcal
+      applyto:
+      - bpcal
+      - gcal
+      - xcal
+      - target
+      applymode: calflag
+    autoflag_closure_error:
+      enable: false
+      column: CORRECTED_DATA
+      fields: auto
+      calibrator_fields: auto
+      baseline_to_group_threshold: 10
+      scan_to_scan_threshold: 10
+    flagging_summary:
+      enable: true
+      
 - polcal:
     enable: false
     order: 45
@@ -277,16 +408,32 @@
 - split_target:
     enable: true
     order: 60
-    label: corr-avg
+    label_in: ''
+    label_out: corr
     split_target:
       enable: true
       time_average: ''
       freq_average: 1
-    hires_split:
-      enable: true
-      hires_label: corr
-      hires_spwid: 0
-      hires_spw: 'null'
+      spw: ''
+      otfcal:
+        enable: true
+        callabel: 1gc1
+        apply_delay_cal:
+          enable: true
+          field:
+           - bpcal
+        apply_bp_cal:
+          enable: true
+          field:
+           - bpcal
+        apply_gain_cal_gain:
+          enable: false
+          field:
+           - gcal
+        apply_transfer_fluxscale:
+          enable: true
+          field:
+           - gcal
     prepms:
       enable: true
     changecentre:
@@ -298,18 +445,27 @@
       listobs: true
       summary_json: true
 
-- flagging__2:
+# flag only target data
+- flagging__3:
     enable: true
-    order: 70
-    label: corr
+    order: 74
+    label: 'corr'
     autoflag_rfi:
       enable: true
       column: DATA
-      fields: auto
-      strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
+      fields: target
+      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
+    rfinder:
+      enable: true
+      field: target
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
     flagging_summary:
       enable: true
-
+      
 - masking:
     enable: false
     order: 80
@@ -403,12 +559,15 @@
       enable: false
       model: 2+3
       clean_model: '4'
-    gain_interpolation:
+    transfer_apply_gains:
       enable: true
-      to_label: corr
-      from_label: corr-avg
+      transfer_to_label: hires
+    transfer_model:
+      enable: true
+      transfer_to_label: hires
+      model: auto
     highfreqres_contim:
-      enable: true
+      enable: false
       chans: 12
       deconv_chans: 3
       fit_spectral_pol: 2
@@ -418,9 +577,7 @@
 - image_HI:
     enable: true
     order: 100
-    label: corr
-    use_hires_data: false
-    hires_label: hires
+    label: hires
     restfreq: 1.420405752GHz
     npix: [1024]
     cell: 7
@@ -441,10 +598,13 @@
     sunblocker:
       enable: false
       use_mstransform: true
+      vampirisms: true
+      uvmax: 2000
       threshold: 4
     wsclean_image:
       enable: true
       wscl_niter: 2
+      tol: 0.01
       ownfitsmask: # or own mask '<mask-name>.fits:output' 
       rm_intcubes: true
       use_mstransform: true

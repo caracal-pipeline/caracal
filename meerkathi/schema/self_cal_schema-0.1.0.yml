@@ -441,21 +441,65 @@ mapping:
             type: bool
             desc: Execute this segment
             required: true
-      gain_interpolation:
+      transfer_apply_gains:
         type: map
         desc: Interpolate gains over the high frequency resolution data
         mapping:
           enable: 
             type: bool
             desc: Execute this segment
-            required: false
-          to_label:
+            required: true
+          transfer_to_label:
             type: str
-            desc: label for high resolution data products in selfcal
+            desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
             required: false
-          from_label:
+      transfer_model:
+        type: map
+        desc: Transfer model from last WSclean imaging run to the MODEL_DATA column of another .MS
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this segment (default False)
+            required: true
+          transfer_to_label:
             type: str
-            desc: label for low resolution data products that are use to do the self calibration
+            desc: label of .ms file to which to transfer the model
+            required: true
+          model:
+            type: str
+            desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). Default is 'auto', in which case MeerKATHI will build the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+            required: true
+          spectra:
+            type: bool
+            desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model. Default is True.
+            required: false
+          row-chunks:
+            type: int
+            desc: Number of rows of input .MS that are processed in a single chunk. Default is 100.
+            required: false
+          model-chunks:
+            type: int
+            desc: Number of sky model components that are processed in a single chunk. Default is 100.
+            required: false
+          invert-uvw:
+            type: bool
+            desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees. Default is True.
+            required: false
+          within:
+            type: str
+            desc: Give JS9 region file. Only sources within those regions will be included. Default is None.
+            required: false
+          points-only:
+            type: bool
+            desc: Select only point-type sources. Defailt is False.
+            required: false
+          num-sources:
+            type: int
+            desc: Select only N brightest sources. Default is None
+            required: false
+          num-workers:
+            type: int
+            desc: Explicitly set the number of worker threads. Default is None
             required: false
       highfreqres_contim:
         type: map

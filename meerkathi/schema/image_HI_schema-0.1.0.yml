@@ -20,13 +20,6 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
         required: false
-      hires_label:
-        desc: Label of names of High frequency resolution MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is hires.
-        type: str
-      use_hires_data:
-        desc: Make use of high resolution data for HI imaging
-        type: bool 
-        required: true
       restfreq:
         desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
         type: str
@@ -133,6 +126,18 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
+          vampirisms:
+            desc: Apply only to data taken during day time (defaults to true)
+            type: bool
+            required: false
+          uvmax:
+            desc: Maximum uvdistance in wavelength to be analysed (defaults to 2000)
+            type: float
+            required: false
+          uvmin:
+            desc: Minimum uvdistance in wavelength to be analysed (defaults to 0)
+            type: float
+            required: false
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map
@@ -144,6 +149,10 @@ mapping:
           wscl_niter:
             desc: Maximum number of rewsclean iterations to perform. Default is 2 # for now .
             type: int
+            required: false
+          tol:
+            type: float
+            desc: Relative change in the noise.
             required: false
           rm_intcubes:
             desc: If set to true it deletes intermediate cubes from the output directory, if set to false it keeps all the cubes from the wsclean loops

@@ -550,7 +550,7 @@
       model: ['1', '2', '3', '4']
       output_data: [CORR_DATA]
       gain_matrix_type: [GainDiagPhase, GainDiag, GainDiag, GainDiag]
-      Gsols_time: [15, 15, 15]
+      Gsols_time: [90, 90, 90]
       Gsols_channel: [0, 0, 0]
       add_vis_model: true
       model_mode: vis_only

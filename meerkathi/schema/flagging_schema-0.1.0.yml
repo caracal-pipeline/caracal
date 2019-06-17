@@ -206,7 +206,48 @@ mapping:
             desc: comma separated list of (zero-indexed) band ids to process
             type: str
             required: false
-  
+
+      rfinder:
+        desc: A tool to investigate the presence of RFI
+        type: map
+        mapping:
+          enable:
+            desc: Enable invsetigation of rfi with rfinder
+            type: bool
+            required: false
+          telescope:
+            desc: Name of telescope
+            type: str
+            required: false
+          field:
+            desc: Field to get flag stats. Given as a key (key in [gcal, bpcal, target]).
+            type: str
+            required: false
+          polarization:
+            desc:  Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS)
+            type: str
+            enum: ['xx', 'XX', 'yy', 'YY', 'xy', 'XY', 'yx', 'YX', 'q', 'Q']
+            required: false
+          spw_enable:
+            desc: Enable spw for rebinning
+            type: bool
+            required: false
+          spw_width:
+            desc: Channel width of rebinned output table (MHz)
+            type: int
+            required: false
+          time_enable:
+            desc: Enable time chunking
+            type: bool
+            required: false
+          time_step:
+            desc: Time chunks in minutes
+            type: int
+            required: false
+          movies_in_report:
+            desc: Generate movies in a repo
+            type: bool
+            required: false
 
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.

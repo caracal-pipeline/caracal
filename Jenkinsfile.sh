@@ -26,7 +26,6 @@ pip install pip setuptools wheel -U
 PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
 pip install ${WORKSPACE_ROOT}/projects/meerkathi\[extra_diagnostics\]
-pip install --force-reinstall -U git+https://github.com/SpheMakh/Stimela.git
 #put the necessary bits in input
 cd $TEST_OUTPUT_DIR
 mkdir input
@@ -48,10 +47,6 @@ meerkathi --get_data_dataid 1477074305 \
           --self_cal_calibrate_enable yes \
           --image_HI_wsclean_image_npix 256 256 \
           --image_HI_flagging_summary_enable no \
-          --self_cal_highfreqres_contim_enable yes \
-          --self_cal_highfreqres_contim_chans 9 \
-          --self_cal_highfreqres_contim_deconv_chans 3 \
-          --self_cal_highfreqres_contim_fit_spectral_pol 1 \
-	  --polcal_enable true \
+          --polcal_enable true \
           --no-interactive
 

@@ -97,7 +97,7 @@ def worker(pipeline, recipe, config):
             opts = dict(opts)
             if 'enable' in opts: del(opts['enable'])
             step = 'flag_{0:s}_{1:d}'.format(cal, i)
-            opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
+            opts["vis"] = '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, table_suffix[cal]+':output')
             opts["datacolumn"] = datacolumn
             recipe.add('cab/casa_flagdata', step, opts,
                 input=pipeline.input,

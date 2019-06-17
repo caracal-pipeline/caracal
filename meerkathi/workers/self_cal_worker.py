@@ -26,6 +26,11 @@ CUBICAL_MT = {
     "GainDiagPhase": 'phase-diag',
 }
 
+corr_indexes = {'H'        : 0,
+                'X'        : 0,
+                'V'        : 1,
+                'Y'        : 1,
+}
 
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
@@ -45,8 +50,7 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    hires_label = config['gain_interpolation'].get('hires_label', 'hires')
-    gain_interpolation = config.get('gain_interpolation', False)
+    hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
     pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(hires_label)
     mslist = pipeline.cal_msnames
@@ -191,7 +195,7 @@ def worker(pipeline, recipe, config):
                   "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale', False),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales', None)),
-                  #"savesourcelist": True,
+                  "savesourcelist": True,
               }
         if config[key].get('mask_from_sky', False):
             fitmask = config[key].get('fits_mask', None)[num-1 if len(config[key].get('fits_mask', None)) >= num else -1]
@@ -840,6 +844,7 @@ def worker(pipeline, recipe, config):
                   "out-name"         : '{0:s}/{1:s}-{2:d}_cubical'.format(get_dir_path(prod_path, pipeline), pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
+                  "out-casa-gaintables" : True,
                   "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
@@ -909,9 +914,6 @@ def worker(pipeline, recipe, config):
         if(calwith=='meqtrees'):
            enable = False
            meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-        hires_switch = config['calibrate'].get('hires_interpol', 'True')
-        if (hires_switch==False):
-            enable = False
         if config[key].get('Bjones',False):
             jones_chain = 'G,B'
         else:
@@ -1179,6 +1181,44 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
 
+    def ragavi_plotting_cubical_tables():
+        """Plot self-cal gain tables"""
+
+        B_tables = glob.glob('{}/g-gains*B.casa'.format(pipeline.output))
+        if len(B_tables) > 1:
+            step = 'plot_G_gain_table'
+
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables])
+            recipe.add('cab/ragavi', step,
+                {
+                 "table"        : [tab+":output" for tab in gain_table_name],
+                 "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
+                 "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
+                 "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
+                 "htmlname"     : '{:s}_self-cal_G_gain_plots'.format(prefix)
+                 },
+                 input=pipeline.input,
+                 output=pipeline.output,
+                 label='{0:s}:: Plot gaincal phase : {1:s}'.format(step, ' '.join(B_tables)))
+
+        D_tables = glob.glob('{}/g-gains*D.casa'.format(pipeline.output))
+        if len(D_tables) > 1:
+            step = 'plot_D_gain_table'
+
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables])
+            recipe.add('cab/ragavi', step,
+                {
+                 "table"        : [tab+":output" for tab in gain_table_name],
+                 "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
+                 "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
+                 "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
+                 "htmlname"     : '{:s}_self-cal_D_gain_plots'.format(prefix)
+                 },
+                 input=pipeline.input,
+                 output=pipeline.output,
+                 label='{0:s}:: Plot gain tables : {1:s}'.format(step, ' '.join(D_tables)))
+
+
     # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
     if config.get('undo_subtractmodelcol', False):
         for i,msname in enumerate(mslist):
@@ -1240,7 +1280,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'sofia_mask'):
         sofia_mask(self_cal_iter_counter, get_dir_path(image_path, pipeline))
     if pipeline.enable_task(config, 'extract_sources'):
-        extract_sources(self_cal_iter_counter, get_dir_path(image_path, pipeline))
+        extract_sources(self_cal_iter_counter, get_dir_path(image_path, pipeline))D
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter, get_dir_path(image_path, pipeline))
 
@@ -1267,7 +1307,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(self_cal_iter_counter, get_dir_path(image_path, pipeline))
 
-    if pipeline.enable_task(config, 'gain_interpolation'):
+    if pipeline.enable_task(config, 'transfer_apply_gains'):
         if (self_cal_iter_counter > cal_niter):
             apply_gains_to_fullres(self_cal_iter_counter-1, get_dir_path(image_path, pipeline), enable=True)
         else:
@@ -1294,11 +1334,6 @@ def worker(pipeline, recipe, config):
     #            image(kk+1)
     #        if pipeline.enable_task(config, 'sofia_mask'):
     #            sofia_mask(kk+1)
-
-    if config['calibrate'].get('hires_interpol')==True:
-        print "Interpolating gains"
-        substep = int(config.get('apply_step', cal_niter))
-        apply_gains_to_fullres(substep,enable=True if (config['calibrate'].get('hires_interpol')==True) else False)
 
     if pipeline.enable_task(config, 'restore_model'):
         if config['restore_model']['model']:
@@ -1404,6 +1439,29 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
+    if pipeline.enable_task(config, 'transfer_model'):
+        meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
+        crystalball_model=config['transfer_model'].get('model','auto')
+        if crystalball_model=='auto': crystalball_model='{0:s}_{1:d}-sources.txt'.format(prefix,self_cal_iter_counter)
+        for i,msname in enumerate(hires_mslist):
+            step = 'transfer_model_{0:d}'.format(i)
+            recipe.add('cab/crystalball', step,
+                {
+                  "ms"           : msname,
+                  "sky-model"    : crystalball_model+':output',
+                  "spectra"      : config['transfer_model'].get('spectra', True),
+                  "row-chunks"   : config['transfer_model'].get('row-chunks', 100),
+                  "model-chunks" : config['transfer_model'].get('model-chunks', 100),
+                  "invert-uvw"   : config['transfer_model'].get('invert-uvw', True),
+                  "within"       : sdm.dismissable(config['transfer_model'].get('within', None)),
+                  "points-only"  : config['transfer_model'].get('points-only', False),
+                  "num-sources"  : sdm.dismissable(config['transfer_model'].get('num-sources', None)),
+                  "num-workers"  : sdm.dismissable(config['transfer_model'].get('num-workers', None)),
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+
     if pipeline.enable_task(config, 'highfreqres_contim'):
         hires_path = "{0:s}/image_{1:s}".format(pipeline.continuum, 'hires')
         if not os.path.exists(hires_path):
@@ -1414,7 +1472,7 @@ def worker(pipeline, recipe, config):
             with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
         step = 'highfreqres_contim'
         image_opts = {
-                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'gain_interpolation') else mslist,
+                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
                   "column"                 : config['highfreqres_contim'].get('column', "CORRECTED_DATA"),
                   "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
                   "npix"                   : config['highfreqres_contim'].get('npix', npix),

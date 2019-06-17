@@ -55,13 +55,16 @@ def worker(pipeline, recipe, config):
                 return get_field('gcal')
 
 
-    label = config['label']
-    pipeline.set_cal_msnames(label)
+    label = config['label_out']
+    label_in = config['label_in']
     pipeline.set_hires_msnames(label_in)
+    pipeline.set_cal_msnames(label)
 
     for i in range(pipeline.nobs):
         fms = pipeline.hires_msnames[i]
-        target = pipeline.target[0]
+        target = pipeline.target
+        target_ls = ','.join(target)
+
         prefix = pipeline.prefixes[i]
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
@@ -72,7 +75,7 @@ def worker(pipeline, recipe, config):
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)            
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel) 
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -115,7 +118,7 @@ def worker(pipeline, recipe, config):
                     "spw"           : config['split_target'].get('spw', ''),
                     "datacolumn"    : config['split_target'].get('column', 'data'),
                     "correlation"   : config['split_target'].get('correlation', ''),
-                    "field"         : str(target),
+                    "field"         : target_ls,
                     "keepflags"     : True,
                     "docallib"      : config['split_target']['otfcal'].get('enable', False),
                     "callib"        : sdm.dismissable('callib_target_'+callabel+'.txt:output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),

@@ -16,8 +16,12 @@ mapping:
         desc: Order of worker in queue
         type: int
         required: true
-      label:
+      label_in:
         desc: Label of the input dataset
+        type: str
+        required: true
+      label_out:
+        desc: Label of the output dataset
         type: str
         required: true
 

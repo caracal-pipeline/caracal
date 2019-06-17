@@ -58,7 +58,7 @@ def worker(pipeline, recipe, config):
     label = config['label_out']
     label_in = config['label_in']
     pipeline.set_hires_msnames(label_in)
-    pipeline.set_cal_msnames(label) 
+    pipeline.set_cal_msnames(label)
 
     for i in range(pipeline.nobs):
         fms = pipeline.hires_msnames[i]
@@ -69,14 +69,13 @@ def worker(pipeline, recipe, config):
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
 
-#        if pipeline.enable_task(config['split_target'].get('otfcal', False)):                #write calibration library file for OTF cal in split_target_worker.py
-        if pipeline.enable_task(config['split_target'], 'otfcal'):
-
+        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
+            
 	    import getpass
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel) 
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))

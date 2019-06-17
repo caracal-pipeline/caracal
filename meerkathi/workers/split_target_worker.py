@@ -75,7 +75,7 @@ def worker(pipeline, recipe, config):
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel) 
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -100,6 +100,9 @@ def worker(pipeline, recipe, config):
 			stdw.write(' finterp=\'linear\'')
 			stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
 
+            docallib = True
+        else: docallib = False
+
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
@@ -120,7 +123,7 @@ def worker(pipeline, recipe, config):
                     "correlation"   : config['split_target'].get('correlation', ''),
                     "field"         : target_ls,
                     "keepflags"     : True,
-                    "docallib"      : config['split_target']['otfcal'].get('enable', False),
+                    "docallib"      : docallib,
                     "callib"        : sdm.dismissable('callib_target_'+callabel+'.txt:output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                 },
                 input=pipeline.input,

@@ -61,11 +61,11 @@ mapping:
               enable:
                 desc: Execute this section
                 type: bool
-                required: true
+                required: false
               callabel:
                 desc: Label of calibration tables to be used
                 type: str
-                required: true
+                required: false
 
               apply_delay_cal:
                 type: map
@@ -74,7 +74,7 @@ mapping:
                   enable: 
                     desc: Executes application of delay correction calibration table.
                     type: bool
-                    required: true
+                    required: false
                   field: 
                     seq: 
                       - type: str 
@@ -86,7 +86,7 @@ mapping:
                   enable:
                     type: bool
                     desc: Executes application of bandpass table.
-                    required: true
+                    required: false
                   field:
                     seq: 
                       - type: str 
@@ -99,7 +99,7 @@ mapping:
                   enable:
                     type: bool
                     desc: Executes application of gain calibration table.
-                    required: true
+                    required: false
                   field:
                     seq: 
                       - type: str 
@@ -112,7 +112,7 @@ mapping:
                   enable:
                     type: bool
                     desc: Executes application of fluxscale table.
-                    required: true
+                    required: false
                   field:
                     seq: 
                       - type: str 

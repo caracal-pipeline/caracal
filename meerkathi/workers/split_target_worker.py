@@ -55,8 +55,7 @@ def worker(pipeline, recipe, config):
                 return get_field('gcal')
 
 
-    label = config['label_out']
-    label_in = config['label_in']
+    label = config['label']
     pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(label_in)
 

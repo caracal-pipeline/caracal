@@ -681,7 +681,7 @@ def worker(pipeline, recipe, config):
                           config[key].get('Gsols_channel', [])[num-1 if num <= len(config[key].get('Gsols_channel',[])) else -1]]
              # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key].get('gain_matrix_type', 'GainDiag')[num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
-            if config[key].get('two_step', False) and config[key].get('aimfast', False) :
+            if config[key].get('two_step', False) and config[key].get('self_estimate', False) :
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
@@ -736,12 +736,17 @@ def worker(pipeline, recipe, config):
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
             elif config[key].get('two_step', False):
-                if matrix_type == 'GainDiagPhase':
+                gasols_ = [config[key].get('GAsols_time', [])[
+                              num - 1 if num <= len(config[key].get('GAsols_time', [])) else -1],
+                          config[key].get('GAsols_channel', [])[
+                              num - 1 if num <= len(config[key].get('GAsols_channel', [])) else -1]]
+                if gasols_[0] == -1:
                     outcolumn = "CORRECTED_DATA_PHASE"
                     incolumn = "DATA"
                 else:
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
+                    gsols_ = gasols_
 
             bsols_ = [config[key].get('Bsols_time',[0])[num-1 if num <= len(config[key].get('Bsols_time',[])) else -1],
                           config[key].get('Bsols_channel', [0])[num-1 if num <= len(config[key].get('Bsols_channel',[])) else -1]]
@@ -1449,7 +1454,7 @@ def worker(pipeline, recipe, config):
     trace_matrix = []
     # if we want to run the hires modules and run selfcal on an averaged input set but forgot to create it at split or wanted to flag first we first want to copy the input ms to the correct hires set and then average the low res set
     if pipeline.enable_task(config, 'create_averaged'):
-        if pipeline.enable_task(config, 'gain_interpolation'):
+        if pipeline.enable_task(config, 'transfer_apply_gains'):
             create_averaged()
         else:
             raise ValueError("Why create an averaged set but then not apply the calibrations to the full data set?")

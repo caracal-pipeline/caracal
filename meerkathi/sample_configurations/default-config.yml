@@ -10,6 +10,7 @@ general:
 
 get_data:
   dataid: []                               
+  order: 0
   mvftoms:             
     enable: false
     channel_range: 'null' 
@@ -19,6 +20,7 @@ get_data:
     enable: false
 
 observation_config:
+  order: 10
   obsinfo:
     enable: true
   target: auto
@@ -32,6 +34,7 @@ observation_config:
 
 prepare_data:
   enable: true
+  order: 20
   prepms:
     enable: false
   add_spectral_weights:  # Estimate spectral weights from spec. sensitivity 
@@ -40,6 +43,7 @@ prepare_data:
 
 flagging:
   enable: true
+  order: 30
   label: ''
   autoflag_autocorr_powerspectra:
     enable: false
@@ -76,6 +80,7 @@ flagging:
 
 cross_cal:
   enable: true
+  order: 40
   otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
   uvrange: ">50"
   label: 1gc1
@@ -181,6 +186,7 @@ cross_cal:
 
 polcal:
   enable: true
+  order: 45
   label: crosshand_cal
   solve_uvdist: 150~10000000000m
   preaverage_time: 32s
@@ -204,6 +210,7 @@ polcal:
 
 inspect_data:
   enable: true
+  order: 50
   label: 1gc1
   real_imag:
     enable: true
@@ -239,6 +246,7 @@ inspect_data:
 
 split_target:
   enable: true
+  order: 60
   label: corr
   split_target:
     enable: true
@@ -262,6 +270,7 @@ split_target:
 
 flagging__2:
   enable: true
+  order: 70
   label: corr
   hires_label: hires
   hires_flag: true
@@ -275,6 +284,7 @@ flagging__2:
 
 masking:
   enable: false
+  order: 80
   centre_coord: ['03:18:0.000', '-37:27:0.000']
   mask_size: 3600      #must be the same as  im_npix in selfcal worker
   cell_size: 2         #this will ch
@@ -300,6 +310,7 @@ masking:
 self_cal:
   enable: true
   label: corr
+  order: 90
   primary_beam: false
   calibrate_with: cubical
   spwid: 0
@@ -376,6 +387,7 @@ self_cal:
 
 image_HI:
   enable: true
+  order: 100
   label: corr
   hires_label: hires
   use_hires_data: true

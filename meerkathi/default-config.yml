@@ -10,6 +10,7 @@
     init_pipeline: true
 
 - get_data:
+    order: 0
     dataid: []
     mvftoms:
       enable: false
@@ -20,6 +21,7 @@
       enable: false
 
 - observation_config:
+    order: 10
     obsinfo:
       enable: true
     bpcal: auto
@@ -33,6 +35,7 @@
 
 - prepare_data:
     enable: true
+    order: 20
     fixvis:
       enable: false
     prepms:
@@ -42,6 +45,7 @@
 
 - flagging:
     enable: true
+    order: 30
     label: ''
     autoflag_autocorr_powerspectra:
       enable: false
@@ -78,6 +82,7 @@
 
 - cross_cal:
     enable: true
+    order: 40
     label: 1gc1
     uvrange: '>50'
     otfdelay: true
@@ -203,6 +208,7 @@
 # flag calibrated data
 - flagging__2:
     enable: true
+    order: 41
     label: ''
     autoflag_rfi:
       enable: true
@@ -215,6 +221,7 @@
 # recalibrate reflagged data to improve K and G solutions
 - cross_cal__2:
     enable: true
+    order: 42
     label: 1gc1
     uvrange: '>50'
     otfdelay: true
@@ -339,6 +346,7 @@
       
 - polcal:
     enable: false
+    order: 45
     feed_angle_rotation: -90
     set_model:
       enable: true
@@ -363,6 +371,7 @@
 
 - inspect_data:
     enable: true
+    order: 50
     label: 1gc1
     real_imag:
       enable: true
@@ -398,6 +407,7 @@
 
 - split_target:
     enable: true
+    order: 60
     label_in: ''
     label_out: corr
     split_target:
@@ -438,6 +448,7 @@
 # flag only target data
 - flagging__3:
     enable: true
+    order: 74
     label: 'corr'
     autoflag_rfi:
       enable: true
@@ -457,6 +468,7 @@
       
 - masking:
     enable: false
+    order: 80
     cell_size: 2
     name_mask: my_mask.fits
     final_mask: 'final_mask.fits'
@@ -483,6 +495,7 @@
 
 - self_cal:
     enable: true
+    order: 90
     label: corr
     undo_subtractmodelcol: false
     spwid: 0
@@ -563,6 +576,7 @@
 
 - image_HI:
     enable: true
+    order: 100
     label: hires
     restfreq: 1.420405752GHz
     npix: [1024]

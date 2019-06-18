@@ -12,10 +12,6 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
-      order:
-        desc: Order of worker in queue
-        type: int
-        required: true
       label_in:
         desc: Label of the input dataset
         type: str

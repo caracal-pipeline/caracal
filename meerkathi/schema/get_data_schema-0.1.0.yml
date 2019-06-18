@@ -42,8 +42,8 @@ mapping:
             required: False
 
       untar:
-        desc: Unarchive from MS from a archive file.
         type: map
+        desc: Unarchive from MS from a archive file.
         mapping:
           enable:
             type: bool

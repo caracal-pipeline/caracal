@@ -297,20 +297,22 @@ class config_parser:
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             #print schema["mapping"][_key]
-            groups[_key] = cls._subparser_tree(self.__validated_schema[key],
+            groups[_key],args = cls._subparser_tree(self.__validated_schema[key],
                                 schema["mapping"][_key],
                                 schema_version,
                                 base_section=key,
+                                args= args,
                                 parser=parser)
             #cls.__GROUPS = groups
             #self.update_config(args,groups)
+        print args
+        print 'alaalaaalallalalalalalallalalalalalalalal'
         #print groups
         #print 'sdaf;kdsakfdas:::::::::::::::::::::::::::::::'
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
-        print args
         self.update_config(args,groups)
         #
 
@@ -351,7 +353,7 @@ class config_parser:
                             opt_valid_opts,
                             opt_default,
                             parser_instance):
-
+            print opt_type
             opt_desc = opt_desc.replace("%", "%%").encode('utf-8').strip()
             if opt_type == "int" or opt_type == "float" or opt_type == "str" or opt_type == "bool" or opt_type == "text":
                 meta = opt_type
@@ -368,10 +370,9 @@ class config_parser:
         sec_defaults = {xformer(k): v for k,v in schema_sections['mapping'].iteritems()}
         # Transform keys
         # Add subsection / update when necessary
-        #assert isinstance(schema_sections, dict)
-        #assert schema_sections["type"] == "map"
-        #assert isinstance(schema_sections["mapping"], dict)
-
+        assert isinstance(schema_sections, dict)
+        assert schema_sections["type"] == "map"
+        assert isinstance(schema_sections["mapping"], dict)
 
         groups = OrderedDict()
         global_schema = OrderedDict()
@@ -379,18 +380,33 @@ class config_parser:
             raise RuntimeError("Must init singleton before running this method")
 
         for key, default in sec_defaults.iteritems():
-            
+            print key, default
+
             option_name = base_section + "_" + key if base_section != "" else key
             assert key in schema_sections["mapping"], "%s does not define a type in schema" % key
 
-            if isinstance(default, dict):
-                groups[key] = schema_sections['mapping'][key].get("example")
+            if schema_sections["mapping"][key] == 'map':
+                print 'aaaaaaaaaaaaaaaaaaaa'
+                groups[key] = cls._subparser_tree(default,
+                                  schema_sections["mapping"][key],
+                                  base_section=option_name,
+                                  update_only=update_only,
+                                  args=args,
+                                  parser=parser)
+                #groups[key] = schema_sections['mapping'][key].get("example")
                 #groups[key] = fromstring(groups[key],schema_sections['mapping'][key].get("type"))
+
             else:
                 assert (("seq" in schema_sections["mapping"][key]) and ("type" in schema_sections["mapping"][key]["seq"][0])) or \
                         "type" in schema_sections["mapping"][key], "Option %s missing type in schema" % option_name
-
+                print schema_sections["mapping"][key]
+                print 'AAAAAAAAAAAAAAAAAAAA'
+                print key, default
                 option_name = base_section + "_" + key if base_section != "" else key
+
+                parser.set_defaults(**{option_name: schema_sections['mapping'][key].get("example")})
+                setattr(args, option_name, schema_sections['mapping'][key].get("example"))
+
                 _option_factory(schema_sections["mapping"][key]["type"] if "seq" not in schema_sections["mapping"][key] else \
                                                             schema_sections["mapping"][key]["seq"][0]["type"],
                                     "seq" in schema_sections["mapping"][key],
@@ -403,7 +419,7 @@ class config_parser:
                 groups[key] = schema_sections['mapping'][key].get("example")
                 #groups[key] = fromstring(groups[key],schema_sections['mapping'][key].get("type"))
 
-        return groups
+        return groups,args
 
 
         #with open(DEFAULT_CONFIG, 'r') as f:

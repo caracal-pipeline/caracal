@@ -53,7 +53,7 @@ def worker(pipeline, recipe, config):
     pipeline.set_hires_msnames(hires_label)
     for m in pipeline.cal_msnames:
         if not os.path.exists(os.path.join(pipeline.msdir, m)):
-            raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(m)):
+            raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(m))
     mslist = pipeline.cal_msnames
 
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))

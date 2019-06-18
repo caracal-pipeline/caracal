@@ -2,6 +2,8 @@ import os
 import sys
 import meerkathi
 import stimela.dismissable as sdm
+import getpass
+import stimela.recipe as stimela
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -71,7 +73,6 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
             
-	    import getpass
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
@@ -88,17 +89,13 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
 
-            meerkathi.log.info('#################################### {0:}'.format(gaintablelist))
             with open(os.path.join(pipeline.output, 'callib_target_'+callabel+'.txt'), 'w') as stdw:
-		for j in range(len(gaintablelist)):
-			if pipeline.singularity_image_dir:
-                            stdw.write('caltable=\'/scratch/output/'+gaintablelist[j]+'\'')
-                        else:
-                            stdw.write('caltable=\'/home/'+uname+'/'+os.path.join(pipeline.output, gaintablelist[j])+'\'')
-			stdw.write(' calwt=False')
-			stdw.write(' tinterp=\''+str(interplist[j])+'\'')
-			stdw.write(' finterp=\'linear\'')
-			stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
+                for j in range(len(gaintablelist)):
+                    stdw.write('caltable="{0:s}/{1:s}"'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"], gaintablelist[j]))
+                    stdw.write(' calwt=False')
+                    stdw.write(' tinterp=\''+str(interplist[j])+'\'')
+                    stdw.write(' finterp=\'linear\'')
+                    stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
 
             docallib = True
         else: docallib = False
@@ -131,7 +128,6 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
 
 
- 
         if pipeline.enable_task(config, 'prepms'):
             step = 'prepms_{:d}'.format(i)
             recipe.add('cab/msutils', step,

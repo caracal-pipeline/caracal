@@ -30,7 +30,7 @@ mapping:
         example: aaa
       prefix:
         type: str
-        required: true
+        required: false
         desc: Prefix for MeerKATHI output products
         example: KaTsO
       init_pipeline:

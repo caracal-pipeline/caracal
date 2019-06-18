@@ -12,12 +12,12 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
-        example: aaa 
+        example: 'True' 
       order:
         desc: Order of worker in queue
         type: int
         required: true
-        example: aaa 
+        example: '1' 
       label_in:
         desc: Label of the input dataset
         type: str

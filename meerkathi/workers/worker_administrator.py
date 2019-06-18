@@ -31,7 +31,6 @@ class worker_administrator(object):
     def __init__(self, config, workers_directory,
             stimela_build=None, prefix=None,
             add_all_first=False, singularity_image_dir=None):
-
         self.config = config
 
         self.add_all_first = add_all_first
@@ -56,7 +55,7 @@ class worker_administrator(object):
         for i, (name,opts) in enumerate(self.config.iteritems()):
             if name.find('general')>=0:
                 continue
-            order = opts.get('order', i+1)
+            order = int(opts.get('order', i+1))
 
             if name.find('__')>=0:
                 worker = name.split('__')[0] + '_worker'
@@ -66,7 +65,7 @@ class worker_administrator(object):
             self.workers.append((name, worker, order))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
-
+        print self.workers
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
         self.recipes = {}
@@ -170,6 +169,7 @@ class worker_administrator(object):
             if config.get('enable', True) is False:
                 self.skip.append(_worker)
                 continue
+            print self.workers, i, _name
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,

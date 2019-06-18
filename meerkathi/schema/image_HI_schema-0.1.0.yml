@@ -16,6 +16,7 @@ mapping:
         desc: Order in queue of workers. Default is 11.
         type: int
         required: false
+        example: '1'
       label:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str

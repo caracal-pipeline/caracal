@@ -16,6 +16,7 @@ mapping:
         desc: Order in queue of workers. Generally a non-negative integer. 
         type: int
         required: true
+        example: '1'
       label:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str

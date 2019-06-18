@@ -2,6 +2,7 @@ import argparse
 import yaml
 import meerkathi
 import os
+from numpy import fromstring
 import copy
 import ruamel.yaml
 from pykwalify.core import Core
@@ -277,14 +278,12 @@ class config_parser:
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
         parser = cls.__primary_parser(add_help=True)
-        #print parser
-        print 'AAAAAAAAAAAAAAAA'
+        groups = OrderedDict()
+
         for key,worker in tmp.iteritems():
-            print key,worker
             if key=="schema_version":
                 continue
-            #elif worker.get("enable", True) is False:
-            #    continue
+
             _key = key.split("__")[0]
             schema_fn = os.path.join(meerkathi.pckgdir,
                                      "schema", "{0:s}_schema-{1:s}.yml".format(_key,
@@ -297,20 +296,22 @@ class config_parser:
             cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-            groups = cls._subparser_tree(self.__validated_schema[key],
+            #print schema["mapping"][_key]
+            groups[key] = cls._subparser_tree(self.__validated_schema[key],
                                 schema["mapping"][_key],
                                 schema_version,
                                 base_section=key,
                                 parser=parser)
-            
-            print groups
+            #cls.__GROUPS = groups
+            #self.update_config(args)
+
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
-        self.update_config(args)
-
+        self.update_config(args,groups)
+        #
 
     @classmethod
     def _subparser_tree(cls,
@@ -349,6 +350,7 @@ class config_parser:
                             opt_valid_opts,
                             opt_default,
                             parser_instance):
+
             opt_desc = opt_desc.replace("%", "%%").encode('utf-8').strip()
             if opt_type == "int" or opt_type == "float" or opt_type == "str" or opt_type == "bool" or opt_type == "text":
                 meta = opt_type
@@ -362,14 +364,7 @@ class config_parser:
             else:
                 raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
 
-
-        #groups = OrderedDict()
-        #print 'AAAAAAAAAAAAAAAAA'
-        #print sections
-        #if sections is None:
-        #    return groups
-
-        #sec_defaults = {xformer(k): v for k,v in sections.iteritems()}
+        sec_defaults = {xformer(k): v for k,v in schema_sections.iteritems()}
 
         # Transform keys
         # Add subsection / update when necessary
@@ -378,16 +373,36 @@ class config_parser:
         #assert isinstance(schema_sections["mapping"], dict)
 
 
+        groups = OrderedDict()
+        global_schema = OrderedDict()
+        if not cls.__validated_schema:
+            raise RuntimeError("Must init singleton before running this method")
 
-            groups = OrderedDict()
-            global_schema = OrderedDict()
-            if not cls.__validated_schema:
-                raise RuntimeError("Must init singleton before running this method")
+        for key, default in sections.iteritems():
+            if isinstance(default, dict):
+                groups[key] = schema_sections['mapping'][key].get("example")
+                #groups[key] = fromstring(groups[key],schema_sections['mapping'][key].get("type"))
+            else:
+                option_name = base_section + "_" + key if base_section != "" else key
+                _option_factory(schema_sections["mapping"][key]["type"] if "seq" not in schema_sections["mapping"][key] else \
+                                                            schema_sections["mapping"][key]["seq"][0]["type"],
+                                    "seq" in schema_sections["mapping"][key],
+                                    option_name,
+                                    schema_sections["mapping"][key].get("required", False),
+                                    schema_sections["mapping"][key].get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
+                                    schema_sections["mapping"][key].get("enum", None),
+                                    schema_sections["mapping"][key].get("example"),
+                                    parser)
+                groups[key] = schema_sections['mapping'][key].get("example")
+                #groups[key] = fromstring(groups[key],schema_sections['mapping'][key].get("type"))
+
+        return groups
+
 
         #with open(DEFAULT_CONFIG, 'r') as f:
         #    parset = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
-            dictovals = {}
+            #dictovals = {}
         #import glob
         #detected_workers = []
         #workers =  glob.glob(os.path.join(meerkathi.pckgdir,"schema", "*_schema-{0:s}.yml".format(schema_version)))
@@ -404,12 +419,9 @@ class config_parser:
             #with open(worker, 'r') as f:
             #    schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             
-            def __recursive_reconstruct(schema, dictovals,opt):
-                    #option_name='tmp'
-                print schema
-                for key in schema['mapping']:
-                    print key
-                    #if isinstance(dictionary, dict):
+ 
+
+                     #if isinstance(dictionary, dict):
                     #    dictovals[opt] = cls._subparser_tree(default,
                     #                                      schema_sections["mapping"][opt],
                     #                                      base_section=option_name,
@@ -444,7 +456,6 @@ class config_parser:
                                 #                schema['mapping'][_key].get("example", False),
                                 #                parser)
                                 
-                    dictovals[key] = schema['mapping'][key].get("example")
                     #print dictovals[key]
                     #if hasattr("__dict__", key):
                     #    dictovals[key] = {}
@@ -453,10 +464,8 @@ class config_parser:
                     #    default = parset.get(key, "!!UNDEFINED!!")
                     #    dictovals[key] = default
             
-            dictovals[_key] = {}
-            __recursive_reconstruct(worker["mapping"][_key], dictovals[_key],key)
 
-            return dictovals
+
         # for opt, default in sec_defaults.iteritems():
         #     #print 'bvvvvvvvvvvvvvvvvvvv'
         #     #print opt
@@ -500,46 +509,54 @@ class config_parser:
         # return groups
 
     @classmethod
-    def update_config(cls, args = None, update_mode="defaults"):
+    def update_config(cls, args,groups,update_mode="defaults"):
         """ Updates argument parser with values from config file """
         args = cls.__ARGS if not args else args
         parser = cls.__primary_parser()
+        #groups = cls.__GROUPS
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
             schema_version = tmp["schema_version"]
 
-        groups = OrderedDict()
+        #groups = OrderedDict()
         global_schema = OrderedDict()
         if not cls.__validated_schema:
             raise RuntimeError("Must init singleton before running this method")
-
-        for key,worker in tmp.iteritems():
+        print tmp
+        for key, worker in tmp.iteritems():
+            print key,worker
             if key=="schema_version":
                 continue
-            #elif worker.get("enable", True) is False:
-            #    continue
 
             _key = key.split("__")[0]
-            schema_fn = os.path.join(meerkathi.pckgdir,
-                                      "schema", "{0:s}_schema-{1:s}.yml".format(_key,
-                                                                                schema_version))
-            if update_mode == "defaults and args": # new parset, re-validate
-                source_data = {
-                            _key : worker,
-                            "schema_version" : schema_version,
-                }
-                c = Core(source_data=source_data, schema_files=[schema_fn])
-                cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
+            print groups
+            print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+            for i,v in worker.iteritems():
+                groups[key][i] = v
+            #schema_fn = os.path.join(meerkathi.pckgdir,
+            #                          "schema", "{0:s}_schema-{1:s}.yml".format(_key,
+            #                                                                    schema_version))
+            #if update_mode == "defaults and args": # new parset, re-validate
+            #    source_data = {
+            #                _key : worker,
+            #                "schema_version" : schema_version,
+            #    }
+            #    c = Core(source_data=source_data, schema_files=[schema_fn])
+            #    cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
 
-            with open(schema_fn, 'r') as f:
-                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-            groups[key] = cls._subparser_tree(cls.__validated_schema[key],
-                                              schema["mapping"][_key],
-                                              base_section=key,
-                                              update_only=update_mode,
-                                              args=args,
-                                              parser=parser)
-            global_schema[key] = schema["mapping"][_key]
+            #with open(schema_fn, 'r') as f:
+            #    schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
+            #groups = cls._subparser_tree(cls.__validated_schema[key],
+            #                                  worker,
+            #                                  schema_version,
+            #                                  base_section=key,
+            #                                  update_only=update_mode,
+            #                                  args=args,
+            #                                  parser=parser)
+            
+            #groups[key] = worker[_key]
+
+            #global_schema[key] = schema["mapping"][_key]
         cls.__store_args(args, groups)
         cls.__store_global_schema(global_schema)
 

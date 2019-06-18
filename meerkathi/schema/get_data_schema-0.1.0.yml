@@ -12,11 +12,13 @@ mapping:
         type: int
         required: True
         desc: Workers are executed in ascedning order based on this value.
+        example: '1'
       dataid:
         seq:
           - type: str
         required: False
         desc: Basename of MS. For MeerKAT data to be downloaded by MeerKATHI, this should be the data ID of the observation
+        example: '1'
 
       mvftoms:
         type: map

@@ -203,7 +203,7 @@ def execute_pipeline(args, arg_groups, block):
 
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
-                
+                #print args.general_output
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
@@ -239,6 +239,7 @@ def execute_pipeline(args, arg_groups, block):
 # Driver entrypoint
 ############################################################################
 def main(argv):
+    
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
 
@@ -261,7 +262,7 @@ def main(argv):
 
     if not args.no_interactive and args.report_viewer:
         raise ValueError("Incompatible options: --no-interactive and --report-viewer")
-
+    print args
     # User requests default config => dump and exit
     if args.get_default:
         log_logo()

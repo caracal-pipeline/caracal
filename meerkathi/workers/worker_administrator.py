@@ -65,7 +65,7 @@ class worker_administrator(object):
             else:
                 worker = name + '_worker'
 
-            self.workers.append((name, worker, order))
+            self.workers.append((name, worker, i))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
 

@@ -12,10 +12,6 @@ mapping:
         desc: Executes the data preparation step.
         type: bool
         required: true
-      order: 
-        desc: Order in queue of workers.
-        type: int
-        required: true
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map

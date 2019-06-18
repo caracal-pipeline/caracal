@@ -48,7 +48,7 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    hires_label = config['transfer_apply_gains'].get('transfer_to_label', 'hires')
+    hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
     pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(hires_label)
     for m in pipeline.cal_msnames:
@@ -913,9 +913,6 @@ def worker(pipeline, recipe, config):
         if(calwith=='meqtrees'):
            enable = False
            meerkathi.log.info('Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-        hires_switch = config['calibrate'].get('hires_interpol', 'True')
-        if (hires_switch==False):
-            enable = False
         if config[key].get('Bjones',False):
             jones_chain = 'G,B'
         else:
@@ -1269,8 +1266,6 @@ def worker(pipeline, recipe, config):
     trace_matrix = []
 
     if pipeline.enable_task(config, 'image'):
-        if config['calibrate'].get('hires_interpol')==True:
-            meerkathi.log.info("Interpolating gains")
         image(self_cal_iter_counter)
     if pipeline.enable_task(config, 'sofia_mask'):
         sofia_mask(self_cal_iter_counter)

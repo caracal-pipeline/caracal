@@ -59,12 +59,14 @@ def worker(pipeline, recipe, config):
 
     label = config['label_out']
     label_in = config['label_in']
-    pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(label_in)
+    pipeline.set_cal_msnames(label)
 
     for i in range(pipeline.nobs):
         fms = pipeline.hires_msnames[i]
-        target = pipeline.target[0]
+        target = pipeline.target
+        target_ls = ','.join(target)
+
         prefix = pipeline.prefixes[i]
         tms = pipeline.cal_msnames[i]
         flagv = tms + '.flagversions'
@@ -74,7 +76,7 @@ def worker(pipeline, recipe, config):
 	    uname = getpass.getuser()
 	    gaintablelist,gainfieldlist,interplist = [],[],[]
             callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)            
+            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
 	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -95,6 +97,9 @@ def worker(pipeline, recipe, config):
                     stdw.write(' finterp=\'linear\'')
                     stdw.write(' fldmap=\'' +str(gainfieldlist[j])+'\'\n')
 
+            docallib = True
+        else: docallib = False
+
         if pipeline.enable_task(config, 'split_target'):
             step = 'split_target_{:d}'.format(i)
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
@@ -113,9 +118,9 @@ def worker(pipeline, recipe, config):
                     "spw"           : config['split_target'].get('spw', ''),
                     "datacolumn"    : config['split_target'].get('column', 'data'),
                     "correlation"   : config['split_target'].get('correlation', ''),
-                    "field"         : str(target),
+                    "field"         : target_ls,
                     "keepflags"     : True,
-                    "docallib"      : config['split_target']['otfcal'].get('enable', False),
+                    "docallib"      : docallib,
                     "callib"        : sdm.dismissable('callib_target_'+callabel+'.txt:output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                 },
                 input=pipeline.input,
@@ -150,24 +155,6 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
-
-        if (pipeline.enable_task(config, 'changecentre') and pipeline.enable_task(config, 'hires_split')):
-            if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
-                meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
-                sys.exit(1)
-            step = 'changecentre_{:d}_hires'.format(i)
-            recipe.add('cab/casa_fixvis', step,
-                {
-                  "msname"  : fms,
-                  "outputvis": fms,
-                  "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Change phase centre ms={1:s}'.format(step, fms))
-
-
         if pipeline.enable_task(config, 'obsinfo'):
             if (config['obsinfo'].get('listobs', True) and pipeline.enable_task(config, 'split_target')):
                 step = 'listobs_{:d}'.format(i)
@@ -193,29 +180,3 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
-
-        if (pipeline.enable_task(config, 'obsinfo') and pipeline.enable_task(config, 'hires_split')):
-            if config['obsinfo'].get('listobs', True):
-                step = 'listobs_{:d}_hires'.format(i)
-                recipe.add('cab/casa_listobs', step,
-                    {
-                      "vis"         : fms,
-                      "listfile"    : '{0:s}-{1:s}-obsinfo.txt'.format(prefix, hires_label),
-                      "overwrite"   : True,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
-
-            if (config['obsinfo'].get('summary_json', True) and pipeline.enable_task(config, 'hires_split')):
-                 step = 'summary_json_{:d}_hires'.format(i)
-                 recipe.add('cab/msutils', step,
-                    {
-                      "msname"      : fms,
-                      "command"     : 'summary',
-                      "display"     : False,
-                      "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(prefix, hires_label),
-                    },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, fms))

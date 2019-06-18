@@ -12,18 +12,22 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
+        example: aaa 
       order:
         desc: Order of worker in queue
         type: int
         required: true
+        example: aaa 
       label_in:
         desc: Label of the input dataset
         type: str
         required: true
+        example: aaa 
       label_out:
         desc: Label of the output dataset
         type: str
         required: true
+        example: aaa 
 
       split_target:
         desc: Split data

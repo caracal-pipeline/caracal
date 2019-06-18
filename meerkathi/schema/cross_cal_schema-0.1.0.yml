@@ -12,10 +12,6 @@ mapping:
         type: bool
         required: true
         desc: Execute this segment.
-      order: 
-        type: int
-        required: true
-        desc: Workers are executed in ascending order based on this value. 
       otfdelay:  
         type: bool
         required: true

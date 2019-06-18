@@ -8,10 +8,6 @@ mapping:
     type: map
     desc: Setup some basic observation information
     mapping:
-      order:
-        desc: Order in queue of workers
-        type: int
-        required: true
       obsinfo:
         desc: Get observation information
         type: map

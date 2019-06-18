@@ -58,14 +58,13 @@ class worker_administrator(object):
         for i, (name,opts) in enumerate(self.config.iteritems()):
             if name.find('general')>=0:
                 continue
-            order = opts.get('order', i+1)
 
             if name.find('__')>=0:
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
 
-            self.workers.append((name, worker, order))
+            self.workers.append((name, worker, i))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
 

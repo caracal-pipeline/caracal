@@ -12,6 +12,10 @@ mapping:
         desc: Execute flagging of the data.
         type: bool
         required: true
+      order:
+        desc: Order in queue of workers. Generally a non-negative integer. 
+        type: int
+        required: true
       label:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str

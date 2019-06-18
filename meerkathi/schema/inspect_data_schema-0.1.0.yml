@@ -12,6 +12,10 @@ mapping:
         type: bool
         desc: Executes dignostic plotting of the first-pass cross-calibrated data.
         required: true
+      order: 
+        type: int
+        desc: The order in which this step will be executed in the pipeline.
+        required: true
       label: 
         type: str
         desc: Lable for output products (plots etc.) for this step.

@@ -142,7 +142,7 @@ def worker(pipeline, recipe, config):
                     "mode"      : 'all',
                     "radrange"  : 0,
                     "angle"     : 0,
-                    "show"      : prefix + '.sunblocker.pdf',
+                    "show"      : prefix + '.sunblocker.svg',
                     "verb"      : True,
                     "dryrun"    : True,
                 },

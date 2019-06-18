@@ -419,7 +419,7 @@ def worker(pipeline, recipe, config):
         wscl_niter = config['wsclean_image'].get('wscl_niter', 2)
         tol = config['wsclean_image'].get('tol', 0.5)
  
-        for j in range(1,wscl_niter):
+        for j in range(1,wscl_niter+1):
             if j==1:        
                 step = 'wsclean_image_HI_with_automasking'
                 ownHIclean_mask=config['wsclean_image'].get('ownfitsmask',)   

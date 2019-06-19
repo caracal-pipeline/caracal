@@ -125,7 +125,6 @@ def worker(pipeline, recipe, config):
                         "datacolumn"    : config['split_target'].get('column', 'data'),
                         "correlation"   : config['split_target'].get('correlation', ''),
                         "field"         : field,
-                        "overwrite"     : True,
                         "keepflags"     : True,
                         "docallib"      : docallib,
                         "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target']	, 'otfcal') else None),

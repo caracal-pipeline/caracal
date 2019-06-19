@@ -70,10 +70,10 @@ def worker(pipeline, recipe, config):
 
         prefix = pipeline.prefixes[i]
 
-        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py
-          
+        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
     	    uname = getpass.getuser()
     	    gaintablelist,gainfieldlist,interplist = [],[],[]
+      
             callabel = config['split_target']['otfcal'].get('callabel', '')
             calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
@@ -87,6 +87,7 @@ def worker(pipeline, recipe, config):
                 gaintablelist.append('{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), calprefix, suffix))
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
+
             callib = 'callib_{0:s}_{1:s}.txt'.format(prefix,callabel)
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
                 for j in range(len(gaintablelist)):

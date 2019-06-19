@@ -5,7 +5,6 @@ import meerkathi.dispatch_crew.utils as utils
 import yaml
 from stimela.dismissable import dismissable as sdm
 import stimela
-from meerkathi.scripts import reporter as mrr
 
 NAME = "Crosshand calibration"
 
@@ -490,8 +489,12 @@ def worker(pipeline, recipe, config):
                   "ms": os.path.abspath(os.path.join(pipeline.msdir, msname)),
         },
         input=INPUT, output=OUTPUT, label="delete_backup_raw")
-
-        rep = mrr(pipeline)
+    
+        try:
+            from meerkathi.scripts import reporter as mrr
+            rep = mrr(pipeline)
+        except ImportError:
+            log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
 
         if config.get('do_dump_precalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_precal", {

@@ -18,14 +18,14 @@ def worker(pipeline, recipe, config):
     if config['label']:
         msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
-    if config.get('hires_flag'): 
-        print("Flagging Full Resolution Data")
-        if config['label']:
-            msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
-            prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
-        else:
-            msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
-            prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
+    #if config.get('hires_flag'): 
+    #    print("Flagging Full Resolution Data")
+    #    if config['label']:
+    #        msnames.append(next('{0:s}'.format(mm.replace(config['label'], config['hires_label'])) for mm in msnames))
+    #        prefixes.append(next('{0:s}'.format(prefix.replace(config['label'], config['hires_label'])) for prefix in prefixes))
+    #    else:
+    #        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
+    #        prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
         nobs=len(msnames)
 
     def get_field(field):

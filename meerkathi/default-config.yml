@@ -10,7 +10,6 @@
     init_pipeline: true
 
 - get_data:
-    order: 0
     dataid: []
     mvftoms:
       enable: false
@@ -21,7 +20,6 @@
       enable: false
 
 - observation_config:
-    order: 10
     obsinfo:
       enable: true
     bpcal: auto
@@ -35,7 +33,6 @@
 
 - prepare_data:
     enable: true
-    order: 20
     fixvis:
       enable: false
     prepms:
@@ -45,10 +42,9 @@
 
 - flagging:
     enable: true
-    order: 30
     label: ''
     autoflag_autocorr_powerspectra:
-      enable: true
+      enable: false
     flag_autocorr:
       enable: true
     quack_flagging:
@@ -82,7 +78,6 @@
 
 - cross_cal:
     enable: true
-    order: 40
     label: 1gc1
     uvrange: '>50'
     otfdelay: true
@@ -107,7 +102,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [-60, 60]
       plot:
@@ -120,7 +115,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -131,7 +126,7 @@
       field:
       - fcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -142,7 +137,7 @@
       field:
       - gcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -208,12 +203,11 @@
 # flag calibrated data
 - flagging__2:
     enable: true
-    order: 41
     label: ''
     autoflag_rfi:
       enable: true
       column: DATA
-      fields: fcal,bpcal,gcal,target
+      fields: fcal,bpcal,gcal
       strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
     flagging_summary:
       enable: true
@@ -221,7 +215,6 @@
 # recalibrate reflagged data to improve K and G solutions
 - cross_cal__2:
     enable: true
-    order: 42
     label: 1gc1
     uvrange: '>50'
     otfdelay: true
@@ -246,7 +239,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [-60, 60]
       plot:
@@ -259,7 +252,7 @@
       field:
       - bpcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -270,7 +263,7 @@
       field:
       - fcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -281,7 +274,7 @@
       field:
       - gcal
       flag:
-        enable: false
+        enable: true
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -346,7 +339,6 @@
       
 - polcal:
     enable: false
-    order: 45
     feed_angle_rotation: -90
     set_model:
       enable: true
@@ -369,30 +361,8 @@
     do_dump_precalibration_leakage_reports: true
     freqsol_soltime: inf
 
-# flag only target data
-- flagging__3:
-    enable: true
-    order: 47
-    label: ''
-    autoflag_rfi:
-      enable: true
-      column: DATA
-      fields: target
-      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
-    rfinder:
-      enable: true
-      field: target
-      polarization: Q
-      spw_enable: true
-      spw_width: 10
-      time_enable: true
-      time_step: 10
-    flagging_summary:
-      enable: true
-
 - inspect_data:
     enable: true
-    order: 50
     label: 1gc1
     real_imag:
       enable: true
@@ -428,7 +398,6 @@
 
 - split_target:
     enable: true
-    order: 60
     label_in: ''
     label_out: corr
     split_target:
@@ -466,10 +435,28 @@
       listobs: true
       summary_json: true
 
-
+# flag only target data
+- flagging__3:
+    enable: true
+    label: 'corr'
+    autoflag_rfi:
+      enable: true
+      column: DATA
+      fields: target
+      strategy: secondpass_QUV.rfis # This can be a bit aggressive !!
+    rfinder:
+      enable: true
+      field: target
+      polarization: Q
+      spw_enable: true
+      spw_width: 10
+      time_enable: true
+      time_step: 10
+    flagging_summary:
+      enable: true
+      
 - masking:
     enable: false
-    order: 80
     cell_size: 2
     name_mask: my_mask.fits
     final_mask: 'final_mask.fits'
@@ -496,7 +483,6 @@
 
 - self_cal:
     enable: true
-    order: 90
     label: corr
     undo_subtractmodelcol: false
     spwid: 0
@@ -577,7 +563,6 @@
 
 - image_HI:
     enable: true
-    order: 100
     label: hires
     restfreq: 1.420405752GHz
     npix: [1024]
@@ -605,6 +590,7 @@
     wsclean_image:
       enable: true
       wscl_niter: 2
+      tol: 0.01
       ownfitsmask: # or own mask '<mask-name>.fits:output' 
       rm_intcubes: true
       use_mstransform: true

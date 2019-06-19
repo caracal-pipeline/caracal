@@ -51,9 +51,11 @@ def worker(pipeline, recipe, config):
     hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
     pipeline.set_cal_msnames(label)
     pipeline.set_hires_msnames(hires_label)
+    for m in pipeline.cal_msnames:
+        if not os.path.exists(os.path.join(pipeline.msdir, m)):
+            raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(m))
     mslist = pipeline.cal_msnames
-    mslist = filter(lambda ms: isinstance(ms, str), mslist)
-    mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), mslist)
+
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
     hires_mslist = pipeline.hires_msnames
     hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)

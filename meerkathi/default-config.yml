@@ -10,7 +10,6 @@
     init_pipeline: true
 
 - get_data:
-    order: 0
     dataid: []
     mvftoms:
       enable: false
@@ -21,7 +20,6 @@
       enable: false
 
 - observation_config:
-    order: 10
     obsinfo:
       enable: true
     bpcal: auto
@@ -35,7 +33,6 @@
 
 - prepare_data:
     enable: true
-    order: 20
     fixvis:
       enable: false
     prepms:
@@ -45,7 +42,6 @@
 
 - flagging:
     enable: true
-    order: 30
     label: ''
     autoflag_autocorr_powerspectra:
       enable: false
@@ -82,7 +78,6 @@
 
 - cross_cal:
     enable: true
-    order: 40
     label: 1gc1
     uvrange: ">50"
     otfdelay: true            # Set whether to apply the delay calibration on the fly when solving for other calibration terms
@@ -208,7 +203,6 @@
 # flag calibrated data
 - flagging__2:
     enable: true
-    order: 41
     label: ''
     autoflag_rfi:
       enable: true
@@ -221,7 +215,6 @@
 # recalibrate reflagged data to improve K and G solutions
 - cross_cal__2:
     enable: true
-    order: 42
     label: 1gc1
     uvrange: '>50'
     otfdelay: true
@@ -346,7 +339,6 @@
       
 - polcal:
     enable: false
-    order: 45
     feed_angle_rotation: -90
     set_model:
       enable: true
@@ -371,7 +363,6 @@
 
 - inspect_data:
     enable: true
-    order: 50
     label: 1gc1
     real_imag:
       enable: true
@@ -407,7 +398,6 @@
 
 - split_target:
     enable: true
-    order: 60
     label_in: ''
     label_out: corr
     split_target:
@@ -448,7 +438,6 @@
 # flag only target data
 - flagging__3:
     enable: true
-    order: 74
     label: 'corr'
     autoflag_rfi:
       enable: true
@@ -468,7 +457,6 @@
       
 - masking:
     enable: false
-    order: 80
     cell_size: 2
     name_mask: my_mask.fits
     final_mask: 'final_mask.fits'
@@ -495,12 +483,10 @@
 
 - self_cal:
     enable: true
-    order: 90
-    label: corr  
+    label: corr
     undo_subtractmodelcol: false
     spwid: 0
-    primary_beam: false  
-    # Imaging settings
+    primary_beam: false
     img_pol: I
     img_npix: 5540
     img_cell: 1.3
@@ -508,11 +494,12 @@
     img_weight: briggs
     img_robust: -1.5
     img_niter: 1000000
+    img_facets: 11
     img_mgain: 0.9
+    img_cleanborder: 0
     img_nchans: 3
     img_joinchannels: true
     img_fit_spectral_pol: 1
-    # Calibration settings
     calibrate_with: cubical
     cal_gain_amplitude_clip_low: 0.5
     cal_gain_amplitude_clip_high: 1.5
@@ -549,7 +536,7 @@
       model: ['1', '2', '3', '4']
       output_data: [CORR_DATA]
       gain_matrix_type: [GainDiagPhase, GainDiag, GainDiag, GainDiag]
-      Gsols_time: [15, 15, 15]
+      Gsols_time: [90, 90, 90]
       Gsols_channel: [0, 0, 0]
       add_vis_model: true
       model_mode: vis_only
@@ -576,7 +563,6 @@
 
 - image_HI:
     enable: true
-    order: 100
     label: hires
     restfreq: 1.420405752GHz
     npix: [1024]

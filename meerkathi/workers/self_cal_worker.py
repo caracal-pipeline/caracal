@@ -60,11 +60,10 @@ def worker(pipeline, recipe, config):
         hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
 
     pipeline.set_cal_msnames(label)
+    for m in pipeline.cal_msnames:
+        if not os.path.exists(os.path.join(pipeline.msdir, m)):
+            raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(m))
     mslist = pipeline.cal_msnames
-    #As avg sets can be created within this worker you cannot check for existence of the sets here.
-    mslist = filter(lambda ms: isinstance(ms, str), mslist)
-    mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), mslist)
-   
     meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
   
     prefix = pipeline.prefix

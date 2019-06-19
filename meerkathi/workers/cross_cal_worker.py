@@ -1,28 +1,31 @@
 import sys
 import os
 import meerkathi.dispatch_crew.utils as utils
+import meerkathi
 import yaml
 import stimela.dismissable as sdm
 
 NAME = "Cross calibration"
+# E.g. to split out continuum/<dir> from output/continuum/dir
+get_dir_path = lambda string,pipeline : string.split(pipeline.output)[1][1:]
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
    'bpcal'    :  {
-                  'delay_cal'      : 'nearest', 
-                  'bp_cal'         : 'nearest', 
+                  'delay_cal'      : 'nearest',
+                  'bp_cal'         : 'nearest',
                   'transfer_fluxscale': 'linear',
                   'gain_cal_gain'  : 'linear',
                  },
    'gcal'     :  {
-                  'delay_cal'      : 'linear', 
-                  'bp_cal'         : 'linear', 
+                  'delay_cal'      : 'linear',
+                  'bp_cal'         : 'linear',
                   'transfer_fluxscale': 'nearest',
                   'gain_cal_gain'  : 'linear',
                  },
    'target'   :  {
-                  'delay_cal'      : 'linear', 
-                  'bp_cal'         : 'linear', 
+                  'delay_cal'      : 'linear',
+                  'bp_cal'         : 'linear',
                   'transfer_fluxscale': 'linear',
                   'gain_cal_gain'  : 'linear',
                  },
@@ -30,10 +33,16 @@ applycal_interp_rules = {
 
 table_suffix = {
     "delay_cal"             : 'K0',
-    "bp_cal"                : 'B0', 
-    "gain_cal_gain"         : 'G0', 
-    "gain_cal_flux"         : 'G0', 
-    "transfer_fluxscale"    : 'F0', 
+    "bp_cal"                : 'B0',
+    "gain_cal_gain"         : 'G0',
+    "gain_cal_flux"         : 'G0',
+    "transfer_fluxscale"    : 'F0',
+}
+
+corr_indexes = {'H'        : 0,
+                'X'        : 0,
+                'V'        : 1,
+                'Y'        : 1,
 }
 
 
@@ -54,26 +63,26 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
 
-        # Check if field was specified as known key, else return the 
-        # same value. 
+        # Check if field was specified as known key, else return the
+        # same value.
         def get_field(field):
             """
-                gets field ids parsed previously in the pipeline 
+                gets field ids parsed previously in the pipeline
                 params:
                     field: list of ids or comma-seperated list of ids where
                            ids are in bpcal, gcal, target, fcal or an actual field name
             """
-            return ','.join(map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                                if isinstance(getattr(pipeline, x)[i], str) else getattr(pipeline, x)[i])
-                                              if x in ['bpcal', 'gcal', 'target', 'fcal']
+            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
+                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
+                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
                                               else x.split(','),
-                                field.split(',') if isinstance(field, str) else field))
+                                field.split(',') if isinstance(field, str) else field)))
 
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
+                return get_field(config['delay_cal'].get('field', ['bpcal','gcal','xcal']))
             if applyme == 'bp_cal':
-                return get_field('bpcal')
+                return get_field(config['bp_cal'].get('field', ['bpcal']))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -86,17 +95,35 @@ def worker(pipeline, recipe, config):
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
-            step = 'plot_{0:s}_{1:d}'.format(cal, i)
-            opts["vis"] = '{0:s}.{1:s}:output'.format(prefix, table_suffix[cal])
+            if 'enable' in opts: del(opts['enable'])
+            step = 'flag_{0:s}_{1:d}'.format(cal, i)
+            opts["vis"] = '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, table_suffix[cal]+':output')
             opts["datacolumn"] = datacolumn
             recipe.add('cab/casa_flagdata', step, opts,
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Flagging gains'.format(step))
 
+        if pipeline.enable_task(config, 'clear_cal'):
+            # Initialize dataset for calibration
+            field = get_field(config['clear_cal'].get('field', ['fcal']))
+            addmodel = config['clear_cal'].get('addmodel', True)
+            step = 'clear_cal_{0:d}'.format(i)
+            recipe.add('cab/casa_clearcal', step,
+               {
+                 "vis"          : msname,
+                 "field"        : field,
+                 "addmodel"     : addmodel,
+               },
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Clear calibration ms={1:s}'.format(step, msname))
+
         if pipeline.enable_task(config, 'set_model'):
             # Set model
-            field = get_field(config['set_model'].get('field', 'fcal'))
+            field = get_field(config['set_model'].get('field', ['fcal']))
+            assert len(utils.get_field_id(msinfo, field)) == 1, "Only one fcal should be set"
+
             if config['set_model'].get('no_verify', False):
                 opts = {
                     "vis"        : msname,
@@ -108,17 +135,19 @@ def worker(pipeline, recipe, config):
                 model = utils.find_in_native_calibrators(msinfo, field)
                 standard = utils.find_in_casa_calibrators(msinfo, field)
                 # Prefer our standard over the NRAO standard
-                if isinstance(model, str): # use local sky model of calibrator field if exists
+                meerkathi_model = isinstance(model, str)
+                if config['set_model'].get('meerkathi_model', True) and meerkathi_model:
+                    # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel"  : model,
                         "msname"    : msname,
-                        "field-id"  : utils.get_field_id(msinfo, field),
-                        "threads"   : config["set_model"].get('threads', 1),
+                        "field-id"  : utils.get_field_id(msinfo, field)[0],
+                        "threads"   : config["set_model"].get('threads', 8),
                         "mode"      : "simulate",
                         "tile-size" : 128,
                         "column"    : "MODEL_DATA",
                     }
-                elif model: # spectral model if specified in our standard
+                elif isinstance(model, dict): # spectral model if specified in our standard
                     opts = {
                       "vis"         : msname,
                       "field"       : field,
@@ -127,7 +156,7 @@ def worker(pipeline, recipe, config):
                       "reffreq"     : '{0:f}GHz'.format(model['ref']/1e9),
                       "spix"        : [model[a] for a in 'abcd'],
                       "scalebychan" : True,
-                      "usescratch"  : False,
+                      "usescratch"  : True,
                     }
                 elif standard: # NRAO model otherwise
                    opts = {
@@ -150,15 +179,16 @@ found in our database or in the CASA NRAO database'.format(field))
         # Delay calibration
         if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
-            field = get_field(config['delay_cal'].get('field', 'bpcal,gcal'))
+            field = get_field(config['delay_cal'].get('field', ['bpcal','gcal']))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
-                 "caltable"     : prefix+".K0",
+                 "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0'),
                  "field"        : field,
-                 "refant"       : refant,
+                 "refant"       : refant, #this reference must be used throughout in the way casa solves the RIME to avoid creating an ambituity in the crosshand phase
                  "solint"       : config['delay_cal'].get('solint', 'inf'),
                  "combine"      : config['delay_cal'].get('combine', ''),
+                 "minsnr"       : config['delay_cal'].get('minsnr', 5),
                  "gaintype"     : "K",
                  "uvrange"      : config.get('uvrange', ''),
                },
@@ -166,21 +196,25 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Delay calibration ms={1:s}'.format(step, msname))
 
-            if config['delay_cal'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['delay_cal'],'flag'):
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
-            if  config['delay_cal'].get('plot', True):
+            if pipeline.enable_task(config['delay_cal'],'plot'):
                 step = 'plot_delay_cal_{0:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                   {
-                    "command"   : 'plot_gains',
-                    "ctable"    : prefix+".K0:output",
-                    "tabtype"   : 'delay',
-                    "plot_file" : '{0:s}-K0'.format(prefix),
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+                table = config['delay_cal']['plot'].get('table_name', prefix+".K0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+
+                     "gaintype"     : config['delay_cal']['plot'].get('gaintype', "K"),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "corr"         : corr_indexes[config['delay_cal']['plot'].get(
+                                        'corr', 'X')],
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['delay_cal']['plot'].get('htmlname', '{0:s}-K0'.format(prefix)),
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         # Bandpass calibration
         if pipeline.enable_task(config, 'bp_cal'):
@@ -194,17 +228,17 @@ found in our database or in the CASA NRAO database'.format(field))
             if config['bp_cal'].get('remove_ph_time_var', False):
 
                 # Initial bandpass calibration (will NOT combine scans even if requested for final bandpass)
-                if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+                if config.get('otfdelay', True): gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['nearest']
                 else: gaintables,interpolations=None,''
-                field = get_field(config['bp_cal'].get('field', 'bpcal'))
+                field = get_field(config['bp_cal'].get('field', ['bpcal']))
                 step = 'pre_bp_cal_{0:d}'.format(i)
 
                 recipe.add('cab/casa_bandpass', step,
                    {
                      "vis"          : msname,
-                     "caltable"     : prefix+'.PREB0',
+                     "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREB0'),
                      "field"        : field,
-                     "refant"       : refant if config['bp_cal'].get('set_refant', False) else '',
+                     "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
                      "solint"       : config['bp_cal'].get('solint', 'inf'),
                      "combine"      : '',
                      "bandtype"     : "B",
@@ -212,45 +246,44 @@ found in our database or in the CASA NRAO database'.format(field))
                      "interp"       : interpolations,
                      "fillgaps"     : 70,
                      "uvrange"      : config['uvrange'],
-                     "minsnr"       : config['bp_cal'].get('minsnr', 5),
+                     "minsnr"       : config['bp_cal'].get('minsnr', 3),
                      "minblperant"  : config['bp_cal'].get('minnrbl', 4),
-                     "solnorm"      : config['bp_cal'].get('solnorm', False),
+                     "solnorm"      : config['bp_cal'].get('solnorm', True),
                    },
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Pre bandpass calibration ms={1:s}'.format(step, msname))
 
-                # Flagging disabled on initial bandpass solution
-                #if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
-                #    flag_gains('bp_cal', config['pre_bp_cal']['flag'])
+                if pipeline.enable_task(config['bp_cal'],'plot'):
+                    step = 'plot_pre_bandpass_{0:d}'.format(i)
+                    table = config['bp_cal']['plot'].get('table_name', prefix+".PREB0")
+                    recipe.add('cab/ragavi', step,
+                        {
+                         "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                         "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
+                         "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                            'corr', 'X')],
+                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['bp_cal']['plot'].get('htmlname', '{0:s}-PREB0'.format(prefix))
 
-                if config['bp_cal'].get('plot', True):
-                     #for plot in 'amp','phase':
-                        step = 'plot_pre_bandpass_{0:d}'.format(i)
-                        recipe.add('cab/msutils', step,
-                           {
-                            "command"   : 'plot_gains',
-                            "ctable"  : prefix+".PREB0:output",
-                            "tabtype"   : 'bandpass',
-                            "plot_file"   : '{0:s}-PREB0'.format(prefix),
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".PREB0:output"))
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Plot pre bandpass calibration gain caltable={1:s}'.format(step, prefix+".PREB0"))
 
                 # Initial flux calibration ***on BPCAL field*** (will NOT combine scans even if requested for final flux calibration)
-                if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+                if config.get('otfdelay', True): gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['nearest']
                 else: gaintables,interpolations=[],[]
-                gaintables+=[prefix+".PREB0:output"]
+                gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREB0:output')]
                 interpolations+=['nearest']
                 step = 'pre_gain_cal_flux_{0:d}'.format(i)
-                field = get_field(config['bp_cal'].get('field', 'bpcal'))
+                field = get_field(config['bp_cal'].get('field', ['bpcal']))
                 recipe.add('cab/casa_gaincal', step,
                    {
                      "vis"          : msname,
-                     "caltable"     : prefix+".PREG0:output",
+                     "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREG0:output'),
                      "field"        : field,
-                     "refant"       : refant if config['gain_cal_flux'].get('set_refant', False) else '',
+                     "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['gain_cal_flux'].get('set_refant', False) else '',
                      "solint"       : config['gain_cal_flux'].get('solint', 'inf'),
                      "combine"      : '',
                      "gaintype"     : "G",
@@ -258,49 +291,49 @@ found in our database or in the CASA NRAO database'.format(field))
                      "gaintable"    : gaintables,
                      "interp"       : interpolations,
                      "uvrange"      : config['uvrange'],
-                     "minsnr"       : config['gain_cal_flux'].get('minsnr', 5),
+                     "minsnr"       : config['gain_cal_flux'].get('minsnr', 3),
                      "minblperant"  : config['gain_cal_flux'].get('minnrbl', 4),
                    },
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{0:s}:: Pre gain calibration for bandpass ms={1:s}'.format(step, msname))
 
-                if config['gain_cal_flux'].get('plot', True):
-                    #for plot in 'amp','phase':
-                        step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
-                        recipe.add('cab/msutils', step,
-                           {
-                            "command"   : 'plot_gains',
-                            "ctable"  : prefix+".PREG0:output",
-                            "tabtype"   : 'gain',
-                            "plot_file"   : '{0:s}-PREG0-fcal'.format(prefix),
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
+                if pipeline.enable_task(config['gain_cal_flux'],'plot'):
+                    step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
+                    table = config['gain_cal_flux']['plot'].get('table_name', prefix+".PREG0")
+                    recipe.add('cab/ragavi', step,
+                        {
+                         "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                         "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
+                         "field"        : utils.get_field_id(msinfo, field)[0],
+                         "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                            'corr', 'X')],
+                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['gain_cal_flux']['plot'].get('htmlname', '{0:s}-PREG0-fcal'.format(prefix))
 
-                # Flagging disabled on initial flux calibration solution
-                #if config['pre_gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
-                #    flag_gains('pre_gain_cal_flux', config['pre_gain_cal_flux']['flag'])
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Plot pre gaincal phase ms={1:s}'.format(step, msname))
 
             # Final bandpass calibration
             if config.get('otfdelay', True):
-                gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+                gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['nearest']
+
                 if config['bp_cal'].get('remove_ph_time_var', False):
-                    gaintables+=[prefix+'.PREG0:output']
+                    gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREG0:output')]
                     interpolations+=['nearest']
             elif config['bp_cal'].get('remove_ph_time_var', False):
-                gaintables,interpolations=[prefix+'.PREG0:output'],['nearest']
+                gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREG0:output')],['nearest']
             else: gaintables,interpolations=None,''
-            field = get_field(config['bp_cal'].get('field', 'bpcal'))
+            field = get_field(config['bp_cal'].get('field', ['bpcal']))
             step = 'bp_cal_{0:d}'.format(i)
 
             recipe.add('cab/casa_bandpass', step,
                {
                  "vis"          : msname,
-                 "caltable"     : prefix+'.B0',
+                 "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0'),
                  "field"        : field,
-                 "refant"       : refant if config['bp_cal'].get('set_refant', False) else '',
+                 "refant"       : refant, #must use the reference to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
                  "solint"       : config['bp_cal'].get('solint', 'inf'),
                  "combine"      : config['bp_cal'].get('combine', ''),
                  "bandtype"     : "B",
@@ -308,45 +341,48 @@ found in our database or in the CASA NRAO database'.format(field))
                  "interp"       : interpolations,
                  "fillgaps"     : 70,
                  "uvrange"      : config['uvrange'],
-                 "minsnr"       : config['bp_cal'].get('minsnr', 5),
+                 "minsnr"       : config['bp_cal'].get('minsnr', 3),
                  "minblperant"  : config['bp_cal'].get('minnrbl', 4),
-                 "solnorm"      : config['bp_cal'].get('solnorm', False),
+                 "solnorm"      : config['bp_cal'].get('solnorm', True),
                },
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Bandpass calibration ms={1:s}'.format(step, msname))
 
-            if config['bp_cal'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['bp_cal'],'flag'):
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
-            if config['bp_cal'].get('plot', True):
-                 #for plot in 'amp','phase':
-                    step = 'plot_bandpass_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".B0:output",
-                        "tabtype"   : 'bandpass',
-                        "plot_file"   : '{0:s}-B0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0:output"))
+            if pipeline.enable_task(config['bp_cal'],'plot'):
+                step = 'plot_bandpass_{0:d}'.format(i)
+                table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                     "gaintype"     : config['bp_cal']['plot'].get('gaintype', "B"),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                        'corr', 'X')],
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['bp_cal']['plot'].get('htmlname', '{0:s}-B0'.format(prefix))
+
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot bandpass calibration gain caltable={1:s}'.format(step, prefix+".B0"))
 
         # Final flux calibration
         if pipeline.enable_task(config, 'gain_cal_flux'):
-            if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['nearest']
+            if config.get('otfdelay', True): gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['nearest']
             else: gaintables,interpolations=[],[]
-            gaintables+=[prefix+".B0:output"]
+            gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations+=['nearest']
             step = 'gain_cal_flux_{0:d}'.format(i)
-            field = get_field(config['gain_cal_flux'].get('field', 'fcal'))
+            field = get_field(config['gain_cal_flux'].get('field', ['fcal']))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
-                 "caltable"     : prefix+".G0:output",
+                 "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'G0:output'),
                  "field"        : field,
-                 "refant"       : refant if config['gain_cal_flux'].get('set_refant', False) else '',
+                 "refant"       : refant, #must use the reference to avoid creating an ambiguity in the crosshand phase if config['gain_cal_flux'].get('set_refant', True) else '',
                  "solint"       : config['gain_cal_flux'].get('solint', 'inf'),
                  "combine"      : config['gain_cal_flux'].get('combine', ''),
                  "gaintype"     : "G",
@@ -354,44 +390,46 @@ found in our database or in the CASA NRAO database'.format(field))
                  "gaintable"    : gaintables,
                  "interp"       : interpolations,
                  "uvrange"      : config['uvrange'],
-                 "minsnr"       : config['gain_cal_flux'].get('minsnr', 5),
+                 "minsnr"       : config['gain_cal_flux'].get('minsnr', 3),
                  "minblperant"  : config['gain_cal_flux'].get('minnrbl', 4),
                },
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Gain calibration for bandpass ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_flux'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_gain_cal_flux_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".G0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-G0-fcal'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+            if pipeline.enable_task(config['gain_cal_flux'],'plot'):
+                step = 'plot_gain_cal_flux_{0:d}'.format(i)
+                table = config['gain_cal_flux']['plot'].get('table_name', prefix+".G0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                     "gaintype"     : config['gain_cal_flux']['plot'].get('gaintype', "G"),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                        'corr', 'X')],
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['gain_cal_flux']['plot'].get('htmlname', '{0:s}-G0-fcal'.format(prefix))
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_flux'].get('flag', {"enable": False}).get('enable', False):
+            if pipeline.enable_task(config['gain_cal_flux'],'flag'):
                 flag_gains('gain_cal_flux', config['gain_cal_flux']['flag'])
 
         # Gain calibration for Gaincal field
         if pipeline.enable_task(config, 'gain_cal_gain'):
-            if config.get('otfdelay', True): gaintables,interpolations=[prefix+'.K0:output'],['linear']
+            if config.get('otfdelay', True):  gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['linear']
             else: gaintables,interpolations=[],[]
-            gaintables+=[prefix+".B0:output"]
+            gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations+=['linear']
             step = 'gain_cal_gain_{0:d}'.format(i)
-            field = get_field(config['gain_cal_gain'].get('field', 'gcal'))
+            field = get_field(config['gain_cal_gain'].get('field', ['gcal']))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
-                 "caltable"     : prefix+".G0:output",
+                 "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'G0:output'),
                  "field"        : field,
-                 "refant"       : refant if config['gain_cal_gain'].get('set_refant', False) else '',
+                 "refant"       : refant, # must use reference to avoid creating an ambiguity in crosshand phase if config['gain_cal_gain'].get('set_refant', True) else '',
                  "solint"       : config['gain_cal_gain'].get('solint', 'inf'),
                  "combine"      : config['gain_cal_gain'].get('combine', ''),
                  "gaintype"     : "G",
@@ -399,7 +437,7 @@ found in our database or in the CASA NRAO database'.format(field))
                  "gaintable"    : gaintables,
                  "interp"       : interpolations,
                  "uvrange"      : config['uvrange'],
-                 "minsnr"       : config['gain_cal_gain'].get('minsnr', 5),
+                 "minsnr"       : config['gain_cal_gain'].get('minsnr', 3),
                  "minblperant"  : config['gain_cal_gain'].get('minnrbl', 4),
                  "append"       : True,
                },
@@ -407,53 +445,57 @@ found in our database or in the CASA NRAO database'.format(field))
                output=pipeline.output,
                label='{0:s}:: Gain calibration ms={1:s}'.format(step, msname))
 
-            if config['gain_cal_gain'].get('flag', {"enabled": False}).get('enabled', False):
+            if pipeline.enable_task(config['gain_cal_gain'],'flag'):
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
-            if config['gain_cal_gain'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_gain_cal_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".G0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-G0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+            if pipeline.enable_task(config['gain_cal_gain'],'plot'):
+                step = 'plot_gain_cal_{0:d}'.format(i)
+                table = config['gain_cal_gain']['plot'].get('table_name', prefix+".G0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                     "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype', "G"),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                        'corr', 'X')],
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['gain_cal_gain']['plot'].get('htmlname', '{0:s}-G0'.format(prefix))
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         # Flux scale transfer
         if pipeline.enable_task(config, 'transfer_fluxscale'):
-            ref = get_field(config['transfer_fluxscale'].get('reference', 'fcal'))
-            trans = get_field(config['transfer_fluxscale'].get('transfer', 'gcal'))
+            ref = get_field(config['transfer_fluxscale'].get('reference', ['fcal']))
+            trans = get_field(config['transfer_fluxscale'].get('transfer', ['gcal']))
             step = 'transfer_fluxscale_{0:d}'.format(i)
             recipe.add('cab/casa_fluxscale', step,
                {
-                "vis"          : msname,
-                "caltable"      : prefix+".G0:output",
-                "fluxtable"     : prefix+".F0:output",
-                "reference"     : [ref],
-                "transfer"      : [trans],
+                "vis"           : msname,
+                "caltable"      : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'G0:output'),
+                "fluxtable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'F0:output'),
+                "reference"     : ref,
+                "transfer"      : trans,
                },
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
 
-            if config['transfer_fluxscale'].get('plot', True):
-                #for plot in 'amp','phase':
-                    step = 'plot_fluxscale_{0:d}'.format(i)
-                    recipe.add('cab/msutils', step,
-                       {
-                        "command"   : 'plot_gains',
-                        "ctable"  : prefix+".F0:output",
-                        "tabtype"   : 'gain',
-                        "plot_file"   : '{0:s}-F0'.format(prefix),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
+            if pipeline.enable_task(config['transfer_fluxscale'],'plot'):
+                step = 'plot_fluxscale_{0:d}'.format(i)
+                table = config['transfer_fluxscale']['plot'].get('table_name', prefix+".F0")
+                recipe.add('cab/ragavi', step,
+                    {
+                     "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
+                     "gaintype"     : config['transfer_fluxscale']['plot'].get('gaintype', "G"),
+                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "corr"         : corr_indexes[config['bp_cal']['plot'].get(
+                                        'corr', 'X')],
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['transfer_fluxscale']['plot'].get('htmlname', '{0:s}-F0'.format(prefix))
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Plot gaincal phase ms={1:s}'.format(step, msname))
 
         applied = []
         for ft in ['bpcal','gcal','target']:
@@ -463,12 +505,12 @@ found in our database or in the CASA NRAO database'.format(field))
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 if not pipeline.enable_task(config, 'apply_'+applyme):
                     continue
-                if ft not in config['apply_'+applyme].get('applyto', 'bpcal,gcal,target').split(','):
+                if ft not in config['apply_'+applyme].get('applyto', ['bpcal','gcal','target']):
                    continue
                 suffix = table_suffix[applyme]
                 interp = applycal_interp_rules[ft][applyme]
                 gainfield = get_gain_field(applyme, ft)
-                gaintablelist.append(prefix+'.{:s}:output'.format(suffix))
+                gaintablelist.append('{0:s}/{1:s}.{2:s}:output'.format(get_dir_path(pipeline.caltables, pipeline), prefix, suffix))
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
                 no_table_to_apply = False
@@ -496,7 +538,7 @@ found in our database or in the CASA NRAO database'.format(field))
         # auto flag closure errors and systematic issues based on calibrated calibrator phase (chi-squared thresholds)
         # Physical assertion: Expect calibrator phase == 0 (calibrator at phase centre). Corrected phases should be at phase centre
         # Any deviation from this expected value per baseline means that there are baseline-based gains (closure errors)
-        # that couldn't be corrected solely antenna-based gains. These baselines must be flagged out of the calibrator and the 
+        # that couldn't be corrected solely antenna-based gains. These baselines must be flagged out of the calibrator and the
         # target fields between calibrator scans which were marked bad.
         # Compare in-between scans per baseline per field per channel
         # Also compare in-between baselines per scan per field per channel

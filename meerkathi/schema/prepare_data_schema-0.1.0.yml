@@ -12,10 +12,6 @@ mapping:
         desc: Executes the data preparation step.
         type: bool
         required: true
-      order: 
-        desc: Order in queue of workers.
-        type: int
-        required: true
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map
@@ -31,10 +27,6 @@ mapping:
         mapping: 
           enable: 
             desc: Enable addition of BITFLAG column to MS.
-            type: bool
-            required: false
-          add_imaging_cols:
-            desc: Adds imaging columns to the measurement set.
             type: bool
             required: false
 

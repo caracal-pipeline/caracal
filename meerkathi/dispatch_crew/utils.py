@@ -38,6 +38,7 @@ def categorize_fields(msinfo):
         'gcal' : (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
         'bpcal': (['CALIBRATE_BANDPASS'], []),
         'target': (['TARGET'], []),
+        'xcal' : (['CALIBRATE_POLARIZATION'], [])
     }
 
     for i, field in enumerate(names):
@@ -51,13 +52,19 @@ def categorize_fields(msinfo):
 
 def get_field_id(msinfo, field_name):
     """ Gets field id """
+    if not isinstance(field_name, str) and not isinstance(field_name, list):
+        raise ValueError("field_name argument must be comma-separated string or list")
     with open(msinfo, 'r') as f:
         info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
-    if field_name not in names:
-        raise KeyError("Could not find field '%s'" % field_name)
-    return ids[names.index(field_name)]
+    results = []
+    for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
+        if fn not in names:
+            raise KeyError("Could not find field '%s'" % field_name)
+        else:
+            results.append(names.index(fn))
+    return results
 
 def select_gcal(msinfo, targets, calibrators, mode='nearest'):
     """
@@ -153,6 +160,8 @@ def field_observation_length(msinfo, field):
             idx = names.index(field)
         elif isinstance(field, int):
             idx = ids.index(field)
+        else:
+            raise ValueError("Field cannot be a {0:s}".format(type(field)))
         return idx
     field = str(ids[index(field)])
 

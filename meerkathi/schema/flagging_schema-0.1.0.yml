@@ -5,22 +5,25 @@ mapping:
     required: true
 
   flagging:
-    desc: Pre-calibration flagging of the data.
+    desc: Flagging of the data.
     type: map
     mapping:
       enable: 
-        desc: Execute pre-calibration flagging of the data.
+        desc: Execute flagging of the data.
         type: bool
-        required: true
-      order:
-        desc: Order in queue of workers. Generally a non-negative integer. 
-        type: int
         required: true
       label:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
         required: false
-
+      hires_label:
+        desc: Label for high frequency resolution data.
+        type: str
+        required: false
+      hires_flag:
+        desc: Enables AOFlagger run on high frequency resolution data.
+        type: bool
+        required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
@@ -28,7 +31,7 @@ mapping:
           enable:
             desc: Enables flagging of antennas based on drifts in the scan average of the auto correlation spectra per field.
             type: bool
-            required: false
+            required: true
           scan_to_scan_threshold:
             desc: Threshold for flagging in sigma above the rest of the scans per field per channel.
             type: int
@@ -61,7 +64,7 @@ mapping:
           enable:
             desc: Enables flagging of autocorrelations.
             type: bool
-            required: false
+            required: true
 
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
@@ -70,16 +73,16 @@ mapping:
           enable:
             desc: Enable quack flagging.
             type: bool
-            required: false
+            required: true
           quackinterval:
             desc: Time interval (in seconds) to flag. 
             type: float
-            required: false
+            required: true
           quackmode: 
             desc: Quack flagging mode. Either 'beg', which flags scan begining, 'endb', which flags end of the scan, 'end', which flags everything but the first specified seconds of the scan and 'tail' which flags all but the last specified seconds of the scan. 
             type: str
             enum: ["beg", "endb", "end", "tail"]
-            required: false
+            required: true
 
       flag_shadow:
         desc: Flag shadowed antennas through the CASA task FLAGDATA.
@@ -105,11 +108,11 @@ mapping:
           enable:
             desc: Enable flagging spectral windows/ channels.
             type: bool
-            required: false
+            required: true
           channels: 
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel", e.g. "*:856~880MHz". End channel not inclusive.
             type: str
-            required: false
+            required: true
           ensure_valid_selection:
             desc: Check whether the channel selection returns any data. If it does not, FLAGDATA is not executed, preventing the pipeline from crashing. This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
             type: bool
@@ -122,7 +125,7 @@ mapping:
           enable: 
             desc: Enabla flagging timeranges.
             type: bool
-            required: false
+            required: true
           timerange: 
             desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
@@ -135,9 +138,13 @@ mapping:
           enable: 
             desc: Enables flagging of bad antennas. 
             type: bool
-            required: false
+            required: true
           antennas:
             desc: Antennas to flag. Follows the CASA Flagdata syntax. 
+            type: str
+            required: false
+          timerange: 
+            desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: false
 
@@ -148,7 +155,7 @@ mapping:
           enable:
             desc: Enables flagging of bad scans. 
             type: bool
-            required: false
+            required: true
           scans: 
             desc: Scans to flag. CASA flagdata syntax.
             type: str
@@ -161,11 +168,11 @@ mapping:
           enable:
             desc: Enables the application of static mask on the data.
             type: bool
-            required: false
+            required: true
           mask: 
             desc: The mask to apply. 
             type: str
-            required: false
+            required: true
           uvrange:
             desc: UV range to select (CASA style range, e.g. lower~upper) for flagging. Leave blank for entire array.
             type: str
@@ -196,6 +203,48 @@ mapping:
             type: str
             required: false
 
+      rfinder:
+        desc: A tool to investigate the presence of RFI
+        type: map
+        mapping:
+          enable:
+            desc: Enable invsetigation of rfi with rfinder
+            type: bool
+            required: false
+          telescope:
+            desc: Name of telescope
+            type: str
+            required: false
+          field:
+            desc: Field to get flag stats. Given as a key (key in [gcal, bpcal, target]).
+            type: str
+            required: false
+          polarization:
+            desc:  Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS)
+            type: str
+            enum: ['xx', 'XX', 'yy', 'YY', 'xy', 'XY', 'yx', 'YX', 'q', 'Q']
+            required: false
+          spw_enable:
+            desc: Enable spw for rebinning
+            type: bool
+            required: false
+          spw_width:
+            desc: Channel width of rebinned output table (MHz)
+            type: int
+            required: false
+          time_enable:
+            desc: Enable time chunking
+            type: bool
+            required: false
+          time_step:
+            desc: Time chunks in minutes
+            type: int
+            required: false
+          movies_in_report:
+            desc: Generate movies in a repo
+            type: bool
+            required: false
+
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map
@@ -203,4 +252,4 @@ mapping:
           enable:
             desc: Enables the writing of flagging summary.
             type: bool
-            required: false 
+            required: true 

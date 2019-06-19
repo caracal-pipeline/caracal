@@ -12,14 +12,15 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
-      order:
-        desc: Order of worker in queue
-        type: int
-        required: true
-      label:
-        desc: Label for new data set
+      label_in:
+        desc: Label of the input dataset
         type: str
         required: true
+      label_out:
+        desc: Label of the output dataset
+        type: str
+        required: true
+
       split_target:
         desc: Split data
         type: map
@@ -35,6 +36,96 @@ mapping:
           freq_average:
             desc: Frequency averaging
             type: int
+            required: true
+          column:
+            desc: Column to split, default is 'corrected'
+            type: str
+            required: false
+          correlation:
+            desc: Select correlations, default is '' = all
+            type: str
+            required: false
+          spw:
+            desc: Select spectral windows and channels, default is '' = all
+            type: str
+            required: false
+
+          otfcal:
+            desc: Apply OTF calibration
+            type: map
+            mapping:
+              enable:
+                desc: Execute this section
+                type: bool
+                required: false
+              callabel:
+                desc: Label of calibration tables to be used
+                type: str
+                required: false
+              apply_delay_cal:
+                type: map
+                desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
+                mapping: 
+                  enable: 
+                    desc: Executes application of delay correction calibration table.
+                    type: bool
+                    required: false
+                  field: 
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
+              apply_bp_cal:
+                type: map
+                desc: Apply the bandpass table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of bandpass table.
+                    required: false
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
+              apply_gain_cal_gain:    
+                type: map
+                desc: Apply the gain calibration table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of gain calibration table.
+                    required: false
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+              apply_transfer_fluxscale:
+                type: map
+                desc: Apply the fluxscale table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of fluxscale table.
+                    required: false
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+
+      changecentre:
+        desc: changes the phase centre
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: true
+          ra:
+            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            type: str
+            required: true
+          dec:
+            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            type: str
             required: true
       obsinfo:
         desc: Get observation information

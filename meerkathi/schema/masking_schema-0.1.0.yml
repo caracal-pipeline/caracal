@@ -1,0 +1,116 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  masking:
+    type: map
+    desc: Create mask from catalog and/or merge with mask of extended source
+    mapping:
+      enable:
+        type: bool
+        desc: Execute this segment
+        required: true
+      centre_coord:
+        seq:
+          - type: str
+        required: true
+        desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"]
+      mask_size:
+        type: int
+        desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
+        required: true
+      cell_size:
+        type: float
+        desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
+        required: true
+      name_mask:
+        type: str
+        required: false
+        desc: Name of the output mask generated from catalog
+      extended_source_input:
+        type: str
+        required: false
+        desc: Name of the input mask for particularly extended sources in the field
+      final_mask:
+        type: str
+        required: false
+        desc: Name of the output final mask
+
+      query_catalog:
+        type: map
+        desc: Query catalog to select field/sources from which extract the mask
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true
+          catalog:
+            type: str
+            required: True
+            desc: Name of catalog to query [NVSS/SUMSS]
+          width_image:
+            type: str
+            desc: Width of the region of sky we want to mask (keep larger than dirty image)
+            required: true
+
+      pb_correction:
+        type: map
+        desc: Correct input image for primary beam before exctracting mask
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: true
+          frequency:
+            type: float
+            desc: Primary beam size changes with frequency, provide central frequency of considered dataset
+            required: false
+
+      make_mask:
+        type: map
+        desc: Build mask from existing image using SoFiA and/or threshold cutoff
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+          mask_with:
+            type: str
+            enum: ["thresh", "sofia"]
+            desc: Tool to use for masking
+            required: true
+          input_image:
+            type: str
+            enum: ["pbcorr", "path_to_mask"]
+            desc: Input image where to create mask ???? what is this ???
+            required: true
+          thresh_lev:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            required: false
+          scale_noise_window:
+            type: float
+            desc: window size where SoFiA measures the local rms, units of pixels
+            required: false
+
+      merge_with_extended:
+        type: map
+        desc: Merge with mask of extended source
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+          extended_source_input:
+            type: str
+            desc: name of image of extended source to merge with current image
+            required: false
+          mask_with:
+            type: str
+            enum: ["thresh", "sofia"]
+            desc: Tool to use for masking
+            required: false
+          thresh_lev:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            required: false

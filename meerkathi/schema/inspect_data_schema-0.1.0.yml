@@ -12,14 +12,14 @@ mapping:
         type: bool
         desc: Executes dignostic plotting of the first-pass cross-calibrated data.
         required: true
-      order: 
-        type: int
-        desc: The order in which this step will be executed in the pipeline.
-        required: true
       label: 
         type: str
         desc: Lable for output products (plots etc.) for this step.
         required: true
+      correlation: 
+        type: str
+        desc: Lable specyfying the correlations used XX,YY is default
+        required: false
 
       real_imag:
         type: map
@@ -30,13 +30,14 @@ mapping:
             desc: Executed the real v/s imaginary data plotting.
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
             required: true
           column: 
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime: 
             type: str
             desc: Time to average for plotting, in seconds.
@@ -55,13 +56,14 @@ mapping:
             desc: Executes the plotting of amplitude v/s phase for data.
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:    
             type: str
             desc: Time to average for plotting, in seconds.
@@ -80,13 +82,14 @@ mapping:
             desc: Executes plotting data amplitude as a function of uvwave.  
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: true
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -100,19 +103,19 @@ mapping:
         type: map
         desc: Plot data amplitde v/s antenna.
         mapping: 
-          mapping:
           enable:
             type: bool
             desc: Executes plotting data amplitude v/s antennas.
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: true
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -131,13 +134,14 @@ mapping:
             desc: Executes plotting data phase v/s uvwave.
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: true
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
@@ -156,13 +160,14 @@ mapping:
             desc: Executes plotting data amplitude v/s scan number.
             required: true
           fields:
-            type: str
+            seq:
+              - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: true
           column:
             type: str
             desc: Data column to plot.
-            required: true
+            required: false
           avgtime:
             type: str
             desc: Time to average for plotting, in seconds.

@@ -9,18 +9,13 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute segment image_HI (yes/no). Default is yes. 
+        desc: Execute segment image_HI (yes/no). Default is yes.
         type: bool
         required: true
-      order:
-        desc: Order in queue of workers. Default is 11.
-        type: int
-        required: false
       label:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
         required: false
-        
       restfreq:
         desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
         type: str
@@ -50,21 +45,58 @@ mapping:
             desc: Execute segment subtractmodelcol. Default is False.
             type: bool
             required: false
-      uvcontsub:
-        desc: Perform a continuum subtraction on the visibilities by fitting a fitorderth-order polynomial to xx and yy correlations at each time step.
+      mstransform:
+        desc: Perform UVLIN continuum subtraction and/or doppler tracking corrections
         type: map
         mapping:
           enable:
-            desc: Execute segment uvcontsub (yes/no). Default is yes.
+            desc: Execute segment doppler correction (yes/no). Default is yes.
             type: bool
+            required: true
+          telescope:
+            desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
+            enum: ['meerkat','vla','gmrt', 'wsrt', 'atca', 'askap']
+            type: str
+            required: false
+          doppler:
+            desc: Transform channel labels and visibilities to a different spectral reference frame. default is True
+            type: bool
+            required: true
+          mode:
+            desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
+            type: str
+            required: false
+          outframe:
+            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'. Defaut is 'BARY'
+            type: str
+            required: false
+          veltype:
+            desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
+            type: str
+            required: false
+          outchangrid:
+            desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above)
+            type: str
+            required: false
+          uvlin:
+            desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform. Default is false
+            type: bool
+            required: true
+          fitspw:
+            desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
+            type: str
             required: false
           fitorder:
-            desc: Order of the polynomial to be subtracted. Default is 1.
+            desc: Polynomial order for the continuum fits
             type: int
             required: false
-          fitspw:
-            desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
+          column:
+            desc: Data column to use.
             type: str
+            required: false
+          obsinfo:
+            desc: Create obsinfo.txt and obsinfo.json of MS file created by mstransform. Default true
+            type: bool
             required: false
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
@@ -74,7 +106,7 @@ mapping:
             desc: Execute segment sunblocker (yes/no). Default is yes.
             type: bool
             required: false
-          use_contsub:
+          use_mstransform:
             desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false
@@ -90,57 +122,18 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
-
-      doppler_corr:
-        desc: Perform doppler tracking corrections
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment doppler correction (yes/no). Default is yes.
+          vampirisms:
+            desc: Apply only to data taken during day time (defaults to true)
             type: bool
             required: false
-          use_contsub:
-            desc: Execute doppler corrections on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
-            type: bool
+          uvmax:
+            desc: Maximum uvdistance in wavelength to be analysed (defaults to 2000)
+            type: float
             required: false
-          telescope:
-            desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
-            enum: ['meerkat','vla','gmrt', 'wsrt', 'atca']
-            type: str
+          uvmin:
+            desc: Minimum uvdistance in wavelength to be analysed (defaults to 0)
+            type: float
             required: false
-          regrid:
-            desc: Transform channel labels and visibilities to a different spectral reference frame. default is True
-            type: bool
-            required: false
-          mode:
-            desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
-            type: str
-            required: false
-          nchan:
-            desc: Number of channels to regrid, 'all' is for all channels or an integer number. Default is 'all'
-            type: text
-            required: false
-          outframe:
-            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'. Defaut is 'BARY'
-            type: str
-            required: false
-          veltype:
-            desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
-            type: str
-            required: false
-          msuvcontsub:
-            desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform. Default is false
-            type: bool
-            required: false
-          fitspw:
-            desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
-            type: str
-            required: false
-          fitorder:
-            desc: Polynomial order for the continuum fits
-            type: int
-            required: false
-                 
       wsclean_image:
         desc: Use WSClean to create line data cube. See WSclean wiki on sourceforge.
         type: map
@@ -149,12 +142,20 @@ mapping:
             desc: Execute segment wsclean_image (yes/no). Default is yes.
             type: bool
             required: false
-          use_contsub:
-            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
+          wscl_niter:
+            desc: Maximum number of rewsclean iterations to perform. Default is 2 # for now .
+            type: int
+            required: false
+          tol:
+            type: float
+            desc: Relative change in the noise.
+            required: false
+          rm_intcubes:
+            desc: If set to true it deletes intermediate cubes from the output directory, if set to false it keeps all the cubes from the wsclean loops
             type: bool
             required: false
-          use_doppcorr:
-            desc: Execute wsclean_image on doppler tracking corrected data. Default is yes
+          use_mstransform:
+            desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false
           pol:
@@ -199,7 +200,7 @@ mapping:
             desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
             type: str
             required: false
-          robust: 
+          robust:
             desc: Robust parameter in case of Briggs weighting. Default is 2.
             type: float
             required: false
@@ -211,12 +212,16 @@ mapping:
             desc: Maximum number of clean iterations to perform. Default is 1000000.
             type: int
             required: false
-          automask: 
+          ownfitsmask:
+            desc: Accepts a 3D-mask cleaning mask in fits format. Mask made by the user. Default is '' (an empty field)
+            type: str
+            required: false
+          automask:
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             type: float
             required: false
           autothreshold:
-            desc: Estimate noise level using a robust estimator and stop at sigma x stddev 
+            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
             type: float
             required: false
           cleanborder:
@@ -227,36 +232,20 @@ mapping:
             desc: If set to true the output is a data cube, if set to false the output is one fits file per spectral channel. Default is yes.
             type: bool
             required: false
-          make_mask:
-            desc: If set to true the output is a sofia mask, if set to false no sofia mask is made. Default is yes.
-            type: bool
-            required: false
           no_update_mod:
-            desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI. 
+            desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI.
             type: bool
             required: false
-      rewsclean_image:
-        desc: Use WSClean to recreate line data cube using a three-dimensional mask. Most WSClean settings are taken from wsclean_image. See WSclean wiki on sourceforge.
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment wsclean_image (yes/no). Default is yes.
+          multi_scale:
             type: bool
+            desc: switch on multiscale cleaning
             required: false
-          fitsmask:
-            desc: Accepts a 3D-mask cleaning mask in fits format. Mask from sofia/own. Default is 'sofia_mask'
-            type: str
-            required: false
-          niter:
-            desc: Maximum number of clean iterations to perform. Default is 1000000.
-            type: int
-            required: false
-          autothreshold:
-            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
-            type: float
+          multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc]
             required: false
 
-      
       casa_image:
         desc: Use CASA to create line data cube.
         type: map
@@ -264,12 +253,16 @@ mapping:
           enable:
             type: bool
             required: false
-          use_contsub:
+          use_mstransform:
             desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false
           pol:
             desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations). Default is I.
+            type: str
+            required: false
+          taper:
+            desc: uvtaper as in casa clean either in arcsec of klambda.
             type: str
             required: false
           spwid:
@@ -314,15 +307,35 @@ mapping:
             desc: Port output to fits files if yes. Default is yes.
             type: bool
             required: false
-      freq_to_vel:
-        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed. Default is true.
+      remove_stokes_axis:
+        desc: Remove Stokes axis from HI cube
         type: map
         mapping:
           enable:
-            desc: Execute conversion.
+            desc: Execute this segment. Default is true
+            type: bool
+            required: true
+      pb_cube:
+        desc: Make primary beam cube
+        type: map
+        mapping:
+          enable:
+            desc: Execute this segment. Default is false
+            type: bool
+            required: true
+      freq_to_vel:
+        desc: Convert the spectral axis' header keys of the HI cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed.
+        type: map
+        mapping:
+          enable:
+            desc: Execute conversion. Default is true
+            type: bool
+            required: true
+          reverse:
+            desc: Perform the inverse transformation and change the cube 3rd axis from velocity to frequency. Default is false.
             type: bool
             required: false
-      sofia: 
+      sofia:
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
         mapping:
@@ -348,18 +361,18 @@ mapping:
               - type: int
             required: false
           merge:
-            desc: Use method to de-select and merge emission islands detected by any of SoFiA’s source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (yes/no). Default is yes.
+            desc: Use method to de-select and merge emission islands detected by any of SoFiA source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (yes/no). Default is yes.
             type: bool
             required: false
           mergeX:
             desc: Merge-'radius' in x-direction. Default is 2
             type: int
             required: false
-          mergeY: 
+          mergeY:
             desc: Merge-'radius' in y-direction. Default is 2
             type: int
             required: false
-          mergeZ: 
+          mergeZ:
             desc: Merge-'radius' in z-direction (velocity direction). Default is 3
             type: int
             required: false
@@ -372,7 +385,7 @@ mapping:
             type: int
             required: false
           minSizeZ:
-            desc: Minimum size in y-direction. Default is 5.      
+            desc: Minimum size in y-direction. Default is 5.
             type: int
             required: false
       flagging_summary:

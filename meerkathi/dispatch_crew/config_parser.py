@@ -370,7 +370,7 @@ class config_parser:
         #print groups
 
         if cfgVars is None:
-            return cfgVars
+            return groups
         #print schema_section
         sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
         # Transform keys
@@ -380,7 +380,7 @@ class config_parser:
         #assert isinstance(schema_section["mapping"], dict)
         #print schema_section["mapping"].iteritems()
         for key, subVars in sec_defaults.iteritems():
-
+            print subVars, key
             #sys.exit(0)
             option_name = base_section + "_" + key if base_section != "" else key
             #print option_name
@@ -411,7 +411,15 @@ class config_parser:
                 #groups[key] = schema_section["mapping"][key].get("example", None)
                 #read in numbers
                 #print subVars["example"]
-                
+                _option_factory(subVars["type"] if "seq" not in subVars else \
+                                                            subVars["seq"][0]["type"],
+                                    "seq" in subVars,
+                                    option_name,
+                                    subVars.get("required", False),
+                                    subVars.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
+                                    subVars.get("enum", None),
+                                    subVars,
+                                    parser)    
                 a = __builtins__['str']('2')
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 #if subVars["type"] == 'str':
@@ -435,15 +443,7 @@ class config_parser:
                 #elif update_only == "defaults":
 
                 #else:
-                #    _option_factory(schema_section["mapping"][key]["type"] if "seq" not in schema_section["mapping"][key] else \
-                #                                            schema_section["mapping"][key]["seq"][0]["type"],
-                #                    "seq" in schema_section["mapping"][key],
-                #                    option_name,
-                #                    schema_section["mapping"][key].get("required", False),
-                #                    schema_section["mapping"][key].get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
-                #                    schema_section["mapping"][key].get("enum", None),
-                #                    default,
-                #                    parser)
+        
             cls.__store_args(args, groups)
 
                 #    groups[key] = default

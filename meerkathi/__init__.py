@@ -250,7 +250,7 @@ def main(argv):
     arg_groups = cp(argv).arg_groups
     #print 'END'
     #print args
-    #print arg_groups
+    print arg_groups
 
     if args.schema:
         schema = {}

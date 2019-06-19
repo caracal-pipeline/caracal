@@ -12,6 +12,7 @@ mapping:
         type: bool
         desc: Execute this segment
         required: true
+        example: 'False'
       order:
         type: int
         desc: Workers are executed in ascending order based on this value
@@ -22,26 +23,32 @@ mapping:
           - type: str
         required: true
         desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"]
+        example: '00:00:00,00:00:00'
       mask_size:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
         required: true
+        example: '1000'
       cell_size:
         type: float
         desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
         required: true
+        example: '2'
       name_mask:
         type: str
         required: false
         desc: Name of the output mask generated from catalog
+        example: 'catalog_mask.fits'
       extended_source_input:
         type: str
         required: false
         desc: Name of the input mask for particularly extended sources in the field
+        example: 'extended_mask.fits'
       final_mask:
         type: str
         required: false
         desc: Name of the output final mask
+        example: 'final_mask.fits'
 
       query_catalog:
         type: map
@@ -51,14 +58,17 @@ mapping:
             type: bool
             desc: Execute this worker
             required: true
+            example: 'False'
           catalog:
             type: str
             required: True
             desc: Name of catalog to query [NVSS/SUMSS]
+            example: 'SUMSS'
           width_image:
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
             required: true
+            example: '2d'
 
       pb_correction:
         type: map
@@ -68,10 +78,12 @@ mapping:
             type: bool
             desc: Execute this worker
             required: true
+            example: 'False'
           frequency:
             type: float
             desc: Primary beam size changes with frequency, provide central frequency of considered dataset
             required: false
+            example: '1.4200'
 
       make_mask:
         type: map
@@ -80,24 +92,30 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
+            required: true
+            example: 'False'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
             desc: Tool to use for masking
             required: true
+            example: 'thresh'
           input_image:
             type: str
             enum: ["pbcorr", "path_to_mask"]
             desc: Input image where to create mask ???? what is this ???
             required: true
+            example: 'pbcorr'
           thresh_lev:
             type: float
             desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
+            example: '3.'
           scale_noise_window:
             type: float
             desc: window size where SoFiA measures the local rms, units of pixels
             required: false
+            example: '31.'
 
       merge_with_extended:
         type: map
@@ -105,17 +123,22 @@ mapping:
         mapping:
           enable:
             type: bool
+            required: true
             desc: Execute this worker
+            example: 'False'
           extended_source_input:
             type: str
             desc: name of image of extended source to merge with current image
             required: false
+            example: 'extended_mask.fits'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
             desc: Tool to use for masking
             required: false
+            example: 'thresh'
           thresh_lev:
             type: float
             desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
+            example: '3.'

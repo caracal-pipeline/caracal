@@ -18,7 +18,7 @@ mapping:
           - type: str
         required: False
         desc: Basename of MS. For MeerKAT data to be downloaded by MeerKATHI, this should be the data ID of the observation
-        example: '1'
+        example: ['mydata']
 
       mvftoms:
         type: map
@@ -28,18 +28,22 @@ mapping:
             type: bool
             desc: Execute this segment
             required: True
+            example: 'False'
           tar: 
             type: bool
             desc: Create a tarbal of the converted MS.
             required: False
+            example: 'False'
           channel_range:
             type: str
             desc: Only exctract channels in this range (0-based, inclusive; comma seperated string)
             required: False
+            example: all
           full_poll:
             type: bool
             desc: Extract all four correlations instead of only the XX,YY
             required: False
+            example: 'False'
 
       untar:
         type: map
@@ -49,10 +53,12 @@ mapping:
             type: bool
             desc: Execute this segment
             required: True
+            example: 'False'
           tar_options: 
             type: str
             desc: Options to parse to 'tar' command
             required: False
+            example: '-xvf'
 
       combine:
         desc: Virtually concatenate MSs and proceed with the combined MS
@@ -62,10 +68,12 @@ mapping:
             type: bool
             desc: Execute this section
             required: True
+            example: 'False'
           reset:
             type: bool
             desc: Delete concatenated MS if it exists. Else, proceed with existing MS
             required: False
+            example: 'False'
           tar:
             desc: Create a tarbal of the converted MS
             type: map
@@ -74,10 +82,13 @@ mapping:
                 desc: Execute this section
                 type: bool
                 required: False
+                example: 'False'
               tar_options:
                 type: str
                 desc: Options to parse to the tar command
                 required: False 
+                example: 'False'
+
           untar:
             desc: Unarchive from MS from a archive file.
             type: map
@@ -86,7 +97,9 @@ mapping:
                 desc: Execute this section
                 type: bool
                 required: False
+                example: 'False'
               tar_options:
                 type: str
                 desc: Options to parse to the tar command
                 required: False
+                example: '-xvf'

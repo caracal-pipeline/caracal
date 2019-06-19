@@ -87,15 +87,19 @@ def add_log_handler(hndl):
 
 # Create the log object
 log, log_filehandler, log_console_handler, log_formatter = create_logger()
-
 ####################################################################
 # MeerKATHI imports
 ####################################################################
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.dispatch_crew import worker_help
+
 import meerkathi.dispatch_crew.caltables as mkct
+
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
+
+
 from meerkathi.view_controllers import event_loop
+
 from meerkathi.dispatch_crew.interruptable_process import interruptable_process
 from meerkathi.dispatch_crew.stream_director import stream_director
 
@@ -240,8 +244,13 @@ def execute_pipeline(args, arg_groups, block):
 ############################################################################
 def main(argv):
     
+
+    #print 'START'
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
+    #print 'END'
+    #print args
+    #print arg_groups
 
     if args.schema:
         schema = {}

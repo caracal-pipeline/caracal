@@ -12,7 +12,7 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
-        example: 'True' 
+        example: 'False' 
       order:
         desc: Order of worker in queue
         type: int
@@ -22,12 +22,12 @@ mapping:
         desc: Label of the input dataset
         type: str
         required: true
-        example: aaa 
+        example: corr
       label_out:
         desc: Label of the output dataset
         type: str
         required: true
-        example: aaa 
+        example: corr 
 
       split_target:
         desc: Split data
@@ -37,26 +37,32 @@ mapping:
             desc: Execute this section
             type: bool
             required: true
+            example: 'False'
           time_average:
             desc: Time averaging
             type: str
             required: true
+            example: '10s'
           freq_average:
             desc: Frequency averaging
             type: int
             required: true
+            example: "10"
           column:
             desc: Column to split, default is 'corrected'
             type: str
             required: false
+            example: 'CORRECTED'
           correlation:
             desc: Select correlations, default is '' = all
             type: str
             required: false
+            example: 'all'
           spw:
             desc: Select spectral windows and channels, default is '' = all
             type: str
             required: false
+            example: 'all'
 
           otfcal:
             desc: Apply OTF calibration
@@ -66,10 +72,12 @@ mapping:
                 desc: Execute this section
                 type: bool
                 required: true
+                example: 'False'
               callabel:
                 desc: Label of calibration tables to be used
                 type: str
                 required: true
+                example: 'corr'
 
               apply_delay_cal:
                 type: map
@@ -79,10 +87,14 @@ mapping:
                     desc: Executes application of delay correction calibration table.
                     type: bool
                     required: true
+                    example: 'False'
                   field: 
                     seq: 
                       - type: str 
                     desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
+                    required: false
+                    example: '1'
+              
               apply_bp_cal:
                 type: map
                 desc: Apply the bandpass table to specified fields via the CASA applycal task.
@@ -91,10 +103,13 @@ mapping:
                     type: bool
                     desc: Executes application of bandpass table.
                     required: true
+                    example: 'False'
                   field:
                     seq: 
                       - type: str 
                     desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
+                    required: false
+                    example: '1'
 
               apply_gain_cal_gain:    
                 type: map
@@ -104,11 +119,14 @@ mapping:
                     type: bool
                     desc: Executes application of gain calibration table.
                     required: true
+                    example: 'False'
                   field:
                     seq: 
                       - type: str 
                     desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
-        
+                    required: false
+                    example: '1'
+
               apply_transfer_fluxscale:
                 type: map
                 desc: Apply the fluxscale table to specified fields via the CASA applycal task.
@@ -117,10 +135,13 @@ mapping:
                     type: bool
                     desc: Executes application of fluxscale table.
                     required: true
+                    example: 'False'
                   field:
                     seq: 
                       - type: str 
                     desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+                    required: false
+                    example: '1'
 
       changecentre:
         desc: changes the phase centre
@@ -130,14 +151,18 @@ mapping:
             desc: Execute this section
             type: bool
             required: true
+            example: "False"
           ra:
             desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
             type: str
             required: true
+            example: 'XXhXXmXX.XXs'
           dec:
             desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
             type: str
             required: true
+            example: 'XXdXXmXX.XXs'
+
       obsinfo:
         desc: Get observation information
         type: map
@@ -146,14 +171,18 @@ mapping:
             desc: Execute this section
             type: bool
             required: true
+            example: 'False'
           listobs:
             desc: Run CASA listobs
             type: bool
             required: true
+            example: 'False'
           summary_json:
             desc: Run MSUtils function
             type: bool
             required: true
+            example: 'False'
+
       prepms:
         desc: Run MSUtils prepms function
         type: map
@@ -162,3 +191,4 @@ mapping:
             desc: Run this section
             type: bool
             required: true
+            example: 'False'

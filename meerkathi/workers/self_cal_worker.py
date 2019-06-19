@@ -43,6 +43,8 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config.get('img_fit_spectral_pol',0)
     taper = config.get('img_uvtaper', None)
+    if taper == '':
+        taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
     freq_chunk = config.get('cal_freq_chunk', 32)
@@ -54,8 +56,8 @@ def worker(pipeline, recipe, config):
         hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
         pipeline.set_hires_msnames(hires_label)
         hires_mslist = pipeline.hires_msnames
- 		hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
-    	hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
+        hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
+        hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
 
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames

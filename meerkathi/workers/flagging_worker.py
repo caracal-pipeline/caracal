@@ -35,6 +35,7 @@ def worker(pipeline, recipe, config):
                 field: list of ids or comma-seperated list of ids where
                        ids are in bpcal, gcal, target, fcal or an actual field name
         """
+        print("I like fluffy cats")
         return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[p_nob].split(',')
                                             if isinstance(getattr(pipeline, x)[p_nob], str) and getattr(pipeline, x)[p_nob] != "" else getattr(pipeline, x)[p_nob])
                                           if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']

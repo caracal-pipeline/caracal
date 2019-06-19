@@ -18,7 +18,7 @@ mapping:
         required: true
       correlation: 
         type: str
-        desc: Lable specyfying the correlations (default: all).
+        desc: Lable specyfying the correlations (default all).
         required: false
 
       real_imag:

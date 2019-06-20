@@ -66,7 +66,7 @@ def worker(pipeline, recipe, config):
 
         target_ls = pipeline.target[i].split(',')
         for field in target_ls:                                                     #replace non standard characters in field names with '_'
-            field = re.sub('[^0-9a-zA-Z]+', '_', field)
+            field = re.sub('[^0-9a-zA-Z]', '_', field)
 
         prefix = pipeline.prefixes[i]
 

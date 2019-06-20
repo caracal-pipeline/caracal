@@ -164,8 +164,8 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}-obsinfo.txt'.format(prefix,tms[:-3])
-                    else: listfile = '{0:s}-{1:s}-obsinfo.txt'.format(prefix,fms[:-3])
+                        listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(tms[:-3])
+                    else: listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(fms[:-3])
                 
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
@@ -180,8 +180,8 @@ def worker(pipeline, recipe, config):
     
                 if (config['obsinfo'].get('summary_json', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}-obsinfo.txt'.format(prefix,tms[:-3])
-                    else: listfile = '{0:s}-{1:s}-obsinfo.txt'.format(prefix,fms[:-3])
+                        listfile = 'meerkathi-{0:s}-obsinfo.json'.format(tms[:-3])
+                    else: listfile = 'meerkathi-{0:s}-obsinfo.json'.format(fms[:-3])
 
                 
                     step = 'summary_json_{:d}'.format(i)

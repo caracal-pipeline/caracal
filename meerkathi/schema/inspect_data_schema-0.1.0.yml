@@ -20,7 +20,7 @@ mapping:
         example: 'corr'
       correlation: 
         type: str
-        desc: Lable specyfying the correlations used XX,YY is default
+        desc: Lable specyfying the correlations (default all).
         required: false
         example: 'XX'
 

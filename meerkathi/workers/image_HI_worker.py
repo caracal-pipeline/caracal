@@ -95,56 +95,7 @@ def make_pb_cube(filename):
             meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(filename.replace('image.fits','pb.fits')))
 
 
-#def calc_rms(filename):
-    #filename=filename.split(':')
-    #filename='{0:s}/{1:s}'.format(filename[1],filename[0])
-#    if not os.path.exists(filename): meerkathi.log.info('Noise not determined in cube for {0:s}. File does not exist.'.format(filename))
-#    else:
-#        with fits.open(filename) as cube:
-#            headcube = cube[0].header
- #           datacube = cube[0].data
- #           y = datacube[~np.isnan(datacube)]
-#	    return np.sqrt(np.sum(y * y, dtype=np.float64) / y.size)
-
-
-
-'''
-def calc_rms(*arg):
-    #filename=filename.split(':')
-    #filename='{0:s}/{1:s}'.format(filename[1],filename[0])
-    if len(arg)==1: 
-        arg='filename'      
-        if not os.path.exists(arg): meerkathi.log.info('Noise not determined in cube for {0:s}. File does not exist.'.format(filename))
-        else:
-            with fits.open(filename) as cube:
-                datacube = cube[0].data
-                y = datacube[~np.isnan(datacube)]
-	        return np.sqrt(np.sum(y * y, dtype=np.float64) / y.size)
-    else:
-        arg=('filename', 'HImaskname')
-        with fits.open(filename) as cube:
-            datacube = cube[0].data
-        with fits.open(HImaskname) as mask:
-            datamask = mask[0].data
-
-            # select channels
-            selchans=datamask.sum(axis=(2,3))>0
-            newcube=datacube[selchans]
-            newmask=datamask[selchans]
-            y2=newcube[newmask==0]
-            #print newcube.shape, newmask.shape, y.shape, 'blah0 blah0'
-              
-            #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
-	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
-'''
-
-
-
-
-
 def calc_rms(filename,HImaskname):
-    #filename=filename.split(':')
-    #filename='{0:s}/{1:s}'.format(filename[1],filename[0])
     if HImaskname==None:
         if not os.path.exists(filename): meerkathi.log.info('Noise not determined in cube for {0:s}. File does not exist.'.format(filename))
         else:
@@ -167,7 +118,6 @@ def calc_rms(filename,HImaskname):
               
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
 	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
-
 
 
 NAME = 'Make HI Cube'
@@ -349,20 +299,20 @@ def worker(pipeline, recipe, config):
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step,
                 {
-                    "command"    : "phazer",
-                    "inset"      : msnamesb,
-                    "outset"     : msnamesb,
-                    "imsize"     : config['sunblocker'].get('imsize', max(npix)),
-                    "cell"       : config['sunblocker'].get('cell', cell),
-                    "pol"        : 'i',
+                    "command"   : "phazer",
+                    "inset"     : msnamesb,
+                    "outset"    : msnamesb,
+                    "imsize"    : config['sunblocker'].get('imsize', max(npix)),
+                    "cell"      : config['sunblocker'].get('cell', cell),
+                    "pol"       : 'i',
                     "threshmode" : 'fit',
-                    "threshold"  : config['sunblocker'].get('threshold', 3.),
-                    "mode"       : 'all',
-                    "radrange"   : 0,
-                    "angle"      : 0,
-                    "show"       : prefix + '.sunblocker.pdf',
-                    "verb"       : True,
-                    "dryrun"     : False,
+                    "threshold" : config['sunblocker'].get('threshold', 3.),
+                    "mode"      : 'all',
+                    "radrange"  : 0,
+                    "angle"     : 0,
+                    "show"      : prefix + '.sunblocker.svg',
+                    "verb"      : True,
+                    "dryrun"    : False,
                     "uvmax"      : config['sunblocker'].get('uvmax',2500.),
                     "uvmin"      : config['sunblocker'].get('uvmin',0.),
                     "vampirisms" : config['sunblocker'].get('vampirisms',True),
@@ -419,7 +369,7 @@ def worker(pipeline, recipe, config):
         wscl_niter = config['wsclean_image'].get('wscl_niter', 2)
         tol = config['wsclean_image'].get('tol', 0.5)
  
-        for j in range(1,wscl_niter):
+        for j in range(1,wscl_niter+1):
             if j==1:        
                 step = 'wsclean_image_HI_with_automasking'
                 ownHIclean_mask=config['wsclean_image'].get('ownfitsmask',)   
@@ -472,7 +422,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs=[] 
                 cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image.fits')
                 rms_ref=calc_rms(cubename,None)
-                #print 'blah1', rms_ref
+                meerkathi.log.info('Initial rms = '+str("{0:.7f}".format(rms_ref))+' Jy/beam')
 
             else:
                 step = 'make_sofia_mask_'+str(j-1)
@@ -488,7 +438,7 @@ def worker(pipeline, recipe, config):
                 "steps.doFlag"          : False,
                 "steps.doScaleNoise"    : True,
                 "steps.doSCfind"        : True,
-                "steps.doMerge"         : False,
+                "steps.doMerge"         : True,
                 "steps.doReliability"   : False,
                 "steps.doParameterise"  : False,
        	        "steps.doWriteMask"     : True,
@@ -515,9 +465,9 @@ def worker(pipeline, recipe, config):
                 recipe.jobs=[]
 
                 if not os.path.exists(HIclean_mask_path):
-                    meerkathi.log.info('Initial sofia mask_'+str(j-1)+' was not found. Exiting and saving the cube') 
+                    meerkathi.log.info('Sofia mask_'+str(j-1)+' was not found. Exiting and saving the cube') 
                    
-                    for ss in ['dirty','psf','residual','model','image']:
+                    for ss in ['dirty','psf','first-residual','residual','model','image']:
                         cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                         MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                         recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
@@ -530,7 +480,7 @@ def worker(pipeline, recipe, config):
                                   label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                     if pipeline.enable_task(config,'freq_to_vel'):
-                        for ss in ['dirty','psf','residual','model','image']:
+                        for ss in ['dirty','psf','first-residual','residual','model','image']:
             	            cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                             MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
@@ -544,7 +494,7 @@ def worker(pipeline, recipe, config):
                     j-=1
                     break
                                 
-                step = 'Sofia_mask_found_running_wsclean_image_HI_loop_'+str(j)
+                step = 'Sofia_mask_found_running_wsclean_image_HI_'+str(j)
                 recipe.add('cab/wsclean', step,
                            {
                                "msname"    : mslist,
@@ -593,16 +543,19 @@ def worker(pipeline, recipe, config):
                 HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
                 cubename_path=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j-1)+'.image.fits')
                 rms2=calc_rms(cubename_path,HIclean_mask_path)
-
-                #print rms2, 'blah2'
-
-                if rms2<=(1.0 - tol)*rms_ref:  #if noise the noise changes by less than 10% keep_going
-                    meerkathi.log.info('relative noise has changed by more than '+str((100.0 - (rms2/rms_ref)*100.0))+'%. I am continuing') 
+                meerkathi.log.info('The updated rms = '+str("{0:.7f}".format(rms2))+' Jy/beam')
+        
+                if rms2<=(1.0 - tol)*rms_ref:  #if the noise changes by less than 10% keep_going
+                    #meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%')) 
                     rms_ref = rms2
-                     
-                    #print cubename,rms_ref, "blah 4 continuing", j
-                    
-                    for ss in ['dirty','psf','residual','model','image']:
+                    if j==wscl_niter: 
+                        meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%. Noise convergence not achieved.'))  
+                        meerkathi.log.info('Maximum number of wsclean iterations reached.')
+                    if j<wscl_niter:
+                        meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%. Noise convergence not achieved.')) 
+                        
+
+                    for ss in ['dirty','psf','first-residual','residual','model','image']:
                         cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                         MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                         recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
@@ -615,7 +568,7 @@ def worker(pipeline, recipe, config):
                                   label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                     if pipeline.enable_task(config,'freq_to_vel'):
-                        for ss in ['dirty','psf','residual','model','image']:
+                        for ss in ['dirty','psf','first-residual','residual','model','image']:
             	            cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                             MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
@@ -626,18 +579,16 @@ def worker(pipeline, recipe, config):
                                        input=pipeline.input,
                                        output=pipeline.output,
                                        label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
-
                     continue
                 else:
-                    if j==wscl_niter:
-                         meerkathi.log.info('Number of wsclean iterations reached')
                     if rms2>=(1.0 - tol)*rms_ref:
-                         meerkathi.log.info('relative noise changed by less than '+str((100.0 - (rms2/rms_ref)*100.0))+'%. I am stopping')
+                        meerkathi.log.info('The relative noise change is less than '+str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%. Noise convergence achieved.'))                     
                     break
 
-        #print j, "blah3" 
 
-        for ss in ['dirty','psf','residual','model','image']:
+        for ss in ['dirty','psf','first-residual','residual','model','image']:
+            if 'dirty' in ss:
+                meerkathi.log.info('Preparing final cubes.')
             cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
             finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_HI.'+ss+'.fits')
             HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
@@ -653,7 +604,7 @@ def worker(pipeline, recipe, config):
 
         for j in range(1,wscl_niter):               
             if config['wsclean_image'].get('rm_intcubes',True):
-                for ss in ['dirty','psf','residual','model','image']:
+                for ss in ['dirty','psf','first-residual','residual','model','image']:
                     cubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits')
                     HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'.image_clean_mask.fits')
                     MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
@@ -706,7 +657,7 @@ def worker(pipeline, recipe, config):
             label='{:s}:: Image HI'.format(step))
 
     if pipeline.enable_task(config,'remove_stokes_axis'):
-        for ss in ['dirty','psf','residual','model','image']:
+        for ss in ['dirty','psf','first-residual','residual','model','image']:
             cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
             recipe.add(remove_stokes_axis, 'remove_stokes_axis_{0:s}_cube'.format(ss),
                        {
@@ -726,7 +677,7 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='Make primary beam cube for {0:s}'.format(cubename))
 
-    for ss in ['dirty','psf','residual','model','image','pb']:
+    for ss in ['dirty','psf','first-residual','residual','model','image','pb']:
         cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
         MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI-MFS-'+ss+'.fits')
         recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
@@ -741,7 +692,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config,'freq_to_vel'):
          if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
          else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
-         for ss in ['dirty','psf','residual','model','image','pb']:
+         for ss in ['dirty','psf','first-residual','residual','model','image','pb']:
             cubename=pipeline.prefix+'_HI.'+ss+'.fits:'+pipeline.output
             recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                        {

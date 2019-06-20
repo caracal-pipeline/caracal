@@ -13,11 +13,6 @@ mapping:
         type: bool
         required: true
         example: 'False' 
-      order:
-        desc: Order of worker in queue
-        type: int
-        required: true
-        example: '6' 
       label_in:
         desc: Label of the input dataset
         type: str

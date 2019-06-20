@@ -18,11 +18,6 @@ mapping:
         desc: Label to tag the output files
         required: true
         example: 'False'
-      order:
-        type: int
-        desc: Workers are executed in ascedning order based on this value
-        required: true
-        example: '7'
       undo_subtractmodelcol:
         desc: replace the corrected column with the sum of corrected and model columns to undo continuum subtraction that may have been done by the image HI worker. Default is false
         type: bool

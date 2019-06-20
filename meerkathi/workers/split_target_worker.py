@@ -65,9 +65,6 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
 
         target_ls = pipeline.target[i].split(',')
-        for field in target_ls:                                                     #replace non standard characters in field names with '_'
-            field = re.sub('[^0-9a-zA-Z]+', '_', field)
-
         prefix = pipeline.prefixes[i]
 
         if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
@@ -101,7 +98,8 @@ def worker(pipeline, recipe, config):
         else: docallib = False
 
         for field in target_ls:
-
+            target = field
+            field = re.sub('[^0-9a-zA-Z]', '_', field)
             fms = pipeline.hires_msnames[i]
             tms = '{0:s}-{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
             flagv = tms+'.flagversions'
@@ -124,7 +122,7 @@ def worker(pipeline, recipe, config):
                         "spw"           : config['split_target'].get('spw', ''),
                         "datacolumn"    : config['split_target'].get('column', 'data'),
                         "correlation"   : config['split_target'].get('correlation', ''),
-                        "field"         : field,
+                        "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
                         "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target']	, 'otfcal') else None),

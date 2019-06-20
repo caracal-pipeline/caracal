@@ -65,17 +65,13 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
 
         target_ls = pipeline.target[i].split(',')
-        for field in target_ls:                                                     #replace non standard characters in field names with '_'
-            field = re.sub('[^0-9a-zA-Z]+', '_', field)
-
         prefix = pipeline.prefixes[i]
 
         if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
     	    uname = getpass.getuser()
     	    gaintablelist,gainfieldlist,interplist = [],[],[]
-      
-            callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
+
+            calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel', '1gc1'))
 
     	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -88,7 +84,7 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
 
-            callib = 'callib_{0:s}_{1:s}.txt'.format(prefix,callabel)
+            callib = 'callib_{0:s}.txt'.format(calprefix)
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
                 for j in range(len(gaintablelist)):
                     stdw.write('caltable="{0:s}/{1:s}"'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"], gaintablelist[j]))
@@ -100,10 +96,12 @@ def worker(pipeline, recipe, config):
             docallib = True
         else: docallib = False
 
-        for field in target_ls:
+        for target in target_ls:
+
+            field = re.sub('[^0-9a-zA-Z]', '_', target)
 
             fms = pipeline.hires_msnames[i]
-            tms = '{0:s}_{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
+            tms = '{0:s}-{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):
@@ -124,11 +122,10 @@ def worker(pipeline, recipe, config):
                         "spw"           : config['split_target'].get('spw', ''),
                         "datacolumn"    : config['split_target'].get('column', 'data'),
                         "correlation"   : config['split_target'].get('correlation', ''),
-                        "field"         : field,
-                        "overwrite"     : True,
+                        "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
-                        "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
+                        "callib"        : sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -165,13 +162,13 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-obsinfo.txt'.format(tms[:-3])
-                    else: listfile = '{0:s}-obsinfo.txt'.format(fms[:-3])
+                        listfile = '{0:s}-{1:s}-{2:s}-obsinfo.txt'.format(prefix,field,label_out)
+                    else: listfile = '{0:s}-obsinfo.txt'.format(prefix)
                 
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
                         {
-                          "vis"         : tms,
+                          "vis"         : [tms if pipeline.enable_task(config, 'split_target') else fms],
                           "listfile"    : listfile,
                           "overwrite"   : True,
                         },
@@ -181,13 +178,13 @@ def worker(pipeline, recipe, config):
     
                 if (config['obsinfo'].get('summary_json', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-obsinfo.json'.format(tms[:-3])
-                    else: listfile = '{0:s}-obsinfo.json'.format(fms[:-3])
+                        listfile = '{0:s}-{1:s}-{2:s}-obsinfo.json'.format(prefix,field,label_out)
+                    else: listfile = '{0:s}-obsinfo.json'.format(prefix)
                 
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                         {
-                          "msname"      : tms,
+                          "msname"      : [tms if pipeline.enable_task(config, 'split_target') else fms],
                           "command"     : 'summary',
                           "display"     : False,
                           "outfile"     : listfile

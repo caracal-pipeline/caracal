@@ -304,9 +304,10 @@ class config_parser:
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
-        
         #groups =  parser.parse_args()
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
+        #cls.__store_args(args, groups)
+
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
@@ -398,7 +399,7 @@ class config_parser:
                 groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
                 parser.set_defaults(**{option_name: subVars['example']})
             elif subVars["type"] == "map": #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
-                cls.__store_args(args, groups)
+                #cls.__store_args(args, groups)
 
                 #cls.__SUBGROUPS = groups #store groups
                 groups[key] = cls._subparser_tree(subVars,
@@ -407,7 +408,7 @@ class config_parser:
                                                   update_only=False,
                                                   args=args,
                                                   parser=parser)
-                                #    parser.set_defaults(**{option_name: subVars})
+                #parser.set_defaults(**{option_name: subVars})
                     
                 #    groups[key] = getattr(args, option_name)
             else:
@@ -425,6 +426,8 @@ class config_parser:
                 #                    parser)    
                 a = __builtins__['str']('2')
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
+                parser.set_defaults(**{option_name: subVars})
+
                 #if subVars["type"] == 'str':
                 #    groups[key] = subVars["example"]
                 #    parser.set_defaults(**{option_name: subVars['example']})

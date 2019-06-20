@@ -18,7 +18,7 @@ mapping:
           - type: str
         required: False
         desc: Basename of MS. For MeerKAT data to be downloaded by MeerKATHI, this should be the data ID of the observation
-        example: ['mydata']
+        example: 'mydata'
 
       mvftoms:
         type: map

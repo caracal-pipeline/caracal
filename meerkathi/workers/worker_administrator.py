@@ -65,7 +65,6 @@ class worker_administrator(object):
             self.workers.append((name, worker, order))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
-        print self.workers
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
         self.recipes = {}
@@ -80,6 +79,7 @@ class worker_administrator(object):
         """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
+        print dataid
         self.dataid = dataid
         self.nobs = nobs = len(self.dataid)
         self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
@@ -164,12 +164,11 @@ class worker_administrator(object):
             except ImportError:
                 traceback.print_exc()
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
-
+            print self.config[_name]
             config = self.config[_name]
             if config.get('enable', True) is False:
                 self.skip.append(_worker)
                 continue
-            print self.workers, i, _name
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,

@@ -17,7 +17,7 @@ mapping:
         desc: Order in queue of workers.
         type: int
         required: true
-        example: '1'
+        example: '3'
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map

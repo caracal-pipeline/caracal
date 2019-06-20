@@ -17,7 +17,7 @@ mapping:
         type: int
         desc: Workers are executed in ascending order based on this value
         required: true
-        example: '1'
+        example: '8'
       centre_coord:
         seq:
           - type: str

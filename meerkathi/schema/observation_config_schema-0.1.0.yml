@@ -12,7 +12,7 @@ mapping:
         desc: Order in queue of workers
         type: int
         required: true
-        example: '1'
+        example: '2'
       obsinfo:
         desc: Get observation information
         type: map

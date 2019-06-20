@@ -17,7 +17,7 @@ mapping:
         type: int
         desc: The order in which this step will be executed in the pipeline.
         required: true
-        example: '1'
+        example: '5'
       label: 
         type: str
         desc: Label for output products (plots etc.) for this step.

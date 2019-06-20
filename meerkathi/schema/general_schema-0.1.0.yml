@@ -12,7 +12,7 @@ mapping:
         type: str
         required: false
         desc: where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
-        example: /home/ 
+        example: / 
       msdir:
         type: str
         required: true
@@ -20,19 +20,19 @@ mapping:
         example: msdir
       input:
         type: str
-        required: true
+        required: false
         desc: where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files).
         example: input
       output:
         type: str
-        required: true
+        required: false
         desc: where MeerKATHI writes output products
         example: output
       prefix:
         type: str
-        required: false
+        required: true
         desc: Prefix for MeerKATHI output products
-        example: KaTsO
+        example: meerkathi
       init_pipeline:
         desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
         required: false

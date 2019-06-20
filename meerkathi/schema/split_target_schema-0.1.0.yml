@@ -92,7 +92,6 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
-                    required: false
                     example: '1'
               
               apply_bp_cal:
@@ -108,7 +107,6 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
-                    required: false
                     example: '1'
 
               apply_gain_cal_gain:    
@@ -124,7 +122,6 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
-                    required: false
                     example: '1'
 
               apply_transfer_fluxscale:

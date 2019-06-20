@@ -13,11 +13,6 @@ mapping:
         type: bool
         required: true
         example: 'True'
-      order: 
-        desc: Order in queue of workers.
-        type: int
-        required: true
-        example: '3'
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map

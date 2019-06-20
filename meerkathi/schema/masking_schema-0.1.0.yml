@@ -13,11 +13,6 @@ mapping:
         desc: Execute this segment
         required: true
         example: 'False'
-      order:
-        type: int
-        desc: Workers are executed in ascending order based on this value
-        required: true
-        example: '8'
       centre_coord:
         seq:
           - type: str

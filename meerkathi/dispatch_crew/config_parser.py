@@ -298,7 +298,6 @@ class config_parser:
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
-            print worker
             groups[worker]= cls._subparser_tree(variables,
                                 schema["mapping"][_worker],        #go within 1st mapping of schema
                                 base_section=worker, 
@@ -397,8 +396,7 @@ class config_parser:
                 #    setattr(args, option_name, subVars)
                 #    groups[key] = default
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
-                print subVars['seq'][0]['type']
-                print subVars['example']
+
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
                 groups[key] = map(typecast_func,subVars["example"])
                 #groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")

@@ -72,7 +72,6 @@ def worker(pipeline, recipe, config):
             pipeline.metada = [metadata]
 
         pipeline.vmsname = msname = config["combine"].get("vmsname")
-        print msname
         pipeline.msnames = ["{0:s}/SUBMSS/{1:s}".format(pipeline.vmsname, _m) for _m in msnames]
 
         if not os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)) or config['combine'].get('reset', True):

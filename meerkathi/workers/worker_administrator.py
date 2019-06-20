@@ -79,7 +79,6 @@ class worker_administrator(object):
         """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
-        print dataid
         self.dataid = dataid
         self.nobs = nobs = len(self.dataid)
         self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]

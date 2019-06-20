@@ -8,11 +8,6 @@ mapping:
     type: map
     desc: Download and/or convert/unarchive data so that its in the MS format for further processing
     mapping:
-      order: 
-        type: int
-        required: True
-        desc: Workers are executed in ascedning order based on this value.
-        example: '1'
       dataid:
         seq:
           - type: str

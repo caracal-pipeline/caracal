@@ -222,7 +222,7 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label="generate_primary_beam:: Generate primary beam")
 
-        pipeline.primary_beam = pipeline.prefix + "-$\(xy\)_$\(reim).fits"
+        pipeline.primary_beam = str(pipeline.prefix)+ "-$\(xy\)_$\(reim).fits"
         pipeline.primary_beam_l_axis = "X"
         pipeline.primary_beam_m_axis = "Y"
         meerkathi.log.info('Primary beam registered as : \\ Pattern - {0:s}\

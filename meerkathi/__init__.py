@@ -247,7 +247,7 @@ def main(argv):
 
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
-    print arg_groups
+
     if args.schema:
         schema = {}
         for item in args.schema:

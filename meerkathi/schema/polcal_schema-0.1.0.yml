@@ -13,11 +13,6 @@ mapping:
         required: true
         desc: Execute this segment.
         example: 'False'
-      order: 
-        type: int
-        required: true
-        desc: Workers are executed in ascending order based on this value. 
-        example: '1'
       label:
         type: str
         required: true

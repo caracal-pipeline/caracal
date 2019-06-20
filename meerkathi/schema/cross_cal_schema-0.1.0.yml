@@ -47,7 +47,7 @@ mapping:
                 - type: str
             desc: "fields to initialize"
             required: true
-            example: '1'
+            example: ['1']
           addmodel:
             type: bool
             desc: "Intializes scratch MODEL_DATA column"
@@ -77,7 +77,7 @@ mapping:
               - type: str 
             desc: Set the field to carry out setjy on. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.   
             required: true
-            example: '1'
+            example: ['1']
           threads:
             type: int
             desc: Set the number of threads to use when predicting local sky model using MeqTrees.
@@ -114,7 +114,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      
             required: true
-            example: 'fcal'
+            example: ['fcal']
           plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -139,7 +139,7 @@ mapping:
                 - type: int 
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: ['1']
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -170,7 +170,7 @@ mapping:
                   - type: float 
                 desc: Specifies the minimum and maximum delay to keep, e.g. [-60, 60]. Execute order 66 on the rest. 
                 required: false
-                example: '1.'
+                example: ['1.']
       bp_cal:
         type: map
         desc: Carry out bandpass calibration (using bandpass task from CASA)
@@ -191,7 +191,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the bandpass from. Specify either the field number, name or even as 'bpcal' corresponding to field specification in observation config.
             required: true
-            example: 'bpcal'
+            example: ['bpcal']
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving. 
@@ -242,7 +242,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['1.']
           plot:
             type: map
             desc: Plotting dignostics plots for bandpass correction calibration.
@@ -300,7 +300,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
-            example: 'fcal'
+            example: ['fcal']
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -341,7 +341,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['1.']
           plot:
             type: map
             desc: Plotting dignostics plots for flux calibrator corrections.
@@ -366,7 +366,7 @@ mapping:
                 - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: ['1']
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -398,7 +398,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: false
-            example: 'gcal'
+            example: ['gcal']
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -439,7 +439,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['1.']
           plot:
             type: map
             desc: Plotting dignostics plots for gain calibrator corrections.
@@ -464,7 +464,7 @@ mapping:
                 - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: ['1']
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -490,13 +490,13 @@ mapping:
               - type: str
             desc: Field to transfer flux sale from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: false
-            example: 'gcal'
+            example: ['gcal']
           transfer:
             seq:
               - type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: true
-            example: 'gcal'
+            example: ['gcal']
           plot:
             type: map
             desc: Enables plotting gain amplitudes for Flux and Gain calibrator field.
@@ -521,7 +521,7 @@ mapping:
                 - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: ['1']
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -532,6 +532,7 @@ mapping:
                 desc: "Output HTML file name"
                 required: false
                 example: 'crossOut'
+      
       apply_delay_cal:
         type: map
         desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
@@ -546,13 +547,13 @@ mapping:
               - type: str 
             desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
             required: true
-            example: 'bpcal'
+            example: ['bpcal']
           applyto: 
             seq: 
               - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
-            example: 'bpcal,gcal,target'
+            example: ['bpcal' , 'gcal', 'target']
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -580,7 +581,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
-            example: 'bpcal,gcal,target'
+            example: ['bpcal', 'gcal', 'target']
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -608,7 +609,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
-            example: 'bpcal, gcal, target'
+            example: ['bpcal', 'gcal', 'target']
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -630,13 +631,13 @@ mapping:
               - type: str 
             desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
             required: true
-            example: 'gcal'
+            example: ['gcal']
           applyto:
             seq: 
               - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: true
-            example: 'bpcal, gcal, target'
+            example: ['bpcal', 'gcal', 'target']
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.

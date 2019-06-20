@@ -33,7 +33,7 @@ mapping:
             -  type: int
           desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images. Default is 1024.
           required: false
-          example: '10,2'
+          example: ['10','2']
       cell:
         desc: Default scale of a pixel in arcsec. Default is 7.
         type: float
@@ -231,7 +231,7 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '1000,1000'
+            example: ['1000' , '1000']
           padding:
             desc: Images have initial size padding*npix, and are later trimmed to npix. Default is 1.2.
             type: float
@@ -307,7 +307,7 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc]
             required: false
-            example: '[0,10,20,30]'
+            example: ['0', '10', '20' , '30']
 
       casa_image:
         desc: Use CASA to create line data cube.
@@ -353,7 +353,7 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '1000,1000'
+            example: ['1000' , '1000']
           cell:
             desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is worker cell.
             type: str
@@ -449,7 +449,7 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '[10,10]'
+            example: ['10', '10']
           merge:
             desc: Use method to de-select and merge emission islands detected by any of SoFiA source finding algorithms. If turned on, pixels with a separation of less than mergeX pixels in x direction and less than mergeY pixels in y-direction and less than z pixels in z-direction will be merged and identified as a single object in the mask. Detections whose extent in x-direction is smaller than minSizeX, in y direction is smaller than minSizeY, and in z-direction is smaller than minSizeZ will be removed from the mask. Parameter merge determines if the merging should be applied (yes/no). Default is yes.
             type: bool

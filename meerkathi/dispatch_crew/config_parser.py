@@ -294,16 +294,17 @@ class config_parser:
             
             #validate with schema
             #c = Core(source_data=source_data, schema_files=[schema_fn])
-            #cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
+            #cls.__validated_schema[worker] = c.validate(raise_exception=True)[_worker]
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
-
+            print worker
             groups[worker]= cls._subparser_tree(variables,
                                 schema["mapping"][_worker],        #go within 1st mapping of schema
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
+
         #groups =  parser.parse_args()
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
         #cls.__store_args(args, groups)
@@ -329,7 +330,6 @@ class config_parser:
                         parser = None): #parser
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
-
         def _str2bool(v):
             if v.upper() in ("YES","TRUE"):
                 return True
@@ -384,6 +384,7 @@ class config_parser:
         #assert schema_section["type"] == "map"
         #assert isinstance(schema_section["mapping"], dict)
         #print schema_section["mapping"].iteritems()
+
         for key, subVars in sec_defaults.iteritems():
             #sys.exit(0)
             option_name = base_section + "_" + key if base_section != "" else key
@@ -396,13 +397,17 @@ class config_parser:
                 #    setattr(args, option_name, subVars)
                 #    groups[key] = default
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
-                groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
+               # groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
                 parser.set_defaults(**{option_name: subVars['example']})
+                typecast_func = __builtins__[subVars['seq'][0]['type']]
+                groups[key] = map(typecast_func,subVars["example"])
+                if key in cfgVars.keys():
+                    groups[key] = cfgVars[key]
+
             elif subVars["type"] == "map": #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
                 #cls.__store_args(args, groups)
-
                 #cls.__SUBGROUPS = groups #store groups
-                groups[key] = cls._subparser_tree(subVars,
+                groups[key] = cls._subparser_tree(cfgVars,
                                                   subVars,
                                                   base_section=option_name,
                                                   update_only=False,
@@ -424,10 +429,11 @@ class config_parser:
                 #                    subVars.get("enum", None),
                 #                    subVars,
                 #                    parser)    
-                a = __builtins__['str']('2')
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 parser.set_defaults(**{option_name: subVars})
-
+                
+                if key in cfgVars.keys():
+                    groups[key] = cfgVars[key]
                 #if subVars["type"] == 'str':
                 #    groups[key] = subVars["example"]
                 #    parser.set_defaults(**{option_name: subVars['example']})

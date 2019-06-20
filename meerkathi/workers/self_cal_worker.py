@@ -42,7 +42,7 @@ def worker(pipeline, recipe, config):
     pol = config.get('img_pol', 'I')
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    taper = config.get('img_uvtaper', None)
+    taper = config.get('img_uvtaper')
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
     ncpu = config.get('ncpu', 9)

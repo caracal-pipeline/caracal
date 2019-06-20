@@ -160,7 +160,7 @@ mapping:
               - type: str
             required: false
             desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Options ["DR","SKEW","KURT","STDDev","MEAN"]. Note that when calibrate model_mode = 'vis_only' DR is not an option.
-            example: 'DR'
+            example: ['DR']
           area_factor:
             type: float
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
@@ -192,13 +192,13 @@ mapping:
               - type: int 
             desc: Auto masking threshold
             required: true
-            example: '10'
+            example: ['10']
           auto_threshold:
             seq:
               - type: float
             desc: Auto clean threshold
             required: true
-            example: '0.5'
+            example: ['0.5']
           column:
             seq:
               - type: str
@@ -226,7 +226,7 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc]
             required: false
-            example: '10, 20, 30' 
+            example: ['10', '20', '30'] 
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean
@@ -267,18 +267,12 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '20'
+            example: ['20']
           inputmask:
             type: str
             desc: input mask over which add Sofia's
             required: false
             example: 'inputMask.fits'
-          kernels:
-            seq:
-              - type: int
-            desc: Kernels for mask
-            required: false
-            example: '[3, 3, 0, b]'
           fornax_special:
             desc: Activates masking of Fornax A using Sofia
             type: bool
@@ -289,7 +283,7 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '4.0'
+            example: ['4.0']
           use_sofia:
             type: bool
             desc: use sofia for mask of Fornax A instead of Fomalont mask  
@@ -335,13 +329,13 @@ mapping:
               - type: int
             desc: Source finder pixel threshold
             required: false
-            example: '3.'
+            example: ['3']
           thresh_isl:
             seq:
               - type: int
             desc: Source finder island threshold
             required: false
-            example: '3.'
+            example: ['3']
 
       calibrate:
         type: map
@@ -357,7 +351,7 @@ mapping:
               - type: str
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
-            example: '1+2'
+            example: ['1+2']
           output_data:
             seq:
               - type: str
@@ -369,7 +363,7 @@ mapping:
               - type: str
             desc: Gain matrix type
             required: true
-            example: 'JJones'
+            example: ['JJones']
           model_mode:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
@@ -395,13 +389,13 @@ mapping:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: true
-            example: '[10,0]'
+            example: ['10', '0']
           Gsols_channel:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '[10,0]'
+            example: ['10', '0']
           Bjones: 
            type: bool
            desc: Enable Bjones
@@ -412,13 +406,13 @@ mapping:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '[10,0]'
+            example: ['10', '0']
           Bsols_channel:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '[10,0]'
+            example: ['10', '0']
           DDjones:
             type: bool
             desc: Enable direction dependent calibration, currently experimental.
@@ -429,13 +423,13 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '[10,0]'
+            example: ['10', '0']
           DDsols_channel:
             desc: Calibration solution intervals
             seq:
               - type: float
             required: false
-            example: '[10,0]'
+            example: ["10", '0']
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -450,24 +444,24 @@ mapping:
                 - type: str
                 desc: "List of gain tables to plot"
                 required: false
-                example: 'Csols'
+                example: ['Csols']
               gaintype:
                 seq:
                 - type: str
                 desc: "List of gain solution types"
                 required: false
-                example: 'Gsols'
+                example: ['Gsols']
               field:
                 seq:
                 - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: ['1']
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'X'
+                example: ['X']
               htmlname:
                 type: str
                 desc: "Output HTML file name"
@@ -487,12 +481,12 @@ mapping:
             type: str
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
-            example: '1+2'
+            example: ['1+2']
           clean_model: 
             type: str
             desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
             required: true
-            example: '1+2'
+            example: ['1+2']
 
       flagging_summary:
         type: map
@@ -633,7 +627,7 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc]
             required: false
-            example: '[10,20,30,40]'
+            example: ['10', '20', '30', '40']
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning

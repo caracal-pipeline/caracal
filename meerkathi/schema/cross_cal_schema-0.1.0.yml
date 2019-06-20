@@ -171,6 +171,7 @@ mapping:
                 desc: Specifies the minimum and maximum delay to keep, e.g. [-60, 60]. Execute order 66 on the rest. 
                 required: false
                 example: ['1.']
+
       bp_cal:
         type: map
         desc: Carry out bandpass calibration (using bandpass task from CASA)

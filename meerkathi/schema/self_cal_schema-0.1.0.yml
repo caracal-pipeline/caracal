@@ -215,7 +215,7 @@ mapping:
               - type: str
             desc: filename of fits mask (in output/masking folder)
             required: false
-            example: 'myMask.fits'
+            example: ['myMask.fits']
           multi_scale:
             type: bool
             desc: switch on multiscale cleaning
@@ -226,7 +226,11 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc]
             required: false
+<<<<<<< HEAD
             example: ['10', '20', '30'] 
+=======
+            example: ['10', '20', '30']
+>>>>>>> 43145b97efc241e6ceb4119fe43be23642cbd9ab
           no_update_model:
             type: bool
             desc: do not update column MODEL_DATA after wsclean

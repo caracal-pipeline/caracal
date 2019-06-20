@@ -231,7 +231,11 @@ mapping:
             seq:
               - type: int
             required: false
+<<<<<<< HEAD
             example: ['1000' , '1000']
+=======
+            example: ['1000', '1000']
+>>>>>>> 43145b97efc241e6ceb4119fe43be23642cbd9ab
           padding:
             desc: Images have initial size padding*npix, and are later trimmed to npix. Default is 1.2.
             type: float
@@ -307,7 +311,11 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc]
             required: false
+<<<<<<< HEAD
             example: ['0', '10', '20' , '30']
+=======
+            example: ['0', '10' , '20', '30']
+>>>>>>> 43145b97efc241e6ceb4119fe43be23642cbd9ab
 
       casa_image:
         desc: Use CASA to create line data cube.
@@ -353,7 +361,11 @@ mapping:
             seq:
               - type: int
             required: false
+<<<<<<< HEAD
             example: ['1000' , '1000']
+=======
+            example: ['1000', '1000']
+>>>>>>> 43145b97efc241e6ceb4119fe43be23642cbd9ab
           cell:
             desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is worker cell.
             type: str

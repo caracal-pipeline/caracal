@@ -32,7 +32,7 @@ class config_parser:
             #                   "with '{}'.".format(cls.__ARGS, args))
 
             #cls.__ARGS.update(args)
-            cls.__GROUPS.update(arg_groups)
+            cls.__GROUPS = arg_groups
         else:
             cls.__ARGS = args
             cls.__GROUPS = arg_groups
@@ -278,6 +278,8 @@ class config_parser:
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
         parser = cls.__primary_parser(add_help=True)
+        groups = OrderedDict()
+
         for worker, variables in tmp.iteritems():
             if worker=="schema_version":
                 continue
@@ -298,19 +300,19 @@ class config_parser:
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
-            print worker
 
-            cls._subparser_tree(variables,
+            groups[worker]= cls._subparser_tree(variables,
                                 schema["mapping"][_worker],        #go within 1st mapping of schema
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
+        
         #groups =  parser.parse_args()
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
-        #cls.__store_args(args, groups)
+        cls.__store_args(args, groups)
         #self.update_config(args)
 
 
@@ -380,7 +382,6 @@ class config_parser:
         #assert isinstance(schema_section["mapping"], dict)
         #print schema_section["mapping"].iteritems()
         for key, subVars in sec_defaults.iteritems():
-            print subVars, key
             #sys.exit(0)
             option_name = base_section + "_" + key if base_section != "" else key
             #print option_name
@@ -444,7 +445,7 @@ class config_parser:
 
                 #else:
         
-            cls.__store_args(args, groups)
+            #cls.__store_args(args, groups)
 
                 #    groups[key] = default
         return groups

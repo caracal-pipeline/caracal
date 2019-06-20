@@ -245,11 +245,11 @@ def execute_pipeline(args, arg_groups, block):
 def main(argv):
     
 
-    #print 'START'
+    print 'START'
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
-    #print 'END'
-    #print args
+    print 'END'
+    print args
     print arg_groups
 
     if args.schema:

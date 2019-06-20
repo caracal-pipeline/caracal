@@ -103,7 +103,7 @@ def worker(pipeline, recipe, config):
         for field in target_ls:
 
             fms = pipeline.hires_msnames[i]
-            tms = '{0:s}_{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
+            tms = '{0:s}-{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):

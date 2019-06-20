@@ -22,7 +22,7 @@ def worker(pipeline, recipe, config):
         msname = msnames[i]
 
         if pipeline.enable_task(config, 'obsinfo'):
-            if config['obsinfo'].get('listobs', True):
+            if config['obsinfo'].get('listobs'):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                     {
@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
     
-            if config['obsinfo'].get('summary_json', True):
+            if config['obsinfo'].get('summary_json'):
                  step = 'summary_json_{:d}'.format(i)
                  recipe.add('cab/msutils', step,
                     {
@@ -47,7 +47,7 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-        if config['obsinfo'].get('vampirisms', False):
+        if config['obsinfo'].get('vampirisms'):
             step = 'vampirisms_{0:d}'.format(i)
             recipe.add('cab/sunblocker', step,
                 {
@@ -83,8 +83,8 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'specframe', [None]*pipeline.nobs)
 
     # Set antenna properties
-    pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
-    pipeline.dish_diameter = config.get('dish_diameter', 13.5)
+    pipeline.Tsys_eta = 22.0
+    pipeline.dish_diameter = 13.5
 
     for item in 'xcal fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
@@ -94,7 +94,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Extracting info from {0:s}/{1:s}.json (if present) and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
 
         # get reference antenna
-        if config.get('reference_antenna', 'auto') == 'auto':
+        if config.get('reference_antenna') == 'auto':
             msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
             if path.exists(msmeta):
                 pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
@@ -135,7 +135,7 @@ def worker(pipeline, recipe, config):
             targets = intents['target'][-1]
             xcals = []
             # Set crosshand angle calibrator
-            if config.get('xcal', 'auto') == 'auto':
+            if config.get('xcal') == 'auto':
                 if len(intents['xcal']) > 0:
                     pipeline.xcal[i] = intents['xcal'][-1] # last on the list if auto
                 else:
@@ -198,7 +198,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
-        if config.get('Check_Cals',True):
+        if config.get('Check_Cals'):
             for item in 'xcal fcal bpcal gcal target'.split():
                 flds =  getattr(pipeline, item)[i].split(',') \
                             if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
@@ -211,10 +211,10 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Generating primary beam')
         recipe.add('cab/eidos', 'primary_beam',
             {
-                "diameter"          : config['primary_beam'].get('diameter', 6.0),
-                "pixels"            : config['primary_beam'].get('pixels', 256),
-                "freq"              : config['primary_beam'].get('freq', "855 1760 64"),
-                "coefficients-file" : config['primary_beam'].get('coefficients_file', 'meerkat_coeff_dict.npy'),
+                "diameter"          : config['primary_beam'].get('diameter'),
+                "pixels"            : config['primary_beam'].get('pixels'),
+                "freq"              : config['primary_beam'].get('freq'),
+                "coefficients-file" : config['primary_beam'].get('coefficients_file'),
                 "prefix"            : pipeline.prefix,
                 "output-eight"      : True,
             },

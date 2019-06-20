@@ -1,8 +1,6 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
+
 
   general:
     desc: General pipeline information, data IDs, prefixes for output

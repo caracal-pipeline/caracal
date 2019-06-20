@@ -163,7 +163,6 @@ class worker_administrator(object):
             except ImportError:
                 traceback.print_exc()
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
-            print self.config[_name]
             config = self.config[_name]
             if config.get('enable', True) is False:
                 self.skip.append(_worker)

@@ -23,8 +23,10 @@ from meerkathi import log, pckgdir
 try:
     import meerkathi.scripts as scripts
     from meerkathi.scripts import reporter as mrr
+    REPORTS = True
 except ImportError:
     log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
+    REPORTS = False
 
 
 class worker_administrator(object):
@@ -62,7 +64,7 @@ class worker_administrator(object):
             else:
                 worker = name + '_worker'
 
-            self.workers.append((name, worker, order))
+            self.workers.append((name, worker, i))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
         self.prefix = prefix or self.config['general']['prefix']
@@ -196,5 +198,6 @@ class worker_administrator(object):
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
         finally: # write reports even if the pipeline only runs partially
-            reporter = mrr(self)
-            reporter.generate_reports()
+            if REPORTS:
+                reporter = mrr(self)
+                reporter.generate_reports()

@@ -9,38 +9,38 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute segment image_HI (yes/no). Default is yes.
+        desc: Execute segment image_HI (yes/no).
         type: bool
         required: true
         example: 'False'
       label:
-        desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
+        desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc.
         type: str
         required: false
         example: 'corr'
       restfreq:
-        desc: Rest frequency default value for this worker. Default is '1.420405752GHz'.
+        desc: Rest frequency default value for this worker.
         type: str
         required: false
         example: '1.420405752GHz'
       npix:
           seq:
             -  type: int
-          desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images. Default is 1024.
+          desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images.
           required: false
-          example: ['10','2']
+          example: ['360']
       cell:
-        desc: Default scale of a pixel in arcsec. Default is 7.
+        desc: Default scale of a pixel in arcsec.
         type: float
         required: false
-        example: '7'
+        example: '5'
       weight:
-        desc: Default weight for the worker. Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is natural.
+        desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition.
         type: str
         required: false
         example: 'briggs'
       robust:
-        desc: Default robust parameter in case of Briggs weighting. Default is 2.
+        desc: Default robust parameter in case of Briggs weighting.
         type: float
         required: false
         example: '2' 
@@ -50,7 +50,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment subtractmodelcol. Default is False.
+            desc: Execute segment subtractmodelcol.
             type: bool
             required: false
             example: 'False'  
@@ -60,33 +60,33 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment doppler correction (yes/no). Default is yes.
+            desc: Execute segment doppler correction (yes/no).
             type: bool
-            required: true
-            example: 'True'
+            required: false
+            example: 'False'
           telescope:
-            desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca
+            desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca.
             enum: ['meerkat','vla','gmrt', 'wsrt', 'atca', 'askap']
             type: str
             required: false
             example: 'meerkat'
           doppler:
-            desc: Transform channel labels and visibilities to a different spectral reference frame. default is True
+            desc: Transform channel labels and visibilities to a different spectral reference frame.
             type: bool
-            required: true
+            required: false
             example: 'True'
           mode:
-            desc: Regridding mode (channel/velocity/frequency/channel_b). Default is 'frequency'
+            desc: Regridding mode (channel/velocity/frequency/channel_b).
             type: str
             required: false
             example: 'frequency'
           outframe:
-            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'. Defaut is 'BARY'
+            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'.
             type: str
             required: false
             example: 'BARY'
           veltype:
-            desc: Definition of velocity (as used in mode), radio or optical.  Default is 'radio'
+            desc: Definition of velocity (as used in mode), radio or optical.
             type: str
             required: false
             example: 'radio'
@@ -96,12 +96,12 @@ mapping:
             required: false
             example: 'auto'
           uvlin:
-            desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform. Default is false
+            desc: Perform continuum subtraction as in task uvcontsub whilst regridding within mstransform.
             type: bool
-            required: true
-            example: "False"
+            required: false
+            example: 'True'
           fitspw:
-            desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed. (Defaults to null)
+            desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed.
             type: str
             required: false
             example: 'null'
@@ -109,17 +109,17 @@ mapping:
             desc: Polynomial order for the continuum fits
             type: int
             required: false
-            example: '3'
+            example: '1'
           column:
             desc: Data column to use.
             type: str
             required: false
             example: 'CORRECTED_DATA'
           obsinfo:
-            desc: Create obsinfo.txt and obsinfo.json of MS file created by mstransform. Default true
+            desc: Create obsinfo.txt and obsinfo.json of MS file created by mstransform.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
       
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
@@ -387,7 +387,7 @@ mapping:
           enable:
             desc: Execute this segment. Default is true
             type: bool
-            required: true
+            required: false
             example: "False"
 
       pb_cube:
@@ -397,7 +397,7 @@ mapping:
           enable:
             desc: Execute this segment. Default is false
             type: bool
-            required: true
+            required: false
             example: 'False'
       
       freq_to_vel:
@@ -407,7 +407,7 @@ mapping:
           enable:
             desc: Execute conversion. Default is true
             type: bool
-            required: true
+            required: false
             example: "False"
           reverse:
             desc: Perform the inverse transformation and change the cube 3rd axis from velocity to frequency. Default is false.

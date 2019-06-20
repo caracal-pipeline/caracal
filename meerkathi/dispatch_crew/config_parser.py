@@ -298,7 +298,7 @@ class config_parser:
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
-
+            print worker
             groups[worker]= cls._subparser_tree(variables,
                                 schema["mapping"][_worker],        #go within 1st mapping of schema
                                 base_section=worker, 
@@ -396,8 +396,15 @@ class config_parser:
                 #    setattr(args, option_name, subVars)
                 #    groups[key] = default
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
-                groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
+                print subVars['seq'][0]['type']
+                print subVars['example']
+                typecast_func = __builtins__[subVars['seq'][0]['type']]
+                groups[key] = map(typecast_func,subVars["example"])
+                #groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
                 parser.set_defaults(**{option_name: subVars['example']})
+            elif subVars["type"] == 'bool': 
+                groups[key] = json.loads(subVars['example'].lower())
+                parser.set_defaults(**{option_name:  subVars['example']})
             elif subVars["type"] == "map": #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
                 #cls.__store_args(args, groups)
 
@@ -424,16 +431,13 @@ class config_parser:
                 #                    subVars.get("enum", None),
                 #                    subVars,
                 #                    parser)    
-                a = __builtins__['str']('2')
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 parser.set_defaults(**{option_name: subVars})
 
                 #if subVars["type"] == 'str':
                 #    groups[key] = subVars["example"]
                 #    parser.set_defaults(**{option_name: subVars['example']})
-                #elif subVars["type"] == 'bool': 
-                #    groups[key] = json.loads(subVars['example'].lower())
-                #    parser.set_defaults(**{option_name:  subVars['example']})
+
                 #else:
                 #    #groups[key] = 
                 #    print key , subVars['example']

@@ -170,7 +170,7 @@ mapping:
                   - type: float 
                 desc: Specifies the minimum and maximum delay to keep, e.g. [-60, 60]. Execute order 66 on the rest. 
                 required: false
-                example: '1.'
+                example: ['0', '1e6']
       bp_cal:
         type: map
         desc: Carry out bandpass calibration (using bandpass task from CASA)
@@ -242,7 +242,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['0', '1e6']
           plot:
             type: map
             desc: Plotting dignostics plots for bandpass correction calibration.
@@ -341,7 +341,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['0', '1e6']
           plot:
             type: map
             desc: Plotting dignostics plots for flux calibrator corrections.
@@ -439,7 +439,7 @@ mapping:
                   - type: float
                 desc: Specifies the minimum and maximum delay to keep, e.g. [0.1, 10].
                 required: false
-                example: '1.'
+                example: ['0']
           plot:
             type: map
             desc: Plotting dignostics plots for gain calibrator corrections.
@@ -532,6 +532,7 @@ mapping:
                 desc: "Output HTML file name"
                 required: false
                 example: 'crossOut'
+
       apply_delay_cal:
         type: map
         desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.

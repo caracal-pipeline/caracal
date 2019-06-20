@@ -22,20 +22,18 @@ def is_valid_file(parser, arg):
 
 class config_parser:
     __ARGS = None
-    __GROUPS = OrderedDict()
+    __GROUPS = None
 
     @classmethod
     def __store_args(cls, args, arg_groups):
         """ Store arguments for later retrieval """
-        if cls.__ARGS is not None:
-            #meerkathi.log.warn("Replacing existing stored arguments '{}'"
-            #                   "with '{}'.".format(cls.__ARGS, args))
 
-            #cls.__ARGS.update(args)
-            cls.__GROUPS = arg_groups
-        else:
-            cls.__ARGS = args
-            cls.__GROUPS = arg_groups
+        if cls.__ARGS is not None:
+            meerkathi.log.warn("Replacing existing stored arguments '{}'"
+                               "with '{}'.".format(cls.__ARGS, args))
+
+        cls.__ARGS = args
+        cls.__GROUPS = arg_groups
 
     @classmethod
     def __store_global_schema(cls, schema):
@@ -312,7 +310,11 @@ class config_parser:
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
+
         cls.__store_args(args, groups)
+        #print args
+        #print cls.__ARGS
+        #print cls.__GROUPS
         #self.update_config(args)
 
 
@@ -412,15 +414,15 @@ class config_parser:
                 #groups[key] = schema_section["mapping"][key].get("example", None)
                 #read in numbers
                 #print subVars["example"]
-                _option_factory(subVars["type"] if "seq" not in subVars else \
-                                                            subVars["seq"][0]["type"],
-                                    "seq" in subVars,
-                                    option_name,
-                                    subVars.get("required", False),
-                                    subVars.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
-                                    subVars.get("enum", None),
-                                    subVars,
-                                    parser)    
+                #_option_factory(subVars["type"] if "seq" not in subVars else \
+                #                                            subVars["seq"][0]["type"],
+                #                    "seq" in subVars,
+                #                    option_name,
+                #                    subVars.get("required", False),
+                #                    subVars.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
+                #                    subVars.get("enum", None),
+                #                    subVars,
+                #                    parser)    
                 a = __builtins__['str']('2')
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 #if subVars["type"] == 'str':

@@ -245,12 +245,10 @@ def execute_pipeline(args, arg_groups, block):
 def main(argv):
     
 
-    print 'START'
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
-    print 'END'
+
     print args
-    print arg_groups
 
     if args.schema:
         schema = {}
@@ -271,7 +269,6 @@ def main(argv):
 
     if not args.no_interactive and args.report_viewer:
         raise ValueError("Incompatible options: --no-interactive and --report-viewer")
-    print args
     # User requests default config => dump and exit
     if args.get_default:
         log_logo()

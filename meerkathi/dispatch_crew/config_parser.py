@@ -284,17 +284,21 @@ class config_parser:
             #elif worker.get("enable", True) is False:
             #    continue
             _worker = worker.split("__")[0]
+            
+
             schema_fn = os.path.join(meerkathi.pckgdir,
                                      "schema", "{0:s}_schema-{1:s}.yml".format(_worker,
                                                                                schema_version))
-            source_data = {
-                            _worker : worker,
-                            "schema_version" : schema_version,
-            }
             
-            #validate with schema
+            #SCHEMA VALIDATION
+            #source_data = {
+            #                _worker : variables,
+            #                "schema_version" : schema_version,
+            #}
             #c = Core(source_data=source_data, schema_files=[schema_fn])
             #cls.__validated_schema[worker] = c.validate(raise_exception=True)[_worker]
+            #########
+
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
 
@@ -304,19 +308,13 @@ class config_parser:
                                 args = args,               
                                 parser=parser)
 
-        #groups =  parser.parse_args()
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
-        #cls.__store_args(args, groups)
 
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
         cls.__store_args(args, groups)
-        #print args
-        #print cls.__ARGS
-        #print cls.__GROUPS
-        #self.update_config(args)
 
 
     @classmethod
@@ -329,6 +327,7 @@ class config_parser:
                         parser = None): #parser
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
+        
         def _str2bool(v):
             if v.upper() in ("YES","TRUE"):
                 return True
@@ -367,63 +366,51 @@ class config_parser:
             else:
                 raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
 
-        #if update_only == False:
         groups = OrderedDict()
-        #else:
-        #    groups = cls.__SUBGROUPS
-        #print groups
 
         if cfgVars is None:
             return groups
-        #print schema_section
         sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
+        
         # Transform keys
         # Add subsection / update when necessary
         #assert isinstance(schema_section, dict)
         #assert schema_section["type"] == "map"
         #assert isinstance(schema_section["mapping"], dict)
-        #print schema_section["mapping"].iteritems()
 
         for key, subVars in sec_defaults.iteritems():
-            #sys.exit(0)
             option_name = base_section + "_" + key if base_section != "" else key
-            #print option_name
             #assert key in subVars, "%s does not define a type in schema" % key
             
-
-                #    parser.set_defaults(**{option_name: subVars})
-                    
+                #    parser.set_defaults(**{option_name: subVars})        
                 #    setattr(args, option_name, subVars)
                 #    groups[key] = default
-            if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
 
+            if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
                 groups[key] = map(typecast_func,subVars["example"])
-                #groups[key]= numpy.core.defchararray.split(subVars['example'], sep=",")
                 parser.set_defaults(**{option_name: subVars['example']})
+                #update with variables from config
                 if key in cfgVars.keys():
                     groups[key] = cfgVars[key]
+
             elif subVars["type"] == 'bool': 
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
+                
                 if key in cfgVars.keys():
                     groups[key] = cfgVars[key]
-            elif subVars["type"] == "map": #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
-                #cls.__store_args(args, groups)
-                #cls.__SUBGROUPS = groups #store groups
+            
+            elif subVars["type"] == "map": 
+            #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
                 groups[key] = cls._subparser_tree(cfgVars,
                                                   subVars,
                                                   base_section=option_name,
                                                   update_only=False,
                                                   args=args,
                                                   parser=parser)
-                #parser.set_defaults(**{option_name: subVars})
-                    
-                #    groups[key] = getattr(args, option_name)
             else:
-                #groups[key] = schema_section["mapping"][key].get("example", None)
-                #read in numbers
-                #print subVars["example"]
+
                 #_option_factory(subVars["type"] if "seq" not in subVars else \
                 #                                            subVars["seq"][0]["type"],
                 #                    "seq" in subVars,
@@ -433,34 +420,15 @@ class config_parser:
                 #                    subVars.get("enum", None),
                 #                    subVars,
                 #                    parser)    
-                groups[key] = __builtins__[subVars['type']](subVars['example'])
-                parser.set_defaults(**{option_name: subVars})
                 
+                groups[key] = __builtins__[subVars['type']](subVars['example'])
+                
+                parser.set_defaults(**{option_name: subVars['example']})
+                
+                #update with variables from config file
                 if key in cfgVars.keys():
                     groups[key] = cfgVars[key]
-                #if subVars["type"] == 'str':
-                #    groups[key] = subVars["example"]
-                #    parser.set_defaults(**{option_name: subVars['example']})
 
-                #else:
-                #    #groups[key] = 
-                #    print key , subVars['example']
-                    #print subVars["example"] , subVars['type'], print len(subVars["example"])
-                #    a = fromstring(subVars["example"],dtype=subVars['type'],sep=',')
-                #    print a
-                #    print a[0]
-                #    groups[key] = fromstring(subVars["example"],dtype=subVars['type'],sep=',')[0]
-                #    parser.set_defaults(**{option_name: subVars['example']})
-                #assert (("seq" in subVars[key]) and ("type" in subVars["mapping"][key]["seq"][0])) or \
-                #        "type" in subVars["mapping"][key], "Option %s missing type in schema" % option_name
-
-                #elif update_only == "defaults":
-
-                #else:
-        
-            #cls.__store_args(args, groups)
-
-                #    groups[key] = default
         return groups
 
     @classmethod

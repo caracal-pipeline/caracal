@@ -1,6 +1,9 @@
 type: map
 mapping:
-  
+  schema_version:
+    type: str
+    required: true
+
   flagging:
     desc: Flagging of the data.
     type: map
@@ -95,7 +98,7 @@ mapping:
             type: str
             enum: ["beg", "endb", "end", "tail"]
             required: False
-            example: ['beg']
+            example: 'beg'
       
       flag_shadow:
         desc: Flag shadowed antennas through the CASA task FLAGDATA.

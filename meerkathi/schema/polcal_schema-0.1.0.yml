@@ -15,14 +15,14 @@ mapping:
         example: 'False'
       label:
         type: str
-        required: true
+        required: false
         desc: Label for this worker and its associated datasets
         example: 'pol'
       solve_uvdist:
         type: str
         required: false
         desc: UV cutoff for solver. This should be large enough to wash out RFI
-        example: '>50'
+        example: "100~100000000m"
       preaverage_time:
         type: str
         required: false
@@ -37,22 +37,22 @@ mapping:
         type: str
         required: false
         desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI
-        example: 'X'
+        example: ''
       timesol_soltime:
         type: str
         required: false
         desc: Time solution interval to be used whenever solving for the DC component of either X or D
-        example: 'X'
+        example: 'inf'
       freqsol_soltime:
         type: str
         required: false
         desc: Time solution interval to be used when solving for per channel solutions for either X or D. This ought to be as long as possible
-        example: 'X'
+        example: 'inf'
       feed_angle_rotation:
         type: float
         required: false
         desc: Apply feed angle rotation matrix to all stations. MeerKAT X and Y feeds are flipped, so apply a -90 offset here
-        example: '1.'
+        example: '-90.'
       do_dump_precalibration_leakage_reports:
         type: bool
         desc: Write out report estimating residual quadrature leakages prior to crosshand calibration
@@ -64,57 +64,57 @@ mapping:
         mapping:
           enable: 
             type: bool
-            required: true
+            required: false
             desc: Execute this segment.
-            example: 'False'
+            example: 'True'
           meerkathi_model: 
             type: bool
             required: false
             desc: Use model, if available full-sky model, built into southern calibrators database, instead of any NRAO model
-            example: 'False'
+            example: 'True'
           threads:
             type: int
             required: false
             desc: When predicting full sky model (lsm) use these many threads in MeqServer
-            example: '1'
+            example: '8'
       do_phaseup_crosshand_calibrator:
         type: bool
         desc: Phaseup diagonal of calibrator that is used to calibrate crosshand phase prior to solving for slope and offset in crosshand phase
         required: false
-        example: 'False'
+        example: 'True'
       do_solve_crosshand_slope:
         type: bool
         desc: Solve for a frequency slope (X-Y digitizer delay) on the crosshand. This requires SNR on the crosshands.
         required: false
-        example: 'False'
+        example: 'True'
       do_solve_crosshand_phase:
         type: bool
         desc: Solve for an absolute phase on the crosshand, necessary for polarization angle measurements and to derotate U from V. This requires SNR on the crosshands.
         required: false
-        example: 'False'
+        example: 'True'
       do_solve_leakages:
         type: bool
         desc: Solve for leakages from I into U and V. If your calibrator polarization model for your flux scale reference is accurate this shouldalways be enabled.
         required: false
-        example: 'False'
+        example: 'True'
       do_apply_XD:
         type: bool
         desc: Apply off-diagonal corrections
         required: false
-        example: 'False'
+        example: 'True'
       do_dump_postcalibration_leakage_reports:
         type: bool
         desc: Write out report estimating residual quadrature leakages post crosshand calibration
         required: false
-        example: 'False'
+        example: 'True'
       flagging_summary_crosshand_cal:
         type: map
         desc: Summarize data flagged at the end of crosshand calibration
         mapping:
           enable: 
             type: bool
-            required: true
+            required: false
             desc: Execute this segment.
-            example: 'False'
+            example: 'True'
 
 

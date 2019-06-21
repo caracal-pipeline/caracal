@@ -16,19 +16,19 @@ mapping:
       centre_coord:
         seq:
           - type: str
-        required: true
-        desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"]
-        example: '00:00:00,00:00:00'
+        required: false
+        desc: Coordinates of the centre of the field of view
+        example: ['00:00:00, 00:00:00']
       mask_size:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
-        required: true
-        example: '1000'
+        required: false
+        example: '900'
       cell_size:
         type: float
         desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
-        required: true
-        example: '2'
+        required: false
+        example: '2.'
       name_mask:
         type: str
         required: false
@@ -38,7 +38,7 @@ mapping:
         type: str
         required: false
         desc: Name of the input mask for particularly extended sources in the field
-        example: 'extended_mask.fits'
+        example: 'Fornaxa_vla.FITS'
       final_mask:
         type: str
         required: false
@@ -52,18 +52,18 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: true
+            required: false
             example: 'False'
           catalog:
             type: str
-            required: True
+            required: false
             desc: Name of catalog to query [NVSS/SUMSS]
             example: 'SUMSS'
           width_image:
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
-            required: true
-            example: '2d'
+            required: false
+            example: '0.5d'
 
       pb_correction:
         type: map
@@ -72,13 +72,13 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: true
+            required: false
             example: 'False'
           frequency:
             type: float
             desc: Primary beam size changes with frequency, provide central frequency of considered dataset
             required: false
-            example: '1.4200'
+            example: '1.420405752'
 
       make_mask:
         type: map
@@ -87,25 +87,25 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: true
+            required: false
             example: 'False'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
             desc: Tool to use for masking
-            required: true
-            example: 'thresh'
+            required: false
+            example: 'sofia'
           input_image:
             type: str
             enum: ["pbcorr", "path_to_mask"]
             desc: Input image where to create mask ???? what is this ???
-            required: true
+            required: false
             example: 'pbcorr'
           thresh_lev:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
             required: false
-            example: '3.'
+            example: '5.'
           scale_noise_window:
             type: float
             desc: window size where SoFiA measures the local rms, units of pixels
@@ -118,7 +118,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            required: true
+            required: false
             desc: Execute this worker
             example: 'False'
           extended_source_input:
@@ -134,6 +134,6 @@ mapping:
             example: 'thresh'
           thresh_lev:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder
             required: false
-            example: '3.'
+            example: '8e-2'

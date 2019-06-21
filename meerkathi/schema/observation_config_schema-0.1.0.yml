@@ -1,6 +1,9 @@
 type: map
 mapping:
-
+  schema_version:
+    type: str
+    required: true
+    
   observation_config:
     type: map
     desc: Setup some basic observation information

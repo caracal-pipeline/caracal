@@ -388,6 +388,18 @@ mapping:
             desc: Minimum size in y-direction. Default is 5.
             type: int
             required: false
+          do_cubelets:
+            desc: Create cubelets of HI sources.
+            type: int
+            required: false
+          do_mom0:
+            desc: Create moment 0 map.
+            type: int
+            required: false
+          do_mom1:
+            desc: Create moment 1 map.
+            type: int
+            required: false
       flagging_summary:
         desc: Print out flagging summary.
         type: map

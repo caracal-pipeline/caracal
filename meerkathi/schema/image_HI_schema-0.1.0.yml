@@ -390,15 +390,15 @@ mapping:
             required: false
           do_cubelets:
             desc: Create cubelets of HI sources.
-            type: int
+            type: bool
             required: false
           do_mom0:
             desc: Create moment 0 map.
-            type: int
+            type: bool
             required: false
           do_mom1:
             desc: Create moment 1 map.
-            type: int
+            type: bool
             required: false
       flagging_summary:
         desc: Print out flagging summary.

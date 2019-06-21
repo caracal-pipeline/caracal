@@ -37,7 +37,7 @@ mapping:
         desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
         type: bool
         required: false
-        example: 'True'
+        example: 'False'
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
@@ -67,7 +67,7 @@ mapping:
         desc: Reference antenna. If 'auto' then MeerKATHI will automatically pick the reference antenna from the .JSON metadata file if available. The file name is the same as the input .MS file but with .JSON extension. This file is typically available only for old (ROACH2) MeerKAT data. For all other data the pipeline will likely throw an error and gracefully terminate. In that case the reference antenna should be set manually.
         type: str
         required: false
-        example: 'auto'
+        example: '0'
       primary_beam:
         desc: Generate primary beam model
         type: map

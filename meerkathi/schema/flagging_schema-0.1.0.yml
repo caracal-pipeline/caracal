@@ -17,12 +17,12 @@ mapping:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
         required: False
-        example: 'False'
+        example: ''
       hires_label:
         desc: Label for high frequency resolution data.
         type: str
         required: False
-        example: 'False'
+        example: ''
       hires_flag:
         desc: Enables AOFlagger run on high frequency resolution data.
         type: bool
@@ -223,13 +223,18 @@ mapping:
             desc: The AOFlagger strategy file to use.
             type: str
             required: False
-            example: 'firtpass_QUV.rfis'
+            example: 'firtpass_Q.rfis'
           column: 
             desc: Specify column to flag
             type: str
             required: False
             example: 'DATA'
           fields: 
+            desc: comma separated list of (zero-indexed) field ids to process
+            type: str
+            required: false
+            example: 'auto'
+          calibrator_fields:
             desc: comma separated list of (zero-indexed) field ids to process
             type: str
             required: false

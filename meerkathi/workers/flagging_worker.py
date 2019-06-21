@@ -15,6 +15,7 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
+    print 's;klfaddlkfalklkdalkdajskfldasjfd;ksafjk;dlsdfjk;lsadmk;alfdmksalfj,dms;klf;,mdfkslaf,dsmklfdsm'
     if config['label']:
         msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
@@ -27,7 +28,6 @@ def worker(pipeline, recipe, config):
     #        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
     #        prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
         nobs=len(msnames)
-
     def get_field(field):
         """
             gets field ids parsed previously in the pipeline 
@@ -41,12 +41,13 @@ def worker(pipeline, recipe, config):
                                           else x.split(','),
                             field.split(',') if isinstance(field, str) else field)))
 
-
+    print nobs
+    print 'AAAAAAAAAAAAAAAAAAA'
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
- 
+        
         # Since the nobs are now equal to the length of the msnames if hires flagging is activated
         # It is important to have a p_nob that will look-up sources based on the original unique ms names in `pipeline`
         # Note: Flagging is still perfomed on all msnames using index i
@@ -67,6 +68,7 @@ def worker(pipeline, recipe, config):
         # Also compares antenna to median of the array per scan per field per channel
         # This should catch any antenna with severe temperature problems
         if pipeline.enable_task(config, 'autoflag_autocorr_powerspectra'):
+
             step = 'autoflag_autocorr_spectra_{0:d}'.format(i)
             def_fields = ",".join(map(str,utils.get_field_id(msinfo, get_field("bpcal,gcal,target,xcal").split(","))))
             def_calfields = ",".join(map(str, utils.get_field_id(msinfo, get_field("bpcal,gcal,xcal").split(","))))
@@ -241,6 +243,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
+            print 'aaaaaa'
+            print config['autoflag_rfi'].get('fields')
+
             if config['autoflag_rfi'].get('fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
                 raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
@@ -248,9 +253,11 @@ def worker(pipeline, recipe, config):
                not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
 
-            if config['autoflag_rfi'].get('fields') is 'auto':
+            if config['autoflag_rfi'].get('fields') == 'auto':
+                print pipeline.bpcal_id[p_nob]
                 fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
             else:
+                print 'ciap'
                 fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
 
             # Make sure no field IDs are duplicated

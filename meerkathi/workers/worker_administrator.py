@@ -74,7 +74,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline", True):
+        if config["general"].get("init_pipeline"):
             self.init_pipeline()
 
     def init_names(self, dataid):

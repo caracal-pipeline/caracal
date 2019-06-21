@@ -32,10 +32,10 @@ def worker(pipeline, recipe, config):
         label = config.get('label', '')
         
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        with open(msinfo, 'r') as stdr:
-            corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
-        corrs =  ','.join(corrs)
-        corr =  config.get('correlation', corrs)
+        #with open(msinfo, 'r') as stdr:
+        #    corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+        #corrs =  ','.join(corrs)
+        corr =  config.get('correlation', 'XX,YY')
 
         if pipeline.enable_task(config, 'real_imag') or pipeline.enable_task(config, 'amp_phase') or pipeline.enable_task(config, 'amp_uvwave') or pipeline.enable_task(config, 'amp_ant') or pipeline.enable_task(config, 'phase_uvwave') or pipeline.enable_task(config, 'amp_scan'):
                 plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'crosscal')

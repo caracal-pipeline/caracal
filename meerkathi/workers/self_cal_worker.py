@@ -533,7 +533,16 @@ def worker(pipeline, recipe, config):
                 blank_limit = 1e-9
             else:
                 blank_limit = None
-
+            print('What happened to the cats?)')
+            print(pipeline.output+'/'+calmodel+'.fits')
+            try:
+                os.remove(pipeline.output+'/'+calmodel+'.fits')
+            except:
+                print('No Previous fits log found.')
+            try:
+                os.remove(pipeline.output+'/'+calmodel+'.lsm.html')
+            except:
+                print('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
 		    	{
 				"image"         : im,
@@ -892,6 +901,7 @@ def worker(pipeline, recipe, config):
                   "madmax-offdiag"  : False,
                   "dd-dd-term"       : False,
                   "model-ddes"      : 'never',
+                  "montblanc-verbosity" : 'DEBUG',
                 }
 
             if config[key].get('two_step', False) and gasols_[0] != -1:

@@ -1,5 +1,5 @@
 import os
-import sys
+import sys, string
 import subprocess
 import itertools
 import meerkathi
@@ -11,7 +11,11 @@ NAME = "Get convert and extract data"
 
 def worker(pipeline, recipe, config):
 
-    pipeline.init_names(config["dataid"])
+
+    if config["dataid"][0].strip():
+      pipeline.init_names(config["dataid"])
+    else:
+      raise KeyError("dataid of get_data worker is empty,\n please check your config.yml file")
     
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]

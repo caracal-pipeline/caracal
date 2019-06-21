@@ -30,6 +30,10 @@ table_suffix = {
 # Check if field was specified as known key, else return the
 # same value.
 
+def filter_name(string):
+    string = string.replace('+','_p_')
+    return re.sub('[^0-9a-zA-Z]', '_', string)
+
 def worker(pipeline, recipe, config):
 
     def get_field(field):
@@ -97,11 +101,10 @@ def worker(pipeline, recipe, config):
         else: docallib = False
 
         for target in target_ls:
+            field = filter_name(target)
 
-            field = re.sub('[^0-9a-zA-Z]', '_', target)
-
-            fms = pipeline.hires_msnames[i]
-            tms = '{0:s}-{1:s}-{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
+            fms = [pipeline.hires_msnames[i] if label_in == '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_in)]
+            tms = '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):
@@ -162,7 +165,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}-{2:s}-obsinfo.txt'.format(prefix,field,label_out)
+                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.txt'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.txt'.format(prefix)
                 
                     step = 'listobs_{:d}'.format(i)
@@ -178,7 +181,7 @@ def worker(pipeline, recipe, config):
     
                 if (config['obsinfo'].get('summary_json', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}-{2:s}-obsinfo.json'.format(prefix,field,label_out)
+                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.json'.format(prefix)
                 
                     step = 'summary_json_{:d}'.format(i)

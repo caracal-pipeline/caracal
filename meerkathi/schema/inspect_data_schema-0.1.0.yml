@@ -22,7 +22,7 @@ mapping:
         type: str
         desc: Lable specyfying the correlations (default all).
         required: false
-        example: 'XX'
+        example: 'auto'
 
       real_imag:
         type: map

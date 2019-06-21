@@ -101,7 +101,7 @@ def worker(pipeline, recipe, config):
             field = re.sub('[^0-9a-zA-Z]', '_', target)
 
             fms = pipeline.hires_msnames[i]
-            tms = '{0:s}-{1:s}-{2:s}.ms'.format(fms[:-3],field,label_out)
+            tms = '{0:s}-{1:s}-{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):

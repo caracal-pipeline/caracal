@@ -8,11 +8,6 @@ mapping:
     desc: General pipeline information, data IDs, prefixes for output
     type: map
     mapping: 
-      data_path:
-        type: str
-        required: false
-        desc: where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
-        example: / 
       msdir:
         type: str
         required: true

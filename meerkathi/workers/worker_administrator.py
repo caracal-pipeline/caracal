@@ -47,7 +47,7 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
-        self.data_path = self.config['general']['data_path']
+        self.data_path = self.input
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages

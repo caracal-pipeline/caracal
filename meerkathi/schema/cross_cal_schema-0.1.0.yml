@@ -27,7 +27,7 @@ mapping:
         type: str
         required: true
         desc: Label for output files.
-        example: ''
+        example: '1gc'
       clear_cal:
         type: map
         desc: Initializes dataset for calibration using CASA

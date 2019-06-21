@@ -18,7 +18,7 @@ mapping:
           - type: str
         required: false
         desc: Coordinates of the centre of the field of view
-        example: ['00:00:00, 00:00:00']
+        example: '00:00:00, 00:00:00'
       mask_size:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)

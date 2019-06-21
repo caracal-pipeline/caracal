@@ -86,7 +86,7 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
-                    example: ['bpcal']
+                    example: 'bpcal'
               
               apply_bp_cal:
                 type: map
@@ -101,7 +101,7 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
-                    example: ['bpcal']
+                    example: 'bpcal'
               apply_gain_cal_gain:    
                 type: map
                 desc: Apply the gain calibration table to specified fields via the CASA applycal task.
@@ -115,7 +115,7 @@ mapping:
                     seq: 
                       - type: str 
                     desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
-                    example: ['gcal']
+                    example: 'gcal'
               apply_transfer_fluxscale:
                 type: map
                 desc: Apply the fluxscale table to specified fields via the CASA applycal task.
@@ -130,7 +130,7 @@ mapping:
                       - type: str 
                     desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
                     required: false
-                    example: ['gcal']
+                    example: 'gcal'
 
       changecentre:
         desc: changes the phase centre

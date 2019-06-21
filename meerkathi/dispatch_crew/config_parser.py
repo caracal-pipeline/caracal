@@ -1,7 +1,7 @@
 import argparse
 import yaml
 import meerkathi
-import os, sys
+import os, sys, string
 import copy
 import ruamel.yaml
 import json
@@ -291,12 +291,12 @@ class config_parser:
                                                                                schema_version))
             
             #SCHEMA VALIDATION
-            #source_data = {
-            #                _worker : variables,
-            #                "schema_version" : schema_version,
-            #}
-            #c = Core(source_data=source_data, schema_files=[schema_fn])
-            #cls.__validated_schema[worker] = c.validate(raise_exception=True)[_worker]
+            source_data = {
+                            _worker : variables,
+                            "schema_version" : schema_version,
+            }
+            c = Core(source_data=source_data, schema_files=[schema_fn])
+            cls.__validated_schema[worker] = c.validate(raise_exception=True)[_worker]
             #########
 
             with open(schema_fn, 'r') as f:
@@ -387,6 +387,8 @@ class config_parser:
                 #    groups[key] = default
 
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
+                subVars['example'] = string.split(subVars['example'],',')
+                print subVars['example']
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})

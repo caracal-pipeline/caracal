@@ -555,7 +555,7 @@ def worker(pipeline, recipe, config):
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
-                "ncores"         : ncpu
+                "ncores"         : ncpu,
 		    	},
 		    	input=pipeline.input,
 		    	output=pipeline.output,

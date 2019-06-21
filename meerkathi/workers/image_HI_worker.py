@@ -275,7 +275,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/casa_listobs', step,
                     {
                       "vis"         : msname_mst,
-                      "listfile"    : 'meerkathi-{0:s}-obsinfo.txt'.format(msname_mst.replace('.ms','')),
+                      "listfile"    : '{0:s}-{1:s}-obsinfo.txt'.format(pipeline.prefix,msname_mst.replace('.ms','')),
                       "overwrite"   : True,
                     },
                     input=pipeline.input,
@@ -287,7 +287,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : msname_mst,
                       "command"     : 'summary',
-                      "outfile"     : 'meerkathi-{0:s}-obsinfo.json'.format(msname_mst.replace('.ms','')),
+                      "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(pipeline.prefix,msname_mst.replace('.ms','')),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -744,3 +744,4 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+

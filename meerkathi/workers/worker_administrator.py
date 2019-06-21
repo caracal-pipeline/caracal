@@ -90,7 +90,7 @@ class worker_administrator(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.hires_msnames = ['{:s}_hires.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = ['{0:s}-{1:s}'.format(self.prefix,os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)

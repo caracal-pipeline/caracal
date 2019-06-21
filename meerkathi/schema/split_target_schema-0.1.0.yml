@@ -52,12 +52,12 @@ mapping:
             desc: Select correlations
             type: str
             required: false
-            example: 'all'
+            example: ' '
           spw:
             desc: Select spectral windows and channels
             type: str
             required: false
-            example: 'all'
+            example: ' '
 
           otfcal:
             desc: Apply OTF calibration

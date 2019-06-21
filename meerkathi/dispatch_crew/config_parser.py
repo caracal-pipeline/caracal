@@ -388,7 +388,6 @@ class config_parser:
 
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 subVars['example'] = string.split(subVars['example'],',')
-                print subVars['example']
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})

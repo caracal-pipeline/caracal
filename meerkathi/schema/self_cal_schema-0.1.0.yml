@@ -89,12 +89,7 @@ mapping:
         type: float
         desc: Clean border
         required: false
-        example: '1.3'
-      img_facets:
-        type: int
-        desc: Number facet to image
-        required: false
-        example: '11'
+        example: '1.3' 
       img_nchans:
         type: int
         desc: Number of channesls in output image

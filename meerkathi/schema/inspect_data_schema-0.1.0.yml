@@ -16,7 +16,7 @@ mapping:
       label: 
         type: str
         desc: Label for output products (plots etc.) for this step.
-        required: true
+        required: false
         example: 'corr'
       correlation: 
         type: str
@@ -31,7 +31,7 @@ mapping:
           enable:
             type: bool 
             desc: Executed the real v/s imaginary data plotting.
-            required: true
+            required: false
             example: "False"
           fields:
             seq:
@@ -62,7 +62,7 @@ mapping:
           enable:
             type: bool
             desc: Executes the plotting of amplitude v/s phase for data.
-            required: true
+            required: false
             example: 'False'
           fields:
             seq:
@@ -93,13 +93,13 @@ mapping:
           enable: 
             type: bool
             desc: Executes plotting data amplitude as a function of uvwave.  
-            required: true
+            required: false
             example: 'False'
           fields:
             seq:
               - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
             example: 'bpcal'
           column:
             type: str
@@ -124,13 +124,13 @@ mapping:
           enable:
             type: bool
             desc: Executes plotting data amplitude v/s antennas.
-            required: true
+            required: false
             example: 'False'
           fields:
             seq:
               - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
             example: 'bpcal'
           column:
             type: str
@@ -155,13 +155,13 @@ mapping:
           enable:
             type: bool
             desc: Executes plotting data phase v/s uvwave.
-            required: true
+            required: false
             example: "False"
           fields:
             seq:
               - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
             example: 'bpcal'
           column:
             type: str
@@ -186,13 +186,13 @@ mapping:
           enable:
             type: bool
             desc: Executes plotting data amplitude v/s scan number.
-            required: true
+            required: false
             example: 'False'
           fields:
             seq:
               - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
-            required: true
+            required: false
             example: 'bpcal'
           column:
             type: str

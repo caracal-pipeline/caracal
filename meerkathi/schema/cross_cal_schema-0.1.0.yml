@@ -15,17 +15,17 @@ mapping:
         example: 'False'
       otfdelay:  
         type: bool
-        required: true
+        required: false
         desc: Set whether to apply the delay calibration on the fly when solving for other calibration terms.
         example: 'True'
       uvrange: 
         type: str
-        required: true
+        required: false
         desc: Set the U-V range for data selection, e.g. '>50'.
         example: '>50' 
       label: 
         type: str
-        required: true
+        required: false
         desc: Label for output files.
         example: '1gc'
       clear_cal:
@@ -41,12 +41,12 @@ mapping:
             seq:
                 - type: str
             desc: "fields to initialize"
-            required: true
+            required: false
             example: '1'
           addmodel:
             type: bool
             desc: "Intializes scratch MODEL_DATA column"
-            required: true
+            required: false
             example: 'True'
       set_model:
         type: map
@@ -55,7 +55,7 @@ mapping:
           enable:
             type: bool
             desc: Execute the setjy task.
-            required: true
+            required: false
             example: 'True'
           meerkathi_model:
             type: bool
@@ -86,7 +86,7 @@ mapping:
           enable:
             type: bool
             desc: Execute delay correction calibration.
-            required: true
+            required: false
             example: 'True'
           combine:
             type: str
@@ -108,7 +108,7 @@ mapping:
             seq: 
               - type: str 
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      
-            required: true
+            required: false
             example: fcal
           plot:
             type: map
@@ -117,7 +117,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
+                required: false
                 example: 'True'
               table_name:
                 type: str
@@ -152,13 +152,13 @@ mapping:
               enable:
                 type: bool
                 desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task.
-                required: true
+                required: false
                 example: 'True'
               mode:
                 type: str
                 desc: Mode to set for flagging based on delay correction gains. Default used is "clip". If you want to use other modes, specify the relevant keywords from Flagdata. 
                 enum: ['list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'antint','extend', 'unflag', 'summary']
-                required: true
+                required: false
                 example: 'clip'
               clipminmax:
                 seq:
@@ -174,7 +174,7 @@ mapping:
           enable: 
             type: bool
             desc: Executes bandpass calibration.
-            required: true
+            required: false
             example: 'True'
           combine:
             type: str
@@ -186,7 +186,7 @@ mapping:
             seq: 
               - type: str 
             desc: Set the field to estimate the bandpass from. Specify either the field number, name or even as 'bpcal' corresponding to field specification in observation config.
-            required: true
+            required: false
             example: 'bpcal'
           minnrbl: 
             type: int
@@ -216,7 +216,7 @@ mapping:
           remove_ph_time_var:
             type: bool
             desc: Remove large temporal phase variations from bandpass calibrator before solving.
-            required: true  
+            required: false  
             example: 'False'          
           flag:
             type: map
@@ -225,7 +225,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enable flagging based on Bandpass correction solutions via CASA FLAGDATA task. 
-                required: true
+                required: false
                 example: 'True'
               mode:
                 type: str
@@ -246,7 +246,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
+                required: false
                 example: 'True'
               table_name:
                 type: str
@@ -283,13 +283,13 @@ mapping:
           enable:
             type: bool
             desc: Execute gain calibration on the flux calibrator field.
-            required: true
+            required: false
             example: 'True'
           combine: 
             type: str
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field"]
-            required: true
+            required: false
             example: ' '
           field: 
             seq: 
@@ -324,7 +324,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
-                required: true
+                required: false
                 example: 'True'
               mode:
                 type: str
@@ -345,7 +345,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
+                required: false
                 example: 'True'
               table_name:
                 type: str
@@ -381,7 +381,7 @@ mapping:
           enable: 
             type: bool
             desc: Execute gain calibration on the gain calibrator field.
-            required: true
+            required: false
             example: 'True'
           combine: 
             type: str
@@ -422,7 +422,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
-                required: true
+                required: false
                 example: 'True'
               mode:
                 type: str
@@ -443,7 +443,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
+                required: false
                 example: 'True'
               table_name:
                 type: str
@@ -479,7 +479,7 @@ mapping:
           enable:
             type: bool
             desc: Executes transferring flux scale.
-            required: true
+            required: false
             example: 'True'
           reference: 
             seq:
@@ -491,7 +491,7 @@ mapping:
             seq:
               - type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
-            required: true
+            required: false
             example: 'fcal'
           plot:
             type: map
@@ -500,7 +500,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
+                required: false
                 example: 'True'
               table_name:
                 type: str
@@ -536,25 +536,25 @@ mapping:
           enable: 
             type: bool
             desc: Executes application of delay correction calibration table.
-            required: true
+            required: false
             example: 'True'
           field: 
             seq: 
               - type: str 
             desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
-            required: true
+            required: false
             example: 'bpcal'
           applyto: 
             seq: 
               - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
-            required: true
+            required: false
             example: 'bpcal, gcal, target, xcal'
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
             enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
-            required: true
+            required: false
             example: 'calflag'
                            
       apply_bp_cal:
@@ -564,25 +564,25 @@ mapping:
           enable:
             type: bool
             desc: Executes application of bandpass table.
-            required: true
+            required: false
             example: 'True'
           field:
             seq: 
               - type: str 
             desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
-            required: True
+            required: false
             example: 'bpcal'
           applyto:
             seq:
               - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
-            required: true
+            required: false
             example: 'bpcal, gcal, target, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
             enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
-            required: true
+            required: false
             example: 'calflag'
 
       apply_gain_cal_gain:    
@@ -592,25 +592,25 @@ mapping:
           enable:
             type: bool
             desc: Executes application of gain calibration table.
-            required: true
+            required: false
             example: "False"
           field:
             seq: 
               - type: str 
             desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
-            required: true
+            required: false
             example: 'gcal'
           applyto:
             seq: 
               - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
-            required: true
+            required: false
             example: 'bpcal, gcal, target, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
             enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
-            required: true
+            required: false
             example: 'calflag'
         
       apply_transfer_fluxscale:
@@ -620,25 +620,25 @@ mapping:
           enable:
             type: bool
             desc: Executes application of fluxscale table.
-            required: true
+            required: false
             example: 'True'
           field:
             seq: 
               - type: str 
             desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
-            required: true
+            required: false
             example: 'gcal'
           applyto:
             seq: 
               - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
-            required: true
+            required: false
             example: 'bpcal, gcal, target, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
             enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
-            required: true
+            required: false
             example: "calflag"
  
       autoflag_closure_error:   
@@ -648,32 +648,32 @@ mapping:
           enable: 
             type: bool
             desc: Execute flagging closure errors etc.
-            required: true
+            required: false
             example: 'False'
           scan_to_scan_threshold: 
             type: int
             desc: Sigma spread above the rest of the scans per field per channel.
-            required: true
+            required: false
             example: '3'
           baseline_to_group_threshold:           
             type: int
             desc: Sigma above array median phase spread per scan per field per channel.
-            required: true
+            required: false
             example: '3'
           column: 
             type: str
             desc: MS column to use.
-            required: true
+            required: false
             example: 'CORRECTED_DATA'
           fields:
             type: str
             desc: Fields to flag. Either set 'auto' or specify as 'gcal, bpcal, target'
-            required: true
+            required: false
             example: 'auto'
           calibrator_fields: 
             type: str
             desc: Calibrator fields to estimate the closure errors etc. from.
-            required: true
+            required: false
             example: 'auto'
           threads: 
             type: int
@@ -688,5 +688,5 @@ mapping:
           enable: 
             type: bool
             desc: Execute printing flagging summary.            
-            required: true
+            required: false
             example: 'True'

@@ -102,6 +102,7 @@ def worker(pipeline, recipe, config):
 
             fms = pipeline.hires_msnames[i]
             tms = '{0:s}-{1:s}-{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
+
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):
@@ -162,7 +163,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}-{2:s}-obsinfo.txt'.format(prefix,field,label_out)
+                      listfile = '{0:s}-{1:s}-{2:s}-obsinfo.txt'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.txt'.format(prefix)
                 
                     step = 'listobs_{:d}'.format(i)

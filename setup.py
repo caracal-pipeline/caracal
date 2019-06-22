@@ -29,6 +29,7 @@ extra_diagnostics = [
     'tornado>=4.0.0,<5.0.0',
     'jupyter>=1.0.0',
     'aplpy>=1.1.1',
+    'pandas>=0.24.0',
     'nbconvert>=5.3.1',
 ]
 

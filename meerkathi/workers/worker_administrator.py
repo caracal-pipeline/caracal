@@ -32,12 +32,14 @@ except ImportError:
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
             stimela_build=None, prefix=None,
-            add_all_first=False, singularity_image_dir=None):
+            add_all_first=False, singularity_image_dir=None,
+            container_tech='docker'):
 
         self.config = config
 
         self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
+        self.container_tech = container_tech
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
@@ -178,6 +180,8 @@ class worker_administrator(object):
                                loggername='STIMELA-{:d}'.format(i),
                                build_label=self.stimela_build,
                                singularity_image_dir=self.singularity_image_dir)
+
+            recipe.JOB_TYPE = self.container_tech
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))

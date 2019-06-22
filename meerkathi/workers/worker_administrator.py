@@ -178,8 +178,8 @@ class worker_administrator(object):
                                loggername='STIMELA-{:d}'.format(i),
                                build_label=self.stimela_build,
                                singularity_image_dir=self.singularity_image_dir)
-            #if self.singularity_image_dir is None:
-            #    recipe.JOB_TYPE = "docker"
+            if self.singularity_image_dir is None:
+                recipe.JOB_TYPE = "docker"
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))

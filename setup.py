@@ -33,6 +33,10 @@ extra_diagnostics = [
     'nbconvert>=5.3.1',
 ]
 
+extra_polcal = [
+    'python-casacore>=2.2.0',
+]
+
 PACKAGE_NAME = 'meerkathi'
 __version__ = '0.1.1'
 
@@ -45,7 +49,8 @@ setup(name = PACKAGE_NAME,
     packages=[PACKAGE_NAME], 
     install_requires = requirements,
     extras_require = {
-        'extra_diagnostics': extra_diagnostics
+        'extra_diagnostics': extra_diagnostics,
+        'polcal_support': extra_polcal
     },
     include_package_data = True,
     ##package_data - any binary or meta data files should go into MANIFEST.in

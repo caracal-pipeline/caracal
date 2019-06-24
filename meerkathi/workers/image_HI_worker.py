@@ -114,8 +114,7 @@ def calc_rms(filename,HImaskname):
             newcube=datacube[selchans]
             newmask=datamask[selchans]
             y2=newcube[newmask==0]
-            #print newcube.shape, newmask.shape, y.shape, 'blah0 blah0'
-              
+            #print newcube.shape, newmask.shape, y.shape, 'blah0 blah0'              
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
 	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
@@ -545,7 +544,7 @@ def worker(pipeline, recipe, config):
                 rms2=calc_rms(cubename_path,HIclean_mask_path)
                 meerkathi.log.info('The updated rms = '+str("{0:.7f}".format(rms2))+' Jy/beam')
         
-                if rms2<=(1.0 - tol)*rms_ref:  #if the noise changes by less than 10% keep_going
+                if rms2<=(1.0 - tol)*rms_ref:  #if the noise changes by less than the specified tol. keep_going
                     #meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%')) 
                     rms_ref = rms2
                     if j==wscl_niter: 
@@ -554,7 +553,6 @@ def worker(pipeline, recipe, config):
                     if j<wscl_niter:
                         meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%. Noise convergence not achieved.')) 
                         
-
                     for ss in ['dirty','psf','first-residual','residual','model','image']:
                         cubename=pipeline.prefix+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                         MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_HI_'+str(j)+'-MFS-'+ss+'.fits')

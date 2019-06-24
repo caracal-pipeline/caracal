@@ -114,7 +114,7 @@ def calc_rms(filename,HImaskname):
             newcube=datacube[selchans]
             newmask=datamask[selchans]
             y2=newcube[newmask==0]
-            #print newcube.shape, newmask.shape, y.shape, 'blah0 blah0'              
+            #print newcube.shape, newmask.shape, y.shape              
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
 	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 

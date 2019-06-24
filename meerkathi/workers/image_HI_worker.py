@@ -118,7 +118,6 @@ def calc_rms(filename,HImaskname):
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
 	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
-
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]

@@ -120,11 +120,9 @@ def worker(pipeline, recipe, config):
             pipeline.lastchanfreq[i]  = lastchanfreq
             pipeline.chanwidth[i] = chanwidth
             meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(','.join(map(str,firstchanfreq)),','.join(map(str,lastchanfreq)),','.join(map(str,chanwidth))))
-        if len(pipeline.chanwidth) > 1:
-            if np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
-                meerkathi.log.info(
-                    'In some datasets the channel increment is negative whereas others have positive increment. This will lead to errors. Exiting')
-                sys.exit(1)
+        if i==len(prefixes)-1 and np.max(pipeline.chanwidth)>0 and np.min(pipeline.chanwidth)<0:
+            meerkathi.log.info('Some datasets have positive channel increment, some others negative. This will lead to errors. Exiting')
+            sys.exit(1)
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
             pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']

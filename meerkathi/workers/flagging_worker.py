@@ -5,14 +5,10 @@ import meerkathi
 import yaml
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
-import re
 import os
 
 def worker(pipeline, recipe, config):
-
     label = config['label']
-
-
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -21,11 +17,6 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    if label:
-        msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
-        prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
-
-        nobs=len(msnames)
 
     def get_field(field):
         """
@@ -42,21 +33,8 @@ def worker(pipeline, recipe, config):
 
 
     for i in range(nobs):
-#        msname = msnames[i]
+
         prefix = pipeline.prefixes[i]
-
-        # Since the nobs are now equal to the length of the msnames if hires flagging is activated
-        # It is important to have a p_nob that will look-up sources based on the original unique ms names in `pipeline`
-        # Note: Flagging is still perfomed on all msnames using index i
-#        if config['label'] and config['hires_flag']:
-#            p_prefix = pipeline.prefixes
-#            if config['label'] in prefix:
-#                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['label']), ''))
-#            elif config['hires_label'] in prefix:
-#                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
-#        else:
-
-        p_nob = i
 
         '''GET LIST OF INPUT MS'''
         mslist = []
@@ -100,9 +78,9 @@ def worker(pipeline, recipe, config):
                     raise KeyError("autoflag on powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
 
                 fields = def_fields if config['autoflag_autocorr_powerspectra'].get('fields', 'auto') == 'auto' else \
-                         ",".join([getattr(pipeline, key + "_id")[p_nob][0] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
+                         ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('fields').split(',')])
                 calfields = def_calfields if config['autoflag_autocorr_powerspectra'].get('calibrator_fields', 'auto') == 'auto' else \
-                         ",".join([getattr(pipeline, key + "_id")[p_nob][0] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
+                         ",".join([getattr(pipeline, key + "_id")[i][0] for key in config['autoflag_autocorr_powerspectra'].get('calibrator_fields').split(',')])
 
             
                 fields = ",".join(set(fields.split(",")))
@@ -273,7 +251,7 @@ def worker(pipeline, recipe, config):
                 if label:
                     fields = '0'
                 elif config['autoflag_rfi'].get('fields', 'auto') == 'auto':
-                    fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
+                    fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
                 else:
                     fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
 

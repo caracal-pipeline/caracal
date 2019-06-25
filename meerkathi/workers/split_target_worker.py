@@ -5,6 +5,8 @@ import stimela.dismissable as sdm
 import getpass
 import stimela.recipe as stimela
 import re
+import json
+from meerkathi.dispatch_crew import utils
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -30,11 +32,16 @@ table_suffix = {
 # Check if field was specified as known key, else return the
 # same value.
 
-def filter_name(string):
-    string = string.replace('+','_p_')
-    return re.sub('[^0-9a-zA-Z]', '_', string)
-
 def worker(pipeline, recipe, config):
+
+#TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
+    def fix_target_obsinfo(fname):                    
+        if pipeline.enable_task(config, 'split_target'):
+            with open(os.path.join(pipeline.output,fname), 'r') as stdr:
+                d = json.load(stdr)
+            d["FIELD"]["INTENTS"] = [u'TARGET']
+            with open(os.path.join(pipeline.output,fname), "w") as stdw:
+                json.dump(d, stdw)
 
     def get_field(field):
             """
@@ -101,10 +108,11 @@ def worker(pipeline, recipe, config):
         else: docallib = False
 
         for target in target_ls:
-            field = filter_name(target)
+            field = utils.filter_name(target)
 
             fms = [pipeline.hires_msnames[i] if label_in == '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_in)]
             tms = '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
+
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):
@@ -183,7 +191,7 @@ def worker(pipeline, recipe, config):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.json'.format(prefix)
-                
+                    
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                         {
@@ -195,3 +203,12 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
+
+		    step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
+		    recipe.add(fix_target_obsinfo, step,
+			{
+				'fname': listfile,
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 

@@ -32,6 +32,10 @@ table_suffix = {
 # Check if field was specified as known key, else return the
 # same value.
 
+def filter_name(string):
+    string = string.replace('+','_p_')
+    return re.sub('[^0-9a-zA-Z]', '_', string)
+
 def worker(pipeline, recipe, config):
 
 #TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
@@ -109,7 +113,6 @@ def worker(pipeline, recipe, config):
 
         for target in target_ls:
             field = utils.filter_name(target)
-
             fms = [pipeline.hires_msnames[i] if label_in == '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_in)]
             tms = '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
 

@@ -41,8 +41,10 @@ $ git fetch origin
 $ git merge origin/master
 $ pip install --upgrade pip
 $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
+$ pip install <absolute path to meerkathi folder>
 $ rm ~/.stimela/*
-$ stimela 
+$ stimela pull
+$ stimela build
 ```
 
 ### On Mac

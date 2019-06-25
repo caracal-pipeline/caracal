@@ -12,30 +12,37 @@ Use https and your github credentials, then go to the pipeline folder 'meerkathi
 git clone https://github.com/ska-sa/meerkathi.git
 cd meerkathi
 ```
-1. Check out submodules
-```
-git submodule update --init --recursive 
-```
-2. Start and activate virtual environment outside the meerkathi directory
+1. Start and activate virtual environment outside the meerkathi directory
 ```
 $ cd ..
 $ virtualenv meerkathi-venv
 $ source meerkathi-venv/bin/activate
 $ pip install pip wheel setuptools -U
 ```
-3. If working from master branch it may be necessary to install bleeding edge fixes from upstream dependencies. Please install the requirements.txt requirements:
+2. If working from master branch it may be necessary to install bleeding edge fixes from upstream dependencies. Please install the requirements.txt requirements:
 ```
 $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 ```
-4. Install meerKATHI
+3. Install meerKATHI
 ```
 $ pip install <absolute path to meerkathi folder>[extra_diagnostics]
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
-5. Build Stimela
+4. Build Stimela
 ```
 $ stimela build
+```
+5. Updating from origin
+```
+$ source meerkathi-venv/bin/activate
+$ cd <absolute path to meerkathi folder>
+$ git fetch origin
+$ git merge origin/master
+$ pip install --upgrade pip
+$ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
+$ rm ~/.stimela/*
+$ stimela 
 ```
 
 ### On Mac

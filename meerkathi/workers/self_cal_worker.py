@@ -569,7 +569,7 @@ def worker(pipeline, recipe, config):
                            "input-skymodel"   : calmodel + '.bbs',
                            "output-skymodel"  : calmodel + '.lsm.html',
                            "type"             : 'BBS',
-                           "output-type"      : 'tigger',
+                           "output-type"      : 'Tigger',
                        },
                        input = pipeline.output,
                        output = pipeline.output,

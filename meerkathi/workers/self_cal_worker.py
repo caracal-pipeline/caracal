@@ -547,7 +547,7 @@ def worker(pipeline, recipe, config):
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
 				"port2tigger"   : False,
-                "format"         : 'bbs'
+                "format"         : 'bbs',
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),

@@ -543,10 +543,11 @@ def worker(pipeline, recipe, config):
 				"image"         : im,
 				"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
 				"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-				"outfile"       : '{:s}.fits:output'.format(calmodel),
+				"outfile"       : '{:s}.bbs:output'.format(calmodel),
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
-				"port2tigger"   : True,
+				"port2tigger"   : False,
+                "format"         : 'bbs'
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
@@ -559,9 +560,18 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             #and then check the proper file is produced
-            if not os.path.isfile(pipeline.output + '/' + calmodel + '.lsm.html'):
+            if not os.path.isfile(pipeline.output + '/' + calmodel + '.bbs'):
                 raise IOError("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
-
+            recipe.add('cab/tigger_convert', step,
+                       {
+                           "input-skymodel"   : calmodel + '.bbs',
+                           "output-skymodel"  : calmodel + '.lsm.html',
+                           "type"             : 'BBS',
+                           "output-type"      : 'tigger',
+                       },
+                       input = pipeline.input,
+                       output = pipeline.output,
+                       label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         elif sourcefinder == 'sofia': 
             print 'are u crazy ?'
             print '############################################'

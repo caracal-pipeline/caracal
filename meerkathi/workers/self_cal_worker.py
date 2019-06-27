@@ -43,6 +43,8 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper', None)
+    if taper == '':
+        taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
     ncpu = config.get('ncpu', 9)
@@ -123,7 +125,7 @@ def worker(pipeline, recipe, config):
             mask = True
             step = 'image_{}_dirty'.format(num)
 
-            recipe.add('cab/wsclean', step,
+
                   {
                       "msname"    : mslist,
                       "column"    : imcolumn,

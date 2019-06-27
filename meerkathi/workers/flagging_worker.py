@@ -35,7 +35,6 @@ def worker(pipeline, recipe, config):
                 field: list of ids or comma-seperated list of ids where
                        ids are in bpcal, gcal, target, fcal or an actual field name
         """
-        print("I like fluffy cats")
         return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[p_nob].split(',')
                                             if isinstance(getattr(pipeline, x)[p_nob], str) and getattr(pipeline, x)[p_nob] != "" else getattr(pipeline, x)[p_nob])
                                           if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
@@ -45,6 +44,7 @@ def worker(pipeline, recipe, config):
 
     for i in range(nobs):
         msname = msnames[i]
+        print(msname)
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
  
@@ -256,7 +256,7 @@ def worker(pipeline, recipe, config):
 
             # Make sure no field IDs are duplicated
             fields = ",".join(set(fields.split(",")))
-
+            print(msname,pipeline.input)
             recipe.add('cab/autoflagger', step,
                 {
                   "msname"      : msname,

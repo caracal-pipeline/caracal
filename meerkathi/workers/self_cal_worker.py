@@ -561,7 +561,9 @@ def worker(pipeline, recipe, config):
             recipe.jobs = []
             #and then check the proper file is produced
             if not os.path.isfile(pipeline.output + '/' + calmodel + '.bbs'):
-                raise IOError("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+                meerkathi.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+                sys.exit(1)
+
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel"   : calmodel + '.bbs',

@@ -528,7 +528,14 @@ def worker(pipeline, recipe, config):
                 blank_limit = 1e-9
             else:
                 blank_limit = None
-
+            try:
+                os.remove(pipeline.output + '/' + calmodel + '.fits')
+            except:
+                print('No Previous fits log found.')
+            try:
+                os.remove(pipeline.output + '/' + calmodel + '.lsm.html')
+            except:
+                print('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
 		    	{
 				"image"         : im,
@@ -545,6 +552,14 @@ def worker(pipeline, recipe, config):
 		    	input=pipeline.input,
 		    	output=pipeline.output,
 		    	label='{0:s}:: Extract sources'.format(step))
+            #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
+            #and then check the proper file is produced
+            if not os.path.isfile(pipeline.output + '/' + calmodel + '.lsm.html'):
+                raise IOError("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+
         elif sourcefinder == 'sofia': 
             print 'are u crazy ?'
             print '############################################'

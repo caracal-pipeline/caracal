@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
             mask = True
             step = 'image_{}_dirty'.format(num)
 
-
+            recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
                       "column"    : imcolumn,

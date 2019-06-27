@@ -571,7 +571,7 @@ def worker(pipeline, recipe, config):
                            "type"             : 'BBS',
                            "output-type"      : 'tigger',
                        },
-                       input = pipeline.input,
+                       input = pipeline.output,
                        output = pipeline.output,
                        label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         elif sourcefinder == 'sofia': 

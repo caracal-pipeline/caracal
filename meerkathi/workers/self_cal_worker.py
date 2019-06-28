@@ -547,7 +547,7 @@ def worker(pipeline, recipe, config):
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
 				"port2tigger"   : False,
-                "format"         : 'bbs',
+                "format"         : 'ascii',
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
@@ -560,15 +560,15 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             #and then check the proper file is produced
-            if not os.path.isfile(pipeline.output + '/' + calmodel + '.bbs'):
+            if not os.path.isfile(pipeline.output + '/' + calmodel + '.txt'):
                 meerkathi.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 sys.exit(1)
 
             recipe.add('cab/tigger_convert', step,
                        {
-                           "input-skymodel"   : calmodel + '.bbs',
+                           "input-skymodel"   : calmodel + '.txt',
                            "output-skymodel"  : calmodel + '.lsm.html',
-                           "type"             : 'BBS',
+                           "type"             : 'ASCII',
                            "output-type"      : 'Tigger',
                        },
                        input = pipeline.output,

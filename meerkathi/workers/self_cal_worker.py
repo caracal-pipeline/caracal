@@ -566,12 +566,12 @@ def worker(pipeline, recipe, config):
             step = 'convert_extract_{0:d}'.format(num)
             recipe.add('cab/tigger_convert', step,
                        {
-                           "input-skymodel"   : calmodel + '.gaul',
+                           "input-skymodel"   : calmodel + '.gaul:output',
                            "output-skymodel"  : calmodel + '.lsm.html',
                            "type"             : 'Gaul',
                            "output-type"      : 'Tigger',
                        },
-                       input = pipeline.output,
+                       input = pipeline.input,
                        output = pipeline.output,
                        label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         elif sourcefinder == 'sofia': 

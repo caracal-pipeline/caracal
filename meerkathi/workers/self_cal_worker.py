@@ -563,7 +563,7 @@ def worker(pipeline, recipe, config):
             if not os.path.isfile(pipeline.output + '/' + calmodel + '.gaul'):
                 meerkathi.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 sys.exit(1)
-
+            step = 'convert_extract_{0:d}'.format(num)
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel"   : calmodel + '.gaul',

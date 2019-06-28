@@ -543,7 +543,7 @@ def worker(pipeline, recipe, config):
 				"image"         : im,
 				"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
 				"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-				"outfile"       : '{:s}.bbs:output'.format(calmodel),
+				"outfile"       : '{:s}.txt:output'.format(calmodel),
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
 				"port2tigger"   : False,

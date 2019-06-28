@@ -289,3 +289,11 @@ def imaging_params(msinfo, spwid=0):
     max_res = numpy.rad2deg( wavelength / maxbl )
     
     return max_res, FoV
+
+
+def filter_name(string):
+    string = string.replace('+','_p_')
+    return re.sub('[^0-9a-zA-Z]', '_', string)
+
+
+

@@ -38,7 +38,7 @@ mapping:
             type: int
             required: true
           column:
-            desc: Column to split, default is 'corrected'
+            desc: Column to split, default is 'data'. Which means use otf calibration.
             type: str
             required: false
           correlation:

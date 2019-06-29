@@ -5,6 +5,8 @@ import stimela.dismissable as sdm
 import getpass
 import stimela.recipe as stimela
 import re
+import json
+from meerkathi.dispatch_crew import utils
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -30,7 +32,20 @@ table_suffix = {
 # Check if field was specified as known key, else return the
 # same value.
 
+def filter_name(string):
+    string = string.replace('+','_p_')
+    return re.sub('[^0-9a-zA-Z]', '_', string)
+
 def worker(pipeline, recipe, config):
+
+#TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
+    def fix_target_obsinfo(fname):                    
+        if pipeline.enable_task(config, 'split_target'):
+            with open(os.path.join(pipeline.output,fname), 'r') as stdr:
+                d = json.load(stdr)
+            d["FIELD"]["INTENTS"] = [u'TARGET']
+            with open(os.path.join(pipeline.output,fname), "w") as stdw:
+                json.dump(d, stdw)
 
     def get_field(field):
             """
@@ -70,9 +85,8 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
     	    uname = getpass.getuser()
     	    gaintablelist,gainfieldlist,interplist = [],[],[]
-      
-            callabel = config['split_target']['otfcal'].get('callabel', '')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
+
+            calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel', '1gc1'))
 
     	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -85,7 +99,7 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(gainfield)
                 interplist.append(interp)
 
-            callib = 'callib_{0:s}_{1:s}.txt'.format(prefix,callabel)
+            callib = 'callib_{0:s}.txt'.format(calprefix)
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
                 for j in range(len(gaintablelist)):
                     stdw.write('caltable="{0:s}/{1:s}"'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"], gaintablelist[j]))
@@ -97,11 +111,11 @@ def worker(pipeline, recipe, config):
             docallib = True
         else: docallib = False
 
-        for field in target_ls:
-            target = field
-            field = re.sub('[^0-9a-zA-Z]', '_', field)
-            fms = pipeline.hires_msnames[i]
-            tms = '{0:s}-{1:s}_{2:s}.ms'.format(fms[:-3],field,label_out)
+        for target in target_ls:
+            field = utils.filter_name(target)
+            fms = [pipeline.hires_msnames[i] if label_in == '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_in)]
+            tms = '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3],field,label_out)
+
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_target'):
@@ -125,7 +139,7 @@ def worker(pipeline, recipe, config):
                         "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
-                        "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
+                        "callib"        : sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -162,13 +176,13 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(tms[:-3])
-                    else: listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(fms[:-3])
+                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.txt'.format(prefix,field,label_out)
+                    else: listfile = '{0:s}-obsinfo.txt'.format(prefix)
                 
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
                         {
-                          "vis"         : tms,
+                          "vis"         : [tms if pipeline.enable_task(config, 'split_target') else fms],
                           "listfile"    : listfile,
                           "overwrite"   : True,
                         },
@@ -178,14 +192,13 @@ def worker(pipeline, recipe, config):
     
                 if (config['obsinfo'].get('summary_json', True)):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = 'meerkathi-{0:s}-obsinfo.json'.format(tms[:-3])
-                    else: listfile = 'meerkathi-{0:s}-obsinfo.json'.format(fms[:-3])
-
-                
+                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(prefix,field,label_out)
+                    else: listfile = '{0:s}-obsinfo.json'.format(prefix)
+                    
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                         {
-                          "msname"      : tms,
+                          "msname"      : [tms if pipeline.enable_task(config, 'split_target') else fms],
                           "command"     : 'summary',
                           "display"     : False,
                           "outfile"     : listfile
@@ -193,3 +206,14 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
+
+		    step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
+		    recipe.add(fix_target_obsinfo, step,
+			{
+				'fname': listfile,
+			},
+			input = pipeline.input,
+			output = pipeline.output,
+			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 
+
+

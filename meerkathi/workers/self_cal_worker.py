@@ -49,7 +49,7 @@ def worker(pipeline, recipe, config):
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
     label_tgain = config['transfer_apply_gains'].get('transfer_to_label', '')         #label of MS where we transform selfcal gaintables
-    label_tmodel = config['transfer_model'].get('transfer_to_label', '')
+    label_tmodel = config['transfer_model'].get('transfer_to_label', '')             #label of MS where we interpolate and transform model column
 
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label)
 

@@ -50,18 +50,30 @@ def worker(pipeline, recipe, config):
     ncpu = config.get('ncpu', 9)
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter', 1)
-    hires_label = config['transfer_apply_gains'].get('transfer_to_label', '')
-    pipeline.set_cal_msnames(label)
-    pipeline.set_hires_msnames(hires_label)
-    for m in pipeline.cal_msnames:
-        if not os.path.exists(os.path.join(pipeline.msdir, m)):
-            raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(m))
-    mslist = pipeline.cal_msnames
+    label_tgain = config['transfer_apply_gains'].get('transfer_to_label', '')         #label of MS where we transform selfcal gaintables
+    label_tmodel = config['transfer_model'].get('transfer_to_label', '')             #label of MS where we interpolate and transform model column
 
-    meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
-    hires_mslist = pipeline.hires_msnames
-    hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
-    hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
+    all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label)
+
+    for m in all_msfile:                      #check whether all ms files to be used exist
+        if not os.path.exists(os.path.join(pipeline.msdir, m)):
+            raise IOError("MS file {0:s} does not exist. Please check that it is where it should be.".format(m))
+
+    if pipeline.enable_task(config, 'transfer_apply_gains'):
+        t, all_msfile_tgain, ms_dict_tgain = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label_tgain)
+        for m in all_msfile_tgain:                      #check whether all ms files to be used exist
+            if not os.path.exists(os.path.join(pipeline.msdir, m)):
+                raise IOError("MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
+
+    if pipeline.enable_task(config, 'transfer_model'):
+        t, all_msfile_tmodel, ms_dict_tmodel = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label_tmodel)
+        for m in all_msfile_tmodel:                      #check whether all ms files to be used exist
+            if not os.path.exists(os.path.join(pipeline.msdir, m)):
+                raise IOError("MS file {0:s}, to transfer model to, does not exist. Please check that it is where it should be.".format(m))
+
+    #meerkathi.log.info("Processing {0:s}".format(",".join(mslist)))
+#    hires_mslist = filter(lambda ms: isinstance(ms, str), hires_mslist)
+#    hires_mslist = filter(lambda ms: os.path.exists(os.path.join(pipeline.msdir, ms)), hires_mslist)
 
     prefix = pipeline.prefix
 
@@ -100,7 +112,7 @@ def worker(pipeline, recipe, config):
       fits.writeto(filename,dat,head,overwrite=True)
 
 
-    def image(num):
+    def image(num, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
         mask = False
@@ -136,7 +148,7 @@ def worker(pipeline, recipe, config):
                       "pol"       : config[key].get('pol', pol),
                       "channelsout"   : nchans,
                       "taper-gaussian" : sdm.dismissable(config[key].get('uvtaper', taper)),
-                      "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
+                      "prefix"    : '{0:s}_{1:s}_{2:d}'.format(prefix, field, num),
                   },
             input=pipeline.input,
             output=pipeline.output,
@@ -145,8 +157,8 @@ def worker(pipeline, recipe, config):
             step = 'mask_dirty_{}'.format(num)
             recipe.add('cab/cleanmask', step,
                {
-                 "image"           :  '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix),
-                 "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
+                 "image"           :  '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(prefix, field, num, mfsprefix),
+                 "output"          :  '{0:s}_{1:s}_{2:d}-mask.fits'.format(prefix, field, num),
                  "dilate"          :  False,
                  "peak-fraction"   :  0.5,
                  "no-negative"     :  True,
@@ -164,8 +176,8 @@ def worker(pipeline, recipe, config):
             step = 'mask_{}'.format(num)
             recipe.add('cab/cleanmask', step,
                {
-                 "image"           :  '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num-1, mfsprefix),
-                 "output"          :  '{0:s}_{1:d}-mask.fits'.format(prefix, num),
+                 "image"           :  '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(prefix, field, num-1, mfsprefix),
+                 "output"          :  '{0:s}_{1:s}_{2:d}-mask.fits'.format(prefix, field, num),
                  "dilate"          :  False,
                  "peak-fraction"   :  sdm.dismissable(pf),
                  "sigma"           :  sdm.dismissable(sigma),
@@ -185,7 +197,7 @@ def worker(pipeline, recipe, config):
                   "npix"      : config[key].get('npix', npix),
                   "padding"   : config[key].get('padding', padding),
                   "scale"     : config[key].get('cell', cell),
-                  "prefix"    : '{0:s}_{1:d}'.format(prefix, num),
+                  "prefix"    : '{0:s}_{1:s}_{2:d}'.format(prefix, field, num),
                   "niter"     : config[key].get('niter', niter),
                   "mgain"     : config[key].get('mgain', mgain),
                   "pol"       : config[key].get('pol', pol),
@@ -214,14 +226,14 @@ def worker(pipeline, recipe, config):
         output=pipeline.output,
         label='{:s}:: Make image after first round of calibration'.format(step))
 
-    def sofia_mask(num):
+    def sofia_mask(num, field):
         step = 'make_sofia_mask'
         key = 'sofia_mask'
 
         if config['img_joinchannels'] == True:
-          imagename = '{0:s}_{1:d}-MFS-image.fits'.format(prefix, num)
+          imagename = '{0:s}_{1:s}_{2:d}-MFS-image.fits'.format(prefix, field, num)
         else:
-          imagename = '{0:s}_{1:d}-image.fits'.format(prefix, num)
+          imagename = '{0:s}_{1:s}_{2:d}-image.fits'.format(prefix, field, num)
 
         if config[key].get('fornax_special',False) == True and config[key].get('use_sofia',False) == True:
           forn_kernels = [[80, 80, 0, 'b']]
@@ -481,10 +493,10 @@ def worker(pipeline, recipe, config):
 #          output=pipeline.output,
 #          label='{0:s}:: Cleanup SoFiA masks'.format(step))
 
-    def make_cube(num, imtype='model'):
-        im = '{0:s}_{1}-cube.fits:output'.format(prefix, num)
+    def make_cube(num, field, imtype='model'):
+        im = '{0:s}_{1:s}_{2}-cube.fits:output'.format(prefix, field, num)
         step = 'makecube_{}'.format(num)
-        images = ['{0:s}_{1}-{2:04d}-{3:s}.fits:output'.format(prefix, num, i, imtype) for i in range(nchans)]
+        images = ['{0:s}_{1:s}_{2}-{3:04d}-{4:s}.fits:output'.format(prefix, field, num, i, imtype) for i in range(nchans)]
         recipe.add('cab/fitstool', step,
             {
                 "image"     : images,
@@ -498,14 +510,14 @@ def worker(pipeline, recipe, config):
 
         return im
 
-    def extract_sources(num):
+    def extract_sources(num, field):
         key = 'extract_sources'
         if config[key].get('detection_image', False):
             step = 'detection_image_{0:d}'.format(num)
-            detection_image = prefix + '-detection_image_{0:d}.fits:output'.format(num)
+            detection_image = prefix + '-detection_image_{0:s}_{1:d}.fits:output'.format(field, num)
             recipe.add('cab/fitstool', step,
                 {
-                    "image"    : [prefix+'_{0:d}{2:s}-{1:s}.fits:output'.format(num, im, mfsprefix) for im in ('image','residual')],
+                    "image"    : ['{0:s}_{1:s}_{2:d}{3:s}-{4:s}.fits:output'.format(prefix, field, num, im, mfsprefix) for im in ('image','residual')],
                     "output"   : detection_image,
                     "diff"     : True,
                     "force"    : True,
@@ -520,12 +532,12 @@ def worker(pipeline, recipe, config):
         if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
             spi_do = config[key].get('spi', False)
             if spi_do:
-                im = make_cube(num, 'image')
+                im = make_cube(num, field, 'image')
             else:
-                im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
+                im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(prefix, field, num, mfsprefix)
 	       
             step = 'extract_{0:d}'.format(num)
-            calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
+            calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
             if detection_image:
                 blank_limit = 1e-9
             else:
@@ -578,14 +590,14 @@ def worker(pipeline, recipe, config):
             print 'are u crazy ?'
             print '############################################'
 
-    def predict_from_fits(num, model, index):
+    def predict_from_fits(num, model, index, mslist, field):
         if isinstance(model, str) and len(model.split('+'))==2:
             combine = True
             mm = model.split('+')
             # Combine FITS models if more than one is given
             step = 'combine_models_' + '_'.join(map(str, mm))
-            calmodel = '{0:s}_{1:d}-FITS-combined.fits:output'.format(prefix, num)
-            cubes = [ make_cube(n, 'model') for n in mm]
+            calmodel = '{0:s}_{1:s}_{2:d}-FITS-combined.fits:output'.format(prefix, field, num)
+            cubes = [ make_cube(n, field, 'model') for n in mm]
             recipe.add('cab/fitstool', step,
                 {
                     "image"    : cubes,
@@ -597,7 +609,7 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Add clean components'.format(step))
         else:
-            calmodel = make_cube(num)
+            calmodel = make_cube(num, field)
 
         step = 'predict_fromfits_{}'.format(num)
         recipe.add('cab/lwimager', 'predict', {
@@ -615,11 +627,11 @@ def worker(pipeline, recipe, config):
             label='{0:s}:: Predict from FITS ms={1:s}'.format(step, mslist[index]))
 
 
-    def combine_models(models, num, enable=True):
-        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
-                       prefix, m) for m in models]
-        model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(
-                            pipeline.output, prefix, m) for m in models]
+    def combine_models(models, num, field, enable=True):
+        model_names = ['{0:s}_{1:s}_{2:d}-pybdsm.lsm.html:output'.format(
+                       prefix, field, m) for m in models]
+        model_names_fits = ['{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
+                            pipeline.output, prefix, field, m) for m in models]
         calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
 
         if enable:
@@ -639,7 +651,7 @@ def worker(pipeline, recipe, config):
         return calmodel, model_names_fits
 
 
-    def calibrate_meqtrees(num):
+    def calibrate_meqtrees(num, mslist, field):
         key = 'calibrate'
         global reset_cal
         if num == cal_niter:
@@ -657,13 +669,13 @@ def worker(pipeline, recipe, config):
             modelcolumn = 'MODEL_DATA'
             if isinstance(model, str) and len(model.split('+')) > 1:
                 mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num,
+                calmodel, fits_model = combine_models(mm, num, field,
                                            enable=False if pipeline.enable_task(
                                            config, 'aimfast') else True)
             else:
                 model = int(model)
-                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+                calmodel = '{0:s}_{1:s}_{2:d}-pybdsm.lsm.html:output'.format(prefix, field, model)
+                fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(pipeline.output, prefix, field, model)
         #If the mode is pybdsm_only, don't use any clean components. So, the same as above, but with
         #vismodel =False
         elif config[key].get('model_mode', None) == 'pybdsm_only':
@@ -671,13 +683,13 @@ def worker(pipeline, recipe, config):
             model = config[key].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+')) > 1:
                 mm = model.split('+')
-                calmodel, fits_model = combine_models(mm, num,
+                calmodel, fits_model = combine_models(mm, num, field,
                                            enable=False if pipeline.enable_task(
                                            config, 'aimfast') else True)
             else:
                 model = int(model)
-                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+                calmodel = '{0:s}_{1:s}_{2:d}-pybdsm.lsm.html:output'.format(prefix, field, model)
+                fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(pipeline.output, prefix, field, model)
 
             modelcolumn = ''
         #If the mode is vis_only, then there is need for an empty sky model (since meqtrees needs one).
@@ -713,19 +725,19 @@ def worker(pipeline, recipe, config):
                     matrix_type= trace_matrix[num-2]
                     SN = trace_SN[num-2]
                 fidelity_data = get_aimfast_data()
-                obs_data = get_obs_data()
+                obs_data = get_obs_data(prefix,field,label)
                 int_time =  obs_data['EXPOSURE']
                 tot_time=0.
                 for scan_key in obs_data['SCAN']['0']:
                     tot_time += obs_data['SCAN']['0'][scan_key]
                 no_ant=len(obs_data['ANT']['DISH_DIAMETER'])
-                DR=fidelity_data['meerkathi_{0}-residual'.format(num)]['meerkathi_{0}-model'.format(num)]['DR']
-                Noise= fidelity_data['meerkathi_{0}-residual'.format(num)]['STDDev']
+                DR=fidelity_data['{0}_{1}-residual'.format(prefix,num)]['{0}_{1}-model'.format(prefix,num)]['DR']
+                Noise= fidelity_data['{0}_{1}-residual'.format(prefix,num)]['STDDev']
                 flux=DR*Noise
                 solvetime = int(Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
 
                 if num> 1:
-                    DR=fidelity_data['meerkathi_{0}-residual'.format(num-1)]['meerkathi_{0}-model'.format(num-1)]['DR']
+                    DR=fidelity_data['{0}_{1}-residual'.format(prefix,num-1)]['{0}_{1}-model'.format(prefix,num-1)]['DR']
                     flux=DR*Noise
                     prev_solvetime = int(Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
                 else:
@@ -780,7 +792,7 @@ def worker(pipeline, recipe, config):
                  "column"               : incolumn,
                  "output-data"          : config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1],
                  "output-column"        : outcolumn,
-                 "prefix"               : '{0:s}-{1:d}_meqtrees'.format(pipeline.dataid[i], num),
+                 "prefix"               : '{0:s}_{1:s}_{2:d}_meqtrees'.format(prefix, msname[:-3], num),
                  "label"                : 'cal{0:d}'.format(num),
                  "read-flags-from-ms"   : True,
                  "read-flagsets"        : "-stefcal",
@@ -804,18 +816,18 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def calibrate_cubical(num):
+    def calibrate_cubical(num, mslist, field):
         key = 'calibrate'
 
         modellist = []
         model = config[key].get('model', num)[num-1]
         if isinstance(model, str) and len(model.split('+'))>1:
             mm = model.split('+')
-            calmodel, fits_model = combine_models(mm, num)
+            calmodel, fits_model = combine_models(mm, num, field)
         else:
             model = int(model)
-            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+            calmodel = '{0:s}_{1:s}_{2:d}-pybdsm.lsm.html:output'.format(prefix, field, model)
+            fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(pipeline.output, prefix, field, model)
 
         if config[key].get('model_mode', None) == 'pybdsm_vis':
             if (num == cal_niter):
@@ -860,7 +872,7 @@ def worker(pipeline, recipe, config):
 
         for i,msname in enumerate(mslist):
 
-            step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i)
+            step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
             cubical_opts= {
                   "data-ms"          : msname,
                   "data-column"      : 'DATA',
@@ -870,7 +882,7 @@ def worker(pipeline, recipe, config):
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                   "dist-ncpu"        : ncpu,
                   "sol-jones"        : jones_chain,
-                  "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
+                  "out-name"         : '{0:s}_{1:s}_{2:d}_cubical'.format(prefix, msname[:-3], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
                   "out-casa-gaintables" : True,
@@ -933,11 +945,8 @@ def worker(pipeline, recipe, config):
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     
-    def apply_gains_to_fullres(apply_iter, enable=True):
-
+    def apply_gains_to_fullres(apply_iter, mslist_out, enable=True):
         key = 'calibrate'
-
-
         calwith = config.get('calibrate_with', 'meqtrees').lower()
         if(calwith=='meqtrees'):
            enable = False
@@ -948,47 +957,46 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G'
         if config[key].get('DDjones', False):
             jones_chain += ',DD'
-        for i,himsname in enumerate(hires_mslist):
+        for i,msname_out in enumerate(mslist_out):
             cubical_gain_interp_opts = {
-               "data-ms"          : himsname,
+               "data-ms"          : msname_out,
                "data-column"      : 'DATA',
                "sol-jones"        : jones_chain,
                "data-time-chunk"  : time_chunk,
                "sel-ddid"         : sdm.dismissable(config[key].get('spwid', None)),
                "dist-ncpu"        : ncpu,
-               "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
+               "out-name"         : '{0:s}-{1:s}_{2:d}_cubical'.format(prefix, msname_out, apply_iter), # '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], apply_iter),
                "out-mode"         : 'ac',
                "weight-column"    : config[key].get('weight_column', 'WEIGHT'),
                "montblanc-dtype"  : 'float',
-               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))}
+               "g-xfer-from"     : "g-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname_out.split('.ms')[0]).replace(label_tgain,label))}
             if config[key].get('DDjones', False):
-               cubical_gain_interp_opts.update({"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
+               cubical_gain_interp_opts.update({"dd-xfer-from": "dE-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname_out.split('.ms')[0]).replace(label_tgain,label))})
             if config[key].get('Bjones', False):
-               cubical_gain_interp_opts.update({"dd-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(himsname.split('.ms')[0]).replace(hires_label,label))})
+               cubical_gain_interp_opts.update({"dd-xfer-from": "b-gains-{0:d}-{1:s}.parmdb:output".format(apply_iter,(msname_out.split('.ms')[0]).replace(label_tgain,label))})
             step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                 input=pipeline.input,
                 output=pipeline.output,
                 shared_memory='100Gb',
-                label="{0:s}:: Apply cubical gains ms={1:s}".format(step, himsname))
-
-
-     
-
+                label="{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out))
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
         return data
-    def get_obs_data(filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[0])):
+    def get_obs_data(prefix,field,label):
         "Extracts data from the json data file"
         if label:
-            filename='{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output, pipeline.prefixes[0],label)
+            filename='{0:s}/{1:s}-{2:s}-{3:s}-obsinfo.json'.format(pipeline.output,prefix,field,label)
+        else: 
+            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
         with open(filename) as f:
             data = json.load(f)
         return data
-    def quality_check(n, enable=True):
+
+    def quality_check(n, field, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
         global reset_cal
@@ -1008,15 +1016,15 @@ def worker(pipeline, recipe, config):
                 conv_crit = config[key].get('convergence_criteria', ["DR", "SKEW", "KURT", "STDDEV", "MEAN"])
                 conv_crit= [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
-                residual0=fidelity_data['meerkathi_{0}-residual'.format(n - 1)]
-                residual1 = fidelity_data['meerkathi_{0}-residual'.format(n)]
+                residual0=fidelity_data['{0}_{1}_{2}-residual'.format(prefix, field, n-1)]
+                residual1 = fidelity_data['{0}_{1}_{2}-residual'.format(prefix, field, n)]
                 # Unlike the other ratios DR should grow hence n-1/n < 1.
 
                 if not pipeline.enable_task(config, 'extract_sources'):
-                    drratio=fidelity_data['meerkathi_{0}-restored'.format(n - 1)]['DR']/fidelity_data[
-                                          'meerkathi_{0}-restored'.format(n)]['DR']
+                    drratio=fidelity_data['{0}_{1}_{2}-restored'.format(prefix, field, n-1)]['DR']/fidelity_data[
+                                          '{0}_{1}_{2}-restored'.format(prefix, field, n)]['DR']
                 else:
-                    drratio=residual0['meerkathi_{0}-model'.format(n - 1)]['DR']/residual1['meerkathi_{0}-model'.format(n)]['DR']
+                    drratio=residual0['{0}_{1}_{2}-model'.format(prefix, field, n-1)]['DR']/residual1['{0}_{1}_{2}-model'.format(prefix, field, n)]['DR']
 
                 # Dynamic range is important,
                 if any(cc == "DR" for cc in conv_crit):
@@ -1087,8 +1095,6 @@ def worker(pipeline, recipe, config):
 
                     if self_cal_iter_counter < 1:
                         self_cal_iter_counter = 1
-
-
                     return True
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
@@ -1097,7 +1103,7 @@ def worker(pipeline, recipe, config):
         # If no condition is met return true to continue
         return True
 
-    def image_quality_assessment(num):
+    def image_quality_assessment(num, field):
         # Check if more than two calibration iterations to combine successive models
         # Combine models <num-1> (or combined) to <num> creat <num+1>-pybdsm-combine
         # This was based on thres_pix but change to model as when extract_sources = True is will take the last settings
@@ -1105,7 +1111,7 @@ def worker(pipeline, recipe, config):
             model = config['calibrate'].get('model', num)[num-1]
             if isinstance(model, str) and len(model.split('+'))==2:
                 mm = model.split('+')
-                combine_models(mm, num)
+                combine_models(mm, num, field)
         # in case we are in the last round, imaging has made a model that is longer then the expected model column
         # Therefore we take this last model if model is not defined
         if num == cal_niter+1:
@@ -1115,21 +1121,20 @@ def worker(pipeline, recipe, config):
                 model = str(num)
 
         step = 'aimfast'
-
         aimfast_settings = {
-                    "residual-image"       : '{0:s}_{1:d}{2:s}-residual.fits:output'.format(
-                                                 prefix, num, mfsprefix),
+                    "residual-image"       : '{0:s}_{1:s}_{2:d}{3:s}-residual.fits:output'.format(
+                                                 prefix, field, num, mfsprefix),
                     "normality-test"       : config[step].get(
                                                  'normality_model', 'normaltest'),
                     "area-factor"          : config[step].get('area_factor', 10),
-                    "label"                : "meerkathi_{}".format(num),
-                }
+                    "label"                : "{0:s}_{1:s}_{2:d}".format(prefix, field, num),
+                    }
 
         # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
 
         if pipeline.enable_task(config, 'extract_sources'):
-            aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
-                prefix, num if num <= len(config['calibrate'].get('model', num))
+            aimfast_settings.update({"tigger-model"   : '{0:s}_{1:s}_{2:d}-pybdsm{3:s}.lsm.html:output'.format(
+                prefix, field, num if num <= len(config['calibrate'].get('model', num))
                 else len(config['calibrate'].get('model', num)),
                 '-combined' if len(model.split('+')) >= 2 else '')})
         else:
@@ -1142,27 +1147,27 @@ def worker(pipeline, recipe, config):
                     im = config['calibrate'].get('output_data').index("CORR_RES") + 1
                 except ValueError:
                     im = num
-                aimfast_settings.update({"restored-image" : '{0:s}_{1:d}{2:s}-image.fits:output'.format(
-                                                                prefix, im, mfsprefix)})
+                aimfast_settings.update({"restored-image" : '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
+                                                                prefix, field, im, mfsprefix)})
         recipe.add('cab/aimfast', step,
             aimfast_settings,
             input=pipeline.output,
             output=pipeline.output,
             label="{0:s}_{1:d}:: Image fidelity assessment for {2:d}".format(step, num, num))
 
-    def aimfast_plotting():
+    def aimfast_plotting(field):
         """Plot comparisons of catalogs and residuals"""
 
         out_dir = pipeline.output
         # Get residuals to compare
-        res_files = sorted(glob.glob("{:s}/{:s}_?-MFS-residual.fits".format(out_dir, prefix)))
+        res_files = sorted(glob.glob("{:s}/{:s}_{:s}_?-MFS-residual.fits".format(out_dir, prefix, field)))
         residuals = []
         for i, r in enumerate(res_files):
             if i < len(res_files) - 1:
                 residuals.append("{:s}:{:s}:output".format(r.split('/')[-1], res_files[i+1].split('/')[-1]))
 
         # Get models to compare
-        model_files = sorted(glob.glob("{:s}/{:s}_*.lsm.html".format(out_dir, prefix)))
+        model_files = sorted(glob.glob("{:s}/{:s}_{:s}_*.lsm.html".format(out_dir, prefix, field)))
         models = []
         for i, m in enumerate(model_files):
             if i < len(model_files) - 1:
@@ -1244,22 +1249,6 @@ def worker(pipeline, recipe, config):
                  label='{0:s}:: Plot gain tables : {1:s}'.format(step, ' '.join(D_tables)))
 
 
-    # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
-    if config.get('undo_subtractmodelcol', False):
-        for i,msname in enumerate(mslist):
-            step = 'undo_modelsub_{:d}'.format(i)
-            recipe.add('cab/msutils', step,
-                {
-                    "command"  : 'sumcols',
-                    "msname"   : msname,
-                    "col1"     : 'CORRECTED_DATA',
-                    "col2"     : 'MODEL_DATA',
-                    "column"   : 'CORRECTED_DATA'
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Add model column to corrected column'.format(step))
-
     # decide which tool to use for calibration
     calwith = config.get('calibrate_with', 'meqtrees').lower()
     if calwith == 'meqtrees':
@@ -1285,53 +1274,73 @@ def worker(pipeline, recipe, config):
         if config['aimfast'].get('plot'):
             config['extract_sources']['enable'] = True
 
-    global self_cal_iter_counter
-    self_cal_iter_counter = config.get('start_at_iter', 1)
-    global reset_cal
-    reset_cal = 0
-    global trace_SN
-    trace_SN = []
-    global trace_matrix
-    trace_matrix = []
+    for target in all_targets:
+        mslist = ms_dict[target]
+        field = utils.filter_name(target)
+        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
+        if config.get('undo_subtractmodelcol', False):
+            for i,msname in enumerate(mslist):
+                step = 'undo_modelsub_{:d}'.format(i)
+                recipe.add('cab/msutils', step,
+                    {
+                        "command"  : 'sumcols',
+                        "msname"   : msname,
+                        "col1"     : 'CORRECTED_DATA',
+                        "col2"     : 'MODEL_DATA',
+                        "column"   : 'CORRECTED_DATA'
+                     },
+                     input=pipeline.input,
+                     output=pipeline.output,
+                     label='{0:s}:: Add model column to corrected column'.format(step))
 
-    if pipeline.enable_task(config, 'image'):
-        image(self_cal_iter_counter)
-    if pipeline.enable_task(config, 'sofia_mask'):
-        sofia_mask(self_cal_iter_counter)
-    if pipeline.enable_task(config, 'extract_sources'):
-        extract_sources(self_cal_iter_counter)
-    if pipeline.enable_task(config, 'aimfast'):
-        image_quality_assessment(self_cal_iter_counter)
+        global self_cal_iter_counter
+        self_cal_iter_counter = config.get('start_at_iter', 1)
+        global reset_cal
+        reset_cal = 0
+        global trace_SN
+        trace_SN = []
+        global trace_matrix
+        trace_matrix = []
 
-    while quality_check(self_cal_iter_counter,
-                        enable=pipeline.enable_task(
-                            config, 'aimfast')):
+        if pipeline.enable_task(config, 'image'):
+            image(self_cal_iter_counter, mslist, field)
+        if pipeline.enable_task(config, 'sofia_mask'):
+            sofia_mask(self_cal_iter_counter, field)
+        if pipeline.enable_task(config, 'extract_sources'):
+            extract_sources(self_cal_iter_counter, field)
+        if pipeline.enable_task(config, 'aimfast'):
+            image_quality_assessment(self_cal_iter_counter, field)
+
+        while quality_check(self_cal_iter_counter, field,
+                            enable=pipeline.enable_task(
+                                config, 'aimfast')):
+            if pipeline.enable_task(config, 'calibrate'):
+                calibrate(self_cal_iter_counter, mslist, field)
+            if reset_cal < 2:
+                self_cal_iter_counter += 1
+                if pipeline.enable_task(config, 'image'):
+                    image(self_cal_iter_counter, mslist, field)
+                if pipeline.enable_task(config, 'sofia_mask'):
+                    sofia_mask(self_cal_iter_counter, field)
+                if pipeline.enable_task(config, 'extract_sources'):
+                    extract_sources(self_cal_iter_counter, field)
+                if pipeline.enable_task(config, 'aimfast'):
+                    image_quality_assessment(self_cal_iter_counter, field)
+
+        if pipeline.enable_task(config, 'transfer_apply_gains'):
+            mslist_out = ms_dict_tgain[target]
+            if (self_cal_iter_counter > cal_niter):
+                apply_gains_to_fullres(self_cal_iter_counter-1, mslist_out, enable=True)
+            else:
+                apply_gains_to_fullres(self_cal_iter_counter, mslist_out, enable=True)
+
+        if pipeline.enable_task(config, 'aimfast'):
+            if config['aimfast']['plot']:
+                aimfast_plotting(field)
+
         if pipeline.enable_task(config, 'calibrate'):
-            calibrate(self_cal_iter_counter)
-        if reset_cal < 2:
-            self_cal_iter_counter += 1
-            if pipeline.enable_task(config, 'image'):
-                image(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'sofia_mask'):
-                sofia_mask(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'extract_sources'):
-                extract_sources(self_cal_iter_counter)
-            if pipeline.enable_task(config, 'aimfast'):
-                image_quality_assessment(self_cal_iter_counter)
-
-    if pipeline.enable_task(config, 'transfer_apply_gains'):
-        if (self_cal_iter_counter > cal_niter):
-            apply_gains_to_fullres(self_cal_iter_counter-1, enable=True)
-        else:
-            apply_gains_to_fullres(self_cal_iter_counter, enable=True)
-
-    if pipeline.enable_task(config, 'aimfast'):
-        if config['aimfast']['plot']:
-            aimfast_plotting()
-
-    if pipeline.enable_task(config, 'calibrate'):
-        if config['calibrate']['ragavi_plot']['enable']:
-            ragavi_plotting_cubical_tables()
+            if config['calibrate']['ragavi_plot']['enable']:
+                ragavi_plotting_cubical_tables()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:
@@ -1343,185 +1352,187 @@ def worker(pipeline, recipe, config):
     #        if pipeline.enable_task(config, 'sofia_mask'):
     #            sofia_mask(kk+1)
 
-    if pipeline.enable_task(config, 'restore_model'):
-        if config['restore_model']['model']:
-            num = config['restore_model']['model']
+        if pipeline.enable_task(config, 'restore_model'):
+            if config['restore_model']['model']:
+                num = config['restore_model']['model']
+                if isinstance(num, str) and len(num.split('+')) == 2:
+                    mm = num.split('+')
+                    if int(mm[-1]) > self_cal_iter_counter:
+                        num = str(self_cal_iter_counter)
+            else:
+                extract_sources = len(config['extract_sources'].get(
+                                      'thresh_isl', [self_cal_iter_counter]))
+                if extract_sources > 1:
+                    num = '{:d}+{:d}'.format(self_cal_iter_counter-1, self_cal_iter_counter)
+                else:
+                    num = self_cal_iter_counter
+
             if isinstance(num, str) and len(num.split('+')) == 2:
                 mm = num.split('+')
-                if int(mm[-1]) > self_cal_iter_counter:
-                    num = str(self_cal_iter_counter)
-        else:
-            extract_sources = len(config['extract_sources'].get(
-                                  'thresh_isl', [self_cal_iter_counter]))
-            if extract_sources > 1:
-                num = '{:d}+{:d}'.format(self_cal_iter_counter-1, self_cal_iter_counter)
+
+                models = ['{0:s}_{1:s}_{2:s}-pybdsm.lsm.html:output'.format(
+                          prefix, field, m) for m in mm]
+                final = '{0:s}_{1:s}_final-pybdsm.lsm.html:output'.format(prefix, field)
+
+                step = 'create_final_lsm_{0:s}_{1:s}'.format(*mm)
+                recipe.add('cab/tigger_convert', step,
+                    {
+                        "input-skymodel"    : models[0],
+                        "append"            : models[1],
+                        "output-skymodel"   : final,
+                        "rename"            : True,
+                        "force"             : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Combined models'.format(step))
+
+            elif isinstance(num, str) and num.isdigit():
+                inputlsm = '{0:s}_{1:s}_{2:d}-pybdsm.lsm.html:output'.format(prefix, field, num)
+                final = '{0:s}_{1:s}_final-pybdsm.lsm.html:output'.format(prefix, field)
+                step = 'create_final_lsm_{0:s}'.format(num)
+                recipe.add('cab/tigger_convert', step,
+                    {
+                        "input-skymodel"    : inputlsm,
+                        "output-skymodel"   : final,
+                        "rename"  : True,
+                        "force"   : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Combined models'.format(step))
             else:
-                num = self_cal_iter_counter
+                raise ValueError("restore_model_model should be integer-valued string or indicate which models to be appended, eg. 2+3")
 
-        if isinstance(num, str) and len(num.split('+')) == 2:
-            mm = num.split('+')
+            if config['restore_model'].get('clean_model', None):
+                num = int(config['restore_model'].get('clean_model', None))
+                if num > self_cal_iter_counter:
+                    num = self_cal_iter_counter
 
-            models = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
-                      prefix, m) for m in mm]
-            final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
+                conv_model = '{0:s}_{1:s}-convolved_model.fits:output'.format(prefix, field)
+                recipe.add('cab/fitstool', step,
+                    {
+                        "image"    : ['{0:s}_{1:s}_{2:d}{3:s}-{4:s}.fits:output'.format(prefix, target, num, mfsprefix, im) for im in ('image','residual')],
+                        "output"   : conv_model,
+                        "diff"     : True,
+                        "force"    : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Make convolved model'.format(step))
 
-            step = 'create_final_lsm_{0:s}_{1:s}'.format(*mm)
-            recipe.add('cab/tigger_convert', step,
-                {
-                    "input-skymodel"    : models[0],
-                    "append"            : models[1],
-                    "output-skymodel"   : final,
-                    "rename"            : True,
-                    "force"             : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Combined models'.format(step))
+                with_cc = '{0:s}_{1:s}-with_cc.fits:output'.format(prefix, field)
+                recipe.add('cab/fitstool', step,
+                    {
+                        "image"    : ['{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(prefix, field, num, mfsprefix), conv_model],
+                        "output"   : with_cc,
+                        "sum"      : True,
+                        "force"    : True,
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Add clean components'.format(step))
 
-        elif isinstance(num, str) and num.isdigit():
-            inputlsm = '{0:s}_{1:s}-pybdsm.lsm.html:output'.format(prefix, num)
-            final = '{0:s}_final-pybdsm.lsm.html:output'.format(prefix)
-            step = 'create_final_lsm_{0:s}'.format(num)
-            recipe.add('cab/tigger_convert', step,
-                {
-                    "input-skymodel"    : inputlsm,
-                    "output-skymodel"   : final,
-                    "rename"  : True,
-                    "force"   : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Combined models'.format(step))
-        else:
-            raise ValueError("restore_model_model should be integer-valued string or indicate which models to be appended, eg. 2+3")
-
-        if config['restore_model'].get('clean_model', None):
-            num = int(config['restore_model'].get('clean_model', None))
-            if num > self_cal_iter_counter:
-                num = self_cal_iter_counter
-
-            conv_model = prefix + '-convolved_model.fits:output'
-            recipe.add('cab/fitstool', step,
-                {
-                    "image"    : [prefix+'_{0:d}{2:s}-{1:s}.fits:output'.format(num, im, mfsprefix) for im in ('image','residual')],
-                    "output"   : conv_model,
-                    "diff"     : True,
-                    "force"    : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make convolved model'.format(step))
-
-            with_cc = prefix + '-with_cc.fits:output'
-            recipe.add('cab/fitstool', step,
-                {
-                    "image"    : [prefix+'_{0:d}{1:s}-image.fits:output'.format(num, mfsprefix), conv_model],
-                    "output"   : with_cc,
-                    "sum"      : True,
-                    "force"    : True,
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Add clean components'.format(step))
-
-            recipe.add('cab/tigger_restore', step,
-                {
-                    "input-image"    : with_cc,
-                    "input-skymodel" : final,
-                    "output-image"   : prefix+'.fullrest.fits',
-                    "force"          : True,
-                },
+                recipe.add('cab/tigger_restore', step,
+                    {
+                        "input-image"    : with_cc,
+                        "input-skymodel" : final,
+                        "output-image"   : '{0:s}_{1:s}.fullrest.fits'.format(prefix, field),
+                        "force"          : True,
+                    },
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add extracted skymodel'.format(step))
 
-    for i,msname in enumerate(mslist):
-        if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata', step,
-                {
-                  "vis"         : msname,
-                  "mode"        : 'summary',
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+        for i,msname in enumerate(mslist):
+            if pipeline.enable_task(config, 'flagging_summary'):
+                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                recipe.add('cab/casa_flagdata', step,
+                    {
+                      "vis"         : msname,
+                      "mode"        : 'summary',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-    if pipeline.enable_task(config, 'transfer_model'):
-        meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
-        crystalball_model=config['transfer_model'].get('model','auto')
-        if crystalball_model=='auto': crystalball_model='{0:s}_{1:d}-sources.txt'.format(prefix,self_cal_iter_counter)
-        for i,msname in enumerate(hires_mslist):
-            step = 'transfer_model_{0:d}'.format(i)
-            recipe.add('cab/crystalball', step,
-                {
-                  "ms"              : msname,
-                  "sky-model"       : crystalball_model+':output',
-                  "spectra"         : config['transfer_model'].get('spectra', True),
-                  "row-chunks"      : config['transfer_model'].get('row_chunks', 0),
-                  "model-chunks"    : config['transfer_model'].get('model_chunks', 0),
-                  "invert-uvw"      : config['transfer_model'].get('invert_uvw', True),
-                  "within"          : sdm.dismissable(config['transfer_model'].get('within', None)),
-                  "points-only"     : config['transfer_model'].get('points_only', False),
-                  "num-sources"     : sdm.dismissable(config['transfer_model'].get('num_sources', None)),
-                  "num-workers"     : sdm.dismissable(config['transfer_model'].get('num_workers', None)),
-                  "memory-fraction" : config['transfer_model'].get('memory_fraction', 0.5),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+        if pipeline.enable_task(config, 'transfer_model'):
+            meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
+            print '*****************************************'
+            crystalball_model=config['transfer_model'].get('model','auto')
+            print '****************************************'
+            mslist_out = ms_dict_tmodel[target]
+            if crystalball_model=='auto': crystalball_model='{0:s}_{1:s}_{2:d}-sources.txt'.format(prefix,field,self_cal_iter_counter)
+            for i,msname in enumerate(mslist_out):
+                step = 'transfer_model_{0:d}'.format(i)
+                recipe.add('cab/crystalball', step,
+                    {
+                      "ms"           : msname,
+                      "sky-model"    : crystalball_model+':output',
+                      "spectra"      : config['transfer_model'].get('spectra', True),
+                      "row-chunks"   : config['transfer_model'].get('row_chunks', 100),
+                      "model-chunks" : config['transfer_model'].get('model_chunks', 100),
+                      "invert-uvw"   : config['transfer_model'].get('invert_uvw', True),
+                      "within"       : sdm.dismissable(config['transfer_model'].get('within', None)),
+                      "points-only"  : config['transfer_model'].get('points_only', False),
+                      "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources', None)),
+                      "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers', None)),
+ #                     "memory-fraction" : 0.2, #  config['transfer_model'].get('memory_fraction', 0.1),
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 
-    if pipeline.enable_task(config, 'highfreqres_contim'):
-        # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
-        for i, prfx in enumerate(['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]):
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
-            with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
-        step = 'highfreqres_contim'
-        image_opts = {
-                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
-                  "column"                 : config['highfreqres_contim'].get('column', "CORRECTED_DATA"),
-                  "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
-                  "npix"                   : config['highfreqres_contim'].get('npix', npix),
-                  "padding"                : config['highfreqres_contim'].get('padding', padding),
-                  "scale"                  : config['highfreqres_contim'].get('cell', cell),
-                  "prefix"                 : '{0:s}_{1:s}'.format(prefix, 'fine'),
-                  "niter"                  : config['highfreqres_contim'].get('niter', niter),
-                  "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
-                  "pol"                    : config['highfreqres_contim'].get('pol', pol),
-                  "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
-                  "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
-                  "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
-                  "joinchannels"           : True,
-                  "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol', 1),
-                  "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask', None)),
-                  "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold', 10),
-                  "multiscale"             : config['highfreqres_contim'].get('multi_scale', False),
-                  "multiscale-scales"      : sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales', None)),
-                  "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask', None)),
-              }
+        if pipeline.enable_task(config, 'highfreqres_contim'):
+            # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
+            for i, prfx in enumerate(['{0:s}-{1:s}-{2:s}'.format(prefix,did,config['label']) for did in pipeline.dataid]):
+                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
+                with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
+            step = 'highfreqres_contim'
+            image_opts = {
+                      "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
+                      "column"                 : config['highfreqres_contim'].get('column', "CORRECTED_DATA"),
+                      "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
+                      "npix"                   : config['highfreqres_contim'].get('npix', npix),
+                      "padding"                : config['highfreqres_contim'].get('padding', padding),
+                      "scale"                  : config['highfreqres_contim'].get('cell', cell),
+                      "prefix"                 : '{0:s}_{1:s}'.format(prefix, 'fine'),
+                      "niter"                  : config['highfreqres_contim'].get('niter', niter),
+                      "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
+                      "pol"                    : config['highfreqres_contim'].get('pol', pol),
+                      "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
+                      "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
+                      "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
+                      "joinchannels"           : True,
+                      "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol', 1),
+                      "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask', None)),
+                      "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold', 10),
+                      "multiscale"             : config['highfreqres_contim'].get('multi_scale', False),
+                      "multiscale-scales"      : sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales', None)),
+                      "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask', None)),
+                  }
 
-        recipe.add('cab/wsclean', step,
-        image_opts,
-        input=pipeline.input,
-        output=pipeline.output,
-        label='{:s}:: Make image and model at fine frequency resolution'.format(step))
+            recipe.add('cab/wsclean', step,
+            image_opts,
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
-        if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
-        else:
-            imagetype=['image','dirty','psf','residual','model']
-            if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
-        for mm in imagetype:
-            step = 'finechancontcube'
-            recipe.add('cab/fitstool', step,
-                {
-                   "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
-                   "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
-                   "stack"    : True,
-                   "delete-files" : True,
-                   "fits-axis": 'FREQ',
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
-
+            if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
+            else:
+                imagetype=['image','dirty','psf','residual','model']
+                if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
+            for mm in imagetype:
+                step = 'finechancontcube'
+                recipe.add('cab/fitstool', step,
+                    {
+                       "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
+                       "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
+                       "stack"    : True,
+                       "delete-files" : True,
+                       "fits-axis": 'FREQ',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 

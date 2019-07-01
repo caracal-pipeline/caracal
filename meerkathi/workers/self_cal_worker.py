@@ -43,6 +43,8 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper', None)
+    if taper == '':
+        taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk', 128)
     ncpu = config.get('ncpu', 9)
@@ -540,16 +542,24 @@ def worker(pipeline, recipe, config):
                 blank_limit = 1e-9
             else:
                 blank_limit = None
-
+            try:
+                os.remove(pipeline.output + '/' + calmodel + '.fits')
+            except:
+                print('No Previous fits log found.')
+            try:
+                os.remove(pipeline.output + '/' + calmodel + '.lsm.html')
+            except:
+                print('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
 		    	{
 				"image"         : im,
 				"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
 				"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-				"outfile"       : '{:s}.fits:output'.format(calmodel),
+				"outfile"       : '{:s}.gaul:output'.format(calmodel),
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
-				"port2tigger"   : True,
+				"port2tigger"   : False,
+                "format"         : 'ascii',
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
@@ -557,6 +567,25 @@ def worker(pipeline, recipe, config):
 		    	input=pipeline.input,
 		    	output=pipeline.output,
 		    	label='{0:s}:: Extract sources'.format(step))
+            #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
+            #and then check the proper file is produced
+            if not os.path.isfile(pipeline.output + '/' + calmodel + '.gaul'):
+                meerkathi.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+                sys.exit(1)
+            step = 'convert_extract_{0:d}'.format(num)
+            recipe.add('cab/tigger_convert', step,
+                       {
+                           "input-skymodel"   : calmodel + '.gaul:output',
+                           "output-skymodel"  : calmodel + '.lsm.html',
+                           "type"             : 'Gaul',
+                           "output-type"      : 'Tigger',
+                       },
+                       input = pipeline.input,
+                       output = pipeline.output,
+                       label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         elif sourcefinder == 'sofia': 
             print 'are u crazy ?'
             print '############################################'

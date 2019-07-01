@@ -290,6 +290,33 @@ def imaging_params(msinfo, spwid=0):
     
     return max_res, FoV
 
-def filter_name(string):
+def filter_name(string):                     #change field names into alphanumerical format for naming output files
     string = string.replace('+','_p_')
     return re.sub('[^0-9a-zA-Z]', '_', string)
+
+def target_to_msfiles(targets, msnames, label):          #creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files 
+    target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
+    
+    for t in targets:                   #list all targets per input ms and make a unique list of all target fields
+        tmp = t.split(',')
+        target_ls.append(tmp)
+        for tt in tmp:
+            all_target.append(tt)
+    all_target = list(set(all_target))
+
+    for i,ms in enumerate(msnames):        #make a list of all input ms file names for each target field
+        for t in target_ls[i]:
+            t = filter_name(t)
+            if label:
+                target_ms_ls.append('{0:s}-{1:s}_{2:s}.ms'.format(ms[:-3],t,label))
+            else:
+                target_ms_ls.append('{0:s}-{1:s}.ms'.format(ms[:-3],t))
+
+    for t in all_target:                        #group ms files by target field name
+        tmp = []
+        for m in target_ms_ls:
+            if m.find(filter_name(t)) > -1:
+                tmp.append(m)
+        target_msfiles.append(tmp)
+    
+    return all_target, target_ms_ls, dict(zip(all_target, target_msfiles))

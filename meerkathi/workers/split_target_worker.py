@@ -47,9 +47,9 @@ def worker(pipeline, recipe, config):
 
     def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field', ['bpcal','gcal','xcal']))
+                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field'))
             if applyme == 'bp_cal':
-                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field', ['bpcal']))
+                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field'))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -71,7 +71,7 @@ def worker(pipeline, recipe, config):
     	    uname = getpass.getuser()
     	    gaintablelist,gainfieldlist,interplist = [],[],[]
       
-            callabel = config['split_target']['otfcal'].get('callabel', '')
+            callabel = config['split_target']['otfcal'].get('callabel')
             calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
     	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
@@ -115,13 +115,13 @@ def worker(pipeline, recipe, config):
                     {
                         "vis"           : fms,
                         "outputvis"     : tms,
-                        "timeaverage"   : True if (config['split_target'].get('time_average', '') != '' and config['split_target'].get('time_average', '') != '0s') else False,
-                        "timebin"       : config['split_target'].get('time_average', ''),
-                        "chanaverage"   : True if config['split_target'].get('freq_average', 1) > 1 else False,
-                        "chanbin"       : config['split_target'].get('freq_average', 1),
-                        "spw"           : config['split_target'].get('spw', ''),
-                        "datacolumn"    : config['split_target'].get('column', 'data'),
-                        "correlation"   : config['split_target'].get('correlation', ''),
+                        "timeaverage"   : True if (config['split_target'].get('time_average') != '' and config['split_target'].get('time_average') != '0s') else False,
+                        "timebin"       : config['split_target'].get('time_average'),
+                        "chanaverage"   : True if config['split_target'].get('freq_average') > 1 else False,
+                        "chanbin"       : config['split_target'].get('freq_average'),
+                        "spw"           : config['split_target'].get('spw'),
+                        "datacolumn"    : config['split_target'].get('column'),
+                        "correlation"   : config['split_target'].get('correlation'),
                         "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
@@ -144,23 +144,23 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
 
             if pipeline.enable_task(config, 'changecentre'):
-                if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
+                if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
                     meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
+                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')))
                     sys.exit(1)
                 step = 'changecentre_{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                     {
                       "msname"  : tms,
                       "outputvis": tms,
-                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
+                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')) ,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
             if pipeline.enable_task(config, 'obsinfo'):
-                if (config['obsinfo'].get('listobs', True)):
+                if (config['obsinfo'].get('listobs')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(tms[:-3])
                     else: listfile = 'meerkathi-{0:s}-obsinfo.txt'.format(fms[:-3])
@@ -176,7 +176,7 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
     
-                if (config['obsinfo'].get('summary_json', True)):
+                if (config['obsinfo'].get('summary_json')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = 'meerkathi-{0:s}-obsinfo.json'.format(tms[:-3])
                     else: listfile = 'meerkathi-{0:s}-obsinfo.json'.format(fms[:-3])

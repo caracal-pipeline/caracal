@@ -345,6 +345,14 @@ class config_parser:
             else:
                 return _opt_type(v)
 
+        def _get_nested(obj, keys):
+            try:
+                for key in keys:
+                    obj = obj[key]
+            except KeyError:
+                return None
+            return obj
+
         def _option_factory(opt_type,
                             is_list,
                             opt_name,
@@ -379,6 +387,7 @@ class config_parser:
         #assert isinstance(schema_section["mapping"], dict)
 
         for key, subVars in sec_defaults.iteritems():
+            print key, cfgVars
             option_name = base_section + "_" + key if base_section != "" else key
             #assert key in subVars, "%s does not define a type in schema" % key
             
@@ -392,17 +401,26 @@ class config_parser:
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})
                 #update with variables from config
-                if key in cfgVars.keys():
-                    groups[key] = cfgVars[key]
+                print option_name
+                subname = string.split(option_name,'_')[-1]
+                print cfgVars
+                
+                if cfgVars[subname]:
+                    print 'ohYEsar'
+                    groups[key] = cfgVars['dataid']
 
             elif subVars["type"] == 'bool': 
+                #print json.loads(subVars['example'].lower())
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
-                
-                if key in cfgVars.keys():
+                if key in cfgVars:
                     groups[key] = cfgVars[key]
+
             
             elif subVars["type"] == "map": 
+                #print 'passby here'
+                #a = _get_nested(cfgVars,key)
+                #print a
             #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
                 groups[key] = cls._subparser_tree(cfgVars,
                                                   subVars,
@@ -427,8 +445,10 @@ class config_parser:
                 parser.set_defaults(**{option_name: subVars['example']})
                 
                 #update with variables from config file
-                if key in cfgVars.keys():
+                if key in cfgVars:
+                    print 'xxxxxxxxxxxxxxxxxxxxxxxx'
                     groups[key] = cfgVars[key]
+                print groups[key]
 
         return groups
 

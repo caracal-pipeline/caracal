@@ -15,7 +15,6 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    print 's;klfaddlkfalklkdalkdajskfldasjfd;ksafjk;dlsdfjk;lsadmk;alfdmksalfj,dms;klf;,mdfkslaf,dsmklfdsm'
     if config['label']:
         msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
@@ -41,8 +40,7 @@ def worker(pipeline, recipe, config):
                                           else x.split(','),
                             field.split(',') if isinstance(field, str) else field)))
 
-    print nobs
-    print 'AAAAAAAAAAAAAAAAAAA'
+
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
@@ -59,7 +57,6 @@ def worker(pipeline, recipe, config):
 #                p_nob = p_prefix.index(prefix.replace('-{0:s}'.format(config['hires_label']), ''))
 #        else:
         p_nob = i
-
 
         # flag antennas automatically based on drifts in the scan average of the 
         # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
@@ -243,8 +240,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
-            print 'aaaaaa'
-            print config['autoflag_rfi'].get('fields')
+
 
             if config['autoflag_rfi'].get('fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
@@ -252,12 +248,10 @@ def worker(pipeline, recipe, config):
             if config['autoflag_rfi'].get('calibrator_fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
-
+            print pipeline.bpcal_id
             if config['autoflag_rfi'].get('fields') == 'auto':
-                print pipeline.bpcal_id[p_nob]
                 fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
             else:
-                print 'ciap'
                 fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
 
             # Make sure no field IDs are duplicated

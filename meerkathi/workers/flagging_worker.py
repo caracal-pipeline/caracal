@@ -241,14 +241,15 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
 
-
+            print config['autoflag_rfi'].get('fields')
+            print 'ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc'
             if config['autoflag_rfi'].get('fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
                 raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
             if config['autoflag_rfi'].get('calibrator_fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
-            print pipeline.bpcal_id
+            print pipeline.bpcal_id, pipeline.gcal_id
             if config['autoflag_rfi'].get('fields') == 'auto':
                 fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
             else:

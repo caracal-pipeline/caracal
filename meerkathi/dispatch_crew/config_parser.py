@@ -388,7 +388,8 @@ class config_parser:
 
         for key, subVars in sec_defaults.iteritems():
             option_name = base_section + "_" + key if base_section != "" else key
-
+            print 'NAME'
+            print option_name, key, cfgVars
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 subVars['example'] = string.split(subVars['example'],',')
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
@@ -406,13 +407,14 @@ class config_parser:
                 #print json.loads(subVars['example'].lower())
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
+
                 if key in cfgVars.keys():
                     groups[key] = cfgVars[key]
             
             elif subVars["type"] == "map": 
 
                 subname = string.split(option_name,'_')[-1]
-
+                print option_name, key
                 groups[key] = cls._subparser_tree(cfgVars,
                                                   subVars,
                                                   base_section=option_name,
@@ -420,15 +422,16 @@ class config_parser:
                                                   args=args,
                                                   parser=parser)
             else:
-                
+                print 'CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
-                
                 parser.set_defaults(**{option_name: subVars['example']})
-                
+                print cfgVars.keys()
                 #update with variables from config file
-                if key in cfgVars:
+                if key in cfgVars.keys():
+                    print cfgVars[key]
                     groups[key] = cfgVars[key]
-
+            print'FINAL'
+            print groups[key]
         return groups
 
     @classmethod

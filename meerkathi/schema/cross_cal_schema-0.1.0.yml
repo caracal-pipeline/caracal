@@ -275,7 +275,6 @@ mapping:
                 required: false
                 example: 'crossOut'
 
-      
       gain_cal_flux:
         type: map
         desc: Carry out gain calibration on the flux calibrator field.
@@ -457,7 +456,7 @@ mapping:
                 example: 'JJones'
               field:
                 seq: 
-                - type: int
+                  - type: int
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
                 example: '1'

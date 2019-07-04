@@ -387,13 +387,7 @@ class config_parser:
         #assert isinstance(schema_section["mapping"], dict)
 
         for key, subVars in sec_defaults.iteritems():
-            print key, cfgVars
             option_name = base_section + "_" + key if base_section != "" else key
-            #assert key in subVars, "%s does not define a type in schema" % key
-            
-                #    parser.set_defaults(**{option_name: subVars})        
-                #    setattr(args, option_name, subVars)
-                #    groups[key] = default
 
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 subVars['example'] = string.split(subVars['example'],',')
@@ -401,27 +395,24 @@ class config_parser:
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})
                 #update with variables from config
-                print option_name
                 subname = string.split(option_name,'_')[-1]
-                print cfgVars
-                
-                if cfgVars[subname]:
-                    print 'ohYEsar'
-                    groups[key] = cfgVars['dataid']
-
+                #print groups[key]
+                #print key, option_name
+                if subname in cfgVars.keys():
+                    groups[key] = cfgVars[subname]
+                #    groups[key] = cfgVars[key]
+                 #   print groups[key]
             elif subVars["type"] == 'bool': 
                 #print json.loads(subVars['example'].lower())
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
-                if key in cfgVars:
+                if key in cfgVars.keys():
                     groups[key] = cfgVars[key]
-
             
             elif subVars["type"] == "map": 
-                #print 'passby here'
-                #a = _get_nested(cfgVars,key)
-                #print a
-            #if subvariable in schema is a map we need to go deeper in the tree recursively calling subparser_tree
+
+                subname = string.split(option_name,'_')[-1]
+
                 groups[key] = cls._subparser_tree(cfgVars,
                                                   subVars,
                                                   base_section=option_name,
@@ -429,16 +420,6 @@ class config_parser:
                                                   args=args,
                                                   parser=parser)
             else:
-
-                #_option_factory(subVars["type"] if "seq" not in subVars else \
-                #                                            subVars["seq"][0]["type"],
-                #                    "seq" in subVars,
-                #                    option_name,
-                #                    subVars.get("required", False),
-                #                    subVars.get("desc", "!!! option %s missing schema description. Please file this bug !!!" % option_name),
-                #                    subVars.get("enum", None),
-                #                    subVars,
-                #                    parser)    
                 
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 
@@ -446,9 +427,7 @@ class config_parser:
                 
                 #update with variables from config file
                 if key in cfgVars:
-                    print 'xxxxxxxxxxxxxxxxxxxxxxxx'
                     groups[key] = cfgVars[key]
-                print groups[key]
 
         return groups
 

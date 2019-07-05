@@ -257,19 +257,34 @@ def worker(pipeline, recipe, config):
 
                 # Make sure no field IDs are duplicated
                 fields = ",".join(set(fields.split(",")))
+                if config['autoflag_rfi']["flagger"] == "aoflagger":
+                    recipe.add('cab/autoflagger', step,
+                        {
+                          "msname"      : msname,
+                          "column"      : config['autoflag_rfi'].get('column', 'DATA'),
+                          # flag the calibrators for RFI and apply to target
+                          "fields"      : fields,
+                          #"bands"       : config['autoflag_rfi'].get('bands', "0"),
+                          "strategy"    : config['autoflag_rfi']['strategy'],
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
 
-                recipe.add('cab/autoflagger', step,
-                    {
-                      "msname"      : msname,
-                      "column"      : config['autoflag_rfi'].get('column', 'DATA'),
-                      # flag the calibrators for RFI and apply to target
-                      "fields"      : fields,
-                      #"bands"       : config['autoflag_rfi'].get('bands', "0"),
-                      "strategy"    : config['autoflag_rfi']['strategy'],
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
+                elif config['autoflag_rfi']["flagger"] == "tricolour":
+                    recipe.add('cab/tricolour', step,
+                        {
+                          "ms"                  : msname,
+                          "data-column"         : config['autoflag_rfi'].get('column', 'DATA'),
+                          "window-backend"      : config['autoflag_rfi'].get('window-backend', 'numpy')
+                          "field-names"         : fields,
+                          "flagging-strategy"   : config['autoflag_rfi']['strategy'],
+                        },
+                        input=pipeline.input,
+                        output=pipeline.output,
+                        label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                else:
+                    raise RuntimeError("Flagger, {0:s} is not available. Options are 'aoflagger, tricolour'.")
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder'

@@ -178,6 +178,11 @@ mapping:
             desc: Enable RFI flagging with AOFlagger.
             type: bool
             required: false
+          flagger:
+            desc: Choose flagger. Options are aoflagger and tricolour
+            type: str
+            enum: ["aoflagger", "tricolour"]
+            required: true
           strategy: 
             desc: The AOFlagger strategy file to use.
             type: str
@@ -194,6 +199,11 @@ mapping:
             desc: comma separated list of (zero-indexed) band ids to process
             type: str
             required: false
+          window-backend:
+            desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. For smaller problems, it may be possible to pack a couple of scans worth of visibility data         into memory, but for larger problem sizes, it is necessary to reorder the data on disk
+            type: str
+            enum: ["numpy", "zarr-disc"]
+
 
       rfinder:
         desc: A tool to investigate the presence of RFI

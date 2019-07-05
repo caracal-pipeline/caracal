@@ -70,6 +70,7 @@
       mask: labelled_rfimask.pickle.npy
     autoflag_rfi:
       enable: true
+      flagger: aoflagger
       column: DATA
       fields: fcal,bpcal,gcal
       strategy: firstpass_QUV.rfis # Default for MeerKAT data
@@ -158,7 +159,6 @@
       - bpcal
       - gcal
       - xcal
-      - target
       applymode: calflag
     apply_bp_cal:
       enable: true
@@ -168,7 +168,6 @@
       - bpcal
       - gcal
       - xcal
-      - target
       applymode: calflag
     apply_gain_cal_gain:
       enable: false
@@ -178,7 +177,6 @@
       - bpcal
       - gcal
       - xcal
-      - target
       applymode: calflag
     apply_transfer_fluxscale:
       enable: true
@@ -188,7 +186,6 @@
       - bpcal
       - gcal
       - xcal
-      - target
       applymode: calflag
     autoflag_closure_error:
       enable: false
@@ -205,8 +202,9 @@
     enable: true
     label: ''
     autoflag_rfi:
+      flagger: aoflagger
       enable: true
-      column: DATA
+      column: CORRECTED_DATA
       fields: fcal,bpcal,gcal
       strategy: secondpass_QUV.rfis # This has to be in the pipeline input folder
     flagging_summary:
@@ -440,6 +438,7 @@
     enable: true
     label: 'corr'
     autoflag_rfi:
+      flagger: aoflagger
       enable: true
       column: DATA
       fields: target

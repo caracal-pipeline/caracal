@@ -307,21 +307,23 @@ class config_parser:
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
-
+            #print groups[worker]
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
-
+            
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
         cls.__store_args(args, groups)
-
-
+        #print groups
+        #print cls.__GROUPS
+        #print args
     @classmethod
     def _subparser_tree(cls,  #class for storage
                         cfgVars, #config file variables
                         schema_section, #section of the schema
                         base_section="", #base of the tree-section of the schema
+                        variable_tree='',
                         update_only = False,
                         args = None,    #base args
                         parser = None): #parser
@@ -346,12 +348,44 @@ class config_parser:
                 return _opt_type(v)
 
         def _get_nested(obj, keys):
+            print obj, keys
             try:
                 for key in keys:
                     obj = obj[key]
             except KeyError:
                 return None
             return obj
+
+        def _recursive_get(d, k):
+            print 'REC'
+            print k
+            a = list(d.keys())
+            b = list(d.values())
+            print a, b
+            c= d.values()[0]
+            if type(c) is not str and type(c) is not bool:
+                print c.keys()
+            if isinstance(type(d.values()[0]), dict):
+                    print 'culo'
+                    sys.exit(0)
+            if len(list(d.keys())) != len(list(d.values())):
+                return recursive_get(d.values(), k)
+            if k[0] in a:
+                value = d.get(k[0])
+                print 'cazzo'
+                print value
+                return value
+            #if len(k) == 0:
+            #    return 0
+
+            else:
+                print 'VALUE'
+                value = d.get(k[0], 0)
+                if isinstance(value, dict):
+                    print 'culo'
+                    return recursive_get(value, k[1:])
+                else:
+                    return value
 
         def _option_factory(opt_type,
                             is_list,
@@ -376,8 +410,8 @@ class config_parser:
 
         groups = OrderedDict()
 
-        if cfgVars is None:
-            return groups
+        #if cfgVars is None:
+        #    return groups
         sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
         
         # Transform keys
@@ -388,50 +422,78 @@ class config_parser:
 
         for key, subVars in sec_defaults.iteritems():
             option_name = base_section + "_" + key if base_section != "" else key
-            print 'NAME'
-            print option_name, key, cfgVars
+
+            #schema_name = schema_section + "_" + key if base_section != "" else key
+
+            #print 'NAME'
+            #print option_name, key, cfgVars
+            #print list(cfgVars.keys())
+            #print list(cfgVars.values())
+
+
+            #print _recursive_get(cfgVars,[key])
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 subVars['example'] = string.split(subVars['example'],',')
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})
                 #update with variables from config
-                subname = string.split(option_name,'_')[-1]
-                #print groups[key]
-                #print key, option_name
-                if subname in cfgVars.keys():
-                    groups[key] = cfgVars[subname]
+                #if update_only == False:
+                #    continue                 #print groups[key]
+                #print 'SEQQQQQQQ'
+                #print subname
+               
+                if key in cfgVars.keys() and list(cfgVars.values())[0]:
+                    groups[key] = cfgVars[key]
+                    parser.set_defaults(**{option_name: cfgVars[key]})
                 #    groups[key] = cfgVars[key]
                  #   print groups[key]
+
             elif subVars["type"] == 'bool': 
-                #print json.loads(subVars['example'].lower())
+                #print 'BOOOOOOOOOLLLLLLL'
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
+                #if update_only == False:
+                #    continue
+                #print key, cfgVars.keys()
+                #print cfgVars.values()[0]
 
-                if key in cfgVars.keys():
+                if key in cfgVars.keys() and list(cfgVars.values())[0]:
                     groups[key] = cfgVars[key]
-            
+                    parser.set_defaults(**{option_name: cfgVars[key]})
+
+
             elif subVars["type"] == "map": 
+                #print 'MAAAAAAAAAAAAAAP'
 
                 subname = string.split(option_name,'_')[-1]
-                print option_name, key
-                groups[key] = cls._subparser_tree(cfgVars,
+                #print option_name, key
+                #print cfgVars.items()
+                if key in cfgVars.keys():
+                    tmpcfgVars = cfgVars[key]
+                else:
+                    tmpcfgVars = dict.fromkeys(cfgVars.keys(), [])
+                #subkey = subkey +'_'+ key 
+                groups[key] = cls._subparser_tree(tmpcfgVars,
                                                   subVars,
                                                   base_section=option_name,
-                                                  update_only=False,
                                                   args=args,
                                                   parser=parser)
+
             else:
-                print 'CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO'
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 parser.set_defaults(**{option_name: subVars['example']})
-                print cfgVars.keys()
+                #print 'NUMMMMMMM'
+
+                #if update_only == False:
+                #     continue                 #print cfgVars.keys()
                 #update with variables from config file
-                if key in cfgVars.keys():
-                    print cfgVars[key]
+                if key in cfgVars.keys() and list(cfgVars.values())[0]:
+                    #print cfgVars[key]
                     groups[key] = cfgVars[key]
-            print'FINAL'
-            print groups[key]
+                    parser.set_defaults(**{option_name: cfgVars[key]})
+            #print 'FINAL'
+            #print key, groups[key]
         return groups
 
     @classmethod

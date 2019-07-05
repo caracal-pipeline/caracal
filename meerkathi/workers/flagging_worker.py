@@ -7,6 +7,8 @@ import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 
 def worker(pipeline, recipe, config):
+
+    print pipeline.prefixes
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -69,6 +71,7 @@ def worker(pipeline, recipe, config):
             step = 'autoflag_autocorr_spectra_{0:d}'.format(i)
             def_fields = ",".join(map(str,utils.get_field_id(msinfo, get_field("bpcal,gcal,target,xcal").split(","))))
             def_calfields = ",".join(map(str, utils.get_field_id(msinfo, get_field("bpcal,gcal,xcal").split(","))))
+            
             if config['autoflag_autocorr_powerspectra'].get('fields') != 'auto' and \
                not set(config['autoflag_autocorr_powerspectra'].get('fields').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
                 raise KeyError("autoflag on powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
@@ -249,7 +252,9 @@ def worker(pipeline, recipe, config):
             if config['autoflag_rfi'].get('calibrator_fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
+            
             print pipeline.bpcal_id, pipeline.gcal_id
+            
             if config['autoflag_rfi'].get('fields') == 'auto':
                 fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])
             else:

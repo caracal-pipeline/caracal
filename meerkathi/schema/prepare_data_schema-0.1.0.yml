@@ -39,4 +39,4 @@ mapping:
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'

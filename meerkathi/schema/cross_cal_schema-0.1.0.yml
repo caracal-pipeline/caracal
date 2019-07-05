@@ -42,7 +42,7 @@ mapping:
                 - type: str
             desc: "fields to initialize"
             required: false
-            example: '1'
+            example: 'fcal bpcal gcal xcal target'
           addmodel:
             type: bool
             desc: "Intializes scratch MODEL_DATA column"

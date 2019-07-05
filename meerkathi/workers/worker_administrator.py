@@ -158,8 +158,11 @@ class worker_administrator(object):
             False
 
     def run_workers(self):
+
         """ Runs the  workers """
         for _name, _worker, i in self.workers:
+            #print 'START'
+
             try:
                 worker = __import__(_worker)
             except ImportError:

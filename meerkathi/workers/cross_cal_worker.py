@@ -72,6 +72,10 @@ def worker(pipeline, recipe, config):
                     field: list of ids or comma-seperated list of ids where
                            ids are in bpcal, gcal, target, fcal or an actual field name
             """
+            if isinstance(field, list):
+              field=field[0]
+            print field
+            print getattr(pipeline.bpcal, list)
             return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
                                                 if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
                                               if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
@@ -106,6 +110,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'clear_cal'):
             # Initialize dataset for calibration
+            print config['clear_cal'].get('field')
             field = get_field(config['clear_cal'].get('field'))
             addmodel = config['clear_cal'].get('addmodel')
             step = 'clear_cal_{0:d}'.format(i)

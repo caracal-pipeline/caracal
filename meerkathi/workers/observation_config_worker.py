@@ -16,8 +16,8 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    print config['obsinfo'].get('listobs')
-    print 'aaaaaaaaaaa'
+    #print config['obsinfo'].get('listobs')
+    #print 'aaaaaaaaaaa'
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]
@@ -86,9 +86,11 @@ def worker(pipeline, recipe, config):
     # Set antenna properties
     pipeline.Tsys_eta = 22.0
     pipeline.dish_diameter = 13.5
-
+    print 'AAAAAAAAAAAAAAAA'
     for item in 'xcal fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
+    print pipeline.bpcal_id
+
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
@@ -129,9 +131,10 @@ def worker(pipeline, recipe, config):
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
             pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
-
+        print config
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
+            print 'IN'
             intents = utils.categorize_fields(msinfo)
             # Get fields and their purposes
             fcals = intents['fcal'][-1]

@@ -276,7 +276,7 @@ def worker(pipeline, recipe, config):
                         {
                           "ms"                  : msname,
                           "data-column"         : config['autoflag_rfi'].get('column', 'DATA'),
-                          "window-backend"      : config['autoflag_rfi'].get('window-backend', 'numpy')
+                          "window-backend"      : config['autoflag_rfi'].get('window-backend', 'numpy'),
                           "field-names"         : fields,
                           "flagging-strategy"   : config['autoflag_rfi']['strategy'],
                         },

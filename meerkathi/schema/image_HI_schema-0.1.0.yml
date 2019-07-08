@@ -480,6 +480,21 @@ mapping:
             type: int
             required: false
             example: '3'
+          do_cubelets:
+            desc: Create cubelets of HI sources.
+            type: bool
+            required: false
+            example: True
+          do_mom0:
+            desc: Create moment 0 map.
+            type: bool
+            required: false
+            example: True
+          do_mom1:
+            desc: Create moment 1 map.
+            type: bool
+            required: false
+            example: True
 
       flagging_summary:
         desc: Print out flagging summary.

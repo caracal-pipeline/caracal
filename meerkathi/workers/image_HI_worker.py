@@ -121,7 +121,7 @@ def calc_rms(filename,HImaskname):
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
-    pipeline.prefixes = ['meerkathi-{0:s}-{1:s}'.format(did,config['label']) for did in pipeline.dataid]
+    pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq')
     npix = config.get('npix')
@@ -273,7 +273,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/casa_listobs', step,
                     {
                       "vis"         : msname_mst,
-                      "listfile"    : 'meerkathi-{0:s}-obsinfo.txt'.format(msname_mst.replace('.ms','')),
+                      "listfile"    : '{0:s}-{1:s}-obsinfo.txt'.format(pipeline.prefix,msname_mst.replace('.ms','')),
                       "overwrite"   : True,
                     },
                     input=pipeline.input,
@@ -285,7 +285,7 @@ def worker(pipeline, recipe, config):
                     {
                       "msname"      : msname_mst,
                       "command"     : 'summary',
-                      "outfile"     : 'meerkathi-{0:s}-obsinfo.json'.format(msname_mst.replace('.ms','')),
+                      "outfile"     : '{0:s}-{1:s}-obsinfo.json'.format(pipeline.prefix,msname_mst.replace('.ms','')),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -708,8 +708,9 @@ def worker(pipeline, recipe, config):
             "steps.doReliability"   : False,
             "steps.doParameterise"  : False,
             "steps.doWriteMask"     : True,
-            "steps.doMom0"          : True,
-            "steps.doMom1"          : False,
+            "steps.doMom0"          : config['sofia'].get('do_mom0', True),
+            "steps.doMom1"          : config['sofia'].get('do_mom1', False),
+            "steps.doCubelets"      : config['sofia'].get('do_cubelets', False),
             "steps.doWriteCat"      : False,
             "flag.regions"          : config['sofia'].get('flagregion'),
             "scaleNoise.statistic"  : config['sofia'].get('rmsMode'),

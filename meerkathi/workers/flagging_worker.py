@@ -199,6 +199,7 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
+
             if pipeline.enable_task(config, 'flag_scan'):
                 step = 'flag_scan_{0:d}'.format(i)
                 recipe.add('cab/casa_flagdata', step,
@@ -301,6 +302,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flagging_summary'):
                 step = 'flagging_summary_flagging_{0:d}_{1:s}'.format(i, config.get('label'))
+
                 recipe.add('cab/casa_flagdata', step,
                     {
                       "vis"         : msname,
@@ -309,3 +311,4 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label'), msname))
+

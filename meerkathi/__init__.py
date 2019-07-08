@@ -213,7 +213,7 @@ def execute_pipeline(args, arg_groups, block):
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
                             singularity_image_dir=args.singularity_image_dir, 
                             container_tech=args.container_tech)
-                
+
                 pipeline.run_workers()
             except exceptions.SystemExit as e:
                 if e.code != 0:

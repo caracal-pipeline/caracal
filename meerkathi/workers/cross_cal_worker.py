@@ -283,7 +283,6 @@ found in our database or in the CASA NRAO database'.format(field))
                          "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes['X'],
                          "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREB0'.format(prefix)
-
                         },
                         input=pipeline.input,
                         output=pipeline.output,
@@ -326,7 +325,6 @@ found in our database or in the CASA NRAO database'.format(field))
                          "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes['X'],
                          "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREG0-fcal'.format(prefix)
-
                         },
                         input=pipeline.input,
                         output=pipeline.output,

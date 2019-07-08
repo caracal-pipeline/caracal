@@ -37,7 +37,7 @@ mapping:
         desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
         type: bool
         required: false
-        example: 'False'
+        example: 'True'
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str

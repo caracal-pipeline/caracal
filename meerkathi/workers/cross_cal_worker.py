@@ -72,10 +72,23 @@ def worker(pipeline, recipe, config):
                     field: list of ids or comma-seperated list of ids where
                            ids are in bpcal, gcal, target, fcal or an actual field name
             """
-            if isinstance(field, list):
-              field=field[0]
-            print field
-            print getattr(pipeline.bpcal, list)
+
+            #translation of whats below, do not delete.
+            #if isinstance(field, str) :
+            #  for x in field.split(','):  
+            #    if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "": 
+            #      ','.join(getattr(pipeline, x)[i].split(','))
+            #    else:
+            #      if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']:
+            #        ','.join(getattr(pipeline, x)[i])
+            #else:
+            #  for x in field:
+            #    if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "": 
+            #      ','.join(getattr(pipeline, x)[i].split(','))
+            #    else:
+            #      if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']:
+            #        ','.join(getattr(pipeline, x)[i])
+
             return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
                                                 if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
                                               if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
@@ -110,8 +123,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'clear_cal'):
             # Initialize dataset for calibration
-            print config['clear_cal'].get('field')
-            field = get_field(config['clear_cal'].get('field'))
+            field = get_field(','.join(config['clear_cal'].get('field')))
+
             addmodel = config['clear_cal'].get('addmodel')
             step = 'clear_cal_{0:d}'.format(i)
             recipe.add('cab/casa_clearcal', step,
@@ -175,6 +188,8 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
+            print 'AAAAAAAAAA'
+            print opts
             recipe.add('cab/casa_setjy' if "skymodel" not in opts else 'cab/simulator', step,
                opts,
                input=pipeline.input,
@@ -405,7 +420,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : "G",
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes['X'],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-G0-fcal'.format(prefix)
                     },
@@ -455,7 +470,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : config['gain_cal_gain']['plot'].get('gaintype'),
-                     "field"        : utils.get_field_id(msinfo, field)[1],
+                     "field"        : utils.get_field_id(msinfo, field),
                      "corr"         : corr_indexes['X'],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-G0'.format(prefix)
                     },

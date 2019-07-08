@@ -87,9 +87,7 @@ def make_pb_cube(filename):
             datacube.resize((1,datacube.shape[0],datacube.shape[1]))
             datacube=np.repeat(datacube,headcube['naxis3'],axis=0)*np.abs(headcube['cdelt1'])
             sigma_pb=17.52/(headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1))*1e+9/13.5/2.355
-            #sigma_pb=headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1)
             sigma_pb.resize((sigma_pb.shape[0],1,1))
-            #print sigma_pb
             datacube=np.exp(-datacube**2/2/sigma_pb**2)
             fits.writeto(filename.replace('image.fits','pb.fits'),datacube,header=headcube,overwrite=True)
             meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(filename.replace('image.fits','pb.fits')))

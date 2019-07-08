@@ -8,7 +8,6 @@ from meerkathi.dispatch_crew import utils
 
 def worker(pipeline, recipe, config):
 
-    print pipeline.prefixes
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -20,6 +19,7 @@ def worker(pipeline, recipe, config):
     if config['label']:
         msnames=[mm.replace('.ms','-{0:s}.ms'.format(config['label'])) for mm in msnames]
         prefixes=['{0:s}-{1:s}'.format(prefix, config['label']) for prefix in prefixes]
+
     #if config.get('hires_flag'): 
     #    print("Flagging Full Resolution Data")
     #    if config['label']:
@@ -29,6 +29,7 @@ def worker(pipeline, recipe, config):
     #        msnames = [mm.replace('.ms','-{0:s}.ms'.format(config['hires_label'])) for mm in msnames]
     #        prefixes = ['{0:s}-{1:s}'.format(prefix, config['hires_label']) for prefix in prefixes]
         nobs=len(msnames)
+
     def get_field(field):
         """
             gets field ids parsed previously in the pipeline 
@@ -244,8 +245,6 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'autoflag_rfi'):
             step = 'autoflag_{0:d}'.format(i)
 
-            print config['autoflag_rfi'].get('fields')
-            print 'ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc'
             if config['autoflag_rfi'].get('fields') != 'auto' and \
                not set(config['autoflag_rfi'].get('fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
                 raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
@@ -253,7 +252,6 @@ def worker(pipeline, recipe, config):
                not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
                 raise KeyError("autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
             
-            print pipeline.bpcal_id, pipeline.gcal_id
             
             if config['autoflag_rfi'].get('fields') == 'auto':
                 fields = ','.join([pipeline.bpcal_id[p_nob], pipeline.gcal_id[p_nob]])

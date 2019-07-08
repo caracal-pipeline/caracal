@@ -208,13 +208,10 @@ def execute_pipeline(args, arg_groups, block):
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
 
-                #print args.general_output
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
                             singularity_image_dir=args.singularity_image_dir)
-                #print pipeline.bpcal_id
-                print 'sdakfdsjf;kdajs;lkfdjsal;kdsklddslka;fd'
                 pipeline.run_workers()
             except exceptions.SystemExit as e:
                 if e.code != 0:
@@ -246,10 +243,8 @@ def execute_pipeline(args, arg_groups, block):
 ############################################################################
 def main(argv):
     
-    #print args, arg_groups
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
-    #print args, arg_groups
 
     if args.schema:
         schema = {}

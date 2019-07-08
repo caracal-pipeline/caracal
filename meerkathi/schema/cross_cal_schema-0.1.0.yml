@@ -42,7 +42,7 @@ mapping:
                 - type: str
             desc: "fields to initialize"
             required: false
-            example: 'fcal bpcal gcal xcal target'
+            example: 'fcal, bpcal, gcal, xcal, target'
           addmodel:
             type: bool
             desc: "Intializes scratch MODEL_DATA column"
@@ -68,11 +68,10 @@ mapping:
             required: false
             example: 'False'
           field:
-            seq: 
-              - type: str 
+            type: str 
             desc: Set the field to carry out setjy on. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.   
-            required: true
-            example: fcal, gcal
+            required: false
+            example: 'fcal'
           threads:
             type: int
             desc: Set the number of threads to use when predicting local sky model using MeqTrees.

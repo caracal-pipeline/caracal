@@ -161,7 +161,6 @@ class worker_administrator(object):
 
         """ Runs the  workers """
         for _name, _worker, i in self.workers:
-            #print 'START'
 
             try:
                 worker = __import__(_worker)

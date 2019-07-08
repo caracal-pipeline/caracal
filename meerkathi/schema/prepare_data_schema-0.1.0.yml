@@ -12,7 +12,7 @@ mapping:
         desc: Executes the data preparation step.
         type: bool
         required: true
-        example: 'True'
+        example: 'False'
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map

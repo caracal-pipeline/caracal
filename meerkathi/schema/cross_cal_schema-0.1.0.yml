@@ -127,7 +127,7 @@ mapping:
                 type: str
                 desc: "Type of gain solution table"
                 required: false
-                example: 'Cjones'
+                example: 'K'
               field:
                 seq: 
                 - type: int 
@@ -256,7 +256,7 @@ mapping:
                 type: str
                 desc: "Type of gain solution table"
                 required: false
-                example: 'False'
+                example: 'B'
               field:
                 seq: 
                 - type: int
@@ -354,7 +354,7 @@ mapping:
                 type: str
                 desc: "Type of gain solution table"
                 required: false
-                example: 'JJones'
+                example: 'G'
               field:
                 seq: 
                 - type: int
@@ -452,7 +452,7 @@ mapping:
                 type: str
                 desc: "Type of gain solution table"
                 required: false
-                example: 'JJones'
+                example: 'G'
               field:
                 seq: 
                   - type: int
@@ -509,7 +509,7 @@ mapping:
                 type: str
                 desc: "Type of gain solution table"
                 required: false
-                example: 'JJones'
+                example: 'G'
               field:
                 seq: 
                 - type: int
@@ -520,7 +520,7 @@ mapping:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'x'
+                example: 'X'
               htmlname:
                 type: str
                 desc: "Output HTML file name"

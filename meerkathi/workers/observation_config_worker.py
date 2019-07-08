@@ -86,10 +86,8 @@ def worker(pipeline, recipe, config):
     # Set antenna properties
     pipeline.Tsys_eta = 22.0
     pipeline.dish_diameter = 13.5
-    print 'AAAAAAAAAAAAAAAA'
     for item in 'xcal fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
-    print pipeline.bpcal_id
 
 
     for i, prefix in enumerate(prefixes):

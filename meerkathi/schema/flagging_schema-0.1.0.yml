@@ -75,7 +75,7 @@ mapping:
             desc: Enables flagging of autocorrelations.
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
@@ -218,7 +218,7 @@ mapping:
             desc: The AOFlagger strategy file to use.
             type: str
             required: False
-            example: 'firtpass_Q.rfis'
+            example: 'firstpass_Q.rfis'
           column: 
             desc: Specify column to flag
             type: str

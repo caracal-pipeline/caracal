@@ -152,6 +152,8 @@ def worker(pipeline, recipe, config):
             else:
                 model = utils.find_in_native_calibrators(msinfo, field)
                 standard = utils.find_in_casa_calibrators(msinfo, field)
+                print standard 
+                print 'SSSSSSSSSSS'
                 # Prefer our standard over the NRAO standard
                 meerkathi_model = isinstance(model, str)
                 if config['set_model'].get('meerkathi_model') and meerkathi_model:
@@ -180,7 +182,7 @@ def worker(pipeline, recipe, config):
                    opts = {
                       "vis"         : msname,
                       "field"       : field,
-                      "standard"    : config['set_model'].get('standard'),
+                      "standard"    : standard,
                       "usescratch"  : False,
                       "scalebychan" : True,
                     }
@@ -188,8 +190,7 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
-            print 'AAAAAAAAAA'
-            print opts
+
             recipe.add('cab/casa_setjy' if "skymodel" not in opts else 'cab/simulator', step,
                opts,
                input=pipeline.input,
@@ -225,7 +226,6 @@ found in our database or in the CASA NRAO database'.format(field))
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
-
                      "gaintype"     : config['delay_cal']['plot'].get('gaintype'),
                      "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes['X'],

@@ -67,14 +67,14 @@ def worker(pipeline, recipe, config):
         target_ls = pipeline.target[i].split(',')
         prefix = pipeline.prefixes[i]
 
-        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
-    	    uname = getpass.getuser()
-    	    gaintablelist,gainfieldlist,interplist = [],[],[]
+        if pipeline.enable_task(config['split_target']  , 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
+            uname = getpass.getuser()
+            gaintablelist,gainfieldlist,interplist = [],[],[]
       
             callabel = config['split_target']['otfcal'].get('callabel')
             calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
 
-    	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
+            for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
                 if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
                    continue
@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
                         "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
-                        "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
+                        "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target'] , 'otfcal') else None),
                     },
                     input=pipeline.input,
                     output=pipeline.output,

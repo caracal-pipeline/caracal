@@ -211,7 +211,9 @@ def execute_pipeline(args, arg_groups, block):
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
-                            singularity_image_dir=args.singularity_image_dir)
+                            singularity_image_dir=args.singularity_image_dir, 
+                            container_tech=args.container_tech)
+                
                 pipeline.run_workers()
             except exceptions.SystemExit as e:
                 if e.code != 0:

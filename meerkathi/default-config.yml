@@ -44,7 +44,7 @@
     enable: true
     label: ''
     autoflag_autocorr_powerspectra:
-      enable: false
+      enable: true
     flag_autocorr:
       enable: true
     quack_flagging:
@@ -191,7 +191,7 @@
       - target
       applymode: calflag
     autoflag_closure_error:
-      enable: false
+      enable: true
       column: CORRECTED_DATA
       fields: auto
       calibrator_fields: auto
@@ -328,7 +328,7 @@
       - target
       applymode: calflag
     autoflag_closure_error:
-      enable: false
+      enable: true
       column: CORRECTED_DATA
       fields: auto
       calibrator_fields: auto

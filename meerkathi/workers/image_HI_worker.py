@@ -3,6 +3,7 @@ import os
 import glob
 import warnings
 import stimela.dismissable as sdm
+import stimela.recipe as stimela
 import astropy
 from astropy.io import fits
 import meerkathi
@@ -739,11 +740,13 @@ def worker(pipeline, recipe, config):
         step = 'continuum_spectral_extraction'
         catalogs = glob.glob('{}/*lsm.html'.format(pipeline.output))
         if len(catalogs) > 0:
+            catalog_file = sorted(catalogs)[-1].split('/')[-1]
+            print(pipeline.output)
             recipe.add('cab/sharpener', step,
                 {
                     "catalog"              :    'PYBDSF',
-                    "cubename"             :    '{:s}_HI.image.fits:output:output'.format(pipeline.prefix),
-                    "catalog_file"         :    "pybdsm_continuum_image1.lsm.html:output",
+                    "cubename"             :    '{:s}_HI.image.fits:output'.format(pipeline.prefix),
+                    "catalog_file"         :    '{:s}:output'.format(catalog_file),
                     "channels_per_plot"    :    config['sharpener'].get('channels_per_plot', 50),
                     "enable_spec_ex"       :    True,
                     "enable_source_catalog":    True,
@@ -751,7 +754,7 @@ def worker(pipeline, recipe, config):
                     "detailed_plot"        :    True,
                     "enable_sdss_match"    :    False,
                     "enable_source_finder" :    False,
-                    "workdir"              :    pipeline.output,
+                    "workdir"              :    '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
                     "label"                :    config['sharpener'].get('label', pipeline.prefix)
                 },
                 input=pipeline.input,

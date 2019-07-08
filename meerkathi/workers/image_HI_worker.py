@@ -1,5 +1,6 @@
 import sys
 import os
+import glob
 import warnings
 import stimela.dismissable as sdm
 import astropy
@@ -733,6 +734,30 @@ def worker(pipeline, recipe, config):
             input=pipeline.input,
             output=pipeline.output,
             label='{0:s}:: Make SoFiA mask and images'.format(step))
+
+    if pipeline.enable_task(config, 'sharpener'):
+        step = 'continuum_spectral_extraction'
+        catalogs = glob.glob('{}/*lsm.html'.format(pipeline.output))
+        if len(catalogs) > 0:
+            recipe.add('cab/sharpener', step,
+                {
+                    "catalog"              :    'PYBDSF',
+                    "cubename"             :    '{:s}_HI.image.fits:output:output'.format(pipeline.prefix),
+                    "catalog_file"         :    "pybdsm_continuum_image1.lsm.html:output",
+                    "channels_per_plot"    :    config['sharpener'].get('channels_per_plot', 50),
+                    "enable_spec_ex"       :    True,
+                    "enable_source_catalog":    True,
+                    "enable_abs_plot"      :    True,
+                    "detailed_plot"        :    True,
+                    "enable_sdss_match"    :    False,
+                    "enable_source_finder" :    False,
+                    "workdir"              :    pipeline.output,
+                    "label"                :    config['sharpener'].get('label', pipeline.prefix)
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Continuum Spectral Extraction'.format(step))
+        else: meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
 
     if pipeline.enable_task(config, 'flagging_summary'):
         for i,msname in enumerate(mslist):

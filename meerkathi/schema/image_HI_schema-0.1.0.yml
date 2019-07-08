@@ -400,6 +400,22 @@ mapping:
             desc: Create moment 1 map.
             type: bool
             required: false
+      sharpener:
+        desc: Run sharpener to extract spectrum of all continuum sources against the lines of sight. The spectra are then plotted.
+        type: map
+        mapping:
+          enable:
+            desc: Execute sharpener (yes/no)? Default is yes.
+            type: bool
+            required: false
+          channels_per_plot:
+            desc: Number of channels to plot per detail plot. Default is 50
+            type: int
+            required: false
+          label:
+            desc: Prefix label of plot names and titles. Default is 'SHARP'
+            type: str
+            required: false
       flagging_summary:
         desc: Print out flagging summary.
         type: map

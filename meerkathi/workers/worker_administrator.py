@@ -50,7 +50,7 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
-        self.data_path = self.config['general']['data_path']
+        self.data_path = self.input
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
@@ -60,7 +60,7 @@ class worker_administrator(object):
         for i, (name,opts) in enumerate(self.config.iteritems()):
             if name.find('general')>=0:
                 continue
-            order = opts.get('order', i+1)
+            order = int(opts.get('order', i+1))
 
             if name.find('__')>=0:
                 worker = name.split('__')[0] + '_worker'
@@ -70,7 +70,6 @@ class worker_administrator(object):
             self.workers.append((name, worker, i))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
-
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
         self.recipes = {}
@@ -78,7 +77,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline", True):
+        if config["general"].get("init_pipeline"):
             self.init_pipeline()
 
     def init_names(self, dataid):
@@ -162,14 +161,15 @@ class worker_administrator(object):
             False
 
     def run_workers(self):
+
         """ Runs the  workers """
         for _name, _worker, i in self.workers:
+
             try:
                 worker = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
-
             config = self.config[_name]
             if config.get('enable', True) is False:
                 self.skip.append(_worker)
@@ -182,6 +182,7 @@ class worker_administrator(object):
                                singularity_image_dir=self.singularity_image_dir)
 
             recipe.JOB_TYPE = self.container_tech
+            self.CURRENT_WORKER = _name
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))

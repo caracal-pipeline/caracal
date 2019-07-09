@@ -282,8 +282,7 @@ class config_parser:
         for worker, variables in tmp.iteritems():
             if worker=="schema_version":
                 continue
-            #elif worker.get("enable", True) is False:
-            #    continue
+
             _worker = worker.split("__")[0]
             
 
@@ -380,56 +379,6 @@ class config_parser:
                     parser.set_defaults(**{option_name: cfgVars[key]})
 
         return groups
-
-        # Deprecated    
-        #def _str2bool(v):
-        #    if v.upper() in ("YES","TRUE"):
-        #        return True
-        #    elif v.upper() in ("NO","FALSE"):
-        #        return False
-        #    else:
-        #        raise argparse.ArgumentTypeError("Failed to convert argument. Must be one of "
-        #                                         "'yes', 'true', 'no' or 'false'.")
-
-        #def _nonetype(v, opt_type="str"):
-        #    type_map = { "str" : str, "int": int, "float": float, "bool": _str2bool, "text": str }
-        #    _opt_type = type_map[opt_type]
-        #    if v.upper() in ("NONE","NULL"):
-        #        return None
-        #    else:
-        #        return _opt_type(v)
-
-        #def _get_nested(obj, keys):
-        #    print obj, keys
-        #    try:
-        #        for key in keys:
-        #            obj = obj[key]
-        #    except KeyError:
-        #        return None
-        #    return obj
-        
-        #def _option_factory(opt_type,
-        #                    is_list,
-        #                    opt_name,
-        #                    opt_required,
-        #                    opt_desc,
-        #                    opt_valid_opts,
-        #                    opt_default,
-        #                    parser_instance):
-        #    opt_desc = opt_desc.replace("%", "%%").encode('utf-8').strip()
-        #    if opt_type == "int" or opt_type == "float" or opt_type == "str" or opt_type == "bool" or opt_type == "text":
-        #        meta = opt_type
-        #        parser_instance.add_argument("--%s" % opt_name,
-        #                                     choices=opt_valid_opts,
-        #                                     default=opt_default,
-        #                                     nargs=("+" if opt_required else "*") if is_list else "?",
-        #                                     metavar=meta,
-        #                                     type=lambda x: _nonetype(x, opt_type),
-        #                                     help=opt_desc + " [%s default: %s]" % ("list:%s" % opt_type if is_list else opt_type, str(opt_default)))
-        #    else:
-        #        raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
-
- 
 
     @classmethod
     def update_config(cls, args = None, update_mode="defaults"):

@@ -16,7 +16,7 @@ def worker(pipeline, recipe, config):
             name = field
         return str(name)
 
-    uvrange = config.get('uvrange', '')
+    uvrange = config.get('uvrange')
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -29,7 +29,7 @@ def worker(pipeline, recipe, config):
     for i in range(nobs):
         msname = msnames[i]
         prefix = prefixes[i]
-        label = config.get('label', '')
+        label = config.get('label')
         
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         corr =  config.get('correlation')
@@ -46,7 +46,9 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'real_imag'):
             fields = config['real_imag'].get('fields')
+            print fields
             for field_ in fields:
+                print config['real_imag'].get('column')
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
                     step = 'plot_real_imag_{0:d}'.format(i)
@@ -58,9 +60,9 @@ def worker(pipeline, recipe, config):
                         "timerange"     : '',
                         "antenna"       : '',
                         "xaxis"         : 'imag',
-                        "xdatacolumn"   : config['real_imag'].get('datacolumn'),
+                        "xdatacolumn"   : config['real_imag'].get('column'),
                         "yaxis"         : 'real',
-                        "ydatacolumn"   : config['real_imag'].get('datacolumn'),
+                        "ydatacolumn"   : config['real_imag'].get('column'),
                         "avgtime"       : config['real_imag'].get('avgtime'),
                         "avgchannel"    : config['real_imag'].get('avgchannel'),
                         "coloraxis"     : col,
@@ -90,9 +92,9 @@ def worker(pipeline, recipe, config):
                         "timerange"     : '',
                         "antenna"       : '',
                         "xaxis"         : 'phase',
-                        "xdatacolumn"   : config['amp_phase'].get('datacolumn'),
+                        "xdatacolumn"   : config['amp_phase'].get('column'),
                         "yaxis"         : 'amp',
-                        "ydatacolumn"   : config['amp_phase'].get('datacolumn'),
+                        "ydatacolumn"   : config['amp_phase'].get('column'),
                         "avgtime"       : config['amp_phase'].get('avgtime'),
                         "avgchannel"    : config['amp_phase'].get('avgchannel'),
                         "coloraxis"     : col,
@@ -121,9 +123,9 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
-                    "xdatacolumn"   : config['amp_uvwave'].get('datacolumn'),
+                    "xdatacolumn"   : config['amp_uvwave'].get('column'),
                     "yaxis"         : 'amp',
-                    "ydatacolumn"   : config['amp_uvwave'].get('datacolumn'),
+                    "ydatacolumn"   : config['amp_uvwave'].get('column'),
                     "avgtime"       : config['amp_uvwave'].get('avgtime'),
                     "avgchannel"    : config['amp_uvwave'].get('avgchannel'),
                     "coloraxis"     : 'baseline',
@@ -152,9 +154,9 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'antenna1',
-                    "xdatacolumn"   : config['amp_ant'].get('datacolumn'),
+                    "xdatacolumn"   : config['amp_ant'].get('column'),
                     "yaxis"         : 'amp',
-                    "ydatacolumn"   : config['amp_ant'].get('datacolumn'),
+                    "ydatacolumn"   : config['amp_ant'].get('column'),
                     "avgtime"       : config['amp_ant'].get('avgtime'),
                     "avgchannel"    : config['amp_ant'].get('avgchannel'),
                     "coloraxis"     : 'corr',
@@ -183,9 +185,9 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
-                    "xdatacolumn"   : config['phase_uvwave'].get('datacolumn'),
+                    "xdatacolumn"   : config['phase_uvwave'].get('column'),
                     "yaxis"         : 'phase',
-                    "ydatacolumn"   : config['phase_uvwave'].get('datacolumn'),
+                    "ydatacolumn"   : config['phase_uvwave'].get('column'),
                     "avgtime"       : config['phase_uvwave'].get('avgtime'),
                     "avgchannel"    : config['phase_uvwave'].get('avgchannel'),
                     "coloraxis"     : 'baseline',
@@ -215,9 +217,9 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'scan',
-                    "xdatacolumn"   : config['amp_scan'].get('datacolumn'),
+                    "xdatacolumn"   : config['amp_scan'].get('column'),
                     "yaxis"         : 'amp',
-                    "ydatacolumn"   : config['amp_scan'].get('datacolumn'),
+                    "ydatacolumn"   : config['amp_scan'].get('column'),
                     "avgtime"       : config['amp_scan'].get('avgtime'),
                     "avgchannel"    : config['amp_scan'].get('avgchannel'),
                     "coloraxis"     : 'baseline',

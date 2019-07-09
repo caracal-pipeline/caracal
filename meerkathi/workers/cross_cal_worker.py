@@ -152,8 +152,7 @@ def worker(pipeline, recipe, config):
             else:
                 model = utils.find_in_native_calibrators(msinfo, field)
                 standard = utils.find_in_casa_calibrators(msinfo, field)
-                print standard 
-                print 'SSSSSSSSSSS'
+
                 # Prefer our standard over the NRAO standard
                 meerkathi_model = isinstance(model, str)
                 if config['set_model'].get('meerkathi_model') and meerkathi_model:

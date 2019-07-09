@@ -17,12 +17,17 @@ mapping:
         type: str
         desc: Label for output products (plots etc.) for this step.
         required: false
-        example: 'corr'
+        example: ''
       correlation: 
         type: str
-        desc: Lable specyfying the correlations (default all).
+        desc: Label specyfying the correlations (default all).
         required: false
         example: 'auto'
+      uvrange: 
+        type: str
+        required: false
+        desc: Set the U-V range for data selection, e.g. '>50'.
+        example: '' 
 
       real_imag:
         type: map

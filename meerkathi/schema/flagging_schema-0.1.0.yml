@@ -209,7 +209,7 @@ mapping:
             desc: The AOFlagger strategy file to use.
             type: str
             required: False
-            example: 'firstpass_Q.rfis'
+            example: 'firstpass_QUV.rfis'
           column: 
             desc: Specify column to flag
             type: str

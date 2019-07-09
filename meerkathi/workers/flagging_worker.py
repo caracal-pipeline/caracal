@@ -179,7 +179,7 @@ def worker(pipeline, recipe, config):
                     if not found_valid_data: meerkathi.log.warn('The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname,flagspwselection,step))
 
                 if found_valid_data or not config['flag_spw'].get('ensure_valid_selection',False):
-                    recipe.add('cab/casa_flagdata','flagspw_{:d}'.format(i),
+                    recipe.add('cab/casa_flagdata', step,
                         {
                           "vis"     : msname,
                           "mode"    : 'manual',
@@ -191,7 +191,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_time'):
                 step = 'flag_time_{0:s}_{1:d}'.format(wname, i)
-                recipe.add('cab/casa_flagdata','flagtime_{:d}'.format(i),
+                recipe.add('cab/casa_flagdata', step,
                     {
                       "vis"       : msname,
                       "mode"      : 'manual',
@@ -280,7 +280,7 @@ def worker(pipeline, recipe, config):
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['rfinder'].get('field')).split(","))))
                     outlabel = '_{0:s}'.format(i)
-                recipe.add('cab/rfinder', 'rfinder',
+                recipe.add('cab/rfinder', step,
                     {
                       "msname"             : msname,
                       "field"              : int(field),
@@ -303,7 +303,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flagging_summary'):
                 __label = config.get('label', False)
-                step = 'flagging_summary_flagging_{0:s}_{1:d}{2:s}'.format(wnmae, i, "_"+__label or "")
+                step = 'flagging_summary_{0:s}_{1:d}{2:s}'.format(wname, i, "_"+__label or "")
                 recipe.add('cab/casa_flagdata', step,
                     {
                       "vis"         : msname,

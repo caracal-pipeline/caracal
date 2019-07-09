@@ -228,7 +228,11 @@ class config_parser:
 
         add('--interactive-port', type=int, default=8888,
             help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
+
         add('--reconstruct-defaults-from-schema', help="Developer option to reconstruct default parset from schema",
+            action='store_true')
+
+        add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
             action='store_true')
         return parser
 

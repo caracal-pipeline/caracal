@@ -1,0 +1,40 @@
+!!omap
+- schema_version: 0.1.0
+
+- general:
+    msdir: msdir
+    prefix: mypipelinerun
+
+- get_data:
+    dataid: ['']
+
+- observation_config:
+    obsinfo:
+      enable: true
+
+- prepare_data:
+    enable: true
+
+- flagging:
+    enable: false
+
+- cross_cal:
+    enable: false
+      
+- polcal:
+    enable: false
+
+- inspect_data:
+    enable: false
+
+- split_target:
+    enable: false
+      
+- masking:
+    enable: false
+
+- self_cal:
+    enable: false
+
+- image_HI:
+    enable: false

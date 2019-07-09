@@ -87,15 +87,19 @@ def add_log_handler(hndl):
 
 # Create the log object
 log, log_filehandler, log_console_handler, log_formatter = create_logger()
-
 ####################################################################
 # MeerKATHI imports
 ####################################################################
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 from meerkathi.dispatch_crew import worker_help
+
 import meerkathi.dispatch_crew.caltables as mkct
+
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
+
+
 from meerkathi.view_controllers import event_loop
+
 from meerkathi.dispatch_crew.interruptable_process import interruptable_process
 from meerkathi.dispatch_crew.stream_director import stream_director
 
@@ -203,7 +207,7 @@ def execute_pipeline(args, arg_groups, block):
 
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
-                
+
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
@@ -240,6 +244,7 @@ def execute_pipeline(args, arg_groups, block):
 # Driver entrypoint
 ############################################################################
 def main(argv):
+    
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
 
@@ -251,7 +256,6 @@ def main(argv):
         args.schema = schema
     else:
         args.schema = {}
-
     with open(args.config, 'r') as f:
         tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
         schema_version = tmp["schema_version"]
@@ -262,7 +266,6 @@ def main(argv):
 
     if not args.no_interactive and args.report_viewer:
         raise ValueError("Incompatible options: --no-interactive and --report-viewer")
-
     # User requests default config => dump and exit
     if args.get_default:
         log_logo()

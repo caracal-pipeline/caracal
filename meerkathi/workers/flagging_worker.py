@@ -250,13 +250,16 @@ def worker(pipeline, recipe, config):
                 
                 if label:
                     fields = '0'
+                    field_names = get_field(msinfo, ['0'])
                 elif config['autoflag_rfi'].get('fields', 'auto') == 'auto':
                     fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
-                    field_names  get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+                    field_names = get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
                 else:
                     field_names = get_field(config['autoflag_rfi'].get('fields')).split(",")
                     fields = ",".join(map(str, utils.get_field_id(msinfo, field_names)))
-
+                
+                field_names = list(set(field_names))
+                
                 # Make sure no field IDs are duplicated
                 fields = ",".join(set(fields.split(",")))
                 if config['autoflag_rfi']["flagger"] == "aoflagger":

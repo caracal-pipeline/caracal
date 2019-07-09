@@ -252,6 +252,7 @@ def worker(pipeline, recipe, config):
                     fields = '0'
                 elif config['autoflag_rfi'].get('fields', 'auto') == 'auto':
                     fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+                    field_names  get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
                 else:
                     fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
                     field_names = get_field(config["autoflag_rfi"]["fields"]).split(",")

@@ -54,7 +54,7 @@ __version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
-MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
+MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
 DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
@@ -243,6 +243,10 @@ def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
 
+    # start a new logfile by default
+    if args.log_append is False:
+        with open(MEERKATHI_LOG, "w") as stdw:
+            pass
     if args.schema:
         schema = {}
         for item in args.schema:

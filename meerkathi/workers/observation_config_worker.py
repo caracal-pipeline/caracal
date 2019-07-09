@@ -16,8 +16,7 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-    #print config['obsinfo'].get('listobs')
-    #print 'aaaaaaaaaaa'
+
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]
@@ -128,10 +127,10 @@ def worker(pipeline, recipe, config):
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
             pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
-        print config
+
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
-            print 'IN'
+
             intents = utils.categorize_fields(msinfo)
             # Get fields and their purposes
             fcals = intents['fcal'][-1]
@@ -213,8 +212,7 @@ def worker(pipeline, recipe, config):
                         if isinstance(getattr(pipeline, 'target')[i], str) else getattr(pipeline, 'target')[i]
             getattr(pipeline, "target_id").append(','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
 
-    print 'OBSCONFIG'
-    print pipeline.chanwidth
+
     if len(pipeline.chanwidth) > 1:
         if np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             meerkathi.log.info(

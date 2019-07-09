@@ -381,7 +381,6 @@ class config_parser:
 
         return groups
 
-
         # Deprecated    
         #def _str2bool(v):
         #    if v.upper() in ("YES","TRUE"):
@@ -431,15 +430,6 @@ class config_parser:
         #        raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
 
  
-        # Transform keys
-        # Add subsection / update when necessary
-        #assert isinstance(schema_section, dict)
-        #assert schema_section["type"] == "map"
-        #assert isinstance(schema_section["mapping"], dict)
-        
-        #recursive loop over keywords of schema. If keyword is a map, descend in the nested set of keywords.
-
-
 
     @classmethod
     def update_config(cls, args = None, update_mode="defaults"):
@@ -452,14 +442,10 @@ class config_parser:
 
         groups = OrderedDict()
         global_schema = OrderedDict()
-        #if not cls.__validated_schema:
-        #    raise RuntimeError("Must init singleton before running this method")
 
         for key,worker in tmp.iteritems():
             if key=="schema_version":
                 continue
-            #elif worker.get("enable", True) is False:
-            #    continue
 
             _key = key.split("__")[0]
             schema_fn = os.path.join(meerkathi.pckgdir,

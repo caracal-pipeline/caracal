@@ -3,7 +3,7 @@ mapping:
   schema_version:
     type: str
     required: true
-    
+
   observation_config:
     type: map
     desc: Setup some basic observation information
@@ -32,7 +32,7 @@ mapping:
             type: bool
             required: false
             example: 'False'            
-      
+
       Check_Cals:
         desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
         type: bool

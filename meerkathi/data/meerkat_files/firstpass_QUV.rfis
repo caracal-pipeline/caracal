@@ -20,7 +20,7 @@ Created by AOFlagger 2.9.0 (2016-12-20)
         <on-stokes-i>0</on-stokes-i>
         <on-stokes-q>1</on-stokes-q>
         <on-stokes-u>1</on-stokes-u>
-        <on-stokes-v>1</on-stokes-v>
+        <on-stokes-v>0</on-stokes-v>
         <children>
           <action type="ForEachComplexComponentAction">
             <on-amplitude>1</on-amplitude>

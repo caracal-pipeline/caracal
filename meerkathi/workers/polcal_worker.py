@@ -23,17 +23,17 @@ def worker(pipeline, recipe, config):
         REFANT = refant = pipeline.reference_antenna[i] or '0'
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        PREFIX = prefix = '{0:s}-{1:s}'.format(prefix, config.get('label'))
+        PREFIX = prefix = '{0:s}-{1:s}'.format(prefix, config.get('label', ''))
         avgmsname = PREFIX + ".avg.ms"
         INPUT=pipeline.input
         MSDIR=pipeline.msdir
         OUTPUT=pipeline.output
-        solve_uvdist=config.get("solve_uvdist")
-        pol_mstimeavg=config.get("preaverage_time")
-        pol_solchanavg=config.get("preaverage_freq")
-        time_solfreqsel=config.get("timesol_solfreqsel") # default to the entire band, but it may be better to use a clean section
-        time_solint=config.get("timesol_soltime") # default 1 per scan
-        freq_solint=config.get("freqsol_soltime") # all time after DC is removed
+        solve_uvdist=config.get("solve_uvdist", "100~100000000m")
+        pol_mstimeavg=config.get("preaverage_time", "30s")
+        pol_solchanavg=config.get("preaverage_freq", 4)
+        time_solfreqsel=config.get("timesol_solfreqsel", "") # default to the entire band, but it may be better to use a clean section
+        time_solint=config.get("timesol_soltime", "inf") # default 1 per scan
+        freq_solint=config.get("freqsol_soltime", "inf") # all time after DC is removed
 
         # !! IMPORTANT !!
         # 1. We assume a linear feed system
@@ -143,8 +143,8 @@ def worker(pipeline, recipe, config):
             import numpy as np
             with tbl("%s::FEED" % os.path.join(MSDIR, ms), readonly=False) as t:
                 ang = t.getcol("RECEPTOR_ANGLE")
-                ang[:,0] = np.deg2rad(config.get("feed_angle_rotation"))
-                ang[:,1] = np.deg2rad(config.get("feed_angle_rotation"))
+                ang[:,0] = np.deg2rad(config.get("feed_angle_rotation", -90))
+                ang[:,1] = np.deg2rad(config.get("feed_angle_rotation", -90))
                 t.putcol("RECEPTOR_ANGLE", ang)
                 log.info("Receptor angle rotated")
 
@@ -189,7 +189,7 @@ def worker(pipeline, recipe, config):
 
         # Set model
         # First do all the polarized calibrators
-        if config['set_model'].get('enable'):
+        if config['set_model'].get('enable', True):
             cf = get_field('xcal')
             if not DISABLE_CROSSHAND_PHASE_CAL:
                 recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
@@ -212,13 +212,13 @@ def worker(pipeline, recipe, config):
             # Prefer our standard over the NRAO standard
             meerkathi_model = isinstance(model, str)
 
-            if config['set_model'].get('meerkathi_model') and meerkathi_model:
+            if config['set_model'].get('meerkathi_model', True) and meerkathi_model:
                 # use local sky model of calibrator field if exists
                 opts = {
                     "skymodel"  : model,
                     "msname"    : avgmsname,
                     "field-id"  : utils.get_field_id(msinfo, field)[0],
-                    "threads"   : config["set_model"].get('threads'),
+                    "threads"   : config["set_model"].get('threads', 8),
                     "mode"      : "simulate",
                     "tile-size" : 128,
                     "column"    : "MODEL_DATA",
@@ -256,7 +256,7 @@ def worker(pipeline, recipe, config):
         toapply = []
 
         # Phaseup diagonal of crosshand cal if available
-        if config.get('do_phaseup_crosshand_calibrator') and not DISABLE_CROSSHAND_PHASE_CAL:
+        if config.get('do_phaseup_crosshand_calibrator', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_gaincal", "crosshand_phaseup", {
                     "vis": avgmsname,
                     "caltable": G1,
@@ -278,7 +278,7 @@ def worker(pipeline, recipe, config):
 
         # Solve for X slope
         # of the form [e^{2pi.i.a\nu} 0 0 1]
-        if config.get('do_solve_crosshand_slope') and not DISABLE_CROSSHAND_PHASE_CAL:
+        if config.get('do_solve_crosshand_slope', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_gaincal", "crosshand_delay", {
                     "vis": avgmsname,
                     "caltable": KX,
@@ -313,7 +313,7 @@ def worker(pipeline, recipe, config):
         # possibly joining scans to solve for per-frequency solutions
         # a strongly polarized source is needed with known properties
         # to limit the amount of PA coverage needed
-        if config.get('do_solve_crosshand_phase') and not DISABLE_CROSSHAND_PHASE_CAL:
+        if config.get('do_solve_crosshand_phase', True) and not DISABLE_CROSSHAND_PHASE_CAL:
             recipe.add("cab/casa_polcal", "crosshand_phase_ref", {
                     "vis": avgmsname,
                     "caltable": Xref,
@@ -370,7 +370,7 @@ def worker(pipeline, recipe, config):
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
         # if necessary to achieve desired SNR
-        if config.get('do_solve_leakages'):
+        if config.get('do_solve_leakages', True):
             recipe.add("cab/casa_polcal", "leakage_ref", {
                     "vis": avgmsname,
                     "caltable": Dref,
@@ -424,7 +424,7 @@ def worker(pipeline, recipe, config):
                 },
                 input=INPUT, output=OUTPUT, label="leakage_freq_plot")
 
-        if config.get('do_apply_XD'):
+        if config.get('do_apply_XD', True):
             # Before application lets transfer KGB corrected data to DATA and backup DATA
             recipe.add("cab/msutils", "backup_raw", {
                 "command"           : "copycol",
@@ -496,7 +496,7 @@ def worker(pipeline, recipe, config):
         except ImportError:
             log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
 
-        if config.get('do_dump_precalibration_leakage_reports'):
+        if config.get('do_dump_precalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_precal", {
                       "ms": os.path.abspath(os.path.join(MSDIR, msname)),
                       "rep": "precal_polleakage_{0:s}.ipynb.html".format(msname),
@@ -505,7 +505,7 @@ def worker(pipeline, recipe, config):
             input=INPUT, output=OUTPUT, label="precal_polleak_rep")
 
 
-        if config.get('do_dump_postcalibration_leakage_reports'):
+        if config.get('do_dump_postcalibration_leakage_reports', True):
             recipe.add(rep.generate_leakage_report, "polarization_leakage_postcal", {
                       "ms": os.path.abspath(os.path.join(MSDIR, avgmsname)),
                       "rep": "postcal_polleakage_{0:s}.ipynb.html".format(avgmsname),

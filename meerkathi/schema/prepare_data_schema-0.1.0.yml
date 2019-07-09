@@ -12,7 +12,6 @@ mapping:
         desc: Executes the data preparation step.
         type: bool
         required: true
-        example: 'False'
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map
@@ -21,7 +20,7 @@ mapping:
             desc: Enable execution of fixvis.
             type: bool
             required: false
-            example: 'False'            
+
       prepms:
         desc: Add BITFLAG column to MS.
         type: map
@@ -30,7 +29,7 @@ mapping:
             desc: Enable addition of BITFLAG column to MS.
             type: bool
             required: false
-            example: 'False'
+
       add_spectral_weights: 
         desc: Add spectral weights column to the measurement set.
         type: map
@@ -39,4 +38,3 @@ mapping:
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
             required: false
-            example: 'False'

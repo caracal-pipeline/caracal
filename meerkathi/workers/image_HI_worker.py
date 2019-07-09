@@ -153,7 +153,6 @@ def calc_rms(filename,HImaskname):
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
-<<<<<<< HEAD
     label = config['label']
     if label != '':
         flabel = '-'+label
@@ -163,12 +162,10 @@ def worker(pipeline, recipe, config):
     RA,Dec=[],[]
     firstchanfreq_all,chanw_all,lastchanfreq_all = [],[],[]
     restfreq = config.get('restfreq','1.420405752GHz') 
-=======
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
     pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq','1.420405752GHz')
->>>>>>> 4b2a3f535fc7627e7d80f738153f50cd74d11ff4
     npix = config.get('npix', [1024])
     if len(npix) == 1:
         npix = [npix[0],npix[0]]

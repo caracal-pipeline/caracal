@@ -252,8 +252,10 @@ def worker(pipeline, recipe, config):
                     fields = '0'
                 elif config['autoflag_rfi'].get('fields', 'auto') == 'auto':
                     fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+                    field_names  get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
                 else:
-                    fields = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['autoflag_rfi'].get('fields')).split(","))))
+                    field_names = get_field(config['autoflag_rfi'].get('fields')).split(",")
+                    fields = ",".join(map(str, utils.get_field_id(msinfo, field_names)))
 
                 # Make sure no field IDs are duplicated
                 fields = ",".join(set(fields.split(",")))
@@ -277,7 +279,7 @@ def worker(pipeline, recipe, config):
                           "ms"                  : msname,
                           "data-column"         : config['autoflag_rfi'].get('column', 'DATA'),
                           "window-backend"      : config['autoflag_rfi'].get('window-backend', 'numpy'),
-                          "field-names"         : fields,
+                          "field-names"         : field_names,
                           "flagging-strategy"   : config['autoflag_rfi']['strategy'],
                         },
                         input=pipeline.input,

@@ -16,46 +16,58 @@ mapping:
             desc: Execute this section 
             type: bool
             required: true
+            example: 'True'
           listobs:
             desc: Run CASA listobs task to get observation information
             type: bool
             required: false
+            example: 'True'
           summary_json:
             desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
             type: bool
             required: false
+            example: 'True'
           vampirisms:
             desc: Returns sun free time range
             type: bool
             required: false
+            example: 'False'            
+
       Check_Cals:
         desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
         type: bool
         required: false
+        example: 'True'
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
-        required: true
+        required: false
+        example: 'auto'
       gcal:
         desc: Gain calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
-        required: true
+        required: false
+        example: 'auto'
       bpcal:
         desc: Bandpass calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
-        required: true
+        required: false
+        example: 'auto'
       fcal:
         desc: Fluxscale calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
         type: str
-        required: true
+        required: false
+        example: 'auto'
       xcal:
         desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
         type: str
-        required: true
+        required: false
+        example: 'auto'
       reference_antenna:
         desc: Reference antenna. If 'auto' then MeerKATHI will automatically pick the reference antenna from the .JSON metadata file if available. The file name is the same as the input .MS file but with .JSON extension. This file is typically available only for old (ROACH2) MeerKAT data. For all other data the pipeline will likely throw an error and gracefully terminate. In that case the reference antenna should be set manually.
         type: str
-        required: true
+        required: false
+        example: '0'
       primary_beam:
         desc: Generate primary beam model
         type: map
@@ -63,20 +75,25 @@ mapping:
           enable:
             type: bool
             desc: Execute this section
-            required: true
+            required: False
+            example: 'False'
           freq:
             desc: A single freq, or the start, end freqs, and channel width in MHz
             type: str
-            required: false
+            required: False
+            example: '855 1760 4'
           diameter:
             desc: Diameter of the required beam
             type: float
-            required: false
+            required: False
+            example: '13.5'
           pixels:
             desc: Number of pixels on one side
             type: int
-            required: false
+            required: False
+            example: '256'
           coefficients_file:
             desc: Coeficients file name
             type: str
-            required: false
+            required: False
+            example: 'meerkat_coeff_dict.npy'

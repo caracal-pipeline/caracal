@@ -1,5 +1,5 @@
 import os
-import sys
+import sys, string
 import subprocess
 import itertools
 import meerkathi
@@ -11,7 +11,11 @@ NAME = "Get convert and extract data"
 
 def worker(pipeline, recipe, config):
 
-    pipeline.init_names(config["dataid"])
+
+    if config["dataid"][0].strip():
+      pipeline.init_names(config["dataid"])
+    else:
+      raise KeyError("dataid of get_data worker is empty,\n please check your config.yml file")
     
     for i in range(pipeline.nobs):
         msname = pipeline.msnames[i]
@@ -70,7 +74,8 @@ def worker(pipeline, recipe, config):
         if hasattr(pipeline, "metadata"):
             metadata = pipeline.metadata[0]
             pipeline.metada = [metadata]
-        pipeline.vmsname = msname = config["combine"].get("vmsname", pipeline.prefix + "-virtconcat.ms")
+
+        pipeline.vmsname = msname = config["combine"].get("vmsname")
         pipeline.msnames = ["{0:s}/SUBMSS/{1:s}".format(pipeline.vmsname, _m) for _m in msnames]
 
         if not os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)) or config['combine'].get('reset', True):

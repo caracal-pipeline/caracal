@@ -119,7 +119,9 @@ def make_pb_cube(filename):
             datacube.resize((1,datacube.shape[0],datacube.shape[1]))
             datacube=np.repeat(datacube,headcube['naxis3'],axis=0)*np.abs(headcube['cdelt1'])
             sigma_pb=17.52/(headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1))*1e+9/13.5/2.355
+            #sigma_pb=headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1)
             sigma_pb.resize((sigma_pb.shape[0],1,1))
+            #print sigma_pb
             datacube=np.exp(-datacube**2/2/sigma_pb**2)
             fits.writeto(filename.replace('image.fits','pb.fits'),datacube,header=headcube,overwrite=True)
             meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(filename.replace('image.fits','pb.fits')))
@@ -163,13 +165,13 @@ def worker(pipeline, recipe, config):
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
     pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
-    restfreq = config.get('restfreq')
-    npix = config.get('npix')
+    restfreq = config.get('restfreq','1.420405752GHz')
+    npix = config.get('npix', [1024])
     if len(npix) == 1:
         npix = [npix[0],npix[0]]
-    cell = config.get('cell')
-    weight = config.get('weight')
-    robust = config.get('robust')
+    cell = config.get('cell', 7)
+    weight = config.get('weight', 'natural')
+    robust = config.get('robust', 0)
 
     for i, msfile in enumerate(all_msfiles):
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
@@ -211,7 +213,7 @@ def worker(pipeline, recipe, config):
             'atca':[-30.307665436,149.550164466],
             'askap':[116.5333,-16.9833],
                 }
-        tellocation=teldict[config.get('telescope')]
+        tellocation=teldict[config.get('telescope','meerkat')]
         telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
         firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
         corr_order= False
@@ -256,6 +258,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'wsclean_image') and corr_order:
             meerkathi.log.info('wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image' )
             sys.exit(1)
+
     elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')!='auto':
         if len(config['mstransform']['outchangrid'].split(','))!=3:
             meerkathi.log.error('Wrong format for mstransform:outchangrid in the .yml config file.')
@@ -288,31 +291,31 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
-            col=config['mstransform'].get('column')
+            col=config['mstransform'].get('column', 'corrected')
             step = 'mstransform_{:d}'.format(i)
             recipe.add('cab/casa_mstransform', step,
                 {
                     "msname"    : msname,
                     "outputvis" : msname_mst,
-                    "regridms"  : config['mstransform'].get('doppler'),
-                    "mode"      : config['mstransform'].get('mode'),
+                    "regridms"  : config['mstransform'].get('doppler', True),
+                    "mode"      : config['mstransform'].get('mode', 'frequency'),
                     "nchan"     : sdm.dismissable(nchan_dopp),
                     "start"     : sdm.dismissable(comfreq0),
                     "width"     : sdm.dismissable(comchanw),
                     "interpolation" : 'nearest',
                     "datacolumn" : col,
                     "restfreq"  :restfreq,
-                    "outframe"  : config['mstransform'].get('outframe'),
-                    "veltype"   : config['mstransform'].get('veltype'),
-                    "douvcontsub" : config['mstransform'].get('uvlin'),
-                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw')),
-                    "fitorder"  : config['mstransform'].get('fitorder'),
+                    "outframe"  : config['mstransform'].get('outframe', 'bary'),
+                    "veltype"   : config['mstransform'].get('veltype', 'radio'),
+                    "douvcontsub" : config['mstransform'].get('uvlin', False),
+                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw', None)),
+                    "fitorder"  : config['mstransform'].get('fitorder', 1),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Doppler tracking corrections'.format(step))
 
-            if config['mstransform'].get('obsinfo'):
+            if config['mstransform'].get('obsinfo', True):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                     {
@@ -336,7 +339,7 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config, 'sunblocker'):
-            if config['sunblocker'].get('use_mstransform'): msnamesb = msname_mst
+            if config['sunblocker'].get('use_mstransform',True): msnamesb = msname_mst
             else: msnamesb = msname
             step = 'sunblocker_{0:d}'.format(i)
             recipe.add("cab/sunblocker", step,
@@ -344,20 +347,20 @@ def worker(pipeline, recipe, config):
                     "command"   : "phazer",
                     "inset"     : msnamesb,
                     "outset"    : msnamesb,
-                    "imsize"    : config['sunblocker'].get('imsize'),
-                    "cell"      : config['sunblocker'].get('cell'),
+                    "imsize"    : config['sunblocker'].get('imsize', max(npix)),
+                    "cell"      : config['sunblocker'].get('cell', cell),
                     "pol"       : 'i',
                     "threshmode" : 'fit',
-                    "threshold" : config['sunblocker'].get('threshold'),
+                    "threshold" : config['sunblocker'].get('threshold', 3.),
                     "mode"      : 'all',
                     "radrange"  : 0,
                     "angle"     : 0,
                     "show"      : prefix + '.sunblocker.svg',
                     "verb"      : True,
                     "dryrun"    : False,
-                    "uvmax"      : config['sunblocker'].get('uvmax'),
-                    "uvmin"      : config['sunblocker'].get('uvmin'),
-                    "vampirisms" : config['sunblocker'].get('vampirisms'),
+                    "uvmax"      : config['sunblocker'].get('uvmax',2500.),
+                    "uvmin"      : config['sunblocker'].get('uvmin',0.),
+                    "vampirisms" : config['sunblocker'].get('vampirisms',True),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -458,6 +461,7 @@ def worker(pipeline, recipe, config):
                       input=pipeline.input,
                       output=pipeline.output,
                       label='{:s}:: Image HI'.format(step))
+
                     if config['wsclean_image']['make_cube']:
                         if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
                         else:
@@ -487,6 +491,7 @@ def worker(pipeline, recipe, config):
                     step = 'make_sofia_mask_'+str(j-1)
                     HIclean_mask=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits:output'
                     HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
+                
                     cubename = pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits:output'
                     cubename_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits')
                     outmask = pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean'
@@ -524,6 +529,7 @@ def worker(pipeline, recipe, config):
 
                     if not os.path.exists(HIclean_mask_path):
                         meerkathi.log.info('Sofia mask_'+str(j-1)+' was not found. Exiting and saving the cube') 
+                   
                         for ss in ['dirty','psf','first-residual','residual','model','image']:
                             cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                             MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
@@ -557,11 +563,11 @@ def worker(pipeline, recipe, config):
                                "msname"    : mslist,
                                "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
                                "weight"    : weight,
-                               "taper-gaussian" : str(config['wsclean_image'].get('taper')),
-                               "pol"        : config['wsclean_image'].get('pol'),
-                               "npix"      : config['wsclean_image'].get('npix'),
-                               "padding"   : config['wsclean_image'].get('padding'),
-                               "scale"     : config['wsclean_image'].get('cell'),
+                               "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
+                               "pol"        : config['wsclean_image'].get('pol','I'),
+                               "npix"      : config['wsclean_image'].get('npix', npix),
+                               "padding"   : config['wsclean_image'].get('padding', 1.2),
+                               "scale"     : config['wsclean_image'].get('cell', cell),
                                "channelsout"     : nchans,
                                "channelrange" : channelrange,
                                "fitsmask"  : HIclean_mask,
@@ -601,6 +607,7 @@ def worker(pipeline, recipe, config):
                     cubename_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits')
                     rms2=calc_rms(cubename_path,HIclean_mask_path)
                     meerkathi.log.info('The updated rms = '+str("{0:.7f}".format(rms2))+' Jy/beam')
+        
                     if rms2<=(1.0 - tol)*rms_ref:  #if the noise changes by less than 10% keep_going
                         rms_ref = rms2
                         if j==wscl_niter: 
@@ -735,18 +742,20 @@ def worker(pipeline, recipe, config):
             image_opts = {
                  "msname"         :    mslist,
                  "prefix"         :    pipeline.prefix+'_'+field+'_HI',
+#                 "field"          :    target,
                  "mode"           :    'channel',
                  "nchan"          :    nchans,
-                 "start"          :    config['casa_image'].get('startchan'),
+                 "start"          :    config['casa_image'].get('startchan', 0,),
                  "interpolation"  :    'nearest',
-                 "niter"          :    config['casa_image'].get('niter'),
+                 "niter"          :    config['casa_image'].get('niter', 1000000),
                  "psfmode"        :    'hogbom',
-                 "threshold"      :    config['casa_image'].get('threshold'),
-                 "npix"           :    config['casa_image'].get('npix'),
-                 "cellsize"       :    config['casa_image'].get('cell'),
-                 "weight"         :    config['casa_image'].get('weight'),
-                 "robust"         :    config['casa_image'].get('robust'),
-                 "stokes"         :    config['casa_image'].get('pol'),
+                 "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
+                 "npix"           :    config['casa_image'].get('npix', npix),
+                 "cellsize"       :    config['casa_image'].get('cell', cell),
+                 "weight"         :    config['casa_image'].get('weight', weight),
+                 "robust"         :    config['casa_image'].get('robust', robust),
+                 "stokes"         :    config['casa_image'].get('pol','I'),
+#                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,
                 }
@@ -796,6 +805,7 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='Fix spectral reference frame for cube {0:s}'.format(cubename))
+        
         if pipeline.enable_task(config,'freq_to_vel'):
              if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
              else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
@@ -818,7 +828,7 @@ def worker(pipeline, recipe, config):
             "steps.doFlag"          : config['sofia'].get('flag', False),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,
-            "steps.doMerge"         : config['sofia'].get('merge'),
+            "steps.doMerge"         : config['sofia'].get('merge', True),
             "steps.doReliability"   : False,
             "steps.doParameterise"  : False,
             "steps.doWriteMask"     : True,
@@ -840,6 +850,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make SoFiA mask and images'.format(step))
+
     if pipeline.enable_task(config, 'flagging_summary'):
         for i,msname in enumerate(all_msfiles):
             step = 'flagging_summary_image_HI_{0:d}'.format(i)

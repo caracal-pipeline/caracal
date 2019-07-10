@@ -205,7 +205,7 @@ mapping:
               - type: str
             desc: filename of fits mask (in output/masking folder)
             required: false
-            example: 'myMask.fits'
+            example: 'catalog_mask.fits'
           multi_scale:
             type: bool
             desc: switch on multiscale cleaning

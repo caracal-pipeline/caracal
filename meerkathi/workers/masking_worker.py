@@ -619,7 +619,7 @@ def worker(pipeline, recipe, config):
 		elif config['make_mask'].get('mask_with') == 'sofia':
 
 			imagename = in_image
-			def_kernels = [[6, 6, 0, 'b'], [15, 15, 0, 'b'], [25, 25, 0, 'b']]
+			def_kernels = [[3, 3, 0, 'b'],[6, 6, 0, 'b'], [15, 15, 0, 'b']]
 			image_opts =   {
 				"import.inFile"         : imagename,
 				"steps.doFlag"          : True,

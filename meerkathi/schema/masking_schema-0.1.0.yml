@@ -53,7 +53,7 @@ mapping:
             type: bool
             desc: Execute this worker
             required: false
-            example: 'False'
+            example: 'true'
           catalog:
             type: str
             required: false
@@ -63,7 +63,7 @@ mapping:
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
             required: false
-            example: '0.5d'
+            example: '1.2d'
 
       pb_correction:
         type: map
@@ -73,7 +73,7 @@ mapping:
             type: bool
             desc: Execute this worker
             required: false
-            example: 'False'
+            example: 'true'
           frequency:
             type: float
             desc: Primary beam size changes with frequency, provide central frequency of considered dataset
@@ -88,7 +88,7 @@ mapping:
             type: bool
             desc: Execute this worker
             required: false
-            example: 'False'
+            example: 'true'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
@@ -102,15 +102,15 @@ mapping:
             required: false
             example: 'pbcorr'
           thresh_lev:
-            type: float
+            type: int
             desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
             required: false
-            example: '5.'
+            example: '5'
           scale_noise_window:
-            type: float
+            type: int
             desc: window size where SoFiA measures the local rms, units of pixels
             required: false
-            example: '31.'
+            example: '101'
 
       merge_with_extended:
         type: map

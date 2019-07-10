@@ -85,9 +85,8 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config['split_target']  , 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
             uname = getpass.getuser()
             gaintablelist,gainfieldlist,interplist = [],[],[]
-      
-            callabel = config['split_target']['otfcal'].get('callabel')
-            calprefix = '{0:s}-{1:s}'.format(prefix, callabel)
+
+            calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel'))
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -140,7 +139,7 @@ def worker(pipeline, recipe, config):
                         "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
-                        "callib"        : sdm.dismissable(callib if pipeline.enable_task(config['split_target'] , 'otfcal') else None),
+                        "callib"        : sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']   , 'otfcal') else None),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -159,16 +158,16 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
 
             if pipeline.enable_task(config, 'changecentre'):
-                if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
+                if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
                     meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')))
+                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
                     sys.exit(1)
                 step = 'changecentre_{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                     {
                       "msname"  : tms,
                       "outputvis": tms,
-                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')) ,
+                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -208,13 +207,13 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
 
-		    step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
-		    recipe.add(fix_target_obsinfo, step,
-			{
-				'fname': listfile,
-			},
-			input = pipeline.input,
-			output = pipeline.output,
-			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 
+            step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
+            recipe.add(fix_target_obsinfo, step,
+            {
+                'fname': listfile,
+            },
+            input = pipeline.input,
+            output = pipeline.output,
+            label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 
 
 

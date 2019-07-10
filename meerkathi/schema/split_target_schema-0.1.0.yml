@@ -37,7 +37,7 @@ mapping:
             desc: Time averaging
             type: str
             required: false
-            example: '0s'
+            example: ''
           freq_average:
             desc: Frequency averaging
             type: int
@@ -52,12 +52,12 @@ mapping:
             desc: Select correlations
             type: str
             required: false
-            example: ' '
+            example: ''
           spw:
             desc: Select spectral windows and channels
             type: str
             required: false
-            example: ' '
+            example: ''
 
           otfcal:
             desc: Apply OTF calibration

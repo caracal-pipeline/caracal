@@ -174,7 +174,7 @@ mapping:
             desc: Execute segment wsclean_image (yes/no). Default is yes.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           wscl_niter:
             desc: Maximum number of rewsclean iterations to perform. Default is 2 # for now .
             type: int
@@ -266,7 +266,7 @@ mapping:
             desc: Accepts a 3D-mask cleaning mask in fits format. Mask made by the user. Default is '' (an empty field)
             type: str
             required: false
-            example: 'myCubeMask.fits'
+            example: ''
           automask:
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             type: float

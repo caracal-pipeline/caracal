@@ -46,9 +46,8 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'real_imag'):
             fields = config['real_imag'].get('fields')
-            print fields
             for field_ in fields:
-                print config['real_imag'].get('column')
+
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
                     step = 'plot_real_imag_{0:d}'.format(i)

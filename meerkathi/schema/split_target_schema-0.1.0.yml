@@ -32,7 +32,7 @@ mapping:
             desc: Execute this section
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           time_average:
             desc: Time averaging
             type: str
@@ -47,7 +47,7 @@ mapping:
             desc: Column to split, default is 'data'. Which means use otf calibration.
             type: str
             required: false
-            example: 'DATA'
+            example: 'data'
           correlation:
             desc: Select correlations
             type: str

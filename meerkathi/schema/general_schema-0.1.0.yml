@@ -8,29 +8,27 @@ mapping:
     desc: General pipeline information, data IDs, prefixes for output
     type: map
     mapping: 
+      data_path:
+        type: str
+        required: false
+        desc: where MeerKATHI (over-) writes HDF5 files and JSON info files downloaded by get_data below
       msdir:
         type: str
         required: true
         desc: where MeerKATHI will write and expect to find measurement set (MS) files
-        example: msdir
       input:
         type: str
-        required: false
+        required: true
         desc: where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files).
-        example: input
       output:
         type: str
-        required: false
+        required: true
         desc: where MeerKATHI writes output products
-        example: output
       prefix:
         type: str
         required: true
         desc: Prefix for MeerKATHI output products
-        example: meerkathi
       init_pipeline:
         desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
         required: false
         type: bool
-        example: 'True'
-

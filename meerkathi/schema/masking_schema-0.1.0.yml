@@ -12,38 +12,31 @@ mapping:
         type: bool
         desc: Execute this segment
         required: true
-        example: 'False'
       centre_coord:
         seq:
           - type: str
-        required: false
-        desc: Coordinates of the centre of the field of view
-        example: '00:00:00, 00:00:00'
+        required: true
+        desc: Coordinates of the centre of the field of view ["00:00:00","00:00:00"]
       mask_size:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
-        required: false
-        example: '900'
+        required: true
       cell_size:
         type: float
         desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
-        required: false
-        example: '2.'
+        required: true
       name_mask:
         type: str
         required: false
         desc: Name of the output mask generated from catalog
-        example: 'catalog_mask.fits'
       extended_source_input:
         type: str
         required: false
         desc: Name of the input mask for particularly extended sources in the field
-        example: 'Fornaxa_vla.FITS'
       final_mask:
         type: str
         required: false
         desc: Name of the output final mask
-        example: 'final_mask.fits'
 
       query_catalog:
         type: map
@@ -52,18 +45,15 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: false
-            example: 'False'
+            required: true
           catalog:
             type: str
-            required: false
+            required: True
             desc: Name of catalog to query [NVSS/SUMSS]
-            example: 'SUMSS'
           width_image:
             type: str
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
-            required: false
-            example: '0.5d'
+            required: true
 
       pb_correction:
         type: map
@@ -72,13 +62,11 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: false
-            example: 'False'
+            required: true
           frequency:
             type: float
             desc: Primary beam size changes with frequency, provide central frequency of considered dataset
             required: false
-            example: '1.420405752'
 
       make_mask:
         type: map
@@ -87,30 +75,24 @@ mapping:
           enable:
             type: bool
             desc: Execute this worker
-            required: false
-            example: 'False'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
             desc: Tool to use for masking
-            required: false
-            example: 'sofia'
+            required: true
           input_image:
             type: str
             enum: ["pbcorr", "path_to_mask"]
             desc: Input image where to create mask ???? what is this ???
-            required: false
-            example: 'pbcorr'
+            required: true
           thresh_lev:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
-            example: '5.'
           scale_noise_window:
             type: float
             desc: window size where SoFiA measures the local rms, units of pixels
             required: false
-            example: '31.'
 
       merge_with_extended:
         type: map
@@ -118,22 +100,17 @@ mapping:
         mapping:
           enable:
             type: bool
-            required: false
             desc: Execute this worker
-            example: 'False'
           extended_source_input:
             type: str
             desc: name of image of extended source to merge with current image
             required: false
-            example: 'extended_mask.fits'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
             desc: Tool to use for masking
             required: false
-            example: 'thresh'
           thresh_lev:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy)
             required: false
-            example: '8e-2'

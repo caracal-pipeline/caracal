@@ -77,7 +77,6 @@ mapping:
             desc: Set the number of threads to use when predicting local sky model using MeqTrees.
             required: false
             example: '1'
-
       delay_cal:
         type: map
         desc: Carry out delay correction calibration (using gaincal task from CASA).
@@ -123,7 +122,6 @@ mapping:
                 desc: "Type of gain solution table"
                 required: false
                 example: 'K'
-                required: false        
               field:
                 seq: 
                 - type: int 

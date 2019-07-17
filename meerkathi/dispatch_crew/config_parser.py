@@ -75,7 +75,8 @@ class config_parser:
         if cls.__GROUPS is None:
             raise ValueError("Please call store_args first.")
         setattr(self.__ARGS, "_".join(chain), new_value)
-        
+
+   
 
     def get_key(self, chain):
         """ Get value given a chain of keys """
@@ -308,7 +309,7 @@ class config_parser:
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
-
+            print groups[worker]
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments            
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
@@ -324,6 +325,13 @@ class config_parser:
                         base_section="", #base of the tree-section of the schema
                         args = None,    #base args
                         parser = None): #parser
+        
+        def _check_if_empty(seq):
+            try:
+                return all(map(empty, seq))
+            except TypeError:
+                return False     
+
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
 
@@ -333,7 +341,7 @@ class config_parser:
         
         for key, subVars in sec_defaults.iteritems():
             option_name = base_section + "_" + key if base_section != "" else key
-
+            print option_name
             #different way of reading schema example according to str, bool, map
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
                 subVars['example'] = string.split(subVars['example'].replace(' ',''),',')
@@ -350,20 +358,47 @@ class config_parser:
             elif subVars["type"] == 'bool': 
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
+                
+                print key, cfgVars.keys()[0]
+                if key == cfgVars.keys()[0]:
+                    print 'figa'
+                print key,  cfgVars.keys()
+                a = list(cfgVars.values())
 
+                #####MAKE A GOOD CONDITION TO CHECK IF THE LIST IS EMPTY OR NOT!!!!
+                #a = _check_if_empty(list(cfgVars.values()))
+                #print list(cfgVars.values())[0]
+                if not any(a):
+                    print 'list is empty'
                 #update 
-                if key in cfgVars.keys() and list(cfgVars.values())[0]:
-                    groups[key] = cfgVars[key]
-                    parser.set_defaults(**{option_name: cfgVars[key]})
+                else:
+                    print 'cazzo'
 
+                    if key in cfgVars.keys() and list(cfgVars.values())[0]:
+                        print 'OUT'
+                        groups[key] = cfgVars[key]
+                        parser.set_defaults(**{option_name: cfgVars[key]})
+                    
+                    elif key == cfgVars.keys()[0]:
+                        print 'IN'
+                        groups[key] = list(cfgVars.values())[0]
+                        parser.set_defaults(**{option_name: list(cfgVars.values())[0]})
+                        print groups[key]
+                
+                print 'NOTHING'
 
             elif subVars["type"] == "map": #in this case recall the function and descend in the dictionary
 
                 subname = string.split(option_name,'_')[-1]
+                print 'ciao'
+                print key
+                print  cfgVars.keys(), list(cfgVars.values())
                 if key in cfgVars.keys():
+                    print 'culo'
                     tmpcfgVars = cfgVars[key]
                 else:
                     tmpcfgVars = dict.fromkeys(cfgVars.keys(), [])
+                print tmpcfgVars
                 
                 groups[key] = cls._subparser_tree(tmpcfgVars,
                                                   subVars,
@@ -377,6 +412,7 @@ class config_parser:
                 if key in cfgVars.keys() and list(cfgVars.values())[0]:
                     groups[key] = cfgVars[key]
                     parser.set_defaults(**{option_name: cfgVars[key]})
+
 
         return groups
 

@@ -587,9 +587,9 @@ def worker(pipeline, recipe, config):
                        input = pipeline.input,
                        output = pipeline.output,
                        label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
-        elif sourcefinder == 'sofia': 
-            print 'are u crazy ?'
-            print '############################################'
+        #elif sourcefinder == 'sofia': 
+        #    print 'are u crazy ?'
+        #    print '############################################'
 
     def predict_from_fits(num, model, index, mslist, field):
         if isinstance(model, str) and len(model.split('+'))==2:

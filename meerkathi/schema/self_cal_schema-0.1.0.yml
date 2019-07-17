@@ -130,6 +130,10 @@ mapping:
         desc: Start self-cal iteration loop at this start value, 1-based.
         required: false
         example: '1'
+      cal_time_chunk:
+        desc: chunk in time for calibration (seconds)
+        type: int
+        example: '128'
 
       aimfast:
         type: map
@@ -280,10 +284,10 @@ mapping:
             required: false
             example: 'False'
           scale_noise_window:
-            type: float
+            type: int
             desc: window size where to measure local rms in pixels
             required: false
-            example: '31.'
+            example: '31'
           positivity:
             type: bool
             desc: merges only positive pixesl of sources in mask  
@@ -325,7 +329,7 @@ mapping:
               - type: int
             desc: Source finder island threshold
             required: false
-            example: '3'
+            example: '3'         
 
       calibrate:
         type: map
@@ -376,13 +380,13 @@ mapping:
             example: 'True'
           Gsols_time:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
             example: '100'
           Gsols_channel:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
             example: '0'
@@ -420,6 +424,23 @@ mapping:
               - type: float
             required: false
             example: '0'
+          weight_column:
+            desc: Column with weights
+            type: str
+            required: false
+            example: 'WEIGHT'
+          madmax_flagging:
+            desc: Flags based on maximum of mad
+            type: bool
+            required: false
+            example: 'True'
+          madmax_flag_thresh:
+            desc: Threshold for madmax flagging
+            seq:
+              - type: int
+            required: false
+            example: '1, 2'
+
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.

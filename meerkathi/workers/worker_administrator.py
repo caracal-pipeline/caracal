@@ -171,7 +171,7 @@ class worker_administrator(object):
                 traceback.print_exc()
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
             config = self.config[_name]
-            if config.get('enable', True) is False:
+            if config.get('enable') is False:
                 self.skip.append(_worker)
                 continue
             # Define stimela recipe instance for worker

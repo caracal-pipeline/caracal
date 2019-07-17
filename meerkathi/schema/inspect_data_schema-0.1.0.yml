@@ -42,7 +42,7 @@ mapping:
             seq:
               - type: str
             desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
-            required: true
+            required: false
             example: 'bpcal, gcal'
           column: 
             type: str

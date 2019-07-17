@@ -116,7 +116,7 @@
       field:
       - bpcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -127,7 +127,7 @@
       field:
       - fcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -138,7 +138,7 @@
       field:
       - gcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:

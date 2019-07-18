@@ -36,7 +36,6 @@ class worker_administrator(object):
             container_tech='docker'):
 
         self.config = config
-
         self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
@@ -50,7 +49,12 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
-        self.data_path = self.config['general']['data_path']
+        if not self.config['general']['data_path']:
+            self.config['general']['data_path'] = os.getcwd()
+            self.data_path = self.config['general']['data_path']
+        else:
+            self.data_path = self.config['general']['data_path']
+        print self.data_path
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
@@ -78,8 +82,14 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline", True):
+        if config["general"].get("init_pipeline"):
             self.init_pipeline()
+
+        #######
+        #this could also go in log_options of config_parser.py but then the update of 
+        #data_path must occure there, and not right above here
+        with open(self.data_path+'/'+self.prefix+'_configFile.yml', 'w') as outfile:
+            ruamel.yaml.dump(self.config, outfile, default_flow_style=False)
 
     def init_names(self, dataid):
         """ iniitalize names to be used throughout the pipeline and associated
@@ -155,7 +165,7 @@ class worker_administrator(object):
                 subprocess.check_call(["cp", "-r", f, self.input])
 
     def enable_task(self, config, task):
-        a = config.get(task, False)
+        a = config.get(task)
         if a:
             return a['enable']
         else:

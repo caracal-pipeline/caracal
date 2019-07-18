@@ -560,7 +560,7 @@ def worker(pipeline, recipe, config):
         "blank_limit"   : sdm.dismissable(blank_limit),
         "adaptive_rms_box" : config[key].get('local_rms'),
         "port2tigger"   : False,
-                "format"         : 'ascii',
+        "format"         : 'ascii',
         "multi_chan_beam": spi_do,
         "spectralindex_do": spi_do,
         "detection_image": sdm.dismissable(detection_image),
@@ -791,7 +791,7 @@ def worker(pipeline, recipe, config):
                  "msname"               : msname,
                  "threads"              : ncpu,
                  "column"               : incolumn,
-                 "output-data"          : config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1],
+                 "output-data"          : config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1],
                  "output-column"        : outcolumn,
                  "prefix"               : '{0:s}_{1:s}_{2:d}_meqtrees'.format(prefix, msname[:-3], num),
                  "label"                : 'cal{0:d}'.format(num),
@@ -840,7 +840,7 @@ def worker(pipeline, recipe, config):
             modellist = [calmodel]
         if config[key].get('model_mode') == 'vis_only':
             modellist = ['MODEL_DATA']
-        matrix_type = config[key].get('gain_matrix_type','Gain2x2')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
+        matrix_type = config[key].get('gain_matrix_type')[num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
         if matrix_type == 'GainDiagPhase' or config[key].get('two_step'):
             gupdate = 'phase-diag'
             bupdate = 'phase-diag'
@@ -851,21 +851,21 @@ def worker(pipeline, recipe, config):
             dupdate = 'full'
 
         jones_chain = 'G'
-        gsols_ = [config[key].get('Gsols_time')[num - 1 if num <= len(config[key].get('Gsols_time', [])) else -1],
+        gsols_ = [config[key].get('Gsols_time')[num - 1 if num <= len(config[key].get('Gsols_time')) else -1],
                   config[key].get('Gsols_channel')[
-                      num - 1 if num <= len(config[key].get('Gsols_channel', [])) else -1]]
-        bsols_ = [config[key].get('Bsols_time')[num - 1 if num <= len(config[key].get('Bsols_time', [])) else -1],
+                      num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
+        bsols_ = [config[key].get('Bsols_time')[num - 1 if num <= len(config[key].get('Bsols_time')) else -1],
                   config[key].get('Bsols_channel')[
-                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+                      num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         ddsols_ = [
-            config[key].get('DDsols_time')[num - 1 if num <= len(config[key].get('DDsols_time', [])) else -1],
+            config[key].get('DDsols_time')[num - 1 if num <= len(config[key].get('DDsols_time')) else -1],
             config[key].get('DDsols_channel')[
-                num - 1 if num <= len(config[key].get('DDsols_channel', [])) else -1]]
+                num - 1 if num <= len(config[key].get('DDsols_channel')) else -1]]
 
-        if (config[key].get('two_step') and ddsols_[0] != -1) or config[key].get('ddjones', False) :
+        if (config[key].get('two_step') and ddsols_[0] != -1) or config[key].get('ddjones') :
             jones_chain += ',DD'
             matrix_type = 'Gain2x2'
-        elif config[key].get('DDjones') and config[key].get('two_step', False):
+        elif config[key].get('DDjones') and config[key].get('two_step'):
              raise ValueError('You cannot do a DD-gain calibration and a split amplitude-phase calibration all at once')
         if config[key].get('Bjones'):
             jones_chain += ',B'
@@ -900,7 +900,6 @@ def worker(pipeline, recipe, config):
                   "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
                   "madmax-threshold" : config[key].get('madmax_flag_thresh'),
                   "madmax-estimate" : 'corr',
-
                 }
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
@@ -941,7 +940,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/cubical', step, cubical_opts,  
                 input=pipeline.input,
                 output=pipeline.output,
-                shared_memory= config[key].get('shared_memory','100Gb'),
+                shared_memory= config[key].get('shared_memory'),
                 #shared_memory = '10Gb',
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
@@ -1123,10 +1122,8 @@ def worker(pipeline, recipe, config):
 
         step = 'aimfast'
         aimfast_settings = {
-                    "residual-image"       : '{0:s}_{1:s}_{2:d}{3:s}-residual.fits:output'.format(
-                                                 prefix, field, num, mfsprefix),
-                    "normality-test"       : config[step].get(
-                                                 'normality_model'),
+                    "residual-image"       : '{0:s}_{1:s}_{2:d}{3:s}-residual.fits:output'.format(prefix, field, num, mfsprefix),
+                    "normality-test"       : config[step].get('normality_model'),
                     "area-factor"          : config[step].get('area_factor'),
                     "label"                : "{0:s}_{1:s}_{2:d}".format(prefix, field, num),
                     }
@@ -1361,8 +1358,7 @@ def worker(pipeline, recipe, config):
                     if int(mm[-1]) > self_cal_iter_counter:
                         num = str(self_cal_iter_counter)
             else:
-                extract_sources = len(config['extract_sources'].get(
-                                      'thresh_isl', [self_cal_iter_counter]))
+                extract_sources = len(config['extract_sources'].get('thresh_isl', [self_cal_iter_counter]))
                 if extract_sources > 1:
                     num = '{:d}+{:d}'.format(self_cal_iter_counter-1, self_cal_iter_counter)
                 else:
@@ -1459,9 +1455,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'transfer_model'):
             meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
-            print '*****************************************'
             crystalball_model=config['transfer_model'].get('model')
-            print '****************************************'
             mslist_out = ms_dict_tmodel[target]
             if crystalball_model=='auto': crystalball_model='{0:s}_{1:s}_{2:d}-sources.txt'.format(prefix,field,self_cal_iter_counter)
             for i,msname in enumerate(mslist_out):

@@ -160,17 +160,16 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
     RA,Dec=[],[]
     firstchanfreq_all,chanw_all,lastchanfreq_all = [],[],[]
-    restfreq = config.get('restfreq') 
     mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
     pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
-    restfreq = config.get('restfreq','1.420405752GHz')
-    npix = config.get('npix', [1024])
+    restfreq = config.get('restfreq')
+    npix = config.get('npix')
     if len(npix) == 1:
         npix = [npix[0],npix[0]]
-    cell = config.get('cell', 7)
-    weight = config.get('weight', 'natural')
-    robust = config.get('robust', 0)
+    cell = config.get('cell')
+    weight = config.get('weight')
+    robust = config.get('robust')
 
     for i, msfile in enumerate(all_msfiles):
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
@@ -212,7 +211,7 @@ def worker(pipeline, recipe, config):
             'atca':[-30.307665436,149.550164466],
             'askap':[116.5333,-16.9833],
                 }
-        tellocation=teldict[config.get('telescope','meerkat')]
+        tellocation=teldict[config.get('telescope')]
         telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
         firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
         corr_order= False
@@ -289,25 +288,25 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
-            col=config['mstransform'].get('column', 'corrected')
+            col=config['mstransform'].get('column')
             step = 'mstransform_{:d}'.format(i)
             recipe.add('cab/casa_mstransform', step,
                 {
                     "msname"    : msname,
                     "outputvis" : msname_mst,
-                    "regridms"  : config['mstransform'].get('doppler', True),
-                    "mode"      : config['mstransform'].get('mode', 'frequency'),
+                    "regridms"  : config['mstransform'].get('doppler'),
+                    "mode"      : config['mstransform'].get('mode'),
                     "nchan"     : sdm.dismissable(nchan_dopp),
                     "start"     : sdm.dismissable(comfreq0),
                     "width"     : sdm.dismissable(comchanw),
                     "interpolation" : 'nearest',
                     "datacolumn" : col,
                     "restfreq"  :restfreq,
-                    "outframe"  : config['mstransform'].get('outframe', 'bary'),
-                    "veltype"   : config['mstransform'].get('veltype', 'radio'),
-                    "douvcontsub" : config['mstransform'].get('uvlin', False),
-                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw', None)),
-                    "fitorder"  : config['mstransform'].get('fitorder', 1),
+                    "outframe"  : config['mstransform'].get('outframe'),
+                    "veltype"   : config['mstransform'].get('veltype'),
+                    "douvcontsub" : config['mstransform'].get('uvlin'),
+                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw')),
+                    "fitorder"  : config['mstransform'].get('fitorder'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -349,16 +348,16 @@ def worker(pipeline, recipe, config):
                     "cell"      : config['sunblocker'].get('cell', cell),
                     "pol"       : 'i',
                     "threshmode" : 'fit',
-                    "threshold" : config['sunblocker'].get('threshold', 3.),
+                    "threshold" : config['sunblocker'].get('threshold'),
                     "mode"      : 'all',
                     "radrange"  : 0,
                     "angle"     : 0,
                     "show"      : prefix + '.sunblocker.svg',
                     "verb"      : True,
                     "dryrun"    : False,
-                    "uvmax"      : config['sunblocker'].get('uvmax',2500.),
-                    "uvmin"      : config['sunblocker'].get('uvmin',0.),
-                    "vampirisms" : config['sunblocker'].get('vampirisms',True),
+                    "uvmax"      : config['sunblocker'].get('uvmax'),
+                    "uvmin"      : config['sunblocker'].get('uvmin'),
+                    "vampirisms" : config['sunblocker'].get('vampirisms'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -564,10 +563,10 @@ def worker(pipeline, recipe, config):
                                "msname"    : mslist,
                                "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
                                "weight"    : weight,
-                               "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
-                               "pol"        : config['wsclean_image'].get('pol','I'),
+                               "taper-gaussian" : str(config['wsclean_image'].get('taper')),
+                               "pol"        : config['wsclean_image'].get('pol'),
                                "npix"      : config['wsclean_image'].get('npix', npix),
-                               "padding"   : config['wsclean_image'].get('padding', 1.2),
+                               "padding"   : config['wsclean_image'].get('padding'),
                                "scale"     : config['wsclean_image'].get('cell', cell),
                                "channelsout"     : nchans,
                                "channelrange" : channelrange,
@@ -746,25 +745,16 @@ def worker(pipeline, recipe, config):
 #                 "field"          :    target,
                  "mode"           :    'channel',
                  "nchan"          :    nchans,
-                 "start"          :    config['casa_image'].get('startchan', 0,),
+                 "start"          :    config['casa_image'].get('startchan'),
                  "interpolation"  :    'nearest',
-                 "niter"          :    config['casa_image'].get('niter', 1000000),
+                 "niter"          :    config['casa_image'].get('niter'),
                  "psfmode"        :    'hogbom',
-<<<<<<< HEAD
                  "threshold"      :    config['casa_image'].get('threshold'),
                  "npix"           :    config['casa_image'].get('npix'),
                  "cellsize"       :    config['casa_image'].get('cell'),
                  "weight"         :    config['casa_image'].get('weight'),
                  "robust"         :    config['casa_image'].get('robust'),
                  "stokes"         :    config['casa_image'].get('pol'),
-=======
-                 "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
-                 "npix"           :    config['casa_image'].get('npix', npix),
-                 "cellsize"       :    config['casa_image'].get('cell', cell),
-                 "weight"         :    config['casa_image'].get('weight', weight),
-                 "robust"         :    config['casa_image'].get('robust', robust),
-                 "stokes"         :    config['casa_image'].get('pol','I'),
->>>>>>> master
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,
@@ -778,8 +768,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{:s}:: Image HI'.format(step))
-    print 'aaaaaaaaa'
-    print specframe_all
+
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
@@ -839,7 +828,7 @@ def worker(pipeline, recipe, config):
             "steps.doFlag"          : config['sofia'].get('flag'),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,
-            "steps.doMerge"         : config['sofia'].get('merge', True),
+            "steps.doMerge"         : config['sofia'].get('merge'),
             "steps.doReliability"   : False,
             "steps.doParameterise"  : False,
             "steps.doWriteMask"     : True,

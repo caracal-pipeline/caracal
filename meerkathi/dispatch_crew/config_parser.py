@@ -1,9 +1,12 @@
 import argparse
 import yaml
 import meerkathi
-import os
+import os, sys, string
 import copy
 import ruamel.yaml
+import json
+import numpy.core
+from numpy import fromstring
 from pykwalify.core import Core
 import itertools
 from collections import OrderedDict
@@ -279,20 +282,25 @@ class config_parser:
 
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
+        
+
         parser = cls.__primary_parser(add_help=True)
-        for key,worker in tmp.iteritems():
-            if key=="schema_version":
+        groups = OrderedDict()
+
+        for worker, variables in tmp.iteritems():
+            if worker=="schema_version":
                 continue
             #elif worker.get("enable", True) is False:
             #    continue
-            _key = key.split("__")[0]
+            _worker = worker.split("__")[0]
+            
             schema_fn = os.path.join(meerkathi.pckgdir,
-                                     "schema", "{0:s}_schema-{1:s}.yml".format(_key,
+                                     "schema", "{0:s}_schema-{1:s}.yml".format(_worker,
                                                                                schema_version))
 
             #SCHEMA VALIDATION automatically check if variables of cfg file are given with appropriate syntax
             source_data = {
-                            _key : worker,
+                            _worker : variables,
                             "schema_version" : schema_version,
             }
             c = Core(source_data=source_data, schema_files=[schema_fn])
@@ -302,9 +310,11 @@ class config_parser:
             #cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-            cls._subparser_tree(self.__validated_schema[key],
-                                schema["mapping"][_key],
-                                base_section=key,
+            
+            groups[worker] = cls._subparser_tree(variables,
+                                schema["mapping"][_worker],
+                                base_section=worker,
+                                args=args,
                                 parser=parser)
             
             #print '\n #LOADED VARIABLES'
@@ -353,46 +363,6 @@ class config_parser:
 
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
-
-        def _str2bool(v):
-            if v.upper() in ("YES","TRUE"):
-                return True
-            elif v.upper() in ("NO","FALSE"):
-                return False
-            else:
-                raise argparse.ArgumentTypeError("Failed to convert argument. Must be one of "
-                                                 "'yes', 'true', 'no' or 'false'.")
-
-        def _nonetype(v, opt_type="str"):
-            type_map = { "str" : str, "int": int, "float": float, "bool": _str2bool, "text": str }
-            _opt_type = type_map[opt_type]
-            if v.upper() in ("NONE","NULL"):
-                return None
-            else:
-                return _opt_type(v)
-
-        def _option_factory(opt_type,
-                            is_list,
-                            opt_name,
-                            opt_required,
-                            opt_desc,
-                            opt_valid_opts,
-                            opt_default,
-                            parser_instance):
-            opt_desc = opt_desc.replace("%", "%%").encode('utf-8').strip()
-            if opt_type == "int" or opt_type == "float" or opt_type == "str" or opt_type == "bool" or opt_type == "text":
-                meta = opt_type
-                parser_instance.add_argument("--%s" % opt_name,
-                                             choices=opt_valid_opts,
-                                             default=opt_default,
-                                             nargs=("+" if opt_required else "*") if is_list else "?",
-                                             metavar=meta,
-                                             type=lambda x: _nonetype(x, opt_type),
-                                             help=opt_desc + " [%s default: %s]" % ("list:%s" % opt_type if is_list else opt_type, str(opt_default)))
-            else:
-                raise ValueError("opt_type %s not understood for %s" % (opt_type, opt_name))
-
-
         groups = OrderedDict()
         sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
         
@@ -471,7 +441,6 @@ class config_parser:
                 groups[key] = cls._subparser_tree(tmpcfgVars,
                                                   subVars,
                                                   base_section=option_name,
-                                                  update_only=update_only,
                                                   args=args,
                                                   parser=parser)
 
@@ -592,7 +561,7 @@ class config_parser:
         with open(filename, 'w') as f:
             sorted_keys = sorted(dictovals, key=lambda k: dictovals[k].get("order", 0) if hasattr(dictovals[k], "get") else 0)
             o = OrderedDict({k: dictovals[k] for k in sorted_keys})
-            o["schema_version"] = "0.1.0"
+            o["schema_version"] = "0.2.0"
             f.write(yaml.dump(o,
                               Dumper=ruamel.yaml.RoundTripDumper))
 

@@ -76,7 +76,7 @@ mapping:
             type: int
             desc: Set the number of threads to use when predicting local sky model using MeqTrees.
             required: false
-            example: '1'
+            example: '8'
       delay_cal:
         type: map
         desc: Carry out delay correction calibration (using gaincal task from CASA).
@@ -132,7 +132,7 @@ mapping:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'x'
+                example: 'X'
               htmlname:
                 type: str
                 desc: "Output HTML file name"

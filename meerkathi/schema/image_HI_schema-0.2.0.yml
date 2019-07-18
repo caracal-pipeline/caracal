@@ -263,20 +263,23 @@ mapping:
             required: false
             example: '1000000'
           ownfitsmask:
-            desc: Accepts a 3D-mask cleaning mask in fits format. Mask made by the user. Default is '' (an empty field)
-            type: str
+            seq:
+              - type: str
+            desc: filename of fits mask (in output/masking folder)
             required: false
-            example: ''
+            example: 'hi_mask.fits'
           automask:
+            seq:
+              - type: int 
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
-            type: float
+            required: false
+            example: '30, 10, 7'
+          auto_threshold:
+            seq:
+              - type: float
+            desc: Auto clean threshold
             required: false
             example: '0.5'
-          autothreshold:
-            desc: Estimate noise level using a robust estimator and stop at sigma x stddev
-            type: float
-            required: false
-            example: '5.'
           cleanborder:
             desc: Set the border size in which no cleaning is performed, in percentage of the width/height of a plane. With an plane size of 1000 pixels and clean border of 1%, each border is 10 pixels. Default is 0.
             type: float

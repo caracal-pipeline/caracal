@@ -207,7 +207,6 @@ def execute_pipeline(args, arg_groups, block):
 
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
-
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
@@ -247,6 +246,7 @@ def main(argv):
     
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
+    #sys.exit(1)
 
     if args.schema:
         schema = {}

@@ -259,9 +259,9 @@ mapping:
           flagregion:
             desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
             seq:
-              - type: int
+              - type: str
             required: false
-            example: '0, 10, 0, 10'
+            example: ''
           inputmask:
             type: str
             desc: input mask over which add Sofia's

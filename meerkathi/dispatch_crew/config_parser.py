@@ -159,6 +159,7 @@ class config_parser:
             return self.__get_schema_attr(chain, attr="seq")[0]["type"]
         else:
             return None
+
     
     @property
     def args(self):
@@ -291,14 +292,14 @@ class config_parser:
                                      "schema", "{0:s}_schema-{1:s}.yml".format(_worker,
                                                                                schema_version))
             
-            #SCHEMA VALIDATION
+            #SCHEMA VALIDATION automatically check if variables of cfg file are given with appropriate syntax
             source_data = {
                             _worker : variables,
                             "schema_version" : schema_version,
             }
             c = Core(source_data=source_data, schema_files=[schema_fn])
             cls.__validated_schema[worker] = c.validate(raise_exception=True)[_worker]
-            #########
+            ##
 
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
@@ -309,13 +310,16 @@ class config_parser:
                                 base_section=worker, 
                                 args = args,               
                                 parser=parser)
-            print groups[worker]
+            
+            #print '\n #LOADED VARIABLES'
+            #print groups[worker]
+        
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments            
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
             raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
-        #store keywords in ordereddDict and namespace 
+        #store keywords as ordereddDict and namespace 
         cls.__store_args(args, groups)
 
     @classmethod
@@ -325,12 +329,29 @@ class config_parser:
                         base_section="", #base of the tree-section of the schema
                         args = None,    #base args
                         parser = None): #parser
-        
-        def _check_if_empty(seq):
+        '''
+        This function recursively goes through the schema file, loaded as a nested orderedDict: subVars.
+        If the variable of the schema is a map, the function goes to the inner nest of the dictionary.
+        Finally, the default values to run the pipeline, stored in the schema as seq, bool, str/numbers,
+        are loaded in groups (orderedDict) and in the parser (namespace).
+
+        For each variable in the schema, the module checks if the same variable is present in the user cfg file: cfgVars
+        If yes, groups[key] is overwritten.
+
+        '''
+        def _empty(alist):
+            '''
+            this recursive function checks if the elements in the array are empty (needed for the variables of the config file)
+            '''
             try:
-                return all(map(empty, seq))
-            except TypeError:
-                return False     
+                for a in alist:
+                    if not _empty(a):
+                        return False
+            except:
+                # we will reach here if alist is not a iterator/list
+                return False
+
+            return True
 
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
@@ -339,79 +360,106 @@ class config_parser:
 
         sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
         
+        # loop over each key of the variables in the schema
+        # the key may contain a set of subkeys, being the schema a nested dictionary
         for key, subVars in sec_defaults.iteritems():
+
+            # store the total name of the key given the workerName(base_section) and key (which may be nested)
             option_name = base_section + "_" + key if base_section != "" else key
-            print option_name
-            #different way of reading schema example according to str, bool, map
+            
+            #print('\n'+str(option_name))
+            
+            #different way of reading schema example according to str, bool, map, seq
             if "seq" in subVars.keys():   #comma-separated strings become numpy arrays
-                subVars['example'] = string.split(subVars['example'].replace(' ',''),',')
                 
+                #print 'seq'
+                #print key, cfgVars.keys()
+                #print cfgVars.values()  
+                #if _empty(cfgVars.values()): 
+                #    print "#########################################alist is empty"    
+                #elif not _empty(cfgVars.values()): 
+                #    print "---------------------------------- elist is not empty"      
+                
+                # read variable loaded from schema
+                subVars['example'] = string.split(subVars['example'].replace(' ',''),',')
                 typecast_func = __builtins__[subVars['seq'][0]['type']]
+                # store
                 groups[key] = map(typecast_func,subVars["example"])
                 parser.set_defaults(**{option_name: subVars['example']})
                 
-                #update keys with users config file       
-                if key in cfgVars.keys() and list(cfgVars.values())[0]:
+                #update keys with users config file: if key is present and value is not empty (because of repeaded keys in different maps)
+                if key in cfgVars.keys() and not _empty(cfgVars.values()):
                     groups[key] = cfgVars[key]
                     parser.set_defaults(**{option_name: cfgVars[key]})
-
-            elif subVars["type"] == 'bool': 
+                    
+                    #print '\n ### update with CFG ###'
+                    #print cfgVars[key]
+                    #print key, groups
+            
+            elif subVars["type"] == 'bool': # variable of schema is bool -> store in groups
+                
+                #print 'bool'
+                #print key, cfgVars.keys()                 
+                #print cfgVars.values()  
+                #if _empty(cfgVars.values()): 
+                #    print "#########################################alist is empty"    
+                #elif not _empty(cfgVars.values()): 
+                #    print "---------------------------------- elist is not empty"      
+                
+                # store variable loaded from schema
                 groups[key] = json.loads(subVars['example'].lower())
                 parser.set_defaults(**{option_name:  subVars['example']})
                 
-                print key, cfgVars.keys()[0]
-                if key == cfgVars.keys()[0]:
-                    print 'figa'
-                print key,  cfgVars.keys()
-                a = list(cfgVars.values())
 
-                #####MAKE A GOOD CONDITION TO CHECK IF THE LIST IS EMPTY OR NOT!!!!
-                #a = _check_if_empty(list(cfgVars.values()))
-                #print list(cfgVars.values())[0]
-                if not any(a):
-                    print 'list is empty'
-                #update 
-                else:
-                    print 'cazzo'
-
-                    if key in cfgVars.keys() and list(cfgVars.values())[0]:
-                        print 'OUT'
-                        groups[key] = cfgVars[key]
-                        parser.set_defaults(**{option_name: cfgVars[key]})
+                #update keys with users config file: if key is present and value is not empty (because of repeaded keys in different maps)
+                if key in cfgVars.keys() and not _empty(cfgVars.values()):
+                    groups[key] = cfgVars[key]
+                    parser.set_defaults(**{option_name: cfgVars[key]})
                     
-                    elif key == cfgVars.keys()[0]:
-                        print 'IN'
-                        groups[key] = list(cfgVars.values())[0]
-                        parser.set_defaults(**{option_name: list(cfgVars.values())[0]})
-                        print groups[key]
-                
-                print 'NOTHING'
+                    #print '\n ### update with CFG ###'
+                    #print cfgVars[key]
+                    #print key, groups
 
             elif subVars["type"] == "map": #in this case recall the function and descend in the dictionary
-
-                subname = string.split(option_name,'_')[-1]
-                print 'ciao'
-                print key
-                print  cfgVars.keys(), list(cfgVars.values())
-                if key in cfgVars.keys():
-                    print 'culo'
-                    tmpcfgVars = cfgVars[key]
-                else:
-                    tmpcfgVars = dict.fromkeys(cfgVars.keys(), [])
-                print tmpcfgVars
+                # need to go in the nested variable
                 
+                #print 'map'
+               
+                # need to keep the nested variable of the cfg file if this is present
+                if key in cfgVars.keys():
+                    tmpcfgVars = cfgVars[key]
+                else:                 
+                    tmpcfgVars = dict.fromkeys(cfgVars.keys(), [])
+                
+                # recall the function with the set of variables of the nest
                 groups[key] = cls._subparser_tree(tmpcfgVars,
                                                   subVars,
                                                   base_section=option_name,
                                                   args=args,
                                                   parser=parser)
 
-            else:
+            else: # variable of schema is a number/str
+                #print 'num'
+                #print key, cfgVars.keys()
+                #print cfgVars.values() 
+
+                # store
                 groups[key] = __builtins__[subVars['type']](subVars['example'])
                 parser.set_defaults(**{option_name: subVars['example']})
-                if key in cfgVars.keys() and list(cfgVars.values())[0]:
+                
+                #if _empty(cfgVars.values()): 
+                #    print "#########################################alist is empty"    
+                #elif not _empty(cfgVars.values()): 
+                #    print "---------------------------------- elist is not empty"      
+                         
+                #update keys with users config file: if key is present and value is not empty (because of repeaded keys in different maps)
+                if key in cfgVars.keys() and not _empty(cfgVars.values()):
                     groups[key] = cfgVars[key]
                     parser.set_defaults(**{option_name: cfgVars[key]})
+                    
+                    #print '\n ### update with CFG ###'
+                    #print cfgVars[key]
+                    #print key, groups
 
 
         return groups

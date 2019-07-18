@@ -409,12 +409,12 @@ def worker(pipeline, recipe, config):
 
 	mask_dir = pipeline.masking + '/'
 
-	centre = config.get('centre_coord')
-	mask_cell = config.get('cell_size')
-	mask_imsize = config.get('mask_size')
+	centre = config.get('centre_coord', ['03:18:0.000', '-37:27:0.000'])
+	mask_cell = config.get('cell_size', 1.)
+	mask_imsize = config.get('mask_size',3600.)
 
-	final_mask = mask_dir+str(config.get('name_mask'))
-	catalog_name = config['query_catalog'].get('catalog')
+	final_mask = mask_dir+str(config.get('name_mask', 'final_mask.fits'))
+	catalog_name = config['query_catalog'].get('catalog', 'SUMSS')
 
 	catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
@@ -427,7 +427,7 @@ def worker(pipeline, recipe, config):
 			recipe.add(query_catalog_sumss, 'query_source_catalog',
 				{
 					'centre'  : centre,
-					'width_im': config[key].get('width_image'),
+					'width_im': config[key].get('width_image', '2d'),
 					'cat_name': catalog_name,
 					'catalog_table' : catalog_tab,
 				},
@@ -480,12 +480,12 @@ def worker(pipeline, recipe, config):
 			recipe.add(query_catalog_nvss, 'query_source_catalog',
 				{
 					'centre'  : centre,
-					'width_im': config[key].get('width_image'),
+					'width_im': config[key].get('width_image', '2d'),
 					'cat_name': catalog_name,
-					'thresh': config['make_mask'].get('thresh_lev'),
+					'thresh': config['make_mask'].get('thresh_lev', 10e-3),
 					'cell'     : mask_cell,
 					'imsize'   : mask_imsize,
-					'obs_freq' : config['pb_correction'].get('frequency'),
+					'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),
 					'catalog_table' : catalog_tab,
 				},
 				input=pipeline.input,
@@ -518,7 +518,7 @@ def worker(pipeline, recipe, config):
 
 		recipe.add(build_beam, 'build gaussian primary beam',
 			{
-				'obs_freq' : config['pb_correction'].get('frequency'),
+				'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),
 				'centre'   : centre,
 				'cell'     : mask_cell,
 				'imsize'   : mask_imsize,
@@ -594,12 +594,12 @@ def worker(pipeline, recipe, config):
 
 	if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
 
-		if config['make_mask'].get('input_image') == 'pbcorr':
+		if config['make_mask'].get('input_image', 'pbcorr') == 'pbcorr':
 			in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
 		else:
-			in_image = 'masking/'+ config['make_mask'].get('input_image')
+			in_image = 'masking/'+ config['make_mask'].get('input_image', 'pbcorr')
 
-		if config['make_mask'].get('mask_with') == 'thresh':
+		if config['make_mask'].get('mask_with', 'thresh') == 'thresh':
 
 			if pipeline.enable_task(config, 'merge_with_extended') == False:
 				cat_mask = final_mask
@@ -610,13 +610,13 @@ def worker(pipeline, recipe, config):
 				{
 					"mosaic_pbcorr" : pipeline.output+'/'+in_image,
 					"mask"          : cat_mask,
-					"contour"       : config['make_mask'].get('thresh_lev'),
+					"contour"       : config['make_mask'].get('thresh_lev', 10e-3),
 				},
 				input=pipeline.input,
 				output=pipeline.output,
 				label='Mask done')
 
-		elif config['make_mask'].get('mask_with') == 'sofia':
+		elif config['make_mask'].get('mask_with', 'thresh') == 'sofia':
 
 			imagename = in_image
 			def_kernels = [[3, 3, 0, 'b'],[6, 6, 0, 'b'], [15, 15, 0, 'b']]
@@ -634,19 +634,19 @@ def worker(pipeline, recipe, config):
 				"steps.doWriteCat"      : False,
 				"SCfind.kernelUnit"     : 'pixel',
 				"SCfind.kernels"        : def_kernels,
-				"SCfind.threshold"      : config['make_mask'].get('thresh_lev'),
+				"SCfind.threshold"      : config['make_mask'].get('thresh_lev',5),
 				"SCfind.rmsMode"        : 'mad',
 				"SCfind.edgeMode"       : 'constant',
 				"SCfind.fluxRange"      : 'all',
 				"scaleNoise.statistic"  : 'mad' ,
-				"scaleNoise.windowSpatial"	:config['make_mask'].get('scale_noise_window'),
+				"scaleNoise.windowSpatial"	:config['make_mask'].get('scale_noise_window',51),
 				"scaleNoise.windowSpectral"	:	1,
 				"scaleNoise.method"     : 'local',
 				"scaleNoise.fluxRange"	:	'all',
 				"scaleNoise.scaleX"     : True,
 				"scaleNoise.scaleY"     : True,
 				"scaleNoise.scaleZ"     : False,
-				"writeCat.basename"	    : str(config.get('name_mask').split('_mask.fits')[0]) ,
+				"writeCat.basename"	    : str(config.get('name_mask', 'final_mask.fits').split('_mask.fits')[0]) ,
 				}
 
 			recipe.add('cab/sofia', step,
@@ -654,7 +654,9 @@ def worker(pipeline, recipe, config):
 			  input=pipeline.output,
 			  output=pipeline.output+'/masking/',
 			  label='{0:s}:: Make SoFiA mask'.format(step))
-
+			print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa'
+			print final_mask
+			print pipeline.output+'/'+imagename
 			step = '5'
 			recipe.add(change_header,step,
 				{
@@ -671,7 +673,7 @@ def worker(pipeline, recipe, config):
 
 		key='merge_with_extended'
 
-		ext_name = config[key].get('extended_source_input')
+		ext_name = config[key].get('extended_source_input','Fornaxa_vla.FITS')
 		extended = 'fields/'+ext_name
 		extended_casa = 'masking/extended.image'
 
@@ -683,7 +685,7 @@ def worker(pipeline, recipe, config):
 		if os.path.exists(pipeline.output+'/'+beam) == False:
 			recipe.add(build_beam, 'build gaussian primary beam',
 			{
-				'obs_freq' : config['pb_correction'].get('frequency'),
+				'obs_freq' : config['pb_correction'].get('frequency', 1.42014e9),
 				'centre'   : centre,
 				'cell'     : mask_cell,
 				'imsize'   : mask_imsize,
@@ -755,13 +757,13 @@ def worker(pipeline, recipe, config):
 			output=pipeline.output,
 			label='Correcting mosaic for primary beam')
 
-		if config['merge_with_extended'].get('mask_with') == 'thresh':
+		if config['merge_with_extended'].get('mask_with', 'thresh') == 'thresh':
 
 			recipe.add(make_mask, 'Build mask for extended',
 				{
 					"mosaic_pbcorr" : pipeline.output+'/'+extended_pbcorr,
 					"mask"          : pipeline.output+extended_mask,
-					"contour"       : config['merge_with_extended'].get('thresh_lev'),
+					"contour"       : config['merge_with_extended'].get('thresh_lev', 8e-4),
 				},
 				input=pipeline.input,
 				output=pipeline.output,

@@ -32,12 +32,10 @@ def worker(pipeline, recipe, config):
         label = config.get('label')
         
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        corr =  config.get('correlation')
-        if corr=='auto':
-            with open(msinfo, 'r') as stdr:
-                corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
-            corrs =  ','.join(corrs)
-            corr = corrs
+        with open(msinfo, 'r') as stdr:
+            corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+        corrs =  ','.join(corrs)
+        corr =  config.get('correlation', corrs)
 
         if pipeline.enable_task(config, 'real_imag') or pipeline.enable_task(config, 'amp_phase') or pipeline.enable_task(config, 'amp_uvwave') or pipeline.enable_task(config, 'amp_ant') or pipeline.enable_task(config, 'phase_uvwave') or pipeline.enable_task(config, 'amp_scan'):
                 plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'crosscal')
@@ -45,7 +43,7 @@ def worker(pipeline, recipe, config):
                     os.mkdir(plot_path)
 
         if pipeline.enable_task(config, 'real_imag'):
-            fields = config['real_imag'].get('fields')
+            fields = config['real_imag'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
 
                 for col in ['baseline', 'scan']:
@@ -78,7 +76,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Plot imag vs real for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_phase'):
-            fields = config['amp_phase'].get('fields')
+            fields = config['amp_phase'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
@@ -91,11 +89,19 @@ def worker(pipeline, recipe, config):
                         "timerange"     : '',
                         "antenna"       : '',
                         "xaxis"         : 'phase',
+<<<<<<< HEAD
                         "xdatacolumn"   : config['amp_phase'].get('column'),
                         "yaxis"         : 'amp',
                         "ydatacolumn"   : config['amp_phase'].get('column'),
                         "avgtime"       : config['amp_phase'].get('avgtime'),
                         "avgchannel"    : config['amp_phase'].get('avgchannel'),
+=======
+                        "xdatacolumn"   : config['amp_phase'].get('datacolumn', 'corrected'),
+                        "yaxis"         : 'amp',
+                        "ydatacolumn"   : config['amp_phase'].get('datacolumn', 'corrected'),
+                        "avgtime"       : config['amp_phase'].get('avgtime', '90'),
+                        "avgchannel"    : config['amp_phase'].get('avgchannel', '32'),
+>>>>>>> master
                         "coloraxis"     : col,
                         "iteraxis"      : 'corr',
                         "plotfile"      : '{0:s}/{1:s}-{2:s}-{3:s}-{4:s}-ap.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_, col),
@@ -110,7 +116,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = config['amp_uvwave'].get('fields')
+            fields = config['amp_uvwave'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -122,11 +128,19 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
+<<<<<<< HEAD
                     "xdatacolumn"   : config['amp_uvwave'].get('column'),
                     "yaxis"         : 'amp',
                     "ydatacolumn"   : config['amp_uvwave'].get('column'),
                     "avgtime"       : config['amp_uvwave'].get('avgtime'),
                     "avgchannel"    : config['amp_uvwave'].get('avgchannel'),
+=======
+                    "xdatacolumn"   : config['amp_uvwave'].get('datacolumn', 'corrected'),
+                    "yaxis"         : 'amp',
+                    "ydatacolumn"   : config['amp_uvwave'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['amp_uvwave'].get('avgtime', '90'),
+                    "avgchannel"    : config['amp_uvwave'].get('avgchannel', '32'),
+>>>>>>> master
                     "coloraxis"     : 'baseline',
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
@@ -141,7 +155,7 @@ def worker(pipeline, recipe, config):
                    label='{0:s}:: Plot uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_ant'):
-            fields = config['amp_ant'].get('fields')
+            fields = config['amp_ant'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -153,11 +167,19 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'antenna1',
+<<<<<<< HEAD
                     "xdatacolumn"   : config['amp_ant'].get('column'),
                     "yaxis"         : 'amp',
                     "ydatacolumn"   : config['amp_ant'].get('column'),
                     "avgtime"       : config['amp_ant'].get('avgtime'),
                     "avgchannel"    : config['amp_ant'].get('avgchannel'),
+=======
+                    "xdatacolumn"   : config['amp_ant'].get('datacolumn', 'corrected'),
+                    "yaxis"         : 'amp',
+                    "ydatacolumn"   : config['amp_ant'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['amp_ant'].get('avgtime', '90'),
+                    "avgchannel"    : config['amp_ant'].get('avgchannel', '32'),
+>>>>>>> master
                     "coloraxis"     : 'corr',
                     "expformat"     : 'png',
                     "exprange"      : 'all',
@@ -172,7 +194,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'phase_uvwave'):
-            fields = config['phase_uvwave'].get('fields')
+            fields = config['phase_uvwave'].get('fields', ['gcal','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'phase_uvwave_{0:d}'.format(i)
@@ -184,11 +206,19 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'uvwave',
+<<<<<<< HEAD
                     "xdatacolumn"   : config['phase_uvwave'].get('column'),
                     "yaxis"         : 'phase',
                     "ydatacolumn"   : config['phase_uvwave'].get('column'),
                     "avgtime"       : config['phase_uvwave'].get('avgtime'),
                     "avgchannel"    : config['phase_uvwave'].get('avgchannel'),
+=======
+                    "xdatacolumn"   : config['phase_uvwave'].get('datacolumn', 'corrected'),
+                    "yaxis"         : 'phase',
+                    "ydatacolumn"   : config['phase_uvwave'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['phase_uvwave'].get('avgtime', '90'),
+                    "avgchannel"    : config['phase_uvwave'].get('avgchannel', '32'),
+>>>>>>> master
                     "coloraxis"     : 'baseline',
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',
@@ -204,7 +234,7 @@ def worker(pipeline, recipe, config):
 
 
         if pipeline.enable_task(config, 'amp_scan'):
-            fields = config['amp_scan'].get('fields')
+            fields = config['amp_scan'].get('fields', ['gcal','target','bpcal'])
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_ampscan_{0:d}'.format(i)
@@ -216,11 +246,19 @@ def worker(pipeline, recipe, config):
                     "timerange"     : '',
                     "antenna"       : '',
                     "xaxis"         : 'scan',
+<<<<<<< HEAD
                     "xdatacolumn"   : config['amp_scan'].get('column'),
                     "yaxis"         : 'amp',
                     "ydatacolumn"   : config['amp_scan'].get('column'),
                     "avgtime"       : config['amp_scan'].get('avgtime'),
                     "avgchannel"    : config['amp_scan'].get('avgchannel'),
+=======
+                    "xdatacolumn"   : config['amp_scan'].get('datacolumn', 'corrected'),
+                    "yaxis"         : 'amp',
+                    "ydatacolumn"   : config['amp_scan'].get('datacolumn', 'corrected'),
+                    "avgtime"       : config['amp_scan'].get('avgtime', '90'),
+                    "avgchannel"    : config['amp_scan'].get('avgchannel', '32'),
+>>>>>>> master
                     "coloraxis"     : 'baseline',
                     "iteraxis"      : 'corr',
                     "expformat"     : 'png',

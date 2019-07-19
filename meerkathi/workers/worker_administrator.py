@@ -1,6 +1,6 @@
-import sys
-import os
+import sys, os, string
 import traceback
+from datetime import datetime
 import stimela
 import glob
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
@@ -31,7 +31,7 @@ except ImportError:
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
-            stimela_build=None, prefix=None,
+            stimela_build=None, prefix=None, configFileName=None,
             add_all_first=False, singularity_image_dir=None,
             container_tech='docker'):
 
@@ -49,6 +49,7 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
+        
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
             self.data_path = self.config['general']['data_path']
@@ -84,11 +85,11 @@ class worker_administrator(object):
         self.init_names([])
         if config["general"].get("init_pipeline"):
             self.init_pipeline()
-
-        #######
-        #this could also go in log_options of config_parser.py but then the update of 
-        #data_path must occure there, and not right above here
-        with open(self.data_path+'/'+self.prefix+'_configFile.yml', 'w') as outfile:
+            
+        timeNow = datetime.now()
+        configFileName = string.split(str(configFileName),'.')[0]
+        outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(configFileName,timeNow)
+        with open(self.data_path+'/'+outConfigName, 'w') as outfile:
             ruamel.yaml.dump(self.config, outfile, default_flow_style=False)
 
     def init_names(self, dataid):

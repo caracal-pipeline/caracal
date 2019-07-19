@@ -162,7 +162,7 @@ def worker(pipeline, recipe, config):
                    opts = {
                       "vis"         : msname,
                       "field"       : field,
-                      "standard"    : config['set_model'].get('standard'),
+                      "standard"    : config['set_model'].get('standard', standard),
                       "usescratch"  : False,
                       "scalebychan" : True,
                     }

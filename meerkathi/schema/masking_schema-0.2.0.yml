@@ -17,8 +17,13 @@ mapping:
         seq:
           - type: str
         required: false
-        desc: Coordinates of the centre of the field of view
-        example: '00:00:00, 00:00:00'
+        desc: Coordinates of the centre of the field of view read from reference_dir by default
+        example: 'HH:MM:SS , DD:MM:SS'
+      label:
+        type: str
+        desc: Label of the .MS file where to find information about the target
+        required: false
+        example: 'corr'
       mask_size:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)

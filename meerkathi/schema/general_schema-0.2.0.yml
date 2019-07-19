@@ -17,22 +17,22 @@ mapping:
         type: str
         required: false
         desc: where MeerKATHI will write and expect to find measurement set (MS) files
-        example: msdir
+        example: 'msdir'
       input:
         type: str
         required: false
         desc: where MeerKATHI expects to find various input files (e.g., RFI flagging strategy files).
-        example: input
+        example: 'input'
       output:
         type: str
         required: false
         desc: where MeerKATHI writes output products
-        example: output
+        example: 'output'
       prefix:
         type: str
         required: false
         desc: Prefix for MeerKATHI output products
-        example: meerkathi
+        example: 'meerkathi'
       init_pipeline:
         desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
         required: false

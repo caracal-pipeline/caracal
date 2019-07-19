@@ -447,8 +447,8 @@ def worker(pipeline, recipe, config):
                           "channelrange" : channelrange,
                           "niter"     : config['wsclean_image'].get('niter'),
                           "mgain"     : config['wsclean_image'].get('mgain'),
-                          "auto-threshold"  : config['wsclean_image'].get('autothreshold'),
-                          "auto-mask"  :   config['wsclean_image'].get('automask'),
+                          "auto-threshold"  : config['wsclean_image'].get('auto_threshold')[j-1 if len(config['wsclean_image'].get('auto_threshold')) >= j else -1],
+                          "auto-mask"  :   config['wsclean_image'].get('auto_mask')[j-1 if len(config['wsclean_image'].get('auto_mask')) >= j else -1],
                           "multiscale" : config['wsclean_image'].get('multi_scale'),
                           "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
                           "no-update-model-required": config['wsclean_image'].get('no_update_mod')
@@ -573,7 +573,8 @@ def worker(pipeline, recipe, config):
                                "fitsmask"  : HIclean_mask,
                                "niter"     : config['wsclean_image'].get('niter'),
                                "mgain"     : config['wsclean_image'].get('mgain'),
-                               "auto-threshold"  : config['wsclean_image'].get('autothreshold'),
+                               "auto-threshold"  : config['wsclean_image'].get('auto_threshold')[j-1 if len(config['wsclean_image'].get('auto_threshold')) >= j else -1],
+                               "auto-mask"  :   config['wsclean_image'].get('auto_mask')[j-1 if len(config['wsclean_image'].get('auto_mask')) >= j else -1],
                                "multiscale" : config['wsclean_image'].get('multi_scale'),
                                "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
                                "no-update-model-required": config['wsclean_image'].get('no_update_mod')

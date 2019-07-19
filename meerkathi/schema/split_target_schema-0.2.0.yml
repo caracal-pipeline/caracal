@@ -87,7 +87,6 @@ mapping:
                       - type: str 
                     desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
                     example: 'bpcal'
-              
               apply_bp_cal:
                 type: map
                 desc: Apply the bandpass table to specified fields via the CASA applycal task.

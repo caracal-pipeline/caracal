@@ -288,7 +288,7 @@ def worker(pipeline, recipe, config):
                       "RFInder_mode"       : "use_flags",
                       "outlabel"           : outlabel,  # The output will be rfi_<pol>_<outlabel>
                       "polarization"       : config[step].get('polarization'),
-                      "spw_width"          : config[step].get('spw_width',
+                      "spw_width"          : config[step].get('spw_width'),
                       "time_step"          : config[step].get('time_step'),
                       "time_enable"        : config[step].get('time_enable'),
                       "spw_enable"         : config[step].get('spw_enable'),

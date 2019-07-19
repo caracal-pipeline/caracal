@@ -22,7 +22,7 @@ mapping:
         type: str
         desc: Label specyfying the correlations (default all).
         required: false
-        example: 'auto'
+        example: 'XX, YY'
       uvrange: 
         type: str
         required: false

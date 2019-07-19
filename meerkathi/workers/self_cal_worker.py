@@ -206,7 +206,7 @@ def worker(pipeline, recipe, config):
                   "joinchannels"    : config[key].get('joinchannels', joinchannels),
                   "local-rms"    : config[key].get('local_rms'),
                   "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-                  "auto-threshold": config[key].get('auto_threshold',[])[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
+                  "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
                   "multiscale" : config[key].get('multi_scale'),
                   "multiscale-scales" : sdm.dismissable(config[key].get('multi_scale_scales')),
                   "savesourcelist": True,
@@ -282,6 +282,10 @@ def worker(pipeline, recipe, config):
         #     kern. 
         #     def_kernels.concatenate(config[key].get('kernels'))
 
+        outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
+        outmaskName = outmask+'_mask.fits'  
+        config['image']['fits_mask'].append(outmaskName) 
+
         image_opts =   {
               "import.inFile"         : imagename,
               "steps.doFlag"          : True,
@@ -294,7 +298,8 @@ def worker(pipeline, recipe, config):
               "steps.doMom0"          : False,
               "steps.doMom1"          : False,
               "steps.doWriteCat"      : True, 
-              "writeCat.writeASCII"   : True,
+              "writeCat.writeASCII"   : False,
+              "writeCat.basename"     : outmask,
               "writeCat.writeSQL"     : False,
               "writeCat.writeXML"     : False,
               "parameters.dilateMask" : False,

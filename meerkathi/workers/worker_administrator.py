@@ -14,6 +14,8 @@ import webbrowser
 import base64
 from urllib import urlencode
 import ruamel.yaml
+from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
+assert ruamel.yaml.version_info >= (0, 12, 14)
 import json
 import subprocess
 from meerkathi.dispatch_crew import worker_help
@@ -27,6 +29,7 @@ try:
 except ImportError:
     log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
     REPORTS = False
+
 
 
 class worker_administrator(object):
@@ -45,6 +48,7 @@ class worker_administrator(object):
         self.logs = self.config['general']['output'] + '/logs'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + '/diagnostic_plots'
+        self.configFolder = self.config['general']['output'] + '/cfgFiles'
         self.caltables = self.config['general']['output'] + '/caltables'
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
@@ -86,10 +90,12 @@ class worker_administrator(object):
         if config["general"].get("init_pipeline"):
             self.init_pipeline()
             
+        # save configuration file
         timeNow = datetime.now()
         configFileName = string.split(str(configFileName),'.')[0]
         outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(configFileName,timeNow)
-        with open(self.data_path+'/'+outConfigName, 'w') as outfile:
+
+        with open(self.configFolder+'/'+outConfigName, 'w') as outfile:
             ruamel.yaml.dump(self.config, outfile, default_flow_style=False)
 
     def init_names(self, dataid):
@@ -142,6 +148,8 @@ class worker_administrator(object):
             os.mkdir(self.reports)
         if not os.path.exists(self.diagnostic_plots):
             os.mkdir(self.diagnostic_plots)
+        if not os.path.exists(self.configFolder):
+            os.mkdir(self.configFolder)
         if not os.path.exists(self.caltables):
             os.mkdir(self.caltables)
         if not os.path.exists(self.masking):

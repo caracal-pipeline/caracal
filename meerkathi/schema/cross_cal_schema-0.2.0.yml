@@ -256,7 +256,7 @@ mapping:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'x'
+                example: 'X'
               htmlname:
                 type: str
                 desc: "Output HTML file name"
@@ -349,7 +349,7 @@ mapping:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'x'
+                example: 'X'
               htmlname:
                 type: str
                 desc: "Output HTML file name"
@@ -442,7 +442,7 @@ mapping:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
                 required: false
-                example: 'x'
+                example: 'X'
               htmlname:
                 type: str
                 desc: "Output HTML file name"

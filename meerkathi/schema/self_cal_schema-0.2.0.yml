@@ -449,7 +449,7 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: false
-                example: 'False'
+                example: 'True'
               gaintype:
                 seq:
                 - type: str

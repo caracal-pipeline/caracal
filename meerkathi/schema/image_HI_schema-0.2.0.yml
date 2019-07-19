@@ -261,14 +261,13 @@ mapping:
             desc: Maximum number of clean iterations to perform. Default is 1000000.
             type: int
             required: false
-            example: '1000000'
+            example: '0'
           ownfitsmask:
-            seq:
-              - type: str
+            type: str
             desc: filename of fits mask (in output/masking folder)
             required: false
-            example: 'hi_mask.fits'
-          automask:
+            example: ''
+          auto_mask:
             seq:
               - type: int 
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.

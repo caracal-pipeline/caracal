@@ -40,3 +40,25 @@ mapping:
             type: bool
             required: false
             example: 'true'
+          weight_columns:
+            seq:
+              - type: str
+            desc: column names
+            required: false
+            example: 'WEIGHT, WEIGHT_SPECTRUM'
+          noise_columns:
+            seq:
+              - type: str
+            desc: column names for noise
+            required: false
+            example: 'SIGMA, SIGMA_SPECTRUM'
+          write_to_ms:
+            desc: write columns to file
+            type: bool
+            required: false
+            example: 'true'
+          stats_data:
+            desc: which statistics for the file.
+            type: str
+            required: false
+            example: 'use_package_meerkat_spec'

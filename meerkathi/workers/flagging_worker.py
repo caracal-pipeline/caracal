@@ -6,6 +6,9 @@ import yaml
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 import os
+from meerkathi.workers.utils import manage_flagsets as manflags
+
+FLAGSETS_SUFFIX = "static automatic autocorr_spectrum".split()
 
 def worker(pipeline, recipe, config):
     label = config['label']
@@ -87,6 +90,10 @@ def worker(pipeline, recipe, config):
                 fields = ",".join(set(fields.split(",")))
                 calfields = ",".join(set(calfields.split(",")))
 
+                # Clear autocorr_spectrum flags if they exist. Else, create the flagset 
+                substep = 'flagset_clear_autocorr_spectra_{0:s}_{1:d}'.format(wname, i)
+                manflags.clear_flagset(pipeline, recipe, "_".join([wname, "autocorr_spectrum"]), msname, cab_name=substep)
+                
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
                     {
                         "msname": msname,
@@ -102,6 +109,17 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input, output=pipeline.output,
                     label="{0:s}: Flag out antennas with drifts in autocorrelation powerspectra")
+                
+                substep = 'flagset_update_autocorr_spectra_{0:s}_{1:d}'.format(wname, i)
+                manflags.update_flagset(pipeline, recipe, "_".join([wname, "autocorr_spectrum"]), msname, cab_name=substep)
+
+
+            # clear static flags if any of them are enabled
+            static_flagging = True in map(lambda sflag: pipeline.enable_task(config, sflag), ["flag_autocorr", "quack_flagging", 
+            "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"])
+            if static_flagging:
+                substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
+                manflags.clear_flagset(pipeline, recipe, "_".join([wname, "static"]), msname, substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
                 step = 'flag_autocorr_{0:s}_{1:d}'.format(wname, i)
@@ -241,8 +259,16 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Apply static mask ms={1:s}'.format(step, msname))
 
+            if static_flagging:
+                substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
+                manflags.clear_flagset(pipeline, recipe, "_".join([wname, "static"]), msname, cab_name=substep)
+
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
+                # Clear autoflags if need be
+                substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(wname, i)
+                manflags.update_flagset(pipeline, recipe, "_".join([wname, "automatc"]), msname, cab_name=substep)
+
                 if config['autoflag_rfi'].get('fields', 'auto') != 'auto' and \
                    not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
                     raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
@@ -252,10 +278,10 @@ def worker(pipeline, recipe, config):
                 
                 if label:
                     fields = '0'
-                    field_names = get_field(msinfo, ['0'])
+                    field_names = get_field('target')
                 elif config['autoflag_rfi'].get('fields', 'auto') == 'auto':
                     fields = ','.join([pipeline.bpcal_id[i], pipeline.gcal_id[i]])
-                    field_names = get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
+                    field_names = utils.get_field(msinfo, [pipeline.bpcal_id[i], pipeline.gcal_id[i]])
                 else:
                     field_names = get_field(config['autoflag_rfi'].get('fields')).split(",")
                     fields = ",".join(map(str, utils.get_field_id(msinfo, field_names)))
@@ -293,6 +319,10 @@ def worker(pipeline, recipe, config):
                 else:
                     raise RuntimeError("Flagger, {0:s} is not available. Options are 'aoflagger, tricolour'.")
 
+                substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(wname, i)
+                manflags.update_flagset(pipeline, recipe, "_".join([wname, "automatic"]), msname, cab_name=substep)
+
+
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
                 if label:
@@ -308,15 +338,15 @@ def worker(pipeline, recipe, config):
                       "plot_noise"         : "noise",
                       "RFInder_mode"       : "use_flags",
                       "outlabel"           : outlabel,  # The output will be rfi_<pol>_<outlabel>
-                      "polarization"       : config[step].get('polarization', 'Q'),
-                      "spw_width"          : config[step].get('spw_width', 10),
-                      "time_step"          : config[step].get('time_step', 10),
-                      "time_enable"        : config[step].get('time_enable', True),
-                      "spw_enable"         : config[step].get('spw_enable', True),
-                      "1d_gif"             : config[step].get('time_enable', True),
-                      "2d_gif"             : config[step].get('time_enable', True),
-                      "altaz_gif"          : config[step].get('spw_enable', True),
-                      "movies_in_report"   : config[step].get('time_enable', True) or config.get('spw_enable', True)
+                      "polarization"       : config['rfinder'].get('polarization', 'Q'),
+                      "spw_width"          : config['rfinder'].get('spw_width', 10),
+                      "time_step"          : config['rfinder'].get('time_step', 10),
+                      "time_enable"        : config['rfinder'].get('time_enable', True),
+                      "spw_enable"         : config['rfinder'].get('spw_enable', True),
+                      "1d_gif"             : config['rfinder'].get('time_enable', True),
+                      "2d_gif"             : config['rfinder'].get('time_enable', True),
+                      "altaz_gif"          : config['rfinder'].get('spw_enable', True),
+                      "movies_in_report"   : config['rfinder'].get('time_enable', True) or config.get('spw_enable', True)
                     },
                     input=pipeline.input,
                     output=pipeline.output,

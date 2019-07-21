@@ -7,6 +7,7 @@ import stimela.recipe as stimela
 import re
 import json
 from meerkathi.dispatch_crew import utils
+from meerkathi.workers.utils import manage_flagsets
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -37,6 +38,8 @@ def filter_name(string):
     return re.sub('[^0-9a-zA-Z]', '_', string)
 
 def worker(pipeline, recipe, config):
+
+    wname = pipeline.CURRENT_WORKER
 
 #TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
     def fix_target_obsinfo(fname):                    
@@ -145,17 +148,12 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
 
+            msname = tms if pipeline.enable_task(config, 'split_target') else fms
 
-            if pipeline.enable_task(config, 'prepms'):
-                step = 'prepms_{:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                    {
-                      "msname"  : tms,
-                      "command" : 'prep' ,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
+            if pipeline.enable_task(config, 'init_legacy_flagset'):
+                step = "init_legacy_flagset_{0:s}_{1:d}".format(wname, i)
+                manage_flagsets.update_flagset(pipeline, recipe, "legacy", msname, clear_existing=True, cab_name=step,
+                    label="{0:s}:: Save current flags in legacy flagset".format(step, msname))
 
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
@@ -165,13 +163,13 @@ def worker(pipeline, recipe, config):
                 step = 'changecentre_{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                     {
-                      "msname"  : tms,
-                      "outputvis": tms,
+                      "msname"  : msname,
+                      "outputvis": msname,
                       "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Change phase centre ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs', True)):
@@ -182,13 +180,13 @@ def worker(pipeline, recipe, config):
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
                         {
-                          "vis"         : [tms if pipeline.enable_task(config, 'split_target') else fms],
+                          "vis"         : msname,
                           "listfile"    : listfile,
                           "overwrite"   : True,
                         },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
     
                 if (config['obsinfo'].get('summary_json', True)):
                     if pipeline.enable_task(config, 'split_target'):
@@ -198,14 +196,14 @@ def worker(pipeline, recipe, config):
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                         {
-                          "msname"      : [tms if pipeline.enable_task(config, 'split_target') else fms],
+                          "msname"      : msname,
                           "command"     : 'summary',
                           "display"     : False,
                           "outfile"     : listfile
                         },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
 		    step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
 		    recipe.add(fix_target_obsinfo, step,
@@ -214,6 +212,4 @@ def worker(pipeline, recipe, config):
 			},
 			input = pipeline.input,
 			output = pipeline.output,
-			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 
-
-
+			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))

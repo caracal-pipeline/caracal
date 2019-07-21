@@ -33,6 +33,11 @@
 
 - prepare_data:
     enable: true
+    manage_flags:
+      enable: true
+      add_bitflag_column: true
+      init_legacy_flagset: true
+      remove_flagsets: true
     fixvis:
       enable: false
     prepms:

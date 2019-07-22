@@ -739,28 +739,38 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'sharpener'):
         step = 'continuum_spectral_extraction'
         catalogs = glob.glob('{}/*lsm.html'.format(pipeline.output))
-        if len(catalogs) > 0:
-            catalog_file = sorted(catalogs)[-1].split('/')[-1]
-            print(pipeline.output)
-            recipe.add('cab/sharpener', step,
-                {
-                    "catalog"              :    'PYBDSF',
-                    "cubename"             :    '{:s}_HI.image.fits:output'.format(pipeline.prefix),
-                    "catalog_file"         :    '{:s}:output'.format(catalog_file),
-                    "channels_per_plot"    :    config['sharpener'].get('channels_per_plot', 50),
-                    "enable_spec_ex"       :    True,
-                    "enable_source_catalog":    True,
-                    "enable_abs_plot"      :    True,
-                    "detailed_plot"        :    True,
-                    "enable_sdss_match"    :    False,
-                    "enable_source_finder" :    False,
-                    "workdir"              :    '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
-                    "label"                :    config['sharpener'].get('label', pipeline.prefix)
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Continuum Spectral Extraction'.format(step))
-        else: meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
+        params = {"enable_spec_ex"        : True,
+                  "enable_source_catalog" : True,
+                  "enable_abs_plot"       : True,
+                  "enable_source_finder"  : False,
+                  "channels_per_plot"     : config['sharpener'].get('channels_per_plot', 50),
+                  "workdir"               : '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
+                  "label"                 : config['sharpener'].get('label', pipeline.prefix)
+        }
+        if config['sharpener'].get('catalog')=='PYBDSF':
+            if len(catalogs) > 0:
+                catalog_file = sorted(catalogs)[-1].split('/')[-1]
+                params["catalog_file"] = catalog_file
+                params["catalog"] = "PYBDSF"
+                recipe.add('cab/sharpener',
+                           step,
+                           params,
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Continuum Spectral Extraction'.format(step))
+            else:
+                meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
+        elif config['sharpener'].get('catalog')=='NVSS':
+            params["catalog_file"] = config['sharpener'].get('catalog_file', '{}_nvss_continuum.txt'.format(pipeline.prefix))
+            params["thresh"] = config['sharpener'].get('thresh', 20)
+            params["width"] = config['sharpener'].get('width', '1.0d')
+            params["catalog"] = "NVSS"
+            recipe.add('cab/sharpener',
+                       step,
+                       params,
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Continuum Spectral Extraction'.format(step))
 
     if pipeline.enable_task(config, 'flagging_summary'):
         for i,msname in enumerate(mslist):

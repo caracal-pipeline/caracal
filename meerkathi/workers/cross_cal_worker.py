@@ -46,10 +46,10 @@ corr_indexes = {'H'        : 0,
                 'Y'        : 1,
 }
 
+FLAGSETS_SUFFIX = [""]
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    pipeline.flagsets[wname] = [wname]
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         nobs = 1
@@ -527,6 +527,7 @@ found in our database or in the CASA NRAO database'.format(field))
             else:
                 substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
                 manflags.clear_flagset(pipeline, recipe, wname, msname, cab_name=substep)
+
             applied.append(field)
             step = 'apply_{0:s}_{1:d}'.format(ft, i)
             recipe.add('cab/casa_applycal', step,

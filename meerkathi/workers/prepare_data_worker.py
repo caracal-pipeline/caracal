@@ -70,6 +70,8 @@ else:
                 flagsets = []
                 for vals in pipeline.flagsets.values():
                     flagsets += vals
+                flagsets = set(flagsets)
+                flagsets.discard("legacy")
                 step = "remove_flags_{0:s}_{1:d}".format(wname, i)
                 recipe.add("cab/pycasacore", step, {
                     "msname" : msname,
@@ -80,14 +82,16 @@ import subprocess
 flagsets = "{1:s}"
 ms = os.path.join(os.environ["MSDIR"], "{0:s}")
 
-names = set(Flagger(ms).flagsets.names())
+fms = Flagger(ms)
+names = set(fms.flagsets.names())
+fms.close()
 names.discard("legacy")
 
 if flagsets == "all":
     if names:
         subprocess.check_call("flag-ms.py --remove {{}}".format(",".join(names)))
 else:
-    subprocess.check_call(["flag-ms.py", "--remove", ",".join(flagsets), ms])
+    subprocess.check_call(["flag-ms.py", "--remove", flagsets, ms])
 """.format(msname, ",".join(flagsets)),
                 },
                     input=pipeline.input,

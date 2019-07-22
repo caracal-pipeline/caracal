@@ -84,7 +84,7 @@ class worker_administrator(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
 
             if hasattr(wkr, "FLAGSETS_SUFFIX"):
-                self.flagsets[_name] = ["_".join([_name, suffix]) for suffix in wkr.FLAGSETS_SUFFIX]
+                self.flagsets[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
 
         self.recipes = {}
         # Workers to skip

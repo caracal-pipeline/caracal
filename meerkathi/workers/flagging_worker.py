@@ -267,7 +267,7 @@ def worker(pipeline, recipe, config):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
                 # Clear autoflags if need be
                 substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join([wname, "automatc"]), msname, cab_name=substep)
+                manflags.update_flagset(pipeline, recipe, "_".join([wname, "automatic"]), msname, cab_name=substep)
 
                 if config['autoflag_rfi'].get('fields', 'auto') != 'auto' and \
                    not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):

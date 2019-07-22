@@ -405,12 +405,28 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute sharpener (yes/no)? Default is yes.
+            desc: Execute sharpener (yes/no)? Default is yes
             type: bool
+            required: false
+          catalog:
+            desc: Type of catalog to use (PYBDSF/NVSS). Default is 'NVSS'
+            type: str
+            required: true
+          catalog_file:
+            desc: Catalog file with sources / or to store sources from online surveys.
+            type: str
             required: false
           channels_per_plot:
             desc: Number of channels to plot per detail plot. Default is 50
             type: int
+            required: false
+          thresh:
+            desc: Threshold to select sources in online catalogs (mJy). Default is '20mJy'
+            type: str
+            required: false
+          width:
+            desc: Field of view of output catalog (degrees). Default is '1.0d'
+            type: str
             required: false
           label:
             desc: Prefix label of plot names and titles. Default is 'SHARP'

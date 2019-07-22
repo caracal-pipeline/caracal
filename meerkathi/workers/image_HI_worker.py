@@ -860,6 +860,7 @@ def worker(pipeline, recipe, config):
                   "enable_source_catalog" : True,
                   "enable_abs_plot"       : True,
                   "enable_source_finder"  : False,
+                  "cubename"              :    '{:s}_HI.image.fits:output'.format(pipeline.prefix),
                   "channels_per_plot"     : config['sharpener'].get('channels_per_plot', 50),
                   "workdir"               : '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
                   "label"                 : config['sharpener'].get('label', pipeline.prefix)
@@ -878,7 +879,7 @@ def worker(pipeline, recipe, config):
             else:
                 meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
         elif config['sharpener'].get('catalog')=='NVSS':
-            params["catalog_file"] = config['sharpener'].get('catalog_file', '{}_nvss_continuum.txt'.format(pipeline.prefix))
+            params["catalog_file"] = config['sharpener'].get('catalog_file', '{}_nvss_continuum.txt:output'.format(pipeline.prefix))
             params["thresh"] = config['sharpener'].get('thresh', 20)
             params["width"] = config['sharpener'].get('width', '1.0d')
             params["catalog"] = "NVSS"

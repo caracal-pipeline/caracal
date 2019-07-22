@@ -650,6 +650,6 @@
       enable: false
     sharpener:
       enable: true
-      channels_per_plot: 50
+      catalog: NVSS
     flagging_summary:
       enable: false

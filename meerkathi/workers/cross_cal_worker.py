@@ -107,6 +107,10 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging gains'.format(step))
 
+        # Clear flags from this worker if they already exist
+        substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
+        manflags.clear_flagset(pipeline, recipe, wname, msname, cab_name=substep)
+
         if pipeline.enable_task(config, 'clear_cal'):
             # Initialize dataset for calibration
             field = get_field(config['clear_cal'].get('field', ['fcal']))
@@ -521,12 +525,6 @@ found in our database or in the CASA NRAO database'.format(field))
             if no_table_to_apply or field in applied:
                 continue
 
-            # Avoid doing multiple times (for each field)
-            if applied:
-                pass
-            else:
-                substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
-                manflags.clear_flagset(pipeline, recipe, wname, msname, cab_name=substep)
 
             applied.append(field)
             step = 'apply_{0:s}_{1:d}'.format(ft, i)

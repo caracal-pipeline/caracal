@@ -121,7 +121,7 @@
       field:
       - bpcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -132,7 +132,7 @@
       field:
       - fcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -143,7 +143,7 @@
       field:
       - gcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -218,7 +218,7 @@
 # recalibrate reflagged data to improve K and G solutions
 - cross_cal__2:
     enable: true
-    label: 1gc1
+    label: 1gc2
     uvrange: '>50'
     otfdelay: true
     clear_cal:
@@ -231,7 +231,7 @@
       - xcal
       addmodel: true
     set_model:
-      enable: true
+      enable: false
       field:
       - fcal
       meerkathi_model: true
@@ -255,7 +255,7 @@
       field:
       - bpcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -266,7 +266,7 @@
       field:
       - fcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -277,7 +277,7 @@
       field:
       - gcal
       flag:
-        enable: true
+        enable: false
         mode: clip
         clipminmax: [0.1, 10]
       plot:
@@ -366,7 +366,7 @@
 
 - inspect_data:
     enable: true
-    label: 1gc1
+    label: 1gc2
     real_imag:
       enable: true
       fields:
@@ -409,8 +409,8 @@
       freq_average: 1
       spw: ''
       otfcal:
-        enable: true
-        callabel: 1gc1
+        enable: false
+        callabel: 1gc2
         apply_delay_cal:
           enable: true
           field:
@@ -427,8 +427,8 @@
           enable: true
           field:
            - gcal
-    prepms:
-      enable: false
+    init_legacy_flagset:
+      enable: true
     changecentre:
       enable: false
       ra: ''
@@ -551,10 +551,10 @@
       model: 2+3
       clean_model: '4'
     transfer_apply_gains:
-      enable: true
+      enable: false
       transfer_to_label: hires
     transfer_model:
-      enable: true
+      enable: false
       transfer_to_label: hires
       model: auto
     highfreqres_contim:
@@ -567,7 +567,7 @@
 
 - image_HI:
     enable: true
-    label: hires
+    label: corr
     restfreq: 1.420405752GHz
     npix: [1024]
     cell: 7

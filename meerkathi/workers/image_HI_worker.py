@@ -860,7 +860,7 @@ def worker(pipeline, recipe, config):
                   "enable_source_catalog" : True,
                   "enable_abs_plot"       : True,
                   "enable_source_finder"  : False,
-                  "cubename"              :    '{:s}_HI.image.fits:output'.format(pipeline.prefix),
+                  "cubename"              : '{:s}_HI.image.fits:output'.format(pipeline.prefix),
                   "channels_per_plot"     : config['sharpener'].get('channels_per_plot', 50),
                   "workdir"               : '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
                   "label"                 : config['sharpener'].get('label', pipeline.prefix)
@@ -868,7 +868,7 @@ def worker(pipeline, recipe, config):
         if config['sharpener'].get('catalog')=='PYBDSF':
             if len(catalogs) > 0:
                 catalog_file = sorted(catalogs)[-1].split('/')[-1]
-                params["catalog_file"] = catalog_file
+                params["catalog_file"] = '{}:output'.format(catalog_file)
                 params["catalog"] = "PYBDSF"
                 recipe.add('cab/sharpener',
                            step,

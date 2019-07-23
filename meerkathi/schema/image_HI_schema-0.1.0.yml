@@ -411,6 +411,7 @@ mapping:
           catalog:
             desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
             type: str
+            enum: ['NVSS', 'PYBDSF']
             required: true
           catalog_file:
             desc: Catalog file with sources / or to store sources from online surveys.

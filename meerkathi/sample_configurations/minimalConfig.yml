@@ -11,6 +11,12 @@
 - observation_config:
     obsinfo:
       enable: true
+    target: auto
+    fcal: auto
+    bpcal: auto
+    gcal: auto
+    xcal: auto
+    reference_antenna: '0'
 
 - prepare_data:
     enable: true
@@ -22,7 +28,7 @@
     enable: true
       
 - polcal:
-    enable: true
+    enable: false
 
 - inspect_data:
     enable: true

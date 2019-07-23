@@ -121,8 +121,8 @@ def get_default(to):
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
     os.system('cp {0:s} {1:s}'.format(DEFAULT_CONFIG, to))
 
-def reconstruct_defaults(filename):
-    cp().reconstruct_defaults(filename)
+def reconstruct_defaults(filename, schema_version):
+    cp().reconstruct_defaults(filename, schema_version=schema_version)
 
 def start_viewer(args, timeout=None, open_webbrowser=True):
     """
@@ -286,7 +286,7 @@ def main(argv):
         log.info(cdb)
         return
     if args.reconstruct_defaults_from_schema:
-        reconstruct_defaults("./DefaultParset.yaml")
+        reconstruct_defaults("./DefaultParset.yaml", schema_version)
         log.info("Default parset reconstructed as best possible and dumped to ./DefaultParset.yaml. Please fill any missing values by inspection.")
         return
     if not args.no_interactive and \

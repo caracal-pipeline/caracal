@@ -561,7 +561,7 @@ class config_parser:
         with open(filename, 'w') as f:
             sorted_keys = sorted(dictovals, key=lambda k: dictovals[k].get("order", 0) if hasattr(dictovals[k], "get") else 0)
             o = OrderedDict({k: dictovals[k] for k in sorted_keys})
-            o["schema_version"] = "0.2.0"
+            o["schema_version"] = schema_version
             f.write(yaml.dump(o,
                               Dumper=ruamel.yaml.RoundTripDumper))
 

@@ -149,7 +149,7 @@ mapping:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
             required: false
-            example: '3.'
+            example: '4.'
           vampirisms:
             desc: Apply only to data taken during day time (defaults to true)
             type: bool
@@ -523,15 +523,15 @@ mapping:
             required: false
             example: '50'
           thresh:
-            desc: Threshold to select sources in online catalogs (mJy). Default is '20mJy'
-            type: str
+            desc: Threshold to select sources in online catalogs (mJy). Default is '20'
+            type: float
             required: false
             example: '20'
           width:
             desc: Field of view of output catalog (degrees). Default is '1.0d'
             type: str
             required: false
-            example: '1'
+            example: '1.0d'
           label:
             desc: Prefix label of plot names and titles. Default is 'pipeline.prefix'
             type: str

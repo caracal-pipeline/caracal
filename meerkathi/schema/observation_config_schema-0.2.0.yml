@@ -67,7 +67,7 @@ mapping:
         desc: Reference antenna. If 'auto' then MeerKATHI will automatically pick the reference antenna from the .JSON metadata file if available. The file name is the same as the input .MS file but with .JSON extension. This file is typically available only for old (ROACH2) MeerKAT data. For all other data the pipeline will likely throw an error and gracefully terminate. In that case the reference antenna should be set manually.
         type: str
         required: false
-        example: '0'
+        example: 'auto'
       primary_beam:
         desc: Generate primary beam model
         type: map

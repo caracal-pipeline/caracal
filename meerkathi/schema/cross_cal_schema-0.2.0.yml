@@ -461,7 +461,7 @@ mapping:
           reference: 
             seq:
               - type: str
-            desc: Field to transfer flux sale from. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
+            desc: Field to transfer flux sale from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
             example: 'gcal'
           transfer:

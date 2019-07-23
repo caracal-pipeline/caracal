@@ -63,6 +63,7 @@ mapping:
             type: str
             required: false
             desc: Name of catalog to query [NVSS/SUMSS]
+            enum: ['NVSS', 'SUMSS']
             example: 'SUMSS'
           width_image:
             type: str

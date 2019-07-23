@@ -16,7 +16,7 @@
     bpcal: auto
     gcal: auto
     xcal: auto
-    reference_antenna: '0'
+    reference_antenna: 'm033'
 
 - prepare_data:
     enable: true

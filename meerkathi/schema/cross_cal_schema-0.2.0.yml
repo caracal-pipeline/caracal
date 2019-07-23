@@ -48,6 +48,7 @@ mapping:
             desc: "Intializes scratch MODEL_DATA column"
             required: false
             example: 'True'
+      
       set_model:
         type: map
         desc: Essentially setjy task from CASA.
@@ -77,6 +78,7 @@ mapping:
             desc: Set the number of threads to use when predicting local sky model using MeqTrees.
             required: false
             example: '8'
+      
       delay_cal:
         type: map
         desc: Carry out delay correction calibration (using gaincal task from CASA).
@@ -137,7 +139,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-                example: 'crossOut'
+                example: ''
           flag:
             type: map
             desc: Flagging based on delay correction solutions.
@@ -261,7 +263,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-                example: 'crossOut'
+                example: ''
 
       gain_cal_flux:
         type: map
@@ -283,7 +285,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
-            example: 'gcal'
+            example: 'fcal'
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -354,7 +356,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-                example: 'crossOut'
+                example: ''
 
       gain_cal_gain:
         type: map
@@ -447,7 +449,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-                example: 'crossOut'
+                example: ''
       
       transfer_fluxscale:    
         type: map
@@ -463,13 +465,13 @@ mapping:
               - type: str
             desc: Field to transfer flux sale from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
-            example: 'gcal'
+            example: 'fcal'
           transfer:
             seq:
               - type: str
             desc: Field to transfer flux scale to. Specify either the field number, name or even as 'gcal' corresponding to field specification in observation config.
             required: false
-            example: 'fcal'
+            example: 'gcal'
           plot:
             type: map
             desc: Enables plotting gain amplitudes for Flux and Gain calibrator field.
@@ -499,7 +501,7 @@ mapping:
                 type: str
                 desc: "Output HTML file name"
                 required: false
-                example: 'crossOut'
+                example: ''
       
       apply_delay_cal:
         type: map

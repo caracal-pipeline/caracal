@@ -262,8 +262,7 @@ found in our database or in the CASA NRAO database'.format(field))
                          "gaintype"     : "B",
                          "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
-                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) +  '{0:s}-PREB0'.format(prefix)
-
+                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREB0'.format(prefix),
                         },
                         input=pipeline.input,
                         output=pipeline.output,
@@ -305,7 +304,7 @@ found in our database or in the CASA NRAO database'.format(field))
                          "gaintype"     : "G",
                          "field"        : utils.get_field_id(msinfo, field)[0],
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
-                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREG0-fcal'.format(prefix)
+                         "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREG0-fcal'.format(prefix),
 
                         },
                         input=pipeline.input,
@@ -358,7 +357,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype'),
                      "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
-                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['bp_cal']['plot'].get('htmlname', '{0:s}-B0'.format(prefix))
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-B0'.format(prefix),
 
                     },
                     input=pipeline.input,
@@ -452,7 +451,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "gaintype"     : "G",
                      "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
-                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['gain_cal_gain']['plot'].get('htmlname', '{0:s}-G0'.format(prefix))
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) +  '{0:s}-G0'.format(prefix)
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -484,7 +483,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "gaintype"     : "G",
                      "field"        : utils.get_field_id(msinfo, field)[0],
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
-                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + config['transfer_fluxscale']['plot'].get('htmlname', '{0:s}-F0'.format(prefix))
+                     "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-F0'.format(prefix)
                     },
                     input=pipeline.input,
                     output=pipeline.output,

@@ -2,8 +2,8 @@
 - schema_version: 0.2.0
 
 - general:
-    msdir: msdir
     prefix: mypipelinerun
+    init_pipeline: true
 
 - get_data:
     dataid: ['']
@@ -16,25 +16,25 @@
     enable: true
 
 - flagging:
-    enable: false
+    enable: true
 
 - cross_cal:
-    enable: false
+    enable: true
       
 - polcal:
     enable: false
 
 - inspect_data:
-    enable: false
+    enable: true
 
 - split_target:
-    enable: false
+    enable: true
       
 - masking:
-    enable: false
+    enable: true
 
 - self_cal:
-    enable: false
+    enable: true
 
 - image_HI:
-    enable: false
+    enable: true

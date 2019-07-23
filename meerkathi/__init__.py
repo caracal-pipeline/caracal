@@ -55,7 +55,7 @@ __version__ = report_version()
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
-DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
+DEFAULT_CONFIG = os.path.join(pckgdir,"sample_configurations","minimalConfig.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
 ################################################################################
@@ -119,7 +119,7 @@ def get_default(to):
     Get default parset copy
     """
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
+    os.system('cp {0:s} {1:s}'.format(DEFAULT_CONFIG, to))
 
 def reconstruct_defaults(filename):
     cp().reconstruct_defaults(filename)

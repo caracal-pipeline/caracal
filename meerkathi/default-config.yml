@@ -650,6 +650,6 @@
       enable: false
     sharpener:
       enable: true
-      catalog: NVSS
+      catalog: PYBDSF
     flagging_summary:
       enable: false

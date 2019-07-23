@@ -409,7 +409,7 @@ mapping:
             type: bool
             required: false
           catalog:
-            desc: Type of catalog to use (PYBDSF/NVSS). Default is 'NVSS'
+            desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
             type: str
             required: true
           catalog_file:
@@ -429,7 +429,7 @@ mapping:
             type: str
             required: false
           label:
-            desc: Prefix label of plot names and titles. Default is 'SHARP'
+            desc: Prefix label of plot names and titles. Default is 'pipeline.prefix'
             type: str
             required: false
       flagging_summary:

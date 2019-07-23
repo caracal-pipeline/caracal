@@ -3,11 +3,7 @@
 
 - general:
     prefix: mypipelinerun
-<<<<<<< HEAD
     init_pipeline: true
-=======
-    initialize_pipeline: true
->>>>>>> 60615c5c7f92f75e1cbc6abae38c6a3da978caa4
 
 - get_data:
     dataid: ['']
@@ -41,8 +37,4 @@
     enable: true
 
 - image_HI:
-<<<<<<< HEAD
     enable: true
-=======
-    enable: true
->>>>>>> 60615c5c7f92f75e1cbc6abae38c6a3da978caa4

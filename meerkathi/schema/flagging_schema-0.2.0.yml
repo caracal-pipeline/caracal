@@ -139,7 +139,7 @@ mapping:
             desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
-            example: '0000/00/00/00:00:00-2018/07/14/01:02:03'
+            example: ''
       
       flag_antennas:
         desc: Flag bad antennas. Or just the ones you have sworn a vendetta against.
@@ -159,7 +159,7 @@ mapping:
             desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
-            example: 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'
+            example: ''
 
       flag_scan:
         desc: Flag bad scans. Uses CASA Flagdata task.

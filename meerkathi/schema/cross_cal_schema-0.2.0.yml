@@ -277,13 +277,13 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field"]
             required: false
-            example: ' '
+            example: ''
           field: 
             seq: 
               - type: str 
             desc: Set the field to estimate the gain from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.
             required: false
-            example: 'fcal'
+            example: 'gcal'
           minnrbl: 
             type: int
             desc: Minimum number of baselines required (per antenna) for solving.
@@ -565,7 +565,7 @@ mapping:
             type: bool
             desc: Executes application of gain calibration table.
             required: false
-            example: "False"
+            example: "True"
           field:
             seq: 
               - type: str 

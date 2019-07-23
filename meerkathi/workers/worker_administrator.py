@@ -96,7 +96,7 @@ class worker_administrator(object):
         outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(configFileName,timeNow)
 
         with open(self.configFolder+'/'+outConfigName, 'w') as outfile:
-            ruamel.yaml.dump(self.config, outfile, default_flow_style=False)
+            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
 
     def init_names(self, dataid):
         """ iniitalize names to be used throughout the pipeline and associated

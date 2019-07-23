@@ -106,13 +106,13 @@ def worker(pipeline, recipe, config):
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:
-            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
             pipeline.nchans[i] = spw
         meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         with open(msinfo, 'r') as stdr:
-            chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+            chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
             firstchanfreq = [ss[0] for ss in chfr]
             lastchanfreq  = [ss[-1] for ss in chfr]
             chanwidth     = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
             sys.exit(1)
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
-            pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+            pipeline.specframe[i]=yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
 
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
@@ -193,7 +193,7 @@ def worker(pipeline, recipe, config):
         with open(msinfo, 'r') as stdr:
             # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
             # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[i].split(',')[0] only
-            targetinfo = yaml.load(stdr)['FIELD']
+            targetinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(pipeline.target[i].split(',')[0])][0]
             pipeline.TRA[i]  = targetpos[0]/np.pi*180.
             pipeline.TDec[i] = targetpos[1]/np.pi*180.

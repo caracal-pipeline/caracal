@@ -855,7 +855,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'sharpener'):
         step = 'continuum_spectral_extraction'
-        catalogs = glob.glob('{}/*lsm.html'.format(pipeline.output))
+        catalogs = glob.glob('{}/*.lsm.html'.format(pipeline.output))
         params = {"enable_spec_ex"        : True,
                   "enable_source_catalog" : True,
                   "enable_abs_plot"       : True,

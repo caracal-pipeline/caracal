@@ -24,8 +24,6 @@ flagset = "{flagset:s}"
 
 if flagset in names:
     subprocess.check_call(["flag-ms.py", "--unflag", flagset, ms])
-else:
-    subprocess.check_call(["flag-ms.py", "--flag", flagset, "--create", ms])
 """.format(ms=ms, flagset=flagset),
     },
     input=pipeline.input,

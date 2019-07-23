@@ -29,11 +29,13 @@ def worker(pipeline, recipe, config):
                 recipe.add("cab/pycasacore", step, {
                     "msname" : msname,
                     "script" : """
-from Owlcat.Flagger import Flagger
 import os
+import Owlcat.Flagger
+
+Owlcat.Flagger.has_purr = False
 ms = os.path.join(os.environ["MSDIR"], "{0:s}")
 
-fms = Flagger(ms)
+fms = Owlcat.Flagger.Flagger(ms)
 fms.add_bitflags()
 fms.close()
 """.format(msname),

@@ -3,7 +3,7 @@
 
 - general:
     prefix: mypipelinerun
-    initialize_pipeline: true
+    init_pipeline: true
 
 - get_data:
     dataid: ['']

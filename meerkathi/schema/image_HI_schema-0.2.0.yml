@@ -497,7 +497,46 @@ mapping:
             type: bool
             required: false
             example: 'True'
-
+      sharpener:
+        desc: Run sharpener to extract spectrum of all continuum sources against the lines of sight. The spectra are then plotted.
+        type: map
+        mapping:
+          enable:
+            desc: Execute sharpener (yes/no)? Default is yes
+            type: bool
+            required: false
+            example: 'False'
+          catalog:
+            desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
+            type: str
+            enum: ['NVSS', 'PYBDSF']
+            required: true
+            example: 'PYBDSF'
+          catalog_file:
+            desc: Catalog file where to store sources from online surveys (NVSS)
+            type: str
+            required: false
+            example: 'catalog_contSources.lsm.html'
+          channels_per_plot:
+            desc: Number of channels to plot per detail plot. Default is 50
+            type: int
+            required: false
+            example: '50'
+          thresh:
+            desc: Threshold to select sources in online catalogs (mJy). Default is '20mJy'
+            type: str
+            required: false
+            example: '20'
+          width:
+            desc: Field of view of output catalog (degrees). Default is '1.0d'
+            type: str
+            required: false
+            example: '1'
+          label:
+            desc: Prefix label of plot names and titles. Default is 'pipeline.prefix'
+            type: str
+            required: false
+            example: ''
       flagging_summary:
         desc: Print out flagging summary.
         type: map

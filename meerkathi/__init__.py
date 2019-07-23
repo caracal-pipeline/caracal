@@ -119,7 +119,7 @@ def get_default(to):
     Get default parset copy
     """
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
+    os.system('cp {0:s}/sample_configurations/minimalConfig.yml {1:s}'.format(pckgdir, to))
 
 def reconstruct_defaults(filename):
     cp().reconstruct_defaults(filename)

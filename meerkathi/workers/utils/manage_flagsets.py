@@ -6,13 +6,16 @@ def clear_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="
     recipe.add("cab/pycasacore", cab_name, {
         "msname"    : ms,
         "script"    : """
-from Owlcat.Flagger import Flagger
+import from Owlcat.Flagger
 import os
 import subprocess
 
+Owlcat.Flagger.has_purr = False
 MSDIR = os.environ["MSDIR"]
 ms = os.path.join(MSDIR, "{ms:s}")
-fms = Flagger(ms)
+
+fms = Owlcat.Flagger.Flagger(ms)
+
 fms.add_bitflags()
 
 if hasattr(fms.flagsets, "names"):
@@ -36,13 +39,15 @@ def update_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name=
     recipe.add("cab/pycasacore", cab_name, {
         "msname"    : ms,
         "script"    : """
-from Owlcat.Flagger import Flagger
+from Owlcat.Flagger
 import os
 import subprocess
 
+Owlcat.Flagger.has_purr = False
 MSDIR = os.environ["MSDIR"]
 ms = os.path.join(MSDIR, "{ms:s}")
-fms = Flagger(ms)
+
+fms = Owlcat.Flagger.Flagger(ms)
 fms.add_bitflags()
 
 if hasattr(fms.flagsets, "names"):

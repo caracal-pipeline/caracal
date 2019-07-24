@@ -380,13 +380,13 @@ mapping:
             example: 'True'
           Gsols_time:
             seq:
-              - type: int
+              - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
             example: '100'
           Gsols_channel:
             seq:
-              - type: int
+              - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
             example: '0'
@@ -397,10 +397,10 @@ mapping:
            example: 'False'
           Bsols_time:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '1e+6'
+            example: '100'
           Bsols_channel:
             seq:
               - type: float
@@ -417,7 +417,7 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '100'
+            example: '0'
           DDsols_channel:
             desc: Calibration solution intervals
             seq:

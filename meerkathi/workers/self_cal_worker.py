@@ -293,7 +293,7 @@ def worker(pipeline, recipe, config):
               "steps.doSCfind"        : True,
               "steps.doMerge"         : True,
               "steps.doReliability"   : False,
-              "steps.doParameterise"  : True,
+              "steps.doParameterise"  : False,
               "steps.doWriteMask"     : True,
               "steps.doMom0"          : False,
               "steps.doMom1"          : False,
@@ -784,7 +784,6 @@ def worker(pipeline, recipe, config):
                 else:
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
-
             bsols_ = [config[key].get('Bsols_time')[num-1 if num <= len(config[key].get('Bsols_time')) else -1],
                           config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)

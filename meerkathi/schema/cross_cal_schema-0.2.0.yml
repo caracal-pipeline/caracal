@@ -93,7 +93,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: 'scan'
+            example: ''
           solint:
             type: str
             desc: Solution interval for delay-correction calibration.
@@ -109,7 +109,7 @@ mapping:
               - type: str 
             desc: Set the field to estimate the delay correction from. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.      
             required: false
-            example: fcal
+            example: bpcal
           plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -126,10 +126,10 @@ mapping:
                 example: 'K'
               field:
                 seq: 
-                - type: int 
+                - type: str 
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: 'bpcal'
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -176,7 +176,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: 'scan'
+            example: ''
           field: 
             seq: 
               - type: str 
@@ -250,10 +250,10 @@ mapping:
                 example: 'B'
               field:
                 seq: 
-                - type: int
+                - type: str
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: 'bpcal'
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -343,10 +343,10 @@ mapping:
                 example: 'G'
               field:
                 seq: 
-                - type: int
+                - type: str
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '0'
+                example: 'fcal'
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -372,7 +372,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field"]
             required: false
-            example: ' '
+            example: ''
           field:
             seq: 
               - type: str 
@@ -388,7 +388,7 @@ mapping:
             type: int
             desc: Minimum required SNR for solutions.
             required: false
-            example: '5'
+            example: '3'
           solint: 
             type: str
             desc: Time solution interval
@@ -436,10 +436,10 @@ mapping:
                 example: 'G'
               field:
                 seq: 
-                  - type: int
+                  - type: str
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: 'gcal'
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"
@@ -488,10 +488,10 @@ mapping:
                 example: 'G'
               field:
                 seq: 
-                - type: int
+                - type: str
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
-                example: '1'
+                example: 'gcal'
               corr:
                 type: str
                 desc: "Correlation to plot. E.g. X/Y or H/V"

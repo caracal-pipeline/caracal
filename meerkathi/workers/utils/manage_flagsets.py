@@ -6,7 +6,7 @@ def clear_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="
     recipe.add("cab/pycasacore", cab_name, {
         "msname"    : ms,
         "script"    : """
-import from Owlcat.Flagger
+import Owlcat.Flagger
 import os
 import subprocess
 
@@ -39,7 +39,7 @@ def update_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name=
     recipe.add("cab/pycasacore", cab_name, {
         "msname"    : ms,
         "script"    : """
-from Owlcat.Flagger
+import Owlcat.Flagger
 import os
 import subprocess
 

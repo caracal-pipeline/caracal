@@ -261,13 +261,13 @@ def worker(pipeline, recipe, config):
 
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join([wname, "static"]), msname, cab_name=substep)
+                manflags.update_flagset(pipeline, recipe, "_".join([wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
                 # Clear autoflags if need be
-                substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join([wname, "automatic"]), msname, cab_name=substep)
+                substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(wname, i)
+                manflags.clear_flagset(pipeline, recipe, "_".join([wname, "automatic"]), msname, cab_name=substep)
 
                 if config['autoflag_rfi'].get('fields', 'auto') != 'auto' and \
                    not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):

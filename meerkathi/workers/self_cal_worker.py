@@ -136,7 +136,6 @@ def worker(pipeline, recipe, config):
         if config[key].get('peak_based_mask_on_dirty'):
             mask = True
             step = 'image_{}_dirty'.format(num)
-            print mslist
             recipe.add('cab/wsclean', step,
                   {
                       "msname"    : mslist,
@@ -480,7 +479,6 @@ def worker(pipeline, recipe, config):
  
           
           image_opts.update({"import.maskFile": fornax_namemask_regr})
-
         recipe.add('cab/sofia', step,
           image_opts,
           input=pipeline.output,
@@ -593,8 +591,8 @@ def worker(pipeline, recipe, config):
                        output = pipeline.output,
                        label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         #elif sourcefinder == 'sofia': 
-        #    print 'are u crazy ?'
-        #    print '############################################'
+        #    print('----not active----')
+        #    sys.exit(1)
 
     def predict_from_fits(num, model, index, mslist, field):
         if isinstance(model, str) and len(model.split('+'))==2:
@@ -784,6 +782,7 @@ def worker(pipeline, recipe, config):
                 else:
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
+
             bsols_ = [config[key].get('Bsols_time')[num-1 if num <= len(config[key].get('Bsols_time')) else -1],
                           config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
             step = 'calibrate_{0:d}_{1:d}'.format(num, i)

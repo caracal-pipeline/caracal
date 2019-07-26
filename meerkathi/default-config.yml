@@ -532,7 +532,7 @@
       thresh_pix: [10, 10, 10]
       thresh_isl: [8, 8, 5]
     aimfast:
-      enable: false
+      enable: true
       tolerance: 0.02
       plot: true
     calibrate:
@@ -652,5 +652,8 @@
       enable: true
     pb_cube:
       enable: false
+    sharpener:
+      enable: true
+      catalog: PYBDSF
     flagging_summary:
       enable: false

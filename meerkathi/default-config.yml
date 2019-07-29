@@ -405,6 +405,7 @@
     label_out: corr
     split_target:
       enable: true
+      column: corrected
       time_average: ''
       freq_average: 1
       spw: ''

@@ -43,7 +43,7 @@ def worker(pipeline, recipe, config):
                   "weight_columns"  : config['add_spectral_weights'].get('weight_columns', ['WEIGHT', 'WEIGHT_SPECTRUM']),
                   "noise_columns"   : config['add_spectral_weights'].get('noise_columns', ['SIGMA', 'SIGMA_SPECTRUM']),
                   "write_to_ms"     : config['add_spectral_weights'].get('write_to_ms', True),
-                  "plot_stats"      : prefix + '-noise_weights.png',
+                  "plot_stats"      : "{0:s}/{1:s}-{2:s}.png".format('diagnostic_plots', prefix, 'noise_weights'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,

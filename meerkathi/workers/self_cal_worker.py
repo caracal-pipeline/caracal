@@ -217,7 +217,7 @@ def worker(pipeline, recipe, config):
         key = 'sofia_mask'
 
         if config['img_joinchannels'] == True:
-          imagename = '{0:s}/{1:s}_{2:d}-MFS.fits'.format(img_dir, prefix, num)
+          imagename = '{0:s}/{1:s}_{2:d}-MFS-image.fits'.format(img_dir, prefix, num)
         else:
           imagename = '{0:s}/{1:s}_{2:d}-image.fits'.format(img_dir, prefix, num)
 
@@ -518,9 +518,10 @@ def worker(pipeline, recipe, config):
         if (sourcefinder == 'pybdsm' or sourcefinder == 'pybdsf'):
             spi_do = config[key].get('spi', False)
             if spi_do:
-                im = make_cube(num, get_dir_path(img_dir, pipeline), 'image')
+                im = make_cube(num, get_dir_path(pipeline.continuum, pipeline) + '/' + img_dir.split("/")[-1], 'image')
+                im = im.split("/")[-1]
             else:
-                im = '{0:s}/{1:s}_{2:d}{3:s}-image.fits:output'.format(img_dir, prefix, num, mfsprefix)
+                im = '{0:s}_{1:d}{2:s}-image.fits:output'.format(prefix, num, mfsprefix)
 	       
             step = 'extract_{0:d}'.format(num)
             calmodel = '{0:s}_{1:d}-pybdsm'.format(prefix, num)
@@ -542,8 +543,8 @@ def worker(pipeline, recipe, config):
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
 		    	},
-		    	input=pipeline.input,
-		    	output=pipeline.output,
+		    	input=pipeline.input, #+ '/' + img_dir,
+		    	output=pipeline.output + '/' + img_dir,
 		    	label='{0:s}:: Extract sources'.format(step))
         elif sourcefinder == 'sofia': 
             print 'are u crazy ?'
@@ -587,11 +588,11 @@ def worker(pipeline, recipe, config):
 
 
     def combine_models(models, num, enable=True):
-        model_names = ['{0:s}_{1:s}-pybdsm.lsm.html:output'.format(
+        model_names = ['{0:s}/{1:s}_{2:s}-pybdsm.lsm.html:output'.format(img_dir, 
                        prefix, m) for m in models]
         model_names_fits = ['{0:s}/{1:s}_{2:s}-pybdsm.fits'.format(
-                            pipeline.output, prefix, m) for m in models]
-        calmodel = '{0:s}_{1:d}-pybdsm-combined.lsm.html:output'.format(prefix, num)
+                            img_dir, prefix, m) for m in models]
+        calmodel = '{0:s}/{1:s}_{2:d}-pybdsm-combined.lsm.html:output'.format(img_dir, prefix, num)
 
         if enable:
             step = 'combine_models_' + '_'.join(map(str, models))
@@ -633,8 +634,8 @@ def worker(pipeline, recipe, config):
                                            config, 'aimfast') else True)
             else:
                 model = int(model)
-                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+                calmodel = '{0:s}/{1:s}_{2:d}-pybdsm.lsm.html:output'.format(img_dir, prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(img_dir, prefix, model)
         #If the mode is pybdsm_only, don't use any clean components. So, the same as above, but with
         #vismodel =False
         elif config[key].get('model_mode', None) == 'pybdsm_only':
@@ -647,8 +648,8 @@ def worker(pipeline, recipe, config):
                                            config, 'aimfast') else True)
             else:
                 model = int(model)
-                calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+                calmodel = '{0:s}/{1:s}_{2:d}-pybdsm.lsm.html:output'.format(img_dir, prefix, model)
+                fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(img_dir, prefix, model)
 
             modelcolumn = ''
         #If the mode is vis_only, then there is need for an empty sky model (since meqtrees needs one).
@@ -775,7 +776,7 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def calibrate_cubical(num, prod_path):
+    def calibrate_cubical(num, prod_path, img_dir):
         key = 'calibrate'
 
         modellist = []
@@ -785,8 +786,8 @@ def worker(pipeline, recipe, config):
             calmodel, fits_model = combine_models(mm, num)
         else:
             model = int(model)
-            calmodel = '{0:s}_{1:d}-pybdsm.lsm.html:output'.format(prefix, model)
-            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(pipeline.output, prefix, model)
+            calmodel = '{0:s}/{1:s}_{2:d}-pybdsm.lsm.html:output'.format(img_dir, prefix, model)
+            fits_model = '{0:s}/{1:s}_{2:d}-pybdsm.fits'.format(img_dir, prefix, model)
 
         if config[key].get('model_mode', None) == 'pybdsm_vis':
             if (num == cal_niter):
@@ -1101,7 +1102,7 @@ def worker(pipeline, recipe, config):
         # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
 
         if pipeline.enable_task(config, 'extract_sources'):
-            aimfast_settings.update({"tigger-model"   : '{0:s}_{1:d}-pybdsm{2:s}.lsm.html:output'.format(
+            aimfast_settings.update({"tigger-model"   : '{0:s}/{1:s}_{2:d}-pybdsm{3:s}.lsm.html:output'.format(img_dir, 
                 prefix, num if num <= len(config['calibrate'].get('model', num))
                 else len(config['calibrate'].get('model', num)),
                 '-combined' if len(model.split('+')) >= 2 else '')})
@@ -1128,20 +1129,32 @@ def worker(pipeline, recipe, config):
     def aimfast_plotting():
         """Plot comparisons of catalogs and residuals"""
 
-        out_dir = pipeline.output
+        cont_dir = get_dir_path(pipeline.continuum, pipeline) 
         # Get residuals to compare
-        res_files = sorted(glob.glob("{:s}/{:s}_?-MFS-residual.fits".format(out_dir, prefix)))
+        res_files = []
+        for ii in range(0, cal_niter + 1):
+            res_file = glob.glob("{0:s}/image_{1:d}/{2:s}_?-MFS-residual.fits".format(pipeline.continuum, ii+1, prefix))
+            res_files.append(res_file)
+
+        res_files = sorted(res_files)
+        res_files = [res for res_files in res_files for res in res_files]
+
         residuals = []
-        for i, r in enumerate(res_files):
-            if i < len(res_files) - 1:
-                residuals.append("{:s}:{:s}:output".format(r.split('/')[-1], res_files[i+1].split('/')[-1]))
+        for ii in range(0, len(res_files)-1): 
+            residuals.append('{0:s}:{1:s}:output'.format(res_files[ii].split('output/')[-1], res_files[ii + 1].split('output/')[-1])) 
 
         # Get models to compare
-        model_files = sorted(glob.glob("{:s}/{:s}_*.lsm.html".format(out_dir, prefix)))
+        model_files = []
+        for ii in range(0, cal_niter + 1):
+            model_file = glob.glob("{0:s}/image_{1:d}/{2:s}_*.lsm.html".format(pipeline.continuum, ii+1, prefix))
+            model_files.append(model_file)
+
+        model_files = sorted(model_files)
+        model_files = [mod for model_files in model_files for mod in model_files]
+
         models = []
-        for i, m in enumerate(model_files):
-            if i < len(model_files) - 1:
-                models.append("{:s}:{:s}:output".format(m.split('/')[-1], model_files[i+1].split('/')[-1]))
+        for ii in range(0, len(model_files)-1): 
+            models.append('{0:s}:{1:s}:output'.format(model_files[ii].split('output/')[-1], model_files[ii + 1].split('output/')[-1]))
 
         if len(model_files) > 1:
             step = "aimfast_comparing_models"
@@ -1175,44 +1188,45 @@ def worker(pipeline, recipe, config):
                 {
                      "compare-residuals"  : residuals,
                      "area-factor"        : config['aimfast'].get('area_factor', 2),
-                     "tigger-model"       : '{:s}:output'.format(model_files[-1].split('/')[-1])
+                     "tigger-model"       : '{:s}:output'.format(model_files[-1].split('output/')[-1])
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label="Plotting source residuals comparisons")
 
-    def ragavi_plotting_cubical_tables():
+    def ragavi_plotting_cubical_tables(): # Is this even still being used?
         """Plot self-cal gain tables"""
 
-        B_tables = glob.glob('{}/g-gains*B.casa'.format(pipeline.output))
+        B_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output, get_dir_path(pipeline.continuum, pipeline), 'selfcal_products', 'g-gains*B.casa'))
         if len(B_tables) > 1:
             step = 'plot_G_gain_table'
 
-            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in B_tables])
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('output/')[-1] for table in B_tables]) # This probably needs changing 
+            print gain_table_name
             recipe.add('cab/ragavi', step,
                 {
                  "table"        : [tab+":output" for tab in gain_table_name],
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
-                 "htmlname"     : '{:s}_self-cal_G_gain_plots'.format(prefix)
+                 "htmlname"     : '{0:s}/{1:s}/{2:s}_self-cal_G_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots, pipeline), 'selfcal', prefix)
                  },
                  input=pipeline.input,
                  output=pipeline.output,
                  label='{0:s}:: Plot gaincal phase : {1:s}'.format(step, ' '.join(B_tables)))
 
-        D_tables = glob.glob('{}/g-gains*D.casa'.format(pipeline.output))
+        D_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output, get_dir_path(pipeline.continuum, pipeline), 'selfcal_products', 'g-gains*D.casa'))
         if len(D_tables) > 1:
             step = 'plot_D_gain_table'
 
-            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('/')[-1] for table in D_tables])
+            gain_table_name = config['calibrate']['ragavi_plot'].get('table', [table.split('output/')[-1] for table in D_tables])
             recipe.add('cab/ragavi', step,
                 {
                  "table"        : [tab+":output" for tab in gain_table_name],
                  "gaintype"     : config['calibrate']['ragavi_plot'].get('gaintype', 'G'),
                  "field"        : config['calibrate']['ragavi_plot'].get('field', ['0']),
                  "corr"         : corr_indexes[config['calibrate']['ragavi_plot'].get('corr', 'X')],
-                 "htmlname"     : '{:s}_self-cal_D_gain_plots'.format(prefix)
+                 "htmlname"     : '{0:s}/{1:s}/{2:s}_self-cal_D_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots, pipeline), 'selfcal', prefix)
                  },
                  input=pipeline.input,
                  output=pipeline.output,
@@ -1280,7 +1294,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'sofia_mask'):
         sofia_mask(self_cal_iter_counter, get_dir_path(image_path, pipeline))
     if pipeline.enable_task(config, 'extract_sources'):
-        extract_sources(self_cal_iter_counter, get_dir_path(image_path, pipeline))D
+        extract_sources(self_cal_iter_counter, get_dir_path(image_path, pipeline))
     if pipeline.enable_task(config, 'aimfast'):
         image_quality_assessment(self_cal_iter_counter, get_dir_path(image_path, pipeline))
 
@@ -1288,11 +1302,10 @@ def worker(pipeline, recipe, config):
                         enable=pipeline.enable_task(
                             config, 'aimfast')):
         if pipeline.enable_task(config, 'calibrate'):
-            calibrate(self_cal_iter_counter)
             selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, 'selfcal_products')
             if not os.path.exists(selfcal_products):
                 os.mkdir(selfcal_products)
-            calibrate(self_cal_iter_counter, selfcal_products)
+            calibrate(self_cal_iter_counter, selfcal_products, get_dir_path(image_path, pipeline))
         if reset_cal < 2:
             self_cal_iter_counter += 1
             image_path = "{0:s}/image_{1:d}".format(pipeline.continuum, self_cal_iter_counter)
@@ -1307,23 +1320,39 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'aimfast'):
                 image_quality_assessment(self_cal_iter_counter, get_dir_path(image_path, pipeline))
 
+    #    Copy plots from the selfcal_products to the diagnotic plots IF calibrate is enabled
+    if pipeline.enable_task(config, 'calibrate'):
+        plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'selfcal')
+        if not os.path.exists(plot_path):
+            os.mkdir(plot_path)
+        selfcal_plots = glob.glob("{0:s}/{1:s}".format(selfcal_products, '*.png'))
+        for plot in selfcal_plots:
+            shutil.copy(plot, plot_path)
+
     if pipeline.enable_task(config, 'transfer_apply_gains'):
         if (self_cal_iter_counter > cal_niter):
-            apply_gains_to_fullres(self_cal_iter_counter-1, get_dir_path(image_path, pipeline), enable=True)
+            apply_gains_to_fullres(self_cal_iter_counter-1, selfcal_products, enable=True)
         else:
-            apply_gains_to_fullres(self_cal_iter_counter, get_dir_path(image_path, pipeline), enable=True)
+            apply_gains_to_fullres(self_cal_iter_counter, selfcal_products, enable=True)
 
     if pipeline.enable_task(config, 'aimfast'):
         if config['aimfast']['plot']:
             aimfast_plotting()
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
 
-    #    Copy plots from the selfcal_products to the diagnotic plots
-    plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'selfcal')
-    if not os.path.exists(plot_path):
-        os.mkdir(plot_path)
-    plots = glob.glob("{0:s}/{1:s}".format(selfcal_products, '*.png'))
-    for plot in plots:
-        shutil.copy(plot, plot_path)
+        #  Move the aimfast html plots 
+            plot_path = "{0:s}/{1:s}".format(pipeline.diagnostic_plots, 'selfcal')
+            if not os.path.exists(plot_path):
+                os.mkdir(plot_path)
+            aimfast_plots = glob.glob("{0:s}/{1:s}".format(pipeline.output, '*.html'))
+            for plot in aimfast_plots:
+                shutil.move(plot, plot_path)
+
+    if pipeline.enable_task(config, 'calibrate'):
+        if config['calibrate']['ragavi_plot']['enable']:
+            ragavi_plotting_cubical_tables()
 
     #DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
     #else:
@@ -1440,9 +1469,9 @@ def worker(pipeline, recipe, config):
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
     if pipeline.enable_task(config, 'transfer_model'):
-        meerkathi.log.info('Transfer the model {0:s}_{1:d}-sources.txt to all input .MS files with label {2:s}'.format(prefix,self_cal_iter_counter,config['transfer_model'].get('transfer_to_label')))
+        meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline), prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
         crystalball_model=config['transfer_model'].get('model','auto')
-        if crystalball_model=='auto': crystalball_model='{0:s}_{1:d}-sources.txt'.format(prefix,self_cal_iter_counter)
+        if crystalball_model=='auto': crystalball_model='{0:s}/{1:s}_{2:d}-sources.txt'.format(get_dir_path(image_path, pipeline), prefix, self_cal_iter_counter)
         for i,msname in enumerate(hires_mslist):
             step = 'transfer_model_{0:d}'.format(i)
             recipe.add('cab/crystalball', step,

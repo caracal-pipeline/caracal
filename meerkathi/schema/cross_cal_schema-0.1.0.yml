@@ -12,10 +12,6 @@ mapping:
         type: bool
         required: true
         desc: Execute this segment.
-      order: 
-        type: int
-        required: true
-        desc: Workers are executed in ascending order based on this value. 
       otfdelay:  
         type: bool
         required: true
@@ -104,15 +100,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
+                required: true        
               field:
                 seq: 
                 - type: int 
@@ -211,14 +199,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -294,14 +274,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -375,14 +347,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -423,14 +387,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -466,7 +422,7 @@ mapping:
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
                            
       apply_bp_cal:
@@ -489,7 +445,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
 
       apply_gain_cal_gain:    
@@ -512,7 +468,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
         
       apply_transfer_fluxscale:
@@ -535,7 +491,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
  
       autoflag_closure_error:   

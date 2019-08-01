@@ -82,6 +82,19 @@ class worker_administrator(object):
 
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
+
+        # Get possible flagsets for reduction
+        self.flagsets = {"legacy" : ["legacy"]}
+        for _name, _worker, i in self.workers:
+            try:
+                wkr = __import__(_worker)
+            except ImportError:
+                traceback.print_exc()
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+
+            if hasattr(wkr, "FLAGSETS_SUFFIX"):
+                self.flagsets[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
+
         self.recipes = {}
         # Workers to skip
         self.skip = []

@@ -4,6 +4,7 @@ import meerkathi.dispatch_crew.utils as utils
 import meerkathi
 import yaml
 import stimela.dismissable as sdm
+from meerkathi.workers.utils import manage_flagsets as manflags
 
 NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
@@ -45,8 +46,10 @@ corr_indexes = {'H'        : 0,
                 'Y'        : 1,
 }
 
+FLAGSETS_SUFFIX = [""]
 
 def worker(pipeline, recipe, config):
+    wname = pipeline.CURRENT_WORKER
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         nobs = 1
@@ -103,6 +106,10 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Flagging gains'.format(step))
+
+        # Clear flags from this worker if they already exist
+        substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
+        manflags.clear_flagset(pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'clear_cal'):
             # Initialize dataset for calibration
@@ -510,6 +517,7 @@ found in our database or in the CASA NRAO database'.format(field))
             if no_table_to_apply or field in applied:
                 continue
 
+
             applied.append(field)
             step = 'apply_{0:s}_{1:d}'.format(ft, i)
             recipe.add('cab/casa_applycal', step,
@@ -526,6 +534,7 @@ found in our database or in the CASA NRAO database'.format(field))
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Apply calibration to field={1:s}, ms={2:s}'.format(step, field, msname))
+
 
         # auto flag closure errors and systematic issues based on calibrated calibrator phase (chi-squared thresholds)
         # Physical assertion: Expect calibrator phase == 0 (calibrator at phase centre). Corrected phases should be at phase centre
@@ -565,6 +574,10 @@ found in our database or in the CASA NRAO database'.format(field))
                 },
                 input=pipeline.input, output=pipeline.output,
                 label="{0:s}: Flag out baselines with closure errors")
+        
+        if applied or pipeline.enable_task(config, 'autoflag_closure_error'):
+            substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
+            manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)
 
 
         if pipeline.enable_task(config, 'flagging_summary'):

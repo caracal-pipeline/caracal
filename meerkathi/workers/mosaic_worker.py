@@ -14,23 +14,25 @@ def worker(pipeline, recipe, config):
     # Empty list to add filenames to
     specified_images = []
 
+    # Want the images from the final iteration of any self-cal, i.e. the highest 'num' in the filename
+    max_num = max(pipeline.nums) ### Assuming that pipeline.nums is a normal list of doubles 
+
     # Parameters relevant to there being multiple images per run of the pipeline
     for i in range(pipeline.nobs):
 
-        msname = pipeline.msnames[i]
+        #msname = pipeline.msnames[i] ### Not needed, I think
         prefix = pipeline.prefixes[i]
-        mfsprefix = ["", '-MFS'][int(nchans>1)]
+        mfsprefix = ["", '-MFS'][int(nchans>1)] ### Hmm, where is nchans defined?
         ### Is the following correct to do?
         field = pipeline.fields[i]
-        num = pipeline.nums[i]
 
         # Use the mosaictype to infer the filenames of the images
         if specified_mosaictype = 'continuum':  # Add name of 2D image output by selfcal
-            image_name = '{0:s}_{1:s}_{2:d}{3:s}-image.fits'.format(prefix, field, num, mfsprefix)
+            image_name = '{0:s}_{1:s}_{2:d}{3:s}-image.fits'.format(prefix, field, max_num, mfsprefix)
             specified_images = specified_images.append(image_name)
             pb_worker = 'observation_config_worker'
         else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
-            image_name = '{0:s}_{1:s}_HI_{2:d}.image.fits'.format(prefix, field, num)
+            image_name = '{0:s}_{1:s}_HI_{2:d}.image.fits'.format(prefix, field, max_num)
             specified_images = specified_images.append(image_name)
             pb_worker = 'image_HI_worker'
 

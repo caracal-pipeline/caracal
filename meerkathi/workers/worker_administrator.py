@@ -53,13 +53,17 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
+
+        print self.config['general']['msdir']
+
+        sys.exit(0)
         
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
             self.data_path = self.config['general']['data_path']
         else:
             self.data_path = self.config['general']['data_path']
-        print self.data_path
+
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages

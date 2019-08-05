@@ -242,7 +242,6 @@ def execute_pipeline(args, arg_groups, block):
 def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
-    #sys.exit(1)
 
     # start a new logfile by default
     if args.log_append is False:

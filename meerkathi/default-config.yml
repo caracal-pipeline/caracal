@@ -566,6 +566,12 @@
     flagging_summary:
       enable: true
 
+- mosaic__1:
+    enable: true
+    mosaic_type: continuum
+    domontage: true
+    cutoff: 0.1
+
 - image_HI:
     enable: true
     label: corr
@@ -658,3 +664,9 @@
       catalog: PYBDSF
     flagging_summary:
       enable: false
+
+- mosaic__2:
+    enable: true
+    mosaic_type: spectral
+    domontage: true
+    cutoff: 0.1

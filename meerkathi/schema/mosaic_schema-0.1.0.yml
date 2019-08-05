@@ -1,0 +1,42 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  mosaic:
+    desc: Mosaic images output by selfcal or imageHI.
+    type: map
+    mapping:
+      enable:
+        desc: Execute mosaic segment (yes/no). Default is no.
+        type: bool
+        required: true
+
+      mosaic_type:
+        desc: Type of mosaic to be made (continuum/spectral). Default is continuum.
+        type: str
+        required: true
+
+      domontage:
+        desc: Re-grid the input images, and associated beams. Default is true.
+        type: bool
+        required: false
+
+      cutoff:
+        desc: The cutoff in the primary beam to use, assuming a Gaussian at the moment. Default is 0.1.
+        type: float
+        required: false
+
+      name:
+        desc: The prefix to be used for output files. Default is the pipeline prefix.
+        type: str
+        required: false
+
+      target_images:
+        desc: List of images to be mosaicked, with suffix of image.fits being expected. 
+        type: seq
+        seq:
+          - type: str
+        required: false
+

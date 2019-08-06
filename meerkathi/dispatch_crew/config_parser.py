@@ -319,7 +319,7 @@ class config_parser:
 
         #store keywords as ordereddDict and namespace 
         #cls.__store_args(args, groups)
-        self.update_config(args)
+        self.update_config(args, update_mode="defaults and args")
 
     @classmethod
     def _subparser_tree(cls,  #class for storage
@@ -366,21 +366,29 @@ class config_parser:
             # store the total name of the key given the workerName(base_section) and key (which may be nested)
             option_name = base_section + "_" + key if base_section != "" else key
 
-            #different way of reading schema example according to str, bool, map, seq
-            if (not subVars.has_key("seq")) and subVars["type"] == "map":
-                # need to go in the nested variable
-                
-                # need to keep the nested variable of the cfg file if this is present
-                if key in cfgVars.keys():
-                    tmpcfgVars = cfgVars[key]
+            def typecast(typ,val, string=False):
+                if isinstance(val, list):
+                    return val
+                if typ.__name__ == "bool" and string:
+                    return str(val).lower()
+                elif typ.__name__ == "bool":
+                    return val in "true yes 1".split()
+                else:
+                    return typ(val)
+
+            # need to go in the nested variable
+            if subVars.has_key("mapping"):
+                if key in cfgVars.keys(): # check if enabled in config file
+                    sub_vars = cfgVars[key]
                 else:                 
-                    tmpcfgVars = dict.fromkeys(cfgVars.keys(), [])
+                    sub_vars = dict.fromkeys(cfgVars.keys(), {})
                 
                 # recall the function with the set of variables of the nest
-                groups[key] = cls._subparser_tree(tmpcfgVars,
+                groups[key] = cls._subparser_tree(sub_vars,
                                                   subVars,
                                                   base_section=option_name,
                                                   args=args,
+                                                  update_only=update_only,
                                                   parser=parser)
                 continue
 
@@ -388,38 +396,39 @@ class config_parser:
                 # for lists
                 dtype = __builtins__[subVars['seq'][0]['type']]
                 subVars["example"] = string.split(subVars['example'].replace(' ',''),',')
-                option_value = map(dtype, subVars["example"])
-                groups[key] = option_value
+                default_value = map(dtype, subVars["example"])
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]
-                option_value = dtype(subVars["example"])
-                groups[key] = option_value
+                default_value = subVars["example"]
+                default_value = typecast(dtype, default_value, string=True)
 
-            #update keys with users config file: if key is present and value is not empty (because of repeaded keys in different maps)
+            #update default if set in user config
             if key in cfgVars.keys() and not _empty(cfgVars.values()):
-                groups[key] = cfgVars[key]
-                option_value = cfgVars[key]
+                default_value = cfgVars[key]
 
             if update_only == "defaults and args":
+                option_value = getattr(args, option_name, default_value)
                 parser.set_defaults(**{option_name: option_value})
-                setattr(args, option_name, option_value)
-                groups[key] = option_value
+                groups[key] = typecast(dtype, option_value)
 
             elif update_only == "defaults":
-                parser.set_defaults(**{option_name: option_value})
-                groups[key] = getattr(args, option_name)
+                parser.set_defaults(**{option_name: default_value})
+                groups[key] = typecast(dtype, default_value)
 
             else:
+                default_value = typecast(dtype, default_value, string=True)
                 if dtype.__name__ == "bool":
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS, 
-                                        action="store_true", default=option_value)
-                elif isinstance(option_value, (list, tuple)):
+                                        choices = "true yes 1 false no 0".split(), default=default_value)
+                elif isinstance(default_value, (list, tuple)):
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                                        type=dtype, nargs="+", default=option_value)
+                                        type=dtype, nargs="+", default=default_value)
                 else:
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                                        type=dtype, default = option_value)
+                                        type=dtype, default = default_value)
+                
+                groups[key] = default_value
 
         return groups
 

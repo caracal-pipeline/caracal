@@ -205,6 +205,12 @@ mapping:
             type: bool
             required: False
             example: 'True'
+          flagger:
+            desc: Choose flagger for automatic flagging
+            type: str
+            enum: ["aoflagger", "tricolour"] #TODO(sphe) add casa tfcrop
+            required: false
+            example: "aoflagger"
           strategy: 
             desc: The AOFlagger strategy file to use.
             type: str

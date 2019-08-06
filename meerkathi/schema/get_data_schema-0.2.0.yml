@@ -83,7 +83,6 @@ mapping:
                 desc: Options to parse to the tar command
                 required: false 
                 example: '-cvf'
-
           untar:
             desc: Unarchive from MS from a archive file.
             type: map

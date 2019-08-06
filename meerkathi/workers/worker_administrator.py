@@ -54,10 +54,6 @@ class worker_administrator(object):
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
 
-        print self.config['general']['msdir']
-
-        sys.exit(0)
-        
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
             self.data_path = self.config['general']['data_path']

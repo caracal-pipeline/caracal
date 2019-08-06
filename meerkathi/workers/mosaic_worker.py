@@ -1,4 +1,4 @@
-import os
+import os, glob
 import sys
 
 NAME = "Mosaic images output by selfcal or imageHI"
@@ -7,10 +7,12 @@ def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
 
-    # Parameters acquired from the config file   ### How do we get them from the schema instead?
-    specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
+    # Prioritise parameters specified in the config file   ### How do we get them from the schema instead?
+    specified_mosaictype = config['mosaic_type']# i.e. 'continuum' or 'spectral'
     specified_cutoff = config['cutoff'] # e.g. 0.25
     use_MFS_images = config['use_MFS_images']
+    specified_prefix = config['name']
+    #specified_images = config['target_images'] ### Test at a later point
 
     # To ease finding the appropriate files, and to keep this worker self-contained
     if use_MFS_images = 'true':
@@ -18,7 +20,20 @@ def worker(pipeline, recipe, config):
     else:
         mfsprefix = ''
 
-    # In case there are simultaneous runs of the pipeline(?), hopefully with different prefixes
+    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
+        matching_files = glob.glob(directory_to_check+'{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
+        max_num = 0  # Initialisation
+        for filename in matching_files:
+            split_filename = filename.split('_')
+            number = split_filename.split('-')[0]
+            num = int(number)
+            if num > max_num:
+                max_num = num
+        filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
+        return filename_of_last_selfcal_image
+
+
+    # In case there are different pipeline prefixes
     for i in range(pipeline.nobs):
 
         prefix = pipeline.prefixes[i]

@@ -49,9 +49,9 @@ def worker(pipeline, recipe, config):
                 specified_images = specified_images.append(image_name)
                 pb_worker = 'observation_config_worker'
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
-                image_name = '{0:s}_{1:s}_HI{2:d}-image.fits'.format(prefix, field, mfsprefix)
+                image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
                 if mfsprefix = '':
-                    image_name = image_name.replace('-image','.image') # Following the naming in image_HI worker   
+                    image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
                 specified_images = specified_images.append(image_name)
                 pb_worker = 'image_HI_worker'
 

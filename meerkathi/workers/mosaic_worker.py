@@ -21,11 +21,11 @@ def worker(pipeline, recipe, config):
         mfsprefix = ''
 
     def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
-        matching_files = glob.glob(directory_to_check+'{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
+        matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
         max_num = 0  # Initialisation
         for filename in matching_files:
-            split_filename = filename.split('_')
-            number = split_filename.split('-')[0]
+            split_filename = filename.split('_') 
+            number = split_filename[-1].split('-')[0]
             num = int(number)
             if num > max_num:
                 max_num = num

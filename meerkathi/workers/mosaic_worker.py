@@ -9,13 +9,19 @@ def worker(pipeline, recipe, config):
 
     # Parameters acquired from the config file   ### How do we get them from the schema instead?
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
-    specified_cutoff = config['cutoff'] # e.g. 0.25  
+    specified_cutoff = config['cutoff'] # e.g. 0.25
+    use_MFS_images = config['use_MFS_images']
+
+    # To ease finding the appropriate files, and to keep this worker self-contained
+    if use_MFS_images = 'true':
+        mfsprefix = '-MFS'
+    else:
+        mfsprefix = ''
 
     # In case there are simultaneous runs of the pipeline(?), hopefully with different prefixes
     for i in range(pipeline.nobs):
 
         prefix = pipeline.prefixes[i]
-        mfsprefix = ["", '-MFS'][int(nchans>1)] ### Hmm, nchans is defined via the config for the selfcal worker...
         
         # Empty list to add filenames to
         specified_images = []
@@ -32,7 +38,7 @@ def worker(pipeline, recipe, config):
                 specified_images = specified_images.append(image_name)
                 pb_worker = 'observation_config_worker'
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
-                image_name = '{0:s}_{1:s}_HI_{2:d}.image.fits'.format(prefix, field, max_num)
+                image_name = '{0:s}_{1:s}_HI{2:d}-image.fits'.format(prefix, field, mfsprefix)
                 specified_images = specified_images.append(image_name)
                 pb_worker = 'image_HI_worker'
 

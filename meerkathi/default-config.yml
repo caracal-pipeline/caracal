@@ -571,6 +571,7 @@
     mosaic_type: continuum
     domontage: true
     cutoff: 0.1
+    use_MFS_images: true
 
 - image_HI:
     enable: true
@@ -670,3 +671,4 @@
     mosaic_type: spectral
     domontage: true
     cutoff: 0.1
+    use_MFS_images: true

@@ -16,7 +16,7 @@
     bpcal: auto
     gcal: auto
     xcal: auto
-    reference_antenna: 'm033'
+    reference_antenna: '0'
 
 - prepare_data:
     enable: true
@@ -34,13 +34,24 @@
     enable: true
 
 - split_target:
-    enable: true
-      
-- masking:
+    label_out: corr
     enable: true
 
+- flagging__2:
+    enable: true
+    label: corr
+    autoflag_rfi:
+      enable: true
+      flagger: aoflagger
+      fields: target
+      
+- masking:
+    enable: false
+
 - self_cal:
+    label: corr
     enable: true
 
 - image_HI:
+    label: corr
     enable: true

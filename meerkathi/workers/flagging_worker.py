@@ -277,6 +277,7 @@ def worker(pipeline, recipe, config):
                 
                 if label:
                     fields = 'target'
+                    field_names = get_field(fields)
                 elif config['autoflag_rfi'].get('fields') == 'auto':
                     fields = 'target,bpcal,gcal,xcal'
                     field_names = get_field(fields)

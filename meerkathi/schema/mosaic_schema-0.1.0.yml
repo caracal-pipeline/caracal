@@ -29,9 +29,9 @@ mapping:
         required: false
 
       use_MFS_images:
-        desc: Indicate that the images to be mosaicked were created using MFS. Default is true.
+        desc: Indicate that the images to be mosaicked were created using MFS. Default is false.
         type: bool
-        required: true
+        required: false
 
       name:
         desc: The prefix to be used for output files. Default is the pipeline prefix.

@@ -32,7 +32,6 @@ def worker(pipeline, recipe, config):
         filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
         return filename_of_last_selfcal_image
 
-
     # In case there are different pipeline prefixes
     for i in range(pipeline.nobs):
 
@@ -41,15 +40,12 @@ def worker(pipeline, recipe, config):
         # Empty list to add filenames to
         specified_images = []
 
-        # Want the images from the final iteration of any self-cal, i.e. the highest 'num' in the filename
-        max_num = max(pipeline.nums) ### Assuming that pipeline.nums is a normal list of doubles 
-
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
         for field in pipeline.fields:  ### Is pipeline.fields always defined?
 
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype = 'continuum':  # Add name of 2D image output by selfcal
-                image_name = '{0:s}_{1:s}_{2:d}{3:s}-image.fits'.format(prefix, field, max_num, mfsprefix)
+                image_name = identify_last_selfcal_image(pipeline.output, prefix, field, mfsprefix)
                 specified_images = specified_images.append(image_name)
                 pb_worker = 'observation_config_worker'
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI

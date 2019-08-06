@@ -221,7 +221,7 @@ mapping:
                 type: bool
                 desc: Enable flagging based on Bandpass correction solutions via CASA FLAGDATA task. 
                 required: false
-                example: 'True'
+                example: 'False'
               mode:
                 type: str
                 desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
@@ -314,7 +314,7 @@ mapping:
                 type: bool
                 desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
                 required: false
-                example: 'True'
+                example: 'False'
               mode:
                 type: str
                 desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
@@ -407,7 +407,7 @@ mapping:
                 type: bool
                 desc: Enable flagging based on delay correction solutions via CASA FLAGDATA task. Default is False.
                 required: false
-                example: 'True'
+                example: 'False'
               mode:
                 type: str
                 desc: Mode to set for flagging based on delay correction gains. Default is "clip". If you want to use other modes, specify the relevant keywords from Flagdata.
@@ -567,7 +567,7 @@ mapping:
             type: bool
             desc: Executes application of gain calibration table.
             required: false
-            example: "True"
+            example: "False"
           field:
             seq: 
               - type: str 

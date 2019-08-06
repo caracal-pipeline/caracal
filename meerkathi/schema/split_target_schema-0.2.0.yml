@@ -12,7 +12,7 @@ mapping:
         desc: Execute this worker
         type: bool
         required: true
-        example: 'False'
+        example: 'True'
       label_in:
         desc: Label of the input dataset
         type: str
@@ -47,7 +47,7 @@ mapping:
             desc: Column to split, default is 'data'. Which means use otf calibration.
             type: str
             required: false
-            example: 'data'
+            example: 'corrected'
           correlation:
             desc: Select correlations
             type: str
@@ -67,7 +67,7 @@ mapping:
                 desc: Execute this section
                 type: bool
                 required: false
-                example: 'True'
+                example: 'False'
               callabel:
                 desc: Label of calibration tables to be used
                 type: str
@@ -171,12 +171,12 @@ mapping:
             required: false
             example: 'True'
 
-      prepms:
-        desc: Run MSUtils prepms function
+      init_legacy_flagset:
+        desc: Save existing flags to legacy flagset
         type: map
         mapping:
           enable:
             desc: Run this section
             type: bool
-            required: false
-            example: 'False'
+            required: true
+            example: 'True'

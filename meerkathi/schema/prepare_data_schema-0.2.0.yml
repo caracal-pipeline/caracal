@@ -22,15 +22,30 @@ mapping:
             type: bool
             required: false
             example: 'False'            
-      prepms:
-        desc: Add BITFLAG column to MS.
+      manage_flags:
+        desc: Manage MS flags
         type: map
-        mapping: 
+        mapping:
           enable: 
-            desc: Enable addition of BITFLAG column to MS.
+            desc: enable this section
             type: bool
             required: false
-            example: 'False'
+            example: 'true'
+          add_bitflag_column:
+            desc: Add BITFLAG and BITFLAG_ROW columns
+            type: bool
+            required: false
+            example: 'true'
+          init_legacy_flagset:
+            desc: Save all current flags in a legacy flagset if it does not exist
+            type: bool
+            required: false
+            example: 'true'
+          remove_flagsets:
+            desc: Remove all existing flagsets, except legacy flags
+            type: bool
+            required: false
+            example: 'true'
       add_spectral_weights: 
         desc: Add spectral weights column to the measurement set.
         type: map
@@ -39,7 +54,7 @@ mapping:
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
             required: false
-            example: 'true'
+            example: 'false'
           weight_columns:
             seq:
               - type: str

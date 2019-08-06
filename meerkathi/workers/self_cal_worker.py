@@ -880,8 +880,7 @@ def worker(pipeline, recipe, config):
             cubical_opts= {
                   "data-ms"          : msname,
                   "data-column"      : 'DATA',
-                  "sol-term-iters"   : '50',
-                  "model-list"       : modellist,
+                  "model-list"       : ":".join(modellist),
                   "data-time-chunk"  : time_chunk,
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid')),
                   "dist-ncpu"        : ncpu,

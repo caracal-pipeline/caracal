@@ -47,10 +47,10 @@ def worker(pipeline, recipe, config):
 
         prefix = pipeline.prefixes[i]
 
-        # Needed for working out the field names for the targets 
-        all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target[i],pipeline.msnames[i],label) ### Just following the pattern in adding '[i]'...
-
         if specified_images is None: ### Check that this is the correct way to check that nothing is passed via the config file
+
+            # Needed for working out the field names for the targets 
+            all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target[i],pipeline.msnames[i],label) ### Just following the pattern in adding '[i]'...
 
             # Empty list to add filenames to
             specified_images = []

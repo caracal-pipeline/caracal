@@ -7,12 +7,20 @@ def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
 
-    # Prioritise parameters specified in the config file   ### How do we get them from the schema instead?
-    specified_mosaictype = config['mosaic_type']# i.e. 'continuum' or 'spectral'
+    # Prioritise parameters specified in the config file, under the 'mosaic' worker   ### How do we get them from the schema instead?
+    specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
     specified_cutoff = config['cutoff'] # e.g. 0.25
     use_MFS_images = config['use_MFS_images']
     specified_prefix = config['name']
     #specified_images = config['target_images'] ### Test at a later point
+
+    # Parameters obtained from the config file, but under another worker
+    if specified_mosaictype = 'continuum':
+        label = pipeline.config['self_cal']['label'] ### Adopt the default for this
+    if specified_mosaictype = 'spectral':
+        label = pipeline.config['image_HI']['label'] ### Adopt the default for this
+    else:
+        meerkathi.log.info("In the config file, mosaic_type must be set to either 'continuum' or 'spectral'.")
 
     # To ease finding the appropriate files, and to keep this worker self-contained
     if use_MFS_images = 'true':
@@ -36,12 +44,17 @@ def worker(pipeline, recipe, config):
     for i in range(pipeline.nobs):
 
         prefix = pipeline.prefixes[i]
-        
+
+        # Needed for working out the field names for the targets 
+        all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target[i],pipeline.msnames[i],label) ### Just following the pattern in adding '[i]'...
+
         # Empty list to add filenames to
         specified_images = []
 
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
-        for field in pipeline.fields:  ### Is pipeline.fields always defined?
+        for target in all_targets:
+
+            field = utils.filter_name(target)
 
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype = 'continuum':  # Add name of 2D image output by selfcal

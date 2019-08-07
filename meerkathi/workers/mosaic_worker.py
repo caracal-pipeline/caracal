@@ -1,7 +1,7 @@
 import os, glob
 import sys
 
-NAME = "Mosaic images output by selfcal or imageHI"
+NAME = "Mosaic specified images, or those output by selfcal or imageHI"
 
 def worker(pipeline, recipe, config):
 
@@ -9,10 +9,10 @@ def worker(pipeline, recipe, config):
 
     # Prioritise parameters specified in the config file, under the 'mosaic' worker   ### How do we get them from the schema instead?
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
-    specified_cutoff = config['cutoff'] # e.g. 0.25
+    specified_cutoff = config['cutoff'] # e.g. 0.25  ### Not immediately needed, so could be removed here?
     use_MFS_images = config['use_MFS_images']
     specified_prefix = config['name']
-    #specified_images = config['target_images'] ### Test at a later point
+    specified_images = config['target_images'] ### Test at a later point
 
     # Parameters obtained from the config file, but under another worker
     if specified_mosaictype = 'continuum':
@@ -20,7 +20,9 @@ def worker(pipeline, recipe, config):
     if specified_mosaictype = 'spectral':
         label = pipeline.config['image_HI']['label'] ### Adopt the default for this
     else:
-        meerkathi.log.info("In the config file, mosaic_type must be set to either 'continuum' or 'spectral'.")
+        label = pipeline.config['self_cal']['label'] ### Adopt the default for this
+        meerkathi.log.info("Mosaic_type was not set to either 'continuum' or 'spectral' in the config file, so proceeding with default mode ('continuum').")
+        specified_mosaictype = 'continuum'
 
     # To ease finding the appropriate files, and to keep this worker self-contained
     if use_MFS_images = 'true':
@@ -48,25 +50,27 @@ def worker(pipeline, recipe, config):
         # Needed for working out the field names for the targets 
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target[i],pipeline.msnames[i],label) ### Just following the pattern in adding '[i]'...
 
-        # Empty list to add filenames to
-        specified_images = []
+        if specified_images is None: ### Check that this is the correct way to check that nothing is passed via the config file
 
-        # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
-        for target in all_targets:
+            # Empty list to add filenames to
+            specified_images = []
 
-            field = utils.filter_name(target)
+            # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
+            for target in all_targets:
 
-            # Use the mosaictype to infer the filenames of the images
-            if specified_mosaictype = 'continuum':  # Add name of 2D image output by selfcal
-                image_name = identify_last_selfcal_image(pipeline.output, prefix, field, mfsprefix)
-                specified_images = specified_images.append(image_name)
-                pb_worker = 'observation_config_worker'
-            else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
-                image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
-                if mfsprefix = '':
-                    image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
-                specified_images = specified_images.append(image_name)
-                pb_worker = 'image_HI_worker'
+                field = utils.filter_name(target)
+
+                # Use the mosaictype to infer the filenames of the images
+                if specified_mosaictype = 'continuum':  # Add name of 2D image output by selfcal
+                    image_name = identify_last_selfcal_image(pipeline.output, prefix, field, mfsprefix)
+                    specified_images = specified_images.append(image_name)
+                    pb_worker = 'observation_config_worker'
+                else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
+                    image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
+                    if mfsprefix = '':
+                        image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
+                    specified_images = specified_images.append(image_name)
+                    pb_worker = 'image_HI_worker'
 
         # List of images in place now, so ready to add montage_mosaic to the meerkathi recipe
         if pipeline.enable_task(config, 'domontage'):

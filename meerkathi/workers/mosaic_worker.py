@@ -74,9 +74,14 @@ def worker(pipeline, recipe, config):
 
         # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
         # so that we can create simple Gaussian primary beam if need be
+        for image_name in specified_images:
+            pb_name = image_name.replace('image.fits', 'pb.fits')
+            if not os.path.exists(pb_name):
+                meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file now.'.format(pb_name))
+            else:
+                meerkathi.log.info('{0:s} is already in place, and will be used by montage_mosaic'.format(pb_name))
 
-
-        # List of images in place, and have ensured that there are corresponding pb files,
+        # List of images in place, and have ensured that there are corresponding pb.fits files,
         # so now ready to add montage_mosaic to the meerkathi recipe
         if pipeline.enable_task(config, 'domontage'):
             recipe.add('cab/montage_mosaic', 'montage_mosaic',

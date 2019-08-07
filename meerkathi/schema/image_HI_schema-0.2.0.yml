@@ -17,7 +17,7 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc.
         type: str
         required: false
-        example: 'corr'
+        example: 'hires'
       restfreq:
         desc: Rest frequency default value for this worker.
         type: str
@@ -53,7 +53,7 @@ mapping:
             desc: Execute segment subtractmodelcol.
             type: bool
             required: false
-            example: 'False'  
+            example: 'True'  
       
       mstransform:
         desc: Perform UVLIN continuum subtraction and/or doppler tracking corrections
@@ -63,7 +63,7 @@ mapping:
             desc: Execute segment doppler correction (yes/no).
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           telescope:
             desc: The name of the telescope from which observations were made. Default is the 'meerkat' telescope. Current options are gmrt, vla, wsrt, atca.
             enum: ['meerkat','vla','gmrt', 'wsrt', 'atca', 'askap']

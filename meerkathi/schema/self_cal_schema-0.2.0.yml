@@ -506,7 +506,7 @@ mapping:
             type: bool
             desc: Execute this segment
             required: false
-            example: 'False'
+            example: 'True'
           transfer_to_label:
             type: str
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
@@ -521,7 +521,7 @@ mapping:
             type: bool
             desc: Execute this segment (default False)
             required: false
-            example: 'False'
+            example: 'True'
           transfer_to_label:
             type: str
             desc: label of .ms file to which to transfer the model
@@ -541,12 +541,12 @@ mapping:
             type: int
             desc: Number of rows of input .MS that are processed in a single chunk.
             required: false
-            example: '1000'
+            example: '0'
           model-chunks:
             type: int
             desc: Number of sky model components that are processed in a single chunk.
             required: false
-            example: '10'
+            example: '0'
           invert-uvw:
             type: bool
             desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees.

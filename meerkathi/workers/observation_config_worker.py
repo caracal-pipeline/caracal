@@ -216,7 +216,7 @@ def worker(pipeline, recipe, config):
                 "diameter"          : config['primary_beam'].get('diameter', 6.0),
                 "pixels"            : config['primary_beam'].get('pixels', 256),
                 "freq"              : config['primary_beam'].get('freq', "855 1760 64"),
-                "coefficients-file" : config['primary_beam'].get('coefficients_file', 'meerkat_coeff_dict.npy'),
+                "coefficients-file" : config['primary_beam'].get('coefficients_file', 'meerkat_beam_coeffs_em_zp_dct.npy'),
                 "prefix"            : pipeline.prefix,
                 "output-eight"      : True,
             },

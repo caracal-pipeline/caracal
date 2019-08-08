@@ -81,19 +81,20 @@ mapping:
             desc: A single freq, or the start, end freqs, and channel width in MHz
             type: str
             required: False
-            example: '855 1760 4'
+            example: '855 1760 16'
           diameter:
             desc: Diameter of the required beam
             type: float
             required: False
-            example: '13.5'
+            example: '6.0'
           pixels:
             desc: Number of pixels on one side
             type: int
             required: False
             example: '256'
-          coefficients_file:
+          coefficients:
             desc: Coeficients file name
             type: str
             required: False
-            example: 'meerkat_coeff_dict.npy'
+            enum: [me, mh]
+            example: 'me'

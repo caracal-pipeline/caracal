@@ -216,7 +216,7 @@ def worker(pipeline, recipe, config):
                 "diameter"          : config['primary_beam'].get('diameter'),
                 "pixels"            : config['primary_beam'].get('pixels'),
                 "freq"              : config['primary_beam'].get('freq'),
-                "coefficients-file" : config['primary_beam'].get('coefficients_file'),
+                "coeff"             : config['primary_beam'].get('coefficients', 'me'),
                 "prefix"            : pipeline.prefix,
                 "output-eight"      : True,
             },

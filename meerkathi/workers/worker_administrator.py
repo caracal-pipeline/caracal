@@ -195,6 +195,7 @@ class worker_administrator(object):
                                singularity_image_dir=self.singularity_image_dir,
                                log_dir=self.logs)
 
+
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name
             # Don't allow pipeline-wide resume

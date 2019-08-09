@@ -113,7 +113,7 @@ def worker(pipeline, recipe, config):
 
       fits.writeto(filename,dat,head,overwrite=True)
 
-
+      
     def image(num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
@@ -540,6 +540,7 @@ def worker(pipeline, recipe, config):
                 im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(prefix, field, num, mfsprefix)
             step = 'extract_{0:d}'.format(num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num) 
+
             if detection_image:
                 blank_limit = 1e-9
             else:
@@ -610,7 +611,7 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Add clean components'.format(step))
         else:
-            calmodel = make_cube(num, img_dir, field) # Should 'model' be in here too?
+            calmodel = make_cube(num, img_dir, field) 
 
         step = 'predict_fromfits_{}'.format(num)
         recipe.add('cab/lwimager', 'predict', {
@@ -946,8 +947,7 @@ def worker(pipeline, recipe, config):
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     
-    def apply_gains_to_fullres(apply_iter, prod_path, mslist_out, enable=True):
-
+    def apply_gains_to_fullres(apply_iter, prod_path, mslist_out, enable=True)
         key = 'calibrate'
         calwith = config.get('calibrate_with', 'meqtrees').lower()
         if(calwith=='meqtrees'):
@@ -1193,7 +1193,7 @@ def worker(pipeline, recipe, config):
 
         model_files = sorted(model_files)
         model_files = [mod for model_files in model_files for mod in model_files]
-
+        
         models = []
         for ii in range(0, len(model_files)-1): 
             models.append('{0:s}:{1:s}:output'.format(model_files[ii].split('output/')[-1], model_files[ii + 1].split('output/')[-1]))
@@ -1375,11 +1375,6 @@ def worker(pipeline, recipe, config):
             for plot in selfcal_plots:
                 shutil.copy(plot, plot_path)
 
-        # if pipeline.enable_task(config, 'calibrate'):
-        #     selfcal_plots = glob.glob("{0:s}/{1:s}".format(selfcal_products, '*.png'))
-        #     for plot in selfcal_plots:
-        #         shutil.copy(plot, plot_path)
-
         if pipeline.enable_task(config, 'transfer_apply_gains'):
             mslist_out = ms_dict_tgain[target]
             if (self_cal_iter_counter > cal_niter):
@@ -1505,7 +1500,7 @@ def worker(pipeline, recipe, config):
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Add extracted skymodel'.format(step))
-
+                
     for i,msname in enumerate(mslist):
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
@@ -1574,11 +1569,11 @@ def worker(pipeline, recipe, config):
                   "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask', None)),
               }
 
-        recipe.add('cab/wsclean', step,
-        image_opts,
-        input=pipeline.input,
-        output=pipeline.output,
-        label='{:s}:: Make image and model at fine frequency resolution'.format(step))
+            recipe.add('cab/wsclean', step,
+            image_opts,
+            input=pipeline.input,
+            output=pipeline.output,
+            label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
         if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
         else:

@@ -54,7 +54,7 @@ __version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
-MEERKATHI_LOG = os.path.join(os.getcwd(), "meerkathi.log")
+MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
 DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
@@ -207,7 +207,8 @@ def execute_pipeline(args, arg_groups, block):
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
-                            singularity_image_dir=args.singularity_image_dir)
+                            singularity_image_dir=args.singularity_image_dir, 
+                            container_tech=args.container_tech)
 
                 pipeline.run_workers()
             except exceptions.SystemExit as e:
@@ -242,6 +243,10 @@ def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
 
+    # start a new logfile by default
+    if args.log_append is False:
+        with open(MEERKATHI_LOG, "w") as stdw:
+            pass
     if args.schema:
         schema = {}
         for item in args.schema:

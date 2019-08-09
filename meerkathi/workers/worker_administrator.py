@@ -23,19 +23,23 @@ from meerkathi import log, pckgdir
 try:
     import meerkathi.scripts as scripts
     from meerkathi.scripts import reporter as mrr
+    REPORTS = True
 except ImportError:
     log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
+    REPORTS = False
 
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
             stimela_build=None, prefix=None,
-            add_all_first=False, singularity_image_dir=None):
+            add_all_first=False, singularity_image_dir=None,
+            container_tech='docker'):
 
         self.config = config
 
         self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
+        self.container_tech = container_tech
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
@@ -63,12 +67,25 @@ class worker_administrator(object):
             else:
                 worker = name + '_worker'
 
-            self.workers.append((name, worker, order))
+            self.workers.append((name, worker, i))
 
         self.workers = sorted(self.workers, key=lambda a: a[2])
 
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
+
+        # Get possible flagsets for reduction
+        self.flagsets = {"legacy" : ["legacy"]}
+        for _name, _worker, i in self.workers:
+            try:
+                wkr = __import__(_worker)
+            except ImportError:
+                traceback.print_exc()
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+
+            if hasattr(wkr, "FLAGSETS_SUFFIX"):
+                self.flagsets[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
+
         self.recipes = {}
         # Workers to skip
         self.skip = []
@@ -88,7 +105,7 @@ class worker_administrator(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.hires_msnames = ['{:s}_hires.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = ['{0:s}-{1:s}'.format(self.prefix,os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)
@@ -177,6 +194,9 @@ class worker_administrator(object):
                                build_label=self.stimela_build,
                                singularity_image_dir=self.singularity_image_dir,
                                log_dir=self.logs)
+
+            recipe.JOB_TYPE = self.container_tech
+            self.CURRENT_WORKER = _name
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))
@@ -203,5 +223,6 @@ class worker_administrator(object):
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
         finally: # write reports even if the pipeline only runs partially
-            reporter = mrr(self)
-            reporter.generate_reports()
+            if REPORTS:
+                reporter = mrr(self)
+                reporter.generate_reports()

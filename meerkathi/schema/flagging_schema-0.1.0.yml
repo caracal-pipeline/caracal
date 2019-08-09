@@ -12,21 +12,9 @@ mapping:
         desc: Execute flagging of the data.
         type: bool
         required: true
-      order:
-        desc: Order in queue of workers. Generally a non-negative integer. 
-        type: int
-        required: true
       label:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
-        required: false
-      hires_label:
-        desc: Label for high frequency resolution data.
-        type: str
-        required: false
-      hires_flag:
-        desc: Enables AOFlagger run on high frequency resolution data.
-        type: bool
         required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
@@ -187,9 +175,15 @@ mapping:
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger.
+            desc: Enable RFI flagging with AOFlagger/TriColour.
             type: bool
             required: false
+          flagger:
+            desc: Choose flagger. Options are aoflagger and tricolour
+            type: str
+            enum: ["aoflagger", "tricolour"]
+            required: true
+            example: 'aoflagger'
           strategy: 
             desc: The AOFlagger strategy file to use.
             type: str
@@ -206,6 +200,11 @@ mapping:
             desc: comma separated list of (zero-indexed) band ids to process
             type: str
             required: false
+          window-backend:
+            desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. For smaller problems, it may be possible to pack a couple of scans worth of visibility data         into memory, but for larger problem sizes, it is necessary to reorder the data on disk
+            type: str
+            enum: ["numpy", "zarr-disc"]
+            example: 'numpy'
 
       rfinder:
         desc: A tool to investigate the presence of RFI

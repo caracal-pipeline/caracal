@@ -45,3 +45,8 @@ mapping:
           - type: str
         required: false
 
+      dish_diameter:
+        desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter so that rudimentary primary beams can be created.
+        type: float
+        required: false
+

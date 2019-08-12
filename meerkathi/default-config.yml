@@ -572,6 +572,7 @@
     domontage: true
     cutoff: 0.1
     use_MFS_images: true
+    dish_diameter: 13.5
 
 - image_HI:
     enable: true

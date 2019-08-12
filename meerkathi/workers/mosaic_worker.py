@@ -83,7 +83,7 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file now.'.format(pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-
+                dish_diameter = config['dish_diameter']
 
 
         # List of images in place, and have ensured that there are corresponding pb.fits files,

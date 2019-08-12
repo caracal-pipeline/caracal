@@ -67,7 +67,7 @@ class worker_administrator(object):
         self.workers = []
 
         for i, (name,opts) in enumerate(self.config.iteritems()):
-            if name.find('general')>=0:
+            if name.find('general')>=0 or name == "schema_version":
                 continue
             order = opts.get('order', i+1)
 

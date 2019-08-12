@@ -258,7 +258,7 @@ def main(argv):
 
     with open(args.config, 'r') as f:
         tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-        schema_version = tmp["schema_version"]
+        arg_groups["schema_version"] = schema_version = tmp["schema_version"]
 
     if args.worker_help:
         print_worker_help(args, schema_version)

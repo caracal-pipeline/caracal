@@ -1,11 +1,79 @@
 import os, glob
 import sys
+from astropy import units as u
+import astropy.coordinates as coord
+from astropy.io import fits
+from astropy import wcs
 
 NAME = "Mosaic specified images, or those output by selfcal or imageHI"
 
 def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
+
+    ##########################################
+    # Defining functions for the worker
+    ##########################################
+
+    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
+        
+        matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
+        max_num = 0  # Initialisation
+        
+        for filename in matching_files:
+            split_filename = filename.split('_')
+            number = split_filename[-1].split('-')[0]
+            num = int(number)
+            if num > max_num:
+                max_num = num
+        
+        filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
+        return filename_of_last_selfcal_image
+
+
+    def build_beam(obs_freq,centre,cell,imsize,out_beam):  # Copied from masking_worker.py
+
+        #if copy_head == True:
+        #    hdrfile = fits.open(headfile)
+	#    hdr = hdrfile[0].header
+	#elif copy_head == False:
+
+        w = wcs.WCS(naxis=2)
+
+        centre = coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs')
+        cell /= 3600.
+
+        w.wcs.crpix = [imsize/2, imsize/2]
+        w.wcs.cdelt = np.array([-cell, cell])
+        w.wcs.crval = [centre.ra.deg, centre.dec.deg]
+        w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
+
+        hdr = w.to_header()
+        hdr['SIMPLE']  = 'T'
+        hdr['BITPIX']  = -32
+        hdr['NAXIS']   = 2
+        hdr.set('NAXIS1',  imsize, after='NAXIS')
+        hdr.set('NAXIS2',  imsize, after='NAXIS1')
+
+        if 'CUNIT1' in hdr:
+            del hdr['CUNIT1']
+        if 'CUNIT2' in hdr:
+            del hdr['CUNIT2']
+
+        pb_fwhm = 1.02*(2.99792458E8)/obs_freq/13.5/np.pi*180.
+        pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
+        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.,hdr['NAXIS2']/2.,hdr['NAXIS2']),
+				    np.linspace(-hdr['NAXIS1']/2.,hdr['NAXIS1']/2.,hdr['NAXIS1']))
+        d = np.sqrt(x*x+y*y)
+        sigma, mu = pb_fwhm_pix/2.35482, 0.0
+        gaussian = np.exp(-( (d-mu)**2 / ( 2.0 * sigma**2 ) ) )
+
+        fits.writeto(out_beam,gaussian,hdr,overwrite=True)
+
+
+    ##########################################
+    # Main part of the worker
+    ##########################################
 
     # Prioritise parameters specified in the config file, under the 'mosaic' worker   ### How do we get them from the schema instead?
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
@@ -29,18 +97,6 @@ def worker(pipeline, recipe, config):
         mfsprefix = '-MFS'
     else:
         mfsprefix = ''
-
-    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
-        matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
-        max_num = 0  # Initialisation
-        for filename in matching_files:
-            split_filename = filename.split('_') 
-            number = split_filename[-1].split('-')[0]
-            num = int(number)
-            if num > max_num:
-                max_num = num
-        filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
-        return filename_of_last_selfcal_image
 
     # In case there are different pipeline prefixes
     for i in range(pipeline.nobs):
@@ -84,7 +140,8 @@ def worker(pipeline, recipe, config):
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
                 dish_diameter = config.get('dish_diameter', 13.5) # The default assumes that MeerKAT data is being processed
-                frequency = config.get('ref_frequency', 1383685546.875) # Value in Hz. The default assumes that MeerKAT data is being processed
+                frequency = config.get('ref_frequency', 1383685546.875) # Units of Hz. The default assumes that MeerKAT data is being processed
+                speed_of_light = 2.99792458e+8  # Units of m/s
 
 
         # List of images in place, and have ensured that there are corresponding pb.fits files,

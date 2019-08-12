@@ -50,3 +50,8 @@ mapping:
         type: float
         required: false
 
+      ref_frequency:
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency so that rudimentary primary beams can be created.
+        type: float
+        required: false
+

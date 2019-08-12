@@ -83,7 +83,8 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file now.'.format(pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                dish_diameter = config['dish_diameter']
+                dish_diameter = config.get('dish_diameter', 13.5) # The default assumes that MeerKAT data is being processed
+                frequency = config.get('ref_frequency', 1383685546.875) # Value in Hz. The default assumes that MeerKAT data is being processed
 
 
         # List of images in place, and have ensured that there are corresponding pb.fits files,

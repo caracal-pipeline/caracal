@@ -417,10 +417,12 @@ def worker(pipeline, recipe, config):
     msfileName = string.split(all_msfiles[0],'.ms')[0]
 
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
+        maskName =  string.split(pipeline.msnames[0],'.ms')[0]
         msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output,pipeline.prefix,msfileName)
         with open(msinfo, 'r') as stdr:
             tinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=tinfo['REFERENCE_DIR']
+            print targetpos
             while len(targetpos)==1: targetpos=targetpos[0]
             coords = [targetpos[0]/np.pi*180., targetpos[1]/np.pi*180.]
             centreCoord = coord.SkyCoord(coords[0],coords[1], frame='icrs', unit=(u.deg, u.deg))

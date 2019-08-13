@@ -511,7 +511,7 @@ mapping:
             type: str
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
             required: false
-            example: 'hires'
+            example: 'corr'
 
       transfer_model:
         type: map
@@ -526,7 +526,7 @@ mapping:
             type: str
             desc: label of .ms file to which to transfer the model
             required: false
-            example: 'hires'
+            example: 'corr'
           model:
             type: str
             desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.

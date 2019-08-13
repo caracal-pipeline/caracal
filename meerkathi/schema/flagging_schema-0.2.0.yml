@@ -201,7 +201,7 @@ mapping:
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger.
+            desc: Enable RFI flagging with AOFlagger or tricolour (not active yet)
             type: bool
             required: False
             example: 'True'

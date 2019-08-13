@@ -17,6 +17,7 @@ def worker(pipeline, recipe, config):
 
     def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
         
+        # Doing this because convergence may have been reached before the user-specified number of iterations
         matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix) # '*' to pick up the number
         max_num = 0  # Initialisation
         
@@ -31,7 +32,7 @@ def worker(pipeline, recipe, config):
         return filename_of_last_selfcal_image
 
 
-    def build_beam(obs_freq,centre,cell,imsize,out_beam):  # Copied from masking_worker.py
+    def build_beam(obs_freq,centre,cell,imsize,out_beam):  # Copied from masking_worker.py and edited
 
         #if copy_head == True:
         #    hdrfile = fits.open(headfile)
@@ -41,7 +42,7 @@ def worker(pipeline, recipe, config):
         w = wcs.WCS(naxis=2)
 
         centre = coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs')
-        cell /= 3600.
+        cell /= 3600.0
 
         w.wcs.crpix = [imsize/2, imsize/2]
         w.wcs.cdelt = np.array([-cell, cell])
@@ -60,7 +61,9 @@ def worker(pipeline, recipe, config):
         if 'CUNIT2' in hdr:
             del hdr['CUNIT2']
 
-        pb_fwhm = 1.02*(2.99792458E8)/obs_freq/13.5/np.pi*180.
+        dish_diameter = config.get('dish_diameter', 13.5) # The default assumes that MeerKAT data is being processed
+        pb_fwhm_radians = 1.02*(2.99792458E8/obs_freq)/dish_diameter
+        pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
         pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
         x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.,hdr['NAXIS2']/2.,hdr['NAXIS2']),
 				    np.linspace(-hdr['NAXIS1']/2.,hdr['NAXIS1']/2.,hdr['NAXIS1']))
@@ -139,9 +142,7 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file now.'.format(pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                dish_diameter = config.get('dish_diameter', 13.5) # The default assumes that MeerKAT data is being processed
                 frequency = config.get('ref_frequency', 1383685546.875) # Units of Hz. The default assumes that MeerKAT data is being processed
-                speed_of_light = 2.99792458e+8  # Units of m/s
 
 
         # List of images in place, and have ensured that there are corresponding pb.fits files,

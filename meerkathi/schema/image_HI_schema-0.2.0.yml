@@ -81,10 +81,11 @@ mapping:
             required: false
             example: 'frequency'
           outframe:
-            desc: Output reference frame, options 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'.
+            desc: Output reference frame, options '', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source'
             type: str
+            enum : ['', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source']
             required: false
-            example: 'BARY'
+            example: 'bary'
           veltype:
             desc: Definition of velocity (as used in mode), radio or optical.
             type: str
@@ -114,7 +115,7 @@ mapping:
             desc: Data column to use.
             type: str
             required: false
-            example: 'CORRECTED_DATA'
+            example: 'corrected'
           obsinfo:
             desc: Create obsinfo.txt and obsinfo.json of MS file created by mstransform.
             type: bool

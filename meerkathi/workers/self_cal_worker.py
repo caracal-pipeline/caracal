@@ -893,8 +893,9 @@ def worker(pipeline, recipe, config):
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
                   "g-type"          : CUBICAL_MT[matrix_type],
-                  "g-time-int"      : gsols_[0],
+                  "g-time-int"      : 20, #gsols_[0],
                   "g-freq-int"      : gsols_[1],
+#                  "out-overwrite"   : False,
                   "g-save-to"       : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                   "g-clip-low"      : config.get('cal_gain_amplitude_clip_low'),
                   "g-clip-high"     : config.get('cal_gain_amplitude_clip_high'),
@@ -1470,7 +1471,8 @@ def worker(pipeline, recipe, config):
                       "row-chunks"   : config['transfer_model'].get('row_chunks'),
                       "model-chunks" : config['transfer_model'].get('model_chunks'),
                       "invert-uvw"   : config['transfer_model'].get('invert_uvw'),
-                      "within"       : sdm.dismissable(config['transfer_model'].get('within')),
+#                      "within"       : sdm.dismissable(config['transfer_model'].get('within')), #TODO(sphe) the cap definition for this parameter is
+#                      wrong
                       "points-only"  : config['transfer_model'].get('points_only'),
                       "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources')),
                       "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers')),

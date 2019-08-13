@@ -563,10 +563,10 @@ mapping:
             required: false
             example: 'False'
           num-sources:
-            type: float
+            type: int
             desc: Select only N brightest sources. Default is None
             required: false
-            example: '1e9'
+            example: "1000000000"
           num-workers:
             type: int
             desc: Explicitly set the number of worker threads. Default is None

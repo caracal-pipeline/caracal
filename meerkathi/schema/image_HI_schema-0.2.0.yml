@@ -17,7 +17,7 @@ mapping:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc.
         type: str
         required: false
-        example: 'hires'
+        example: 'corr'
       restfreq:
         desc: Rest frequency default value for this worker.
         type: str
@@ -105,7 +105,7 @@ mapping:
             desc: Spectral window channel selection for fitting the continuumSelection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed.
             type: str
             required: false
-            example: 'null'
+            example: ''
           fitorder:
             desc: Polynomial order for the continuum fits
             type: int

@@ -506,7 +506,7 @@ mapping:
             type: bool
             desc: Execute this segment
             required: false
-            example: 'True'
+            example: 'False'
           transfer_to_label:
             type: str
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains

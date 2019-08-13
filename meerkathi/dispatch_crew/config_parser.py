@@ -229,9 +229,6 @@ class config_parser:
         add('--interactive-port', type=int, default=8888,
             help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 
-        add('--reconstruct-defaults-from-schema', help="Developer option to reconstruct default parset from schema",
-            action='store_true')
-
         add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
             action='store_true')
         return parser
@@ -484,47 +481,6 @@ class config_parser:
 
         with open(filename, 'w') as f:
             f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))
-
-    @classmethod
-    def reconstruct_defaults(cls, filename, schema_version=None):
-        groups = OrderedDict()
-        global_schema = OrderedDict()
-        schema_version = schema_version or self.schema_version
-        if not cls.__validated_schema:
-            raise RuntimeError("Must init singleton before running this method")
-
-        with open(DEFAULT_CONFIG, 'r') as f:
-            parset = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-
-        dictovals = {}
-        detected_workers = []
-        for worker in glob.glob(os.path.join(meerkathi.pckgdir,
-                                             "schema", "*_schema-{0:s}.yml".format(schema_version))):
-            _key = key=os.path.basename(worker).replace("_schema-{0:s}.yml".format(schema_version), "")
-            schema_fn = os.path.join(meerkathi.pckgdir,
-                                      "schema", "{0:s}_schema-{1:s}.yml".format(key,
-                                                                                schema_version))
-            meerkathi.log.info("Processing {0:s}".format(_key))
-            detected_workers += [_key]
-            with open(schema_fn, 'r') as f:
-                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-
-            def __recursive_reconstruct(schema, parset, dictovals):
-                for key in schema["mapping"]:
-                    if hasattr("__dict__", key):
-                        dictovals[key] = {}
-                        __recursive_reconstruct(key, parset[key], dictovals[key])
-                    else:
-                        default = parset.get(key, "!!UNDEFINED!!")
-                        dictovals[key] = default
-            dictovals[_key] = {}
-            __recursive_reconstruct(schema["mapping"][_key], parset[_key], dictovals[_key])
-        with open(filename, 'w') as f:
-            sorted_keys = sorted(dictovals, key=lambda k: dictovals[k].get("order", 0) if hasattr(dictovals[k], "get") else 0)
-            o = OrderedDict({k: dictovals[k] for k in sorted_keys})
-            o["schema_version"] = schema_version
-            f.write(yaml.dump(o,
-                              Dumper=ruamel.yaml.RoundTripDumper))
 
     @classmethod
     def log_options(cls):

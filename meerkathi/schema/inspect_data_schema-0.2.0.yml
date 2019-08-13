@@ -1,0 +1,216 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  inspect_data:
+    type: map
+    desc: Dignostic plots of the first-pass cross-calibrated data.
+    mapping:
+      enable:
+        type: bool
+        desc: Executes dignostic plotting of the first-pass cross-calibrated data.
+        required: true
+        example: 'False'
+      label: 
+        type: str
+        desc: Label for output products (plots etc.) for this step.
+        required: false
+        example: ''
+      correlation: 
+        type: str
+        desc: Label specyfying the correlations (default all).
+        required: false
+        example: 'XX, YY'
+      uvrange: 
+        type: str
+        required: false
+        desc: Set the U-V range for data selection, e.g. '>50'.
+        example: '' 
+
+      real_imag:
+        type: map
+        desc: Plot real vs imaginary parts of data.
+        mapping:
+          enable:
+            type: bool 
+            desc: Executed the real v/s imaginary data plotting.
+            required: false
+            example: "True"
+          fields:
+            seq:
+              - type: str
+            desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
+            required: false
+            example: 'bpcal, gcal'
+          column: 
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime: 
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel: 
+            type: str
+            desc: Number of channels to average for plotting.       
+            required: false
+            example: '10'
+
+      amp_phase:
+        type: map
+        desc: Plot Amplitude vs Phase for  data.    
+        mapping:
+          enable:
+            type: bool
+            desc: Executes the plotting of amplitude v/s phase for data.
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: 'bpcal, gcal'
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:    
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+      
+      amp_uvwave:
+        type: map
+        desc: Plot data amplitude v/s  uvwave.
+        mapping: 
+          enable: 
+            type: bool
+            desc: Executes plotting data amplitude as a function of uvwave.  
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: 'bpcal, gcal'
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+
+      amp_ant:
+        type: map
+        desc: Plot data amplitde v/s antenna.
+        mapping: 
+          enable:
+            type: bool
+            desc: Executes plotting data amplitude v/s antennas.
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: 'bpcal, gcal'
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+
+      phase_uvwave:
+        type: map
+        desc: Plot data phase v/s uvwave.
+        mapping:
+          enable:
+            type: bool
+            desc: Executes plotting data phase v/s uvwave.
+            required: false
+            example: "True"
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: 'bpcal, gcal'
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+      
+      amp_scan:
+        type: map
+        desc: Plot data amplitude v/s scan number.
+        mapping:
+          enable:
+            type: bool
+            desc: Executes plotting data amplitude v/s scan number.
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: 'bpcal, gcal, target'
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'

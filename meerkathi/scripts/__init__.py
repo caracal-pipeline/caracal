@@ -141,7 +141,7 @@ class reporter:
             rep_template = f.read()
 
         report_names = [os.path.join(self.__report_dir,
-                "%s.seflcal-diagnostics.html" % os.path.basename(ms)) for ms in self.__ms]
+                "%s.selfcal-diagnostics.html" % os.path.basename(ms)) for ms in self.__ms]
         for msi, (ms, rep) in enumerate(zip(self.__ms, report_names)):
             meerkathi.log.info("Creating a report for dataset id '{}'. "
                                "The report will be dumped here: '{}'.".format(ms, rep))

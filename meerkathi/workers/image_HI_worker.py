@@ -162,7 +162,7 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
     RA,Dec=[],[]
     firstchanfreq_all,chanw_all,lastchanfreq_all = [],[],[]
-    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
+    mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
     pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq')
@@ -368,11 +368,14 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'wsclean_image'):
         nchans_all,specframe_all = [],[]
         label = config['label']
+
         if label != '':
-            flabel = '-'+label
+            flabel = '_'+label
         else: flabel = label
         if config['wsclean_image'].get('use_mstransform'):
+
             all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,True)
+
             for i, msfile in enumerate(all_msfiles):
                     # If channelisation changed during a previous pipeline run as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
@@ -398,7 +401,7 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('The spectral reference frame is {0:}'.format(specframe)) 
                           
                 elif config['mstransform'].get('doppler'):
-                    nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
+                    nchans_all.append([nchan_dopp for kk in chanw_all[i]])
                     specframe_all.append([{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe')] for kk in chanw_all[i]])
         else:
             #all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
@@ -449,8 +452,8 @@ def worker(pipeline, recipe, config):
                           "channelrange" : channelrange,
                           "niter"     : config['wsclean_image'].get('niter'),
                           "mgain"     : config['wsclean_image'].get('mgain'),
-                          "auto-threshold"  : config['wsclean_image'].get('auto_threshold')[j-1 if len(config['wsclean_image'].get('auto_threshold')) >= j else -1],
-                          "auto-mask"  :   config['wsclean_image'].get('auto_mask')[j-1 if len(config['wsclean_image'].get('auto_mask')) >= j else -1],
+                          "auto-threshold"  : config['wsclean_image'].get('auto_threshold'),
+                          "auto-mask"  :   config['wsclean_image'].get('auto_mask'),
                           "multiscale" : config['wsclean_image'].get('multi_scale'),
                           "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
                           "no-update-model-required": config['wsclean_image'].get('no_update_mod')
@@ -575,8 +578,7 @@ def worker(pipeline, recipe, config):
                                "fitsmask"  : HIclean_mask,
                                "niter"     : config['wsclean_image'].get('niter'),
                                "mgain"     : config['wsclean_image'].get('mgain'),
-                               "auto-threshold"  : config['wsclean_image'].get('auto_threshold')[j-1 if len(config['wsclean_image'].get('auto_threshold')) >= j else -1],
-                               "auto-mask"  :   config['wsclean_image'].get('auto_mask')[j-1 if len(config['wsclean_image'].get('auto_mask')) >= j else -1],
+                               "auto-threshold"  : config['wsclean_image'].get('auto_threshold'),
                                "multiscale" : config['wsclean_image'].get('multi_scale'),
                                "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
                                "no-update-model-required": config['wsclean_image'].get('no_update_mod')

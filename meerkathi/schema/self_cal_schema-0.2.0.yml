@@ -183,7 +183,7 @@ mapping:
             example: 'True'
           auto_mask:
             seq:
-              - type: int 
+              - type: float 
             desc: Auto masking threshold
             required: false
             example: '30, 10, 7'

@@ -195,7 +195,7 @@ mapping:
             desc: Execute wsclean_image on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           pol:
             desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations). Default is I.
             type: str
@@ -262,21 +262,19 @@ mapping:
             desc: Maximum number of clean iterations to perform. Default is 1000000.
             type: int
             required: false
-            example: '0'
+            example: '1000000'
           ownfitsmask:
             type: str
             desc: filename of fits mask (in output/masking folder)
             required: false
             example: ''
           auto_mask:
-            seq:
-              - type: int 
+            type: float
             desc: Construct a mask from found components and when a threshold of sigma is reached, continue cleaning with the mask down to the normal threshold.
             required: false
-            example: '30, 10, 7'
+            example: '10'
           auto_threshold:
-            seq:
-              - type: float
+            type: float
             desc: Auto clean threshold
             required: false
             example: '0.5'
@@ -294,7 +292,7 @@ mapping:
             desc: If set to true, will not store the clean model in MODEL_DATA. Relevant for HI.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           multi_scale:
             type: bool
             desc: switch on multiscale cleaning

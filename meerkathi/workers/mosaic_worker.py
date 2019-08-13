@@ -61,14 +61,14 @@ def worker(pipeline, recipe, config):
         if 'CUNIT2' in hdr:
             del hdr['CUNIT2']
 
-        dish_diameter = config.get('dish_diameter', 13.5) # The default assumes that MeerKAT data is being processed
+        dish_diameter = config.get('dish_diameter', 13.5) # Units of m. The default assumes that MeerKAT data is being processed
         pb_fwhm_radians = 1.02*(2.99792458E8/obs_freq)/dish_diameter
         pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
         pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
-        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.,hdr['NAXIS2']/2.,hdr['NAXIS2']),
-				    np.linspace(-hdr['NAXIS1']/2.,hdr['NAXIS1']/2.,hdr['NAXIS1']))
+        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.0,hdr['NAXIS2']/2.0,hdr['NAXIS2']),
+				    np.linspace(-hdr['NAXIS1']/2.0,hdr['NAXIS1']/2.0,hdr['NAXIS1']))
         d = np.sqrt(x*x+y*y)
-        sigma, mu = pb_fwhm_pix/2.35482, 0.0
+        sigma, mu = pb_fwhm_pix/2.35482, 0.0  # sigma = FWHM/sqrt(8ln2)
         gaussian = np.exp(-( (d-mu)**2 / ( 2.0 * sigma**2 ) ) )
 
         fits.writeto(out_beam,gaussian,hdr,overwrite=True)
@@ -139,11 +139,24 @@ def worker(pipeline, recipe, config):
             if os.path.exists(pipeline.output+'/'+pb_name):
                 meerkathi.log.info('{0:s} is already in place, and will be used by montage_mosaic.'.format(pb_name))
             else:
-                meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file now.'.format(pb_name))
+                meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file instead.'.format(pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                frequency = config.get('ref_frequency', 1383685546.875) # Units of Hz. The default assumes that MeerKAT data is being processed
+                image_centre =
+                image_cell = 
+                image_imsize =
 
+                recipe.add(build_beam, 'build gaussian primary beam',
+		    {
+		        'obs_freq' : config.get('frequency', 1383685546.875), # Units of Hz. The default assumes that MeerKAT data is being processed
+		        'centre'   : image_centre,
+		        'cell'     : image_cell,
+		        'imsize'   : image_imsize,
+		        'out_beam' : pb_name,
+		    },
+		    input=pipeline.input,
+                    output=pipeline.output)
+                 
 
         # List of images in place, and have ensured that there are corresponding pb.fits files,
         # so now ready to add montage_mosaic to the meerkathi recipe

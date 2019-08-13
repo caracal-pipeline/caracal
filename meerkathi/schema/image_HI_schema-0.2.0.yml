@@ -237,7 +237,7 @@ mapping:
             desc: Cleaning gain for major iterations, Ratio of peak that will be subtracted in each major iteration. Default is 0.9.
             type: float
             required: false
-            example: '0.9'
+            example: '1.0'
           cell:
             desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is Worker default for cell.
             type: float

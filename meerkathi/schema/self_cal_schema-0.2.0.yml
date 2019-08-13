@@ -521,7 +521,7 @@ mapping:
             type: bool
             desc: Execute this segment (default False)
             required: false
-            example: 'False'
+            example: 'True'
           transfer_to_label:
             type: str
             desc: label of .ms file to which to transfer the model

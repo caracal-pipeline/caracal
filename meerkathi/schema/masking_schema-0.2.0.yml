@@ -70,6 +70,11 @@ mapping:
             desc: Width of the region of sky we want to mask (keep larger than dirty image)
             required: false
             example: '1.2d'
+          thresh_nvss:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            required: false
+            example: '10e-3'
 
       pb_correction:
         type: map

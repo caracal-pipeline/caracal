@@ -559,7 +559,7 @@ mapping:
             example: ''
           points-only:
             type: bool
-            desc: Select only point-type sources. Defailt is False.
+            desc: Select only point-only sources. Default is False.
             required: false
             example: 'False'
           num-sources:
@@ -575,7 +575,7 @@ mapping:
 
       highfreqres_contim:
         type: map
-        desc: Make final continuum image and model at higher freq res, ideally using a clean mask based on the last round of continuum imging
+        desc: Make final continuum image and model at higher frequency resolution, ideally using a clean mask based on the last round of continuum imaging
         mapping:
           enable:
             type: bool

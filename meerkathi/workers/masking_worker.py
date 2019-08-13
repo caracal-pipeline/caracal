@@ -111,7 +111,6 @@ def worker(pipeline, recipe, config):
     def query_catalog_nvss(catalog_table,centre,width_im,cell,imsize,obs_freq,cat_name,thresh):
 
         Vizier.ROW_LIMIT = -1
-
         p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'),
             width=width_im, catalog=cat_name)
         tab = p[0]
@@ -352,6 +351,9 @@ def worker(pipeline, recipe, config):
 
         major = tab['MajAxis']
         minor = tab['MinAxis']
+        ra = tab['RADEG']
+        dec = tab['DECDEG']
+
         pix_x = tab['PixX']
         pix_y = tab['PixY']
 
@@ -375,6 +377,7 @@ def worker(pipeline, recipe, config):
                 ell = np.power(x-xc, 2)/np.power(a,2) + np.power(y-yc, 2)/np.power(b,2)
                 index_ell = np.where(np.less_equal(ell,1))
                 data[index_ell] = 1
+
 
         fits.writeto(mask,data,hdr,overwrite=True)
 
@@ -415,7 +418,6 @@ def worker(pipeline, recipe, config):
 
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
         msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output,pipeline.prefix,msfileName)
-        print msinfo
         with open(msinfo, 'r') as stdr:
             tinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=tinfo['REFERENCE_DIR']
@@ -497,7 +499,7 @@ def worker(pipeline, recipe, config):
                     'centre'  : centre,
                     'width_im': config[key].get('width_image'),
                     'cat_name': catalog_name,
-                    'thresh': config['make_mask'].get('thresh_lev'),
+                    'thresh': config[key].get('thresh_nvss'),
                     'cell'     : mask_cell,
                     'imsize'   : mask_imsize,
                     'obs_freq' : config['pb_correction'].get('frequency'),
@@ -514,100 +516,98 @@ def worker(pipeline, recipe, config):
                 cat_mask = final_mask
             else:
                 cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
-
             catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
-            recipe.add(make_mask_nvss, 'Build mask from mosaic',
+            recipe.add(make_mask_nvss, 'Build mask from NVSS catalog',
                 {
                     "catalog_table" : catalog_tab,
                     "centre"   : centre,
                     'cell'     : mask_cell,
                     'imsize'   : mask_imsize,
-                    "mask"      : cat_mask,
+                    "mask"     : cat_mask,
                 },
                 input=pipeline.input,
                 output=pipeline.output,
-                label='Mask done')
-
-    if pipeline.enable_task(config, 'pb_correction'):
-
-        recipe.add(build_beam, 'build gaussian primary beam',
-            {
-                'obs_freq' : config['pb_correction'].get('frequency'),
-                'centre'   : centre,
-                'cell'     : mask_cell,
-                'imsize'   : mask_imsize,
-                'out_beam' : mask_dir+'/gauss_pbeam.fits',
-            },
-            input=pipeline.input,
-            output=pipeline.output)
-
-        mosaic = 'masking/'+catalog_name+'_mosaic.fits'
-        mosaic_casa = 'masking/mosaic_casa.image'
-
-        beam = 'masking/gauss_pbeam.fits'
-        beam_casa = 'masking/gauss_pbeam.image'
-
-        mosaic_regrid_casa = 'masking/mosaic_regrid.image'
-        mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
-        mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
-
-        step =  '1'
-        recipe.add('cab/casa_importfits', step,
-            {
-                "fitsimage"         : mosaic+':output',
-                "imagename"         : mosaic_casa+":output",
-                "overwrite"         : True,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='Mosaic in casa format')
-
-        step =  '2'
-        recipe.add('cab/casa_importfits', step,
-            {
-                "fitsimage"         : beam+':output',
-                "imagename"         : beam_casa,
-                "overwrite"         : True,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='Beam in casa format')
-
-        step = '3'
-        recipe.add('cab/casa_imregrid', step,
-            {
-                "template"      : beam_casa+':output',
-                "imagename"     : mosaic_casa+':output',
-                "output"        : mosaic_regrid_casa,
-                "overwrite"     : True,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='Regridding mosaic to size and projection of dirty image')
-
-        step = '4'
-        recipe.add('cab/casa_exportfits', step,
-            {
-                "fitsimage"         : mosaic_regrid+':output',
-                "imagename"         : mosaic_regrid_casa+':output',
-                "overwrite"         : True,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='Extracted regridded mosaic')
-
-        recipe.add(pbcorr, 'Correcting mosaic for primary beam',
-            {
-                "mosaic_regrid" : pipeline.output+'/'+mosaic_regrid,
-                "mosaic_pbcorr" : pipeline.output+'/'+mosaic_pbcorr,
-                "beam"          : pipeline.output+'/'+beam,
-            },
-            input=pipeline.input,
-            output=pipeline.output,
-            label='Correcting mosaic for primary beam')
+                label='Mask from catalog')
 
     if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
+        if pipeline.enable_task(config, 'pb_correction'):
+
+            recipe.add(build_beam, 'build gaussian primary beam',
+                {
+                    'obs_freq' : config['pb_correction'].get('frequency'),
+                    'centre'   : centre,
+                    'cell'     : mask_cell,
+                    'imsize'   : mask_imsize,
+                    'out_beam' : mask_dir+'/gauss_pbeam.fits',
+                },
+                input=pipeline.input,
+                output=pipeline.output)
+
+            mosaic = 'masking/'+catalog_name+'_mosaic.fits'
+            mosaic_casa = 'masking/mosaic_casa.image'
+
+            beam = 'masking/gauss_pbeam.fits'
+            beam_casa = 'masking/gauss_pbeam.image'
+
+            mosaic_regrid_casa = 'masking/mosaic_regrid.image'
+            mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
+            mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+
+            step =  '1'
+            recipe.add('cab/casa_importfits', step,
+                {
+                    "fitsimage"         : mosaic+':output',
+                    "imagename"         : mosaic_casa+":output",
+                    "overwrite"         : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='Mosaic in casa format')
+
+            step =  '2'
+            recipe.add('cab/casa_importfits', step,
+                {
+                    "fitsimage"         : beam+':output',
+                    "imagename"         : beam_casa,
+                    "overwrite"         : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='Beam in casa format')
+
+            step = '3'
+            recipe.add('cab/casa_imregrid', step,
+                {
+                    "template"      : beam_casa+':output',
+                    "imagename"     : mosaic_casa+':output',
+                    "output"        : mosaic_regrid_casa,
+                    "overwrite"     : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='Regridding mosaic to size and projection of dirty image')
+
+            step = '4'
+            recipe.add('cab/casa_exportfits', step,
+                {
+                    "fitsimage"         : mosaic_regrid+':output',
+                    "imagename"         : mosaic_regrid_casa+':output',
+                    "overwrite"         : True,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='Extracted regridded mosaic')
+
+            recipe.add(pbcorr, 'Correcting mosaic for primary beam',
+                {
+                    "mosaic_regrid" : pipeline.output+'/'+mosaic_regrid,
+                    "mosaic_pbcorr" : pipeline.output+'/'+mosaic_pbcorr,
+                    "beam"          : pipeline.output+'/'+beam,
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='Correcting mosaic for primary beam')
 
         if config['make_mask'].get('input_image') == 'pbcorr':
             in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'

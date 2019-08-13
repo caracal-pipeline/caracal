@@ -373,11 +373,12 @@ def worker(pipeline, recipe, config):
             if minor[i]/3600. >= float(hdr['CDELT2']) and major[i]/3600. >= float(hdr['CDELT2']):
                 a = major[i]/3600./float(hdr['CDELT2'])/2.
                 b = minor[i]/3600./float(hdr['CDELT2'])/2.
-
                 ell = np.power(x-xc, 2)/np.power(a,2) + np.power(y-yc, 2)/np.power(b,2)
                 index_ell = np.where(np.less_equal(ell,1))
                 data[index_ell] = 1
-
+            else:
+                data[int(yc),int(xc)] = 1
+ 
 
         fits.writeto(mask,data,hdr,overwrite=True)
 
@@ -422,7 +423,6 @@ def worker(pipeline, recipe, config):
         with open(msinfo, 'r') as stdr:
             tinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=tinfo['REFERENCE_DIR']
-            print targetpos
             while len(targetpos)==1: targetpos=targetpos[0]
             coords = [targetpos[0]/np.pi*180., targetpos[1]/np.pi*180.]
             centreCoord = coord.SkyCoord(coords[0],coords[1], frame='icrs', unit=(u.deg, u.deg))

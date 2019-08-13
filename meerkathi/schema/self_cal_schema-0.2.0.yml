@@ -521,7 +521,7 @@ mapping:
             type: bool
             desc: Execute this segment (default False)
             required: false
-            example: 'True'
+            example: 'False'
           transfer_to_label:
             type: str
             desc: label of .ms file to which to transfer the model
@@ -564,9 +564,9 @@ mapping:
             example: 'False'
           num-sources:
             type: int
-            desc: Select only N brightest sources. Default is None
+            desc: Select only N brightest sources. Default is 0
             required: false
-            example: "1000000000"
+            example: "0"
           num-workers:
             type: int
             desc: Explicitly set the number of worker threads. Default is None

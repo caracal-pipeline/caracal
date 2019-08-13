@@ -42,7 +42,8 @@ def worker(pipeline, recipe, config):
         w = wcs.WCS(naxis=2)
 
         centre = coord.SkyCoord(centre[0], centre[1], unit=(u.deg, u.deg), frame='icrs') # Using u.deg for both due to using 'CRVAL1' and 'CRVAL2' to set the centre
-        cell /= 3600.0  # Am assuming that cell was passed to the function in units of arcsec, so this is converting it to units of deg.
+        #cell /= 3600.0  # Am assuming that cell was passed to the function in units of arcsec, so this is converting it to units of deg.
+        # Commenting the above out as 'CDELT2' from the corresponding image will be passed to the function, and this is already in deg.
 
         w.wcs.crpix = [imsize/2, imsize/2]
         w.wcs.cdelt = np.array([-cell, cell])
@@ -144,9 +145,9 @@ def worker(pipeline, recipe, config):
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
                 image_hdu = fits.open(image_name)
                 image_header = hdu[0].header
-                image_centre = [ input_header['CRVAL1'], input_header['CRVAL2'] ] # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
-                image_cell = 
-                image_imsize = int(input_header['NAXIS1'])  # Ensuring that this value is an integer
+                image_centre = [ image_header['CRVAL1'], image_header['CRVAL2'] ] # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
+                image_cell = image_header['CDELT2'] ### Need to ensure that this value is a float?  # Again assuming that these are in units of deg.
+                image_imsize = image_header['NAXIS1'])  ### Need to ensure that this value is an integer?
 
                 recipe.add(build_beam, 'build gaussian primary beam',
 		    {

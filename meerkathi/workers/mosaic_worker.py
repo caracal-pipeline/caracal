@@ -41,8 +41,8 @@ def worker(pipeline, recipe, config):
 
         w = wcs.WCS(naxis=2)
 
-        centre = coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs')
-        cell /= 3600.0
+        centre = coord.SkyCoord(centre[0], centre[1], unit=(u.deg, u.deg), frame='icrs') # Using u.deg for both due to using 'CRVAL1' and 'CRVAL2' to set the centre
+        cell /= 3600.0  # Am assuming that cell was passed to the function in units of arcsec, so this is converting it to units of deg.
 
         w.wcs.crpix = [imsize/2, imsize/2]
         w.wcs.cdelt = np.array([-cell, cell])
@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
         dish_diameter = config.get('dish_diameter', 13.5) # Units of m. The default assumes that MeerKAT data is being processed
         pb_fwhm_radians = 1.02*(2.99792458E8/obs_freq)/dish_diameter
         pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
-        pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
+        pb_fwhm_pix = pb_fwhm/hdr['CDELT2']  
         x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.0,hdr['NAXIS2']/2.0,hdr['NAXIS2']),
 				    np.linspace(-hdr['NAXIS1']/2.0,hdr['NAXIS1']/2.0,hdr['NAXIS1']))
         d = np.sqrt(x*x+y*y)
@@ -142,9 +142,11 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info('{0:s} does not exist, so going to create a rudimentary pb.fits file instead.'.format(pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                image_centre =
+                image_hdu = fits.open(image_name)
+                image_header = hdu[0].header
+                image_centre = [ input_header['CRVAL1'], input_header['CRVAL2'] ] # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
                 image_cell = 
-                image_imsize =
+                image_imsize = int(input_header['NAXIS1'])  # Ensuring that this value is an integer
 
                 recipe.add(build_beam, 'build gaussian primary beam',
 		    {

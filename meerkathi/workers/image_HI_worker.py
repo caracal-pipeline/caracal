@@ -213,7 +213,7 @@ def worker(pipeline, recipe, config):
             'atca':[-30.307665436,149.550164466],
             'askap':[116.5333,-16.9833],
                 }
-        tellocation=teldict[config.get('telescope')]
+        tellocation=teldict[config["mstransform"].get('telescope')]
         telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
         firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
         corr_order= False

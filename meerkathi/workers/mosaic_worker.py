@@ -109,7 +109,6 @@ def worker(pipeline, recipe, config):
     #for i in range(len(pipeline.prefixes)): ### I may need to put this loop back in later
 
     prefix = pipeline.prefix
-    print('specified_images = ', specified_images)
 
     if specified_images is None: ### Check that this is the correct way to check that nothing is passed via the config file
          
@@ -186,12 +185,10 @@ def worker(pipeline, recipe, config):
 
     # Need to tell MeerKATHI to look in the output folder for the images to be mosaicked
     images_in_output = [image_name+':output' for image_name in specified_images]
-    print(images_in_output)
 
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe
     if pipeline.enable_task(config, 'domontage'):
-        print('I enabled domontage in the config file, so should see this message')
         recipe.add('cab/montage_mosaic', 'montage_mosaic',
             {
                 "mosaic-type"    : specified_mosaictype,
@@ -204,7 +201,7 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='montage_mosaic:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
         
-    else:
+    else:  # Written out for clarity as to what difference the 'domontage' setting makes 
         recipe.add('cab/montage_mosaic', 'montage_mosaic',
             {
                 "mosaic-type"    : specified_mosaictype,

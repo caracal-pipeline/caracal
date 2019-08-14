@@ -1590,20 +1590,20 @@ def worker(pipeline, recipe, config):
             output=pipeline.output,
             label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
-        if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
-        else:
-            imagetype=['image','dirty','psf','residual','model']
-            if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
-        for mm in imagetype:
-            step = 'finechancontcube'
-            recipe.add('cab/fitstool', step,
-                {
-                   "image"    : ['{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
-                   "output"   : '{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
-                   "stack"    : True,
-                   "delete-files" : True,
-                   "fits-axis": 'FREQ',
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+            if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
+            else:
+                imagetype=['image','dirty','psf','residual','model']
+                if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
+            for mm in imagetype:
+                step = 'finechancontcube'
+                recipe.add('cab/fitstool', step,
+                    {
+                       "image"    : ['{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
+                       "output"   : '{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
+                       "stack"    : True,
+                       "delete-files" : True,
+                       "fits-axis": 'FREQ',
+                    },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))

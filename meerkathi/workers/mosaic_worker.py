@@ -5,7 +5,7 @@ import astropy.coordinates as coord
 from astropy.io import fits
 from astropy import wcs
 
-NAME = "Mosaic specified images, or those output by selfcal or imageHI"
+NAME = "Mosaic images"
 
 def worker(pipeline, recipe, config):
 
@@ -82,16 +82,16 @@ def worker(pipeline, recipe, config):
     # Prioritise parameters specified in the config file, under the 'mosaic' worker   ### How do we get them from the schema instead?
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
     use_MFS_images = config['use_MFS_images']
-    specified_prefix = config['name']
+    #specified_prefix = config['name'] ### Come back to. I'd said in the schema that this does not need to be specified...
     specified_images = config['target_images'] ### Test at a later point
 
     # Parameters obtained from the config file, but under another worker
     if specified_mosaictype == 'continuum':
-        label = pipeline.config['self_cal']['label'] ### Adopt the default for this
+        label = pipeline.config['self_cal'].get('label', 'corr')
     if specified_mosaictype == 'spectral':
-        label = pipeline.config['image_HI']['label'] ### Adopt the default for this
+        label = pipeline.config['image_HI'].get('label', 'corr') 
     else:
-        label = pipeline.config['self_cal']['label'] ### Adopt the default for this
+        label = pipeline.config['self_cal'].get('label', 'corr') 
         meerkathi.log.info("Mosaic_type was not set to either 'continuum' or 'spectral' in the config file, so proceeding with default mode ('continuum').")
         specified_mosaictype = 'continuum'
 

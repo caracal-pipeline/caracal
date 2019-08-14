@@ -139,8 +139,12 @@ def worker(pipeline, recipe, config):
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
                 specified_images = specified_images.append(image_name)
 
+    meerkathi.log.info('Images to be mosaicked are:')
+    meerkathi.log.info(specified_images)
+
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian primary beams if need be
+    images_in_output = []  
     for image_name in specified_images:
             
         pb_name = image_name.replace('image.fits', 'pb.fits')
@@ -180,6 +184,10 @@ def worker(pipeline, recipe, config):
 
     meerkathi.log.info('Checking for *pb.fits files now complete.')
 
+    # Need to tell MeerKATHI to look in the output folder for the images to be mosaicked
+    images_in_output = [image_name+':output' for image_name in specified_images]
+    print(images_in_output)
+
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe
     if pipeline.enable_task(config, 'domontage'):
@@ -190,7 +198,7 @@ def worker(pipeline, recipe, config):
                 "domontage"      : True,
                 "cutoff"         : config.get('cutoff', 0.1),
                 "name"           : prefix,
-                "target-images"  : specified_images,
+                "target-images"  : images_in_output,
             },
             input=pipeline.input,
             output=pipeline.output,
@@ -203,7 +211,7 @@ def worker(pipeline, recipe, config):
                 "domontage"      : False,
                 "cutoff"         : config.get('cutoff', 0.1),
                 "name"           : prefix,
-                "target-images"  : specified_images,
+                "target-images"  : images_in_output,
             },
             input=pipeline.input,
             output=pipeline.output,

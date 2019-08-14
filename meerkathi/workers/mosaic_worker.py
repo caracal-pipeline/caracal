@@ -142,8 +142,7 @@ def worker(pipeline, recipe, config):
     meerkathi.log.info(specified_images)
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
-    # so that we can create simple Gaussian primary beams if need be
-    images_in_output = []  
+    # so that we can create simple Gaussian primary beams if need be 
     for image_name in specified_images:
             
         pb_name = image_name.replace('image.fits', 'pb.fits')

@@ -20,8 +20,12 @@ mapping:
 
       domontage:
         desc: Re-grid the input images, and associated beams. Default is true.
-        type: bool
-        required: false
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section 
+            type: bool
+            required: false
 
       cutoff:
         desc: The cutoff in the primary beam to use, assuming a Gaussian at the moment. Default is 0.1.

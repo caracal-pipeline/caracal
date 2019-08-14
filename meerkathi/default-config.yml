@@ -569,7 +569,8 @@
 - mosaic__1:
     enable: true
     mosaic_type: continuum
-    domontage: true
+    domontage: 
+      enable: true
     cutoff: 0.1
     use_MFS_images: true
     dish_diameter: 13.5
@@ -671,6 +672,7 @@
 - mosaic__2:
     enable: true
     mosaic_type: spectral
-    domontage: true
+    domontage: 
+      enable: true
     cutoff: 0.1
     use_MFS_images: true

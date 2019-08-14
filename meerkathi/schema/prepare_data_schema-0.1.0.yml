@@ -60,3 +60,21 @@ mapping:
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
             required: false
+          weight_columns:
+            seq:
+              - type: str
+            desc: column names
+            required: false
+          noise_columns:
+            seq:
+              - type: str
+            desc: column names for noise
+            required: false
+          write_to_ms:
+            desc: write columns to file
+            type: bool
+            required: false
+          stats_data:
+            desc: which statistics for the file.
+            type: str
+            required: false

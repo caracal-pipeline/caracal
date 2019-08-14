@@ -321,12 +321,12 @@ mapping:
             required: false
           Gsols_time:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: true
           Gsols_channel:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
           Bjones: 
@@ -335,12 +335,12 @@ mapping:
            required: false
           Bsols_time:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
           Bsols_channel:
             seq:
-              - type: float
+              - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
           DDjones:
@@ -350,12 +350,12 @@ mapping:
           DDsols_time:
             desc: Calibration solution intervals
             seq:
-              - type: float
+              - type: int
             required: false
           DDsols_channel:
             desc: Calibration solution intervals
             seq:
-              - type: float
+              - type: int
             required: false
           ragavi_plot:
             type: map

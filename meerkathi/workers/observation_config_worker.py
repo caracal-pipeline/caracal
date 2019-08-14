@@ -22,7 +22,7 @@ def worker(pipeline, recipe, config):
         msname = msnames[i]
 
         if pipeline.enable_task(config, 'obsinfo'):
-            if config['obsinfo'].get('listobs', True):
+            if config['obsinfo'].get('listobs'):
                 step = 'listobs_{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                     {
@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
                     output=pipeline.output,
                     label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
     
-            if config['obsinfo'].get('summary_json', True):
+            if config['obsinfo'].get('summary_json'):
                  step = 'summary_json_{:d}'.format(i)
                  recipe.add('cab/msutils', step,
                     {
@@ -47,7 +47,7 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-        if config['obsinfo'].get('vampirisms', False):
+        if config['obsinfo'].get('vampirisms'):
             step = 'vampirisms_{0:d}'.format(i)
             recipe.add('cab/sunblocker', step,
                 {
@@ -66,7 +66,7 @@ def worker(pipeline, recipe, config):
 
     # initialse things
     for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
-        val = config.get(item, 'auto')
+        val = config.get(item)
         if val and not isinstance(val, list):
             setattr(pipeline, item, [val]*pipeline.nobs)
         elif isinstance(val, list):
@@ -83,8 +83,8 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'specframe', [None]*pipeline.nobs)
 
     # Set antenna properties
-    pipeline.Tsys_eta = config.get('Tsys_eta', 22.0)
-    pipeline.dish_diameter = config.get('dish_diameter', 13.5)
+    pipeline.Tsys_eta = config.get('Tsys_eta')
+    pipeline.dish_diameter = config.get('dish_diameter')
 
     for item in 'xcal fcal bpcal gcal target'.split():
         setattr(pipeline, item + "_id", [])
@@ -94,7 +94,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Extracting info from {0:s}/{1:s}.json (if present) and {2:s}'.format(pipeline.data_path, pipeline.dataid[i],msinfo))
 
         # get reference antenna
-        if config.get('reference_antenna', 'auto') == 'auto':
+        if config.get('reference_antenna') == 'auto':
             msmeta = '{0:s}/{1:s}.json'.format(pipeline.data_path, pipeline.dataid[i])
             if path.exists(msmeta):
                 pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
@@ -106,13 +106,13 @@ def worker(pipeline, recipe, config):
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:
-            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
             pipeline.nchans[i] = spw
         meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         with open(msinfo, 'r') as stdr:
-            chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+            chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
             firstchanfreq = [ss[0] for ss in chfr]
             lastchanfreq  = [ss[-1] for ss in chfr]
             chanwidth     = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
             sys.exit(1)
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
-            pipeline.specframe[i]=yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+            pipeline.specframe[i]=yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
 
         #Auto select some/all fields if user didn't manually override all of them
         if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
@@ -137,7 +137,7 @@ def worker(pipeline, recipe, config):
             targets = intents['target'][-1]
             xcals = []
             # Set crosshand angle calibrator
-            if config.get('xcal', 'auto') == 'auto':
+            if config.get('xcal') == 'auto':
                 if len(intents['xcal']) > 0:
                     pipeline.xcal[i] = intents['xcal'][-1] # last on the list if auto
                 else:
@@ -193,14 +193,14 @@ def worker(pipeline, recipe, config):
         with open(msinfo, 'r') as stdr:
             # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
             # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[i].split(',')[0] only
-            targetinfo = yaml.load(stdr)['FIELD']
+            targetinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(pipeline.target[i].split(',')[0])][0]
             pipeline.TRA[i]  = targetpos[0]/np.pi*180.
             pipeline.TDec[i] = targetpos[1]/np.pi*180.
             meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(pipeline.TRA[i],pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
-        if config.get('Check_Cals',True):
+        if config.get('Check_Cals'):
             for item in 'xcal fcal bpcal gcal target'.split():
                 flds =  getattr(pipeline, item)[i].split(',') \
                             if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
@@ -213,10 +213,10 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Generating primary beam')
         recipe.add('cab/eidos', 'primary_beam',
             {
-                "diameter"          : config['primary_beam'].get('diameter', 6.0),
-                "pixels"            : config['primary_beam'].get('pixels', 256),
-                "freq"              : config['primary_beam'].get('freq', "855 1760 64"),
-                "coefficients-file" : config['primary_beam'].get('coefficients_file', 'meerkat_beam_coeffs_em_zp_dct.npy'),
+                "diameter"          : config['primary_beam'].get('diameter'),
+                "pixels"            : config['primary_beam'].get('pixels'),
+                "freq"              : config['primary_beam'].get('freq'),
+                "coeff"             : config['primary_beam'].get('coefficients', 'me'),
                 "prefix"            : pipeline.prefix,
                 "output-eight"      : True,
             },

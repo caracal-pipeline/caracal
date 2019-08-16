@@ -561,10 +561,10 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/pybdsm', step,
 		    	{
     			 	"image"         : im,
-            "thresh_pix"    : config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1]
+            "thresh_pix"    : config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
             "thresh_isl"    : config[key].get('thresh_isl')[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
     				"outfile"       : '{:s}.gaul:output'.format(calmodel), 
-    				"blank_limit"   : sdm.dismissable(blank_limit),,
+    				"blank_limit"   : sdm.dismissable(blank_limit),
             "adaptive_rms_box" : config[key].get('local_rms'),
     				"port2tigger"   : False,
             "format"         : 'ascii',
@@ -953,7 +953,7 @@ def worker(pipeline, recipe, config):
                 label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     
-    def apply_gains_to_fullres(apply_iter, prod_path, mslist_out, enable=True)
+    def apply_gains_to_fullres(apply_iter, prod_path, mslist_out, enable=True):
         key = 'calibrate'
         calwith = config.get('calibrate_with').lower()
         if(calwith=='meqtrees'):
@@ -1156,7 +1156,7 @@ def worker(pipeline, recipe, config):
         else:
             # Use the image
             if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORR_DATA":
-                aimfast_settings.update({"restored-image" : '{0:s}/{1:s}_{2:d}{3:s}-image.fits:output'.format(img_dir, prefix, num, mfsprefix)})
+                aimfast_settings.update({"restored-image" : '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix)})
 
             else:
                 try:
@@ -1569,7 +1569,7 @@ def worker(pipeline, recipe, config):
                       "npix"                   : config['highfreqres_contim'].get('npix', npix),
                       "padding"                : config['highfreqres_contim'].get('padding', padding),
                       "scale"                  : config['highfreqres_contim'].get('cell', cell),
-                      "prefix"                 : '{0:s}/{1:s}_{2:s}'.format(get_dir_path(hires_path, pipeline), prefix, 'fine')
+                      "prefix"                 : '{0:s}/{1:s}_{2:s}'.format(get_dir_path(hires_path, pipeline), prefix, 'fine'),
                       "niter"                  : config['highfreqres_contim'].get('niter', niter),
                       "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
                       "pol"                    : config['highfreqres_contim'].get('pol', pol),

@@ -48,7 +48,7 @@ mapping:
         type: int
         desc: Number of pixels in output image
         required: false
-        example: '900'
+        example: '1500'
       img_padding:
         type: float
         desc: Padding in WSclean
@@ -143,7 +143,7 @@ mapping:
             type: bool
             desc: Execute this segment
             required: false
-            example: 'False'
+            example: 'True'
           tolerance:
             type: float
             desc: Relative change in weighted mean of several indicators from aimfast.
@@ -156,10 +156,10 @@ mapping:
             desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Options ["DR","SKEW","KURT","STDDev","MEAN"]. Note that when calibrate model_mode = 'vis_only' DR is not an option.
             example: 'DR'
           area_factor:
-            type: float
+            type: int
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
             required: false
-            example: '1.'
+            example: '6'
           normality_model:
             type: str
             enum: ["normaltest", "shapiro"]
@@ -170,7 +170,7 @@ mapping:
             type: bool
             desc: Generate html plots for comparing catalogs and residuals
             required: false
-            example: 'False'
+            example: 'True'
 
       image:
         type: map
@@ -323,7 +323,7 @@ mapping:
               - type: int
             desc: Source finder pixel threshold
             required: false
-            example: '3'
+            example: '5'
           thresh_isl:
             seq:
               - type: int
@@ -449,7 +449,7 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: false
-                example: 'True'
+                example: 'False'
               gaintype:
                 seq:
                 - type: str

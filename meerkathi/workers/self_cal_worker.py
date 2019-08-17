@@ -1348,6 +1348,7 @@ def worker(pipeline, recipe, config):
             image_quality_assessment(self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
 
         while quality_check(self_cal_iter_counter, field, enable=pipeline.enable_task(config, 'aimfast')):
+            print "Calibration Round:", self_cal_iter_counter
             if pipeline.enable_task(config, 'calibrate'):
                 selfcal_products = "{0:s}/{1:s}".format(pipeline.continuum, 'selfcal_products')
                 if not os.path.exists(selfcal_products):

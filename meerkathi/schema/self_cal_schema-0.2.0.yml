@@ -148,7 +148,7 @@ mapping:
             type: float
             desc: Relative change in weighted mean of several indicators from aimfast.
             required: false
-            example: '2.'
+            example: '0.02'
           convergence_criteria:
             seq:
               - type: str
@@ -186,7 +186,7 @@ mapping:
               - type: float 
             desc: Auto masking threshold
             required: false
-            example: '30, 10, 7'
+            example: '30, 5, 3'
           auto_threshold:
             seq:
               - type: float

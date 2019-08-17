@@ -186,7 +186,7 @@ mapping:
               - type: float 
             desc: Auto masking threshold
             required: false
-            example: '30, 5, 3'
+            example: '30, 10, 7'
           auto_threshold:
             seq:
               - type: float
@@ -449,7 +449,7 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: false
-                example: 'False'
+                example: 'True'
               gaintype:
                 seq:
                 - type: str

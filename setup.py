@@ -10,7 +10,7 @@ except ImportError as e:
 requirements = [
 'ruamel.yaml>=0.15.22',
 'numpy>=1.15.4',
-'stimela>=1.0.1',
+'stimela>=1.1.4',
 'scipy>=0.19.1',
 'pysolr>=3.4.0',
 'progressbar2>=3.11.0',
@@ -34,7 +34,7 @@ extra_diagnostics = [
 ]
 
 PACKAGE_NAME = 'meerkathi'
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 setup(name = PACKAGE_NAME,
     version = __version__,

@@ -123,7 +123,7 @@ def observed_longest(msinfo, bpcals):
       Automatically select bandpass calibrator
     """
     with open(msinfo, 'r') as f:
-        info = yaml.load(f)
+        info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -150,7 +150,7 @@ def observed_longest(msinfo, bpcals):
 
 def field_observation_length(msinfo, field):
     with open(msinfo, 'r') as f:
-        info = yaml.load(f)
+        info = yaml.safe_load(f)
     
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -214,7 +214,7 @@ def find_in_casa_calibrators(msinfo, field):
     """
    
     with open(meerkathi.pckgdir +'/data/casa_calibrators.yml') as stdr:
-        db = yaml.load(stdr)
+        db = yaml.safe_load(stdr)
     
     found = False
     for src in db['models'].values():

@@ -1,0 +1,103 @@
+!!omap
+- schema_version: 0.2.0
+
+- general:
+    prefix: mypipelinerun
+    init_pipeline: true
+
+- get_data:
+    dataid: ['']
+
+- observation_config:
+    obsinfo:
+      enable: true
+    target: auto
+    fcal: auto
+    bpcal: auto
+    gcal: auto
+    xcal: auto
+    reference_antenna: '0'
+
+- prepare_data:
+    enable: true
+
+- flagging:
+    enable: true
+
+- cross_cal:
+    enable: true
+    apply_delay_cal:
+      enable: true
+      field: 
+      - gcal
+      applyto: 
+      - gcal
+      - bpcal
+      - target
+    apply_bp_cal:
+      enable: true
+      field: 
+      - bpcal
+      applyto:
+      - gcal
+      - bpcal
+      - target
+    apply_transfer_fluxscale:
+      enable: true
+      field: 
+      - gcal
+      applyto:
+      - gcal
+      - bpcal
+      - target
+    apply_gain_cal_gain:
+      enable: false
+      field: 
+      - gcal
+      applyto: 
+      - gcal
+      - bpcal
+      - target
+
+- polcal:
+    enable: false
+
+- inspect_data:
+    enable: true
+
+- split_target:
+    label_out: corr
+    enable: true
+    split_target:
+      enable: true
+      column: corrected
+      otfcal:
+        enable: false
+
+- flagging__2:
+    enable: true
+    label: corr
+    autoflag_rfi:
+      enable: true
+      flagger: aoflagger
+      fields: target
+      
+- masking:
+    enable: false
+
+- self_cal:
+    label: corr
+    enable: true
+    image:
+      enable: true
+      mask_from_sky: false
+    transfer_apply_gains:
+      enable: false
+    transfer_model:
+      enable: true
+      transfer_to_label: corr
+
+
+- image_HI:
+    label: corr
+    enable: true

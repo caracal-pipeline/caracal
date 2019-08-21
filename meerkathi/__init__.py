@@ -55,7 +55,7 @@ __version__ = report_version()
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
-DEFAULT_CONFIG = os.path.join(pckgdir, "default-config.yml")
+DEFAULT_CONFIG = os.path.join(pckgdir,"sample_configurations","minimalConfig.yml")
 SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
 ################################################################################
@@ -119,10 +119,7 @@ def get_default(to):
     Get default parset copy
     """
     log.info("Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    os.system('cp {0:s}/default-config.yml {1:s}'.format(pckgdir, to))
-
-def reconstruct_defaults(filename):
-    cp().reconstruct_defaults(filename)
+    os.system('cp {0:s} {1:s}'.format(DEFAULT_CONFIG, to))
 
 def start_viewer(args, timeout=None, open_webbrowser=True):
     """
@@ -203,11 +200,11 @@ def execute_pipeline(args, arg_groups, block):
 
                 # Obtain some divine knowledge
                 cdb = mkct.calibrator_database()
-                
+
                 pipeline = mwa(arg_groups,
                             args.workers_directory, stimela_build=args.stimela_build,
                             add_all_first=args.add_all_first, prefix=args.general_prefix,
-                            singularity_image_dir=args.singularity_image_dir, 
+                            configFileName= args.config, singularity_image_dir=args.singularity_image_dir, 
                             container_tech=args.container_tech)
 
                 pipeline.run_workers()
@@ -258,7 +255,7 @@ def main(argv):
 
     with open(args.config, 'r') as f:
         tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1,1))
-        schema_version = tmp["schema_version"]
+        arg_groups["schema_version"] = schema_version = tmp["schema_version"]
 
     if args.worker_help:
         print_worker_help(args, schema_version)
@@ -284,10 +281,7 @@ def main(argv):
         log.info("Found the following reference calibrators (in CASA format):")
         log.info(cdb)
         return
-    if args.reconstruct_defaults_from_schema:
-        reconstruct_defaults("./DefaultParset.yaml")
-        log.info("Default parset reconstructed as best possible and dumped to ./DefaultParset.yaml. Please fill any missing values by inspection.")
-        return
+
     if not args.no_interactive and \
        args.config == DEFAULT_CONFIG and \
        not args.get_default and \

@@ -1,7 +1,9 @@
 import sys
 import os
+import glob
 import warnings
 import stimela.dismissable as sdm
+import stimela.recipe as stimela
 import astropy
 from astropy.io import fits
 import meerkathi
@@ -134,7 +136,7 @@ def calc_rms(filename,HImaskname):
             with fits.open(filename) as cube:
                 datacube = cube[0].data
                 y = datacube[~np.isnan(datacube)]
-	        return np.sqrt(np.sum(y * y, dtype=np.float64) / y.size)
+            return np.sqrt(np.sum(y * y, dtype=np.float64) / y.size)
     else:
         with fits.open(filename) as cube:
             datacube = cube[0].data
@@ -148,30 +150,28 @@ def calc_rms(filename,HImaskname):
             y2=newcube[newmask==0]
             #print newcube.shape, newmask.shape, y.shape              
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
-	    return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
+        return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
 
 NAME = 'Make HI Cube'
 def worker(pipeline, recipe, config):
     label = config['label']
     if label != '':
-        flabel = '-'+label
+        flabel = '_'+label
     else: flabel = label
     all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
-
     RA,Dec=[],[]
     firstchanfreq_all,chanw_all,lastchanfreq_all = [],[],[]
-    restfreq = config.get('restfreq','1.420405752GHz') 
-    mslist = ['{0:s}-{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
+    mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])for did in pipeline.dataid]
     pipeline.prefixes = ['{2:s}-{0:s}-{1:s}'.format(did,config['label'],pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
-    restfreq = config.get('restfreq','1.420405752GHz')
-    npix = config.get('npix', [1024])
+    restfreq = config.get('restfreq')
+    npix = config.get('npix')
     if len(npix) == 1:
         npix = [npix[0],npix[0]]
-    cell = config.get('cell', 7)
-    weight = config.get('weight', 'natural')
-    robust = config.get('robust', 0)
+    cell = config.get('cell')
+    weight = config.get('weight')
+    robust = config.get('robust')
 
     for i, msfile in enumerate(all_msfiles):
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
@@ -201,7 +201,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(RA[i],Dec[i]))
 
     # Find common barycentric frequency grid for all input .MS, or set it as requested in the config file
-    if pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')=='auto':
+    if pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler') and config['mstransform'].get('outchangrid')=='auto':
         firstchanfreq=list(itertools.chain.from_iterable(firstchanfreq_all))
         chanw=list(itertools.chain.from_iterable(chanw_all))
         lastchanfreq=list(itertools.chain.from_iterable(lastchanfreq_all))
@@ -213,7 +213,7 @@ def worker(pipeline, recipe, config):
             'atca':[-30.307665436,149.550164466],
             'askap':[116.5333,-16.9833],
                 }
-        tellocation=teldict[config.get('telescope','meerkat')]
+        tellocation=teldict[config["mstransform"].get('telescope')]
         telloc=EarthLocation.from_geodetic(tellocation[0],tellocation[1])
         firstchanfreq_dopp,chanw_dopp,lastchanfreq_dopp = firstchanfreq,chanw,lastchanfreq
         corr_order= False
@@ -223,7 +223,6 @@ def worker(pipeline, recipe, config):
 
         for i, msfile in enumerate(all_msfiles):
             msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.txt'.format(pipeline.output,pipeline.prefix,msfile[:-3])
-            print msinfo
             with open(msinfo, 'r') as searchfile:
                 for longdatexp in searchfile:
                     if "Observed from" in longdatexp:
@@ -259,7 +258,7 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image' )
             sys.exit(1)
 
-    elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler', True) and config['mstransform'].get('outchangrid', 'auto')!='auto':
+    elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler') and config['mstransform'].get('outchangrid')!='auto':
         if len(config['mstransform']['outchangrid'].split(','))!=3:
             meerkathi.log.error('Wrong format for mstransform:outchangrid in the .yml config file.')
             meerkathi.log.error('Current setting is mstransform:outchangrid:"{0:s}"'.format(config['mstransform']['outchangrid']))
@@ -291,25 +290,25 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists('{1:s}/{0:s}'.format(msname_mst,pipeline.msdir)): os.system('rm -r {1:s}/{0:s}'.format(msname_mst,pipeline.msdir))
-            col=config['mstransform'].get('column', 'corrected')
+            col=config['mstransform'].get('column')
             step = 'mstransform_{:d}'.format(i)
             recipe.add('cab/casa_mstransform', step,
                 {
                     "msname"    : msname,
                     "outputvis" : msname_mst,
-                    "regridms"  : config['mstransform'].get('doppler', True),
-                    "mode"      : config['mstransform'].get('mode', 'frequency'),
+                    "regridms"  : config['mstransform'].get('doppler'),
+                    "mode"      : config['mstransform'].get('mode'),
                     "nchan"     : sdm.dismissable(nchan_dopp),
                     "start"     : sdm.dismissable(comfreq0),
                     "width"     : sdm.dismissable(comchanw),
                     "interpolation" : 'nearest',
                     "datacolumn" : col,
                     "restfreq"  :restfreq,
-                    "outframe"  : config['mstransform'].get('outframe', 'bary'),
-                    "veltype"   : config['mstransform'].get('veltype', 'radio'),
-                    "douvcontsub" : config['mstransform'].get('uvlin', False),
-                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw', None)),
-                    "fitorder"  : config['mstransform'].get('fitorder', 1),
+                    "outframe"  : config['mstransform'].get('outframe'),
+                    "veltype"   : config['mstransform'].get('veltype'),
+                    "douvcontsub" : config['mstransform'].get('uvlin'),
+                    "fitspw"    : sdm.dismissable(config['mstransform'].get('fitspw')),
+                    "fitorder"  : config['mstransform'].get('fitorder'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -351,16 +350,16 @@ def worker(pipeline, recipe, config):
                     "cell"      : config['sunblocker'].get('cell', cell),
                     "pol"       : 'i',
                     "threshmode" : 'fit',
-                    "threshold" : config['sunblocker'].get('threshold', 3.),
+                    "threshold" : config['sunblocker'].get('threshold'),
                     "mode"      : 'all',
                     "radrange"  : 0,
                     "angle"     : 0,
                     "show"      : prefix + '.sunblocker.svg',
                     "verb"      : True,
                     "dryrun"    : False,
-                    "uvmax"      : config['sunblocker'].get('uvmax',2500.),
-                    "uvmin"      : config['sunblocker'].get('uvmin',0.),
-                    "vampirisms" : config['sunblocker'].get('vampirisms',True),
+                    "uvmax"      : config['sunblocker'].get('uvmax'),
+                    "uvmin"      : config['sunblocker'].get('uvmin'),
+                    "vampirisms" : config['sunblocker'].get('vampirisms'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
@@ -369,11 +368,14 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'wsclean_image'):
         nchans_all,specframe_all = [],[]
         label = config['label']
+
         if label != '':
-            flabel = '-'+label
+            flabel = '_'+label
         else: flabel = label
-        if config['wsclean_image'].get('use_mstransform',True):
+        if config['wsclean_image'].get('use_mstransform'):
+
             all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,True)
+
             for i, msfile in enumerate(all_msfiles):
                     # If channelisation changed during a previous pipeline run as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
@@ -398,9 +400,9 @@ def worker(pipeline, recipe, config):
                         specframe_all.append(specframe)
                     meerkathi.log.info('The spectral reference frame is {0:}'.format(specframe)) 
                           
-                elif config['mstransform'].get('doppler', True):
-                    nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
-                    specframe_all.append([{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe', 'bary')] for kk in chanw_all[i]])
+                elif config['mstransform'].get('doppler'):
+                    nchans_all.append([nchan_dopp for kk in chanw_all[i]])
+                    specframe_all.append([{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe')] for kk in chanw_all[i]])
         else:
             #all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
             msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output,pipeline.prefix,msfile[:-3]) 
@@ -415,20 +417,20 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info('The spectral reference frame is {0:}'.format(specframe)) 
           
 
-        spwid = config['wsclean_image'].get('spwid', 0)
-        nchans = config['wsclean_image'].get('nchans',0)
+        spwid = config['wsclean_image'].get('spwid')
+        nchans = config['wsclean_image'].get('nchans')
         if nchans == 0 or nchans == 'all': nchans=nchans_all[0][spwid]   # Assuming user wants same spw for all msfiles and they have same number of channels
         specframe_all=[ss[spwid] for ss in specframe_all][0]             # Assuming user wants same spw for all msfiles and they have same specframe
-        firstchan = config['wsclean_image'].get('firstchan', 0)
-        binchans  = config['wsclean_image'].get('binchans', 1)
+        firstchan = config['wsclean_image'].get('firstchan')
+        binchans  = config['wsclean_image'].get('binchans')
         channelrange = [firstchan, firstchan+nchans*binchans]
             # Construct weight specification
-        if config['wsclean_image'].get('weight', 'natural') == 'briggs':
+        if config['wsclean_image'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
-        wscl_niter = config['wsclean_image'].get('wscl_niter', 2)
-        tol = config['wsclean_image'].get('tol', 0.5)
+        wscl_niter = config['wsclean_image'].get('wscl_niter')
+        tol = config['wsclean_image'].get('tol')
 
         for target in (all_targets):
             mslist = ms_dict[target]
@@ -436,37 +438,40 @@ def worker(pipeline, recipe, config):
             for j in range(1,wscl_niter+1):
                 if j==1:        
                     step = 'wsclean_image_HI_with_automasking'
-                    ownHIclean_mask=config['wsclean_image'].get('ownfitsmask',)   
-                    recipe.add('cab/wsclean', step,
-                        {
-                  "msname"    : mslist,
-                  "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
-                  "weight"    : weight,
-                  "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
-                  "pol"        : config['wsclean_image'].get('pol','I'),
-                  "npix"      : config['wsclean_image'].get('npix', npix),
-                  "padding"   : config['wsclean_image'].get('padding', 1.2),
-                  "scale"     : config['wsclean_image'].get('cell', cell),
-                  "channelsout"     : nchans,
-                  "channelrange" : channelrange,
-                  "niter"     : config['wsclean_image'].get('niter', 1000000),
-                  "mgain"     : config['wsclean_image'].get('mgain', 1.0),
-                  "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
-                  "fitsmask"  : ownHIclean_mask,
-                  "auto-mask"  :   config['wsclean_image'].get('automask', 3),
-                  "multiscale" : config['wsclean_image'].get('multi_scale', False),
-                  "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales', None)),
-                  "no-update-model-required": config['wsclean_image'].get('no_update_mod', True)
-                       },
+                    ownHIclean_mask=config['wsclean_image'].get('ownfitsmask')   
+                    HI_image_opts = {
+                          "msname"    : mslist,
+                          "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
+                          "weight"    : weight,
+                          "taper-gaussian" : str(config['wsclean_image'].get('taper')),
+                          "pol"        : config['wsclean_image'].get('pol'),
+                          "npix"      : config['wsclean_image'].get('npix', npix),
+                          "padding"   : config['wsclean_image'].get('padding'),
+                          "scale"     : config['wsclean_image'].get('cell', cell),
+                          "channelsout"     : nchans,
+                          "channelrange" : channelrange,
+                          "niter"     : config['wsclean_image'].get('niter'),
+                          "mgain"     : config['wsclean_image'].get('mgain'),
+                          "auto-threshold"  : config['wsclean_image'].get('auto_threshold'),
+                          "auto-mask"  :   config['wsclean_image'].get('auto_mask'),
+                          "multiscale" : config['wsclean_image'].get('multi_scale'),
+                          "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
+                          "no-update-model-required": config['wsclean_image'].get('no_update_mod')
+                    }
+
+                    if ownHIclean_mask:
+                        HI_image_opts.update( {"fitsmask" : ownHIclean_mask+':output/masking'})
+
+                    recipe.add('cab/wsclean', step,HI_image_opts,
                       input=pipeline.input,
                       output=pipeline.output,
                       label='{:s}:: Image HI'.format(step))
 
                     if config['wsclean_image']['make_cube']:
-                        if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
+                        if not config['wsclean_image'].get('niter'): imagetype=['image','dirty']
                         else:
                             imagetype=['image','dirty','psf','residual','model']
-                            if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
+                            if config['wsclean_image'].get('mgain')<1.0: imagetype.append('first-residual')
                         for mm in imagetype:
                                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                                 recipe.add('cab/fitstool', step,
@@ -504,7 +509,7 @@ def worker(pipeline, recipe, config):
                        "steps.doMerge"         : True,
                        "steps.doReliability"   : False,
                        "steps.doParameterise"  : False,
-       	               "steps.doWriteMask"     : True,
+                       "steps.doWriteMask"     : True,
                        "steps.doMom0"          : False,
                        "steps.doMom1"          : False,
                        "steps.doWriteCat"      : False,
@@ -544,12 +549,12 @@ def worker(pipeline, recipe, config):
 
                         if pipeline.enable_task(config,'freq_to_vel'):
                             for ss in ['dirty','psf','first-residual','residual','model','image']:
-            	                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                                 MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                           {
                                   'filename' : cubename,
-                                  'reverse'  : config['freq_to_vel'].get('reverse', False)
+                                  'reverse'  : config['freq_to_vel'].get('reverse')
                                           },
                                            input=pipeline.input,
                                            output=pipeline.output,
@@ -563,30 +568,30 @@ def worker(pipeline, recipe, config):
                                "msname"    : mslist,
                                "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
                                "weight"    : weight,
-                               "taper-gaussian" : str(config['wsclean_image'].get('taper',0)),
-                               "pol"        : config['wsclean_image'].get('pol','I'),
+                               "taper-gaussian" : str(config['wsclean_image'].get('taper')),
+                               "pol"        : config['wsclean_image'].get('pol'),
                                "npix"      : config['wsclean_image'].get('npix', npix),
-                               "padding"   : config['wsclean_image'].get('padding', 1.2),
+                               "padding"   : config['wsclean_image'].get('padding'),
                                "scale"     : config['wsclean_image'].get('cell', cell),
                                "channelsout"     : nchans,
                                "channelrange" : channelrange,
                                "fitsmask"  : HIclean_mask,
-                               "niter"     : config['wsclean_image'].get('niter', 1000000),
-                               "mgain"     : config['wsclean_image'].get('mgain', 1.0),
-                               "auto-threshold"  : config['wsclean_image'].get('autothreshold', 5),
-                               "multiscale" : config['wsclean_image'].get('multi_scale', False),
-                               "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales', None)),
-                               "no-update-model-required": config['wsclean_image'].get('no_update_mod', True)
+                               "niter"     : config['wsclean_image'].get('niter'),
+                               "mgain"     : config['wsclean_image'].get('mgain'),
+                               "auto-threshold"  : config['wsclean_image'].get('auto_threshold'),
+                               "multiscale" : config['wsclean_image'].get('multi_scale'),
+                               "multiscale-scales" : sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
+                               "no-update-model-required": config['wsclean_image'].get('no_update_mod')
                                },
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{:s}:: re-Image HI_'+str(j).format(step))
  
                     if config['wsclean_image']['make_cube']:
-                        if not config['wsclean_image'].get('niter', 1000000): imagetype=['image','dirty']
+                        if not config['wsclean_image'].get('niter'): imagetype=['image','dirty']
                         else:
                             imagetype=['image','dirty','psf','residual','model']
-                            if config['wsclean_image'].get('mgain', 1.0)<1.0: imagetype.append('first-residual')
+                            if config['wsclean_image'].get('mgain')<1.0: imagetype.append('first-residual')
                         for mm in imagetype:
                             step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                             recipe.add('cab/fitstool', step,
@@ -630,12 +635,12 @@ def worker(pipeline, recipe, config):
 
                         if pipeline.enable_task(config,'freq_to_vel'):
                             for ss in ['dirty','psf','first-residual','residual','model','image']:
-            	                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
+                                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
                                 MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
                                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                           {
                                    "filename" : cubename,
-                                   "reverse"  : config['freq_to_vel'].get('reverse', False)
+                                   "reverse"  : config['freq_to_vel'].get('reverse')
                                           },
                                            input=pipeline.input,
                                            output=pipeline.output,
@@ -663,7 +668,7 @@ def worker(pipeline, recipe, config):
                     os.rename(MFScubename,MFSfinalcubename)
 
             for j in range(1,wscl_niter):               
-                if config['wsclean_image'].get('rm_intcubes',True):
+                if config['wsclean_image'].get('rm_intcubes'):
                     for ss in ['dirty','psf','first-residual','residual','model','image']:
                         cubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits')
                         HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
@@ -681,7 +686,7 @@ def worker(pipeline, recipe, config):
         if label != '':
             flabel = '-'+label
         else: flabel = label
-        if config['wsclean_image'].get('use_mstransform',True):
+        if config['wsclean_image'].get('use_mstransform'):
             all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,True)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
@@ -706,7 +711,7 @@ def worker(pipeline, recipe, config):
                         specframe_all.append(specframe)
                     meerkathi.log.info('The spectral reference frame is {0:}'.format(specframe)) 
                           
-                elif config['mstransform'].get('doppler', True):
+                elif config['mstransform'].get('doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd':0,'lsrk':1,'galacto':2,'bary':3,'geo':4,'topo':5}[config['mstransform'].get('outframe', 'bary')] for kk in chanw_all[i]])
         else:
@@ -721,15 +726,15 @@ def worker(pipeline, recipe, config):
                 specframe_all.append(specframe)
             meerkathi.log.info('The spectral reference frame is {0:}'.format(specframe)) 
           
-        spwid = config['casa_image'].get('spwid', 0)
-        nchans = config['casa_image'].get('nchans',0)
+        spwid = config['casa_image'].get('spwid')
+        nchans = config['casa_image'].get('nchans')
         if nchans == 0 or nchans == 'all': nchans=nchans_all[0][spwid]   # Assuming user wants same spw for all msfiles and they have same number of channels
         specframe_all=[ss[spwid] for ss in specframe_all][0]             # Assuming user wants same spw for all msfiles and they have same specframe
-        firstchan = config['casa_image'].get('firstchan', 0)
-        binchans  = config['casa_image'].get('binchans', 1)
+        firstchan = config['casa_image'].get('firstchan')
+        binchans  = config['casa_image'].get('binchans')
         channelrange = [firstchan, firstchan+nchans*binchans]
         # Construct weight specification
-        if config['casa_image'].get('weight', 'natural') == 'briggs':
+        if config['casa_image'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format( config['casa_image'].get('robust', robust))
         else:
             weight = config['casa_image'].get('weight', weight)
@@ -745,24 +750,24 @@ def worker(pipeline, recipe, config):
 #                 "field"          :    target,
                  "mode"           :    'channel',
                  "nchan"          :    nchans,
-                 "start"          :    config['casa_image'].get('startchan', 0,),
+                 "start"          :    config['casa_image'].get('startchan'),
                  "interpolation"  :    'nearest',
-                 "niter"          :    config['casa_image'].get('niter', 1000000),
+                 "niter"          :    config['casa_image'].get('niter'),
                  "psfmode"        :    'hogbom',
-                 "threshold"      :    config['casa_image'].get('threshold', '10mJy'),
-                 "npix"           :    config['casa_image'].get('npix', npix),
-                 "cellsize"       :    config['casa_image'].get('cell', cell),
-                 "weight"         :    config['casa_image'].get('weight', weight),
-                 "robust"         :    config['casa_image'].get('robust', robust),
-                 "stokes"         :    config['casa_image'].get('pol','I'),
+                 "threshold"      :    config['casa_image'].get('threshold'),
+                 "npix"           :    config['casa_image'].get('npix'),
+                 "cellsize"       :    config['casa_image'].get('cell'),
+                 "weight"         :    config['casa_image'].get('weight'),
+                 "robust"         :    config['casa_image'].get('robust'),
+                 "stokes"         :    config['casa_image'].get('pol'),
 #                 "wprojplanes"    :    1,
                  "port2fits"      :    True,
                  "restfreq"       :    restfreq,
                 }
-            if config['casa_image'].get('taper', '') != '':
+            if config['casa_image'].get('taper') != '':
                 image_opts.update({
                 "uvtaper"         : True,
-                "outertaper"      : config['casa_image'].get('taper', ''),
+                "outertaper"      : config['casa_image'].get('taper'),
                 })
             recipe.add('cab/casa_clean', step, image_opts,
                 input=pipeline.input,
@@ -807,14 +812,14 @@ def worker(pipeline, recipe, config):
                        label='Fix spectral reference frame for cube {0:s}'.format(cubename))
         
         if pipeline.enable_task(config,'freq_to_vel'):
-             if not config['freq_to_vel'].get('reverse', False): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
+             if not config['freq_to_vel'].get('reverse'): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
              else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
              for ss in ['dirty','psf','first-residual','residual','model','image','pb']:
                 cubename=pipeline.prefix+'_'+field+'_HI.'+ss+'.fits:'+pipeline.output
                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                            {
                            'filename' : cubename,
-                           'reverse'  : config['freq_to_vel'].get('reverse', False)
+                           'reverse'  : config['freq_to_vel'].get('reverse')
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -825,31 +830,68 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/sofia', step,
                 {
             "import.inFile"         : pipeline.prefix+'_'+field+'_HI.image.fits:output',
-            "steps.doFlag"          : config['sofia'].get('flag', False),
+            "steps.doFlag"          : config['sofia'].get('flag'),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,
-            "steps.doMerge"         : config['sofia'].get('merge', True),
+            "steps.doMerge"         : config['sofia'].get('merge'),
             "steps.doReliability"   : False,
             "steps.doParameterise"  : False,
             "steps.doWriteMask"     : True,
-            "steps.doMom0"          : config['sofia'].get('do_mom0', True),
-            "steps.doMom1"          : config['sofia'].get('do_mom1', False),
-            "steps.doCubelets"      : config['sofia'].get('do_cubelets', False),
+            "steps.doMom0"          : config['sofia'].get('do_mom0'),
+            "steps.doMom1"          : config['sofia'].get('do_mom1'),
+            "steps.doCubelets"      : config['sofia'].get('do_cubelets'),
             "steps.doWriteCat"      : False,
-            "flag.regions"          : config['sofia'].get('flagregion', []),
-            "scaleNoise.statistic"  : config['sofia'].get('rmsMode', 'mad'),
-            "SCfind.threshold"      : config['sofia'].get('threshold', 4),
-            "SCfind.rmsMode"        : config['sofia'].get('rmsMode', 'mad'),
-            "merge.radiusX"         : config['sofia'].get('mergeX', 2),
-            "merge.radiusY"         : config['sofia'].get('mergeY', 2),
-            "merge.radiusZ"         : config['sofia'].get('mergeZ', 2),
-            "merge.minSizeX"        : config['sofia'].get('minSizeX', 2),
-            "merge.minSizeY"        : config['sofia'].get('minSizeY', 2),
-            "merge.minSizeZ"        : config['sofia'].get('minSizeZ', 2),
+            "flag.regions"          : config['sofia'].get('flagregion'),
+            "scaleNoise.statistic"  : config['sofia'].get('rmsMode'),
+            "SCfind.threshold"      : config['sofia'].get('threshold'),
+            "SCfind.rmsMode"        : config['sofia'].get('rmsMode'),
+            "merge.radiusX"         : config['sofia'].get('mergeX'),
+            "merge.radiusY"         : config['sofia'].get('mergeY'),
+            "merge.radiusZ"         : config['sofia'].get('mergeZ'),
+            "merge.minSizeX"        : config['sofia'].get('minSizeX'),
+            "merge.minSizeY"        : config['sofia'].get('minSizeY'),
+            "merge.minSizeZ"        : config['sofia'].get('minSizeZ'),
                 },
                 input=pipeline.input,
                 output=pipeline.output,
                 label='{0:s}:: Make SoFiA mask and images'.format(step))
+
+    if pipeline.enable_task(config, 'sharpener'):
+        step = 'continuum_spectral_extraction'
+        catalogs = glob.glob('{}/*.lsm.html'.format(pipeline.output))
+        params = {"enable_spec_ex"        : True,
+                  "enable_source_catalog" : True,
+                  "enable_abs_plot"       : True,
+                  "enable_source_finder"  : False,
+                  "cubename"              : '{:s}_HI.image.fits:output'.format(pipeline.prefix),
+                  "channels_per_plot"     : config['sharpener'].get('channels_per_plot'),
+                  "workdir"               : '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
+                  "label"                 : config['sharpener'].get('label', pipeline.prefix)
+        }
+        if config['sharpener'].get('catalog')=='PYBDSF':
+            if len(catalogs) > 0:
+                catalog_file = sorted(catalogs)[-1].split('/')[-1]
+                params["catalog_file"] = '{}:output'.format(catalog_file)
+                params["catalog"] = "PYBDSF"
+                recipe.add('cab/sharpener',
+                           step,
+                           params,
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Continuum Spectral Extraction'.format(step))
+            else:
+                meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
+        elif config['sharpener'].get('catalog')=='NVSS':
+            params["catalog_file"] = config['sharpener'].get('catalog_file')
+            params["thresh"] = config['sharpener'].get('thresh', 20)
+            params["width"] = config['sharpener'].get('width', '1.0d')
+            params["catalog"] = "NVSS"
+            recipe.add('cab/sharpener',
+                       step,
+                       params,
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Continuum Spectral Extraction'.format(step))
 
     if pipeline.enable_task(config, 'flagging_summary'):
         for i,msname in enumerate(all_msfiles):

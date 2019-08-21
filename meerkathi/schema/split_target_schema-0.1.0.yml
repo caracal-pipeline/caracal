@@ -143,8 +143,8 @@ mapping:
             desc: Run MSUtils function
             type: bool
             required: true
-      prepms:
-        desc: Run MSUtils prepms function
+      init_legacy_flagset:
+        desc: Save existing flags to legacy flagset
         type: map
         mapping:
           enable:

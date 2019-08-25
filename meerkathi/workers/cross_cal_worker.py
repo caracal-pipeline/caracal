@@ -187,7 +187,8 @@ found in our database or in the CASA NRAO database'.format(field))
         if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
             field = get_field(config['delay_cal'].get('field'))
-            recipe.add('cab/casa_gaincal', step,
+            cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
+            recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
                  "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0'),
@@ -238,8 +239,14 @@ found in our database or in the CASA NRAO database'.format(field))
                 else: gaintables,interpolations=None,''
                 field = get_field(config['bp_cal'].get('field'))
                 step = 'pre_bp_cal_{0:d}'.format(i)
-
-                recipe.add('cab/casa_bandpass', step,
+                cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
+               # if config['casa_version']=='47':
+               #    cabtouse = 'cab/casa47_bandpass'
+               # else:
+               #    cabtouse = 'cab/casa_bandpass'
+                meerkathi.info('cabtouse=', cabtouse)
+                print 'cabtouse=', cabtouse
+                recipe.add(cabtouse, step,
                    {
                      "vis"          : msname,
                      "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREB0'),
@@ -282,6 +289,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 interpolations+=['nearest']
                 step = 'pre_gain_cal_flux_{0:d}'.format(i)
                 field = get_field(config['bp_cal'].get('field'))
+                cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
                 recipe.add('cab/casa_gaincal', step,
                    {
                      "vis"          : msname,
@@ -330,8 +338,8 @@ found in our database or in the CASA NRAO database'.format(field))
             else: gaintables,interpolations=None,''
             field = get_field(config['bp_cal'].get('field'))
             step = 'bp_cal_{0:d}'.format(i)
-
-            recipe.add('cab/casa_bandpass', step,
+            cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
+            recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
                  "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0'),
@@ -379,7 +387,8 @@ found in our database or in the CASA NRAO database'.format(field))
             interpolations+=['nearest']
             step = 'gain_cal_flux_{0:d}'.format(i)
             field = get_field(config['gain_cal_flux'].get('field'))
-            recipe.add('cab/casa_gaincal', step,
+            cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal' 
+            recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
                  "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'G0:output'),
@@ -425,7 +434,8 @@ found in our database or in the CASA NRAO database'.format(field))
             interpolations+=['linear']
             step = 'gain_cal_gain_{0:d}'.format(i)
             field = get_field(config['gain_cal_gain'].get('field'))
-            recipe.add('cab/casa_gaincal', step,
+            cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
+            recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
                  "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'G0:output'),
@@ -520,7 +530,8 @@ found in our database or in the CASA NRAO database'.format(field))
 
             applied.append(field)
             step = 'apply_{0:s}_{1:d}'.format(ft, i)
-            recipe.add('cab/casa_applycal', step,
+            cabtouse = 'cab/casa47_applycal' if config['casa_version']=='47' else 'cab/casa_applycal'
+            recipe.add(cabtouse, step,
                {
                 "vis"       : msname,
                 "field"     : field,

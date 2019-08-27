@@ -569,9 +569,14 @@ mapping:
             example: "0"
           num-workers:
             type: int
-            desc: Explicitly set the number of worker threads. Default is None
+            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
             required: false
-            example: '8'
+            example: '0'
+          memory-fraction:
+            type: float
+            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+            required: false
+            example: '0.5'
 
       highfreqres_contim:
         type: map

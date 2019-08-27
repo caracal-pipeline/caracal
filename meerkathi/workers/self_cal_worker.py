@@ -863,7 +863,8 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         if config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]  == 'CORR_DATA':
-            flags= 'legacy'
+            flags= '-cubical' \
+                   ''
         else:
             flags='-cubical'
         for i,msname in enumerate(mslist):
@@ -880,7 +881,7 @@ def worker(pipeline, recipe, config):
                   "dist-ncpu"        : ncpu,
                   "flags-apply"      : flags,
                   "sol-jones"        : '"'+jones_chain+'"',
-                  "sol-diag"         : take_diag_terms,
+                  "sol-diag-diag"    : take_diag_terms,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,

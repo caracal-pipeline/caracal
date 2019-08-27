@@ -32,12 +32,14 @@ except ImportError:
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
             stimela_build=None, prefix=None,
-            add_all_first=False, singularity_image_dir=None):
+            add_all_first=False, singularity_image_dir=None,
+            container_tech='docker'):
 
         self.config = config
 
         self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
+        self.container_tech = container_tech
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
@@ -90,7 +92,7 @@ class worker_administrator(object):
         self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
         self.hires_msnames = ['{:s}_hires.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = ['meerkathi-{:s}'.format(os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = ['{0:s}-{1:s}'.format(self.prefix,os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)
@@ -178,8 +180,8 @@ class worker_administrator(object):
                                loggername='STIMELA-{:d}'.format(i),
                                build_label=self.stimela_build,
                                singularity_image_dir=self.singularity_image_dir)
-            #if self.singularity_image_dir is None:
-            #    recipe.JOB_TYPE = "docker"
+
+            recipe.JOB_TYPE = self.container_tech
             # Don't allow pipeline-wide resume
             # functionality
             os.system('rm -f {}'.format(recipe.resume_file))

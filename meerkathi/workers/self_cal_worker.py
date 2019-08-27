@@ -533,14 +533,12 @@ def worker(pipeline, recipe, config):
                 blank_limit = 1e-9
             else:
                 blank_limit = None
-            print('What happened to the cats?)')
-            print(pipeline.output+'/'+calmodel+'.fits')
             try:
-                os.remove(pipeline.output+'/'+calmodel+'.fits')
+                os.remove(pipeline.output + '/' + calmodel + '.fits')
             except:
                 print('No Previous fits log found.')
             try:
-                os.remove(pipeline.output+'/'+calmodel+'.lsm.html')
+                os.remove(pipeline.output + '/' + calmodel + '.lsm.html')
             except:
                 print('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
@@ -548,10 +546,11 @@ def worker(pipeline, recipe, config):
 				"image"         : im,
 				"thresh_pix"    : config[key].get('thresh_pix', [])[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
 				"thresh_isl"    : config[key].get('thresh_isl', [])[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-				"outfile"       : '{:s}.fits:output'.format(calmodel),
+				"outfile"       : '{:s}.gaul:output'.format(calmodel),
 				"blank_limit"   : sdm.dismissable(blank_limit),
 				"adaptive_rms_box" : config[key].get('local_rms', True),
-				"port2tigger"   : True,
+				"port2tigger"   : False,
+                "format"         : 'ascii',
 				"multi_chan_beam": spi_do,
 				"spectralindex_do": spi_do,
 				"detection_image": sdm.dismissable(detection_image),
@@ -560,6 +559,25 @@ def worker(pipeline, recipe, config):
 		    	input=pipeline.input,
 		    	output=pipeline.output,
 		    	label='{0:s}:: Extract sources'.format(step))
+            #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
+            #and then check the proper file is produced
+            if not os.path.isfile(pipeline.output + '/' + calmodel + '.gaul'):
+                meerkathi.log.error("No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
+                sys.exit(1)
+            step = 'convert_extract_{0:d}'.format(num)
+            recipe.add('cab/tigger_convert', step,
+                       {
+                           "input-skymodel"   : calmodel + '.gaul:output',
+                           "output-skymodel"  : calmodel + '.lsm.html',
+                           "type"             : 'Gaul',
+                           "output-type"      : 'Tigger',
+                       },
+                       input = pipeline.input,
+                       output = pipeline.output,
+                       label = '{0:s}:: Convert extracted sources to tigger model'.format(step))
         elif sourcefinder == 'sofia': 
             print 'are u crazy ?'
             print '############################################'
@@ -863,8 +881,7 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
 
         if config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]  == 'CORR_DATA':
-            flags= '-cubical' \
-                   ''
+            flags= 'legacy'
         else:
             flags='-cubical'
         for i,msname in enumerate(mslist):
@@ -881,7 +898,7 @@ def worker(pipeline, recipe, config):
                   "dist-ncpu"        : ncpu,
                   "flags-apply"      : flags,
                   "sol-jones"        : '"'+jones_chain+'"',
-                  "sol-diag-diag"    : take_diag_terms,
+                  "sol-diag-only"    : take_diag_terms,
                   "out-name"         : '{0:s}-{1:d}_cubical'.format(pipeline.dataid[i], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data', 'CORR_DATA')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -1630,8 +1647,8 @@ def worker(pipeline, recipe, config):
                   "ms"           : msname,
                   "sky-model"    : crystalball_model+':output',
                   "spectra"      : config['transfer_model'].get('spectra', True),
-                  "row-chunks"   : config['transfer_model'].get('row-chunks', 100),
-                  "model-chunks" : config['transfer_model'].get('model-chunks', 100),
+                  "row-chunks"   : config['transfer_model'].get('row-chunks', 0),
+                  "model-chunks" : config['transfer_model'].get('model-chunks', 0),
                   "invert-uvw"   : config['transfer_model'].get('invert-uvw', True),
                   "within"       : sdm.dismissable(config['transfer_model'].get('within', None)),
                   "points-only"  : config['transfer_model'].get('points-only', False),
@@ -1695,4 +1712,5 @@ def worker(pipeline, recipe, config):
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+
 

@@ -100,15 +100,7 @@ mapping:
               enable:
                 type: bool
                 desc: Enables plotting dignostics
-                required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
+                required: true        
               field:
                 seq: 
                 - type: int 
@@ -207,14 +199,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -290,14 +274,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -371,14 +347,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int
@@ -419,14 +387,6 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: true
-              table_name:
-                type: str
-                desc: "Table to plot"
-                required: false
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
               field:
                 seq: 
                 - type: int

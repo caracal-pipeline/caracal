@@ -422,7 +422,7 @@ mapping:
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
                            
       apply_bp_cal:
@@ -445,7 +445,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
 
       apply_gain_cal_gain:    
@@ -468,7 +468,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
         
       apply_transfer_fluxscale:
@@ -491,7 +491,7 @@ mapping:
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
-            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict", "calonly"]
             required: true
  
       autoflag_closure_error:   

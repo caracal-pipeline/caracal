@@ -7,6 +7,7 @@ import stimela.recipe as stimela
 import re
 import json
 from meerkathi.dispatch_crew import utils
+from meerkathi.workers.utils import manage_flagsets
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -38,6 +39,8 @@ def filter_name(string):
 
 def worker(pipeline, recipe, config):
 
+    wname = pipeline.CURRENT_WORKER
+
 #TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
     def fix_target_obsinfo(fname):                    
         if pipeline.enable_task(config, 'split_target'):
@@ -62,9 +65,9 @@ def worker(pipeline, recipe, config):
 
     def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field', ['bpcal','gcal','xcal']))
+                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field'))
             if applyme == 'bp_cal':
-                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field', ['bpcal']))
+                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field'))
             if applyme == 'gain_cal_flux':
                 return get_field('fcal')
             if applyme == 'gain_cal_gain':
@@ -82,11 +85,12 @@ def worker(pipeline, recipe, config):
         target_ls = pipeline.target[i].split(',')
         prefix = pipeline.prefixes[i]
 
-        if pipeline.enable_task(config['split_target']	, 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
-    	    uname = getpass.getuser()
-    	    gaintablelist,gainfieldlist,interplist = [],[],[]
+        if pipeline.enable_task(config['split_target']  , 'otfcal'):                #write calibration library file for OTF cal in split_target_worker.py          
+            uname = getpass.getuser()
+            gaintablelist,gainfieldlist,interplist = [],[],[]
 
-            calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel', '1gc1'))
+            calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel'))
+
 
     	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
@@ -129,52 +133,48 @@ def worker(pipeline, recipe, config):
                     {
                         "vis"           : fms,
                         "outputvis"     : tms,
-                        "timeaverage"   : True if (config['split_target'].get('time_average', '') != '' and config['split_target'].get('time_average', '') != '0s') else False,
-                        "timebin"       : config['split_target'].get('time_average', ''),
-                        "chanaverage"   : True if config['split_target'].get('freq_average', 1) > 1 else False,
-                        "chanbin"       : config['split_target'].get('freq_average', 1),
-                        "spw"           : config['split_target'].get('spw', ''),
-                        "datacolumn"    : config['split_target'].get('column', 'data'),
-                        "correlation"   : config['split_target'].get('correlation', ''),
+                        "timeaverage"   : True if (config['split_target'].get('time_average') != '' and config['split_target'].get('time_average') != '0s') else False,
+                        "timebin"       : config['split_target'].get('time_average'),
+                        "chanaverage"   : True if config['split_target'].get('freq_average') > 1 else False,
+                        "chanbin"       : config['split_target'].get('freq_average'),
+                        "spw"           : config['split_target'].get('spw'),
+                        "datacolumn"    : config['split_target'].get('column'),
+                        "correlation"   : config['split_target'].get('correlation'),
                         "field"         : target,
                         "keepflags"     : True,
                         "docallib"      : docallib,
+                        "callib"        : sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']   , 'otfcal') else None),
                         "callib"        : sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
 
+            msname = tms if pipeline.enable_task(config, 'split_target') else fms
 
-            if pipeline.enable_task(config, 'prepms'):
-                step = 'prepms_{:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                    {
-                      "msname"  : tms,
-                      "command" : 'prep' ,
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Add BITFLAG column ms={1:s}'.format(step, tms))
+            if pipeline.enable_task(config, 'init_legacy_flagset'):
+                step = "init_legacy_flagset_{0:s}_{1:d}".format(wname, i)
+                manage_flagsets.update_flagset(pipeline, recipe, "legacy", msname, clear_existing=True, cab_name=step,
+                    label="{0:s}:: Save current flags in legacy flagset".format(step, msname))
 
             if pipeline.enable_task(config, 'changecentre'):
-                if config['changecentre'].get('ra','') == '' or config['changecentre'].get('dec','') == '':
+                if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
                     meerkathi.log.error('Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
-                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')))
+                    meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')))
                     sys.exit(1)
                 step = 'changecentre_{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                     {
                       "msname"  : tms,
                       "outputvis": tms,
-                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra',''),config['changecentre'].get('dec','')) ,
+                      "phasecenter" : 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra'),config['changecentre'].get('dec')) ,
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Change phase centre ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'obsinfo'):
-                if (config['obsinfo'].get('listobs', True)):
+                if (config['obsinfo'].get('listobs')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.txt'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.txt'.format(prefix)
@@ -182,15 +182,15 @@ def worker(pipeline, recipe, config):
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
                         {
-                          "vis"         : [tms if pipeline.enable_task(config, 'split_target') else fms],
+                          "vis"         : msname,
                           "listfile"    : listfile,
                           "overwrite"   : True,
                         },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Get observation information ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
     
-                if (config['obsinfo'].get('summary_json', True)):
+                if (config['obsinfo'].get('summary_json')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(prefix,field,label_out)
                     else: listfile = '{0:s}-obsinfo.json'.format(prefix)
@@ -198,22 +198,20 @@ def worker(pipeline, recipe, config):
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                         {
-                          "msname"      : [tms if pipeline.enable_task(config, 'split_target') else fms],
+                          "msname"      : msname,
                           "command"     : 'summary',
                           "display"     : False,
                           "outfile"     : listfile
                         },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, tms))
+                    label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-		    step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
-		    recipe.add(fix_target_obsinfo, step,
-			{
-				'fname': listfile,
-			},
-			input = pipeline.input,
-			output = pipeline.output,
-			label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 
-
-
+            step = 'fix_target_obsinfo_{:d}'.format(i) #set directories
+            recipe.add(fix_target_obsinfo, step,
+            {
+                'fname': listfile,
+            },
+            input = pipeline.input,
+            output = pipeline.output,
+            label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))                 

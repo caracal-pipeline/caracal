@@ -12,6 +12,7 @@ mapping:
         desc: Executes the data preparation step.
         type: bool
         required: true
+
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map
@@ -21,12 +22,33 @@ mapping:
             type: bool
             required: false
 
+      manage_flags:
+        desc: Manage MS flags
+        type: map
+        mapping:
+          enable: 
+            desc: enable this section
+            type: bool
+            required: false
+          add_bitflag_column:
+            desc: Add BITFLAG and BITFLAG_ROW columns
+            type: bool
+            required: false
+          init_legacy_flagset:
+            desc: Save all current flags in a legacy flagset if it does not exist
+            type: bool
+            required: false
+          remove_flagsets:
+            desc: Remove all existing flagsets, except legacy flags
+            type: bool
+            required: false
+
       prepms:
-        desc: Add BITFLAG column to MS.
+        desc: Run a sequence of opertations to prepare the MS for the pipeline
         type: map
         mapping: 
           enable: 
-            desc: Enable addition of BITFLAG column to MS.
+            desc: Enable this section
             type: bool
             required: false
 
@@ -37,4 +59,22 @@ mapping:
           enable: 
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
+            required: false
+          weight_columns:
+            seq:
+              - type: str
+            desc: column names
+            required: false
+          noise_columns:
+            seq:
+              - type: str
+            desc: column names for noise
+            required: false
+          write_to_ms:
+            desc: write columns to file
+            type: bool
+            required: false
+          stats_data:
+            desc: which statistics for the file.
+            type: str
             required: false

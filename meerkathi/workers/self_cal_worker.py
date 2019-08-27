@@ -1530,7 +1530,7 @@ def worker(pipeline, recipe, config):
 		  "points-only"  : config['transfer_model'].get('points_only'),
 		  "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources')),
 		  "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers')),
-	#                 "memory-fraction" : 0.2, #  config['transfer_model'].get('memory_fraction', 0.1),
+                  "memory-fraction" : config['transfer_model'].get('memory_fraction'),
 		},
 		input=pipeline.input,
 		output=pipeline.output,

@@ -213,7 +213,7 @@ class config_parser:
             help='Prints auxilary calibrator standard into the log',
             action='store_true')
 
-        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity"], default="docker",
+        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"], default="docker",
             help='Container technology to use')
 
         add('--no-interactive',

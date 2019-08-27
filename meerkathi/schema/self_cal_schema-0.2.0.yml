@@ -569,9 +569,9 @@ mapping:
             example: "0"
           num-workers:
             type: int
-            desc: Explicitly set the number of worker threads. Default is None
+            desc: Explicitly set the number of worker threads. Default is 0.
             required: false
-            example: '8'
+            example: '0'
 
       highfreqres_contim:
         type: map

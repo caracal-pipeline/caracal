@@ -134,7 +134,10 @@ mapping:
         desc: chunk in time for calibration (seconds)
         type: int
         example: '128'
-
+      cal_freq_chunk:
+        desc: chunk in time for calibration (seconds)
+        type: int
+        example: '20'
       aimfast:
         type: map
         desc: Quality assessment parameter
@@ -407,19 +410,14 @@ mapping:
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
             example: '1'
-          DDjones:
-            type: bool
-            desc: Enable direction dependent calibration, currently experimental.
-            required: false
-            example: 'False'
-          DDsols_time:
-            desc: Calibration solution intervals
+          GAsols_time:
+            desc: Time intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
             seq:
               - type: float
             required: false
             example: '0'
-          DDsols_channel:
-            desc: Calibration solution intervals
+          GAsols_channel:
+            desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
             seq:
               - type: float
             required: false

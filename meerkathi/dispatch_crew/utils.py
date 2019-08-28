@@ -141,7 +141,7 @@ def observed_longest(msinfo, bpcals):
     for bpcal in bpcals:
         idx = index(bpcal)
         bpcal = str(ids[idx])
-        total_time = numpy.sum(info['SCAN'][bpcal].values())
+        total_time = numpy.sum(list(info['SCAN'][bpcal].values()))
         if total_time > most_time:
             most_time = total_time
             field = names[idx]
@@ -165,7 +165,7 @@ def field_observation_length(msinfo, field):
         return idx
     field = str(ids[index(field)])
 
-    return  numpy.sum(info['SCAN'][field].values())
+    return  numpy.sum(list(info['SCAN'][field].values()))
 
 
 def find_in_native_calibrators(msinfo, field):
@@ -175,7 +175,7 @@ def find_in_native_calibrators(msinfo, field):
     """
 
     db = mkct.calibrator_database()
-    if field not in db.db.keys():
+    if field not in list(db.db.keys()):
         return False
 
     with open(msinfo, 'r') as stdr:
@@ -217,7 +217,7 @@ def find_in_casa_calibrators(msinfo, field):
         db = yaml.safe_load(stdr)
     
     found = False
-    for src in db['models'].values():
+    for src in list(db['models'].values()):
         if field == src['3C']:
             found = True
             standards = src['standards']
@@ -319,4 +319,4 @@ def target_to_msfiles(targets, msnames, label):          #creates lists of all u
                 tmp.append(m)
         target_msfiles.append(tmp)
     
-    return all_target, target_ms_ls, dict(zip(all_target, target_msfiles))
+    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))

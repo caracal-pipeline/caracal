@@ -34,13 +34,13 @@ class worker_options(object):
 
                 args = {}
                 dtype = None
-                if segment.has_key("seq"):
+                if "seq" in segment:
                     args["action"] = "append"
                     dtype = segment["seq"][0]["type"]
                     ptype = "list:" + dtype
                 elif segment["type"] not in ["bool"]:
                     args["type"] = eval(dtype or segment["type"])
-                    if segment.has_key("enum"):
+                    if "enum" in segment:
                         args["choices"] = segment["enum"]
                     ptype = segment["type"]
                 else:

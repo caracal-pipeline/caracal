@@ -7,16 +7,15 @@ import pkg_resources
 import os
 import sys
 import ruamel.yaml
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from http.server import HTTPServer
 
 import webbrowser
 import subprocess
 import traceback
 import pdb
 import logging
-import StringIO
-import exceptions
+import io
 
 ##############################################################################
 # Globals
@@ -32,19 +31,19 @@ def report_version():
     path = os.path.dirname(os.path.abspath(__file__))
     try:
         # work round possible unavailability of git -C
-        result = subprocess.check_output('cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip()
+        result = subprocess.check_output('cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
     except subprocess.CalledProcessError:
         result = None
-    if result is not None and 'fatal' not in result:
+    if result != None and 'fatal' not in result:
         # will succeed if tags exist
         return result
     else:
         # perhaps we are in a github without tags? Cook something up if so
         try:
-            result = subprocess.check_output('cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip()
+            result = subprocess.check_output('cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
         except subprocess.CalledProcessError:
             result = None
-        if result is not None and 'fatal' not in result:
+        if result != None and 'fatal' not in result:
             return __version__+'-'+result
         else:
             # we are probably in an installed version
@@ -143,7 +142,7 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
             os.chdir(web_dir)
             try:
                 httpd.serve_forever()
-            except KeyboardInterrupt, SystemExit:
+            except KeyboardInterrupt as SystemExit:
                 httpd.shutdown()
             finally:
                 sys.stdout = stdout_bak
@@ -168,7 +167,7 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
                 os.dup2(savout, 1)
 
         wt.join(timeout=timeout)
-    except KeyboardInterrupt, SystemExit:
+    except KeyboardInterrupt as SystemExit:
         log.info("Interrupt received - shutting down web server. Goodbye!")
     return wt
 
@@ -208,7 +207,7 @@ def execute_pipeline(args, arg_groups, block):
                             container_tech=args.container_tech)
 
                 pipeline.run_workers()
-            except exceptions.SystemExit as e:
+            except SystemExit as e:
                 if e.code != 0:
                     log.error("One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
                     log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(MEERKATHI_LOG, str(__version__)))

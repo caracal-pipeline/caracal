@@ -18,7 +18,7 @@ SELFCAL_TEMPLATE = os.path.join(os.path.dirname(__file__), "obs_report", "SelfCa
 class reporter:
     def __init__(self, pipeline):
         """ Process and dump a static html report for each ms in the pipeline """
-        self.__ms = copy.deepcopy(filter(lambda x:isinstance(x, str), pipeline.msnames))
+        self.__ms = copy.deepcopy([x for x in pipeline.msnames if isinstance(x, str)])
         self.__outputdir = os.path.abspath(pipeline.output)
         with open(REPORT_TEMPLATE) as f:
             self.__rep_template = f.read()

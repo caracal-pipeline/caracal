@@ -1,4 +1,5 @@
-import sys, os, string
+import sys
+import os
 import traceback
 from datetime import datetime
 import stimela
@@ -7,12 +8,12 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
-from urllib import urlencode
+from urllib.parse import urlencode
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
@@ -66,7 +67,7 @@ class worker_administrator(object):
         sys.path.append(self.workers_directory)
         self.workers = []
 
-        for i, (name,opts) in enumerate(self.config.iteritems()):
+        for i, (name,opts) in enumerate(self.config.items()):
             if name.find('general')>=0 or name == "schema_version":
                 continue
             order = opts.get('order', i+1)
@@ -105,7 +106,7 @@ class worker_administrator(object):
             
         # save configuration file
         timeNow = datetime.now()
-        configFileName = string.split(str(configFileName),'.')[0]
+        configFileName = os.path.splitext(configFileName)[0]
         outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(configFileName,timeNow)
 
         with open(self.configFolder+'/'+outConfigName, 'w') as outfile:

@@ -30,6 +30,12 @@ corr_indexes = {'H'        : 0,
                 'Y'        : 1,
 }
 
+SOL_TERMS = {
+    "G"     : "50",
+    "B"     : "50",
+    "DD"    : "20",
+}
+
 def worker(pipeline, recipe, config):
     npix = config['img_npix']
     padding = config['img_padding']
@@ -86,7 +92,7 @@ def worker(pipeline, recipe, config):
           shutil.move(pipeline.output+'/'+mask_name,pipeline.output+'/masking/'+mask_name)
 
       casafiles = glob.glob(pipeline.output+'/*.image')
-      for i in xrange(0,len(casafiles)):
+      for i in range(0,len(casafiles)):
         shutil.rmtree(casafiles[i])
 
 
@@ -657,7 +663,7 @@ def worker(pipeline, recipe, config):
 
     def calibrate_meqtrees(num, mslist, field):
         key = 'calibrate'
-        global reset_cal
+        global reset_cal, trace_SN, trace_matrix
         if num == cal_niter:
             vismodel = config[key].get('add_vis_model')  
         else:
@@ -731,14 +737,15 @@ def worker(pipeline, recipe, config):
                 fidelity_data = get_aimfast_data()
                 obs_data = get_obs_data(prefix,field,label)
                 int_time =  obs_data['EXPOSURE']
-                tot_time=0.
+                tot_time=0.0
+
                 for scan_key in obs_data['SCAN']['0']:
                     tot_time += obs_data['SCAN']['0'][scan_key]
                 no_ant=len(obs_data['ANT']['DISH_DIAMETER'])
-                DR=fidelity_data['{0}_{1}-residual'.format(prefix,num)]['{0}_{1}-model'.format(prefix,num)]['DR']
-                Noise= fidelity_data['{0}_{1}-residual'.format(prefix,num)]['STDDev']
-                flux=DR*Noise
-                solvetime = int(Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
+                DR = fidelity_data['{0}_{1}-residual'.format(prefix,num)]['{0}_{1}-model'.format(prefix,num)]['DR']
+                Noise = fidelity_data['{0}_{1}-residual'.format(prefix,num)]['STDDev']
+                flux = DR * Noise
+                solvetime = int(Noise**2 * SN**2 * tot_time * no_ant / (flux**2 * 2.) / int_time)
 
                 if num> 1:
                     DR=fidelity_data['{0}_{1}-residual'.format(prefix,num-1)]['{0}_{1}-model'.format(prefix,num-1)]['DR']
@@ -765,9 +772,7 @@ def worker(pipeline, recipe, config):
                     gsols_[0] = minsolvetime
                     if matrix_type == 'GainDiag':
                         reset_cal = 2
-                global trace_SN
                 trace_SN.append(SN)
-                global trace_matrix
                 trace_matrix.append(matrix_type)
                 if matrix_type == 'GainDiagPhase' and config[key].get('two_step'):
                     outcolumn = "CORRECTED_DATA_PHASE"
@@ -873,9 +878,11 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
+        sol_terms = []
+        for term in jones_chain.split(","):
+            sol_terms.append(SOL_TERMS[term])
 
         for i,msname in enumerate(mslist):
-
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
             cubical_opts= {
                   "data-ms"          : msname,
@@ -885,6 +892,7 @@ def worker(pipeline, recipe, config):
                   "sel-ddid"         : sdm.dismissable(config[key].get('spwid')),
                   "dist-ncpu"        : ncpu,
                   "sol-jones"        : jones_chain,
+                  "sol-term-iters"   : ",".join(sol_terms),
                   "out-name"         : '{0:s}_{1:s}_{2:d}_cubical'.format(prefix, msname[:-3], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,
@@ -893,8 +901,8 @@ def worker(pipeline, recipe, config):
                   "montblanc-dtype"  : 'float',
                   "g-solvable"      : True,
                   "g-type"          : CUBICAL_MT[matrix_type],
-                  "g-time-int"      : 20, #gsols_[0],
-                  "g-freq-int"      : gsols_[1],
+                  "g-time-int"      : int(gsols_[0]),
+                  "g-freq-int"      : int(gsols_[1]),
 #                  "out-overwrite"   : False,
                   "g-save-to"       : "g-gains-{0:d}-{1:s}.parmdb:output".format(num,msname.split('.ms')[0]),
                   "g-clip-low"      : config.get('cal_gain_amplitude_clip_low'),
@@ -1525,7 +1533,7 @@ def worker(pipeline, recipe, config):
                 step = 'finechancontcube'
                 recipe.add('cab/fitstool', step,
                     {
-                       "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
+                       "image"    : [pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in range(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
                        "output"   : pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
                        "stack"    : True,
                        "delete-files" : True,

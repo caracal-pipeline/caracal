@@ -45,7 +45,7 @@ def target_to_msfiles(targets,msnames,label,doppler=False):
                 tmp.append(m)
         target_msfiles.append(tmp)
 
-    return all_target, target_ms_ls, dict(zip(all_target, target_msfiles))
+    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))
 
 
 
@@ -476,7 +476,7 @@ def worker(pipeline, recipe, config):
                                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                                 recipe.add('cab/fitstool', step,
                                     {
-                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
+                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in range(nchans)],
                                "output"   : pipeline.prefix+'_'+field+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
                                "stack"    : True,
                                "delete-files" : True,
@@ -596,7 +596,7 @@ def worker(pipeline, recipe, config):
                             step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                             recipe.add('cab/fitstool', step,
                                 {
-                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
+                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in range(nchans)],
                                "output"   : pipeline.prefix+'_'+field+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
                                "stack"    : True,
                                "delete-files" : True,

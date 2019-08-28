@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import npyscreen
-import exceptions
 from threading import Thread
 
 import meerkathi

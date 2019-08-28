@@ -5,6 +5,8 @@ import meerkathi
 import yaml
 import stimela.dismissable as sdm
 from meerkathi.workers.utils import manage_flagsets as manflags
+from meerkathi.workers.utils import manage_fields as manfields
+
 
 NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
@@ -66,35 +68,20 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
         prefix = '{0:s}-{1:s}'.format(prefix, config.get('label'))
 
-        # Check if field was specified as known key, else return the
-        # same value.
-        def get_field(field):
-            """
-                gets field ids parsed previously in the pipeline
-                params:
-                    field: list of ids or comma-seperated list of ids where
-                           ids are in bpcal, gcal, target, fcal or an actual field name
-            """
-            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
-                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
-                                              else x.split(','),
-                                field.split(',') if isinstance(field, str) else field)))
-
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['delay_cal'].get('field'))
+                return manfields.get_field(pipeline,i,config['delay_cal'].get('field'))
             if applyme == 'bp_cal':
-                return get_field(config['bp_cal'].get('field'))
+                return manfields.get_field(pipeline,i,config['bp_cal'].get('field'))
             if applyme == 'gain_cal_flux':
-                return get_field('fcal')
+                return manfields.get_field(pipeline,i,'fcal')
             if applyme == 'gain_cal_gain':
-                return get_field('gcal')
+                return manfields.get_field(pipeline,i,'gcal')
             if applyme == 'transfer_fluxscale':
                 if applyto in ['gcal', 'target']:
-                    return get_field('gcal')
+                    return manfields.get_field(pipeline,i,'gcal')
                 elif applyto == 'bpcal':
-                    return get_field('fcal')
+                    return manfields.get_field(pipeline,i,'fcal')
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
@@ -113,7 +100,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'clear_cal'):
             # Initialize dataset for calibration
-            field = get_field(config['clear_cal'].get('field'))
+            field = manfields.get_field(pipeline,i,config['clear_cal'].get('field'))
             addmodel = config['clear_cal'].get('addmodel')
             step = 'clear_cal_{0:d}'.format(i)
             recipe.add('cab/casa_clearcal', step,
@@ -128,7 +115,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'set_model'):
             # Set model
-            field = get_field(config['set_model'].get('field'))
+            field = manfields.get_field(pipeline,i,config['set_model'].get('field'))
             assert len(utils.get_field_id(msinfo, field)) == 1, "Only one fcal should be set"
 
             if config['set_model'].get('no_verify'):
@@ -186,7 +173,7 @@ found in our database or in the CASA NRAO database'.format(field))
         # Delay calibration
         if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
-            field = get_field(config['delay_cal'].get('field'))
+            field = manfields.get_field(pipeline,i,config['delay_cal'].get('field'))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
@@ -236,7 +223,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 # Initial bandpass calibration (will NOT combine scans even if requested for final bandpass)
                 if config.get('otfdelay'): gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'K0:output')],['nearest']
                 else: gaintables,interpolations=None,''
-                field = get_field(config['bp_cal'].get('field'))
+                field = manfields.get_field(pipeline,i,config['bp_cal'].get('field'))
                 step = 'pre_bp_cal_{0:d}'.format(i)
 
                 recipe.add('cab/casa_bandpass', step,
@@ -281,7 +268,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREB0:output')]
                 interpolations+=['nearest']
                 step = 'pre_gain_cal_flux_{0:d}'.format(i)
-                field = get_field(config['bp_cal'].get('field'))
+                field = manfields.get_field(pipeline,i,config['bp_cal'].get('field'))
                 recipe.add('cab/casa_gaincal', step,
                    {
                      "vis"          : msname,
@@ -328,7 +315,7 @@ found in our database or in the CASA NRAO database'.format(field))
             elif config['bp_cal'].get('remove_ph_time_var'):
                 gaintables,interpolations=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREG0:output')],['nearest']
             else: gaintables,interpolations=None,''
-            field = get_field(config['bp_cal'].get('field'))
+            field = manfields.get_field(pipeline,i,config['bp_cal'].get('field'))
             step = 'bp_cal_{0:d}'.format(i)
 
             recipe.add('cab/casa_bandpass', step,
@@ -378,7 +365,7 @@ found in our database or in the CASA NRAO database'.format(field))
             gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations+=['nearest']
             step = 'gain_cal_flux_{0:d}'.format(i)
-            field = get_field(config['gain_cal_flux'].get('field'))
+            field = manfields.get_field(pipeline,i,config['gain_cal_flux'].get('field'))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
@@ -424,7 +411,7 @@ found in our database or in the CASA NRAO database'.format(field))
             gaintables+=['{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations+=['linear']
             step = 'gain_cal_gain_{0:d}'.format(i)
-            field = get_field(config['gain_cal_gain'].get('field'))
+            field = manfields.get_field(pipeline,i,config['gain_cal_gain'].get('field'))
             recipe.add('cab/casa_gaincal', step,
                {
                  "vis"          : msname,
@@ -466,8 +453,8 @@ found in our database or in the CASA NRAO database'.format(field))
 
         # Flux scale transfer
         if pipeline.enable_task(config, 'transfer_fluxscale'):
-            ref = get_field(config['transfer_fluxscale'].get('reference'))
-            trans = get_field(config['transfer_fluxscale'].get('transfer'))
+            ref = manfields.get_field(pipeline,i,config['transfer_fluxscale'].get('reference'))
+            trans = manfields.get_field(pipeline,i,config['transfer_fluxscale'].get('transfer'))
             step = 'transfer_fluxscale_{0:d}'.format(i)
             recipe.add('cab/casa_fluxscale', step,
                {

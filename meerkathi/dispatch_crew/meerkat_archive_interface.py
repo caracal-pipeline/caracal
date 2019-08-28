@@ -122,7 +122,7 @@ def __query_filter(solr_url,
     # Step through query results - may be many pages
     while curr_cursor != res.nextCursorMark:
         curr_cursor = res.nextCursorMark
-        hits += filter(_observation_filter, res)
+        hits += list(filter(_observation_filter, res))
         res = archive.search(search, sort='ProductName desc, id asc', rows=1000, cursorMark=curr_cursor)
 
     return hits
@@ -247,8 +247,8 @@ def download_observations(directory, observations):
                         filename, local_file_size))
 
             # Create a fake range if none exists
-            fake_range = "{}-{}/{}".format(local_file_size, sys.maxint,
-                sys.maxint - local_file_size)
+            fake_range = "{}-{}/{}".format(local_file_size, sys.maxsize,
+                sys.maxsize - local_file_size)
 
             remote_file_size = r.headers.get('Content-Range', fake_range)
             remote_file_size = remote_file_size.split('/')[-1]

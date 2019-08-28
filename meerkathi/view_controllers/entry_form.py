@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import npyscreen
-import exceptions
 import os
 
 import meerkathi
@@ -24,7 +23,7 @@ class entry_form(npyscreen.FormBaseNew):
 
     def on_quit_pressed(self):
         self.event_loop.switchForm(None)
-        raise exceptions.SystemExit(0)
+        SystemExit(0)
 
     def on_edit_pressed(self):
         self.event_loop.switchForm("OPTIONEDITOR")

@@ -35,7 +35,7 @@ class catalog_parser:
                    db["d_casa"],
                    db.get("lsm", "<none>").ljust(30),
                    db.get("lsm_epoch", db["epoch"]))
-            for name, db in self._cat.iteritems()])
+            for name, db in self._cat.items()])
       return '\n'.join(lines)
 
     @classmethod

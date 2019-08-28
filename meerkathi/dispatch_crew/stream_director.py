@@ -1,6 +1,6 @@
 import sys
 import logging
-from StringIO import StringIO
+from io import StringIO
 class stream_director(object):
     def __init__(self, logger, log_level=logging.INFO):
         class stream_logger(StringIO):

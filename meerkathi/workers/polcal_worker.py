@@ -4,6 +4,7 @@ from meerkathi import log
 import meerkathi.dispatch_crew.utils as utils
 import yaml
 from stimela.dismissable import dismissable as sdm
+from meerkathi.workers.utils import manage_flagsets as manflields 
 import stimela
 
 NAME = "Crosshand calibration"
@@ -74,20 +75,6 @@ def worker(pipeline, recipe, config):
         unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341","PKS 1934-638", "PKS 1934-63", "PKS1934-638",
                                    "PKS0407-65", "0408-65", "J0407-6552"]
 
-        def get_field(field):
-            """
-                gets field ids parsed previously in the pipeline 
-                params:
-                    field: list of ids or comma-seperated list of ids where
-                           ids are in bpcal, gcal, target, fcal or an actual field name
-            """
-            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
-                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
-                                              else x.split(','),
-                                field.split(',') if isinstance(field, str) else field)))
-
-
         DISABLE_CROSSHAND_PHASE_CAL = False
         if get_field("xcal") == "":
             DISABLE_CROSSHAND_PHASE_CAL = True
@@ -97,7 +84,7 @@ def worker(pipeline, recipe, config):
         if not DISABLE_CROSSHAND_PHASE_CAL and get_field("xcal") not in set(polarized_calibrators.keys()):
             raise RuntimeError("Field(s) {0:s} not recognized crosshand calibrators. Unset xcal marked sources to disable X Jones calibration."
                                "Currently the following are recognized "
-                               "crosshand phase calibrators: {1:s}".format(get_field("xcal"), ", ".join(polarized_calibrators.keys())))
+                               "crosshand phase calibrators: {1:s}".format(get_field("xcal"), ", ".join(list(polarized_calibrators.keys()))))
 
         if get_field("fcal") not in set(unpolarized_calibrators):
             raise RuntimeError("Field(s) {0:s} not recognized leakage calibrators. Currently the following are recognized "

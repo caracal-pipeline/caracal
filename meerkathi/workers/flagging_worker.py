@@ -7,6 +7,7 @@ import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 import os
 from meerkathi.workers.utils import manage_flagsets as manflags
+from meerkathi.workers.utils import manage_fields as manfields
 
 FLAGSETS_SUFFIX = "static automatic autocorr_spectrum".split()
 
@@ -21,20 +22,6 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-
-    def get_field(field):
-        """
-            gets field ids parsed previously in the pipeline 
-            params:
-                field: list of ids or comma-seperated list of ids where
-                       ids are in bpcal, gcal, target, fcal or an actual field name
-        """
-        return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                            if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
-                                          if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
-                                          else x.split(','),
-                            field.split(',') if isinstance(field, str) else field)))
-
 
     for i in range(nobs):
 
@@ -72,8 +59,8 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'autoflag_autocorr_powerspectra'):
                 step = 'autoflag_autocorr_spectra_{0:s}_{1:d}'.format(wname, i)
-                def_fields = ",".join(map(str,utils.get_field_id(msinfo, get_field("bpcal,gcal,target,xcal").split(","))))
-                def_calfields = ",".join(map(str, utils.get_field_id(msinfo, get_field("bpcal,gcal,xcal").split(","))))
+                def_fields = ",".join(map(str,utils.get_field_id(msinfo, manfields.get_field(pipeline,i,"bpcal,gcal,target,xcal").split(","))))
+                def_calfields = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(pipeline,i,"bpcal,gcal,xcal").split(","))))
                 if config['autoflag_autocorr_powerspectra'].get('fields') != 'auto' and \
                    not set(config['autoflag_autocorr_powerspectra'].get('fields').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
                     raise KeyError("autoflag on powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
@@ -114,8 +101,8 @@ def worker(pipeline, recipe, config):
 
 
             # clear static flags if any of them are enabled
-            static_flagging = True in map(lambda sflag: pipeline.enable_task(config, sflag), ["flag_autocorr", "quack_flagging", 
-            "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"])
+            static_flagging = True in [pipeline.enable_task(config, sflag) for sflag in ["flag_autocorr", "quack_flagging", 
+            "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"]]
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.clear_flagset(pipeline, recipe, "_".join([wname, "static"]), msname, substep)
@@ -187,8 +174,8 @@ def worker(pipeline, recipe, config):
                         if len(ff)>1: spws=ff[0]
                         else: spws='*'
                         edges=[ii*scalefactor for ii in map(float,ff[-1].split('~'))]
-                        if spws=='*': spws=range(len(pipeline.firstchanfreq[i]))
-                        elif '~' in spws: spws=range(int(spws.split('~')[0]),int(spws.split('~')[1])+1)
+                        if spws=='*': spws=list(range(len(pipeline.firstchanfreq[i])))
+                        elif '~' in spws: spws=list(range(int(spws.split('~')[0]),int(spws.split('~')[1])+1))
                         else: spws=[spws,]
                         edges=[edges for uu in range(len(spws))]
                         for ss in spws:
@@ -277,12 +264,12 @@ def worker(pipeline, recipe, config):
                 
                 if label:
                     fields = 'target'
-                    field_names = get_field(fields)
+                    field_names = manfields.get_field(pipeline,i,fields)
                 elif config['autoflag_rfi'].get('fields') == 'auto':
                     fields = 'target,bpcal,gcal,xcal'
-                    field_names = get_field(fields)
+                    field_names = manfields.get_field(pipeline,i,fields)
                 else:
-                    field_names = get_field(config['autoflag_rfi'].get('fields')).split(",")
+                    field_names = manfields.get_field(pipeline,i,config['autoflag_rfi'].get('fields')).split(",")
                     fields = ",".join(map(str, utils.get_field_id(msinfo, field_names)))
                 
                 field_names = list(set(field_names))
@@ -340,7 +327,7 @@ def worker(pipeline, recipe, config):
                     field = '0'
                     outlabel = '_{0:s}_{1:d}'.format(fieldName,i)
                 else:
-                    field = ",".join(map(str, utils.get_field_id(msinfo, get_field(config['rfinder'].get('field')).split(","))))
+                    field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(pipeline,i,config['rfinder'].get('field')).split(","))))
                     outlabel = '_{0:s}'.format(i)
                 recipe.add('cab/rfinder', step,
                     {

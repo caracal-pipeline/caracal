@@ -1,4 +1,8 @@
-import os, sys, math, shutil,string,glob
+import os
+import sys
+import math
+import shutil
+import glob
 import yaml
 import numpy as np
 from astroquery.vizier import Vizier
@@ -125,7 +129,7 @@ def worker(pipeline, recipe, config):
         pix_x = np.empty([len(tab['RAJ2000'])])
         pix_y = np.empty([len(tab['RAJ2000'])])
 
-        for i in xrange (0, len(tab['RAJ2000'])):
+        for i in range (0, len(tab['RAJ2000'])):
             tab['RAJ2000'][i] = string.join(string.split(tab['RAJ2000'][i],' '),':')
             ra_deg[i] = ra2deg(tab['RAJ2000'][i])
             tab['DEJ2000'][i] = string.join(string.split(tab['DEJ2000'][i],' '),':')
@@ -147,7 +151,7 @@ def worker(pipeline, recipe, config):
         flux14 = np.array(flux_corr,dtype=float)
         below_thresh = flux14<thresh
 
-        for i in xrange(1,len(tab.colnames)):
+        for i in range(1,len(tab.colnames)):
             tab[tab.colnames[i]][below_thresh] = np.nan
 
         tab = tab[~np.isnan(tab['Flux_pbcorr'])]
@@ -169,7 +173,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(mosaic_outdir) == True:
                 shutil.rmtree(mosaic_outdir)
 
-        for i in xrange(0,len(unique)):
+        for i in range(0,len(unique)):
                 summsfield = fields_dir+str(unique[i])+'.FITS'
                 outfield = mosaic_tmpdir+str(unique[i])+'.FITS'
                 shutil.copy(summsfield,outfield)
@@ -181,7 +185,7 @@ def worker(pipeline, recipe, config):
             shutil.rmtree(montage_tmpdir)
 
         casafiles = glob.glob(mask_dir+'/*.image')
-        for i in xrange(0,len(casafiles)):
+        for i in range(0,len(casafiles)):
             shutil.rmtree(casafiles[i])
 
     def move_files(catalog_name,mask_dir):
@@ -242,7 +246,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(mosaic_tmpdir) == False:
                 os.mkdir(mosaic_tmpdir)
 
-        for i in xrange(0,len(unique)):
+        for i in range(0,len(unique)):
 
                 summsfield = fields_dir+str(unique[i])+'.FITS'
                 outfield = mosaic_tmpdir+str(unique[i])+'.FITS'
@@ -280,7 +284,7 @@ def worker(pipeline, recipe, config):
 
         pblist = fits.open(filename)
         dat = pblist[0].data
-        print 'CHANGE THEE HEADER'
+        print('CHANGE THEE HEADER')
         if copy_head == True:
             hdrfile = fits.open(headfile)
             head = hdrfile[0].header
@@ -289,9 +293,9 @@ def worker(pipeline, recipe, config):
                 del head['NAXIS3']
 
             head['NAXIS'] = 2
-            print head['NAXIS']
+            print(head['NAXIS'])
             dat = np.squeeze(dat)
-            print dat.shape
+            print(dat.shape)
 
         elif copy_head == False:
 
@@ -365,7 +369,7 @@ def worker(pipeline, recipe, config):
         ynum = np.linspace(0,hdr['NAXIS2'],hdr['NAXIS2'])
         x, y =  np.meshgrid(xnum, ynum)
 
-        for i in xrange(0,len(pix_x)):
+        for i in range(0,len(pix_x)):
 
             xc = pix_x[i]
             yc = pix_y[i]
@@ -415,10 +419,10 @@ def worker(pipeline, recipe, config):
     
     flabel = config['label']
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,flabel)
-    msfileName = string.split(all_msfiles[0],'.ms')[0]
+    msfileName = str.split(all_msfiles[0],'.ms')[0]
 
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
-        maskName =  string.split(pipeline.msnames[0],'.ms')[0]
+        maskName =  str.split(pipeline.msnames[0],'.ms')[0]
         msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(pipeline.output,pipeline.prefix,msfileName)
         with open(msinfo, 'r') as stdr:
             tinfo = yaml.safe_load(stdr)['FIELD']

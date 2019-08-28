@@ -1,7 +1,7 @@
 import argparse
 import yaml
 import meerkathi
-import os, sys, string
+import os, sys
 import copy
 import ruamel.yaml
 import json
@@ -282,7 +282,7 @@ class config_parser:
         parser = cls.__primary_parser(add_help=True)
         groups = OrderedDict()
 
-        for worker, variables in tmp.iteritems():
+        for worker, variables in tmp.items():
             if worker=="schema_version":
                 continue
             _worker = worker.split("__")[0]
@@ -354,11 +354,11 @@ class config_parser:
         """ Recursively creates subparser tree for the config """
         xformer = lambda s: s.replace('-', '_')
         groups = OrderedDict()
-        sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].iteritems()} #make schema section loopable
+        sec_defaults = {xformer(k): v for k,v in schema_section["mapping"].items()} #make schema section loopable
         
         # loop over each key of the variables in the schema
         # the key may contain a set of subkeys, being the schema a nested dictionary
-        for key, subVars in sec_defaults.iteritems():
+        for key, subVars in sec_defaults.items():
 
             # store the total name of the key given the workerName(base_section) and key (which may be nested)
             option_name = base_section + "_" + key if base_section != "" else key
@@ -374,11 +374,11 @@ class config_parser:
                     return typ(val)
 
             # need to go in the nested variable
-            if subVars.has_key("mapping"):
-                if key in cfgVars.keys(): # check if enabled in config file
+            if "mapping" in subVars:
+                if key in list(cfgVars.keys()): # check if enabled in config file
                     sub_vars = cfgVars[key]
                 else:                 
-                    sub_vars = dict.fromkeys(cfgVars.keys(), {})
+                    sub_vars = dict.fromkeys(list(cfgVars.keys()), {})
                 
                 # recall the function with the set of variables of the nest
                 groups[key] = cls._subparser_tree(sub_vars,
@@ -389,11 +389,11 @@ class config_parser:
                                                   parser=parser)
                 continue
 
-            elif subVars.has_key("seq"):
+            elif "seq" in subVars:
                 # for lists
                 dtype = __builtins__[subVars['seq'][0]['type']]
-                subVars["example"] = string.split(subVars['example'].replace(' ',''),',')
-                default_value = map(dtype, subVars["example"])
+                subVars["example"] = str.split(subVars['example'].replace(' ',''),',')
+                default_value = list(map(dtype, subVars["example"]))
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]
@@ -401,7 +401,7 @@ class config_parser:
                 default_value = typecast(dtype, default_value, string=True)
 
             #update default if set in user config
-            if key in cfgVars.keys() and not _empty(cfgVars.values()):
+            if key in list(cfgVars.keys()) and not _empty(list(cfgVars.values())):
                 default_value = cfgVars[key]
 
             if update_only == "defaults and args":
@@ -443,7 +443,7 @@ class config_parser:
         if not cls.__validated_schema:
             raise RuntimeError("Must init singleton before running this method")
 
-        for key,worker in tmp.iteritems():
+        for key,worker in tmp.items():
             if key=="schema_version":
                 continue
 
@@ -487,8 +487,8 @@ class config_parser:
         """ Prints argument tree to the logger for prosterity to behold """
         meerkathi.log.info("".join(["".ljust(25,"#"), " PIPELINE CONFIGURATION ", "".ljust(25,"#")]))
         def _tree_print(branch, indent="\t"):
-            dicts = OrderedDict( [(k, v) for k, v in branch.iteritems() if isinstance(v, dict)] )
-            other = OrderedDict( [(k, v) for k, v in branch.iteritems() if not isinstance(v, dict)] )
+            dicts = OrderedDict( [(k, v) for k, v in branch.items() if isinstance(v, dict)] )
+            other = OrderedDict( [(k, v) for k, v in branch.items() if not isinstance(v, dict)] )
 
             def _printval(k, v):
                 if isinstance(v, dict):
@@ -503,9 +503,9 @@ class config_parser:
                                                    k.ljust(30),
                                                    v))
 
-            for k, v in other.iteritems(): _printval(k, v)
-            for k, v in dicts.iteritems(): _printval(k, v)
-        ordered_groups = OrderedDict(sorted(cls.__GROUPS.items(),
+            for k, v in other.items(): _printval(k, v)
+            for k, v in dicts.items(): _printval(k, v)
+        ordered_groups = OrderedDict(sorted(list(cls.__GROUPS.items()),
                                              key=lambda p: p[1].get("order",0)))
         _tree_print(ordered_groups)
         meerkathi.log.info("".join(["".ljust(25,"#"), " END OF CONFIGURATION ", "".ljust(25,"#")]))

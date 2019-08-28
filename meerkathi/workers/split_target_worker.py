@@ -8,6 +8,7 @@ import re
 import json
 from meerkathi.dispatch_crew import utils
 from meerkathi.workers.utils import manage_flagsets
+from meerkathi.workers.utils import manage_fields as manfields
 
 NAME = 'Split and average target data'
 # Rules for interpolation mode to use when applying calibration solutions
@@ -46,34 +47,21 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'split_target'):
             with open(os.path.join(pipeline.output,fname), 'r') as stdr:
                 d = json.load(stdr)
-            d["FIELD"]["INTENTS"] = [u'TARGET']
+            d["FIELD"]["INTENTS"] = ['TARGET']
             with open(os.path.join(pipeline.output,fname), "w") as stdw:
                 json.dump(d, stdw)
 
-    def get_field(field):
-            """
-                gets field ids parsed previously in the pipeline
-                params:
-                    field: list of ids or comma-seperated list of ids where
-                           ids are in bpcal, gcal, target, fcal or an actual field name
-            """
-            return ','.join(filter(lambda s: s != "", map(lambda x: ','.join(getattr(pipeline, x)[i].split(',')
-                                                if isinstance(getattr(pipeline, x)[i], str) and getattr(pipeline, x)[i] != "" else getattr(pipeline, x)[i])
-                                              if x in ['bpcal', 'gcal', 'target', 'fcal', 'xcal']
-                                              else x.split(','),
-                                field.split(',') if isinstance(field, str) else field)))
-
     def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
-                return get_field(config['split_target']['otfcal']['apply_delay_cal'].get('field'))
+                return manfields.get_field(pipeline,i,config['split_target']['otfcal']['apply_delay_cal'].get('field'))
             if applyme == 'bp_cal':
-                return get_field(config['split_target']['otfcal']['apply_bp_cal'].get('field'))
+                return manfields.get_field(pipeline,i,config['split_target']['otfcal']['apply_bp_cal'].get('field'))
             if applyme == 'gain_cal_flux':
-                return get_field('fcal')
+                return manfields.get_field(pipeline,i,'fcal')
             if applyme == 'gain_cal_gain':
-                return get_field('gcal')
+                return manfields.get_field(pipeline,i,'gcal')
             if applyme == 'transfer_fluxscale':
-                return get_field('gcal')
+                return manfields.get_field(pipeline,i,'gcal')
 
     label_in = config['label_in']
     label_out = config['label_out']
@@ -91,9 +79,7 @@ def worker(pipeline, recipe, config):
 
             calprefix = '{0:s}-{1:s}'.format(prefix, config['split_target']['otfcal'].get('callabel'))
 
-
-    	    for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-                #meerkathi.log.info((applyme,pipeline.enable_task(config, 'apply_'+applyme)))
+            for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
                    continue
                 suffix = table_suffix[applyme]
@@ -128,7 +114,6 @@ def worker(pipeline, recipe, config):
                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
 
                     os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
-
                 recipe.add('cab/casa_mstransform', step,
                     {
                         "vis"           : fms,
@@ -148,7 +133,7 @@ def worker(pipeline, recipe, config):
                     },
                     input=pipeline.input,
                     output=pipeline.output,
-                    label='{0:s}:: Split and average data ms={1:s}'.format(step, fms))
+                    label='{0:s}:: Split and average data ms={1:s}'.format(step, " ".join(fms)))
 
             msname = tms if pipeline.enable_task(config, 'split_target') else fms
 

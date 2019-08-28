@@ -909,7 +909,7 @@ def worker(pipeline, recipe, config):
                   "dist-ncpu"        : ncpu,
                   "flags-apply"      : flags,
                   "sol-jones"        : '"'+jones_chain+'"',
-                  "sol-diag-only"    : take_diag_terms,
+                  "sel-diag"         : take_diag_terms,
                   "out-name"         : '{0:s}_{1:s}_{2:d}_cubical'.format(prefix, msname[:-3], num),
                   "out-mode"         : CUBICAL_OUT[config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                   "out-plots"        : True,

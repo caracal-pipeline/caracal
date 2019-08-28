@@ -928,7 +928,7 @@ def worker(pipeline, recipe, config):
                   "madmax-enable"   : config[key].get('madmax_flagging'),
                   "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
                   "madmax-threshold": config[key].get('madmax_flag_thresh'),
-                  "madmax-estimate" : 'diag',
+                  "madmax-estimate" : 'corr',
                   "madmax-offdiag"  : False,
                   "dd-dd-term"      : False,
                   "model-ddes"      : 'never',

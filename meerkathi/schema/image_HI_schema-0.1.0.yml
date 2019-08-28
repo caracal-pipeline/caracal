@@ -12,10 +12,6 @@ mapping:
         desc: Execute segment image_HI (yes/no). Default is yes.
         type: bool
         required: true
-      order:
-        desc: Order in queue of workers. Default is 11.
-        type: int
-        required: false
       label:
         desc: Label of names of MS data sets to be used. MS data set names will always start with the data set id, followed by a hyphen, followed by desc. Default is corr.
         type: str
@@ -391,6 +387,51 @@ mapping:
           minSizeZ:
             desc: Minimum size in y-direction. Default is 5.
             type: int
+            required: false
+          do_cubelets:
+            desc: Create cubelets of HI sources.
+            type: bool
+            required: false
+          do_mom0:
+            desc: Create moment 0 map.
+            type: bool
+            required: false
+          do_mom1:
+            desc: Create moment 1 map.
+            type: bool
+            required: false
+      sharpener:
+        desc: Run sharpener to extract spectrum of all continuum sources against the lines of sight. The spectra are then plotted.
+        type: map
+        mapping:
+          enable:
+            desc: Execute sharpener (yes/no)? Default is yes
+            type: bool
+            required: false
+          catalog:
+            desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
+            type: str
+            enum: ['NVSS', 'PYBDSF']
+            required: true
+          catalog_file:
+            desc: Catalog file with sources / or to store sources from online surveys.
+            type: str
+            required: false
+          channels_per_plot:
+            desc: Number of channels to plot per detail plot. Default is 50
+            type: int
+            required: false
+          thresh:
+            desc: Threshold to select sources in online catalogs (mJy). Default is '20mJy'
+            type: str
+            required: false
+          width:
+            desc: Field of view of output catalog (degrees). Default is '1.0d'
+            type: str
+            required: false
+          label:
+            desc: Prefix label of plot names and titles. Default is 'pipeline.prefix'
+            type: str
             required: false
       flagging_summary:
         desc: Print out flagging summary.

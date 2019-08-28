@@ -7,6 +7,7 @@ import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
+import multiprocessing
 
 NAME = 'Self calibration loop'
 
@@ -48,6 +49,8 @@ def worker(pipeline, recipe, config):
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     ncpu = config.get('ncpu')
+    if ncpu == 0:
+        ncpu = multiprocessing.cpu_count()
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter')
     label_tgain = config['transfer_apply_gains'].get('transfer_to_label')         #label of MS where we transform selfcal gaintables

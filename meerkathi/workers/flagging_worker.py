@@ -1,4 +1,4 @@
-NAME = 'Flagging'
+NAME = 'Pre-calibration flagging'
 
 import sys
 import meerkathi
@@ -349,17 +349,6 @@ def worker(pipeline, recipe, config):
                       "plot_noise"         : "noise",
                       "RFInder_mode"       : "use_flags",
                       "outlabel"           : outlabel,  # The output will be rfi_<pol>_<outlabel>
-<<<<<<< HEAD
-                      "polarization"       : config['rfinder'].get('polarization', 'Q'),
-                      "spw_width"          : config['rfinder'].get('spw_width', 10),
-                      "time_step"          : config['rfinder'].get('time_step', 10),
-                      "time_enable"        : config['rfinder'].get('time_enable', True),
-                      "spw_enable"         : config['rfinder'].get('spw_enable', True),
-                      "1d_gif"             : config['rfinder'].get('time_enable', True),
-                      "2d_gif"             : config['rfinder'].get('time_enable', True),
-                      "altaz_gif"          : config['rfinder'].get('spw_enable', True),
-                      "movies_in_report"   : config['rfinder'].get('time_enable', True) or config.get('spw_enable', True)
-=======
                       "polarization"       : config['rfinder'].get('polarization'),
                       "spw_width"          : config['rfinder'].get('spw_width'),
                       "time_step"          : config['rfinder'].get('time_step'),
@@ -369,7 +358,6 @@ def worker(pipeline, recipe, config):
                       "2d_gif"             : config['rfinder'].get('time_enable'),
                       "altaz_gif"          : config['rfinder'].get('spw_enable'),
                       "movies_in_report"   : config['rfinder'].get('time_enable') or config.get('spw_enable')
->>>>>>> upstream/master
                     },
                     input=pipeline.input,
                     output=pipeline.output,

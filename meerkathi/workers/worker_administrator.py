@@ -212,7 +212,9 @@ class worker_administrator(object):
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,
                                loggername='STIMELA-{:d}'.format(i),
                                build_label=self.stimela_build,
-                               singularity_image_dir=self.singularity_image_dir)
+                               singularity_image_dir=self.singularity_image_dir,
+                               log_dir=self.logs)
+
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name
@@ -231,6 +233,9 @@ class worker_administrator(object):
             else:
                 log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
+                casa_last = glob.glob(self.output + '/*.last')
+                for file in casa_last:
+                    os.remove(file)
 
         # Execute all workers if they saved for later execution
         try:

@@ -29,7 +29,7 @@
     apply_delay_cal:
       enable: true
       field: 
-      - gcal
+      - bpcal
       applyto: 
       - gcal
       - bpcal

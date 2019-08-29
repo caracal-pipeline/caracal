@@ -122,6 +122,7 @@ else:
                   "weight_columns"  : config['add_spectral_weights'].get('weight_columns'),
                   "noise_columns"   : config['add_spectral_weights'].get('noise_columns'),
                   "write_to_ms"     : config['add_spectral_weights'].get('write_to_ms'),
+                  "plot_stats"      : "{0:s}/{1:s}-{2:s}.png".format('diagnostic_plots', prefix, 'noise_weights'),
                   "plot_stats"      : prefix + '-noise_weights.png',
                 },
                 input=pipeline.input,

@@ -9,6 +9,7 @@ import logging
 # Globals
 ##############################################################################
 
+
 def report_version():
     # Distutils standard  way to do version numbering
     try:
@@ -19,7 +20,8 @@ def report_version():
     path = os.path.dirname(os.path.abspath(__file__))
     try:
         # work round possible unavailability of git -C
-        result = subprocess.check_output('cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+        result = subprocess.check_output(
+            'cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
     except subprocess.CalledProcessError:
         result = None
     if result != None and 'fatal' not in result:
@@ -28,7 +30,8 @@ def report_version():
     else:
         # perhaps we are in a github without tags? Cook something up if so
         try:
-            result = subprocess.check_output('cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
+            result = subprocess.check_output(
+                'cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
         except subprocess.CalledProcessError:
             result = None
         if result != None and 'fatal' not in result:
@@ -37,21 +40,27 @@ def report_version():
             # we are probably in an installed version
             return __version__
 
+
 __version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
 MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
-DEFAULT_CONFIG = os.path.join(pckgdir,"sample_configurations","minimalConfig.yml")
-SCHEMA = os.path.join(pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
+DEFAULT_CONFIG = os.path.join(
+    pckgdir, "sample_configurations", "minimalConfig.yml")
+SCHEMA = os.path.join(
+    pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
 
 ################################################################################
 # Logging
 ################################################################################
+
+
 def create_logger():
     """ Create a console logger """
     log = logging.getLogger(__name__)
-    cfmt = logging.Formatter(('%(name)s - %(asctime)s %(levelname)s - %(message)s'))
+    cfmt = logging.Formatter(
+        ('%(name)s - %(asctime)s %(levelname)s - %(message)s'))
     log.setLevel(logging.DEBUG)
     filehandler = logging.FileHandler(MEERKATHI_LOG)
     filehandler.setFormatter(cfmt)
@@ -66,8 +75,10 @@ def create_logger():
 
     return log, filehandler, console, cfmt
 
+
 def remove_log_handler(hndl):
     log.removeHandler(hndl)
+
 
 def add_log_handler(hndl):
     log.addHandler(hndl)

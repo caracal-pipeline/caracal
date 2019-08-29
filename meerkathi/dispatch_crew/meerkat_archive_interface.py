@@ -9,6 +9,7 @@ import requests
 import progressbar
 import re
 
+
 def __standard_observation_query(filename=None,
                                  product_type_name="MeerKATAR1TelescopeProduct",
                                  product_num_channels=4096,
@@ -31,15 +32,17 @@ def __standard_observation_query(filename=None,
         fq('StartTime', time_extent)]
 
     # Construct the query
-    query = ' AND '.join('%s:%s' % (fq.field, fq.query) for fq in query_list if fq.query is not None)
+    query = ' AND '.join('%s:%s' % (fq.field, fq.query)
+                         for fq in query_list if fq.query is not None)
     return query
 
+
 def __query_filter(solr_url,
-                    query=None,
-                    required_intents=['gaincal', 'bpcal', 'target'],
-                    required_minimum_duration=2,
-                    required_fields=[],
-                    required_description='.*'):
+                   query=None,
+                   required_intents=['gaincal', 'bpcal', 'target'],
+                   required_minimum_duration=2,
+                   required_fields=[],
+                   required_description='.*'):
     """
     Find recent telescope observations suitable for imaging
     """
@@ -49,9 +52,8 @@ def __query_filter(solr_url,
 
     search = query if query is not None else __standard_observation_query()
 
-
     meerkathi.log.info("Querying solr server '%s' "
-                        "with query string '%s'." % (solr_url, search))
+                       "with query string '%s'." % (solr_url, search))
 
     archive = pysolr.Solr(solr_url)
 
@@ -62,8 +64,8 @@ def __query_filter(solr_url,
         """
 
         # Create an observation string for logging
-        filename, description = (solr_result.get(f,'') for f in
-            ('Filename', 'Description'))
+        filename, description = (solr_result.get(f, '') for f in
+                                 ('Filename', 'Description'))
         observation = '{} {}'.format(filename, description[:50])
 
         # Its only worth imaging observations with
@@ -75,17 +77,17 @@ def __query_filter(solr_url,
 
         if ('gaincal' in required_intents) and gaincals == 0:
             meerkathi.log.warn('Ignoring "{}", no gain calibrators '
-                                'are present.'.format(observation))
+                               'are present.'.format(observation))
             return False
 
         if ('bpcal' in required_intents) and bandpasses == 0:
             meerkathi.log.warn('Ignoring "{}", no band pass calibrators '
-                                'are present.'.format(observation))
+                               'are present.'.format(observation))
             return False
 
         if ('target' in required_intents) and obs_targets == 0:
             meerkathi.log.warn('Ignoring "{}", no target fields '
-                                'are present.'.format(observation))
+                               'are present.'.format(observation))
             return False
 
         # Check that the description matches
@@ -104,28 +106,30 @@ def __query_filter(solr_url,
                                                                             f))
                 return False
 
-
         # Don't take anything less than 2 hours in duration
         duration = solr_result['Duration']
 
         if duration < required_minimum_duration * ONE_HOUR:
             meerkathi.log.warn('Ignoring "{}", observation is '
-                'only "{}"s long, need to be at minimum "{}"s.'.format(observation,
-                                                                       duration,
-                                                                       required_minimum_duration * ONE_HOUR))
+                               'only "{}"s long, need to be at minimum "{}"s.'.format(observation,
+                                                                                      duration,
+                                                                                      required_minimum_duration * ONE_HOUR))
             return False
 
         return True
     hits = []
     curr_cursor = "*"
-    res = archive.search(search, sort='ProductName desc, id asc', rows=1000, cursorMark='*')
+    res = archive.search(
+        search, sort='ProductName desc, id asc', rows=1000, cursorMark='*')
     # Step through query results - may be many pages
     while curr_cursor != res.nextCursorMark:
         curr_cursor = res.nextCursorMark
         hits += list(filter(_observation_filter, res))
-        res = archive.search(search, sort='ProductName desc, id asc', rows=1000, cursorMark=curr_cursor)
+        res = archive.search(
+            search, sort='ProductName desc, id asc', rows=1000, cursorMark=curr_cursor)
 
     return hits
+
 
 def load_observation_metadata(directory, filename):
     """ Load observation metadata """
@@ -133,11 +137,13 @@ def load_observation_metadata(directory, filename):
     with open(os.path.join(directory, filename), 'r') as f:
         return json.load(f)
 
+
 def dump_observation_metadata(directory, filename, observation):
     """ Dump observation metadata """
 
     with open(os.path.join(directory, filename), 'w') as f:
         return json.dump(observation, f)
+
 
 def query_metadatas(input_dir,
                     solr_url,
@@ -145,7 +151,7 @@ def query_metadatas(input_dir,
                     product_type_name="MeerKATAR1TelescopeProduct",
                     product_num_channels=4096,
                     time_extent="[NOW-3DAYS TO NOW]",
-                    required_intents=['gaincal','bpcal','target'],
+                    required_intents=['gaincal', 'bpcal', 'target'],
                     required_minimum_duration=2,
                     required_fields=[],
                     required_description='.*'):
@@ -173,7 +179,7 @@ def query_metadatas(input_dir,
             # If it exists, load and return the metadata as our observation object
             if os.path.exists(metadata_path):
                 meerkathi.log.info("Observation metadata exists locally at '{}'. "
-                                    "Reusing it.".format(metadata_path))
+                                   "Reusing it.".format(metadata_path))
 
                 results = itertools.chain(results, [load_observation_metadata(input_dir,
                                                                               metadata_filename)])
@@ -200,6 +206,7 @@ def query_metadatas(input_dir,
                                                           required_description))
     return list(results)
 
+
 def download_observations(directory, observations):
     """ Download the specified observations
         args:
@@ -222,14 +229,15 @@ def download_observations(directory, observations):
 
         # Infer the HTTP location from the KAT archive file location
         location = observation['FileLocation'][0]
-        location = location.replace('/var/kat', 'http://kat-archive.kat.ac.za', 1)
+        location = location.replace(
+            '/var/kat', 'http://kat-archive.kat.ac.za', 1)
         filename = observation['Filename']
         url = os.path.join(location, filename)
 
         filename = os.path.join(directory, filename)
         file_exists = os.path.exists(filename) and os.path.isfile(filename)
         local_file_size = os.path.getsize(filename) if file_exists else 0
-        headers = { "Range" : "bytes={}-".format(local_file_size) }
+        headers = {"Range": "bytes={}-".format(local_file_size)}
 
         r = requests.get(url, headers=headers, stream=True)
 
@@ -243,12 +251,12 @@ def download_observations(directory, observations):
         elif r.status_code == 206:
             if local_file_size > 0:
                 meerkathi.log.info("'{}' already exists, "
-                    "resuming download from {}.".format(
-                        filename, local_file_size))
+                                   "resuming download from {}.".format(
+                                       filename, local_file_size))
 
             # Create a fake range if none exists
             fake_range = "{}-{}/{}".format(local_file_size, sys.maxsize,
-                sys.maxsize - local_file_size)
+                                           sys.maxsize - local_file_size)
 
             remote_file_size = r.headers.get('Content-Range', fake_range)
             remote_file_size = remote_file_size.split('/')[-1]
@@ -263,10 +271,10 @@ def download_observations(directory, observations):
 
         f = open(filename, 'ab' if file_exists else 'wb')
         bar = (progressbar.ProgressBar(max_value=progressbar.UnknownLength)
-            if remote_file_size is None else progressbar.ProgressBar(
-                maxval=int(remote_file_size)))
+               if remote_file_size is None else progressbar.ProgressBar(
+            maxval=int(remote_file_size)))
 
-        #Download chunks of file and write to disk
+        # Download chunks of file and write to disk
         try:
             with f, bar:
                 downloaded = local_file_size
@@ -281,6 +289,7 @@ def download_observations(directory, observations):
         filenames.append(filename)
 
     return filename
+
 
 def check_observation_cache(directory, h5filename, observation):
     """
@@ -301,8 +310,8 @@ def check_observation_cache(directory, h5filename, observation):
 
     if not obs_size == os.path.getsize(h5file):
         meerkathi.log.warn("'{}' file size '{}' "
-            "differs from that in the observation metadata '{}'."
-                .format(h5filename, h5_size, obs_size))
+                           "differs from that in the observation metadata '{}'."
+                           .format(h5filename, h5_size, obs_size))
         return False
 
     return True

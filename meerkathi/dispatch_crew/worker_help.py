@@ -1,7 +1,7 @@
 import yaml
 import yamlordereddictloader
 import sys
-from  argparse import ArgumentParser
+from argparse import ArgumentParser
 
 
 class worker_options(object):
@@ -11,7 +11,8 @@ class worker_options(object):
         """
         self.worker = name
         self.desc = worker_dict["desc"]
-        self.parser = parser or ArgumentParser("{0:s}: {1:s}".format(self.worker, self.desc))
+        self.parser = parser or ArgumentParser(
+            "{0:s}: {1:s}".format(self.worker, self.desc))
         self.worker_dict = worker_dict
 
     def traverse_worker(self, section, lineage=None):
@@ -26,7 +27,7 @@ class worker_options(object):
                 if lineage is None:
                     _lineage = name
                 else:
-                    _lineage = "{0:s}-{1:s}".format(lineage,name)
+                    _lineage = "{0:s}-{1:s}".format(lineage, name)
                 # send back if its a mapping
                 if segment.get("type", False) == "map":
                     self.traverse_worker(segment, _lineage)
@@ -49,7 +50,8 @@ class worker_options(object):
                 desc = segment.get("desc",
                                    "!!! option %s missing schema description. Please file this bug !!!" % name).replace("%", "%%")
                 desc = desc + " [type: %s]" % ptype
-                self.parser.add_argument("--{0:s}".format(_lineage), help=desc, **args) 
+                self.parser.add_argument(
+                    "--{0:s}".format(_lineage), help=desc, **args)
         else:
             return
 

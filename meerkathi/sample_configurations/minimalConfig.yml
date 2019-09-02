@@ -29,7 +29,7 @@
     apply_delay_cal:
       enable: true
       field: 
-      - gcal
+      - bpcal
       applyto: 
       - gcal
       - bpcal
@@ -66,8 +66,8 @@
     enable: true
 
 - split_target:
-    label_out: corr
     enable: true
+    label_out: corr
     split_target:
       enable: true
       column: corrected
@@ -86,8 +86,8 @@
     enable: false
 
 - self_cal:
-    label: corr
     enable: true
+    label: corr
     image:
       enable: true
       mask_from_sky: false
@@ -99,5 +99,5 @@
 
 
 - image_HI:
-    label: corr
     enable: true
+    label: corr

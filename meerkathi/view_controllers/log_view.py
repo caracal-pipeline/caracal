@@ -4,6 +4,7 @@ from meerkathi import add_log_handler, remove_log_handler, log_formatter
 
 KEEP_NLINES = 1000
 
+
 class log_view(npyscreen.Pager):
     def __init__(self, *args, **kwargs):
         class logging_handler(StreamHandler):
@@ -11,11 +12,12 @@ class log_view(npyscreen.Pager):
                 self.__parent_view = parent_view
                 self.setFormatter(log_formatter)
                 StreamHandler.__init__(self, *args, **kwargs)
+
             @property
             def parent_view(self):
                 return self.__parent_view
 
-            def emit(self, record): 
+            def emit(self, record):
                 msg = str(self.format(record))
                 self.parent_view.values.insert(0, msg)
                 self.parent_view.values = self.parent_view.values[:KEEP_NLINES]
@@ -32,4 +34,3 @@ class log_view(npyscreen.Pager):
     @property
     def logging_handler(self):
         return self.__log_handler
-    

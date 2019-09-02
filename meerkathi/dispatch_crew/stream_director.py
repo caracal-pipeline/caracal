@@ -1,6 +1,8 @@
 import sys
 import logging
-from StringIO import StringIO
+from io import StringIO
+
+
 class stream_director(object):
     def __init__(self, logger, log_level=logging.INFO):
         class stream_logger(StringIO):
@@ -9,7 +11,7 @@ class stream_director(object):
                 self.log_level = log_level
                 self.__fileno = fileno
                 StringIO.__init__(self, *args, **kwargs)
-            
+
             @property
             def fileno(self):
                 return lambda: self.__fileno
@@ -17,11 +19,11 @@ class stream_director(object):
             def is_not_log(self, line):
                 # avoid recursive writeout by checking for a tag
                 return line.find("meerkathi -") < 0 and line.find("INFO -") < 0 and \
-                                 line.find("ERROR -") < 0 and line.find("WARNING -") < 0 and \
-                                 line.find("DEBUG -") < 0 and line.find("CRITICAL -") < 0 and \
-                                 line.find("INFO:meerkathi") < 0 and line.find("ERROR:meerkathi") < 0 and \
-                                 line.find("WARNING:meerkathi") < 0 and line.find("DEBUG:meerkathi") < 0 and \
-                                 line.find("CRITICAL:meerkathi") < 0
+                    line.find("ERROR -") < 0 and line.find("WARNING -") < 0 and \
+                    line.find("DEBUG -") < 0 and line.find("CRITICAL -") < 0 and \
+                    line.find("INFO:meerkathi") < 0 and line.find("ERROR:meerkathi") < 0 and \
+                    line.find("WARNING:meerkathi") < 0 and line.find("DEBUG:meerkathi") < 0 and \
+                    line.find("CRITICAL:meerkathi") < 0
 
             def writelines(self, lines):
                 StringIO.writelines(self, lines)
@@ -29,24 +31,26 @@ class stream_director(object):
                     if self.is_not_log(line):
                         self.logger.log(self.log_level, line.rstrip())
 
-            def write(self, buf):                
+            def write(self, buf):
                 StringIO.write(self, buf)
-                
+
                 for line in buf.rstrip().splitlines():
                     if self.is_not_log(line):
                         self.logger.log(self.log_level, line.rstrip())
-                        
-        self.__stdout_logger = stream_logger(logger, logging.INFO, fileno=sys.stdout.fileno())
-        self.__stderr_logger = stream_logger(logger, logging.CRITICAL, fileno=sys.stderr.fileno())
-        
+
+        self.__stdout_logger = stream_logger(
+            logger, logging.INFO, fileno=sys.stdout.fileno())
+        self.__stderr_logger = stream_logger(
+            logger, logging.CRITICAL, fileno=sys.stderr.fileno())
+
     def __enter__(self):
         self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
-        self.old_stdout.flush(); self.old_stderr.flush()
-        
+        self.old_stdout.flush()
+        self.old_stderr.flush()
+
         sys.stdout = self.__stdout_logger
         sys.stderr = self.__stderr_logger
 
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr
-        

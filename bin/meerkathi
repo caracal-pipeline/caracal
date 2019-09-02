@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import meerkathi
+import meerkathi.main as main
 import sys
 
-meerkathi.main(sys.argv[1:])
-
+main.main(sys.argv[1:])

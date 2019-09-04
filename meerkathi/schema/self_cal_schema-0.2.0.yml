@@ -438,7 +438,11 @@ mapping:
               - type: int
             required: false
             example: '1, 2'
-
+          overwrite:
+            desc: Allow cubical to overwrite existing output
+            type: bool
+            required: false
+            example: 'False'
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.

@@ -349,18 +349,18 @@ def worker(pipeline, recipe, config):
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
-                recipe.add('cab/autoflagger', step,
-                           {
-                               "msname": msname,
-                               "column": config['autoflag_rfi'].get('column'),
-                               # flag the calibrators for RFI and apply to target
-                               "fields": fields,
+                #recipe.add('cab/autoflagger', step,
+                #           {
+                #               "msname": msname,
+                #               "column": config['autoflag_rfi'].get('column'),
+                #               # flag the calibrators for RFI and apply to target
+                #               "fields": fields,
                                # "bands"       : config['autoflag_rfi'].get('bands', "0"),
-                               "strategy": config['autoflag_rfi']['strategy'],
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
+                #               "strategy": config['autoflag_rfi']['strategy'],
+                #           },
+                #           input=pipeline.input,
+                #           output=pipeline.output,
+                #           label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)

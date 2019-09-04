@@ -4,11 +4,12 @@ import glob
 import sys
 import yaml
 import json
-import os
+import re
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
+from typing import Any
 
 NAME = 'Self calibration loop'
 
@@ -17,7 +18,11 @@ NAME = 'Self calibration loop'
 # To split out continuum/<dir> from output/continuum/dir
 
 
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def get_dir_path(string, pipeline):
+    print("such silliness")
+    print(string)
+    print(string.split(pipeline.output))
+    return string.split(pipeline.output)[1][1:]
 
 
 CUBICAL_OUT = {
@@ -40,7 +45,7 @@ corr_indexes = {'H': 0,
 SOL_TERMS = {
     "G": "50",
     "B": "50",
-    "DD": "20",
+    "DD": "25",
 }
 
 
@@ -104,7 +109,7 @@ def worker(pipeline, recipe, config):
     # functions for convience
 
     def cleanup_files(mask_name):
-
+        # This function is never used
         if os.path.exists(pipeline.output+'/'+mask_name):
             shutil.move(pipeline.output+'/'+mask_name,
                         pipeline.output+'/masking/'+mask_name)
@@ -593,24 +598,24 @@ def worker(pipeline, recipe, config):
             except:
                 print('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
-		    		   {
-						   "image": im,  
-						   "thresh_pix"    : config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
-        				   "thresh_isl"    : config[key].get('thresh_isl')[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-						   "outfile"       : '{:s}.gaul:output'.format(calmodel),
-						   "blank_limit"   : sdm.dismissable(blank_limit),
-						   "adaptive_rms_box" : config[key].get('local_rms'),
-						   "port2tigger"   : False,
-                		   "format"         : 'ascii',
-						   "multi_chan_beam": spi_do,
-						   "spectralindex_do": spi_do,
-						   "detection_image": sdm.dismissable(detection_image),
-                		   "ncores"         : ncpu,
-		    	       },
-		    		   input=pipeline.input, 
-		    		   # Unfortuntaly need to do it this way for pybdsm
-                	   output=pipeline.output + '/' + img_dir,
-		    		   label='{0:s}:: Extract sources'.format(step))
+                       {
+                           "image": im,
+                           "thresh_pix"    : config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+                           "thresh_isl"    : config[key].get('thresh_isl')[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
+                           "outfile"       : '{:s}.gaul:output'.format(calmodel),
+                           "blank_limit"   : sdm.dismissable(blank_limit),
+                           "adaptive_rms_box" : config[key].get('local_rms'),
+                           "port2tigger"   : False,
+                           "format"         : 'ascii',
+                           "multi_chan_beam": spi_do,
+                           "spectralindex_do": spi_do,
+                           "detection_image": sdm.dismissable(detection_image),
+                           "ncores"         : ncpu,
+                       },
+                       input=pipeline.input,
+                       # Unfortuntaly need to do it this way for pybdsm
+                       output=pipeline.output + '/' + img_dir,
+                       label='{0:s}:: Extract sources'.format(step))
             #In order to make sure that we actually find stuff in the images we execute the rec ipe here
             recipe.run()
             # Empty job que after execution
@@ -939,7 +944,7 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
         gasols_ = [
             config[key].get('GAsols_time')[num - 1 if num <= 
-            							   len(config[key].get('GAsols_time')) else -1],
+                                           len(config[key].get('GAsols_time')) else -1],
             config[key].get('GAsols_channel')[num - 1 if num <= 
                                               len(config[key].get('GAsols_channel')) else -1]]
 
@@ -952,12 +957,12 @@ def worker(pipeline, recipe, config):
         sol_terms = []
         for term in jones_chain.split(","):
             sol_terms.append(SOL_TERMS[term])
+        flags= ""
+        if num > 1:
+            flags = "-cubical"
+            for i in range(num-1):
+                flags = flags + ",-step_{0:d}_2gc_flags".format(i+1)
 
-        if config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= 
-                                          num else -1]  == 'CORR_DATA':
-            flags= 'legacy'
-        else:
-            flags='-cubical'
         for i,msname in enumerate(mslist):
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
             cubical_opts = {
@@ -983,7 +988,7 @@ def worker(pipeline, recipe, config):
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "out-overwrite": False,
+                "out-overwrite": config[key].get('overwrite'),
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
@@ -998,7 +1003,10 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
-
+            if flags != "":
+                cubical_opts.update({
+                    "flags-apply": flags,
+                })
             if config[key].get('two_step') and gasols_[0] != -1:
                 cubical_opts.update({
                     "dd-update-type": 'amp-diag',
@@ -1013,7 +1021,6 @@ def worker(pipeline, recipe, config):
                 })
             if config[key].get('Bjones', False):
                 cubical_opts.update({
-                    "g-update-type": gupdate,
                     "b-update-type": bupdate,
                     "b-solvable": True,
                     "b-time-int": int(bsols_[0]),
@@ -1024,7 +1031,7 @@ def worker(pipeline, recipe, config):
                                                                                                pipeline), num, msname.split('.ms')[0]),
                     "b-clip-high": config.get('cal_gain_amplitude_clip_high')})
             recipe.add('cab/cubical', step, cubical_opts,  
-                	   input=pipeline.input,
+                       input=pipeline.input,
                        output=pipeline.output,
                        shared_memory= config[key].get('shared_memory'),
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
@@ -1037,23 +1044,22 @@ def worker(pipeline, recipe, config):
                            "flag": "step_{0:d}_2gc_flags".format(num),
                            "flagged-any": ["+L"]
                        },
-                 	   input=pipeline.input,
+                       input=pipeline.input,
                        output=pipeline.output,
                        label="save_2gc_flags_{0:s}_step_{1:d}:: Save 2GC flags step {1:d} ".format(mspref, num))
 
-
-	def restore(num,  prod_pathms,list_out,enable_inter=True): 
-		key = 'calibrate'
-    	calwith = config.get('calibrate_with').lower()
-    	# First check we are using Cubical
-    	if (calwith == 'meqtrees'):
-        	if enable_inter:
-            	meerkathi.log.info(
-                	'Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-            	raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
-        	else:
+    def restore(num,  prod_path,mslist_out,enable_inter=True):
+        key = 'calibrate'
+        calwith = config.get('calibrate_with').lower()
+        # First check we are using Cubical
+        if (calwith == 'meqtrees'):
+            if enable_inter:
                 meerkathi.log.info(
-                	"We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+                    'Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
+                raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
+            else:
+                meerkathi.log.info(
+                    "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
                 raise ValueError("We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         #to achieve accurate restauration we need to reset all parameters properly
         matrix_type = config[key].get('gain_matrix_type')[
@@ -1108,11 +1114,8 @@ def worker(pipeline, recipe, config):
             matrix_type = 'Gain2x2'
         # select the right datasets
         if enable_inter:
-            #Cubical messes up when a whole area is flagged as it will flag the full frequency range of a freq-chunk the freq chunk should be much larger in applying
-            chunky = 0
             apmode= 'ac'
         else:
-            chunky = 0
             if  CUBICAL_OUT[config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]] == 'sr':
                 apmode = 'ar'
             else:
@@ -1140,52 +1143,54 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
             else:
-                fromname = mslist[i]
+                fromname = msname_out.replace(label_tgain, label)
 
             # build cubical commands
             cubical_gain_interp_opts = {
                "data-ms": msname_out,
                "data-column": 'DATA',
                "data-time-chunk": time_chunk,
+               "sol-jones": jones_chain,
                "sel-ddid": sdm.dismissable(config[key].get('spwid')),
+               "sol-term-iters": 0,
                "dist-ncpu": ncpu,
                "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,  
-               																	 pipeline), pipeline.dataid[i], msname_out, apply_iter),
+                                                                                 pipeline), pipeline.dataid[i], msname_out, num),
                "data-freq-chunk": 0,
                "out-mode": apmode,
                "weight-column": config[key].get('weight_column'),
                "montblanc-dtype": 'float',
                "g-solvable": False,
+               "g-update-type": gupdate,
                "g-type": CUBICAL_MT[matrix_type],
                "g-time-int": int(gsols_[0]),
                "g-freq-int": int(gsols_[1]),
                "g-save-to": None,
                "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), apply_iter, (fromname.split('.ms')[0]).replace(label_tgain, label))}
+                                                                                             pipeline), num, fromname.split('.ms')[0]),
                "madmax-enable": config[key].get('madmax_flagging'),
-               "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
+               "madmax-plot": False,
                "madmax-threshold": config[key].get('madmax_flag_thresh'),
                "madmax-estimate": 'diag',
                "madmax-offdiag": False,}
             # expand
             if config[key].get('Bjones'):
-               cubical_gain_interp_opts.update(
-                   {"g-update-type": gupdate,
+               cubical_gain_interp_opts.update({
                     "b-update-type": bupdate,
                     "b-type": CUBICAL_MT[matrix_type],
                     "b-xfer-from":"{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                                               pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label))})
+                                                                                                pipeline), num, fromname.split('.ms')[0]),
                     "b-time-int": int(bsols_[0]),
                     "b-freq-int": int(bsols_[1]),
                     "b-solvable": False,
                     "b-save-to": None
                     })
             if config[key].get('two_step') and gasols_[0] != -1:
-               cubical_gain_interp_opts.update(
-                   {"g-update-type": gupdate,
+               cubical_gain_interp_opts.update({
                     "dd-update-type": 'amp-diag',
                     "dd-type": CUBICAL_MT[matrix_type],
-                    "dd-xfer-from": "g-amp-gains-{0:d}-{1:s}.parmdb:output".format(num,(fromname.split('.ms')[0])),
+                    "dd-xfer-from":  "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0]),
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
                     "dd-solvable": False,
@@ -1194,10 +1199,10 @@ def worker(pipeline, recipe, config):
             # ensure proper logging for restore or interpolation
             if not enable_inter:
                 step = 'restore_cubical_gains_{0:d}_{1:d}'.format(num, i)
-                stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname)
+                stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname_out)
             else:
                 step = 'apply_cubical_gains_{0:d}_{1:d}'.format(num, i)
-                stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname)
+                stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                 input=pipeline.input,
                 output=pipeline.output,
@@ -1550,18 +1555,28 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Add model column to corrected column'.format(step))
+        #get the flags available at start of selfcal
 
         global self_cal_iter_counter
-        self_cal_iter_counter = config.get('start_at_iter')
+        self_cal_iter_counter = config.get('start_at_iter')  # type: Any
         global reset_cal
         reset_cal = 0
         global trace_SN
         trace_SN = []
         global trace_matrix
         trace_matrix = []
-   		# When we do not start at iteration 1 we need to restore the data set
-    	if self_cal_iter_counter != 1:
-        	restore(self_cal_iter_counter-1, mslist,enable_inter=False)
+        image_path = "{0:s}/image_{1:d}".format(
+            pipeline.continuum, self_cal_iter_counter)
+        #I think it is best to always define selfcal_products as it might be needed for transfer gains or restore
+
+        selfcal_products = "{0:s}/{1:s}".format(
+            pipeline.continuum, 'selfcal_products')
+        # When we do not start at iteration 1 we need to restore the data set
+        if self_cal_iter_counter != 1:
+            if not os.path.exists(image_path):
+                raise IOError(
+                    "Trying to restore step {0:d} but the correct direcory ({1:s}) does not exist.".format(self_cal_iter_counter-1,image_path))
+            restore(self_cal_iter_counter-1,selfcal_products, mslist,enable_inter=False)
 
         image_path = "{0:s}/image_{1:d}".format(
             pipeline.continuum, self_cal_iter_counter)
@@ -1583,8 +1598,6 @@ def worker(pipeline, recipe, config):
 
         while quality_check(self_cal_iter_counter, field, enable=pipeline.enable_task(config, 'aimfast')):
             if pipeline.enable_task(config, 'calibrate'):
-                selfcal_products = "{0:s}/{1:s}".format(
-                    pipeline.continuum, 'selfcal_products')
                 if not os.path.exists(selfcal_products):
                     os.mkdir(selfcal_products)
                 calibrate(self_cal_iter_counter, selfcal_products,
@@ -1624,12 +1637,12 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'transfer_apply_gains'):
             mslist_out = ms_dict_tgain[target]
-            if (self_cal_iter_counter > cal_niter):
+            if self_cal_iter_counter > cal_niter:
                 restore(
-                	self_cal_iter_counter-1,selfcal_products, mslist_out, enable_inter=True)
+                    self_cal_iter_counter-1,selfcal_products, mslist_out, enable_inter=True)
             else:
                 restore(
-                	self_cal_iter_counter,selfcal_products, mslist_out, enable_inter=True)
+                    self_cal_iter_counter,selfcal_products, mslist_out, enable_inter=True)
 
         if pipeline.enable_task(config, 'aimfast'):
             if config['aimfast']['plot']:

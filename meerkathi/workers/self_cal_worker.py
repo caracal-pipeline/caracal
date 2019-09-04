@@ -1112,6 +1112,7 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
+
         # select the right datasets
         if enable_inter:
             apmode= 'ac'
@@ -1150,14 +1151,17 @@ def worker(pipeline, recipe, config):
                "data-ms": msname_out,
                "data-column": 'DATA',
                "data-time-chunk": time_chunk,
-               "sol-jones": jones_chain,
-               "sel-ddid": sdm.dismissable(config[key].get('spwid')),
-               "sol-term-iters": 0,
-               "dist-ncpu": ncpu,
-               "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,  
-                                                                                 pipeline), pipeline.dataid[i], msname_out, num),
                "data-freq-chunk": 0,
+               "sel-ddid": sdm.dismissable(config[key].get('spwid')),
+               "sol-jones": jones_chain,
+               "sol-term-iters": 0,
+               "sel-diag": take_diag_terms,
+               "dist-ncpu": ncpu,
+               "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
+                                                                                 pipeline), prefix, msname_out[:-3], num),
                "out-mode": apmode,
+               "out-overwrite":False,
+               "out-apply-solver"
                "weight-column": config[key].get('weight_column'),
                "montblanc-dtype": 'float',
                "g-solvable": False,
@@ -1165,14 +1169,16 @@ def worker(pipeline, recipe, config):
                "g-type": CUBICAL_MT[matrix_type],
                "g-time-int": int(gsols_[0]),
                "g-freq-int": int(gsols_[1]),
-               "g-save-to": None,
                "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                              pipeline), num, fromname.split('.ms')[0]),
                "madmax-enable": config[key].get('madmax_flagging'),
                "madmax-plot": False,
                "madmax-threshold": config[key].get('madmax_flag_thresh'),
-               "madmax-estimate": 'diag',
-               "madmax-offdiag": False,}
+               "madmax-estimate": 'corr',
+               "madmax-offdiag": False,
+               "dd-dd-term": False,
+               "model-ddes": 'never',
+            }
             # expand
             if config[key].get('Bjones'):
                cubical_gain_interp_opts.update({
@@ -1182,8 +1188,7 @@ def worker(pipeline, recipe, config):
                                                                                                 pipeline), num, fromname.split('.ms')[0]),
                     "b-time-int": int(bsols_[0]),
                     "b-freq-int": int(bsols_[1]),
-                    "b-solvable": False,
-                    "b-save-to": None
+                    "b-solvable": False
                     })
             if config[key].get('two_step') and gasols_[0] != -1:
                cubical_gain_interp_opts.update({
@@ -1193,8 +1198,7 @@ def worker(pipeline, recipe, config):
                                                                                              pipeline), num, fromname.split('.ms')[0]),
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
-                    "dd-solvable": False,
-                    "dd-save-to": None
+                    "dd-solvable": False
                     })
             # ensure proper logging for restore or interpolation
             if not enable_inter:

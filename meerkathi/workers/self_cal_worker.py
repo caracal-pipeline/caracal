@@ -214,7 +214,7 @@ def worker(pipeline, recipe, config):
 
         step = 'image_{}'.format(num)
         image_opts = {
-            "msname": mslist[0],
+            "msname": mslist,
             "column": imcolumn,
             "weight": 'briggs {}'.format(config[key].get('robust', robust)),
             "npix": config[key].get('npix', npix),

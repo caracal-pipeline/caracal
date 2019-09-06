@@ -48,7 +48,7 @@ mapping:
         type: int
         desc: Number of pixels in output image
         required: false
-        example: '1500'
+        example: '1800'
       img_padding:
         type: float
         desc: Padding in WSclean
@@ -143,7 +143,7 @@ mapping:
             type: bool
             desc: Execute this segment
             required: false
-            example: 'True'
+            example: 'False'
           tolerance:
             type: float
             desc: Relative change in weighted mean of several indicators from aimfast.
@@ -439,7 +439,7 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '1, 2'
+            example: '0, 10'
 
           ragavi_plot:
             type: map

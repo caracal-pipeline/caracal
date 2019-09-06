@@ -28,12 +28,12 @@ mapping:
             -  type: int
           desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images.
           required: false
-          example: '360'
+          example: '900'
       cell:
         desc: Default scale of a pixel in arcsec.
         type: float
         required: false
-        example: '5'
+        example: '2'
       weight:
         desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition.
         type: str
@@ -43,7 +43,7 @@ mapping:
         desc: Default robust parameter in case of Briggs weighting.
         type: float
         required: false
-        example: '2' 
+        example: '0' 
       
       subtractmodelcol:
         desc: Replace the column CORRECTED_DATA with the difference CORRECTED_DATA - MODEL_DATA. This is useful for continuum subtraction as it enables the subtraction of the most recent continuum clean model.

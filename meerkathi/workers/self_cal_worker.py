@@ -220,7 +220,7 @@ def worker(pipeline, recipe, config):
 
         step = 'image_{}'.format(num)
         image_opts = {
-            "msname": mslist[0],
+            "msname": mslist,
             "column": imcolumn,
             "weight": 'briggs {}'.format(config[key].get('robust', robust)),
             "npix": config[key].get('npix', npix),
@@ -1168,7 +1168,7 @@ def worker(pipeline, recipe, config):
                "g-type": CUBICAL_MT[matrix_type],
                "g-time-int": int(gsols_[0]),
                "g-freq-int": int(gsols_[1]),
-               "g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+               "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                              pipeline), num, fromname.split('.ms')[0]),
                "madmax-enable": config[key].get('madmax_flagging'),
                "madmax-plot": False,
@@ -1542,6 +1542,8 @@ def worker(pipeline, recipe, config):
 
     for target in all_targets:
         mslist = ms_dict[target]
+        print(mslist,target)
+        #exit()
         field = utils.filter_name(target)
         # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
         if config.get('undo_subtractmodelcol'):

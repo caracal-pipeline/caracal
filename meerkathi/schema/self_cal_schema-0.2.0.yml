@@ -446,7 +446,6 @@ mapping:
             type: str
             required: false
             example: 'auto'
-
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.

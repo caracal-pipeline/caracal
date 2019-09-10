@@ -1585,12 +1585,12 @@ def worker(pipeline, recipe, config):
                   "points-only"  : config['transfer_model'].get('points_only'),
                   "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources')),
                   "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers')),
- #                     "memory-fraction" : 0.2, #  config['transfer_model'].get('memory_fraction', 0.1),
-                },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
-                
+                  "memory-fraction" : config['transfer_model'].get('memory_fraction'),
+                  },
+                  input=pipeline.input,
+                  output=pipeline.output,
+                  label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+            
     if pipeline.enable_task(config, 'highfreqres_contim'):
         hires_path = "{0:s}/image_{1:s}".format(pipeline.continuum, 'hires')
         if not os.path.exists(hires_path):

@@ -135,6 +135,7 @@ mapping:
         type: int
         example: '128'
 
+
       aimfast:
         type: map
         desc: Quality assessment parameter
@@ -235,7 +236,7 @@ mapping:
             type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-            example: 'True'
+            example: 'False'
       
       sofia_mask: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
@@ -440,7 +441,11 @@ mapping:
               - type: int
             required: false
             example: '0, 10'
-
+          sol_term_iters:
+            desc: Number of iterations per Jones term. If set to 'auto', uses hardcoded iteration numbers depending on the jones chain.
+            type: str
+            required: false
+            example: 'auto'
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -449,7 +454,7 @@ mapping:
                 type: bool
                 desc: Enables plotting dignostics
                 required: false
-                example: 'True'
+                example: 'False'
               gaintype:
                 seq:
                 - type: str

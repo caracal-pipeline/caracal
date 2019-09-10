@@ -23,7 +23,7 @@
     autoflag_rfi:
       enable: true
       flagger: aoflagger
-      fields: 'bpcal, gcal, fcal'
+      fields: ['bpcal, gcal, fcal']
     flag_autocorr:
       enable: true
     flag_shadow:
@@ -67,10 +67,9 @@
 - image_HI:
     label: corr
     enable: true
-    npix: 1800
+    npix: [1800]
     cell: 2
     restfreq: '1.420405752GHz'
-    mstranform: 
+    mstransform: 
       enable: true
       telescope: meerkat
-      

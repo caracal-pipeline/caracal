@@ -130,7 +130,7 @@ mapping:
             desc: Execute segment sunblocker (yes/no). Default is yes.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           use_mstransform:
             desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool

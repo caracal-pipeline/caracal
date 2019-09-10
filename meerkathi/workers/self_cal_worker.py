@@ -3,6 +3,7 @@ import sys
 import yaml
 import json
 import os
+import re
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -30,6 +31,12 @@ corr_indexes = {'H'        : 0,
                 'X'        : 0,
                 'V'        : 1,
                 'Y'        : 1,
+}
+
+SOL_TERMS = {
+    "G": "50",
+    "B": "50",
+    "DD": "20",
 }
 
 def worker(pipeline, recipe, config):
@@ -112,8 +119,16 @@ def worker(pipeline, recipe, config):
           del head['CUNIT2']
 
       fits.writeto(filename,dat,head,overwrite=True)
-
-      
+    
+    #def get_mem():
+    #    with open('/proc/meminfo') as p:
+    #         memory_available = p.read()
+    #         print memory_available
+    #    memtotal = re.search(r'^MemTotal:\s+(\d+)', memory_available)
+    #    if memtotal:
+    #       memtotal_kb = int(memtotal.groups()[0])
+    #       print 'memory_in_kb:', memtotal_kb
+    #    return memtotal_kb
     def image(num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
@@ -192,7 +207,7 @@ def worker(pipeline, recipe, config):
 
         step = 'image_{}'.format(num)
         image_opts = {
-                  "msname"    : mslist[0],
+                  "msname"    : mslist,
                   "column"    : imcolumn,
                   "weight"    : 'briggs {}'.format(config[key].get('robust', robust)),
                   "npix"      : config[key].get('npix', npix),
@@ -877,9 +892,41 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-
+        
+        sol_term_iters = config[key].get('sol_term_iters')
+        print "sol_term_iters", sol_term_iters
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
+        print "sol_terms", sol_terms
+        #Determine the memory requirements of cubical automatically
         for i,msname in enumerate(mslist):
-
+        #    print "sol-term-iters:", config[key].get('sol_term_iters')
+        #    print "prefix, field, label=",prefix, field, label
+        #    ms_prefix = pipeline.prefixes[i]
+        #    print 'ms_prefix', ms_prefix
+        #    observation_data = get_obs_data(ms_prefix, field, label)
+        #    n_correlations = observation_data['NCOR']
+        #    print 'n_correlations', n_correlations
+        #    n_ant = len(observation_data['ANT']['NAME'])
+        #    n_baseline = n_ant*(n_ant-1)/2
+        #    print observation_data.keys()
+        #    n_chan = observation_data['SPW']['NUM_CHAN'][0]
+        #    print n_chan 
+        #    sol_t = observation_data['FIELD']['PERIOD'][0]/observation_data['EXPOSURE']
+        #    print sol_t, n_baseline, n_correlations
+        #    membyte = get_mem()
+        #    print "denomitor:", 16.0*n_correlations*n_baseline*n_chan*sol_t
+        #    maxtiles = max(1,int(membyte*1.0*0.5/16.0*n_correlations*n_baseline*n_chan*sol_t))
+        #    print "memory in kb, number of tiles:", membyte, maxtiles
+        #    tilesize = max(sol_t, min(nworker*sol_t, membyte*0.5/(16.0*n_correlations*n_chan*n_baseline)))
+        #    print tilesize
+            # Determine the number of tiles
+           
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
             cubical_opts= {
                   "data-ms"          : msname,
@@ -908,6 +955,7 @@ def worker(pipeline, recipe, config):
                   "madmax-plot"     : True if (config[key].get('madmax_flagging')) else False,
                   "madmax-threshold" : config[key].get('madmax_flag_thresh'),
                   "madmax-estimate" : 'corr',
+                  "sol-term-iters" : sol_terms,
                 }
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
@@ -997,7 +1045,7 @@ def worker(pipeline, recipe, config):
     def get_obs_data(prefix,field,label):
         "Extracts data from the json data file"
         if label:
-            filename='{0:s}/{1:s}-{2:s}-{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
+            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
         else: 
             filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
         with open(filename) as f:
@@ -1516,95 +1564,84 @@ def worker(pipeline, recipe, config):
                 output=pipeline.output,
                 label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
             
-        for i,msname in enumerate(mslist):
-            if pipeline.enable_task(config, 'flagging_summary'):
-                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
-                recipe.add('cab/casa_flagdata', step,
-                    {
-                      "vis"         : msname,
-                      "mode"        : 'summary',
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-        if pipeline.enable_task(config, 'transfer_model'):
-            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline), prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
-            crystalball_model=config['transfer_model'].get('model')
-            mslist_out = ms_dict_tmodel[target]
-            if crystalball_model=='auto': crystalball_model='{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path, pipeline), prefix, field, self_cal_iter_counter)
-            for i,msname in enumerate(mslist_out):
-                step = 'transfer_model_{0:d}'.format(i)
-                recipe.add('cab/crystalball', step,
-                    {
-                      "ms"           : msname,
-                      "sky-model"    : crystalball_model+':output',
-                      "spectra"      : config['transfer_model'].get('spectra'),
-                      "row-chunks"   : config['transfer_model'].get('row_chunks'),
-                      "model-chunks" : config['transfer_model'].get('model_chunks'),
-                      "invert-uvw"   : config['transfer_model'].get('invert_uvw'),
+    if pipeline.enable_task(config, 'transfer_model'):
+        meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline), prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
+        crystalball_model=config['transfer_model'].get('model')
+        mslist_out = ms_dict_tmodel[target]
+        if crystalball_model=='auto': crystalball_model='{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path, pipeline), prefix, field, self_cal_iter_counter)
+        for i,msname in enumerate(mslist_out):
+            step = 'transfer_model_{0:d}'.format(i)
+            recipe.add('cab/crystalball', step,
+                {
+                  "ms"           : msname,
+                  "sky-model"    : crystalball_model+':output',
+                  "spectra"      : config['transfer_model'].get('spectra'),
+                  "row-chunks"   : config['transfer_model'].get('row_chunks'),
+                  "model-chunks" : config['transfer_model'].get('model_chunks'),
+                  "invert-uvw"   : config['transfer_model'].get('invert_uvw'),
 #                      "within"       : sdm.dismissable(config['transfer_model'].get('within')), #TODO(sphe) the cap definition for this parameter is
 #                      wrong
-                      "points-only"  : config['transfer_model'].get('points_only'),
-                      "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources')),
-                      "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers')),
-                      "memory-fraction" : config['transfer_model'].get('memory_fraction'),
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
-                
-        if pipeline.enable_task(config, 'highfreqres_contim'):
-            hires_path = "{0:s}/image_{1:s}".format(pipeline.continuum, 'hires')
-            if not os.path.exists(hires_path):
-                os.mkdir(hires_path)
+                  "points-only"  : config['transfer_model'].get('points_only'),
+                  "num-sources"  : sdm.dismissable(config['transfer_model'].get('num_sources')),
+                  "num-workers"  : sdm.dismissable(config['transfer_model'].get('num_workers')),
+                  "memory-fraction" : config['transfer_model'].get('memory_fraction'),
+                  },
+                  input=pipeline.input,
+                  output=pipeline.output,
+                  label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+            
+    if pipeline.enable_task(config, 'highfreqres_contim'):
+        hires_path = "{0:s}/image_{1:s}".format(pipeline.continuum, 'hires')
+        if not os.path.exists(hires_path):
+            os.mkdir(hires_path)
             # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
-            for i, prfx in enumerate(['{0:s}-{1:s}-{2:s}'.format(prefix, did, config['label']) for did in pipeline.dataid]):
-                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
-                with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
-            step = 'highfreqres_contim'
-            image_opts = {
-                      "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
-                      "column"                 : config['highfreqres_contim'].get('column'),
-                      "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
-                      "npix"                   : config['highfreqres_contim'].get('npix', npix),
-                      "padding"                : config['highfreqres_contim'].get('padding', padding),
-                      "scale"                  : config['highfreqres_contim'].get('cell', cell),
-                      "prefix"                 : '{0:s}/{1:s}_{2:s}'.format(get_dir_path(hires_path, pipeline), prefix, 'fine'),
-                      "niter"                  : config['highfreqres_contim'].get('niter', niter),
-                      "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
-                      "pol"                    : config['highfreqres_contim'].get('pol', pol),
-                      "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
-                      "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
-                      "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
-                      "joinchannels"           : True,
-                      "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol'),
-                      "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask')),
-                      "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold'),
-                      "multiscale"             : config['highfreqres_contim'].get('multi_scale'),
-                      "multiscale-scales"      : sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales')),
-                      "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask')),
-                  }
-            recipe.add('cab/wsclean', step,
+        for i, prfx in enumerate(['{0:s}-{1:s}-{2:s}'.format(prefix, did, config['label']) for did in pipeline.dataid]):
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
+            with open(msinfo, 'r') as stdr: pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
+        step = 'highfreqres_contim'
+        image_opts = {
+                  "msname"                 : hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
+                  "column"                 : config['highfreqres_contim'].get('column'),
+                  "weight"                 : 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
+                  "npix"                   : config['highfreqres_contim'].get('npix', npix),
+                  "padding"                : config['highfreqres_contim'].get('padding', padding),
+                  "scale"                  : config['highfreqres_contim'].get('cell', cell),
+                  "prefix"                 : '{0:s}/{1:s}_{2:s}'.format(get_dir_path(hires_path, pipeline), prefix, 'fine'),
+                  "niter"                  : config['highfreqres_contim'].get('niter', niter),
+                  "mgain"                  : config['highfreqres_contim'].get('mgain', mgain),
+                  "pol"                    : config['highfreqres_contim'].get('pol', pol),
+                  "taper-gaussian"         : sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
+                  "deconvolution-channels" : config['highfreqres_contim'].get('deconv_chans',nchans),
+                  "channelsout"            : config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]),
+                  "joinchannels"           : True,
+                  "fit-spectral-pol"       : config['highfreqres_contim'].get('fit_spectral_pol'),
+                  "auto-mask"              : sdm.dismissable(config['highfreqres_contim'].get('auto_mask')),
+                  "auto-threshold"         : config['highfreqres_contim'].get('auto_threshold'),
+                  "multiscale"             : config['highfreqres_contim'].get('multi_scale'),
+                  "multiscale-scales"      : sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales')),
+                  "fitsmask"               : sdm.dismissable(config['highfreqres_contim'].get('fits_mask')),
+              }
+        recipe.add('cab/wsclean', step,
             image_opts,
             input=pipeline.input,
             output=pipeline.output,
             label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
-            if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
-            else:
-                imagetype=['image','dirty','psf','residual','model']
-                if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
-            for mm in imagetype:
-                step = 'finechancontcube'
-                recipe.add('cab/fitstool', step,
-                    {
-                       "image"    : ['{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
-                       "output"   : '{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
-                       "stack"    : True,
-                       "delete-files" : True,
-                       "fits-axis": 'FREQ',
-                    },
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
+        if not config['highfreqres_contim'].get('niter', niter): imagetype=['image','dirty']
+        else:
+            imagetype=['image','dirty','psf','residual','model']
+            if config['highfreqres_contim'].get('mgain', mgain)<1.0: imagetype.append('first-residual')
+        for mm in imagetype:
+            step = 'finechancontcube'
+            recipe.add('cab/fitstool', step,
+                {
+                   "image"    : ['{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(config['highfreqres_contim'].get('chans',pipeline.nchans[0][0]))],
+                   "output"   : '{0:s}/'.format(get_dir_path(hires_path, pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
+                   "stack"    : True,
+                   "delete-files" : True,
+                   "fits-axis": 'FREQ',
+                },
+                input=pipeline.input,
+                output=pipeline.output,
+                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))

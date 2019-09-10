@@ -3,6 +3,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 import copy
 
+
 class catalog_parser:
     def __init__(self, filename):
         """
@@ -18,25 +19,25 @@ class catalog_parser:
         return copy.deepcopy(self._cat)
 
     def __str__(self):
-      """ Return multiline string describing the calibrator database """
-      lines = [""]
-      lines.extend(["\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
-                    "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
-                    "lsm:%s\tlsm epoch:%d" %
-                  (str(name).ljust(15),
-                   db["epoch"],
-                   db["ra"],
-                   db["decl"],
-                   db["S_v0"],
-                   db["v0"],
-                   db["a_casa"],
-                   db["b_casa"],
-                   db["c_casa"],
-                   db["d_casa"],
-                   db.get("lsm", "<none>").ljust(30),
-                   db.get("lsm_epoch", db["epoch"]))
-            for name, db in self._cat.iteritems()])
-      return '\n'.join(lines)
+        """ Return multiline string describing the calibrator database """
+        lines = [""]
+        lines.extend(["\t%s\tEpoch:%d\tRA:%3.2f\tDEC:%3.2f\t"
+                      "S_v0:%.4f\tv0:%.4e\ta:%.4f\tb:%.4f\tc:%.4f\td:%.4f\t"
+                      "lsm:%s\tlsm epoch:%d" %
+                      (str(name).ljust(15),
+                       db["epoch"],
+                       db["ra"],
+                       db["decl"],
+                       db["S_v0"],
+                       db["v0"],
+                       db["a_casa"],
+                       db["b_casa"],
+                       db["c_casa"],
+                       db["d_casa"],
+                       db.get("lsm", "<none>").ljust(30),
+                       db.get("lsm_epoch", db["epoch"]))
+                      for name, db in self._cat.items()])
+        return '\n'.join(lines)
 
     @classmethod
     def read_caltable(cls, filename):
@@ -53,19 +54,19 @@ class catalog_parser:
         """
         calibrator_db = {}
         with open(filename) as f:
-            line=f.readline()
+            line = f.readline()
             ln_no = 1
             while line:
-                #discard comments
+                # discard comments
                 command = line.split("//")[0]
 
-                #empty line ?
+                # empty line ?
                 if command.strip() == "":
                     line = f.readline()
                     ln_no += 1
                     continue
                 cmd = None
-                #source ?
+                # source ?
                 valset = re.match(r"^name=(?P<name>[0-9A-Za-z\-+_ ]+)[ ]+"
                                   r"epoch=(?P<epoch>[0-9]+)[ ]+"
                                   r"ra=(?P<ra>[+\-]?[0-9]+h[0-9]+m[0-9]+(?:.[0-9]+)?s)[ ]+"
@@ -75,12 +76,12 @@ class catalog_parser:
                                   r"c=(?P<c>[+\-]?[0-9]+(?:.[0-9]+)?)[ ]+"
                                   r"d=(?P<d>[+\-]?[0-9]+(?:.[0-9]+)?)$",
                                   command)
-                #else alias ?
+                # else alias ?
                 if not valset:
                     valset = re.match(r"^alias src=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
                                       r"dest=(?P<dest>[0-9A-Za-z\-+_ ]+)$",
                                       command)
-                    #else lsm?
+                    # else lsm?
                     if not valset:
                         valset = re.match(r"^lsm name=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
                                           r"epoch=(?P<epoch>[0-9]+)[ ]+"
@@ -90,9 +91,12 @@ class catalog_parser:
                             raise RuntimeError("Illegal line encountered while parsing"
                                                "southern standard at line %d:'%s'" %
                                                (ln_no, line))
-                        else: cmd = "lsm"
-                    else: cmd = "alias"
-                else: cmd = "add"
+                        else:
+                            cmd = "lsm"
+                    else:
+                        cmd = "alias"
+                else:
+                    cmd = "add"
 
                 if cmd == "add":
                     # parse sources (spectra in MHz)
@@ -111,8 +115,8 @@ class catalog_parser:
                                            r"(?P<m>[0-9]+)m"
                                            r"(?P<s>[0-9]+(?:.[0-9]+)?)s$",
                                            decl)
-                    decl = np.deg2rad(float(valset_decl.group("d")) + \
-                                      float(valset_decl.group("m")) + \
+                    decl = np.deg2rad(float(valset_decl.group("d")) +
+                                      float(valset_decl.group("m")) +
                                       float(valset_decl.group("s")))
 
                     a = float(valset.group("a"))
@@ -143,7 +147,7 @@ class catalog_parser:
                     if not src in calibrator_db:
                         raise RuntimeError("%s has not been defined. cannot alias "
                                            "%s to %s in line %d" %
-                                           (src,dest,src,ln_no))
+                                           (src, dest, src, ln_no))
                     calibrator_db[dest] = calibrator_db[src]
                 elif cmd == "lsm":
                     src = valset.group("src")
@@ -151,12 +155,13 @@ class catalog_parser:
                     lsm = valset.group("lsmname")
                     if not src in calibrator_db:
                         raise RuntimeError("%s has not been defined. Cannot link lsm "
-                                           "%s to %s in line %d" % 
+                                           "%s to %s in line %d" %
                                            (src, lsm, ln_no))
                     calibrator_db[name]["lsm"] = lsm
                     calibrator_db[name]["lsm_epoch"] = int(epoch)
                 else:
-                    raise RuntimeError("Invalid command processed. This is a bug")
+                    raise RuntimeError(
+                        "Invalid command processed. This is a bug")
 
                 # finally parse next line
                 line = f.readline()
@@ -183,13 +188,15 @@ class catalog_parser:
 
         def pbspi(v, a, b, c, d):
             return 10 ** (a + b * np.log10(v) + c * np.log10(v) ** 2 + d * np.log10(v) ** 3)
+
         def casaspi(v, v0, I, a, b, c, d):
             return I * (v/v0) ** (a + b * np.log(v/v0) + c * np.log(v/v0) ** 2 + d * np.log(v/v0) ** 3)
 
         I = pbspi(v0, a, b, c, d)
 
         v = np.linspace(vlower, vupper, 10000)
-        popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(v, v0, I, a, b, c, d), v, pbspi(v,a,b,c,d))
+        popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
+            v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
         perr = np.sqrt(np.diag(pcov))
         assert np.all(perr < 1.0e-6)
 

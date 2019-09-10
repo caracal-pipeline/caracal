@@ -39,9 +39,8 @@
     enable: true
 
 - split_target:
-    label_out: corr
     enable: true
- 
+    
 - flagging__2:
     enable: true
     label: corr
@@ -54,8 +53,8 @@
     enable: false
 
 - self_cal:
-    label: corr
     enable: true
+
     img_npix: 1800
     img_cell: 2
     image:
@@ -65,7 +64,6 @@
       Gsols_time: [120]
 
 - image_HI:
-    label: corr
     enable: true
     npix: [1800]
     cell: 2

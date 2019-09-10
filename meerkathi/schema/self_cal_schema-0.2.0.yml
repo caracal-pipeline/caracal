@@ -43,7 +43,7 @@ mapping:
         type: int
         desc: number of cpu's to use
         required: false
-        example: '1'
+        example: '5'
       img_npix:
         type: int
         desc: Number of pixels in output image
@@ -237,7 +237,7 @@ mapping:
             desc: switch on local rms measurement for cleaning
             required: false
             example: 'False'
-      
+
       sofia_mask: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
@@ -346,7 +346,7 @@ mapping:
               - type: str
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
-            example: '1, 2'
+            example: '1,2'
           output_data:
             seq:
               - type: str
@@ -384,7 +384,7 @@ mapping:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '100'
+            example: '20'
           Gsols_channel:
             seq:
               - type: float
@@ -401,13 +401,13 @@ mapping:
               - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '100'
+            example: '0'
           Bsols_channel:
             seq:
               - type: float
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
             required: false
-            example: '1'
+            example: '2'
           DDjones:
             type: bool
             desc: Enable direction dependent calibration, currently experimental.
@@ -574,9 +574,14 @@ mapping:
             example: "0"
           num-workers:
             type: int
-            desc: Explicitly set the number of worker threads. Default is 0.
+            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
             required: false
             example: '0'
+          memory-fraction:
+            type: float
+            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+            required: false
+            example: '0.5'
 
       highfreqres_contim:
         type: map

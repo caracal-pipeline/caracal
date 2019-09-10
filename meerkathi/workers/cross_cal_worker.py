@@ -177,7 +177,8 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
-            recipe.add('cab/casa_setjy' if "skymodel" not in opts else 'cab/simulator', step,
+            cabtouse = 'cab/casa47_setjy' if config['casa_version']=='47' else 'cab/casa_setjy'
+            recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
                opts,
                input=pipeline.input,
                output=pipeline.output,
@@ -208,14 +209,18 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
             if pipeline.enable_task(config['delay_cal'],'plot'):
+                print "fieldtoplot", utils.get_field_id(msinfo, field)[0]
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = prefix+".K0"
+                fieldtoplot = []
+                fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
 
                      "gaintype"     : "K",
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     #"field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : fieldtoplot,
                      "corr"         : corr_indexes[config['delay_cal']['plot'].get('corr')],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-K0'.format(prefix),
                     },
@@ -270,11 +275,13 @@ found in our database or in the CASA NRAO database'.format(field))
                 if pipeline.enable_task(config['bp_cal'],'plot'):
                     step = 'plot_pre_bandpass_{0:d}'.format(i)
                     table = prefix+".PREB0"
+                    fieldtoplot = []
+                    fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                     recipe.add('cab/ragavi', step,
                         {
                          "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                          "gaintype"     : "B",
-                         "field"        : utils.get_field_id(msinfo, field)[0],
+                         "field"        : fieldtoplot,
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                          "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREB0'.format(prefix),
                         },
@@ -313,11 +320,13 @@ found in our database or in the CASA NRAO database'.format(field))
                 if pipeline.enable_task(config['gain_cal_flux'],'plot'):
                     step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
                     table = prefix+".PREG0"
+                    fieldtoplot = []
+                    fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                     recipe.add('cab/ragavi', step,
                         {
                          "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                          "gaintype"     : "G",
-                         "field"        : utils.get_field_id(msinfo, field)[0],
+                         "field"        : fieldtoplot,
                          "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                          "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-PREG0-fcal'.format(prefix),
 
@@ -365,12 +374,14 @@ found in our database or in the CASA NRAO database'.format(field))
 
             if pipeline.enable_task(config['bp_cal'],'plot'):
                 step = 'plot_bandpass_{0:d}'.format(i)
+                fieldtoplot = []
+                fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                 table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : config['bp_cal']['plot'].get('gaintype'),
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : fieldtoplot,
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-B0'.format(prefix),
 
@@ -406,16 +417,18 @@ found in our database or in the CASA NRAO database'.format(field))
                },
                input=pipeline.input,
                output=pipeline.output,
-               label='{0:s}:: Gain calibration for bandpass ms={1:s}'.format(step, msname))
+               label='{0:s}:: Gain calibration fer bandpass ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config['gain_cal_flux'],'plot'):
                 step = 'plot_gain_cal_flux_{0:d}'.format(i)
                 table = prefix+".G0"
+                fieldtoplot = []
+                fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : "G",
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : fieldtoplot,
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-G0-fcal'.format(prefix)
                     },
@@ -462,11 +475,13 @@ found in our database or in the CASA NRAO database'.format(field))
             if pipeline.enable_task(config['gain_cal_gain'],'plot'):
                 step = 'plot_gain_cal_{0:d}'.format(i)
                 table = prefix+".G0"
+                fieldtoplot = []
+                fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : "G",
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : fieldtoplot,
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) +  '{0:s}-G0'.format(prefix)
                     },
@@ -494,11 +509,13 @@ found in our database or in the CASA NRAO database'.format(field))
             if pipeline.enable_task(config['transfer_fluxscale'],'plot'):
                 step = 'plot_fluxscale_{0:d}'.format(i)
                 table = prefix+".F0"
+                fieldtoplot = []
+                fieldtoplot.append(utils.get_field_id(msinfo, ref)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),
                      "gaintype"     : "G",
-                     "field"        : utils.get_field_id(msinfo, field)[0],
+                     "field"        : fieldtoplot,
                      "corr"         : corr_indexes[config['bp_cal']['plot'].get('corr')],
                      "htmlname"     : '{0:s}/'.format(get_dir_path(pipeline.reports, pipeline)) + '{0:s}-F0'.format(prefix)
                     },

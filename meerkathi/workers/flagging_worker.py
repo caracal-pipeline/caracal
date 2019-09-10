@@ -267,7 +267,7 @@ def worker(pipeline, recipe, config):
                 # Clear autoflags if need be
                 substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(wname, i)
                 manflags.clear_flagset(pipeline, recipe, "_".join([wname, "automatic"]), msname, cab_name=substep)
-
+                print "fieldset:", set(config['autoflag_rfi'].get('fields', 'auto').split(','))
                 if config['autoflag_rfi'].get('fields') != 'auto' and \
                    not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
                     raise KeyError("autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")

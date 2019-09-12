@@ -193,7 +193,6 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
                 if (config['obsinfo'].get('summary_json')):
-                    print "prefix, field, label_out:", prefix,field,label_out
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(
                             prefix, field, label_out)

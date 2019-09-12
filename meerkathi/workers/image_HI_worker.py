@@ -421,6 +421,7 @@ def worker(pipeline, recipe, config):
             else:
                 msnamesb = msname
             step = 'sunblocker_{0:d}'.format(i)
+            prefix = pipeline.prefix[i]
             recipe.add("cab/sunblocker", step,
                        {
                            "command": "phazer",

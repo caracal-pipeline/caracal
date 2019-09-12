@@ -23,7 +23,7 @@
     autoflag_rfi:
       enable: true
       flagger: aoflagger
-      fields: ['bpcal, gcal, fcal']
+      fields: 'bpcal,gcal,fcal'
     flag_autocorr:
       enable: true
     flag_shadow:

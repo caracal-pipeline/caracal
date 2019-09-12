@@ -132,7 +132,7 @@ def worker(pipeline, recipe, config):
             if 'CUNIT2' in head:
                 del head['CUNIT2']
 
-      fits.writeto(filename,dat,head,overwrite=True)
+        fits.writeto(filename,dat,head,overwrite=True)
     
     #def get_mem():
     #    with open('/proc/meminfo') as p:
@@ -999,7 +999,7 @@ def worker(pipeline, recipe, config):
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "out-overwrite": False,
+                "out-overwrite": True,
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
@@ -1007,7 +1007,6 @@ def worker(pipeline, recipe, config):
                 "g-clip-low": config.get('cal_gain_amplitude_clip_low'),
                 "g-clip-high": config.get('cal_gain_amplitude_clip_high'),
                 "madmax-enable": config[key].get('madmax_flagging'),
-                "out-overwrite": False,
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
@@ -1466,7 +1465,6 @@ def worker(pipeline, recipe, config):
                 self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
 
         while quality_check(self_cal_iter_counter, field, enable=pipeline.enable_task(config, 'aimfast')):
-            print "Calibration Round:", self_cal_iter_counter
             if pipeline.enable_task(config, 'calibrate'):
                 selfcal_products = "{0:s}/{1:s}".format(
                     pipeline.continuum, 'selfcal_products')

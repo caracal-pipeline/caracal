@@ -185,7 +185,8 @@ found in our database or in the CASA NRAO database'.format(field))
         # Delay calibration
         if pipeline.enable_task(config, 'delay_cal'):
             step = 'delay_cal_{0:d}'.format(i)
-            field = get_field(config['delay_cal'].get('field'))
+            #field = get_field(config['delay_cal'].get('field'))
+            field = manfields.get_field(pipeline, i, config['delay_cal'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
             recipe.add(cabtouse, step,
                {
@@ -207,7 +208,6 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
             if pipeline.enable_task(config['delay_cal'],'plot'):
-                print "fieldtoplot", utils.get_field_id(msinfo, field)[0]
                 step = 'plot_delay_cal_{0:d}'.format(i)
                 table = prefix+".K0"
                 fieldtoplot = []
@@ -252,7 +252,6 @@ found in our database or in the CASA NRAO database'.format(field))
                # else:
                #    cabtouse = 'cab/casa_bandpass'
                 meerkathi.info('cabtouse=', cabtouse)
-                print 'cabtouse=', cabtouse
                 recipe.add(cabtouse, step,
                    {
                      "vis"          : msname,

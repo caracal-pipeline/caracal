@@ -19,7 +19,8 @@ import yaml
 from meerkathi.dispatch_crew import utils
 import itertools
 
-
+# To split out cubes/<dir> from output/cubes/dir
+def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
 def target_to_msfiles(targets,msnames,label,doppler=False):
     target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
@@ -107,14 +108,14 @@ def fix_specsys(filename,specframe):
             if 'specsys' in headcube: del headcube['specsys']
             headcube['specsys3']=specsys3
 
-def make_pb_cube(filename):
+def make_pb_cube(filename, apply_corr):
     filename=filename.split(':')
     filename='{0:s}/{1:s}'.format(filename[1],filename[0])
     if not os.path.exists(filename): meerkathi.log.info('Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
     else:
         with fits.open(filename) as cube:
             headcube = cube[0].header
-            datacube = np.indices((headcube['naxis2'],headcube['naxis1']),dtype=float32)
+            datacube = np.indices((headcube['naxis2'],headcube['naxis1']),dtype=np.float32)
             datacube[0]-=(headcube['crpix2']-1)
             datacube[1]-=(headcube['crpix1']-1)
             datacube=np.sqrt((datacube**2).sum(axis=0))
@@ -126,6 +127,8 @@ def make_pb_cube(filename):
             #print sigma_pb
             datacube=np.exp(-datacube**2/2/sigma_pb**2)
             fits.writeto(filename.replace('image.fits','pb.fits'),datacube,header=headcube,overwrite=True)
+            if apply_corr:
+                fits.writeto(filename.replace('image.fits','pb_corr.fits'),cube[0].data/datacube,header=headcube,overwrite=True) # Applying the primary beam correction
             meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(filename.replace('image.fits','pb.fits')))
 
 
@@ -194,8 +197,10 @@ def worker(pipeline, recipe, config):
             tinfo = yaml.safe_load(stdr)['FIELD']
             targetpos=tinfo['REFERENCE_DIR']
             while len(targetpos)==1: targetpos=targetpos[0]
-            tRA  = targetpos[0]/np.pi*180.
-            tDec = targetpos[1]/np.pi*180.
+            tRA  = targetpos[0]/np.pi*180. # original
+            tDec = targetpos[1]/np.pi*180. # original
+           # tRA  = targetpos[0][0][0]/np.pi*180. # modified
+           # tDec = targetpos[0][0][1]/np.pi*180. # modified             
             RA.append(tRA)
             Dec.append(tDec)
         meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(RA[i],Dec[i]))
@@ -423,6 +428,8 @@ def worker(pipeline, recipe, config):
         specframe_all=[ss[spwid] for ss in specframe_all][0]             # Assuming user wants same spw for all msfiles and they have same specframe
         firstchan = config['wsclean_image'].get('firstchan')
         binchans  = config['wsclean_image'].get('binchans')
+        if nchans != 'all':
+            nchans = int(nchans)
         channelrange = [firstchan, firstchan+nchans*binchans]
             # Construct weight specification
         if config['wsclean_image'].get('weight') == 'briggs':
@@ -435,13 +442,23 @@ def worker(pipeline, recipe, config):
         for target in (all_targets):
             mslist = ms_dict[target]
             field = utils.filter_name(target)
+           # img_dir = get_dir_path(pipeline.cubes, pipeline) # Will need to change this to image_1, image_2 etc..
             for j in range(1,wscl_niter+1):
-                if j==1:        
+
+                image_path = "{0:s}/image_{1:d}".format(
+                    pipeline.cubes, j)
+                if not os.path.exists(image_path):
+                    os.mkdir(image_path)
+
+                img_dir = '{0:s}/image_{1:d}'.format(get_dir_path(pipeline.cubes, pipeline), j)
+
+                if j==1:   
                     step = 'wsclean_image_HI_with_automasking'
                     ownHIclean_mask=config['wsclean_image'].get('ownfitsmask')   
                     HI_image_opts = {
                           "msname"    : mslist,
-                          "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
+                          "prefix"    : '{0:s}/{1:s}_{2:s}_HI_{3:s}'.format(img_dir, 
+                            pipeline.prefix, field, str(j)),
                           "weight"    : weight,
                           "taper-gaussian" : str(config['wsclean_image'].get('taper')),
                           "pol"        : config['wsclean_image'].get('pol'),
@@ -460,7 +477,9 @@ def worker(pipeline, recipe, config):
                     }
 
                     if ownHIclean_mask:
-                        HI_image_opts.update( {"fitsmask" : ownHIclean_mask+':output/masking'})
+                       # HI_image_opts.update( {"fitsmask" : ownHIclean_mask+':output/masking'}) # This is wrong.
+                        HI_image_opts.update( {"fitsmask" : '{0:s}/{1:s}:output'.format(get_dir_path(pipeline.masking, pipeline)
+                            , ownHIclean_mask)})
 
                     recipe.add('cab/wsclean', step,HI_image_opts,
                       input=pipeline.input,
@@ -472,12 +491,13 @@ def worker(pipeline, recipe, config):
                         else:
                             imagetype=['image','dirty','psf','residual','model']
                             if config['wsclean_image'].get('mgain')<1.0: imagetype.append('first-residual')
-                        for mm in imagetype:
+                        for mm in imagetype: 
                                 step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                                 recipe.add('cab/fitstool', step,
                                     {
-                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                               "output"   : pipeline.prefix+'_'+field+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
+                               "image"    : ['{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(img_dir, pipeline.prefix,
+                                field, j, d, mm)for d in xrange(nchans)],
+                               "output"   : '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(img_dir, pipeline.prefix, field, j, mm),
                                "stack"    : True,
                                "delete-files" : True,
                                "fits-axis": 'FREQ',
@@ -488,18 +508,20 @@ def worker(pipeline, recipe, config):
 
                     recipe.run()
                     recipe.jobs=[] 
-                    cubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image.fits')
+                    cubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image.fits'.format(image_path, pipeline.prefix, field, j)
                     rms_ref=calc_rms(cubename,None)
                     meerkathi.log.info('Initial rms = '+str("{0:.7f}".format(rms_ref))+' Jy/beam')
 
                 else:
                     step = 'make_sofia_mask_'+str(j-1)
-                    HIclean_mask=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits:output'
-                    HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
-                
-                    cubename = pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits:output'
-                    cubename_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits')
-                    outmask = pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean'
+                    HIclean_mask = '{0:s}_{1:s}_HI_{2:d}.image_clean_mask.fits:output'.format(pipeline.prefix, field, j)
+                    #HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:s}.image_clean_mask.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j))
+                    HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image_clean_mask.fits'.format(image_path, pipeline.prefix, field, j)
+                    #cubename = '{0:s}_{1:s}_HI_{2:d}.image.fits:output'.format(pipeline.prefix, field, j-1)
+                    cubename = '{0:s}_{1:s}_HI_{2:d}.image.fits:input'.format(pipeline.prefix, field, j-1)
+                    #cubename_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image.fits'.format(pipeline.cubes, pipeline.prefix, field, j-1)
+                    cubename_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image.fits'.format(image_path, pipeline.prefix, field, j-1)
+                    outmask = '{0:s}_{1:s}_HI_{2:d}.image_clean'.format(pipeline.prefix, field, j)
                     recipe.add('cab/sofia', step,
                          {
                        "import.inFile"         : cubename,
@@ -525,19 +547,19 @@ def worker(pipeline, recipe, config):
                        "merge.minSizeZ"        : 2,
                        "writeCat.basename"     : outmask,
                          },
-                         input=pipeline.input,
-                         output=pipeline.output,
+                         input=pipeline.cubes + '/image_' + str(j-1),
+                         output=pipeline.output + '/' + img_dir,
                          label='{0:s}:: Make SoFiA mask'.format(step))
 
                     recipe.run()
                     recipe.jobs=[]
 
-                    if not os.path.exists(HIclean_mask_path):
+                    if not os.path.exists(HIclean_mask_file):
                         meerkathi.log.info('Sofia mask_'+str(j-1)+' was not found. Exiting and saving the cube') 
                    
                         for ss in ['dirty','psf','first-residual','residual','model','image']:
-                            cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                            cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
+                            MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
                             recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
                                       {
                                "filename" : cubename,
@@ -549,8 +571,8 @@ def worker(pipeline, recipe, config):
 
                         if pipeline.enable_task(config,'freq_to_vel'):
                             for ss in ['dirty','psf','first-residual','residual','model','image']:
-                                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                                MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                                cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
+                                MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits'.format(img_dir, pipeline.prefix, field, str(j), ss)
                                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                           {
                                   'filename' : cubename,
@@ -566,7 +588,8 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/wsclean', step,
                                {
                                "msname"    : mslist,
-                               "prefix"    : pipeline.prefix+'_'+field+'_HI_'+str(j),
+                               "prefix"    : '{0:s}/{1:s}_{2:s}_HI_{3:s}'.format(img_dir, pipeline.prefix,
+                                field, str(j)),
                                "weight"    : weight,
                                "taper-gaussian" : str(config['wsclean_image'].get('taper')),
                                "pol"        : config['wsclean_image'].get('pol'),
@@ -575,7 +598,7 @@ def worker(pipeline, recipe, config):
                                "scale"     : config['wsclean_image'].get('cell', cell),
                                "channelsout"     : nchans,
                                "channelrange" : channelrange,
-                               "fitsmask"  : HIclean_mask,
+                               "fitsmask"  : '{0:s}/{1:s}'.format(img_dir, HIclean_mask),
                                "niter"     : config['wsclean_image'].get('niter'),
                                "mgain"     : config['wsclean_image'].get('mgain'),
                                "auto-threshold"  : config['wsclean_image'].get('auto_threshold'),
@@ -596,8 +619,9 @@ def worker(pipeline, recipe, config):
                             step = 'make_{0:s}_cube'.format(mm.replace('-','_'))
                             recipe.add('cab/fitstool', step,
                                 {
-                               "image"    : [pipeline.prefix+'_'+field+'_HI_'+str(j)+'-{0:04d}-{1:s}.fits:output'.format(d,mm) for d in xrange(nchans)],
-                               "output"   : pipeline.prefix+'_'+field+'_HI_'+str(j)+'.{0:s}.fits'.format(mm),
+                               "image"    : ['{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(img_dir, pipeline.prefix,
+                                field, str(j), d, mm)for d in xrange(nchans)],
+                               "output"   : '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(img_dir, pipeline.prefix, field, str(j), mm),
                                "stack"    : True,
                                "delete-files" : True,
                                "fits-axis": 'FREQ',
@@ -607,10 +631,12 @@ def worker(pipeline, recipe, config):
                                 label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step,mm.replace('-','_')))
 
                     recipe.run()
-                    recipe.jobs=[] 
-                    HIclean_mask_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
-                    cubename_path=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j-1)+'.image.fits')
-                    rms2=calc_rms(cubename_path,HIclean_mask_path)
+                    recipe.jobs=[]
+                    #HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:s}.image_clean_mask.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j))
+                    #cubename_file = '{0:s}/{1:s}_{2:s}_HI_{3:s}.image.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j-1))
+                    HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image_clean_mask.fits'.format(image_path, pipeline.prefix, field, j)
+                    cubename_file = '{0:s}/image_{1:d}/{2:s}_{3:s}_HI_{1:d}.image.fits'.format(pipeline.cubes, j-1, pipeline.prefix, field)
+                    rms2=calc_rms(cubename_file,HIclean_mask_file)
                     meerkathi.log.info('The updated rms = '+str("{0:.7f}".format(rms2))+' Jy/beam')
         
                     if rms2<=(1.0 - tol)*rms_ref:  #if the noise changes by less than 10% keep_going
@@ -622,8 +648,9 @@ def worker(pipeline, recipe, config):
                             meerkathi.log.info('The relative noise change is larger than '+ str("{0:.3f}".format((100.0 - (rms2/rms_ref)*100.0))+'%. Noise convergence not achieved.')) 
 
                         for ss in ['dirty','psf','first-residual','residual','model','image']:
-                            cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                            cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
+                            MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
+
                             recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
                                       {
                                "filename" : cubename,
@@ -635,8 +662,8 @@ def worker(pipeline, recipe, config):
 
                         if pipeline.enable_task(config,'freq_to_vel'):
                             for ss in ['dirty','psf','first-residual','residual','model','image']:
-                                cubename=pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits:'+pipeline.output
-                                MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                                cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
+                                MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(img_dir, pipeline.prefix, field, str(j), ss)
                                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                           {
                                    "filename" : cubename,
@@ -654,37 +681,44 @@ def worker(pipeline, recipe, config):
             for ss in ['dirty','psf','first-residual','residual','model','image']:
                 if 'dirty' in ss:
                     meerkathi.log.info('Preparing final cubes.')
-                cubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits')
-                finalcubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI.'+ss+'.fits')
-                HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
-                finalHIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI.image_clean_mask.fits')
-                MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
-                MFSfinalcubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI'+'-MFS-'+ss+'.fits')
+                #cubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, j, ss)
+                cubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(image_path, pipeline.prefix, field, j, ss)
+                #finalcubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, ss)
+                finalcubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits'.format(image_path, pipeline.prefix, field, ss)
+                #HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image_clean_mask.fits'.format(pipeline.cubes, pipeline.prefix, field, j)
+                HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:d}.image_clean_mask.fits'.format(image_path, pipeline.prefix, field, j)
+                #finalHIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI.image_clean_mask.fits'.format(pipeline.cubes, pipeline.prefix, field)
+                finalHIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI.image_clean_mask.fits'.format(image_path, pipeline.prefix, field)
+                #MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}-MFS-{4:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, j, ss)
+                MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}-MFS-{4:s}.fits'.format(image_path, pipeline.prefix, field, j, ss)
+                #finalMFScubename = '{0:s}/{1:s}_{2:s}_HI-MFS-{3:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, ss)
+                finalMFScubename = '{0:s}/{1:s}_{2:s}_HI-MFS-{3:s}.fits'.format(image_path, pipeline.prefix, field, ss)
                 if os.path.exists(cubename):
-                    os.rename(cubename,finalcubename)
-                if os.path.exists(HIclean_mask):
-                    os.rename(HIclean_mask,finalHIclean_mask)
+                    os.rename(cubename, finalcubename)
+                if os.path.exists(HIclean_mask_file):
+                    os.rename(HIclean_mask_file, finalHIclean_mask_file)
                 if os.path.exists(MFScubename):
-                    os.rename(MFScubename,MFSfinalcubename)
+                    os.rename(MFScubename, finalMFScubename)
 
             for j in range(1,wscl_niter):               
                 if config['wsclean_image'].get('rm_intcubes'):
                     for ss in ['dirty','psf','first-residual','residual','model','image']:
-                        cubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.'+ss+'.fits')
-                        HIclean_mask=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'.image_clean_mask.fits')
-                        MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI_'+str(j)+'-MFS-'+ss+'.fits')
+                        cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j), ss)
+                        HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:s}.image_clean_mask.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j))
+                        MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits'.format(pipeline.cubes, pipeline.prefix, field, str(j), ss)
                         if os.path.exists(cubename):
                             os.remove(cubename)
-                        if os.path.exists(HIclean_mask):
-                            os.remove(HIclean_mask)
+                        if os.path.exists(HIclean_mask_file):
+                            os.remove(HIclean_mask_file)
                         if os.path.exists(MFScubename):
                             os.remove(MFScubename)
 
     if pipeline.enable_task(config, 'casa_image'):
+        img_dir = get_dir_path(pipeline.cubes, pipeline)
         nchans_all,specframe_all = [],[]
         label = config['label']
         if label != '':
-            flabel = '-'+label
+            flabel = '_'+label # THIS WAS THE PROBLEM
         else: flabel = label
         if config['wsclean_image'].get('use_mstransform'):
             all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,True)
@@ -730,8 +764,13 @@ def worker(pipeline, recipe, config):
         nchans = config['casa_image'].get('nchans')
         if nchans == 0 or nchans == 'all': nchans=nchans_all[0][spwid]   # Assuming user wants same spw for all msfiles and they have same number of channels
         specframe_all=[ss[spwid] for ss in specframe_all][0]             # Assuming user wants same spw for all msfiles and they have same specframe
-        firstchan = config['casa_image'].get('firstchan')
-        binchans  = config['casa_image'].get('binchans')
+        firstchan = config['casa_image'].get('firstchan') 
+        # if config['casa_image'].get('binchans') != 1
+        binchans = config['casa_image'].get('binchans')
+        # else:
+        #     binchans = 1
+        if nchans != 'all':
+            nchans = int(nchans)
         channelrange = [firstchan, firstchan+nchans*binchans]
         # Construct weight specification
         if config['casa_image'].get('weight') == 'briggs':
@@ -746,11 +785,11 @@ def worker(pipeline, recipe, config):
             step = 'casa_image_HI'
             image_opts = {
                  "msname"         :    mslist,
-                 "prefix"         :    pipeline.prefix+'_'+field+'_HI',
+                 "prefix"         :    '{0:s}/{1:s}_{2:s}_HI'.format(img_dir, pipeline.prefix, field),
 #                 "field"          :    target,
                  "mode"           :    'channel',
                  "nchan"          :    nchans,
-                 "start"          :    config['casa_image'].get('startchan'),
+                 "start"          :    config['casa_image'].get('firstchan'),
                  "interpolation"  :    'nearest',
                  "niter"          :    config['casa_image'].get('niter'),
                  "psfmode"        :    'hogbom',
@@ -761,7 +800,7 @@ def worker(pipeline, recipe, config):
                  "robust"         :    config['casa_image'].get('robust'),
                  "stokes"         :    config['casa_image'].get('pol'),
 #                 "wprojplanes"    :    1,
-                 "port2fits"      :    True,
+                 "port2fits"      :    config['casa_image'].get('port2fits'), # was hardcoded to true
                  "restfreq"       :    restfreq,
                 }
             if config['casa_image'].get('taper') != '':
@@ -778,9 +817,16 @@ def worker(pipeline, recipe, config):
         mslist = ms_dict[target]
         field = utils.filter_name(target)
 
+        #img_dir = get_dir_path(pipeline.cubes, pipeline)
+        if pipeline.enable_task(config, 'casa_image'):
+            img_dir = get_dir_path(pipeline.cubes, pipeline)
+        else:
+            img_dir = '{0:s}/image_{1:d}'.format(get_dir_path(pipeline.cubes, pipeline), wscl_niter)
+
+
         if pipeline.enable_task(config,'remove_stokes_axis'):
-            for ss in ['dirty','psf','first-residual','residual','model','image']:
-                cubename=pipeline.prefix+'_'+field+'_HI.'+ss+'.fits:'+pipeline.output
+            for ss in ['dirty','psf','first-residual','residual','model','image', 'flux']:
+                cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(img_dir, pipeline.prefix, field, ss)
                 recipe.add(remove_stokes_axis, 'remove_stokes_axis_{0:s}_cube'.format(ss),
                            {
                            'filename' : cubename,
@@ -790,18 +836,19 @@ def worker(pipeline, recipe, config):
                            label='Remove Stokes axis for cube {0:s}'.format(cubename))
 
         if pipeline.enable_task(config,'pb_cube'):
-            cubename=pipeline.prefix+'_'+field+'_HI.image.fits:'+pipeline.output
+            cubename = '{0:s}/{1:s}_{2:s}_HI.image.fits:output'.format(img_dir, pipeline.prefix, field)
+
             recipe.add(make_pb_cube, 'pb_cube',
                        {
                        'filename': cubename,
+                       'apply_corr' : config['pb_cube'].get('apply_pb')
                         },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='Make primary beam cube for {0:s}'.format(cubename))
 
-        for ss in ['dirty','psf','first-residual','residual','model','image','pb']:
-            cubename=pipeline.prefix+'_'+field+'_HI.'+ss+'.fits:'+pipeline.output
-            MFScubename=os.path.join(pipeline.output,pipeline.prefix+'_'+field+'_HI-MFS-'+ss+'.fits')
+        for ss in ['dirty','psf','first-residual','residual','model','image','pb', 'pb_corr', 'flux']:
+            cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(img_dir, pipeline.prefix, field, ss)
             recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
                       {
                       'filename' : cubename,
@@ -814,8 +861,8 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config,'freq_to_vel'):
              if not config['freq_to_vel'].get('reverse'): meerkathi.log.info('Converting spectral axis of cubes from frequency to radio velocity')
              else: meerkathi.log.info('Converting spectral axis of cubes from radio velocity to frequency')
-             for ss in ['dirty','psf','first-residual','residual','model','image','pb']:
-                cubename=pipeline.prefix+'_'+field+'_HI.'+ss+'.fits:'+pipeline.output
+             for ss in ['dirty','psf','first-residual','residual','model','image','pb', 'pb_corr', 'flux']:
+                cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(img_dir, pipeline.prefix, field, ss)
                 recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                            {
                            'filename' : cubename,
@@ -826,10 +873,14 @@ def worker(pipeline, recipe, config):
                            label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
 
         if pipeline.enable_task(config, 'sofia'):
+            if pipeline.enable_task(config, 'casa_image'):
+                out_dir = pipeline.cubes
+            else:
+                out_dir = pipeline.cubes + '/image_' + str(wscl_niter)
             step = 'sofia_sources'
             recipe.add('cab/sofia', step,
                 {
-            "import.inFile"         : pipeline.prefix+'_'+field+'_HI.image.fits:output',
+            "import.inFile"         : '{0:s}_{1:s}_HI.image.fits:output'.format(pipeline.prefix, field),
             "steps.doFlag"          : config['sofia'].get('flag'),
             "steps.doScaleNoise"    : True,
             "steps.doSCfind"        : True,
@@ -853,25 +904,44 @@ def worker(pipeline, recipe, config):
             "merge.minSizeZ"        : config['sofia'].get('minSizeZ'),
                 },
                 input=pipeline.input,
-                output=pipeline.output,
+                output=out_dir,
                 label='{0:s}:: Make SoFiA mask and images'.format(step))
 
     if pipeline.enable_task(config, 'sharpener'):
         step = 'continuum_spectral_extraction'
-        catalogs = glob.glob('{}/*.lsm.html'.format(pipeline.output))
+
+        if pipeline.enable_task(config, 'casa_image'):
+            img_dir = get_dir_path(pipeline.cubes, pipeline)
+        else:
+            img_dir = '{0:s}/image_{1:d}'.format(get_dir_path(pipeline.cubes, pipeline), wscl_niter)
+
         params = {"enable_spec_ex"        : True,
                   "enable_source_catalog" : True,
                   "enable_abs_plot"       : True,
                   "enable_source_finder"  : False,
-                  "cubename"              : '{:s}_HI.image.fits:output'.format(pipeline.prefix),
+                  "cubename"              : '{0:s}/{1:s}_{2:s}_HI.image.fits:output'.format(img_dir,
+                    pipeline.prefix, field),
                   "channels_per_plot"     : config['sharpener'].get('channels_per_plot'),
-                  "workdir"               : '{:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
+                  "workdir"               : '{0:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
                   "label"                 : config['sharpener'].get('label', pipeline.prefix)
         }
         if config['sharpener'].get('catalog')=='PYBDSF':
+            catalogs = []
+            nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
+
+            for ii in range(0, len(nimages)):
+                catalog = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(pipeline.continuum, 
+                    ii+1, pipeline.prefix, field))
+                catalogs.append(catalog)
+
+            catalogs = sorted(catalogs)
+            catalogs = [cat for catalogs in catalogs for cat in catalogs]
             if len(catalogs) > 0:
-                catalog_file = sorted(catalogs)[-1].split('/')[-1]
-                params["catalog_file"] = '{}:output'.format(catalog_file)
+                catalog_file = catalogs[-1].split('output/')[-1]
+                if config['sharpener'].get('catalog_file') == '':
+                    params["catalog_file"] = '{0:s}:output'.format(catalog_file)
+                else:
+                    params["catalog_file"] = '{0:s}:input'.format(config['sharpener'].get('catalog_file'))
                 params["catalog"] = "PYBDSF"
                 recipe.add('cab/sharpener',
                            step,
@@ -882,9 +952,16 @@ def worker(pipeline, recipe, config):
             else:
                 meerkathi.log.info('No PyBDSM catalogs found. Skipping continuum spectral extraction.')
         elif config['sharpener'].get('catalog')=='NVSS':
-            params["catalog_file"] = config['sharpener'].get('catalog_file')
-            params["thresh"] = config['sharpener'].get('thresh', 20)
-            params["width"] = config['sharpener'].get('width', '1.0d')
+            print 'LOOK_HERE'
+            print 'NVSS ACCEPTED, this is before it knows a catalog is supplied'
+            print '{0:s}'.format(config['sharpener'].get('catalog_file'))
+
+            if config['sharpener'].get('catalog_file') != '':
+                print 'Should be here if a catalog has been supplied'
+                print '{0:s}'.format(config['sharpener'].get('catalog_file'))
+                params["catalog_file"] = '{0:s}:input'.format(config['sharpener'].get('catalog_file'))
+            params["thresh"] = config['sharpener'].get('thresh')
+            params["width"] = config['sharpener'].get('width')
             params["catalog"] = "NVSS"
             recipe.add('cab/sharpener',
                        step,

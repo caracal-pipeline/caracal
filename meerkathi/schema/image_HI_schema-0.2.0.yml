@@ -338,11 +338,16 @@ mapping:
             type: str
             required: false
             example: 'all'
-          startchan:
-            desc: Starting channel of the cube. Used in combination with nchans. Default is 0.
+          firstchan:
+            desc: First channel of HI cube. Default is 0.
             type: int
             required: false
             example: '0'
+          binchans:
+            desc: Integer binning of channels. Default is 1 (no binning).
+            type: int
+            required: false
+            example: '1'
           npix:
             desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is worker npix.
             type: seq
@@ -397,6 +402,11 @@ mapping:
         mapping:
           enable:
             desc: Execute this segment. Default is false
+            type: bool
+            required: false
+            example: 'False'
+          apply_pb: 
+            desc: Whether to apply the primary beam correction to the image cube. Default is false
             type: bool
             required: false
             example: 'False'
@@ -509,13 +519,13 @@ mapping:
             desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
             type: str
             enum: ['NVSS', 'PYBDSF']
-            required: true
+            required: false # was true
             example: 'PYBDSF'
           catalog_file:
             desc: Catalog file where to store sources from online surveys (NVSS)
             type: str
             required: false
-            example: 'catalog_contSources.lsm.html'
+            example: ''
           channels_per_plot:
             desc: Number of channels to plot per detail plot. Default is 50
             type: int

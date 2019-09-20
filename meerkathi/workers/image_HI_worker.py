@@ -22,10 +22,7 @@ from meerkathi.dispatch_crew import utils
 import itertools
 
 # To split out cubes/<dir> from output/cubes/dir
-
-
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
-
 
 def target_to_msfiles(targets, msnames, label, doppler=False):
     target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
@@ -37,8 +34,9 @@ def target_to_msfiles(targets, msnames, label, doppler=False):
             all_target.append(tt)
     all_target = list(set(all_target))
 
-    for i, ms in enumerate(
-            msnames):  # make a list of all input ms file names for each target field
+    # make a list of all input ms file names for each target field
+    for i, ms in enumerate(msnames):
+
         for t in target_ls[i]:
             tmp = utils.filter_name(t)
             if doppler:
@@ -55,7 +53,7 @@ def target_to_msfiles(targets, msnames, label, doppler=False):
                 tmp.append(m)
         target_msfiles.append(tmp)
 
-    return all_target, target_ms_ls, dict(zip(all_target, target_msfiles))
+    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))
 
 
 def freq_to_vel(filename, reverse):
@@ -83,6 +81,7 @@ def freq_to_vel(filename, reverse):
                     (1 - float(headcube['crval3']) / restfreq)
                 # FITS standard for radio velocity as per
                 # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
+
                 headcube['ctype3'] = 'VRAD'
                 if 'cunit3' in headcube:
                     # delete cunit3 because we adopt the default units = m/s
@@ -152,9 +151,9 @@ def fix_specsys(filename, specframe):
             if 'specsys' in headcube:
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
-
-
+            
 def make_pb_cube(filename, apply_corr):
+
     filename = filename.split(':')
     filename = '{0:s}/{1:s}'.format(filename[1], filename[0])
     if not os.path.exists(filename):
@@ -176,7 +175,6 @@ def make_pb_cube(filename, apply_corr):
                 np.arange(headcube['naxis3']) - headcube['crpix3'] + 1)) * 1e+9 / 13.5 / 2.355
             # sigma_pb=headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1)
             sigma_pb.resize((sigma_pb.shape[0], 1, 1))
-            #print sigma_pb
             datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
             fits.writeto(
                 filename.replace(
@@ -201,6 +199,7 @@ def make_pb_cube(filename, apply_corr):
 
 def calc_rms(filename, HImaskname):
     if HImaskname is None:
+
         if not os.path.exists(filename):
             meerkathi.log.info(
                 'Noise not determined in cube for {0:s}. File does not exist.'.format(filename))
@@ -220,7 +219,6 @@ def calc_rms(filename, HImaskname):
             newcube = datacube[selchans]
             newmask = datamask[selchans]
             y2 = newcube[newmask == 0]
-            #print newcube.shape, newmask.shape, y.shape
             #y = datacube[(~np.isnan(datacube)) & (np.sum(datamask,axis=(1,2))>0) & (npdatamask[:,0,0]==0)]
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
@@ -282,10 +280,8 @@ def worker(pipeline, recipe, config):
             targetpos = tinfo['REFERENCE_DIR']
             while len(targetpos) == 1:
                 targetpos = targetpos[0]
-            tRA = targetpos[0] / np.pi * 180.  # original
-            tDec = targetpos[1] / np.pi * 180.  # original
-           # tRA  = targetpos[0][0][0]/np.pi*180. # modified
-           # tDec = targetpos[0][0][1]/np.pi*180. # modified
+            tRA = targetpos[0] / np.pi * 180.
+            tDec = targetpos[1] / np.pi * 180.
             RA.append(tRA)
             Dec.append(tDec)
         meerkathi.log.info(
@@ -621,7 +617,6 @@ def worker(pipeline, recipe, config):
 
                 img_dir = '{0:s}/image_{1:d}'.format(
                     get_dir_path(pipeline.cubes, pipeline), j)
-
                 if j == 1:
                     step = 'wsclean_image_HI_with_automasking'
                     ownHIclean_mask = config['wsclean_image'].get(
@@ -660,8 +655,8 @@ def worker(pipeline, recipe, config):
                         if not config['wsclean_image'].get('niter'):
                             imagetype = ['image', 'dirty']
                         else:
-                            imagetype = [
-                                'image', 'dirty', 'psf', 'residual', 'model']
+                            imagetype = ['image', 'dirty',
+                                         'psf', 'residual', 'model']
                             if config['wsclean_image'].get('mgain') < 1.0:
                                 imagetype.append('first-residual')
                         for mm in imagetype:
@@ -834,8 +829,8 @@ def worker(pipeline, recipe, config):
                         if not config['wsclean_image'].get('niter'):
                             imagetype = ['image', 'dirty']
                         else:
-                            imagetype = [
-                                'image', 'dirty', 'psf', 'residual', 'model']
+                            imagetype = ['image', 'dirty',
+                                         'psf', 'residual', 'model']
                             if config['wsclean_image'].get('mgain') < 1.0:
                                 imagetype.append('first-residual')
                         for mm in imagetype:

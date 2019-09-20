@@ -20,7 +20,7 @@ HOME=$WORKSPACE_ROOT
 export HOME
 
 # Install Meerkathi into a virtual env
-virtualenv ${WORKSPACE_ROOT}/projects/pyenv
+virtualenv ${WORKSPACE_ROOT}/projects/pyenv -p python3.6
 . ${WORKSPACE_ROOT}/projects/pyenv/bin/activate
 pip install pip setuptools wheel -U
 PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
@@ -31,7 +31,7 @@ cd $TEST_OUTPUT_DIR
 mkdir input
 
 # Aim, fire!
-stimela pull
+stimela pull -d
 stimela build
 
 # New selfcal test once it goes in

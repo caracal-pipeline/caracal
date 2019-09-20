@@ -519,7 +519,7 @@ mapping:
             desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
             type: str
             enum: ['NVSS', 'PYBDSF']
-            required: false # was true
+            required: false
             example: 'PYBDSF'
           channels_per_plot:
             desc: Number of channels to plot per detail plot. Default is 50

@@ -521,11 +521,6 @@ mapping:
             enum: ['NVSS', 'PYBDSF']
             required: false # was true
             example: 'PYBDSF'
-          catalog_file:
-            desc: Catalog file where to store sources from online surveys (NVSS)
-            type: str
-            required: false
-            example: ''
           channels_per_plot:
             desc: Number of channels to plot per detail plot. Default is 50
             type: int

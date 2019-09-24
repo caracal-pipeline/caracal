@@ -176,25 +176,13 @@ def make_pb_cube(filename, apply_corr):
             # sigma_pb=headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1)
             sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
-            fits.writeto(
-                filename.replace(
-                    'image.fits',
-                    'pb.fits'),
-                datacube,
-                header=headcube,
-                overwrite=True)
+            fits.writeto(filename.replace('image.fits','pb.fits'),
+                datacube, header=headcube, overwrite=True)
             if apply_corr:
-                fits.writeto(
-                    filename.replace(
-                        'image.fits',
-                        'pb_corr.fits'),
-                    cube[0].data / datacube,
-                    header=headcube,
-                    overwrite=True)  # Applying the primary beam correction
-            meerkathi.log.info(
-                'Created primary beam cube FITS {0:s}'.format(
-                    filename.replace(
-                        'image.fits', 'pb.fits')))
+                fits.writeto(filename.replace('image.fits','pb_corr.fits'),
+                    cube[0].data / datacube, header=headcube, overwrite=True)  # Applying the primary beam correction
+            meerkathi.log.info('Created primary beam cube FITS {0:s}'.format(
+                    filename.replace('image.fits', 'pb.fits')))
 
 
 def calc_rms(filename, HImaskname):
@@ -239,9 +227,7 @@ def worker(pipeline, recipe, config):
     mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])
               for did in pipeline.dataid]
     pipeline.prefixes = [
-        '{2:s}-{0:s}-{1:s}'.format(
-            did,
-            config['label'],
+        '{2:s}-{0:s}-{1:s}'.format(did, config['label'],
             pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config.get('restfreq')
@@ -365,9 +351,7 @@ def worker(pipeline, recipe, config):
         comchanw = '{0:.3f}Hz'.format(comchanw)
         meerkathi.log.info(
             'Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(
-                nchan_dopp,
-                comfreq0,
-                comchanw))
+                nchan_dopp, comfreq0, comchanw))
         if pipeline.enable_task(config, 'wsclean_image') and corr_order:
             meerkathi.log.info(
                 'wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image')
@@ -388,9 +372,7 @@ def worker(pipeline, recipe, config):
         nchan_dopp = int(nchan_dopp)
         meerkathi.log.info(
             'Set requested Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(
-                nchan_dopp,
-                comfreq0,
-                comchanw))
+                nchan_dopp, comfreq0, comchanw))
 
     elif pipeline.enable_task(config, 'mstransform'):
         nchan_dopp, comfreq0, comchanw = None, None, None
@@ -425,17 +407,17 @@ def worker(pipeline, recipe, config):
                         "outputvis": msname_mst,
                         "regridms": config['mstransform'].get('doppler'),
                         "mode": config['mstransform'].get('mode'),
-                           "nchan": sdm.dismissable(nchan_dopp),
-                           "start": sdm.dismissable(comfreq0),
-                           "width": sdm.dismissable(comchanw),
-                           "interpolation": 'nearest',
-                           "datacolumn": col,
-                           "restfreq": restfreq,
-                           "outframe": config['mstransform'].get('outframe'),
-                           "veltype": config['mstransform'].get('veltype'),
-                           "douvcontsub": config['mstransform'].get('uvlin'),
-                           "fitspw": sdm.dismissable(config['mstransform'].get('fitspw')),
-                           "fitorder": config['mstransform'].get('fitorder'),
+                        "nchan": sdm.dismissable(nchan_dopp),
+                        "start": sdm.dismissable(comfreq0),
+                        "width": sdm.dismissable(comchanw),
+                        "interpolation": 'nearest',
+                        "datacolumn": col,
+                        "restfreq": restfreq,
+                        "outframe": config['mstransform'].get('outframe'),
+                        "veltype": config['mstransform'].get('veltype'),
+                        "douvcontsub": config['mstransform'].get('uvlin'),
+                        "fitspw": sdm.dismissable(config['mstransform'].get('fitspw')),
+                        "fitorder": config['mstransform'].get('fitorder'),
                         },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -447,8 +429,7 @@ def worker(pipeline, recipe, config):
                            step,
                            {"vis": msname_mst,
                             "listfile": '{0:s}-{1:s}-obsinfo.txt'.format(pipeline.prefix,
-                                                                         msname_mst.replace('.ms',
-                                                                                            '')),
+                                                                    msname_mst.replace('.ms', '')),
                             "overwrite": True,
                             },
                            input=pipeline.input,
@@ -463,11 +444,8 @@ def worker(pipeline, recipe, config):
                     {
                         "msname": msname_mst,
                         "command": 'summary',
-                        "outfile": '{0:s}-{1:s}-obsinfo.json'.format(
-                            pipeline.prefix,
-                            msname_mst.replace(
-                                '.ms',
-                                '')),
+                        "outfile": '{0:s}-{1:s}-obsinfo.json'.format(pipeline.prefix,
+                            msname_mst.replace('.ms', '')),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -486,22 +464,20 @@ def worker(pipeline, recipe, config):
                        {"command": "phazer",
                         "inset": msnamesb,
                         "outset": msnamesb,
-                        "imsize": config['sunblocker'].get('imsize',
-                                                           max(npix)),
-                           "cell": config['sunblocker'].get('cell',
-                                                            cell),
-                           "pol": 'i',
-                           "threshmode": 'fit',
-                           "threshold": config['sunblocker'].get('threshold'),
-                           "mode": 'all',
-                           "radrange": 0,
-                           "angle": 0,
-                           "show": '{0:s}.sunblocker.svg'.format(pipeline.prefix),
-                           "verb": True,
-                           "dryrun": False,
-                           "uvmax": config['sunblocker'].get('uvmax'),
-                           "uvmin": config['sunblocker'].get('uvmin'),
-                           "vampirisms": config['sunblocker'].get('vampirisms'),
+                        "imsize": config['sunblocker'].get('imsize', max(npix)),
+                        "cell": config['sunblocker'].get('cell', cell),
+                        "pol": 'i',
+                        "threshmode": 'fit',
+                        "threshold": config['sunblocker'].get('threshold'),
+                        "mode": 'all',
+                        "radrange": 0,
+                        "angle": 0,
+                        "show": '{0:s}.sunblocker.svg'.format(pipeline.prefix),
+                        "verb": True,
+                        "dryrun": False,
+                        "uvmax": config['sunblocker'].get('uvmax'),
+                        "uvmin": config['sunblocker'].get('uvmin'),
+                        "vampirisms": config['sunblocker'].get('vampirisms'),
                         },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -550,8 +526,7 @@ def worker(pipeline, recipe, config):
                         chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
                         firstchanfreq = [ss[0] for ss in chfr]
                         lastchanfreq = [ss[-1] for ss in chfr]
-                        chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
-                                     for ss in chfr]
+                        chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
                     meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
@@ -598,8 +573,7 @@ def worker(pipeline, recipe, config):
         # Construct weight specification
         if config['wsclean_image'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['wsclean_image'].get(
-                    'robust', robust))
+                config['wsclean_image'].get('robust', robust))
         else:
             weight = config['wsclean_image'].get('weight', weight)
         wscl_niter = config['wsclean_image'].get('wscl_niter')
@@ -655,8 +629,7 @@ def worker(pipeline, recipe, config):
                         if not config['wsclean_image'].get('niter'):
                             imagetype = ['image', 'dirty']
                         else:
-                            imagetype = ['image', 'dirty',
-                                         'psf', 'residual', 'model']
+                            imagetype = ['image', 'dirty', 'psf', 'residual', 'model']
                             if config['wsclean_image'].get('mgain') < 1.0:
                                 imagetype.append('first-residual')
                         for mm in imagetype:
@@ -666,20 +639,11 @@ def worker(pipeline, recipe, config):
                                 'cab/fitstool',
                                 step,
                                 {
-                                    "image": [
-                                        '{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(
-                                            img_dir,
-                                            pipeline.prefix,
-                                            field,
-                                            j,
-                                            d,
-                                            mm)for d in xrange(nchans)],
+                                    "image": ['{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(
+                                              img_dir, pipeline.prefix, field, j, d, 
+                                              mm) for d in xrange(nchans)],
                                     "output": '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(
-                                        img_dir,
-                                        pipeline.prefix,
-                                        field,
-                                        j,
-                                        mm),
+                                        img_dir, pipeline.prefix, field, j, mm),
                                     "stack": True,
                                     "delete-files": True,
                                     "fits-axis": 'FREQ',
@@ -688,9 +652,7 @@ def worker(pipeline, recipe, config):
                                 output=pipeline.output,
                                 label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
                                     step,
-                                    mm.replace(
-                                        '-',
-                                        '_')))
+                                    mm.replace('-', '_')))
 
                     recipe.run()
                     recipe.jobs = []
@@ -748,20 +710,12 @@ def worker(pipeline, recipe, config):
                         meerkathi.log.info(
                             'Sofia mask_' + str(j - 1) + ' was not found. Exiting and saving the cube')
 
-                        for ss in [
-                            'dirty',
-                            'psf',
-                            'first-residual',
-                            'residual',
-                            'model',
-                                'image']:
+                        for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                             cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(
                                 img_dir, pipeline.prefix, field, str(j), ss)
                             MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(
                                 img_dir, pipeline.prefix, field, str(j), ss)
-                            recipe.add(
-                                fix_specsys,
-                                'fix_specsys_{0:s}_cube'.format(ss),
+                            recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
                                 {
                                     "filename": cubename,
                                     "specframe": specframe_all,
@@ -771,20 +725,12 @@ def worker(pipeline, recipe, config):
                                 label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                         if pipeline.enable_task(config, 'freq_to_vel'):
-                            for ss in [
-                                'dirty',
-                                'psf',
-                                'first-residual',
-                                'residual',
-                                'model',
-                                    'image']:
+                            for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                                 cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(
                                     img_dir, pipeline.prefix, field, str(j), ss)
                                 MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits'.format(
                                     img_dir, pipeline.prefix, field, str(j), ss)
-                                recipe.add(
-                                    freq_to_vel,
-                                    'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
+                                recipe.add(freq_to_vel, 'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                     {
                                         'filename': cubename,
                                         'reverse': config['freq_to_vel'].get('reverse')},
@@ -799,28 +745,23 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/wsclean',
                                step,
                                {"msname": mslist,
-                                "prefix": '{0:s}/{1:s}_{2:s}_HI_{3:s}'.format(img_dir,
-                                                                              pipeline.prefix,
-                                                                              field,
-                                                                              str(j)),
+                                "prefix": '{0:s}/{1:s}_{2:s}_HI_{3:s}'.format(img_dir, pipeline.prefix,
+                                                                              field, str(j)),
                                 "weight": weight,
                                 "taper-gaussian": str(config['wsclean_image'].get('taper')),
-                                   "pol": config['wsclean_image'].get('pol'),
-                                   "npix": config['wsclean_image'].get('npix',
-                                                                       npix),
-                                   "padding": config['wsclean_image'].get('padding'),
-                                   "scale": config['wsclean_image'].get('cell',
-                                                                        cell),
-                                   "channelsout": nchans,
-                                   "channelrange": channelrange,
-                                   "fitsmask": '{0:s}/{1:s}'.format(img_dir,
-                                                                    HIclean_mask),
-                                   "niter": config['wsclean_image'].get('niter'),
-                                   "mgain": config['wsclean_image'].get('mgain'),
-                                   "auto-threshold": config['wsclean_image'].get('auto_threshold'),
-                                   "multiscale": config['wsclean_image'].get('multi_scale'),
-                                   "multiscale-scales": sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
-                                   "no-update-model-required": config['wsclean_image'].get('no_update_mod')},
+                                "pol": config['wsclean_image'].get('pol'),
+                                "npix": config['wsclean_image'].get('npix', npix),
+                                "padding": config['wsclean_image'].get('padding'),
+                                "scale": config['wsclean_image'].get('cell', cell),
+                                "channelsout": nchans,
+                                "channelrange": channelrange,
+                                "fitsmask": '{0:s}/{1:s}'.format(img_dir, HIclean_mask),
+                                "niter": config['wsclean_image'].get('niter'),
+                                "mgain": config['wsclean_image'].get('mgain'),
+                                "auto-threshold": config['wsclean_image'].get('auto_threshold'),
+                                "multiscale": config['wsclean_image'].get('multi_scale'),
+                                "multiscale-scales": sdm.dismissable(config['wsclean_image'].get('multi_scale_scales')),
+                                "no-update-model-required": config['wsclean_image'].get('no_update_mod')},
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{:s}:: re-Image HI_' + str(j).format(step))
@@ -829,8 +770,7 @@ def worker(pipeline, recipe, config):
                         if not config['wsclean_image'].get('niter'):
                             imagetype = ['image', 'dirty']
                         else:
-                            imagetype = ['image', 'dirty',
-                                         'psf', 'residual', 'model']
+                            imagetype = ['image', 'dirty', 'psf', 'residual', 'model']
                             if config['wsclean_image'].get('mgain') < 1.0:
                                 imagetype.append('first-residual')
                         for mm in imagetype:
@@ -840,20 +780,11 @@ def worker(pipeline, recipe, config):
                                 'cab/fitstool',
                                 step,
                                 {
-                                    "image": [
-                                        '{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(
-                                            img_dir,
-                                            pipeline.prefix,
-                                            field,
-                                            str(j),
-                                            d,
-                                            mm)for d in xrange(nchans)],
-                                    "output": '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(
-                                        img_dir,
-                                        pipeline.prefix,
-                                        field,
-                                        str(j),
-                                        mm),
+                                    "image": ['{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(
+                                              img_dir, pipeline.prefix, field, str(j), d, 
+                                              mm) for d in xrange(nchans)],
+                                    "output": '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(img_dir,
+                                        pipeline.prefix, field, str(j), mm),
                                     "stack": True,
                                     "delete-files": True,
                                     "fits-axis": 'FREQ',
@@ -862,9 +793,7 @@ def worker(pipeline, recipe, config):
                                 output=pipeline.output,
                                 label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
                                     step,
-                                    mm.replace(
-                                        '-',
-                                        '_')))
+                                    mm.replace('-', '_')))
 
                     recipe.run()
                     recipe.jobs = []
@@ -876,8 +805,7 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info(
                         'The updated rms = ' + str("{0:.7f}".format(rms2)) + ' Jy/beam')
 
-                    if rms2 <= (
-                            1.0 - tol) * rms_ref:  # if the noise changes by less than 10% keep_going
+                    if rms2 <= (1.0 - tol) * rms_ref:  # if the noise changes by less than 10% keep_going
                         rms_ref = rms2
                         if j == wscl_niter:
                             meerkathi.log.info('The relative noise change is larger than ' + str("{0:.3f}".format(
@@ -888,21 +816,13 @@ def worker(pipeline, recipe, config):
                             meerkathi.log.info('The relative noise change is larger than ' + str("{0:.3f}".format(
                                 (100.0 - (rms2 / rms_ref) * 100.0)) + '%. Noise convergence not achieved.'))
 
-                        for ss in [
-                            'dirty',
-                            'psf',
-                            'first-residual',
-                            'residual',
-                            'model',
-                                'image']:
+                        for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                             cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(
                                 img_dir, pipeline.prefix, field, str(j), ss)
                             MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(
                                 img_dir, pipeline.prefix, field, str(j), ss)
 
-                            recipe.add(
-                                fix_specsys,
-                                'fix_specsys_{0:s}_cube'.format(ss),
+                            recipe.add(fix_specsys, 'fix_specsys_{0:s}_cube'.format(ss),
                                 {
                                     "filename": cubename,
                                     "specframe": specframe_all,
@@ -912,19 +832,12 @@ def worker(pipeline, recipe, config):
                                 label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                         if pipeline.enable_task(config, 'freq_to_vel'):
-                            for ss in [
-                                'dirty',
-                                'psf',
-                                'first-residual',
-                                'residual',
-                                'model',
-                                    'image']:
+                            for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                                 cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits:output'.format(
                                     img_dir, pipeline.prefix, field, str(j), ss)
                                 MFScubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}-MFS-{4:s}.fits:output'.format(
                                     img_dir, pipeline.prefix, field, str(j), ss)
-                                recipe.add(
-                                    freq_to_vel,
+                                recipe.add(freq_to_vel,
                                     'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                                     {
                                         "filename": cubename,
@@ -939,13 +852,7 @@ def worker(pipeline, recipe, config):
                                 (100.0 - (rms2 / rms_ref) * 100.0)) + '%. Noise convergence achieved.'))
                         break
 
-            for ss in [
-                'dirty',
-                'psf',
-                'first-residual',
-                'residual',
-                'model',
-                    'image']:
+            for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                 if 'dirty' in ss:
                     meerkathi.log.info('Preparing final cubes.')
                 cubename = '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(
@@ -969,13 +876,7 @@ def worker(pipeline, recipe, config):
 
             for j in range(1, wscl_niter):
                 if config['wsclean_image'].get('rm_intcubes'):
-                    for ss in [
-                        'dirty',
-                        'psf',
-                        'first-residual',
-                        'residual',
-                        'model',
-                            'image']:
+                    for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, str(j), ss)
                         HIclean_mask_file = '{0:s}/{1:s}_{2:s}_HI_{3:s}.image_clean_mask.fits'.format(
@@ -1117,14 +1018,7 @@ def worker(pipeline, recipe, config):
             img_dir = img_dir.split('output/')[-1]
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
-            for ss in [
-                'dirty',
-                'psf',
-                'first-residual',
-                'residual',
-                'model',
-                'image',
-                    'flux']:
+            for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image', 'flux']:
                 cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(
                     img_dir, pipeline.prefix, field, ss)
                 recipe.add(remove_stokes_axis,
@@ -1139,24 +1033,15 @@ def worker(pipeline, recipe, config):
             cubename = '{0:s}/{1:s}_{2:s}_HI.image.fits:output'.format(
                 img_dir, pipeline.prefix, field)
 
-            recipe.add(make_pb_cube,
-                       'pb_cube',
+            recipe.add(make_pb_cube, 'pb_cube',
                        {'filename': cubename,
                         'apply_corr': config['pb_cube'].get('apply_pb')},
                        input=pipeline.input,
                        output=pipeline.output,
                        label='Make primary beam cube for {0:s}'.format(cubename))
 
-        for ss in [
-            'dirty',
-            'psf',
-            'first-residual',
-            'residual',
-            'model',
-            'image',
-            'pb',
-            'pb_corr',
-                'flux']:
+        for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model',
+                   'image', 'pb', 'pb_corr', 'flux']:
             cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(
                 img_dir, pipeline.prefix, field, ss)
             recipe.add(fix_specsys,
@@ -1175,20 +1060,11 @@ def worker(pipeline, recipe, config):
             else:
                 meerkathi.log.info(
                     'Converting spectral axis of cubes from radio velocity to frequency')
-            for ss in [
-                'dirty',
-                'psf',
-                'first-residual',
-                'residual',
-                'model',
-                'image',
-                'pb',
-                'pb_corr',
-                    'flux']:
+            for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model',
+                       'image', 'pb', 'pb_corr', 'flux']:
                 cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(
                     img_dir, pipeline.prefix, field, ss)
-                recipe.add(
-                    freq_to_vel,
+                recipe.add(freq_to_vel,
                     'spectral_header_to_vel_radio_{0:s}_cube'.format(ss),
                     {
                         'filename': cubename,
@@ -1210,8 +1086,7 @@ def worker(pipeline, recipe, config):
                 step,
                 {
                     "import.inFile": '{0:s}_{1:s}_HI.image.fits:output'.format(
-                        pipeline.prefix,
-                        field),
+                        pipeline.prefix, field),
                     "steps.doFlag": config['sofia'].get('flag'),
                     "steps.doScaleNoise": True,
                     "steps.doSCfind": True,
@@ -1263,8 +1138,7 @@ def worker(pipeline, recipe, config):
             nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
 
             for ii in range(0, len(nimages)):
-                catalog = glob.glob(
-                    "{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(
+                catalog = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(
                         pipeline.continuum, ii + 1, pipeline.prefix, field))
                 catalogs.append(catalog)
 
@@ -1277,23 +1151,20 @@ def worker(pipeline, recipe, config):
             if len(catalog_file) > 0:
 
                 params["catalog"] = "PYBDSF"
-                recipe.add(
-                    'cab/sharpener',
+                recipe.add('cab/sharpener',
                     step,
                     params,
                     input=pipeline.input,
                     output=pipeline.output,
                     label='{0:s}:: Continuum Spectral Extraction'.format(step))
             else:
-                # or should we force it onto NVSS?
                 meerkathi.log.info(
                     'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
         elif config['sharpener'].get('catalog') == 'NVSS':
             params["thresh"] = config['sharpener'].get('thresh')
             params["width"] = config['sharpener'].get('width')
             params["catalog"] = "NVSS"
-            recipe.add(
-                'cab/sharpener',
+            recipe.add('cab/sharpener',
                 step,
                 params,
                 input=pipeline.input,

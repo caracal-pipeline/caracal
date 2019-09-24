@@ -236,6 +236,17 @@ mapping:
             type: str
             required: false
             example: 'auto'
+          window_backend:
+            desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
+            type: str
+            enum: ["numpy", "zarr-disk"]
+            required: false
+            example: "numpy"
+          tricolour_calibrator_strat:
+            type: str
+            required: False
+            example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
+            
 
       rfinder:
         desc: A tool to investigate the presence of RFI

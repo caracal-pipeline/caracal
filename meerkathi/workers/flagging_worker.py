@@ -301,14 +301,29 @@ def worker(pipeline, recipe, config):
                 if label:
                     fields = 'target'
                     field_names = manfields.get_field(pipeline, i, fields)
+                    fields = ",".join(
+                        map(str, utils.get_field_id(msinfo, field_names)))
+                    tricolour_mode = 'polarisation'
+                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 elif config['autoflag_rfi'].get('fields') == 'auto':
                     fields = 'target,bpcal,gcal,xcal'
+                    tricolour_mode = 'polarisation'
+                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                     field_names = manfields.get_field(pipeline, i, fields)
+                    fields = ",".join(
+                        map(str, utils.get_field_id(msinfo, field_names)))
                 else:
                     field_names = manfields.get_field(
                         pipeline, i, config['autoflag_rfi'].get('fields')).split(",")
                     fields = ",".join(
                         map(str, utils.get_field_id(msinfo, field_names)))
+                    if 'target' in fields:
+                       tricolour_mode = 'polarisation'
+                       tricolour_strt = 'mk_rfi_flagging_target_fields_firstpass.yaml'
+                    else: 
+                       tricolour_mode = 'total_power'
+                       tricolour_strat = config['autoflag_rfi'].get('tricolour_calibrator_strat')
+          
 
                 field_names = list(set(field_names))
 
@@ -318,7 +333,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,
-                                   "column": config['autoflag_rfi'].get('column', 'DATA'),
+                                   "column": config['autoflag_rfi'].get('column'),
                                    # flag the calibrators for RFI and apply to target
                                    "fields": fields,
                                    # "bands"       : config['autoflag_rfi'].get('bands', "0"),
@@ -332,10 +347,11 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,
-                                   "data-column": config['autoflag_rfi'].get('column', 'DATA'),
-                                   "window-backend": config['autoflag_rfi'].get('window-backend', 'numpy'),
-                                   "field-names": field_names,
-                                   "flagging-strategy": config['autoflag_rfi']['strategy'],
+                                   "data-column": config['autoflag_rfi'].get('column'),
+                                   "window-backend": config['autoflag_rfi'].get('window_backend'),
+                                   "field-names": fields,
+                                   "flagging-strategy": tricolour_mode,
+                                   "config" : tricolour_strat,
                                },
                                input=pipeline.input,
                                output=pipeline.output,
@@ -349,18 +365,18 @@ def worker(pipeline, recipe, config):
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
-                recipe.add('cab/autoflagger', step,
-                           {
-                               "msname": msname,
-                               "column": config['autoflag_rfi'].get('column'),
-                               # flag the calibrators for RFI and apply to target
-                               "fields": fields,
-                               # "bands"       : config['autoflag_rfi'].get('bands', "0"),
-                               "strategy": config['autoflag_rfi']['strategy'],
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
+               # recipe.add('cab/autoflagger', step,
+               #            {
+               #                "msname": msname,
+               #                "column": config['autoflag_rfi'].get('column'),
+               #                # flag the calibrators for RFI and apply to target
+               #                "fields": fields,
+               #                # "bands"       : config['autoflag_rfi'].get('bands', "0"),
+               #                "strategy": config['autoflag_rfi']['strategy'],
+               #            #},
+               #            input=pipeline.input,
+               #            output=pipeline.output,
+               #            label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)

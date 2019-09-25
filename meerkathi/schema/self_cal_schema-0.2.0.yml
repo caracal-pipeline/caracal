@@ -542,17 +542,17 @@ mapping:
             desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
             required: false
             example: 'True'
-          row-chunks:
+          row_chunks:
             type: int
             desc: Number of rows of input .MS that are processed in a single chunk.
             required: false
             example: '0'
-          model-chunks:
+          model_chunks:
             type: int
             desc: Number of sky model components that are processed in a single chunk.
             required: false
             example: '0'
-          invert-uvw:
+          invert_uvw:
             type: bool
             desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees.
             required: false
@@ -562,22 +562,22 @@ mapping:
             desc: Give JS9 region file. Only sources within those regions will be included.
             required: false
             example: ''
-          points-only:
+          points_only:
             type: bool
             desc: Select only point-only sources. Default is False.
             required: false
             example: 'False'
-          num-sources:
+          num_sources:
             type: int
             desc: Select only N brightest sources. Default is 0
             required: false
             example: "0"
-          num-workers:
+          num_workers:
             type: int
             desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
             required: false
             example: '0'
-          memory-fraction:
+          memory_fraction:
             type: float
             desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
             required: false

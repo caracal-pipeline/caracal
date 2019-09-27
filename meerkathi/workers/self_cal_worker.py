@@ -5,6 +5,7 @@ import sys
 import yaml
 import json
 import os
+import re
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -131,7 +132,17 @@ def worker(pipeline, recipe, config):
             if 'CUNIT2' in head:
                 del head['CUNIT2']
 
-        fits.writeto(filename, dat, head, overwrite=True)
+        fits.writeto(filename,dat,head,overwrite=True)
+    
+    #def get_mem():
+    #    with open('/proc/meminfo') as p:
+    #         memory_available = p.read()
+    #         print memory_available
+    #    memtotal = re.search(r'^MemTotal:\s+(\d+)', memory_available)
+    #    if memtotal:
+    #       memtotal_kb = int(memtotal.groups()[0])
+    #       print 'memory_in_kb:', memtotal_kb
+    #    return memtotal_kb
 
     def image(num, img_dir, mslist, field):
         key = 'image'
@@ -932,12 +943,42 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        sol_terms = []
-        for term in jones_chain.split(","):
-            sol_terms.append(SOL_TERMS[term])
-
-        for i, msname in enumerate(mslist):
+        
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
+        #Determine the memory requirements of cubical automatically
+        for i,msname in enumerate(mslist):
+        #    print "sol-term-iters:", config[key].get('sol_term_iters')
+        #    print "prefix, field, label=",prefix, field, label
+        #    ms_prefix = pipeline.prefixes[i]
+        #    print 'ms_prefix', ms_prefix
+        #    observation_data = get_obs_data(ms_prefix, field, label)
+        #    n_correlations = observation_data['NCOR']
+        #    print 'n_correlations', n_correlations
+        #    n_ant = len(observation_data['ANT']['NAME'])
+        #    n_baseline = n_ant*(n_ant-1)/2
+        #    print observation_data.keys()
+        #    n_chan = observation_data['SPW']['NUM_CHAN'][0]
+        #    print n_chan 
+        #    sol_t = observation_data['FIELD']['PERIOD'][0]/observation_data['EXPOSURE']
+        #    print sol_t, n_baseline, n_correlations
+        #    membyte = get_mem()
+        #    print "denomitor:", 16.0*n_correlations*n_baseline*n_chan*sol_t
+        #    maxtiles = max(1,int(membyte*1.0*0.5/16.0*n_correlations*n_baseline*n_chan*sol_t))
+        #    print "memory in kb, number of tiles:", membyte, maxtiles
+        #    tilesize = max(sol_t, min(nworker*sol_t, membyte*0.5/(16.0*n_correlations*n_chan*n_baseline)))
+        #    print tilesize
+            # Determine the number of tiles
+           
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
+            
+     
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
@@ -958,7 +999,7 @@ def worker(pipeline, recipe, config):
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "out-overwrite": False,
+                "out-overwrite": True,
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
@@ -966,7 +1007,6 @@ def worker(pipeline, recipe, config):
                 "g-clip-low": config.get('cal_gain_amplitude_clip_low'),
                 "g-clip-high": config.get('cal_gain_amplitude_clip_high'),
                 "madmax-enable": config[key].get('madmax_flagging'),
-                "out-overwrite": False,
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
@@ -996,6 +1036,7 @@ def worker(pipeline, recipe, config):
                     "b-save-to": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msname.split('.ms')[0]),
                     "b-clip-high": config.get('cal_gain_amplitude_clip_high')})
+
 
             if config[key].get('DDjones', False):
                 cubical_opts.update({"g-update-type": gupdate,
@@ -1065,11 +1106,10 @@ def worker(pipeline, recipe, config):
     def get_obs_data(prefix, field, label):
         "Extracts data from the json data file"
         if label:
-            filename = '{0:s}/{1:s}-{2:s}-{3:s}-obsinfo.json'.format(
-                pipeline.output, prefix, field, label)
-        else:
-            filename = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, prefix)
+            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
+        else: 
+            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
+
         with open(filename) as f:
             data = json.load(f)
         return data
@@ -1227,8 +1267,7 @@ def worker(pipeline, recipe, config):
         else:
             # Use the image
             if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORR_DATA":
-                aimfast_settings.update(
-                    {"restored-image": '{0:s}/{1:s}_{2:d}{3:s}-image.fits:output'.format(img_dir, prefix, num, mfsprefix)})
+                aimfast_settings.update({"restored-image" : '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix)})
 
             else:
                 try:

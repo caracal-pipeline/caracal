@@ -222,11 +222,6 @@ mapping:
             desc: scales of multiscale [0,10,20,etc, etc] in pixels
             required: false
             example: '10, 20, 30' 
-          no_update_model:
-            type: bool
-            desc: do not update column MODEL_DATA after wsclean
-            required: false
-            example: "False"           
           minuvw_m:
             type: int
             desc: exclude short baselines [m]

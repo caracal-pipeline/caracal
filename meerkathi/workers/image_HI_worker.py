@@ -642,7 +642,7 @@ def worker(pipeline, recipe, config):
                                 {
                                     "image": ['{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(
                                               img_dir, pipeline.prefix, field, j, d, 
-                                              mm) for d in xrange(nchans)],
+                                              mm) for d in range(nchans)],
                                     "output": '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(
                                         img_dir, pipeline.prefix, field, j, mm),
                                     "stack": True,
@@ -783,7 +783,7 @@ def worker(pipeline, recipe, config):
                                 {
                                     "image": ['{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(
                                               img_dir, pipeline.prefix, field, str(j), d, 
-                                              mm) for d in xrange(nchans)],
+                                              mm) for d in range(nchans)],
                                     "output": '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(img_dir,
                                         pipeline.prefix, field, str(j), mm),
                                     "stack": True,

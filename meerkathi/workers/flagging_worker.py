@@ -250,6 +250,8 @@ def worker(pipeline, recipe, config):
                            label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flag_antennas'):
+                #for key in pipeline:
+                print(dir(pipeline))
                 step = 'flag_antennas_{0:s}_{1:d}'.format(wname, i)
                 recipe.add('cab/casa_flagdata', step,
                            {

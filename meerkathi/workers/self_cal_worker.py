@@ -19,9 +19,6 @@ NAME = 'Self calibration loop'
 
 
 def get_dir_path(string, pipeline):
-    print("such silliness")
-    print(string)
-    print(string.split(pipeline.output))
     return string.split(pipeline.output)[1][1:]
 
 
@@ -887,6 +884,7 @@ def worker(pipeline, recipe, config):
     def calibrate_cubical(num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
 
+
         modellist = []
         model = config[key].get('model', num)[num-1]
         if isinstance(model, str) and len(model.split('+')) > 1:
@@ -894,7 +892,8 @@ def worker(pipeline, recipe, config):
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
         else:
             model = int(model)
-            calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
+            print('Watskeburt {} {}'.format(img_dir,prod_path))
+            calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html'.format(
                 img_dir, prefix, field, model)
             fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
                 img_dir, prefix, field, model)
@@ -960,8 +959,8 @@ def worker(pipeline, recipe, config):
         flags= ""
         if num > 1:
             flags = "-cubical"
-            for i in range(num-1):
-                flags = flags + ",-step_{0:d}_2gc_flags".format(i+1)
+            #for i in range(num-1):
+            #    flags = flags + ",-step_{0:d}_2gc_flags".format(i+1)
 
         for i,msname in enumerate(mslist):
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
@@ -988,6 +987,7 @@ def worker(pipeline, recipe, config):
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
+                "g-max-prior-error":0.3,
                 "out-overwrite": config[key].get('overwrite'),
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
@@ -1006,6 +1006,11 @@ def worker(pipeline, recipe, config):
             if flags != "":
                 cubical_opts.update({
                     "flags-apply": flags,
+                })
+            #if this is the first iteration let's ensure all the flag are applied by reinitializing the bitflag column
+            if self_cal_iter_counter == 1:
+                cubical_opts.update({
+                    "flags-reinit-bitflags": True,
                 })
             if config[key].get('two_step') and gasols_[0] != -1:
                 cubical_opts.update({
@@ -1036,17 +1041,17 @@ def worker(pipeline, recipe, config):
                        shared_memory= config[key].get('shared_memory'),
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
             # We need a version of the flags to restore to at every step
-            mspref = msname.split(".ms")[0].replace("-", "_")
-            recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
-                       {
-                           "msname": msname,
-                           "create": True,
-                           "flag": "step_{0:d}_2gc_flags".format(num),
-                           "flagged-any": ["+L"]
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label="save_2gc_flags_{0:s}_step_{1:d}:: Save 2GC flags step {1:d} ".format(mspref, num))
+            #mspref = msname.split(".ms")[0].replace("-", "_")
+            #recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
+            #           {
+            #               "msname": msname,
+            #               "create": True,
+            #               "flag": "step_{0:d}_2gc_flags".format(num),
+            #               "flagged-any": ["+L"]
+            #           },
+            #           input=pipeline.input,
+            #           output=pipeline.output,
+            #           label="save_2gc_flags_{0:s}_step_{1:d}:: Save 2GC flags step {1:d} ".format(mspref, num))
 
     def restore(num,  prod_path,mslist_out,enable_inter=True):
         key = 'calibrate'
@@ -1542,7 +1547,6 @@ def worker(pipeline, recipe, config):
 
     for target in all_targets:
         mslist = ms_dict[target]
-        print(mslist,target)
         #exit()
         field = utils.filter_name(target)
         # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
@@ -1582,6 +1586,7 @@ def worker(pipeline, recipe, config):
                 raise IOError(
                     "Trying to restore step {0:d} but the correct direcory ({1:s}) does not exist.".format(self_cal_iter_counter-1,image_path))
             restore(self_cal_iter_counter-1,selfcal_products, mslist,enable_inter=False)
+
 
         image_path = "{0:s}/image_{1:d}".format(
             pipeline.continuum, self_cal_iter_counter)

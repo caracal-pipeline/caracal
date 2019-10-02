@@ -208,9 +208,9 @@ mapping:
             example: '0'
           nchans:
             desc: Number of channels of HI cube, 'all' or an integer number. Default is 'all'.
-            type: str
+            type: int
             required: false
-            example: 'all'
+            example: '-1'
           firstchan:
             desc: First channel of HI cube. Default is 0.
             type: int

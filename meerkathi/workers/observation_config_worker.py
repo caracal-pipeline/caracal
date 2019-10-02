@@ -82,7 +82,8 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
     setattr(pipeline, 'chanwidth', [None]*pipeline.nobs)
     setattr(pipeline, 'specframe', [None]*pipeline.nobs)
-
+    setattr(pipeline, 'starttime', [None]*pipeline.nobs)
+    setattr(pipeline, 'endtime', [None]*pipeline.nobs)
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta')
     pipeline.dish_diameter = config.get('dish_diameter')

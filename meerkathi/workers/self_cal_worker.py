@@ -28,8 +28,8 @@ CUBICAL_OUT = {
 }
 
 CUBICAL_MT = {
-    "Gain2x2"      : 'complex-2x2',
-    "GainDiag"      :'complex-diag',
+    "Gain2x2": 'complex-2x2',
+    "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
     "GainDiagPhase": 'phase-diag',
 }
 
@@ -597,17 +597,17 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/pybdsm', step,
                        {
                            "image": im,
-                           "thresh_pix"    : config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
-                           "thresh_isl"    : config[key].get('thresh_isl')[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
-                           "outfile"       : '{:s}.gaul:output'.format(calmodel),
-                           "blank_limit"   : sdm.dismissable(blank_limit),
-                           "adaptive_rms_box" : config[key].get('local_rms'),
-                           "port2tigger"   : False,
-                           "format"         : 'ascii',
+                           "thresh_pix": config[key].get('thresh_pix')[num-1 if len(config[key].get('thresh_pix')) >= num else -1],
+                           "thresh_isl": config[key].get('thresh_isl')[num-1 if len(config[key].get('thresh_isl')) >= num else -1],
+                           "outfile": '{:s}.gaul:output'.format(calmodel),
+                           "blank_limit": sdm.dismissable(blank_limit),
+                           "adaptive_rms_box": config[key].get('local_rms'),
+                           "port2tigger": False,
+                           "format": 'ascii',
                            "multi_chan_beam": spi_do,
                            "spectralindex_do": spi_do,
                            "detection_image": sdm.dismissable(detection_image),
-                           "ncores"         : ncpu,
+                           "ncores": ncpu,
                        },
                        input=pipeline.input,
                        # Unfortuntaly need to do it this way for pybdsm
@@ -884,7 +884,6 @@ def worker(pipeline, recipe, config):
     def calibrate_cubical(num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
 
-
         modellist = []
         model = config[key].get('model', num)[num-1]
         if isinstance(model, str) and len(model.split('+')) > 1:
@@ -892,7 +891,6 @@ def worker(pipeline, recipe, config):
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
         else:
             model = int(model)
-            print('Watskeburt {} {}'.format(img_dir,prod_path))
             calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html'.format(
                 img_dir, prefix, field, model)
             fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
@@ -953,9 +951,15 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        sol_terms = []
-        for term in jones_chain.split(","):
-            sol_terms.append(SOL_TERMS[term])
+        
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
         flags= ""
         if num > 1:
             flags = "-cubical"
@@ -1229,11 +1233,10 @@ def worker(pipeline, recipe, config):
     def get_obs_data(prefix, field, label):
         "Extracts data from the json data file"
         if label:
-            filename = '{0:s}/{1:s}-{2:s}-{3:s}-obsinfo.json'.format(
-                pipeline.output, prefix, field, label)
-        else:
-            filename = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, prefix)
+            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
+        else: 
+            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
+
         with open(filename) as f:
             data = json.load(f)
         return data
@@ -1391,8 +1394,7 @@ def worker(pipeline, recipe, config):
         else:
             # Use the image
             if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORR_DATA":
-                aimfast_settings.update(
-                    {"restored-image": '{0:s}/{1:s}_{2:d}{3:s}-image.fits:output'.format(img_dir, prefix, num, mfsprefix)})
+                aimfast_settings.update({"restored-image" : '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix)})
 
             else:
                 try:
@@ -1547,7 +1549,6 @@ def worker(pipeline, recipe, config):
 
     for target in all_targets:
         mslist = ms_dict[target]
-        #exit()
         field = utils.filter_name(target)
         # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
         if config.get('undo_subtractmodelcol'):

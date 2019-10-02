@@ -17,7 +17,11 @@ from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
-from urllib.parse import urlencode
+try:
+   from urllib.parse import urlencode
+except ImportError:
+   from urllib import urlencode
+ 
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)

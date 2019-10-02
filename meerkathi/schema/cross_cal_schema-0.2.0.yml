@@ -1,5 +1,5 @@
 type: map
-mapping:
+mapping: 
   schema_version:
     type: str
     required: true
@@ -12,7 +12,7 @@ mapping:
         type: bool
         required: true
         desc: Execute this segment.
-        example: 'False'
+        example: 'True'
       otfdelay:  
         type: bool
         required: false
@@ -28,6 +28,11 @@ mapping:
         required: false
         desc: Label for output files.
         example: '1gc1'
+      casa_version: 
+        type: str
+        required: false
+        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
+        example: '47'
       clear_cal:
         type: map
         desc: Initializes dataset for calibration using CASA
@@ -523,7 +528,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, target, xcal'
+            example: 'bpcal, gcal, xcal'
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -551,7 +556,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, target, xcal'
+            example: 'bpcal, gcal, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -579,7 +584,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, target, xcal'
+            example: 'bpcal, gcal, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -607,7 +612,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, target, xcal'
+            example: 'bpcal, gcal, xcal'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.

@@ -398,7 +398,7 @@ mapping:
             type: str
             desc: Time solution interval
             required: false
-            example: 'inf'
+            example: '30s'
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration

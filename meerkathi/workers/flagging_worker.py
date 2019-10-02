@@ -25,6 +25,9 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
 
     for i in range(nobs):
+        # loop over all input .MS files
+        # the additional 'for loop' below loops over all single target .MS files
+        #   produced by the pipeline (see "if label" below)
 
         prefix = pipeline.prefixes[i]
 
@@ -118,10 +121,11 @@ def worker(pipeline, recipe, config):
             # clear static flags if any of them are enabled
             static_flagging = True in [pipeline.enable_task(config, sflag) for sflag in ["flag_autocorr", "quack_flagging",
                                                                                          "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"]]
+
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.clear_flagset(pipeline, recipe, "_".join(
-                    [wname, "static"]), msname, substep)
+                    [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
                 step = 'flag_autocorr_{0:s}_{1:d}'.format(wname, i)
@@ -277,7 +281,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Apply static mask ms={1:s}'.format(step, msname))
 
             if static_flagging:
-                substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
+                substep = 'flagset_update_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 

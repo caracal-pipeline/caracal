@@ -247,11 +247,6 @@ found in our database or in the CASA NRAO database'.format(field))
                     pipeline, i, config['bp_cal'].get('field'))
                 step = 'pre_bp_cal_{0:d}'.format(i)
                 cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
-               # if config['casa_version']=='47':
-               #    cabtouse = 'cab/casa47_bandpass'
-               # else:
-               #    cabtouse = 'cab/casa_bandpass'
-                meerkathi.info('cabtouse=', cabtouse)
                 recipe.add(cabtouse, step,
                    {
                      "vis"          : msname,
@@ -569,7 +564,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 continue
 
             applied.append(field)
-            step = 'apply_{0:s}_{1:d}'.format(ft, i)
+            step = 'applyto_{0:s}_{1:d}'.format(ft, i)
             cabtouse = 'cab/casa47_applycal' if config['casa_version']=='47' else 'cab/casa_applycal'
             recipe.add(cabtouse, step,
                {

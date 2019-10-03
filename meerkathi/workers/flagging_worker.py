@@ -303,10 +303,8 @@ def worker(pipeline, recipe, config):
                         "autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
 
                 if label:
-                    fields = 'target'
-                    field_names = manfields.get_field(pipeline, i, fields)
                     fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
+                        map(str, utils.get_field_id(msinfo, target_ls[j])))
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 elif config['autoflag_rfi'].get('fields') == 'auto':
@@ -328,9 +326,6 @@ def worker(pipeline, recipe, config):
                        tricolour_mode = 'total_power'
                        tricolour_strat = config['autoflag_rfi'].get('tricolour_calibrator_strat')
           
-
-                field_names = list(set(field_names))
-
                 # Make sure no field IDs are duplicated
                 fields = ",".join(set(fields.split(",")))
                 if config['autoflag_rfi']["flagger"] == "aoflagger":

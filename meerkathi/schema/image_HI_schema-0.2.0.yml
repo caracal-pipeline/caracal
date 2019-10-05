@@ -28,12 +28,12 @@ mapping:
             -  type: int
           desc: Default number of pixels (wherever npix is requested) in this worker. List of integers (width and height) or a single integer for square images.
           required: false
-          example: '360'
+          example: '900'
       cell:
         desc: Default scale of a pixel in arcsec.
         type: float
         required: false
-        example: '5'
+        example: '2'
       weight:
         desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition.
         type: str
@@ -43,7 +43,7 @@ mapping:
         desc: Default robust parameter in case of Briggs weighting.
         type: float
         required: false
-        example: '2' 
+        example: '0' 
       
       subtractmodelcol:
         desc: Replace the column CORRECTED_DATA with the difference CORRECTED_DATA - MODEL_DATA. This is useful for continuum subtraction as it enables the subtraction of the most recent continuum clean model.
@@ -135,17 +135,17 @@ mapping:
             desc: Execute sunblocker on continuum-subtracted data (otherwise use non-continuum-subtracted data) (yes/no). Default is yes.
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           imsize:
             desc: Image size (use the same as in wsclean_image or casa_image). Default is worker npix
             type: int
             required: false
-            example: '1000'
+            example: '900'
           cell:
             desc: Cell size in arcsec (use the same as in wsclean_image or casa_image). Default is worker cell
             type: float
             required: false
-            example: '7.'
+            example: '2.'
           threshold:
             desc: Distance from average beyond which data are flagged in units of sigma. Default is 4.
             type: float
@@ -227,7 +227,7 @@ mapping:
             seq:
               - type: int
             required: false
-            example: '1000 , 1000'
+            example: '900 , 900'
           padding:
             desc: Images have initial size padding*npix, and are later trimmed to npix. Default is 1.2.
             type: float
@@ -242,7 +242,7 @@ mapping:
             desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is Worker default for cell.
             type: float
             required: false
-            example: '7'
+            example: '2'
           weight:
             desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is Worker default for weight.
             type: str
@@ -252,7 +252,7 @@ mapping:
             desc: Robust parameter in case of Briggs weighting. Default is 2.
             type: float
             required: false
-            example: '2'
+            example: '0'
           taper:
             desc: Gaussian taper FWHM in arcsec. Default is 0, no tapering.
             type: float
@@ -338,23 +338,28 @@ mapping:
             type: str
             required: false
             example: 'all'
-          startchan:
-            desc: Starting channel of the cube. Used in combination with nchans. Default is 0.
+          firstchan:
+            desc: First channel of HI cube. Default is 0.
             type: int
             required: false
             example: '0'
+          binchans:
+            desc: Integer binning of channels. Default is 1 (no binning).
+            type: int
+            required: false
+            example: '1'
           npix:
             desc: Image size in pixels. List of integers (width and height) or a single integer for square images. Default is worker npix.
             type: seq
             seq:
               - type: int
             required: false
-            example: '1000, 1000'
+            example: '900, 900'
           cell:
             desc: Scale of a pixel. Default unit is arcsec, but can be specificied, e.g. 'scale 20asec'. Default is worker cell.
             type: float
             required: false
-            example: '7'
+            example: '2'
           weight:
             desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the Robustness parameter robust has to be specified in addition. Default is worker weight.
             type: str
@@ -364,7 +369,7 @@ mapping:
             desc: Robust parameter in case of Briggs weighting. Default is worker robust.
             type: float
             required: false
-            example: '0.5'
+            example: '0.0'
           niter:
             desc: Maximum number of clean iterations to perform. Default is 1000000.
             type: int
@@ -397,6 +402,11 @@ mapping:
         mapping:
           enable:
             desc: Execute this segment. Default is false
+            type: bool
+            required: false
+            example: 'False'
+          apply_pb: 
+            desc: Whether to apply the primary beam correction to the image cube. Default is false
             type: bool
             required: false
             example: 'False'
@@ -509,13 +519,8 @@ mapping:
             desc: Type of catalog to use (PYBDSF/NVSS). Default is 'PYBDSF'
             type: str
             enum: ['NVSS', 'PYBDSF']
-            required: true
-            example: 'PYBDSF'
-          catalog_file:
-            desc: Catalog file where to store sources from online surveys (NVSS)
-            type: str
             required: false
-            example: 'catalog_contSources.lsm.html'
+            example: 'PYBDSF'
           channels_per_plot:
             desc: Number of channels to plot per detail plot. Default is 50
             type: int

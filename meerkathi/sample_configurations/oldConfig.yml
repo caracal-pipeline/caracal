@@ -338,7 +338,6 @@ self_cal:
     multi_scale: False
     multi_scale_scales: [0,40,80,150] #pixel
     local_rms: False
-    no_update_model: False
     minuvw_m: 0
   sofia_mask:
     enable: true

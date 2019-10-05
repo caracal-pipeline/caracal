@@ -2,9 +2,11 @@ import meerkathi.dispatch_crew.catalog_parser as cp
 import meerkathi
 import os
 
-__DB_FILENAME = os.path.join(meerkathi.pckgdir, "data/southern_calibrators.txt")
+__DB_FILENAME = os.path.join(
+    meerkathi.pckgdir, "data/southern_calibrators.txt")
 
 __CALIBRATOR_DB = None
+
 
 def calibrator_database():
     """ Return the Southern standard calibrator database """
@@ -24,4 +26,3 @@ def calibrator_database():
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
     #meerkathi.log.info("\n" + str(__CALIBRATOR_DB))
     return __CALIBRATOR_DB
-

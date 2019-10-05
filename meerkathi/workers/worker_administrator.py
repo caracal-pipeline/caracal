@@ -1,4 +1,9 @@
-import sys, os, string
+from meerkathi import log, pckgdir
+from meerkathi.dispatch_crew import worker_help
+import subprocess
+import json
+import sys
+import os
 import traceback
 from datetime import datetime
 import stimela
@@ -7,36 +12,36 @@ from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
-from urllib import urlencode
+try:
+   from urllib.parse import urlencode
+except ImportError:
+   from urllib import urlencode
+ 
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
-import json
-import subprocess
-from meerkathi.dispatch_crew import worker_help
 
-from meerkathi import log, pckgdir
 
 try:
     import meerkathi.scripts as scripts
     from meerkathi.scripts import reporter as mrr
     REPORTS = True
 except ImportError:
-    log.warning("Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
+    log.warning(
+        "Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
     REPORTS = False
-
 
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
-            stimela_build=None, prefix=None, configFileName=None,
-            add_all_first=False, singularity_image_dir=None,
-            container_tech='docker'):
+                 stimela_build=None, prefix=None, configFileName=None,
+                 add_all_first=False, singularity_image_dir=None,
+                 container_tech='docker'):
 
         self.config = config
         self.add_all_first = add_all_first
@@ -47,7 +52,8 @@ class worker_administrator(object):
         self.output = self.config['general']['output']
         self.logs = self.config['general']['output'] + '/logs'
         self.reports = self.config['general']['output'] + '/reports'
-        self.diagnostic_plots = self.config['general']['output'] + '/diagnostic_plots'
+        self.diagnostic_plots = self.config['general']['output'] + \
+            '/diagnostic_plots'
         self.configFolder = self.config['general']['output'] + '/cfgFiles'
         self.caltables = self.config['general']['output'] + '/caltables'
         self.masking = self.config['general']['output'] + '/masking'
@@ -66,12 +72,12 @@ class worker_administrator(object):
         sys.path.append(self.workers_directory)
         self.workers = []
 
-        for i, (name,opts) in enumerate(self.config.iteritems()):
-            if name.find('general')>=0 or name == "schema_version":
+        for i, (name, opts) in enumerate(self.config.items()):
+            if name.find('general') >= 0 or name == "schema_version":
                 continue
             order = opts.get('order', i+1)
 
-            if name.find('__')>=0:
+            if name.find('__') >= 0:
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
@@ -84,16 +90,18 @@ class worker_administrator(object):
         self.stimela_build = stimela_build
 
         # Get possible flagsets for reduction
-        self.flagsets = {"legacy" : ["legacy"]}
+        self.flagsets = {"legacy": ["legacy"]}
         for _name, _worker, i in self.workers:
             try:
                 wkr = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
+                    _worker, self.workers_directory))
 
             if hasattr(wkr, "FLAGSETS_SUFFIX"):
-                self.flagsets[_name] = ["_".join([_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
+                self.flagsets[_name] = ["_".join(
+                    [_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
 
         self.recipes = {}
         # Workers to skip
@@ -102,14 +110,16 @@ class worker_administrator(object):
         self.init_names([])
         if config["general"].get("init_pipeline"):
             self.init_pipeline()
-            
+
         # save configuration file
         timeNow = datetime.now()
-        configFileName = string.split(str(configFileName),'.')[0]
-        outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(configFileName,timeNow)
+        configFileName = os.path.splitext(configFileName)[0]
+        outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(
+            configFileName, timeNow)
 
         with open(self.configFolder+'/'+outConfigName, 'w') as outfile:
-            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
+            ruamel.yaml.dump(self.config, outfile,
+                             Dumper=ruamel.yaml.RoundTripDumper)
 
     def init_names(self, dataid):
         """ iniitalize names to be used throughout the pipeline and associated
@@ -118,11 +128,16 @@ class worker_administrator(object):
         self.dataid = dataid
         self.nobs = nobs = len(self.dataid)
         self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
-        self.msnames = ['{:s}.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.split_msnames = ['{:s}_split.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.cal_msnames = ['{:s}_cal.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.hires_msnames = ['{:s}_hires.ms'.format(os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = ['{0:s}-{1:s}'.format(self.prefix,os.path.basename(dataid)) for dataid in self.dataid]
+        self.msnames = ['{:s}.ms'.format(
+            os.path.basename(dataid)) for dataid in self.dataid]
+        self.split_msnames = ['{:s}_split.ms'.format(
+            os.path.basename(dataid)) for dataid in self.dataid]
+        self.cal_msnames = ['{:s}_cal.ms'.format(
+            os.path.basename(dataid)) for dataid in self.dataid]
+        self.hires_msnames = ['{:s}_hires.ms'.format(
+            os.path.basename(dataid)) for dataid in self.dataid]
+        self.prefixes = [
+            '{0:s}-{1:s}'.format(self.prefix, os.path.basename(dataid)) for dataid in self.dataid]
 
         for item in 'input msdir output'.split():
             value = getattr(self, item, None)
@@ -131,21 +146,25 @@ class worker_administrator(object):
 
         for item in 'data_path reference_antenna fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
-            if value and len(value)==1:
+            if value and len(value) == 1:
                 value = value*nobs
                 setattr(self, item, value)
 
     def set_cal_msnames(self, label):
         if self.virtconcat:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
+            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
+                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
         else:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3], "-"+label if label else "") for msname in self.msnames]
+            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
+                msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
     def set_hires_msnames(self, label):
         if self.virtconcat:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
+            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
+                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
         else:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(msname[:-3], "-"+label if label else "") for msname in self.msnames]
+            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
+                msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
     def init_pipeline(self):
         # First create input folders if they don't exist
@@ -179,7 +198,7 @@ class worker_administrator(object):
             if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
                 subprocess.check_call(["cp", "-r", f, self.input])
 
-        #Copy fields for masking in input/fields/.
+        # Copy fields for masking in input/fields/.
         log.info("Copying fields for masking into input folder")
         for _f in os.listdir("{0:s}/data/meerkat_files/".format(pckgdir)):
             f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
@@ -200,7 +219,8 @@ class worker_administrator(object):
                 worker = __import__(_worker)
             except ImportError:
                 traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(_worker, self.workers_directory))
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
+                    _worker, self.workers_directory))
 
             config = self.config[_name]
             if config.get('enable') is False:
@@ -209,11 +229,10 @@ class worker_administrator(object):
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,
-                               loggername='STIMELA-{:d}'.format(i),
-                               build_label=self.stimela_build,
-                               singularity_image_dir=self.singularity_image_dir,
-                               log_dir=self.logs)
-
+                                    loggername='STIMELA-{:d}'.format(i),
+                                    build_label=self.stimela_build,
+                                    singularity_image_dir=self.singularity_image_dir,
+                                    log_dir=self.logs)
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name
@@ -242,7 +261,7 @@ class worker_administrator(object):
                 for worker in self.workers:
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
-        finally: # write reports even if the pipeline only runs partially
+        finally:  # write reports even if the pipeline only runs partially
             if REPORTS:
                 reporter = mrr(self)
                 reporter.generate_reports()

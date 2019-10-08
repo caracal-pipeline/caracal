@@ -198,7 +198,7 @@ mapping:
               - type: str
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
-            example: 'bpcal, gcal, target'
+            example: 'bpcal, gcal'
           column:
             type: str
             desc: Data column to plot.

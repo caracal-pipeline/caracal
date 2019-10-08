@@ -178,5 +178,5 @@ mapping:
           enable:
             desc: Run this section
             type: bool
-            required: true
+            required: false
             example: 'True'

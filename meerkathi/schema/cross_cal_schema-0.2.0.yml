@@ -40,7 +40,7 @@ mapping:
           enable:
             type: bool
             desc: Execute intialization step
-            required: true
+            required: false
             example: 'True'
           field:
             seq:

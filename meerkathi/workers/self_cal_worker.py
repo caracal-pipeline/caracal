@@ -243,7 +243,7 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
-            "savesourcelist": True,
+            "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
 
         if config[key].get('mask_from_sky'):

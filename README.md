@@ -31,16 +31,22 @@ $ export PYTHONPATH='' # Ensure that you use venv Python
 If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
 
 4. Pull and/or build stimela images
-  - **uDocker**[Recomended]
-    ```
-    $ stimela pull
-    ```
 
-  - **Singularity**[Recomeded]
+  - **Podman**[Recommended]
+    ```
+    $ stimela pull -p
+    ```
+    
+  - **Singularity**[Recommended]
     ```
     $ stimela pull --singularity --pull-folder <folder to store stimela singularity images>
     ```
 
+  - **uDocker**[Recommended]<note: no python3 support>
+    ```
+    $ stimela pull
+    ```
+    
   - **Docker**
     ```
     $ stimela pull
@@ -48,11 +54,15 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     ```
 
 5. run meerkathi
-  - **uDocker**[Recomended]
-    ``` $ meerkathi -c path_to_configuration_file --container-tech udocker```
 
-  - **Singularity**[Recomended]
+  - **Podman**[Recommended]
+    ``` $ meerkathi -c path_to_configuration_file --container-tech podman```
+
+  - **Singularity**[Recommended]
     ```$ meerkathi -c path_to_configuration_file --container-tech singularity -sid <folder where singularity images are stored>```
+
+  - **uDocker**[no python3 support]
+    ``` $ meerkathi -c path_to_configuration_file --container-tech udocker```
 
   - **Docker**
     ```$ meerkathi -c< path to configuration file>```
@@ -94,8 +104,8 @@ $ export PYTHONPATH='' # Ensure that you use venv Python
     ```
     $ stimela pull
     ```
-
-  - **Singularity**[Recommeded]
+    
+  - **Singularity**[Recommended]
     ```
     $ stimela pull --singularity --pull-folder <folder to store stimela singularity images>
     ```
@@ -112,7 +122,7 @@ $ export PYTHONPATH='' # Ensure that you use venv Python
 
   - **Singularity**[Recommended]
     ```$ meerkathi -c path_to_configuration_file --container-tech singularity -sid <folder where singularity images are stored>```
-
+      
   - **Docker**
     ```$ meerkathi -c< path to configuration file>```
     

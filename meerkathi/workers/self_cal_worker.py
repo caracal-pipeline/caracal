@@ -1077,6 +1077,7 @@ def worker(pipeline, recipe, config):
                 "data-time-chunk": time_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
+                "sol-term-iters": ",".join(sol_terms),
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,
                                                                                   pipeline), pipeline.dataid[i], msname_out, apply_iter),
                 "out-mode": 'ac',

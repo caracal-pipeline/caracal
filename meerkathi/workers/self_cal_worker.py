@@ -1069,6 +1069,14 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G'
         if config[key].get('DDjones'):
             jones_chain += ',DD'
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
         for i, msname_out in enumerate(mslist_out):
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
@@ -1077,6 +1085,7 @@ def worker(pipeline, recipe, config):
                 "data-time-chunk": time_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
+                "sol-term-iters": ",".join(sol_terms),
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,
                                                                                   pipeline), pipeline.dataid[i], msname_out, apply_iter),
                 "out-mode": 'ac',

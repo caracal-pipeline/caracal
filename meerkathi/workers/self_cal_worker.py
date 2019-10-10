@@ -786,7 +786,7 @@ def worker(pipeline, recipe, config):
                     matrix_type = trace_matrix[num-2]
                     SN = trace_SN[num-2]
                 fidelity_data = get_aimfast_data()
-                obs_data = get_obs_data(prefix, field, label)
+                obs_data = get_obs_data(msname)
                 int_time = obs_data['EXPOSURE']
                 tot_time = 0.0
 
@@ -1112,13 +1112,9 @@ def worker(pipeline, recipe, config):
             data = json.load(f)
         return data
 
-    def get_obs_data(prefix, field, label):
+    def get_obs_data(msname):
         "Extracts data from the json data file"
-        if label:
-            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
-        else: 
-            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
-
+        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,msname[:-3])
         with open(filename) as f:
             data = json.load(f)
         return data

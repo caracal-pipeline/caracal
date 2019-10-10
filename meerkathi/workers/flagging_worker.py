@@ -55,13 +55,8 @@ def worker(pipeline, recipe, config):
         # Also compares antenna to median of the array per scan per field per channel
         # This should catch any antenna with severe temperature problems
         for j, msname in enumerate(mslist):
-            if label:
-                fieldName = utils.filter_name(target_ls[j])
-                msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
-                    pipeline.output, pipeline.prefix, msname[:-3])
-            else:
-                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                    pipeline.output, prefix)
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
+                pipeline.output, msname[:-3])
 
             if not os.path.exists(msinfo):
                 raise IOError(
@@ -154,7 +149,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow'].get('include_full_mk64'):
-                    #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+                    #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
                     with open(msinfo, 'r') as stdr:
                         subarray = yaml.load(stdr)['ANT']['NAME']
@@ -380,6 +375,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
                 if label:
+                    fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                     outlabel = '_{0:s}_{1:d}'.format(fieldName, i)
                 else:

@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
         prefix = prefixes[i]
         label = config.get('label')
 
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
 
         corr = config.get('correlation')
         if corr == 'auto':

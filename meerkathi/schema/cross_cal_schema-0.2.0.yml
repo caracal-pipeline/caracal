@@ -98,7 +98,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: ''
+            example: 'scan'
           solint:
             type: str
             desc: Solution interval for delay-correction calibration.
@@ -181,7 +181,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: ''
+            example: 'scan'
           field: 
             seq: 
               - type: str 
@@ -205,7 +205,7 @@ mapping:
             example: 'True'
           solint:
             type: str
-            desc: Solution interval for delay-correction calibration.
+            desc: Solution interval for bandpass calibration.
             required: false
             example: 'inf'
           set_refant:
@@ -214,10 +214,36 @@ mapping:
             required: false
             example: 'False' 
           remove_ph_time_var:
-            type: bool
-            desc: Remove large temporal phase variations from bandpass calibrator before solving.
-            required: false  
-            example: 'False'          
+            type: map
+            desc: Remove large temporal phase variations from the bandpass calibrator before solving for the bandpass.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable removal of gain phase variations with time prior to solving for final bandpass.
+                required: false
+                example: 'False'
+              bp_solint:
+                type: str
+                desc: Solution interval for bandpass calibration before determining the variation of the gain phase with time.
+                required: false
+                example: 'inf'
+              bp_combine:
+                type: str
+                desc: Parameter to combine different data axis for solving.
+                enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
+                required: false
+                example: ''
+              g_solint:
+                type: str
+                desc: Solution interval for gain phase calibration to be applied when solving for the final bandpass.
+                required: false
+                example: 'inf'
+              g_combine:
+                type: str
+                desc: Parameter to combine different data axis for solving.
+                enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
+                required: false
+                example: ''
           flag:
             type: map
             desc: Flagging based on bandpass amplitude solutions.
@@ -398,7 +424,7 @@ mapping:
             type: str
             desc: Time solution interval
             required: false
-            example: '30s'
+            example: 'inf'
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration

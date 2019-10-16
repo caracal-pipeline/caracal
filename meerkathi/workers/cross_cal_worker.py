@@ -254,7 +254,7 @@ found in our database or in the CASA NRAO database'.format(field))
                      "field"        : field,
                      "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
                      "solint"       : config['bp_cal'].get('solint'),
-                     "combine"      : '',
+                     "combine"      : config['bp_cal'].get('combine'),
                      "bandtype"     : "B",
                      "gaintable"    : sdm.dismissable(gaintables),
                      "interp"       : interpolations,

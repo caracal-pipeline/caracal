@@ -554,7 +554,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -582,7 +582,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -610,7 +610,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -638,7 +638,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.

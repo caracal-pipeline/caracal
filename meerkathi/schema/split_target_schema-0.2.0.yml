@@ -67,7 +67,7 @@ mapping:
                 desc: Execute this section
                 type: bool
                 required: false
-                example: 'True'
+                example: 'False'
               callabel:
                 desc: Label of calibration tables to be used
                 type: str

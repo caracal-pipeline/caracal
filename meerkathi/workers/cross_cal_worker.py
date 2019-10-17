@@ -528,7 +528,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 step = 'plot_fluxscale_{0:d}'.format(i)
                 table = prefix+".F0"
                 fieldtoplot = []
-                fieldtoplot.append(utils.get_field_id(msinfo, ref)[0])
+                fieldtoplot.append(utils.get_field_id(msinfo, trans)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),

@@ -209,6 +209,10 @@ class config_parser:
         add('-gd', '--get-default',
             help='Name file where the configuration should be saved')
 
+        add('-gdt', '--get-default-template', choices=["minimal", "meerkat"],
+                default="minimal",
+                help='Default template to get. Choices are minimal and config')
+
         add('-aaf', '--add-all-first', action='store_true',
             help='Add steps from all workers to pipeline before execucting. Default is execute each workers as they are encountered.')
 

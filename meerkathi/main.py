@@ -26,6 +26,10 @@ __version__ = meerkathi.__version__
 pckgdir = meerkathi.pckgdir
 MEERKATHI_LOG = meerkathi.MEERKATHI_LOG
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
+SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
+        "minimal" : "minimalConfig.yml",
+        "meerkat" : "meerkat-defaults.yml",
+        }
 SCHEMA = meerkathi.SCHEMA
 
 # Create the log object
@@ -56,13 +60,15 @@ def print_worker_help(args, schema_version):
     helper.print_worker()
 
 
-def get_default(to):
+def get_default(sample, to):
     """
     Get default parset copy
     """
     log.info(
         "Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
-    os.system('cp {0:s} {1:s}'.format(DEFAULT_CONFIG, to))
+    sample_config = os.path.join(pckgdir, "sample_configurations",
+            SAMPLE_CONFIGS[sample])
+    os.system('cp {0:s} {1:s}'.format(sample_config, to))
 
 
 def start_viewer(args, timeout=None, open_webbrowser=True):
@@ -225,7 +231,7 @@ def main(argv):
     # User requests default config => dump and exit
     if args.get_default:
         log_logo()
-        get_default(args.get_default)
+        get_default(args.get_default_template, args.get_default)
         return
 
     # standalone report hosting

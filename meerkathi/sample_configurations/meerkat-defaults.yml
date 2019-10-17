@@ -83,9 +83,7 @@ cross_cal:
     enable: true
   delay_cal:
     enable: true
-    combine: ''
-    solint: inf
-    minsnr: 3
+    solint: 30s
     field:
       - bpcal
       - gcal
@@ -96,12 +94,15 @@ cross_cal:
         - gcal
   bp_cal: 
     enable: true
-    combine: 'scan'
+    remove_ph_time_var: true
+    solint: inf
+    combine: scan
+    combine_PREB0: scan
     solnorm: false
   gain_cal_flux: 
     enable: true
     combine: ''
-    solint: inf
+    solint: 30s
   gain_cal_gain: 
     enable: true
     combine: ''
@@ -132,50 +133,33 @@ cross_cal:
       - gcal
       - bpcal
       - target
-  flagging_summary: 
-    enable: true
 
 polcal: 
   enable: false
 
 inspect_data: 
   enable: true
-  label: ''
+  label: '1gc'
+  fields:
+    - bpcal
+    - gcal
   real_imag: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
   amp_phase: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
   amp_uvwave: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
   amp_ant: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
   phase_uvwave: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
   amp_scan: 
     enable: true
-    fields:
-      - bpcal
-      - gcal
     avgtime: '60'
 
 split_target: 

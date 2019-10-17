@@ -182,6 +182,12 @@ mapping:
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
             example: ''
+          combine_PREB0:
+            type: str
+            desc: Parameter to combine different data axis for solving.
+            enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
+            required: false
+            example: 'scan'
           field: 
             seq: 
               - type: str 
@@ -208,6 +214,11 @@ mapping:
             desc: Solution interval for delay-correction calibration.
             required: false
             example: 'inf'
+          solint_PREB0:
+            type: str
+            desc: Solution interval for delay-correction calibration.
+            required: false
+            example: '60s'
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration

@@ -207,10 +207,10 @@ mapping:
             required: false
             example: '0'
           nchans:
-            desc: Number of channels of HI cube, 'all' or an integer number. Default is 'all'.
-            type: str
+            desc: Number of channels of HI cube, 0 means all channels.
+            type: int
             required: false
-            example: 'all'
+            example: '0'
           firstchan:
             desc: First channel of HI cube. Default is 0.
             type: int
@@ -334,10 +334,10 @@ mapping:
             required: false
             example: '0'
           nchans:
-            desc: Number of channels. If set to 'all', all channels are used. Otherwise provide the number of channels (starting with startchan, see below). Default is 'all'.
-            type: str
+            desc: Number of channels of HI cube, 0 means all channels.
+            type: int
             required: false
-            example: 'all'
+            example: '0'
           firstchan:
             desc: First channel of HI cube. Default is 0.
             type: int

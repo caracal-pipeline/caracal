@@ -557,7 +557,7 @@ def worker(pipeline, recipe, config):
 
         spwid = config['wsclean_image'].get('spwid')
         nchans = config['wsclean_image'].get('nchans')
-        if nchans == 0 or nchans == 'all':
+        if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
             nchans = nchans_all[0][spwid]
@@ -566,8 +566,6 @@ def worker(pipeline, recipe, config):
         specframe_all = [ss[spwid] for ss in specframe_all][0]
         firstchan = config['wsclean_image'].get('firstchan')
         binchans = config['wsclean_image'].get('binchans')
-        if nchans != 'all':
-            nchans = int(nchans)
         channelrange = [firstchan, firstchan + nchans * binchans]
         # Construct weight specification
         if config['wsclean_image'].get('weight') == 'briggs':
@@ -950,7 +948,7 @@ def worker(pipeline, recipe, config):
 
         spwid = config['casa_image'].get('spwid')
         nchans = config['casa_image'].get('nchans')
-        if nchans == 0 or nchans == 'all':
+        if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
             nchans = nchans_all[0][spwid]
@@ -959,8 +957,6 @@ def worker(pipeline, recipe, config):
         specframe_all = [ss[spwid] for ss in specframe_all][0]
         firstchan = config['casa_image'].get('firstchan')
         binchans = config['casa_image'].get('binchans')
-        if nchans != 'all':
-            nchans = int(nchans)
         channelrange = [firstchan, firstchan + nchans * binchans]
         # Construct weight specification
         if config['casa_image'].get('weight') == 'briggs':

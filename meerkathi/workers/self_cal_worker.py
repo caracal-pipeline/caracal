@@ -1010,6 +1010,7 @@ def worker(pipeline, recipe, config):
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
+                "log-boring": True,
             }
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
@@ -1081,6 +1082,7 @@ def worker(pipeline, recipe, config):
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
+                "log-boring": True,
                 "sol-jones": jones_chain,
                 "data-time-chunk": time_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),

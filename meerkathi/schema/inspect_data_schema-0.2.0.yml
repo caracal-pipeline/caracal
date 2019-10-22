@@ -20,7 +20,7 @@ mapping:
         example: ''
       correlation: 
         type: str
-        desc: Label specyfying the correlations (default all).
+        desc: Label specyfying the correlations.
         required: false
         example: 'XX, YY'
       uvrange: 

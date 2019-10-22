@@ -62,6 +62,7 @@ def worker(pipeline, recipe, config):
         taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
+    freq_chunk = config.get('cal_freq_chunk')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -984,6 +985,7 @@ def worker(pipeline, recipe, config):
                 "data-column": 'DATA',
                 "model-list": ":".join(modellist),
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -1085,6 +1087,7 @@ def worker(pipeline, recipe, config):
                 "log-boring": True,
                 "sol-jones": jones_chain,
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-term-iters": ",".join(sol_terms),

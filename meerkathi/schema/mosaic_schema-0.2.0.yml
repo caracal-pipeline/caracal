@@ -5,66 +5,66 @@ mapping:
     required: true
 
   mosaic:
+    type: map       
     desc: Mosaic images output by selfcal or imageHI.
-    type: map
     mapping:
       enable:
+        type: bool
+        required: true
         desc: Execute mosaic segment (yes/no). Default is no.
         example: 'no'
-        type: bool
-        required: true
 
       mosaic_type:
-        desc: Type of mosaic to be made (continuum/spectral). Default is continuum.
-        example: 'continuum'
         type: str
         required: true
+        desc: Type of mosaic to be made (continuum/spectral). Default is continuum.
+        example: 'continuum'
 
       domontage:
-        desc: Re-grid the input images, and associated beams. Default is true.
         type: map
+        desc: Re-grid the input images, and associated beams. Default is true.
         mapping:
           enable:
-            desc: Execute this domontage section.
-            example: 'True' 
             type: bool
             required: false
+            desc: Execute this domontage section.
+            example: 'True' 
 
       cutoff:
-        desc: The cutoff in the primary beam to use, assuming a Gaussian at the moment. Default is 0.1 (signifying 10 per cent).
-        example: '0.1'
         type: float
         required: false
+        desc: The cutoff in the primary beam to use, assuming a Gaussian at the moment. Default is 0.1 (signifying 10 per cent).
+        example: '0.1'
 
       use_MFS_images:
-        desc: Indicate that the images to be mosaicked were created using MFS. Default is false.
-        example: 'False'
         type: bool
         required: false
+        desc: Indicate that the images to be mosaicked were created using MFS. Default is false.
+        example: 'False'
 
       name:
-        desc: The prefix to be used for output files. Default is the pipeline prefix (pipeline.prefix).
-        example: ''
         type: str
         required: false
+        desc: The prefix to be used for output files. Default is the pipeline prefix (pipeline.prefix).
+        example: ''
 
       target_images:
-        desc: List of images to be mosaicked, with suffix of image.fits being expected. 
-        example: " '', '' "
         type: seq
         seq:
           - type: str
         required: false
+        desc: List of images to be mosaicked, with suffix of image.fits being expected. 
+        example: " '', '' "
 
       dish_diameter:
+        type: float
+        required: false      
         desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter (in units of m) so that rudimentary primary beams can be created.
         example: '13.5'
-        type: float
-        required: false
 
       ref_frequency:
-        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that rudimentary primary beams can be created.
-        example: '1383685546.875'
         type: float
         required: false
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that rudimentary primary beams can be created.
+        example: '1383685546.875'
 

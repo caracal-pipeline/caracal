@@ -63,7 +63,7 @@ def worker(pipeline, recipe, config):
         if 'CUNIT2' in hdr:
             del hdr['CUNIT2']
 
-        dish_diameter = config.get('dish_diameter', 13.5) # Units of m. The default assumes that MeerKAT data is being processed
+        dish_diameter = config.get('dish_diameter') # Units of m. The default assumes that MeerKAT data is being processed
         pb_fwhm_radians = 1.02*(2.99792458E8/obs_freq)/dish_diameter
         pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
         pb_fwhm_pix = pb_fwhm/hdr['CDELT2']  
@@ -169,7 +169,7 @@ def worker(pipeline, recipe, config):
 
                 recipe.add(build_beam, 'Build Gaussian, 2D primary-beam',
 		    {
-		        'obs_freq' : config.get('frequency', 1383685546.875), # Units of Hz. The default assumes that MeerKAT data is being processed
+		        'obs_freq' : config.get('frequency'), # Units of Hz. The default assumes that MeerKAT data is being processed
 		        'centre'   : image_centre,
 		        'cell'     : image_cell,
 		        'imsize'   : image_imsize,
@@ -192,7 +192,7 @@ def worker(pipeline, recipe, config):
             {
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : True,
-                "cutoff"         : config.get('cutoff', 0.1),
+                "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
                 "target-images"  : images_in_output,
             },
@@ -205,7 +205,7 @@ def worker(pipeline, recipe, config):
             {
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : False,
-                "cutoff"         : config.get('cutoff', 0.1),
+                "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
                 "target-images"  : images_in_output,
             },

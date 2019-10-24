@@ -1,0 +1,182 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  split_target:
+    desc: Split and average target data
+    type: map
+    mapping:
+      enable:
+        desc: Execute this worker
+        type: bool
+        required: true
+        example: 'True'
+      label_in:
+        desc: Label of the input dataset
+        type: str
+        required: false
+        example: ''
+      label_out:
+        desc: Label of the output dataset
+        type: str
+        required: false
+        example: corr 
+
+      split_target:
+        desc: Split data
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'True'
+          time_average:
+            desc: Time averaging
+            type: str
+            required: false
+            example: ''
+          freq_average:
+            desc: Frequency averaging
+            type: int
+            required: false
+            example: '1'
+          column:
+            desc: Column to split, default is 'data'. Which means use otf calibration.
+            type: str
+            required: false
+            example: 'corrected'
+          correlation:
+            desc: Select correlations
+            type: str
+            required: false
+            example: ''
+          spw:
+            desc: Select spectral windows and channels
+            type: str
+            required: false
+            example: ''
+
+          otfcal:
+            desc: Apply OTF calibration
+            type: map
+            mapping:
+              enable:
+                desc: Execute this section
+                type: bool
+                required: false
+                example: 'False'
+              callabel:
+                desc: Label of calibration tables to be used
+                type: str
+                required: false
+                example: '1gc1'
+              apply_delay_cal:
+                type: map
+                desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
+                mapping: 
+                  enable: 
+                    desc: Executes application of delay correction calibration table.
+                    type: bool
+                    required: false
+                    example: 'True'
+                  field: 
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
+                    example: 'bpcal'
+              apply_bp_cal:
+                type: map
+                desc: Apply the bandpass table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of bandpass table.
+                    required: false
+                    example: 'True'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
+                    example: 'bpcal'
+              apply_gain_cal_gain:    
+                type: map
+                desc: Apply the gain calibration table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of gain calibration table.
+                    required: false
+                    example: 'False'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+                    example: 'gcal'
+              apply_transfer_fluxscale:
+                type: map
+                desc: Apply the fluxscale table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of fluxscale table.
+                    required: false
+                    example: 'True'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+                    required: false
+                    example: 'gcal'
+
+      changecentre:
+        desc: changes the phase centre
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'False'
+          ra:
+            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            type: str
+            required: false
+            example: '0h0m0.0s'
+          dec:
+            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            type: str
+            required: false
+            example: '0d0m0.0s'
+
+      obsinfo:
+        desc: Get observation information
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'True'
+          listobs:
+            desc: Run CASA listobs
+            type: bool
+            required: false
+            example: 'True'
+          summary_json:
+            desc: Run MSUtils function
+            type: bool
+            required: false
+            example: 'True'
+
+      init_legacy_flagset:
+        desc: Save existing flags to legacy flagset
+        type: map
+        mapping:
+          enable:
+            desc: Run this section
+            type: bool
+            required: false
+            example: 'True'

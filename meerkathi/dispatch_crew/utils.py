@@ -3,26 +3,29 @@ import math
 import numpy
 import yaml
 import meerkathi
-import meerkathi.dispatch_crew.caltables as mkct 
+import meerkathi.dispatch_crew.caltables as mkct
 import re
 import astropy.io.fits as fitsio
 import codecs
 
-def angular_dist_pos_angle (ra1, dec1, ra2, dec2):
+
+def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
     the position angle (North through East) of the direction from 1 to 2."""
 
     # Knicked from ska-sa/tigger
     ra = ra2 - ra1
-    sind0, sind, cosd0, cosd = numpy.sin(dec1), numpy.sin(dec2), numpy.cos(dec1), numpy.cos(dec2)
+    sind0, sind, cosd0, cosd = numpy.sin(dec1), numpy.sin(
+        dec2), numpy.cos(dec1), numpy.cos(dec2)
     sina, cosa = numpy.sin(ra)*cosd, numpy.cos(ra)*cosd
     x = cosa*sind0 - sind*cosd0
     y = sina
     z = cosa*cosd0 + sind*sind0
-    PA = numpy.arctan2(y,-x)
+    PA = numpy.arctan2(y, -x)
     R = numpy.arccos(z)
 
-    return R,PA
+    return R, PA
+
 
 def categorize_fields(msinfo):
     with open(msinfo, 'r') as f:
@@ -34,11 +37,11 @@ def categorize_fields(msinfo):
     intent_ids = info['FIELD']['STATE_ID']
 
     mapping = {
-        'fcal' : (['CALIBRATE_FLUX'], []),
-        'gcal' : (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
+        'fcal': (['CALIBRATE_FLUX'], []),
+        'gcal': (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
         'bpcal': (['CALIBRATE_BANDPASS'], []),
         'target': (['TARGET'], []),
-        'xcal' : (['CALIBRATE_POLARIZATION'], [])
+        'xcal': (['CALIBRATE_POLARIZATION'], [])
     }
 
     for i, field in enumerate(names):
@@ -50,10 +53,12 @@ def categorize_fields(msinfo):
 
     return mapping
 
+
 def get_field_id(msinfo, field_name):
     """ Gets field id """
     if not isinstance(field_name, str) and not isinstance(field_name, list):
-        raise ValueError("field_name argument must be comma-separated string or list")
+        raise ValueError(
+            "field_name argument must be comma-separated string or list")
     with open(msinfo, 'r') as f:
         info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     names = info['FIELD']['NAME']
@@ -61,10 +66,11 @@ def get_field_id(msinfo, field_name):
     results = []
     for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
         if fn not in names:
-            raise KeyError("Could not find field '%s'" % field_name)
+            raise KeyError("Could not find field '{0:s}' in the field list {1:}".format(fn,names))
         else:
             results.append(names.index(fn))
     return results
+
 
 def select_gcal(msinfo, targets, calibrators, mode='nearest'):
     """
@@ -104,7 +110,7 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
 
         mean_ra = numpy.mean(tras)
         mean_dec = numpy.mean(tdecs)
-        
+
         nearest_dist = numpy.inf
         gcal = None
         for field in calibrators:
@@ -118,12 +124,13 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
 
     return gcal
 
+
 def observed_longest(msinfo, bpcals):
     """
       Automatically select bandpass calibrator
     """
     with open(msinfo, 'r') as f:
-        info = yaml.load(f)
+        info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -141,20 +148,21 @@ def observed_longest(msinfo, bpcals):
     for bpcal in bpcals:
         idx = index(bpcal)
         bpcal = str(ids[idx])
-        total_time = numpy.sum(info['SCAN'][bpcal].values())
+        total_time = numpy.sum(list(info['SCAN'][bpcal].values()))
         if total_time > most_time:
             most_time = total_time
             field = names[idx]
 
     return field
 
+
 def field_observation_length(msinfo, field):
     with open(msinfo, 'r') as f:
-        info = yaml.load(f)
-    
+        info = yaml.safe_load(f)
+
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
-    
+
     def index(field):
         if isinstance(field, str):
             idx = names.index(field)
@@ -165,7 +173,7 @@ def field_observation_length(msinfo, field):
         return idx
     field = str(ids[index(field)])
 
-    return  numpy.sum(info['SCAN'][field].values())
+    return numpy.sum(list(info['SCAN'][field].values()))
 
 
 def find_in_native_calibrators(msinfo, field):
@@ -175,16 +183,16 @@ def find_in_native_calibrators(msinfo, field):
     """
 
     db = mkct.calibrator_database()
-    if field not in db.db.keys():
+    if field not in list(db.db.keys()):
         return False
 
     with open(msinfo, 'r') as stdr:
         info = yaml.load(stdr)
 
-    ref = info['SPW']['REF_FREQUENCY'][0] # Centre frequency of first channel
+    ref = info['SPW']['REF_FREQUENCY'][0]  # Centre frequency of first channel
     bw = info['SPW']['TOTAL_BANDWIDTH'][0]
     nchan = info['SPW']['NUM_CHAN'][0]
-    
+
     src = db.db[field]
     aghz = src["a_casa"]
     bghz = src["b_casa"]
@@ -200,6 +208,7 @@ def find_in_native_calibrators(msinfo, field):
                     d=src['d_casa'],
                     ref=src['v0'])
 
+
 def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through meerkathi"""
 
@@ -212,12 +221,12 @@ def find_in_casa_calibrators(msinfo, field):
     """Check if field is in the CASA NRAO Calibrators database. 
        Return model if it is. Else, return False. 
     """
-   
-    with open(meerkathi.pckgdir +'/data/casa_calibrators.yml') as stdr:
-        db = yaml.load(stdr)
-    
+
+    with open(meerkathi.pckgdir + '/data/casa_calibrators.yml') as stdr:
+        db = yaml.safe_load(stdr)
+
     found = False
-    for src in db['models'].values():
+    for src in list(db['models'].values()):
         if field == src['3C']:
             found = True
             standards = src['standards']
@@ -236,6 +245,7 @@ def find_in_casa_calibrators(msinfo, field):
         return db['standards'][int(standard)]
     else:
         return False
+
 
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
     if isinstance(skymodel, str):
@@ -257,22 +267,23 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
     bw = sum(info['SPW']['TOTAL_BANDWIDTH'])
     nchans = sum(info['SPW']['NUM_CHAN'])
     dfreq = bw/nchans
-    
-    k_b =  1.38e-23 # Boltzman's constant
-    Jy = 1e-26 # 1 Jansky
 
-    # estimate noise needed for a gain error of 'gain_tol' using Sandeep Sirothia's Equation (priv comm). 
+    k_b = 1.38e-23  # Boltzman's constant
+    Jy = 1e-26  # 1 Jansky
+
+    # estimate noise needed for a gain error of 'gain_tol' using Sandeep Sirothia's Equation (priv comm).
     visnoise = flux * numpy.sqrt(nant - j) * gain_tol
     # calculate dt*df (solution intervals) needed to get that noise
     effective_area = numpy.pi * (dish_diameter / 2.0)**2
-    dt_dfreq = ( 2 * k_b * Tsys_eta  / (Jy * numpy.sqrt(npol) * effective_area * visnoise) )**2 
+    dt_dfreq = (2 * k_b * Tsys_eta / (Jy * numpy.sqrt(npol)
+                                      * effective_area * visnoise))**2
 
     # return/save dt*df and the time, frequency resolution of the data
     if save:
         with codecs.open(msinfo, 'w', 'utf8') as yw:
             info['DTDF'] = dt_dfreq
             yaml.dump(data, yw, default_flow_style=False)
-    
+
     return dt_dfreq, dtime, dfreq
 
 
@@ -284,39 +295,44 @@ def imaging_params(msinfo, spwid=0):
     dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])
     freq = info['SPW']["REF_FREQUENCY"][spwid]
     wavelegnth = 2.998e8/freq
-    
-    FoV = numpy.rad2deg( 1.22 * wavelength / dish_size  )
-    max_res = numpy.rad2deg( wavelength / maxbl )
-    
+
+    FoV = numpy.rad2deg(1.22 * wavelength / dish_size)
+    max_res = numpy.rad2deg(wavelength / maxbl)
+
     return max_res, FoV
 
-def filter_name(string):                     #change field names into alphanumerical format for naming output files
-    string = string.replace('+','_p_')
+
+def filter_name(string):  # change field names into alphanumerical format for naming output files
+    string = string.replace('+', '_p_')
     return re.sub('[^0-9a-zA-Z]', '_', string)
 
-def target_to_msfiles(targets, msnames, label):          #creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files 
+
+# creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files
+def target_to_msfiles(targets, msnames, label):
     target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
-    
-    for t in targets:                   #list all targets per input ms and make a unique list of all target fields
+
+    for t in targets:  # list all targets per input ms and make a unique list of all target fields
         tmp = t.split(',')
         target_ls.append(tmp)
         for tt in tmp:
             all_target.append(tt)
     all_target = list(set(all_target))
 
-    for i,ms in enumerate(msnames):        #make a list of all input ms file names for each target field
+    # make a list of all input ms file names for each target field
+    for i, ms in enumerate(msnames):
         for t in target_ls[i]:
             t = filter_name(t)
             if label:
-                target_ms_ls.append('{0:s}-{1:s}_{2:s}.ms'.format(ms[:-3],t,label))
+                target_ms_ls.append(
+                    '{0:s}-{1:s}_{2:s}.ms'.format(ms[:-3], t, label))
             else:
-                target_ms_ls.append('{0:s}-{1:s}.ms'.format(ms[:-3],t))
+                target_ms_ls.append('{0:s}-{1:s}.ms'.format(ms[:-3], t))
 
-    for t in all_target:                        #group ms files by target field name
+    for t in all_target:  # group ms files by target field name
         tmp = []
         for m in target_ms_ls:
             if m.find(filter_name(t)) > -1:
                 tmp.append(m)
         target_msfiles.append(tmp)
-    
-    return all_target, target_ms_ls, dict(zip(all_target, target_msfiles))
+
+    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))

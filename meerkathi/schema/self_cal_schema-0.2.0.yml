@@ -438,7 +438,6 @@ mapping:
             type: str
             required: false
             example: 'auto'
-            example: '1, 2'
           overwrite:
             desc: Allow cubical to overwrite existing output
             type: bool

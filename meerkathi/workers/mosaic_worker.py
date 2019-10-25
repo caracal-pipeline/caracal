@@ -156,8 +156,12 @@ def worker(pipeline, recipe, config):
     # so that we can create simple Gaussian primary beams if need be 
     for image_name in specified_images: 
         ### WARNING: pathnames is currently not defined if user has specified the images to use 
-            
+        
         pb_name = image_name.replace('image.fits', 'pb.fits')
+        
+        # Need the corresponding pathname for the image being considered
+        index_to_use = specified_images.index(image_name)
+        pathname = pathnames[index_to_use]
 
         if os.path.exists(pathname + '/' + pb_name):
             meerkathi.log.info('{0:s}/{1:s} is already in place, and will be used by montage_mosaic.'.format(pathname,pb_name))
@@ -173,7 +177,7 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info('{0:s}/{1:s} does not exist, so going to create a rudimentary pb.fits file instead.'.format(pathname,pb_name))
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
-                image_hdu = fits.open(pathname_image_name)
+                image_hdu = fits.open(pathname + '/' + image_name) ### Hmm, didn't have this prefixed with pipeline.output before 
                 image_header = hdu[0].header
                 image_centre = [ image_header['CRVAL1'], image_header['CRVAL2'] ] # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
                 image_cell = image_header['CDELT2'] ### Need to ensure that this value is a float?  # Again assuming that these are in units of deg.

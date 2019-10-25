@@ -149,6 +149,11 @@ def worker(pipeline, recipe, config):
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
                 specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
 
+    else: ### i.e. if the user has specified images, I start by assuming that they are all in the main 'output' directory
+
+        pathnames = [ pipeline.output ] * len(specified_images) 
+
+    
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)
 

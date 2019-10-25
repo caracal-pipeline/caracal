@@ -63,6 +63,7 @@ def worker(pipeline, recipe, config):
         taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
+    freq_chunk = config.get('cal_freq_chunk')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -244,7 +245,7 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
-            "savesourcelist": True,
+            "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
 
         if config[key].get('mask_from_sky'):
@@ -353,6 +354,7 @@ def worker(pipeline, recipe, config):
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
+            "scaleNoise.interpolation": 'linear',
             "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
@@ -787,7 +789,7 @@ def worker(pipeline, recipe, config):
                     matrix_type = trace_matrix[num-2]
                     SN = trace_SN[num-2]
                 fidelity_data = get_aimfast_data()
-                obs_data = get_obs_data(prefix, field, label)
+                obs_data = get_obs_data(msname)
                 int_time = obs_data['EXPOSURE']
                 tot_time = 0.0
 
@@ -985,6 +987,7 @@ def worker(pipeline, recipe, config):
                 "data-column": 'DATA',
                 "model-list": ":".join(modellist),
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -1011,6 +1014,7 @@ def worker(pipeline, recipe, config):
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
+                "log-boring": True,
             }
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
@@ -1070,14 +1074,25 @@ def worker(pipeline, recipe, config):
             jones_chain = 'G'
         if config[key].get('DDjones'):
             jones_chain += ',DD'
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
         for i, msname_out in enumerate(mslist_out):
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
+                "log-boring": True,
                 "sol-jones": jones_chain,
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
+                "sol-term-iters": ",".join(sol_terms),
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,
                                                                                   pipeline), pipeline.dataid[i], msname_out, apply_iter),
                 "out-mode": 'ac',
@@ -1104,13 +1119,9 @@ def worker(pipeline, recipe, config):
             data = json.load(f)
         return data
 
-    def get_obs_data(prefix, field, label):
+    def get_obs_data(msname):
         "Extracts data from the json data file"
-        if label:
-            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
-        else: 
-            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
-
+        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,msname[:-3])
         with open(filename) as f:
             data = json.load(f)
         return data

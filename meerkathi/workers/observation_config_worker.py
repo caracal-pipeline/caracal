@@ -21,6 +21,7 @@ def worker(pipeline, recipe, config):
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]
+        msroot = msname[:-3]
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo'].get('listobs'):
@@ -28,7 +29,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/casa_listobs', step,
                            {
                                "vis": msname,
-                               "listfile": prefix+'-obsinfo.txt',
+                               "listfile": '{0:s}-obsinfo.txt'.format(msroot),
                                "overwrite": True,
                            },
                            input=pipeline.input,
@@ -42,7 +43,7 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "command": 'summary',
                                "display": False,
-                               "outfile": prefix+'-obsinfo.json',
+                               "outfile": '{0:s}-obsinfo.json'.format(msroot),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -91,13 +92,13 @@ def worker(pipeline, recipe, config):
         setattr(pipeline, item + "_id", [])
 
     for i, prefix in enumerate(prefixes):
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json (if present) and {2:s}'.format(
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
+        meerkathi.log.info('Extracting info from {0:s}/{1:s}-obsinfo.json (if present) and {2:s}'.format(
             pipeline.data_path, pipeline.dataid[i], msinfo))
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':
-            msmeta = '{0:s}/{1:s}.json'.format(
+            msmeta = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.data_path, pipeline.dataid[i])
             if path.exists(msmeta):
                 pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)

@@ -306,6 +306,6 @@ mapping:
           enable:
             desc: Enables the writing of flagging summary.
             type: bool
-            required: true 
+            required: false
             example: 'False'
 

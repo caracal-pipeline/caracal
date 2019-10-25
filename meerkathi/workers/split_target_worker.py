@@ -76,6 +76,7 @@ def worker(pipeline, recipe, config):
 
         target_ls = pipeline.target[i].split(',')
         prefix = pipeline.prefixes[i]
+        msname = pipeline.msnames[i][:-3]
 
         # write calibration library file for OTF cal in split_target_worker.py
         if pipeline.enable_task(config['split_target'], 'otfcal'):
@@ -177,9 +178,9 @@ def worker(pipeline, recipe, config):
                 if (config['obsinfo'].get('listobs')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.txt'.format(
-                            prefix, field, label_out)
+                            pipeline.dataid[i], field, label_out)
                     else:
-                        listfile = '{0:s}-obsinfo.txt'.format(prefix)
+                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
 
                     step = 'listobs_{:d}'.format(i)
                     recipe.add('cab/casa_listobs', step,
@@ -195,9 +196,9 @@ def worker(pipeline, recipe, config):
                 if (config['obsinfo'].get('summary_json')):
                     if pipeline.enable_task(config, 'split_target'):
                         listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(
-                            prefix, field, label_out)
+                            pipeline.dataid[i], field, label_out)
                     else:
-                        listfile = '{0:s}-obsinfo.json'.format(prefix)
+                        listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
 
                     step = 'summary_json_{:d}'.format(i)
                     recipe.add('cab/msutils', step,

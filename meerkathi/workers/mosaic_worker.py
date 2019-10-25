@@ -124,6 +124,7 @@ def worker(pipeline, recipe, config):
 
         # Empty list to add filenames to
         specified_images = []
+        specified_images_with_pathnames = []
 
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
         for target in all_targets:
@@ -136,15 +137,17 @@ def worker(pipeline, recipe, config):
 
                 path_to_image = pipeline.output + '/continuum/image_' + str(subdirectory_number)
                 image_name = identify_last_selfcal_image(path_to_image, prefix, field, mfsprefix)
-                specified_images = specified_images.append(image_name)
-               
+                specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
+                specified_images_with_pathnames = specified_images_with_pathnames.append(path_to_image + '/' + image_name)
+
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
 
-                path_to_cube = pipeline.output + '/cubes/cube_' + str(subdirectory_number) ### Don't actually use this yet?
+                path_to_cube = pipeline.output + '/cubes/cube_' + str(subdirectory_number)
                 image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
-                specified_images = specified_images.append(image_name)
+                specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
+                specified_images_with_pathnames = specified_images_with_pathnames.append(path_to_cube + '/' + image_name)
 
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)

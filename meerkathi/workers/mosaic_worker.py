@@ -117,6 +117,11 @@ def worker(pipeline, recipe, config):
         #Needed for working out the field names for the targets 
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
 
+        # Due to the way the output is now sorted, need to know the total number of targets
+        n_targets = len(all_targets)  ### Assuming that all_targets is a list or an array
+        meerkathi.log.info('The number of targets to be mosaicked is {0:d}'.format(n_targets))
+        subdirectory_number = 0
+
         # Empty list to add filenames to
         specified_images = []
 
@@ -124,11 +129,13 @@ def worker(pipeline, recipe, config):
         for target in all_targets:
 
             field = utils.filter_name(target)
+            subdirectory_number += 1 
 
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype == 'continuum':  # Add name of 2D image output by selfcal
 
-                image_name = identify_last_selfcal_image(pipeline.output, prefix, field, mfsprefix)
+                path_to_image = pipeline.output + '/continuum/image_' + str(subdirectory_number)
+                image_name = identify_last_selfcal_image(path_to_image, prefix, field, mfsprefix)
                 specified_images = specified_images.append(image_name)
                
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI

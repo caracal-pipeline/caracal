@@ -183,7 +183,7 @@ def worker(pipeline, recipe, config):
 
                 # Create rudimentary primary-beam, which is assumed to be a Gaussian with FWMH = 1.02*lambda/D
                 image_hdu = fits.open(pathname + '/' + image_name) ### Hmm, didn't have this prefixed with pipeline.output before 
-                image_header = hdu[0].header
+                image_header = image_hdu[0].header
                 image_centre = [ image_header['CRVAL1'], image_header['CRVAL2'] ] # i.e. [ RA, Dec ]. Assuming that these are in units of deg.
                 image_cell = image_header['CDELT2'] ### Need to ensure that this value is a float?  # Again assuming that these are in units of deg.
                 image_imsize = image_header['NAXIS1']  ### Need to ensure that this value is an integer?

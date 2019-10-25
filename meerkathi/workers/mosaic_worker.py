@@ -1,6 +1,7 @@
 import os, glob
 import sys
 import meerkathi
+import numpy as np
 from astropy import units as u
 import astropy.coordinates as coord
 from astropy.io import fits

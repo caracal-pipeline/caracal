@@ -340,6 +340,7 @@ def worker(pipeline, recipe, config):
         hdr['SIMPLE'] = 'T'
         hdr['BITPIX'] = -32
         hdr['NAXIS'] = 2
+        hdr['EQUINOX'] = 2000.
         hdr.set('NAXIS1',  imsize, after='NAXIS')
         hdr.set('NAXIS2',  imsize, after='NAXIS1')
 
@@ -354,6 +355,7 @@ def worker(pipeline, recipe, config):
 
         major = tab['MajAxis']
         minor = tab['MinAxis']
+        minor = major
         ra = tab['RADEG']
         dec = tab['DECDEG']
 

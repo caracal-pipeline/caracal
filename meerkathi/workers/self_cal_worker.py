@@ -353,6 +353,7 @@ def worker(pipeline, recipe, config):
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
+            "scaleNoise.interpolation": 'linear',
             "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,

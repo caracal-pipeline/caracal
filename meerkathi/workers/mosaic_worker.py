@@ -140,6 +140,7 @@ def worker(pipeline, recipe, config):
                
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
 
+                path_to_cube = pipeline.output + '/cubes/cube_' + str(subdirectory_number) ### Don't actually use this yet?
                 image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   

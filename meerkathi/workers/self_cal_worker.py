@@ -62,6 +62,7 @@ def worker(pipeline, recipe, config):
         taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
+    freq_chunk = config.get('cal_freq_chunk')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -352,6 +353,7 @@ def worker(pipeline, recipe, config):
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
+            "scaleNoise.interpolation": 'linear',
             "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
@@ -984,6 +986,7 @@ def worker(pipeline, recipe, config):
                 "data-column": 'DATA',
                 "model-list": ":".join(modellist),
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -1010,6 +1013,7 @@ def worker(pipeline, recipe, config):
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
+                "log-boring": True,
             }
 
             if config[key].get('two_step', False) and ddsols_[0] != -1:
@@ -1081,8 +1085,10 @@ def worker(pipeline, recipe, config):
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
+                "log-boring": True,
                 "sol-jones": jones_chain,
                 "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-term-iters": ",".join(sol_terms),

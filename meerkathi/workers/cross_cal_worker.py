@@ -235,7 +235,7 @@ found in our database or in the CASA NRAO database'.format(field))
             #   2) per-scan flux calibration on the bandpass calibrator.
             # The phase term of the per-scan flux calibration removes large temporal phase variations from the bandpass calibrator.
             # It is applied on the fly to the bandpass calibrator when solving for the final (possibly time-independent) bandpass.
-            if config['bp_cal'].get('remove_ph_time_var'):
+            if pipeline.enable_task(config['bp_cal'],'remove_ph_time_var'):
 
                 # Initial bandpass calibration (will NOT combine scans even if requested for final bandpass)
                 if config.get('otfdelay'):
@@ -253,8 +253,8 @@ found in our database or in the CASA NRAO database'.format(field))
                      "caltable"     : '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), prefix, 'PREB0'),
                      "field"        : field,
                      "refant"       : refant, #must be enabled to avoid creating an ambiguity in crosshand phase if config['bp_cal'].get('set_refant', True) else '',
-                     "solint"       : config['bp_cal'].get('solint_PREB0'),
-                     "combine"      : config['bp_cal'].get('combine_PREB0'),
+                     "solint"       : config['bp_cal']['remove_ph_time_var'].get('bp_solint'),
+                     "combine"      : config['bp_cal']['remove_ph_time_var'].get('bp_combine'),
                      "bandtype"     : "B",
                      "gaintable"    : sdm.dismissable(gaintables),
                      "interp"       : interpolations,
@@ -306,8 +306,8 @@ found in our database or in the CASA NRAO database'.format(field))
                                "field": field,
                                # must be enabled to avoid creating an ambiguity in crosshand phase if config['gain_cal_flux'].get('set_refant', False) else '',
                                "refant": refant,
-                               "solint": config['gain_cal_flux'].get('solint'),
-                               "combine": '',
+                               "solint": config['bp_cal']['remove_ph_time_var'].get('g_solint'),
+                               "combine": config['bp_cal']['remove_ph_time_var'].get('g_combine'),
                                "gaintype": "G",
                                "calmode": 'ap',
                                "gaintable": gaintables,
@@ -343,11 +343,11 @@ found in our database or in the CASA NRAO database'.format(field))
                 gaintables, interpolations = ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                     pipeline.caltables, pipeline), prefix, 'K0:output')], ['nearest']
 
-                if config['bp_cal'].get('remove_ph_time_var'):
+                if pipeline.enable_task(config['bp_cal'],'remove_ph_time_var'):
                     gaintables += ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                         pipeline.caltables, pipeline), prefix, 'PREG0:output')]
                     interpolations += ['nearest']
-            elif config['bp_cal'].get('remove_ph_time_var'):
+            elif pipeline.enable_task(config['bp_cal'],'remove_ph_time_var'):
                 gaintables, interpolations = ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                     pipeline.caltables, pipeline), prefix, 'PREG0:output')], ['nearest']
             else:
@@ -528,7 +528,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 step = 'plot_fluxscale_{0:d}'.format(i)
                 table = prefix+".F0"
                 fieldtoplot = []
-                fieldtoplot.append(utils.get_field_id(msinfo, ref)[0])
+                fieldtoplot.append(utils.get_field_id(msinfo, trans)[0])
                 recipe.add('cab/ragavi', step,
                     {
                      "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), table, 'output'),

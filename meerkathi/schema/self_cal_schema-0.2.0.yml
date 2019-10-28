@@ -41,7 +41,7 @@ mapping:
         example: '0'
       ncpu:
         type: int
-        desc: number of cpu's to use. If set to 0, then use all available cpu's.
+        desc: number of cpu's to use.
         required: false
         example: '5'
       img_npix:

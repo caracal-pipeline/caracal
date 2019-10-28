@@ -206,6 +206,13 @@ def worker(pipeline, recipe, config):
                             spws = [spws, ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
+                            print('###########')
+                            print('###########')
+                            print('###########')
+                            print(ss)
+                            print('###########')
+                            print('###########')
+                            print('###########')
                             if ss < len(pipeline.lastchanfreq[i]) and min(edges[ss][1], pipeline.lastchanfreq[i][ss])-max(edges[ss][0], pipeline.firstchanfreq[i][ss]) > 0:
                                 found_valid_data = 1
                     if not found_valid_data:

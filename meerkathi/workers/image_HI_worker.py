@@ -241,8 +241,8 @@ def worker(pipeline, recipe, config):
     for i, msfile in enumerate(all_msfiles):
         # Upate pipeline attributes (useful if, e.g., channel averaging was
         # performed by the split_data worker)
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-            pipeline.output, msfile[:-3])
+        msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
+            pipeline.output, pipeline.prefix, msfile[:-3])
         meerkathi.log.info('Updating info from {0:s}'.format(msinfo))
         with open(msinfo, 'r') as stdr:
             spw = yaml.load(stdr)['SPW']['NUM_CHAN']
@@ -298,8 +298,8 @@ def worker(pipeline, recipe, config):
                 corr_order = True
 
         for i, msfile in enumerate(all_msfiles):
-            msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(
-                pipeline.output, msfile[:-3])
+            msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.txt'.format(
+                pipeline.output, pipeline.prefix, msfile[:-3])
             with open(msinfo, 'r') as searchfile:
                 for longdatexp in searchfile:
                     if "Observed from" in longdatexp:
@@ -509,8 +509,8 @@ def worker(pipeline, recipe, config):
                     # If channelisation changed during a previous pipeline run
                     # as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
-                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                        pipeline.output, msfile[:-3])
+                    msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
+                        pipeline.output, pipeline.prefix, msfile[:-3])
                     meerkathi.log.info(
                         'Updating info from {0:s}'.format(msinfo))
                     with open(msinfo, 'r') as stdr:
@@ -541,8 +541,8 @@ def worker(pipeline, recipe, config):
                                          config['mstransform'].get('outframe')] for kk in chanw_all[i]])
         else:
             #all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msfile[:-3])
+            msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
+                pipeline.output, pipeline.prefix, msfile[:-3])
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw
@@ -900,8 +900,8 @@ def worker(pipeline, recipe, config):
                 pipeline.target, pipeline.msnames, flabel, True)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
-                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                        pipeline.output, msfile[:-3])
+                    msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
+                        pipeline.output, pipeline.prefix, msfile[:-3])
                     meerkathi.log.info(
                         'Updating info from {0:s}'.format(msinfo))
                     with open(msinfo, 'r') as stdr:
@@ -932,8 +932,8 @@ def worker(pipeline, recipe, config):
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
                                          config['mstransform'].get('outframe', 'bary')] for kk in chanw_all[i]])
         else:
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msfile[:-3])
+            msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
+                pipeline.output, pipeline.msinfo, msfile[:-3])
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw

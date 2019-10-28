@@ -47,7 +47,7 @@ def worker(pipeline, recipe, config):
         #cell /= 3600.0  # Am assuming that cell was passed to the function in units of arcsec, so this is converting it to units of deg.
         # Commenting the above out as 'CDELT2' from the corresponding image will be passed to the function, and this is already in deg.
 
-        w.wcs.crpix = [imsize/2, imsize/2]
+        w.wcs.crpix = [ (imsize/2) + 1, (imsize/2) + 1 ] # The '+ 1's are needed to avoid a shape mismatch later on
         w.wcs.cdelt = np.array([-cell, cell])
         w.wcs.crval = [centre.ra.deg, centre.dec.deg]
         w.wcs.ctype = ["RA---SIN", "DEC--SIN"]

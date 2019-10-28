@@ -10,7 +10,6 @@ import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
-import multiprocessing
 
 NAME = 'Self calibration loop'
 

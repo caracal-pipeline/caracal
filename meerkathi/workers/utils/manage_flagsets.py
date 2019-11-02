@@ -1,6 +1,44 @@
 # Manage flagsets
 
 
+def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):
+    """ Add flagset if it does not exist, clear its flags if exists"""
+
+    recipe.add("cab/pycasacore", cab_name, {
+        "msname": ms,
+        "script": """
+import Owlcat.Flagger
+import os
+import subprocess
+
+Owlcat.Flagger.has_purr = False
+MSDIR = os.environ["MSDIR"]
+ms = os.path.join(MSDIR, "{ms:s}")
+
+fms = Owlcat.Flagger.Flagger(ms)
+
+fms.add_bitflags()
+
+if hasattr(fms.flagsets, "names"):
+    names = fms.flagsets.names()
+else:
+    names = []
+
+fms.close()
+flagset = "{flagset:s}"
+if names and flagset in names:
+    idx = names.index(flagset)
+    remove_us = names[idx:]
+    subprocess.check_call(["flag-ms.py", "--remove", ",".join(remove_us), ms])
+else:
+    print("INFO::: Flagset does not exist. Will exit gracefully (exit status 0).")
+""".format(ms=ms, flagset=flagset),
+    },
+        input=pipeline.input,
+        output=pipeline.output, label=label or cab_name)
+
+
+
 def clear_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):
     """ Add flagset if it does not exist, clear its flags if exists"""
 

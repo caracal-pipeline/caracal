@@ -90,7 +90,7 @@ def worker(pipeline, recipe, config):
                 # Clear autocorr_spectrum flags if they exist. Else, create the flagset
                 substep = 'flagset_clear_autocorr_spectra_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_flagset(pipeline, recipe, "_".join(
                     [wname, "autocorr_spectrum"]), msname, cab_name=substep)
 
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
@@ -119,7 +119,7 @@ def worker(pipeline, recipe, config):
 
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_flagset(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
@@ -285,7 +285,7 @@ def worker(pipeline, recipe, config):
                 # Clear autoflags if need be
                 substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
                 if config['autoflag_rfi'].get('fields') != 'auto' and \

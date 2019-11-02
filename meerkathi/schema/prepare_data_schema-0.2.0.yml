@@ -22,6 +22,11 @@ mapping:
             type: bool
             required: false
             example: 'False'            
+      clear_cal:
+        desc: Clears out calibrated data and resets previous predicted model
+        type: bool
+        required: false
+        example: 'False'            
       manage_flags:
         desc: Manage MS flags
         type: map

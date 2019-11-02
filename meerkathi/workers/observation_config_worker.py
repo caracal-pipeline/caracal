@@ -229,17 +229,15 @@ def worker(pipeline, recipe, config):
                 pipeline.TRA[i], pipeline.TDec[i]))
 
         # update ids for all fields now that auto fields were selected
-        if config.get('Check_Cals'):
-            for item in 'xcal fcal bpcal gcal target'.split():
-                flds = getattr(pipeline, item)[i].split(',') \
-                    if isinstance(getattr(pipeline, item)[i], str) else getattr(pipeline, item)[i]
-                getattr(pipeline, item + "_id").append(
-                    ','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
+        for item in 'xcal fcal bpcal gcal target'.split():
+                setattr(pipeline, item+"_id", utils.get_field_id(msinfo, 
+                        getattr(pipeline, item)[i]))
         else:
             flds = getattr(pipeline, 'target')[i].split(',') \
                 if isinstance(getattr(pipeline, 'target')[i], str) else getattr(pipeline, 'target')[i]
             getattr(pipeline, "target_id").append(
                 ','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
+
     if pipeline.enable_task(config, 'primary_beam'):
         meerkathi.log.info('Generating primary beam')
         recipe.add('cab/eidos', 'primary_beam',

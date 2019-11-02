@@ -14,10 +14,6 @@ get_data:
 observation_config: 
   obsinfo: 
     enable: true
-    listobs: true
-    summary_json: true
-    vampirisms: false
-  Check_Cals: true
   target: auto
   gcal: auto
   bpcal: auto
@@ -37,11 +33,9 @@ prepare_data:
     enable: false
   manage_flags: 
     enable: true
-    add_bitflag_column: true
-    init_legacy_flagset: true
-    remove_flagsets: true
   add_spectral_weights: 
     enable: false
+  clear_cal: true
 
 flagging:
   enable: true
@@ -51,7 +45,7 @@ flagging:
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: true
+    ensure_valid_selection: false #TODO(Paolo, I think) this is not working
   flag_antennas:
     enable: false
     antennas: '0'
@@ -76,58 +70,26 @@ cross_cal:
   otfdelay: true
   uvrange: '>250'
   label: 1gc1
-  casa_version: '47'
-  clear_cal:
-    enable: true
   set_model:
     enable: true
-  delay_cal:
+  bpcal:
     enable: true
-    solint: 30s
-    field:
-      - bpcal
-      - gcal
-    plot:
-      enable: true
-      field:
-        - bpcal
-        - gcal
-  bp_cal: 
+    order: KGBKGB
+    apply: ["", "K", "KG", "KGB", "",""]
+    combine: ["", "", scan]
+    solint: [inf, inf, inf]
+    calmode: [a, ap, ap]
+    B_fillgaps: 70
+    plotgains: true
+  gcal:
     enable: true
-    remove_ph_time_var: true
-    solint: inf
-    combine: scan
-    combine_PREB0: scan
-    solnorm: false
-  gain_cal_flux: 
-    enable: true
-    combine: ''
-    solint: 30s
-  gain_cal_gain: 
-    enable: true
-    combine: ''
-    solint: 30s
-  transfer_fluxscale: 
-    enable: true
-  apply_delay_cal: 
-    enable: true
-    applyto: 
-      - gcal
-      - bpcal
-      - target
-  apply_bp_cal: 
-    enable: true
-    applyto: 
-      - gcal
-      - bpcal
-      - target
-  apply_gain_cal_gain: 
-    enable: false
-    applyto: 
-      - gcal
-      - bpcal
-      - target
-  apply_transfer_fluxscale: 
+    order: KG
+    apply: [b, bK]
+    combine: ["", ""]
+    solint: [inf, inf]
+    calmode: [a, ap]
+    plotgains: true
+  apply_cal: 
     enable: true
     applyto: 
       - gcal

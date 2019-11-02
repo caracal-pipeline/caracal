@@ -100,16 +100,16 @@ else:
                     output=pipeline.output,
                     label="{0:s}:: Clear bitflags ms={1:s}".format(step, msname))
 
-        if pipeline.enable_task(config, 'prepms'):
-            step = 'prepms_{:d}'.format(i)
-            recipe.add('cab/msutils', step,
+        if config["clear_cal"]:
+            step = 'clear_cal_{:d}'.format(i)
+            recipe.add('cab/casa_clearcal', step,
                        {
-                           "msname": msname,
-                           "command": 'prep',
+                           "vis": msname,
+                           "field" : "",
                        },
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='{0:s}:: PREP MS ms={1:s}'.format(step, msname))
+                       label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'add_spectral_weights'):
             step = 'estimate_weights_{:d}'.format(i)

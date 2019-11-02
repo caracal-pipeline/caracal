@@ -22,10 +22,6 @@ observation_config:
   reference_antenna: '0'
   primary_beam: 
     enable: false
-    freq: 855 1760 16
-    diameter: 6.0
-    pixels: 256
-    coefficients: me
 
 prepare_data: 
   enable: true
@@ -61,7 +57,7 @@ flagging:
     flagger: aoflagger
     strategy: firstpass_QUV.rfis
   rfinder:
-    enable: true
+    enable: false
     telescope: MeerKAT
     field: target
 
@@ -75,19 +71,18 @@ cross_cal:
   bpcal:
     enable: true
     order: KGBKGB
-    apply: ["", "K", "KG", "KGB", "",""]
-    combine: ["", "", scan]
-    solint: [inf, inf, inf]
-    calmode: [a, ap, ap]
+    combine: ["", "", "", "","", scan]
+    solint: [inf, inf, inf, 60s, 60s, inf]
+    calmode: [a, ap, ap, a, ap, ap] 
     B_fillgaps: 70
     plotgains: true
   gcal:
     enable: true
     order: KG
-    apply: [b, bK]
-    combine: ["", ""]
-    solint: [inf, inf]
-    calmode: [a, ap]
+    apply: B
+    combine: ["", "", "", ""] 
+    solint: [inf, inf, 120s, 120s]
+    calmode: [a, ap, a, ap] 
     plotgains: true
   apply_cal: 
     enable: true
@@ -167,4 +162,3 @@ self_cal:
 image_HI: 
   enable: true
   label: corr
-

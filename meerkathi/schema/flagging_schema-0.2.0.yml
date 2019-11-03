@@ -66,7 +66,7 @@ mapping:
             desc: Enables flagging of autocorrelations.
             type: bool
             required: False
-            example: 'False'
+            example: 'True'
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map

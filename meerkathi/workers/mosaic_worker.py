@@ -65,7 +65,7 @@ def worker(pipeline, recipe, config):
             del hdr['CUNIT2']
 
         dish_diameter = config['dish_diameter'] # Units of m. The default assumes that MeerKAT data is being processed
-        pb_fwhm_radians = 1.02*( 2.99792458E8/float(obs_freq) )/float(dish_diameter)
+        pb_fwhm_radians = 1.02*( 2.99792458E8/obs_freq )/dish_diameter
         pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
         pb_fwhm_pix = pb_fwhm/hdr['CDELT2']  
         x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.0,hdr['NAXIS2']/2.0,hdr['NAXIS2']),
@@ -237,7 +237,7 @@ def worker(pipeline, recipe, config):
             },
             input=pipeline.input,
             output=pipeline.output,
-            label='montage_mosaic:: Re-gridding already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
+            label='montage_mosaic:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
      
     ### Leaving the following as a reminder of syntax    
     #if pipeline.enable_task(config, 'add_spectral_weights'):

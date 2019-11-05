@@ -150,11 +150,8 @@ def worker(pipeline, recipe, config):
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
                 specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
 
-    else: ### i.e. if the user has specified images, I start by assuming that they are all in the main 'output' directory
+    else: ### i.e. if the user has specified images, they have hopefully included which subdirectory of 'continuum' or 'cubes' each image is in
 
-        #pathnames = [ pipeline.output ] * len(specified_images) 
-
-          ### Now testing the scenario where the common directory is either output/continuum or output/cubes
         if specified_mosaictype == 'continuum':
             pathnames = [ pipeline.output+'/continuum' ] * len(specified_images)
         else:
@@ -163,13 +160,12 @@ def worker(pipeline, recipe, config):
     
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)
-    print('Corresponding pathnames = ', pathnames)
+    meerkathi.log.info('Corresponding pathnames = ', pathnames)
 
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian primary beams if need be 
     for image_name in specified_images: 
-        ### WARNING: pathnames is currently not defined if user has specified the images to use 
         
         pb_name = image_name.replace('image.fits', 'pb.fits')
         
@@ -216,11 +212,35 @@ def worker(pipeline, recipe, config):
 
     meerkathi.log.info('Checking for *pb.fits files now complete.')
 
-    # Need to tell MeerKATHI where to look in the output folder for the images to be mosaicked
+    # Need(?) to tell MeerKATHI where to look in the output folder for the images to be mosaicked
     if specified_mosaictype == 'continuum':
         input_directory = pipeline.continuum
     else:
         input_directory = pipeline.cubes
+
+    original_working_directory = os.getcwd() ### Will need it later, unless Sphe has a more elegant method
+
+    meerkathi.log.info('Now creating symlinks to images and beams, to mimic them being in the same directory')
+    os.chdir(input_directory) # To get the symlinks created in the correct directory
+
+    for specified_image in specified_images: ### Start by assuming that 'image' is of the form 'image_1/image_filename'
+
+        split_imagename = specified_image.split('/')
+        subdirectory = split_imagename[0]
+        image_filename = split_imagename[1]
+
+        symlink_for_image_command = 'ln -s ' + specified_image + ' ' + image_filename
+        os.system(symlink_for_image_command) ### Check that this creates the symlink in the expected place
+ 
+        # Also need a symlink for the corresponding pb file
+        specified_beam = specified_image.replace('image.fits', 'pb.fits')
+        beam_filename = image_filename.replace('image.fits', 'pb.fits')
+
+        symlink_for_beam_command = 'ln -s ' + specified_beam + ' ' + beam_filename
+        os.system(symlink_for_beam_command)
+
+    os.chdir(original_working_directory) # To get back to where we were before symlink creation
+
 
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe

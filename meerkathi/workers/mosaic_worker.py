@@ -152,11 +152,19 @@ def worker(pipeline, recipe, config):
 
     else: ### i.e. if the user has specified images, I start by assuming that they are all in the main 'output' directory
 
-        pathnames = [ pipeline.output ] * len(specified_images) 
+        #pathnames = [ pipeline.output ] * len(specified_images) 
+
+          ### Now testing the scenario where the common directory is either output/continuum or output/cubes
+        if specified_mosaictype == 'continuum':
+            pathnames = [ pipeline.output+'/continuum' ] * len(specified_images)
+        else:
+            pathnames = [ pipeline.output+'/cubes' ] * len(specified_images)
 
     
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)
+    print('Corresponding pathnames = ', pathnames)
+
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
     # so that we can create simple Gaussian primary beams if need be 
@@ -208,8 +216,11 @@ def worker(pipeline, recipe, config):
 
     meerkathi.log.info('Checking for *pb.fits files now complete.')
 
-    # Need to tell MeerKATHI to look in the output folder for the images to be mosaicked
-    images_in_output = [image_name+':output' for image_name in specified_images]
+    # Need to tell MeerKATHI where to look in the output folder for the images to be mosaicked
+    if specified_mosaictype == 'continuum':
+        input_directory = pipeline.continuum
+    else:
+        input_directory = pipeline.cubes
 
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe
@@ -220,10 +231,10 @@ def worker(pipeline, recipe, config):
                 "domontage"      : True,
                 "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
-                "target-images"  : images_in_output,
+                "target-images"  : specified_images,
             },
-            input=pipeline.input,
-            output=pipeline.output,
+            input=input_directory,
+            output=pipeline.mosaics,
             label='montage_mosaic:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
         
     else:  # Written out for clarity as to what difference the 'domontage' setting makes 
@@ -233,10 +244,10 @@ def worker(pipeline, recipe, config):
                 "domontage"      : False,
                 "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
-                "target-images"  : images_in_output,
+                "target-images"  : specified_images,
             },
-            input=pipeline.input,
-            output=pipeline.output,
+            input=input_directory,
+            output=pipeline.mosaics,
             label='montage_mosaic:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
      
     ### Leaving the following as a reminder of syntax    

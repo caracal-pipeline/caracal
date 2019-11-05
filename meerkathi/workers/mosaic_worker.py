@@ -160,7 +160,7 @@ def worker(pipeline, recipe, config):
     
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)
-    meerkathi.log.info('Corresponding pathnames = ', pathnames)
+    #print('Corresponding pathnames = ', pathnames)
 
 
     # Although montage_mosaic checks whether pb.fits files are present, we need to do this earlier in the worker,
@@ -230,16 +230,16 @@ def worker(pipeline, recipe, config):
         split_imagename = specified_image.split('/')
         subdirectory = split_imagename[0]
         image_filename = split_imagename[1]
-        image_filenames = image_filenames.append(image_filename)
+        image_filenames.append(image_filename)
 
-        symlink_for_image_command = 'ln -s ' + specified_image + ' ' + image_filename
+        symlink_for_image_command = 'ln -sf ' + specified_image + ' ' + image_filename
         os.system(symlink_for_image_command) ### Check that this creates the symlink in the expected place
- 
+
         # Also need a symlink for the corresponding pb file
         specified_beam = specified_image.replace('image.fits', 'pb.fits')
         beam_filename = image_filename.replace('image.fits', 'pb.fits')
 
-        symlink_for_beam_command = 'ln -s ' + specified_beam + ' ' + beam_filename
+        symlink_for_beam_command = 'ln -sf ' + specified_beam + ' ' + beam_filename
         os.system(symlink_for_beam_command)
 
     os.chdir(original_working_directory) # To get back to where we were before symlink creation

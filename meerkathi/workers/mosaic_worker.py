@@ -223,11 +223,14 @@ def worker(pipeline, recipe, config):
     meerkathi.log.info('Now creating symlinks to images and beams, to mimic them being in the same directory')
     os.chdir(input_directory) # To get the symlinks created in the correct directory
 
+    image_filenames = []  # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe 
+
     for specified_image in specified_images: ### Start by assuming that 'image' is of the form 'image_1/image_filename'
 
         split_imagename = specified_image.split('/')
         subdirectory = split_imagename[0]
         image_filename = split_imagename[1]
+        image_filenames = image_filenames.append(image_filename)
 
         symlink_for_image_command = 'ln -s ' + specified_image + ' ' + image_filename
         os.system(symlink_for_image_command) ### Check that this creates the symlink in the expected place
@@ -251,7 +254,7 @@ def worker(pipeline, recipe, config):
                 "domontage"      : True,
                 "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
-                "target-images"  : specified_images,
+                "target-images"  : image_filenames,
             },
             input=input_directory,
             output=pipeline.mosaics,
@@ -264,7 +267,7 @@ def worker(pipeline, recipe, config):
                 "domontage"      : False,
                 "cutoff"         : config.get('cutoff'),
                 "name"           : prefix,
-                "target-images"  : specified_images,
+                "target-images"  : image_filenames,
             },
             input=input_directory,
             output=pipeline.mosaics,

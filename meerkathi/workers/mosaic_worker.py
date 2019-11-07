@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
         return filename_of_last_selfcal_image
 
  
-     def identify_last_subdirectory(directory_to_check, mosaictype, prefix, field, mfsprefix):
+     def identify_last_subdirectory(directory_to_check, mosaictype):
 
         max_num = 0  # Initialisation
 
@@ -57,7 +57,7 @@ def worker(pipeline, recipe, config):
                 max_num = num
 
         last_subdirectory = subdirectory_prefix +  str(max_num)
-        return last_subdirectory
+        return max_num, last_subdirectory
 
 
     def build_beam(obs_freq,centre,cell,imsize,out_beam):  # Copied from masking_worker.py and edited
@@ -143,13 +143,12 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info("It is assumed that they are all in the highest-numbered subdirectory of 'output/continuum' and 'output/cubes'.")
         meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
-        #Needed for working out the field names for the targets 
+        # Needed for working out the field names for the targets 
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
 
         # Due to the way the output is now sorted, need to know the total number of targets
         n_targets = len(all_targets)  ### Assuming that all_targets is a list or an array
         meerkathi.log.info('The number of targets to be mosaicked is {0:d}'.format(n_targets))
-        subdirectory_number = 0
 
         # Empty list to add filenames to
         pathnames = []
@@ -159,21 +158,24 @@ def worker(pipeline, recipe, config):
         for target in all_targets:
 
             field = utils.filter_name(target)
-            subdirectory_number += 1 
 
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype == 'continuum':  # Add name of 2D image output by selfcal
 
-                path_to_image = pipeline.output + '/continuum/image_' + str(subdirectory_number)
+                max_num, last_subdirectory = identify_last_subdirectory(pipeline.continuum, specified_mosaictype)
+                path_to_image = pipeline.continuum + '/' + last_subdirectory
                 pathnames = pathnames.append(path_to_image)
-                image_name = identify_last_selfcal_image(path_to_image, prefix, field, mfsprefix)
+
+                image_name = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
                 specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
 
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
 
-                path_to_cube = pipeline.output + '/cubes/cube_' + str(subdirectory_number)
+                max_num, last_subdirectory = identify_last_subdirectory(pipeline.cubes, specified_mosaictype)
+                path_to_cube = pipeline.cubes + '/' + last_subdirectory
                 pathnames = pathnames.append(path_to_cube)
-                image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)
+
+                image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)   ### max_num definitely not needed for cubes?
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
                 specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
@@ -182,9 +184,11 @@ def worker(pipeline, recipe, config):
 
         if specified_mosaictype == 'continuum':
             pathnames = [ pipeline.output+'/continuum' ] * len(specified_images)
-        else:
+        elif specified_mosaictype == 'spectral':
             pathnames = [ pipeline.output+'/cubes' ] * len(specified_images)
-
+        else:
+            meerkathi.log.error("You need to specify whether you want to mosaic in 'continuum' or 'spectral' mode. EXITING.")
+            sys.exit(1)   ### This may be redundant by this stage in the worker?
     
     meerkathi.log.info('Images to be mosaicked are:')
     meerkathi.log.info(specified_images)

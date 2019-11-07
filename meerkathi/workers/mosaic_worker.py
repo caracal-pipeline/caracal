@@ -39,7 +39,7 @@ def worker(pipeline, recipe, config):
         max_num = 0  # Initialisation
 
         # Writing this so that it works for both selfcal and imageHI output
-        if mosaictype == 'continuum'
+        if mosaictype == 'continuum':
             subdirectory_prefix = 'image_'
         elif mosaictype == 'spectral':
             subdirectory_prefix = 'cube_'
@@ -107,11 +107,11 @@ def worker(pipeline, recipe, config):
     # Main part of the worker
     ##########################################
 
-    # Prioritise parameters specified in the config file, under the 'mosaic' worker   ### How do we get them from the schema instead?
+    # Prioritise parameters specified in the config file, under the 'mosaic' worker 
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
     use_MFS_images = config['use_MFS_images']
     #specified_prefix = config['name'] ### Come back to. I'd said in the schema that this does not need to be specified...
-    specified_images = config['target_images'] ### Test at a later point
+    specified_images = config['target_images'] 
 
     # Parameters that depend on the mosaictype
     if specified_mosaictype == 'continuum':
@@ -139,7 +139,9 @@ def worker(pipeline, recipe, config):
 
     if specified_images is None: ### Check that this is the correct way to check that nothing is passed via the config file
          
-        print('For this test, I do not expect to see this message, as image names are passed via the config file')
+        meerkathi.log.info("No image names were specified via the config file, so they are going to be selected automatically.")
+        meerkathi.log.info("It is assumed that they are all in the highest-numbered subdirectory of 'output/continuum' and 'output/cubes'.")
+        meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
         #Needed for working out the field names for the targets 
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 

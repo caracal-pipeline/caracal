@@ -17,7 +17,7 @@ def worker(pipeline, recipe, config):
     # Defining functions for the worker
     ##########################################
 
-    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
+    def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):  ### Not using anymore, but might need later
         
         # Doing this because convergence may have been reached before the user-specified number of iterations
         matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(prefix, field, mfsprefix)) # '*' to pick up the number
@@ -32,6 +32,32 @@ def worker(pipeline, recipe, config):
         
         filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
         return filename_of_last_selfcal_image
+
+ 
+     def identify_last_subdirectory(directory_to_check, mosaictype, prefix, field, mfsprefix):
+
+        max_num = 0  # Initialisation
+
+        # Writing this so that it works for both selfcal and imageHI output
+        if mosaictype == 'continuum'
+            subdirectory_prefix = 'image_'
+        elif mosaictype == 'spectral':
+            subdirectory_prefix = 'cube_'
+        else:
+            meerkathi.log.error("You need to specify whether you want to mosaic in 'continuum' or 'spectral' mode. EXITING.")
+            sys.exit(1)
+    
+        matching_subdirectories = glob.glob(directory_to_check+'/'+subdirectory_prefix+'*') # '*' to pick up the number
+
+        for subdirectory in matching_subdirectories:
+            split_subdirectory = subdirectory.split('_')
+            number = split_subdirectory[-1]  # In case there is one or more '_' in the directory name, want to get the last portion
+            num = int(number)
+            if num > max_num:
+                max_num = num
+
+        last_subdirectory = subdirectory_prefix +  str(max_num)
+        return last_subdirectory
 
 
     def build_beam(obs_freq,centre,cell,imsize,out_beam):  # Copied from masking_worker.py and edited
@@ -217,6 +243,7 @@ def worker(pipeline, recipe, config):
         input_directory = pipeline.continuum
     else:
         input_directory = pipeline.cubes
+
 
     original_working_directory = os.getcwd() ### Will need it later, unless Sphe has a more elegant method
 

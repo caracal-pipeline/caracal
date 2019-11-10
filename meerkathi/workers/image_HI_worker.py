@@ -443,7 +443,8 @@ def worker(pipeline, recipe, config):
                     {
                         "msname": msname_mst,
                         "command": 'summary',
-                        "outfile": '{0:s}-obsinfo.txt'.format(msname_mst[:-3]),
+                        "display": False,
+                        "outfile": '{0:s}-obsinfo.json'.format(msname_mst[:-3]),
                     },
                     input=pipeline.input,
                     output=pipeline.output,
@@ -621,6 +622,8 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{:s}:: Image HI'.format(step))
+                    recipe.run()
+                    recipe.jobs = []
 
                     if config['wsclean_image']['make_cube']:
                         if not config['wsclean_image'].get('niter'):
@@ -632,24 +635,28 @@ def worker(pipeline, recipe, config):
                         for mm in imagetype:
                             step = 'make_{0:s}_cube'.format(
                                 mm.replace('-', '_'))
-                            recipe.add(
-                                'cab/fitstool',
-                                step,
-                                {
-                                    "image": ['{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(
-                                              img_dir, pipeline.prefix, field, j, d, 
-                                              mm) for d in range(nchans)],
-                                    "output": '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(
-                                        img_dir, pipeline.prefix, field, j, mm),
-                                    "stack": True,
-                                    "delete-files": True,
-                                    "fits-axis": 'FREQ',
-                                },
-                                input=pipeline.input,
-                                output=pipeline.output,
-                                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
+                            if not os.path.exists('output/{0:s}/{1:s}_{2:s}_HI_{3:d}-0000-{4:s}.fits'.format(
+                                img_dir, pipeline.prefix, field, j, mm)):
+                                meerkathi.log.info('Skipping container {0:s}. Single channels do not exist.'.format(step))
+                            else:
+                                recipe.add(
+                                    'cab/fitstool',
                                     step,
-                                    mm.replace('-', '_')))
+                                    {
+                                        "image": ['{0:s}/{1:s}_{2:s}_HI_{3:d}-{4:04d}-{5:s}.fits:output'.format(
+                                                  img_dir, pipeline.prefix, field, j, d, 
+                                                  mm) for d in range(nchans)],
+                                        "output": '{0:s}/{1:s}_{2:s}_HI_{3:d}.{4:s}.fits'.format(
+                                            img_dir, pipeline.prefix, field, j, mm),
+                                        "stack": True,
+                                        "delete-files": True,
+                                        "fits-axis": 'FREQ',
+                                    },
+                                    input=pipeline.input,
+                                    output=pipeline.output,
+                                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
+                                        step,
+                                        mm.replace('-', '_')))
 
                     recipe.run()
                     recipe.jobs = []
@@ -773,24 +780,41 @@ def worker(pipeline, recipe, config):
                         for mm in imagetype:
                             step = 'make_{0:s}_cube'.format(
                                 mm.replace('-', '_'))
-                            recipe.add(
-                                'cab/fitstool',
-                                step,
-                                {
-                                    "image": ['{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(
-                                              img_dir, pipeline.prefix, field, str(j), d, 
-                                              mm) for d in range(nchans)],
-                                    "output": '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(img_dir,
-                                        pipeline.prefix, field, str(j), mm),
-                                    "stack": True,
-                                    "delete-files": True,
-                                    "fits-axis": 'FREQ',
-                                },
-                                input=pipeline.input,
-                                output=pipeline.output,
-                                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
+                            if not os.path.exists('output/{0:s}/{1:s}_{2:s}_HI_{3:s}-0000-{4:s}.fits'.format(
+                                img_dir, pipeline.prefix, field, str(j), mm)):
+                                meerkathi.log.info('Skipping container {0:s}. Single channels do not exist.'.format(step))
+                            else:
+                                recipe.add(
+                                    'cab/fitstool',
                                     step,
-                                    mm.replace('-', '_')))
+                                    {
+                                        "image": ['{0:s}/{1:s}_{2:s}_HI_{3:s}-{4:04d}-{5:s}.fits:output'.format(
+                                                  img_dir, pipeline.prefix, field, str(j), d, 
+                                                  mm) for d in range(nchans)],
+                                        "output": '{0:s}/{1:s}_{2:s}_HI_{3:s}.{4:s}.fits'.format(img_dir,
+                                            pipeline.prefix, field, str(j), mm),
+                                        "stack": True,
+                                        "delete-files": True,
+                                        "fits-axis": 'FREQ',
+                                    },
+                                    input=pipeline.input,
+                                    output=pipeline.output,
+                                    label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
+                                        step,
+                                        mm.replace('-', '_')))
+
+                    for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model',
+                               'image', 'pb', 'pb_corr', 'flux']:
+                        cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(
+                            img_dir, pipeline.prefix, field, ss)
+                        recipe.add(fix_specsys,
+                                   'fix_specsys_{0:s}_cube'.format(ss),
+                                   {'filename': cubename,
+                                       'specframe': specframe_all,
+                                    },
+                                   input=pipeline.input,
+                                   output=pipeline.output,
+                                   label='Fix spectral reference frame for cube {0:s}'.format(cubename))
 
                     recipe.run()
                     recipe.jobs = []
@@ -973,7 +997,6 @@ def worker(pipeline, recipe, config):
             image_opts = {
                 "msname": mslist,
                 "prefix": '{0:s}/{1:s}_{2:s}_HI'.format(img_dir, pipeline.prefix, field),
-                #                 "field"          :    target,
                 "mode": 'channel',
                 "nchan": nchans,
                 "start": config['casa_image'].get('firstchan'),
@@ -986,8 +1009,6 @@ def worker(pipeline, recipe, config):
                 "weight": config['casa_image'].get('weight'),
                 "robust": config['casa_image'].get('robust'),
                 "stokes": config['casa_image'].get('pol'),
-                #                 "wprojplanes"    :    1,
-                # was hardcoded to true
                 "port2fits": config['casa_image'].get('port2fits'),
                 "restfreq": restfreq,
             }
@@ -1001,16 +1022,19 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{:s}:: Image HI'.format(step))
 
+    # Once all cubes have been made fix the headers etc.
+    # Unless casa_image is enabled, assume wsclean_image was used
+    # (possibly in a previous pipeline run)
+    if pipeline.enable_task(config, 'casa_image'):
+        img_dir = get_dir_path(pipeline.cubes, pipeline)
+    else:
+        img_dir = "{0:s}/image_{1:d}".format(pipeline.cubes,
+            config['wsclean_image'].get('wscl_niter'))
+        img_dir = img_dir.split('output/')[-1]
+
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-
-        if pipeline.enable_task(config, 'casa_image'):
-            img_dir = get_dir_path(pipeline.cubes, pipeline)
-        else:
-            img_dir = finalcubename.split(
-                '/{0:s}_{1:s}_HI.image.fits'.format(pipeline.prefix, field))[0]
-            img_dir = img_dir.split('output/')[-1]
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image', 'flux']:
@@ -1035,19 +1059,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Make primary beam cube for {0:s}'.format(cubename))
 
-        for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model',
-                   'image', 'pb', 'pb_corr', 'flux']:
-            cubename = '{0:s}/{1:s}_{2:s}_HI.{3:s}.fits:output'.format(
-                img_dir, pipeline.prefix, field, ss)
-            recipe.add(fix_specsys,
-                       'fix_specsys_{0:s}_cube'.format(ss),
-                       {'filename': cubename,
-                           'specframe': specframe_all,
-                        },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Fix spectral reference frame for cube {0:s}'.format(cubename))
-
         if pipeline.enable_task(config, 'freq_to_vel'):
             if not config['freq_to_vel'].get('reverse'):
                 meerkathi.log.info(
@@ -1069,12 +1080,6 @@ def worker(pipeline, recipe, config):
                     label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cubename))
 
         if pipeline.enable_task(config, 'sofia'):
-            if pipeline.enable_task(config, 'casa_image'):
-                out_dir = pipeline.cubes
-            else:
-                out_dir = finalcubename.split(
-                    '/{0:s}_{1:s}_HI.image.fits'.format(pipeline.prefix, field))[0]
-
             step = 'sofia_sources'
             recipe.add(
                 'cab/sofia',
@@ -1105,18 +1110,11 @@ def worker(pipeline, recipe, config):
                     "merge.minSizeZ": config['sofia'].get('minSizeZ'),
                 },
                 input=pipeline.input,
-                output=out_dir,
+                output='output/{0:s}'.format(img_dir),
                 label='{0:s}:: Make SoFiA mask and images'.format(step))
 
     if pipeline.enable_task(config, 'sharpener'):
         step = 'continuum_spectral_extraction'
-
-        if pipeline.enable_task(config, 'casa_image'):
-            img_dir = get_dir_path(pipeline.cubes, pipeline)
-        else:
-            img_dir = finalcubename.split(
-                '/{0:s}_{1:s}_HI.image.fits'.format(pipeline.prefix, field))[0]
-            img_dir = img_dir.split('output/')[-1]
 
         params = {"enable_spec_ex": True,
                   "enable_source_catalog": True,

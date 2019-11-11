@@ -446,6 +446,12 @@ mapping:
             type: str
             required: false
             example: 'auto'
+          dist_max_chunks:
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
+            type: int
+            required: false
+            example: '4'
+          
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.

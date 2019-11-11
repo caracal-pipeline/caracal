@@ -175,8 +175,7 @@ def worker(pipeline, recipe, config):
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
             cabtouse = 'cab/casa47_setjy' if config['casa_version']=='47' else 'cab/casa_setjy'
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_setjy'
+        
             recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
                opts,
                input=pipeline.input,
@@ -190,8 +189,7 @@ found in our database or in the CASA NRAO database'.format(field))
             #field = get_field(config['delay_cal'].get('field'))
             field = manfields.get_field(pipeline, i, config['delay_cal'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_gaincal'
+            
             recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
@@ -251,8 +249,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     pipeline, i, config['bp_cal'].get('field'))
                 step = 'pre_bp_cal_{0:d}'.format(i)
                 cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
-                if (recipe.JOB_TYPE == 'singularity'):
-                    cabtouse = 'cab/casa_bandpass'
+                
                 recipe.add(cabtouse, step,
                    {
                      "vis"          : msname,
@@ -303,8 +300,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 interpolations += ['nearest']
                 step = 'pre_gain_cal_flux_{0:d}'.format(i)
                 cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
-                if (recipe.JOB_TYPE == 'singularity'):
-                    cabtouse = 'cab/casa_gaincal'
+                
                 field = manfields.get_field(
                     pipeline, i, config['bp_cal'].get('field'))
                 recipe.add('cab/casa_gaincal', step,
@@ -364,8 +360,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 pipeline, i, config['bp_cal'].get('field'))
             step = 'bp_cal_{0:d}'.format(i)
             cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_bandpass'
+           
             recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
@@ -421,8 +416,7 @@ found in our database or in the CASA NRAO database'.format(field))
             field = manfields.get_field(
                 pipeline, i, config['gain_cal_flux'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal' 
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_gaincal'
+          
             recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
@@ -476,8 +470,7 @@ found in our database or in the CASA NRAO database'.format(field))
             step = 'gain_cal_gain_{0:d}'.format(i)
             field = manfields.get_field(pipeline, i, config['gain_cal_gain'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_gaincal'
+           
             recipe.add(cabtouse, step,
                {
                  "vis"          : msname,
@@ -580,8 +573,7 @@ found in our database or in the CASA NRAO database'.format(field))
             applied.append(field)
             step = 'applyto_{0:s}_{1:d}'.format(ft, i)
             cabtouse = 'cab/casa47_applycal' if config['casa_version']=='47' else 'cab/casa_applycal'
-            if (recipe.JOB_TYPE == 'singularity'):
-                cabtouse = 'cab/casa_applycal'
+         
             recipe.add(cabtouse, step,
                {
                 "vis"       : msname,

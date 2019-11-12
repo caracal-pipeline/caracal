@@ -158,7 +158,7 @@ mapping:
             required: false
             example: 'True'
           image_with:
-            desc: Choose whether to image with WSclean + SoFiA or with Casa.
+            desc: Choose whether to image with WSclean + SoFiA ("wsclean") or with Casa ("casa").
             type: str
             required: false
             example: wsclean

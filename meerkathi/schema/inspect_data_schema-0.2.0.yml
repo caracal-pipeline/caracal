@@ -33,7 +33,7 @@ mapping:
           - type: str
         required: false
         desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
-        example: 'pbcal, gcal'
+        example: 'bpcal, gcal'
       real_imag:
         type: map
         desc: Plot real vs imaginary parts of data.

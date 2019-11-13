@@ -4,12 +4,12 @@ mapping:
     type: str
     required: true
 
-  image_HI:
+  image_line:
     desc: Create HI data cube and detect sources therein
     type: map
     mapping:
       enable:
-        desc: Execute segment image_HI (yes/no). Default is yes.
+        desc: Execute segment image_line (yes/no). Default is yes.
         type: bool
         required: true
       label:

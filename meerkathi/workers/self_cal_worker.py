@@ -1432,7 +1432,7 @@ def worker(pipeline, recipe, config):
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
+        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_line worker
         if config.get('undo_subtractmodelcol'):
             for i, msname in enumerate(mslist):
                 step = 'undo_modelsub_{:d}'.format(i)

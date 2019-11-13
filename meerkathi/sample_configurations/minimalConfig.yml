@@ -63,7 +63,7 @@
       enable: true
       Gsols_time: [120]
 
-- image_HI:
+- image_line:
     enable: true
     npix: [1800]
     cell: 2

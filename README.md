@@ -1,6 +1,8 @@
 [![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/)
 
-## Install
+## Documentation
+
+https://meerkathi.readthedocs.io
 
 ## Download & Install
 

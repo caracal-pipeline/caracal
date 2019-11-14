@@ -70,7 +70,8 @@ def worker(pipeline, recipe, config):
         refant = pipeline.reference_antenna[i] or '0'
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
-        prefix = '{0:s}-{1:s}'.format(prefix, config.get('label'))
+        worker_label = config.get('label')
+        prefix = '{0:s}-{1:s}'.format(prefix, worker_label)
 
         def get_gain_field(applyme, applyto=None):
             if applyme == 'delay_cal':
@@ -91,7 +92,7 @@ def worker(pipeline, recipe, config):
             opts = dict(opts)
             if 'enable' in opts:
                 del(opts['enable'])
-            step = 'flag_{0:s}_{1:d}'.format(cal, i)
+            step = 'flag_{0:s}_{1:s}_{2:d}'.format(cal, worker_label, i)
             opts["vis"] = '{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                 pipeline.caltables, pipeline), prefix, table_suffix[cal]+':output')
             opts["datacolumn"] = datacolumn
@@ -101,7 +102,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Flagging gains'.format(step))
 
         # Clear flags from this worker if they already exist
-        substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
+        substep = 'flagset_clear_{0:s}_{1:s}_{2:d}'.format(wname, worker_label, i)
         manflags.clear_flagset(pipeline, recipe, wname,
                                msname, cab_name=substep)
 
@@ -110,7 +111,7 @@ def worker(pipeline, recipe, config):
             field = manfields.get_field(
                 pipeline, i, config['clear_cal'].get('field'))
             addmodel = config['clear_cal'].get('addmodel')
-            step = 'clear_cal_{0:d}'.format(i)
+            step = 'clear_cal_{0:s}_{1:d}'.format(worker_label, i)
             recipe.add('cab/casa_clearcal', step,
                        {
                            "vis": msname,
@@ -173,7 +174,7 @@ def worker(pipeline, recipe, config):
                 else:
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
-            step = 'set_model_cal_{0:d}'.format(i)
+            step = 'set_model_cal_{0:s}_{1:d}'.format(worker_label, i)
             cabtouse = 'cab/casa47_setjy' if config['casa_version']=='47' else 'cab/casa_setjy'
             recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
                opts,
@@ -184,7 +185,7 @@ found in our database or in the CASA NRAO database'.format(field))
 
         # Delay calibration
         if pipeline.enable_task(config, 'delay_cal'):
-            step = 'delay_cal_{0:d}'.format(i)
+            step = 'delay_cal_{0:s}_{1:d}'.format(worker_label, i)
             #field = get_field(config['delay_cal'].get('field'))
             field = manfields.get_field(pipeline, i, config['delay_cal'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
@@ -208,7 +209,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('delay_cal', config['delay_cal']['flag'], datacolumn="FPARAM")
 
             if pipeline.enable_task(config['delay_cal'],'plot'):
-                step = 'plot_delay_cal_{0:d}'.format(i)
+                step = 'plot_delay_cal_{0:s}_{1:d}'.format(worker_label, i)
                 table = prefix+".K0"
                 fieldtoplot = []
                 fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
@@ -245,7 +246,7 @@ found in our database or in the CASA NRAO database'.format(field))
                     gaintables, interpolations = None, ''
                 field = manfields.get_field(
                     pipeline, i, config['bp_cal'].get('field'))
-                step = 'pre_bp_cal_{0:d}'.format(i)
+                step = 'pre_bp_cal_{0:s}_{1:d}'.format(worker_label, i)
                 cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
                 recipe.add(cabtouse, step,
                    {
@@ -270,7 +271,7 @@ found in our database or in the CASA NRAO database'.format(field))
 
                 if pipeline.enable_task(config['bp_cal'],'plot'):
 
-                    step = 'plot_pre_bandpass_{0:d}'.format(i)
+                    step = 'plot_pre_bandpass_{0:s}_{1:d}'.format(worker_label, i)
                     table = prefix+".PREB0"
                     fieldtoplot = []
                     fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
@@ -295,7 +296,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 gaintables += ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                     pipeline.caltables, pipeline), prefix, 'PREB0:output')]
                 interpolations += ['nearest']
-                step = 'pre_gain_cal_flux_{0:d}'.format(i)
+                step = 'pre_gain_cal_flux_{0:s}_{1:d}'.format(worker_label, i)
                 cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
                 field = manfields.get_field(
                     pipeline, i, config['bp_cal'].get('field'))
@@ -321,7 +322,7 @@ found in our database or in the CASA NRAO database'.format(field))
                            label='{0:s}:: Pre gain calibration for bandpass ms={1:s}'.format(step, msname))
 
                 if pipeline.enable_task(config['gain_cal_flux'], 'plot'):
-                    step = 'plot_pre_gain_cal_flux_{0:d}'.format(i)
+                    step = 'plot_pre_gain_cal_flux_{0:s}_{1:d}'.format(worker_label, i)
                     table = prefix+".PREG0"
                     fieldtoplot = []
                     fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
@@ -354,7 +355,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 gaintables, interpolations = None, ''
             field = manfields.get_field(
                 pipeline, i, config['bp_cal'].get('field'))
-            step = 'bp_cal_{0:d}'.format(i)
+            step = 'bp_cal_{0:s}_{1:d}'.format(worker_label, i)
             cabtouse = 'cab/casa47_bandpass' if config['casa_version']=='47' else 'cab/casa_bandpass'
             recipe.add(cabtouse, step,
                {
@@ -381,7 +382,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('bp_cal', config['bp_cal']['flag'])
 
             if pipeline.enable_task(config['bp_cal'], 'plot'):
-                step = 'plot_bandpass_{0:d}'.format(i)
+                step = 'plot_bandpass_{0:s}_{1:d}'.format(worker_label, i)
                 fieldtoplot = []
                 fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
                 table = config['bp_cal']['plot'].get('table_name', prefix+".B0")
@@ -407,7 +408,7 @@ found in our database or in the CASA NRAO database'.format(field))
             gaintables += ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                 pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations += ['nearest']
-            step = 'gain_cal_flux_{0:d}'.format(i)
+            step = 'gain_cal_flux_{0:s}_{1:d}'.format(worker_label, i)
             field = manfields.get_field(
                 pipeline, i, config['gain_cal_flux'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal' 
@@ -432,7 +433,7 @@ found in our database or in the CASA NRAO database'.format(field))
                label='{0:s}:: Gain calibration fer bandpass ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config['gain_cal_flux'],'plot'):
-                step = 'plot_gain_cal_flux_{0:d}'.format(i)
+                step = 'plot_gain_cal_flux_{0:s}_{1:d}'.format(worker_label, i)
                 table = prefix+".G0"
                 fieldtoplot = []
                 fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
@@ -461,7 +462,7 @@ found in our database or in the CASA NRAO database'.format(field))
             gaintables += ['{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                 pipeline.caltables, pipeline), prefix, 'B0:output')]
             interpolations += ['linear']
-            step = 'gain_cal_gain_{0:d}'.format(i)
+            step = 'gain_cal_gain_{0:s}_{1:d}'.format(worker_label, i)
             field = manfields.get_field(pipeline, i, config['gain_cal_gain'].get('field'))
             cabtouse = 'cab/casa47_gaincal' if config['casa_version']=='47' else 'cab/casa_gaincal'
             recipe.add(cabtouse, step,
@@ -489,7 +490,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 flag_gains('gain_cal_gain', config['gain_cal_gain']['flag'])
 
             if pipeline.enable_task(config['gain_cal_gain'], 'plot'):
-                step = 'plot_gain_cal_{0:d}'.format(i)
+                step = 'plot_gain_cal_{0:s}_{1:d}'.format(worker_label, i)
                 table = prefix+".G0"
                 fieldtoplot = []
                 fieldtoplot.append(utils.get_field_id(msinfo, field)[0])
@@ -511,7 +512,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 pipeline, i, config['transfer_fluxscale'].get('reference'))
             trans = manfields.get_field(
                 pipeline, i, config['transfer_fluxscale'].get('transfer'))
-            step = 'transfer_fluxscale_{0:d}'.format(i)
+            step = 'transfer_fluxscale_{0:s}_{1:d}'.format(worker_label, i)
             recipe.add('cab/casa_fluxscale', step,
                        {
                            "vis": msname,
@@ -525,7 +526,7 @@ found in our database or in the CASA NRAO database'.format(field))
                        label='{0:s}:: Flux scale transfer ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config['transfer_fluxscale'], 'plot'):
-                step = 'plot_fluxscale_{0:d}'.format(i)
+                step = 'plot_fluxscale_{0:s}_{1:d}'.format(worker_label, i)
                 table = prefix+".F0"
                 fieldtoplot = []
                 fieldtoplot.append(utils.get_field_id(msinfo, trans)[0])
@@ -564,7 +565,7 @@ found in our database or in the CASA NRAO database'.format(field))
                 continue
 
             applied.append(field)
-            step = 'applyto_{0:s}_{1:d}'.format(ft, i)
+            step = 'applyto_{0:s}_{1:s}_{2:d}'.format(ft,worker_label, i)
             cabtouse = 'cab/casa47_applycal' if config['casa_version']=='47' else 'cab/casa_applycal'
             recipe.add(cabtouse, step,
                {
@@ -589,7 +590,7 @@ found in our database or in the CASA NRAO database'.format(field))
         # Compare in-between scans per baseline per field per channel
         # Also compare in-between baselines per scan per field per channel
         if pipeline.enable_task(config, 'autoflag_closure_error'):
-            step = 'autoflag_closure_error_{0:d}'.format(i)
+            step = 'autoflag_closure_error_{0:s}_{1:d}'.format(worker_label, i)
             def_fields = ','.join(
                 [pipeline.bpcal_id[i], pipeline.gcal_id[i], pipeline.target_id[i]])
             def_calfields = ','.join(
@@ -627,12 +628,12 @@ found in our database or in the CASA NRAO database'.format(field))
                        label="{0:s}: Flag out baselines with closure errors")
 
         if applied or pipeline.enable_task(config, 'autoflag_closure_error'):
-            substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
+            substep = 'flagset_update_{0:s}_{1:s}_{2:d}'.format(wname, worker_label, i)
             manflags.update_flagset(
                 pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_crosscal_{0:d}'.format(i)
+            step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(worker_label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
                            "vis": msname,

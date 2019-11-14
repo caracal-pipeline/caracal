@@ -148,12 +148,12 @@ mapping:
             required: false
             example: '0.'
 
-      make_image:
-        desc: Image either with WSclean + SoFiA (for clean masks) or with Casa.
+      make_cube:
+        desc: Make a line cube with either WSclean + SoFiA (for clean masks) or Casa.
         type: map
         mapping:
           enable:
-            desc: Execute segment make_image.
+            desc: Execute segment make_cube.
             type: bool
             required: false
             example: 'True'

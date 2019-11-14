@@ -70,7 +70,7 @@ else:
 
             if config["manage_flags"].get("remove_flagsets", False):
                 flagsets = []
-                for vals in list(pipeline.flagsets.values()):
+                for vals in list(pipeline.flags.values()):
                     flagsets += vals
                 flagsets = set(flagsets)
                 flagsets.discard("legacy")

@@ -1,4 +1,37 @@
 # Manage flagsets
+import os
+import sys
+
+
+def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
+    flagversions = "{folder:s}/{ms:s}.flagversions".format(folder=pipeline.msdir, ms=ms)
+
+    index = pipeline.flag_names.index(flagname)
+    remove_us = pipeline.flag_names[index:]
+    for i,flag in enumerate(remove_us):
+        step = "{0:s}_{0:d}".format(cab_name, i)
+        recipe.add("cab/casa_flagmanager", step, {
+            "vis": ms,
+            "mode": "delete",
+            "versionname": flag,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="{0:s}:: Delete flags".format(step))
+        pipeline.flag_names.remove(flag)
+
+def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
+    step = "{0:s}_{0:d}".format(cab_name)
+    recipe.add("cab/casa_flagmanager", step, {
+        "vis": ms,
+        "mode": "replace",
+        "versionname": flag,
+        },
+        input=pipeline.input,
+        output=pipeline.output,
+        label="{0:s}:: Delete flags".format(label or step))
+    pipeline.flag_names.remove(flag)
+
 
 
 def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

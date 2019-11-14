@@ -104,6 +104,48 @@ mapping:
             desc: Plot gains
             example: "True"
             required: false
+          flag:
+            type: map
+            desc: Apply existing gains and flag corrected data
+            mapping:
+              column:
+                type: str
+                desc: Data column to flag on
+                example: "corrected"
+                required: false
+                enum: [corrected, residual]
+              usewindowstats:
+                type: str
+                desc: Calculate additional flags using sliding window statistics
+                enum: ["none", "sum", "std", "both"]
+                example: "std"
+                required: false
+              combinescans:
+                type: bool
+                desc: Accumulate data across scans depending on the value of ntime
+                example: "False"
+                required: false
+              flagdimension:
+                type: str
+                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
+                enum: [freq, time, freqtime, timefreq]
+                example: freqtime
+                required: false
+              timecutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "4.0"
+                required: false
+              freqcutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "3.0"
+                required: false
+              correlation:
+                type: str
+                desc: Correlation
+                example: ""
+                required: false
       gcal:
         type: map
         desc: Calibrating on the amplitude/phase calibrator field

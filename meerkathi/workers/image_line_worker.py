@@ -151,7 +151,7 @@ def fix_specsys(filename, specframe):
             if 'specsys' in headcube:
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
-            
+
 def make_pb_cube(filename, apply_corr):
 
     filename = filename.split(':')
@@ -687,20 +687,22 @@ def worker(pipeline, recipe, config):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
-                if config['make_cube']['wscl_make_cube']:
-                    if not config['make_cube'].get('niter'):
-                        imagetype = ['image', 'dirty']
+                if config['make_image']['wscl_make_cube']:
+                    if not config['make_image'].get('niter'):
+                        imagetype = ['dirty', 'image']
                     else:
-                        imagetype = ['image', 'dirty', 'psf', 'residual', 'model']
-                        if config['make_cube'].get('wscl_mgain') < 1.0:
+                        imagetype = ['dirty', 'image', 'psf', 'residual', 'model']
+                        if config['make_image'].get('wscl_mgain') < 1.0:
                             imagetype.append('first-residual')
                     for mm in imagetype:
                         step = 'make_{0:s}_cube'.format(
                             mm.replace('-', '_'))
-                        if not os.path.exists('output/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits'.format(
-                                img_dir, pipeline.prefix, field, line_name, j, mm)):
+                        if not os.path.exists('{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits'.format(
+                                img_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
                             meerkathi.log.info('Skipping container {0:s}. Single channels do not exist.'.format(step))
                         else:
+                            stacked_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(img_dir,
+                                            pipeline.prefix, field, line_name, j, mm)
                             recipe.add(
                                 'cab/fitstool',
                                 step,
@@ -708,8 +710,7 @@ def worker(pipeline, recipe, config):
                                     "image": ['{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-{5:04d}-{6:s}.fits:output'.format(
                                             img_dir, pipeline.prefix, field, line_name,
                                             j, d, mm) for d in range(nchans)],
-                                    "output": '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(img_dir,
-                                            pipeline.prefix, field, line_name, j, mm),
+                                    "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,
                                     "fits-axis": 'FREQ',
@@ -719,6 +720,20 @@ def worker(pipeline, recipe, config):
                                 label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
                                     step,
                                     mm.replace('-', '_')))
+
+                            recipe.run()
+                            recipe.jobs = []
+
+                            # Replace channels that are single-valued (usually zero-ed) in the dirty cube with blanks
+                            #   in all cubes assuming that channels run along numpy axis 1 (axis 0 is for Stokes)
+                            with fits.open('{0:s}/{1:s}'.format(pipeline.output, stacked_cube)) as stck:
+                                cubedata=stck[0].data
+                                cubehead=stck[0].header
+                                if mm == 'dirty':
+                                    tobeblanked = (cubedata == np.nanmean(cubedata,axis = (0, 2, 3)).reshape((
+                                        1, cubedata.shape[1], 1, 1))).all(axis = (0, 2, 3))
+                                cubedata[:, tobeblanked] = np.nan
+                                fits.writeto('{0:s}/{1:s}'.format(pipeline.output, stacked_cube), cubedata, header = cubehead, overwrite = True)
 
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits:output'.format(

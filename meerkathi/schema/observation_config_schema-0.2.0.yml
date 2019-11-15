@@ -93,8 +93,13 @@ mapping:
             required: False
             example: '256'
           coefficients:
-            desc: Coeficients file name
+            desc: Coeficients type
             type: str
             required: False
             enum: [me, mh]
             example: 'me'
+          coefficients_file:
+            type: str
+            desc: File needed for generating PBs. meerkat_beam_coeffs_ah_zp_dct.npy for MeerKAT Holography beams (coefficient = mh) and meerkat_beam_coeffs_em_zp_dct.npy for MeerKAT EM sims(me).
+            required: False
+            example: 'meerkat_beam_coeffs_em_zp_dct.npy'    

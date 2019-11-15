@@ -52,6 +52,7 @@ def worker(pipeline, recipe, config):
     cell = config['img_cell']
     mgain = config['img_mgain']
     niter = config['img_niter']
+    imgweight = config['img_weight']
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol')
@@ -176,7 +177,7 @@ def worker(pipeline, recipe, config):
                        {
                            "msname": mslist,
                            "column": imcolumn,
-                           "weight": 'briggs {}'.format(config.get('robust', robust)),
+                           "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
                            "npix": config[key].get('npix', npix),
                            "padding": config[key].get('padding', padding),
                            "scale": config[key].get('cell', cell),
@@ -228,7 +229,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
-            "weight": 'briggs {}'.format(config[key].get('robust', robust)),
+            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
             "npix": config[key].get('npix', npix),
             "padding": config[key].get('padding', padding),
             "scale": config[key].get('cell', cell),

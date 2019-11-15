@@ -61,7 +61,7 @@
       enable: true
     calibrate:
       enable: true
-      Gsols_time: [120]
+      Gsols_time: [1]
 
 - image_line:
     enable: true

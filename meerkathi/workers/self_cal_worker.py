@@ -53,6 +53,7 @@ def worker(pipeline, recipe, config):
     mgain = config['img_mgain']
     niter = config['img_niter']
     imgweight = config['img_weight']
+    img_nmiter = config['img_nmiter']
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol')
@@ -178,6 +179,7 @@ def worker(pipeline, recipe, config):
                            "msname": mslist,
                            "column": imcolumn,
                            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+                           "nmiter": img_nmiter,
                            "npix": config[key].get('npix', npix),
                            "padding": config[key].get('padding', padding),
                            "scale": config[key].get('cell', cell),
@@ -231,6 +233,7 @@ def worker(pipeline, recipe, config):
             "column": imcolumn,
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
             "npix": config[key].get('npix', npix),
+            "nmiter": img_nmiter,
             "padding": config[key].get('padding', padding),
             "scale": config[key].get('cell', cell),
             "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
@@ -1719,6 +1722,7 @@ def worker(pipeline, recipe, config):
                 "msname": hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
                 "column": config['highfreqres_contim'].get('column'),
                 "weight": 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
+                "nmiter": img_nmiter,
                 "npix": config['highfreqres_contim'].get('npix', npix),
                 "padding": config['highfreqres_contim'].get('padding', padding),
                 "scale": config['highfreqres_contim'].get('cell', cell),

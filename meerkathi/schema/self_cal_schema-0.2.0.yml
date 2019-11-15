@@ -85,6 +85,11 @@ mapping:
         desc: Number of cleaning iterations
         required: false
         example: '1000000'
+      img_nmiter: 
+        type: int
+        desc: Number of major cycles
+        required: False
+        example: '0'   
       img_cleanborder:
         type: float
         desc: Clean border

@@ -6,6 +6,7 @@ from astropy import units as u
 import astropy.coordinates as coord
 from astropy.io import fits
 from astropy import wcs
+from meerkathi.dispatch_crew import utils
 
 NAME = "Mosaic images"
 
@@ -147,6 +148,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
         # Needed for working out the field names for the targets 
+        print('pipeline.target = {0:s}'.format(pipeline.target))
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
 
         # Due to the way the output is now sorted, need to know the total number of targets

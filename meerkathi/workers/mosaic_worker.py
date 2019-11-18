@@ -140,7 +140,7 @@ def worker(pipeline, recipe, config):
 
     prefix = pipeline.prefix
 
-    if specified_images is None: ### Check that this is the correct way to check that nothing is passed via the config file
+    if specified_images is " 'directory/first_image.fits', 'directory/second_image.fits' ": # If nothing is passed via the config file, then specified_images adopts this via the schema
          
         meerkathi.log.info("No image names were specified via the config file, so they are going to be selected automatically.")
         meerkathi.log.info("It is assumed that they are all in the highest-numbered subdirectory of 'output/continuum' and 'output/cubes'.")

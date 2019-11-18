@@ -147,6 +147,19 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
+            if pipeline.enable_task(config, 'flag_elevation'):
+                step = 'flag_elevation_{0:s}_{1:d}'.format(wname, i)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'elevation',
+                               "lowerlimit": config['flag_elevation'].get('low'),
+                               "upperlimit": config['flag_elevation'].get('high'),
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
+
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow'].get('include_full_mk64'):
                     #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
@@ -359,19 +372,6 @@ def worker(pipeline, recipe, config):
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
-               # recipe.add('cab/autoflagger', step,
-               #            {
-               #                "msname": msname,
-               #                "column": config['autoflag_rfi'].get('column'),
-               #                # flag the calibrators for RFI and apply to target
-               #                "fields": fields,
-               #                # "bands"       : config['autoflag_rfi'].get('bands', "0"),
-               #                "strategy": config['autoflag_rfi']['strategy'],
-               #            #},
-               #            input=pipeline.input,
-               #            output=pipeline.output,
-               #            label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
-
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
                 if label:
@@ -381,7 +381,7 @@ def worker(pipeline, recipe, config):
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
                         pipeline, i, config['rfinder'].get('field')).split(","))))
-                    outlabel = '_{0:s}'.format(i)
+                    outlabel = '_{0:d}'.format(i)
                 recipe.add('cab/rfinder', step,
                            {
                                "msname": msname,

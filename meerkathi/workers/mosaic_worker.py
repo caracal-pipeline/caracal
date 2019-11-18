@@ -148,7 +148,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
         # Needed for working out the field names for the targets 
-        print('pipeline.target = {0:s}'.format(pipeline.target))
+        #print('pipeline.target = {0:s}'.format(pipeline.target))
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
 
         # Due to the way the output is now sorted, need to know the total number of targets
@@ -174,20 +174,20 @@ def worker(pipeline, recipe, config):
             if specified_mosaictype == 'continuum':  # Add name of 2D image output by selfcal
 
                 path_to_image = pipeline.continuum + '/' + last_subdirectory
-                pathnames = pathnames.append(path_to_image)
+                pathnames.append(path_to_image)
 
                 image_name = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(prefix, field, str(max_num),  mfsprefix)
-                specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
+                specified_images.append(image_name) # Note that the path is not included in image_name
 
             else:  # i.e. mosaictype = 'spectral', so add name of cube output by imageHI
 
                 path_to_cube = pipeline.cubes + '/' + last_subdirectory
-                pathnames = pathnames.append(path_to_cube)
+                pathnames.append(path_to_cube)
 
                 image_name = '{0:s}_{1:s}_HI{2:s}-image.fits'.format(prefix, field, mfsprefix)   ### max_num definitely not needed for cubes?
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_HI_worker   
-                specified_images = specified_images.append(image_name) # Note that the path is not included in image_name
+                specified_images.append(image_name) # Note that the path is not included in image_name
 
     else: ### i.e. if the user has specified images, they have hopefully included which subdirectory of 'continuum' or 'cubes' each image is in
 

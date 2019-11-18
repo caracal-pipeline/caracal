@@ -99,7 +99,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
             iters[term] = 0
 
         itern = iters[term]
-        step = "%s_%s_%d_%d" % (name, label, itern, iobs)
+        step = "%s_%s_%d_%d_bpcal" % (name, label, itern, iobs)
         params = {}
         params["vis"] = ms
         if term == "A":
@@ -175,6 +175,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
             else:
                 iters_gcal[term] = 0
 
+            step = "%s_%s_%d_%d_gcal" % (name, label, itern, iobs)
             if term == "I":
                 step = "%s_%s_%d_%d" % (name, label, itern, obs)
                 applycal(recipe, [gtab+":output" for gtab in gaintables_gcal], 
@@ -237,13 +238,12 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                 params["gaintype"] = term
                 plot_field = [field_id]
                 N_from_bpcal = len(config["gcal"]["apply"])
-                otf_apply = get_last_gain(gaintables_gcal[N_from_bpcal:])
+                otf_apply = get_last_gain(gaintables_gcal[N_from_bpcal:], my_term=term)
                 if otf_apply:
                     tables = gaintables_gcal[:N_from_bpcal] + [gaintables_gcal[count+N_from_bpcal] for count in otf_apply]
                     params["gaintable"] = [tab+":output" for tab in tables]
                     params["interp"] = interps_gcal[:N_from_bpcal] + [interps_gcal[count+N_from_bpcal] for count in otf_apply]
                     params["gainfield"] = fields_gcal[:N_from_bpcal] + [fields_gcal[count+N_from_bpcal] for count in otf_apply]
-
                 if term == "G" and iters_gcal[term]+1 == gtable_final_counter:
                     caltable = gtable_final
                     params["append"] = True
@@ -259,7 +259,6 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                 params["field"] = field
 
                 itern = iters[term]
-                step = "%s_%s_%d_%d" % (name, label, itern, iobs)
                 recipe.add(RULES[term]["cab"], step, 
                         copy.deepcopy(params),
                         input=pipeline.input, output=pipeline.caltables,
@@ -476,7 +475,6 @@ found in our database or in the CASA NRAO database'.format(field))
             interps_gcal = [solve_outs["gcal"]["interps"][count] for count in apply_gcal]
             gainfield_gcal = [solve_outs["gcal"]["gainfield"][count] for count in apply_gcal]
             iters_gcal = solve_outs["gcal"]["iters"]
-
             # apply to bpcal
             _gaintables = [gtab+":output" for gtab in gaintables_bpcal]
             if "bpcal" in config["apply_cal"]["applyto"]:
@@ -511,10 +509,9 @@ found in our database or in the CASA NRAO database'.format(field))
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(recipe, copy.deepcopy(_gaintables), interps_bpcal,
                         gainfield_bpcal, "target", pipeline, i, calmode=calmode, label=label)
-
         substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
         manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)
-
+        
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:d}'.format(i)

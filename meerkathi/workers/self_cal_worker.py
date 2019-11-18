@@ -32,12 +32,6 @@ CUBICAL_MT = {
     "GainDiagPhase": 'phase-diag',
 }
 
-corr_indexes = {'H': 0,
-                'X': 0,
-                'V': 1,
-                'Y': 1,
-                }
-
 SOL_TERMS = {
     "G": "50",
     "B": "50",
@@ -1382,7 +1376,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_G_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },
@@ -1402,7 +1395,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_D_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },

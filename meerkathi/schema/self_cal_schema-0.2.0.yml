@@ -467,11 +467,6 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
                 example: '0'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
 
       restore_model:
         type: map

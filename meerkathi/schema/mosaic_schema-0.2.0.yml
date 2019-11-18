@@ -54,7 +54,7 @@ mapping:
           - type: str
         required: false
         desc: List of images to be mosaicked, with suffix of image.fits being expected. 
-        example: " '', '' "
+        example: " 'directory/first_image.fits', 'directory/second_image.fits' "
 
       dish_diameter:
         type: float

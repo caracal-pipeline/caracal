@@ -148,11 +148,9 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
         # Needed for working out the field names for the targets 
-        print('pipeline.target')
-        print(pipeline.target)
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
-        print('all_targets:')
-        print(all_targets)
+        meerkathi.log.info('all_targets:')
+        meerkathi.log.info(all_targets)
         
         # Due to the way the output is now sorted, need to know the total number of targets
         n_targets = len(all_targets)  ### Assuming that all_targets is a list or an array

@@ -248,7 +248,7 @@ def worker(pipeline, recipe, config):
 
     original_working_directory = os.getcwd() ### Will need it later, unless Sphe has a more elegant method
 
-    meerkathi.log.info('Now creating symlinks to images and beams, to mimic them being in the same directory')
+    meerkathi.log.info('Now creating symlinks to images and beams, in case they are distributed across multiple subdirectories')
     os.chdir(input_directory) # To get the symlinks created in the correct directory
 
     image_filenames = []  # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe 

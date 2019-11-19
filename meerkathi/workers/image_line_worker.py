@@ -75,7 +75,7 @@ def freq_to_vel(filename, reverse):
                 headcube['restfreq'] = restfreq
 
             # convert from frequency to radio velocity
-            if 'FREQ' in headcube['ctype3'] and not reverse:
+            if headcube['naxis'] > 2 and 'FREQ' in headcube['ctype3'] and not reverse: 
                 headcube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq
                 headcube['crval3'] = C * \
                     (1 - float(headcube['crval3']) / restfreq)
@@ -88,7 +88,7 @@ def freq_to_vel(filename, reverse):
                     del headcube['cunit3']
 
             # convert from radio velocity to frequency
-            elif 'VRAD' in headcube['ctype3'] and reverse:
+            elif headcube['naxis'] > 2 and 'VRAD' in headcube['ctype3'] and headcube['naxis'] > 2 and reverse:
                 headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
                 headcube['crval3'] = restfreq * \
                     (1 - float(headcube['crval3']) / C)
@@ -99,10 +99,10 @@ def freq_to_vel(filename, reverse):
             else:
                 if not reverse:
                     meerkathi.log.info(
-                        'Skipping conversion for {0:s}. Input cube not in frequency.'.format(filename))
+                        'Skipping conversion for {0:s}. Input is not a cube or not in frequency.'.format(filename))
                 else:
                     meerkathi.log.info(
-                        'Skipping conversion for {0:s}. Input cube not in velocity.'.format(filename))
+                        'Skipping conversion for {0:s}. Input is not a cube or not in velocity.'.format(filename))
 
 
 def remove_stokes_axis(filename):
@@ -798,7 +798,7 @@ def worker(pipeline, recipe, config):
                             pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
                         line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, line_name, j)
-                        MFScubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:s}-MFS-{5:s}.fits'.format(
+                        MFScubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
                         if os.path.exists(cubename):
                             os.remove(cubename)

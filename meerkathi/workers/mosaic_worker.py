@@ -107,6 +107,7 @@ def worker(pipeline, recipe, config):
     use_MFS_images = config['use_MFS_images']
     #specified_prefix = config['name'] ### Come back to. I'd said in the schema that this does not need to be specified...
     specified_images = config['target_images'] 
+    line_name = config['line_name']
 
     # Parameters that depend on the mosaictype
     if specified_mosaictype == 'spectral':
@@ -178,8 +179,8 @@ def worker(pipeline, recipe, config):
 
                 path_to_cube = pipeline.cubes
                 pathnames.append(path_to_cube)
-
-                image_name = '{0:s}/{1:s}_{2:s}_HI{3:s}-image.fits'.format(last_subdirectory, prefix, field, mfsprefix)  # max_num not needed for finalcubename
+    
+                image_name = '{0:s}/{1:s}_{2:s}_{3:s}{4:s}-image.fits'.format(last_subdirectory, prefix, field, line_name, mfsprefix)  # max_num not needed for finalcubename
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_line_worker   
                 specified_images.append(image_name) # Note that the path is not included in image_name

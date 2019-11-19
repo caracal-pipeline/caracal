@@ -39,14 +39,8 @@ def worker(pipeline, recipe, config):
 
         max_num = 0  # Initialisation
 
-        # Writing this so that it works for both selfcal and image_line output
-        if mosaictype == 'continuum':
-            subdirectory_prefix = 'image_'
-        elif mosaictype == 'spectral':
-            subdirectory_prefix = 'cube_'
-        else:
-            meerkathi.log.error("You need to specify whether you want to mosaic in 'continuum' or 'spectral' mode. EXITING.")
-            sys.exit(1)
+        # Same subdirectory prefix whether looking in pipeline.continuum or pipeline.cubes 
+        subdirectory_prefix = 'image_'
     
         matching_subdirectories = glob.glob(directory_to_check+'/'+subdirectory_prefix+'*') # '*' to pick up the number
 
@@ -185,12 +179,12 @@ def worker(pipeline, recipe, config):
                 path_to_cube = pipeline.cubes
                 pathnames.append(path_to_cube)
 
-                image_name = '{0:s}/{1:s}_{2:s}_HI{3:s}-image.fits'.format(last_subdirectory, prefix, field, mfsprefix)   ### max_num definitely not needed for cubes?
+                image_name = '{0:s}/{1:s}_{2:s}_HI{3:s}-image.fits'.format(last_subdirectory, prefix, field, mfsprefix)  # max_num not needed for finalcubename
                 if mfsprefix == '':
                     image_name = image_name.replace('-image','.image') # Following the naming in image_line_worker   
                 specified_images.append(image_name) # Note that the path is not included in image_name
 
-    else: ### i.e. if the user has specified images, they have hopefully included which subdirectory of 'continuum' or 'cubes' each image is in
+    else: # i.e. if the user has specified images, they have hopefully included which subdirectory of 'continuum' or 'cubes' each image is in
 
         pathnames = [ input_directory ] * len(specified_images)
     

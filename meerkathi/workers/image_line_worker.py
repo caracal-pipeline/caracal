@@ -594,17 +594,17 @@ def worker(pipeline, recipe, config):
             line_clean_mask_file = None
             rms_values=[]
             for j in range(1, wscl_niter + 1):
-                image_path = "{0:s}/image_{1:d}".format(
+                cube_path = "{0:s}/cube_{1:d}".format(
                     pipeline.cubes, j)
-                if not os.path.exists(image_path):
-                    os.mkdir(image_path)
-                img_dir = '{0:s}/image_{1:d}'.format(
+                if not os.path.exists(cube_path):
+                    os.mkdir(cube_path)
+                cube_dir = '{0:s}/cube_{1:d}'.format(
                     get_dir_path(pipeline.cubes, pipeline), j)
 
                 line_image_opts.update({
                     "msname": mslist,
                     "prefix": '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}'.format(
-                        img_dir,pipeline.prefix, field, line_name, j)
+                        cube_dir,pipeline.prefix, field, line_name, j)
                     })
 
                 if j == 1:
@@ -623,11 +623,11 @@ def worker(pipeline, recipe, config):
                     line_clean_mask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output'.format(
                         pipeline.prefix, field, line_name, j)
                     line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
-                        image_path, pipeline.prefix, field, line_name, j)
+                        cube_path, pipeline.prefix, field, line_name, j)
                     cubename = '{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input'.format(
                         pipeline.prefix, field, line_name, j - 1)
                     cubename_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits'.format(
-                        image_path, pipeline.prefix, field, line_name, j - 1)
+                        cube_path, pipeline.prefix, field, line_name, j - 1)
                     outmask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean'.format(
                         pipeline.prefix, field, line_name, j)
                     recipe.add('cab/sofia', step,
@@ -655,8 +655,8 @@ def worker(pipeline, recipe, config):
                                    "merge.minSizeZ": 2,
                                    "writeCat.basename": outmask,
                                },
-                               input=pipeline.cubes + '/image_' + str(j - 1),
-                               output=pipeline.output + '/' + img_dir,
+                               input=pipeline.cubes + '/cube_' + str(j - 1),
+                               output=pipeline.output + '/' + cube_dir,
                                label='{0:s}:: Make SoFiA mask'.format(step))
 
                     recipe.run()
@@ -669,7 +669,7 @@ def worker(pipeline, recipe, config):
                         break
 
                     step = 'make_image_{0:s}_{1:d}_with_SoFiA_mask'.format(line_name, j)
-                    line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(img_dir, line_clean_mask)})
+                    line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(cube_dir, line_clean_mask)})
                     if 'auto-mask' in line_image_opts:
                         del(line_image_opts['auto-mask'])
                     
@@ -683,7 +683,7 @@ def worker(pipeline, recipe, config):
 
                 # delete line "MFS" images made by WSclean by averaging all channels
                 for mfs in glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}_{5:d}-MFS*fits'.format(
-                    pipeline.output,img_dir,pipeline.prefix, field, line_name, j)):
+                    pipeline.output,cube_dir,pipeline.prefix, field, line_name, j)):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
@@ -698,17 +698,17 @@ def worker(pipeline, recipe, config):
                         step = 'make_{0:s}_cube'.format(
                             mm.replace('-', '_'))
                         if not os.path.exists('{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits'.format(
-                                img_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
+                                cube_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
                             meerkathi.log.info('Skipping container {0:s}. Single channels do not exist.'.format(step))
                         else:
-                            stacked_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(img_dir,
+                            stacked_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(cube_dir,
                                             pipeline.prefix, field, line_name, j, mm)
                             recipe.add(
                                 'cab/fitstool',
                                 step,
                                 {
                                     "image": ['{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-{5:04d}-{6:s}.fits:output'.format(
-                                            img_dir, pipeline.prefix, field, line_name,
+                                            cube_dir, pipeline.prefix, field, line_name,
                                             j, d, mm) for d in range(nchans)],
                                     "output": stacked_cube,
                                     "stack": True,
@@ -737,7 +737,7 @@ def worker(pipeline, recipe, config):
 
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits:output'.format(
-                            img_dir, pipeline.prefix, field, line_name, j, ss)
+                            cube_dir, pipeline.prefix, field, line_name, j, ss)
                         recipe.add(fix_specsys,
                                    'fix_specsys_{0:s}_cube'.format(ss),
                                    {'filename': cubename,
@@ -749,7 +749,7 @@ def worker(pipeline, recipe, config):
                     recipe.run()
                     recipe.jobs = []
 
-                cubename_file = '{0:s}/image_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits'.format(
+                cubename_file = '{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits'.format(
                     pipeline.cubes, j, pipeline.prefix, field, line_name)
                 rms_values.append(calc_rms(cubename_file, line_clean_mask_file))
                 meerkathi.log.info('RMS = {0:.3e} Jy/beam for {1:s}'.format(rms_values[-1],cubename_file))
@@ -773,17 +773,17 @@ def worker(pipeline, recipe, config):
                 if 'dirty' in ss:
                     meerkathi.log.info('Preparing final cubes.')
                 cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
-                    image_path, pipeline.prefix, field, line_name, j, ss)
+                    cube_path, pipeline.prefix, field, line_name, j, ss)
                 finalcubename = '{0:s}/{1:s}_{2:s}_{3:s}.{4:s}.fits'.format(
-                    image_path, pipeline.prefix, field, line_name, ss)
+                    cube_path, pipeline.prefix, field, line_name, ss)
                 line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
-                    image_path, pipeline.prefix, field, line_name, j)
+                    cube_path, pipeline.prefix, field, line_name, j)
                 final_line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}.image_clean_mask.fits'.format(
-                    image_path, pipeline.prefix, field, line_name)
+                    cube_path, pipeline.prefix, field, line_name)
                 MFScubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-MFS-{5:s}.fits'.format(
-                    image_path, pipeline.prefix, field, line_name, j, ss)
+                    cube_path, pipeline.prefix, field, line_name, j, ss)
                 finalMFScubename = '{0:s}/{1:s}_{2:s}_{3:s}-MFS-{4:s}.fits'.format(
-                    image_path, pipeline.prefix, field, line_name, ss)
+                    cube_path, pipeline.prefix, field, line_name, ss)
                 if os.path.exists(cubename):
                     os.rename(cubename, finalcubename)
                 if os.path.exists(line_clean_mask_file):
@@ -808,7 +808,7 @@ def worker(pipeline, recipe, config):
                             os.remove(MFScubename)
 
     if pipeline.enable_task(config, 'make_image') and config['make_image'].get('image_with')=='casa':
-        img_dir = get_dir_path(pipeline.cubes, pipeline)
+        cube_dir = get_dir_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
         label = config['label']
         if label != '':
@@ -892,7 +892,7 @@ def worker(pipeline, recipe, config):
             step = 'make_image_line'
             image_opts = {
                 "msname": mslist,
-                "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(img_dir, pipeline.prefix, field, line_name),
+                "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(cube_dir, pipeline.prefix, field, line_name),
                 "mode": 'channel',
                 "nchan": nchans,
                 "start": config['make_image'].get('firstchan'),
@@ -922,16 +922,16 @@ def worker(pipeline, recipe, config):
     recipe.jobs = []
     
     # Once all cubes have been made fix the headers etc.
-    # Search img_dir and img_dir/images_*/ for cubes whose header should be fixed
-    img_dir = get_dir_path(pipeline.cubes, pipeline)
+    # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
+    cube_dir = get_dir_path(pipeline.cubes, pipeline)
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
 
         casa_cube_list=glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits'.format(
-            pipeline.output,img_dir, pipeline.prefix, field, line_name))
-        wscl_cube_list=glob.glob('{0:s}/{1:s}/image_*/{2:s}_{3:s}_{4:s}*.fits'.format(
-            pipeline.output,img_dir, pipeline.prefix, field, line_name))
+            pipeline.output,cube_dir, pipeline.prefix, field, line_name))
+        wscl_cube_list=glob.glob('{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
+            pipeline.output,cube_dir, pipeline.prefix, field, line_name))
         # rm first occurrence of pipeline.output in cube file names
         cube_list = [''.join(cc.split(pipeline.output+'/')[1:]) for cc in casa_cube_list+wscl_cube_list]
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]

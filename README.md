@@ -51,7 +51,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     
   - **Docker**
     ```
-    $ stimela pull
+    $ stimela pull -d
     $ stimela build
     ```
 

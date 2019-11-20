@@ -289,7 +289,7 @@ found in our database or in the CASA NRAO database'.format(field))
 
                 if pipeline.enable_task(config['gain_cal_flux'], 'plot'):
                     table = prefix+".PREG0"
-                    gains['pre_gain_cal_flux'] = (table, 'G')
+                    gain_tables_to_plot['pre_gain_cal_flux'] = (table, 'G')
 
             # Final bandpass calibration
             if config.get('otfdelay'):
@@ -454,10 +454,10 @@ found in our database or in the CASA NRAO database'.format(field))
                        {
                            "table"   :   gain_tables,
                            "gaintype":   gain_types,
-                           "htmlname":   "{0:s}/{1:s}_{2:d}_gain_plots".format(
+                           "htmlname":   "{0:s}/{1:s}/{2:s}_{3:d}_gain_plots".format(
                                              get_dir_path(pipeline.diagnostic_plots,
                                                           pipeline),
-                                             prefix, i)
+                                             'crosscal', prefix, i)
                        },
                        input=pipeline.input,
                        output=pipeline.output,

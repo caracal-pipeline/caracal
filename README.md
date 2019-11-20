@@ -52,7 +52,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
   - **Docker**
     ```
     $ stimela pull -d
-    $ stimela build 
+    $ stimela build
     ```
 
 5. run meerkathi

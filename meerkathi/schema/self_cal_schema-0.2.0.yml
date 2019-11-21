@@ -125,19 +125,27 @@ mapping:
         desc: Number of self-calibration iterations to perform
         required: false
         example: '2'
+      cal_minuvw_m:
+          type: int
+          desc: Exclude short baselines in all of self cal [m]. If smaller than the exclusion in the imaging it will be fixed to that value.
+          required: false
+          example: '0'
       start_at_iter:
         type: int
         desc: Start self-cal iteration loop at this start value, 1-based.
         required: false
         example: '1'
       cal_time_chunk:
-        desc: chunk in time for calibration (seconds)
+        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries.
         type: int
+        required: false
         example: '128'
       cal_freq_chunk:
-        desc: chunk in time for calibration (seconds)
+        desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries.
         type: int
-        example: '20'
+        required: false
+        example: '1024'
+
       aimfast:
         type: map
         desc: Quality assessment parameter
@@ -379,13 +387,13 @@ mapping:
           Gsols_time:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: G-Jones time solution interval. The parameter cal_time_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time chunk.
             required: false
-            example: '20'
+            example: '16'
           Gsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: G-Jones frequency solution interval. The parameter cal_frq_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency chunk.
             required: false
             example: '0'
           Bjones: 
@@ -464,11 +472,6 @@ mapping:
                 desc: "Fields to plot. Specify by field id, index."
                 required: false
                 example: '0'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
 
       restore_model:
         type: map

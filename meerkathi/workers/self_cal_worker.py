@@ -33,16 +33,10 @@ CUBICAL_MT = {
     "GainDiagPhase": 'phase-diag',
 }
 
-corr_indexes = {'H': 0,
-                'X': 0,
-                'V': 1,
-                'Y': 1,
-                }
-
 SOL_TERMS = {
     "G": "50",
     "B": "50",
-    "DD": "25",
+    "DD": "20",
 }
 
 
@@ -63,10 +57,13 @@ def worker(pipeline, recipe, config):
         taper = None
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
-    ncpu = config.get('ncpu')
     freq_chunk = config.get('cal_freq_chunk')
-    minbl = config.get('cal_min_uvw')
-    mfsprefix = ["", '-MFS'][int(nchans>1)]
+    minbl = config.get('cal_minuvw_m')
+    img_min_bl = config['image'].get('minuvw_m')
+    if img_min_bl > 0. and minbl < img_min_bl:
+        minbl = img_min_bl
+    ncpu = config.get('ncpu')
+    mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
     # label of MS where we transform selfcal gaintables
     label_tgain = config['transfer_apply_gains'].get('transfer_to_label')
@@ -236,8 +233,10 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
-            "savesourcelist": True,
+            "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
+        if img_min_bl > 0:
+            image_opts.update({"minuvw-m": img_min_bl})
 
         if config[key].get('mask_from_sky'):
             fitmask = config[key].get('fits_mask')[
@@ -345,6 +344,7 @@ def worker(pipeline, recipe, config):
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
+            "scaleNoise.interpolation": 'linear',
             "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
@@ -1010,6 +1010,8 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
+            if minbl > 0:
+                cubical_opts.update({"sol-min-bl": minbl})
             if flags != "":
                 cubical_opts.update({
                     "flags-apply": flags,

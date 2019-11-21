@@ -127,7 +127,7 @@ mapping:
         example: '2'
       cal_minuvw_m:
           type: int
-          desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop. If the value provided here is smaller than the baseline length limit set in the imaging section of this worker, it will be fixed to the latter value.
+          desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop.
           required: false
           example: '0'
       start_at_iter:
@@ -231,7 +231,7 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc] in pixels
             required: false
-            example: '10, 20, 30' 
+            example: '10, 20, 30'
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning

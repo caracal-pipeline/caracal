@@ -57,10 +57,10 @@ def worker(pipeline, recipe, config):
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
-    minbl = config.get('cal_minuvw_m')
-    img_min_bl = config['image'].get('minuvw_m')
-    if img_min_bl > 0. and minbl < img_min_bl:
-        minbl = img_min_bl
+    cal_min_uvw = config.get('cal_minuvw_m')
+    img_min_uvw = config['image'].get('minuvw_m')
+    if img_min_uvw > 0. and cal_min_uvw < img_min_uvw:
+        cal_min_uvw = img_min_uvw
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -244,8 +244,8 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
-        if img_min_bl > 0:
-            image_opts.update({"minuvw-m": img_min_bl})
+        if img_min_uvw > 0:
+            image_opts.update({"minuvw-m": img_min_uvw})
 
         if config[key].get('mask_from_sky'):
             fitmask = config[key].get('fits_mask')[
@@ -1015,8 +1015,8 @@ def worker(pipeline, recipe, config):
                 "madmax-estimate": 'corr',
                 "log-boring": True,
             }
-            if minbl > 0:
-                cubical_opts.update({"sol-min-bl": minbl})
+            if cal_min_uvw > 0:
+                cubical_opts.update({"sol-min-bl": cal_min_uvw})
             if config[key].get('two_step', False) and ddsols_[0] != -1:
                 cubical_opts.update({
                     "g-update-type": gupdate,

@@ -44,6 +44,11 @@ mapping:
         desc: number of cpu's to use
         required: false
         example: '5'
+      minuvw_m:
+        type: int
+        desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop.
+        required: false
+        example: '0'
       img_npix:
         type: int
         desc: Number of pixels in output image
@@ -125,11 +130,6 @@ mapping:
         desc: Number of self-calibration iterations to perform
         required: false
         example: '2'
-      cal_minuvw_m:
-          type: int
-          desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop.
-          required: false
-          example: '0'
       start_at_iter:
         type: int
         desc: Start self-cal iteration loop at this start value, 1-based.

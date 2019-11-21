@@ -65,6 +65,7 @@ def worker(pipeline, recipe, config):
     time_chunk = config.get('cal_time_chunk')
     ncpu = config.get('ncpu')
     freq_chunk = config.get('cal_freq_chunk')
+    minbl = config.get('cal_min_uvw')
     mfsprefix = ["", '-MFS'][int(nchans>1)]
     cal_niter = config.get('cal_niter')
     # label of MS where we transform selfcal gaintables
@@ -991,7 +992,9 @@ def worker(pipeline, recipe, config):
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "g-max-prior-error":0.3,
+                "g-max-prior-error":1.3,
+                "g-max-post-error":1.3,
+                "g-prop-flags": 'never',     #This is temporary for testing
                 "out-overwrite": config[key].get('overwrite'),
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
@@ -1023,6 +1026,9 @@ def worker(pipeline, recipe, config):
                     "dd-type": CUBICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
+                    "dd-max-prior-error": 1.3,
+                    "dd-max-post-error": 1.3,
+                    "dd-prop-flags": 'never',  # This is temporary for testing
                     "dd-save-to": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                     pipeline), num, msname.split('.ms')[0]),
                     "dd-clip-low": config.get('cal_gain_amplitude_clip_low'),
@@ -1104,24 +1110,45 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
         bsols_ = [config[key].get('Bsols_time')[num - 1 if num <= len(config[key].get('Bsols_time')) else -1],
                   config[key].get('Bsols_channel')[
-                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+                      num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         gasols_ = [
             config[key].get('GAsols_time')[num - 1 if num <= len(config[key].get('GAsols_time')) else -1],
             config[key].get('GAsols_channel')[
                 num - 1 if num <= len(config[key].get('GAsols_channel')) else -1]]
         # If we want to interpolate our frequency interval is always 1 no matter what
         if enable_inter:
-            gsols_[1]=1
-            bsols_[1]=1
-            gasols_[1]=1
+            key_apply = 'transfer_apply_gains'
+            gsols_ = [config[key_apply].get('Gsols_time')[num - 1 if num <= len(config[key_apply].get('Gsols_time')) else -1],
+                      config[key_apply].get('Gsols_channel')[num - 1 if num <= len(config[key_apply].get('Gsols_channel')) else -1]]
+            bsols_ = [config[key_apply].get('Bsols_time')[num - 1 if num <= len(config[key_apply].get('Bsols_time')) else -1],
+                      config[key_apply].get('Bsols_channel')[num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
+            if gasols_[0] != -1:
+                gasols_ = [config[key_apply].get('GAsols_time')[num - 1 if num <= len(config[key_apply].get('GAsols_time')) else -1],
+                           config[key_apply].get('GAsols_channel')[num - 1 if num <= len(config[key_apply].get('GAsols_channel')) else -1]]
+
+        time_chunk_apply = gsols_[0]
+        freq_chunk_apply = gsols_[1]
+
         # expand the Jones chain if necessary, for multiple Jones terms we always need matrix complex2x2
         if (config[key].get('two_step') and gasols_[0] != -1):
             jones_chain += ',DD'
             matrix_type = 'Gain2x2'
+            if gasols_[0] > time_chunk_apply:
+                time_chunk_apply = gasols_[0]
+            if gasols_[1] > freq_chunk_apply:
+                freq_chunk_apply = gasols_[1]
+
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-
+            if bsols_[0] > time_chunk_apply:
+                time_chunk_apply = bsols_[0]
+            if bsols_[1] > freq_chunk_apply:
+                freq_chunk_apply = bsols_[1]
+        if freq_chunk_apply == 1:
+            freq_chunk_apply = freq_chunk
+        if time_chunk_apply == 1:
+            time_chunk_apply = time_chunk
         # select the right datasets
         if enable_inter:
             apmode= 'ac'
@@ -1130,7 +1157,7 @@ def worker(pipeline, recipe, config):
                 apmode = 'ar'
             else:
                 apmode = 'ac'
-
+        matrix_type = 'Gain2x2'
         # loop through measurement sets
         for i,msname_out in enumerate(mslist_out):
             #If we are restoring a step we need to restore the flags of the 2gc process
@@ -1159,11 +1186,9 @@ def worker(pipeline, recipe, config):
             cubical_gain_interp_opts = {
                "data-ms": msname_out,
                "data-column": 'DATA',
-               "data-time-chunk": time_chunk,
-               "data-freq-chunk": freq_chunk,
                "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                "sol-jones": jones_chain,
-               "sol-term-iters": 0,
+               "sol-term-iters": "5,0",
                "sel-diag": take_diag_terms,
                "dist-ncpu": ncpu,
                "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
@@ -1172,13 +1197,11 @@ def worker(pipeline, recipe, config):
                "out-overwrite": config[key].get('overwrite'),
                "weight-column": config[key].get('weight_column'),
                "montblanc-dtype": 'float',
-               "g-solvable": False,
+               "g-solvable": True,
                "g-update-type": gupdate,
                "g-type": CUBICAL_MT[matrix_type],
                "g-time-int": int(gsols_[0]),
                "g-freq-int": int(gsols_[1]),
-               "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), num, fromname.split('.ms')[0]),
                "madmax-enable": config[key].get('madmax_flagging'),
                "madmax-plot": False,
                "madmax-threshold": config[key].get('madmax_flag_thresh'),
@@ -1187,27 +1210,58 @@ def worker(pipeline, recipe, config):
                "dd-dd-term": False,
                "model-ddes": 'never',
             }
+            if enable_inter:
+                cubical_gain_interp_opts.update({
+                    "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
+                })
+            else:
+                cubical_gain_interp_opts.update({
+                    "g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
+                })
+
             # expand
             if config[key].get('Bjones'):
-               cubical_gain_interp_opts.update({
-                    "b-update-type": bupdate,
-                    "b-type": CUBICAL_MT[matrix_type],
-                    "b-xfer-from":"{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                pipeline), num, fromname.split('.ms')[0]),
-                    "b-time-int": int(bsols_[0]),
-                    "b-freq-int": int(bsols_[1]),
-                    "b-solvable": False
+                cubical_gain_interp_opts.update({
+                        "b-update-type": bupdate,
+                        "b-type": CUBICAL_MT[matrix_type],
+                        "b-time-int": int(bsols_[0]),
+                        "b-freq-int": int(bsols_[1]),
+                        "b-solvable": False
+                        })
+                if enable_inter:
+                    cubical_gain_interp_opts.update({
+                        "b-xfer-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
                     })
+                else:
+                    cubical_gain_interp_opts.update({
+                        "b-load-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
+                     })
             if config[key].get('two_step') and gasols_[0] != -1:
-               cubical_gain_interp_opts.update({
-                    "dd-update-type": 'amp-diag',
-                    "dd-type": CUBICAL_MT[matrix_type],
-                    "dd-xfer-from":  "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), num, fromname.split('.ms')[0]),
-                    "dd-time-int": int(gasols_[0]),
-                    "dd-freq-int": int(gasols_[1]),
-                    "dd-solvable": False
+                cubical_gain_interp_opts.update({
+                        "dd-update-type": 'amp-diag',
+                        "dd-type": CUBICAL_MT[matrix_type],
+                        "dd-time-int": int(gasols_[0]),
+                        "dd-freq-int": int(gasols_[1]),
+                        "dd-solvable": False
+                        })
+                if enable_inter:
+                    cubical_gain_interp_opts.update({
+                        "dd-xfer-from": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
                     })
+                else:
+                    cubical_gain_interp_opts.update({
+                        "dd-load-from": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                             pipeline), num, fromname.split('.ms')[0])
+                     })
+            cubical_gain_interp_opts.update({
+                "data-time-chunk": time_chunk_apply,
+                "data-freq-chunk": freq_chunk_apply
+                 })
             # ensure proper logging for restore or interpolation
             if not enable_inter:
                 step = 'restore_cubical_gains_{0:d}_{1:d}'.format(num, i)

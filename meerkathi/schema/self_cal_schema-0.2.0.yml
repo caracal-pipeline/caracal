@@ -509,6 +509,47 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'False'
+          Gsols_time:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+            example: '1'
+          Gsols_channel:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+            example: '1'
+          Bjones:
+            type: bool
+            desc: Enable Bjones
+            required: false
+            example: 'False'
+          Bsols_time:
+            seq:
+              - type: int
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+            example: '1'
+          Bsols_channel:
+            seq:
+              - type: float
+            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            required: false
+            example: '1'
+          GAsols_time:
+            desc: Time intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
+            seq:
+              - type: float
+            required: false
+            example: '1'
+          GAsols_channel:
+            desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
+            seq:
+              - type: float
+            required: false
+            example: '1'
           transfer_to_label:
             type: str
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains

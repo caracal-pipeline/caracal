@@ -58,9 +58,6 @@ def worker(pipeline, recipe, config):
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
     cal_min_uvw = config.get('cal_minuvw_m')
-    img_min_uvw = config['image'].get('minuvw_m')
-    if img_min_uvw > 0. and cal_min_uvw < img_min_uvw:
-        cal_min_uvw = img_min_uvw
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -244,8 +241,8 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
-        if img_min_uvw > 0:
-            image_opts.update({"minuvw-m": img_min_uvw})
+        if cal_min_uvw > 0:
+            image_opts.update({"minuvw-m": cal_min_uvw})
 
         if config[key].get('mask_from_sky'):
             fitmask = config[key].get('fits_mask')[

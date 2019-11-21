@@ -58,7 +58,7 @@ def worker(pipeline, recipe, config):
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
     minbl = config.get('cal_minuvw_m')
-    img_min_bl = config.get['image']('minuvw_m')
+    img_min_bl = config['image'].get('minuvw_m')
     if img_min_bl > 0. and minbl < img_min_bl:
         minbl = img_min_bl
     ncpu = config.get('ncpu')

@@ -192,7 +192,8 @@ class worker_administrator(object):
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
-        meerkathi.log_filehandler.setFilename(os.path.join(self.logs, meerkathi.MEERKATHI_LOG), delay=False)
+        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
+        meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")

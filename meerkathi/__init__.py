@@ -55,6 +55,25 @@ SCHEMA = os.path.join(
 # Logging
 ################################################################################
 
+import logging.handlers
+
+class DelayedFileHandler(logging.handlers.MemoryHandler):
+    """A DelayedFileHandler is a variation on the MemoryHandler. It will buffer up log
+    entries until told to stop delaying, then dumps everything into the target file
+    and from then on logs continuously. This allows the log file to be switched at startup."""
+    def __init__(self, filename, delay=True):
+        logging.handlers.MemoryHandler.__init__(self, 100000, target=logging.FileHandler(filename))
+        self._delay = delay
+
+    def shouldFlush(self, record):
+        return not self._delay
+
+    def setFilename(self, filename, delay=False):
+        self._delay = delay
+        self.setTarget(logging.FileHandler(filename))
+        if not delay:
+            self.flush()
+
 
 def create_logger():
     """ Create a console logger """
@@ -62,8 +81,10 @@ def create_logger():
     cfmt = logging.Formatter(
         ('%(name)s - %(asctime)s %(levelname)s - %(message)s'))
     log.setLevel(logging.DEBUG)
-    filehandler = logging.FileHandler(MEERKATHI_LOG)
+
+    filehandler = DelayedFileHandler(MEERKATHI_LOG)
     filehandler.setFormatter(cfmt)
+
     log.addHandler(filehandler)
     log.setLevel(logging.INFO)
 

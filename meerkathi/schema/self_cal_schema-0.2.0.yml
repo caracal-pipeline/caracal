@@ -547,11 +547,11 @@ mapping:
             desc: Number of sky model components that are processed in a single chunk.
             required: false
             example: '0'
-          invert_uvw:
-            type: bool
-            desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees.
+          exp-sign-convention:
+            type: str
+            desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
             required: false
-            example: 'True'
+            example: 'casa'
           within:
             type: str
             desc: Give JS9 region file. Only sources within those regions will be included.

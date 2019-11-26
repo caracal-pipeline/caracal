@@ -27,7 +27,7 @@ $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 ```
 3. Install meerKATHI
 ```
-$ pip install <absolute path to meerkathi folder>[extra_diagnostics]
+$ pip install <absolute path to meerkathi folder>"[extra_diagnostics]"
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
@@ -51,7 +51,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     
   - **Docker**
     ```
-    $ stimela pull
+    $ stimela pull -d
     $ stimela build
     ```
 

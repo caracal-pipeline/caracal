@@ -147,6 +147,19 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
+            if pipeline.enable_task(config, 'flag_elevation'):
+                step = 'flag_elevation_{0:s}_{1:d}'.format(wname, i)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'elevation',
+                               "lowerlimit": config['flag_elevation'].get('low'),
+                               "upperlimit": config['flag_elevation'].get('high'),
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
+
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow'].get('include_full_mk64'):
                     #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])

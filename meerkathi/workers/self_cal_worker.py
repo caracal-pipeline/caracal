@@ -1680,14 +1680,6 @@ def worker(pipeline, recipe, config):
                                                                                           pipeline), prefix, field, self_cal_iter_counter)
         for i, msname in enumerate(mslist_out):
             step = 'transfer_model_{0:d}'.format(i)
-            print('******************')
-            print('******************')
-            print('******************')
-            print('******************')
-            print('******************')
-            print(config['transfer_model'].get('exp_sign_convention'))
-            print('******************')
-            print('******************')
             recipe.add('cab/crystalball', step,
                        {
                            "ms": msname,

@@ -1680,6 +1680,14 @@ def worker(pipeline, recipe, config):
                                                                                           pipeline), prefix, field, self_cal_iter_counter)
         for i, msname in enumerate(mslist_out):
             step = 'transfer_model_{0:d}'.format(i)
+            print('******************')
+            print('******************')
+            print('******************')
+            print('******************')
+            print('******************')
+            print(config['transfer_model'].get('exp_sign_convention'))
+            print('******************')
+            print('******************')
             recipe.add('cab/crystalball', step,
                        {
                            "ms": msname,
@@ -1687,7 +1695,7 @@ def worker(pipeline, recipe, config):
                            "spectra": config['transfer_model'].get('spectra'),
                            "row-chunks": config['transfer_model'].get('row_chunks'),
                            "model-chunks": config['transfer_model'].get('model_chunks'),
-                           "invert-uvw": config['transfer_model'].get('invert_uvw'),
+                           "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
                            "within": sdm.dismissable(config['transfer_model'].get('within') or None),
                            "points-only": config['transfer_model'].get('points_only'),
                            "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),

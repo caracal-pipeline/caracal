@@ -58,8 +58,9 @@ mapping:
             required: false
             example: 'True'
           mode:
-            desc: Regridding mode (channel/velocity/frequency/channel_b).
+            desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT - Currently only frequency mode is supported.
             type: str
+            enum: ['frequency', ]
             required: false
             example: 'frequency'
           outframe:
@@ -160,6 +161,7 @@ mapping:
           image_with:
             desc: Choose whether to image with WSclean + SoFiA ("wsclean") or with Casa ("casa").
             type: str
+            enum: ["wsclean", "casa"]
             required: false
             example: wsclean
           use_mstransform:

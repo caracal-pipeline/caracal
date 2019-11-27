@@ -581,18 +581,25 @@ def worker(pipeline, recipe, config):
             "channelsout": nchans,
             "channelrange": channelrange,
             "niter": config['make_cube'].get('niter'),
+            "gain": config['make_cube'].get('gain'),
             "mgain": config['make_cube'].get('wscl_mgain'),
             "auto-threshold": config['make_cube'].get('wscl_auto_threshold'),
             "multiscale": config['make_cube'].get('wscl_multi_scale'),
-            "multiscale-scales": sdm.dismissable(config['make_cube'].get('wscl_multi_scale_scales')),
+            "multiscale-scales": config['make_cube'].get('wscl_multi_scale_scales'),
+            "multiscale-scale-bias": config['make_cube'].get('wscl_multi_scale_bias'),
             "no-update-model-required": config['make_cube'].get('wscl_no_update_mod')
         }
 
         for target in (all_targets):
+            meerkathi.log.info('Starting to make line cube for target {0:}'.format(target))
             mslist = ms_dict[target]
             field = utils.filter_name(target)
             line_clean_mask_file = None
             rms_values=[]
+            if 'fitsmask' in line_image_opts:
+                del(line_image_opts['fitsmask'])
+            if 'auto-mask' in line_image_opts:
+                del(line_image_opts['auto-mask'])
             for j in range(1, wscl_niter + 1):
                 cube_path = "{0:s}/cube_{1:d}".format(
                     pipeline.cubes, j)
@@ -687,12 +694,12 @@ def worker(pipeline, recipe, config):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
-                if config['make_image']['wscl_make_cube']:
-                    if not config['make_image'].get('niter'):
+                if config['make_cube']['wscl_make_cube']:
+                    if not config['make_cube'].get('niter'):
                         imagetype = ['dirty', 'image']
                     else:
                         imagetype = ['dirty', 'image', 'psf', 'residual', 'model']
-                        if config['make_image'].get('wscl_mgain') < 1.0:
+                        if config['make_cube'].get('wscl_mgain') < 1.0:
                             imagetype.append('first-residual')
                     for mm in imagetype:
                         step = 'make_{0:s}_cube'.format(
@@ -898,6 +905,7 @@ def worker(pipeline, recipe, config):
                 "start": config['make_cube'].get('firstchan'),
                 "interpolation": 'nearest',
                 "niter": config['make_cube'].get('niter'),
+                "gain": config['make_cube'].get('gain'),
                 "psfmode": 'hogbom',
                 "threshold": config['make_cube'].get('casa_threshold'),
                 "npix": config['make_cube'].get('npix'),

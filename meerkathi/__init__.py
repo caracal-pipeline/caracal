@@ -4,6 +4,7 @@ import pkg_resources
 import os
 import subprocess
 import logging
+from time import gmtime, strftime
 
 ##############################################################################
 # Globals
@@ -45,7 +46,7 @@ __version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
-MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi.txt")
+MEERKATHI_LOG = os.path.join(os.getcwd(), "log-meerkathi-{0:s}.txt".format(strftime("%Y%m%d-%H%M%S", gmtime())))
 DEFAULT_CONFIG = os.path.join(
     pckgdir, "sample_configurations", "minimalConfig.yml")
 SCHEMA = os.path.join(

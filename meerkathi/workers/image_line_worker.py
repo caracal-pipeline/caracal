@@ -344,7 +344,7 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info(
             'Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(
                 nchan_dopp, comfreq0, comchanw))
-        if pipeline.enable_task(config, 'make_image') and config['make_image'].get('image_with')=='wsclean' and corr_order:
+        if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='wsclean' and corr_order:
             meerkathi.log.info(
                 'wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image')
             sys.exit(1)
@@ -485,7 +485,7 @@ def worker(pipeline, recipe, config):
                 shutil.copy(plot, pipeline.diagnostic_plots)
                 os.remove(plot)
 
-    if pipeline.enable_task(config, 'make_image') and config['make_image'].get('image_with')=='wsclean':
+    if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='wsclean':
         nchans_all, specframe_all = [], []
         label = config['label']
         if label != '':
@@ -493,7 +493,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
 
-        if config['make_image'].get('use_mstransform'):
+        if config['make_cube'].get('use_mstransform'):
             all_targets, all_msfiles, ms_dict = target_to_msfiles(
                 pipeline.target, pipeline.msnames, flabel, True)
             for i, msfile in enumerate(all_msfiles):
@@ -546,8 +546,8 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
-        spwid = config['make_image'].get('spwid')
-        nchans = config['make_image'].get('nchans')
+        spwid = config['make_cube'].get('spwid')
+        nchans = config['make_cube'].get('nchans')
         if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
@@ -555,44 +555,51 @@ def worker(pipeline, recipe, config):
         # Assuming user wants same spw for all msfiles and they have same
         # specframe
         specframe_all = [ss[spwid] for ss in specframe_all][0]
-        firstchan = config['make_image'].get('firstchan')
-        binchans = config['make_image'].get('binchans')
+        firstchan = config['make_cube'].get('firstchan')
+        binchans = config['make_cube'].get('binchans')
         channelrange = [firstchan, firstchan + nchans * binchans]
-        npix = config['make_image'].get('npix')
+        npix = config['make_cube'].get('npix')
         if len(npix) == 1:
             npix = [npix[0], npix[0]]
 
         # Construct weight specification
-        if config['make_image'].get('weight') == 'briggs':
+        if config['make_cube'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['make_image'].get('robust'))
+                config['make_cube'].get('robust'))
         else:
-            weight = config['make_image'].get('weight')
-        wscl_niter = config['make_image'].get('wscl_sofia_niter')
-        wscl_tol = config['make_image'].get('wscl_sofia_converge')
+            weight = config['make_cube'].get('weight')
+        wscl_niter = config['make_cube'].get('wscl_sofia_niter')
+        wscl_tol = config['make_cube'].get('wscl_sofia_converge')
 
         line_image_opts = {
             "weight": weight,
-            "taper-gaussian": str(config['make_image'].get('taper')),
-            "pol": config['make_image'].get('pol'),
+            "taper-gaussian": str(config['make_cube'].get('taper')),
+            "pol": config['make_cube'].get('pol'),
             "npix": npix,
-            "padding": config['make_image'].get('padding'),
-            "scale": config['make_image'].get('cell'),
+            "padding": config['make_cube'].get('padding'),
+            "scale": config['make_cube'].get('cell'),
             "channelsout": nchans,
             "channelrange": channelrange,
-            "niter": config['make_image'].get('niter'),
-            "mgain": config['make_image'].get('wscl_mgain'),
-            "auto-threshold": config['make_image'].get('wscl_auto_threshold'),
-            "multiscale": config['make_image'].get('wscl_multi_scale'),
-            "multiscale-scales": sdm.dismissable(config['make_image'].get('wscl_multi_scale_scales')),
-            "no-update-model-required": config['make_image'].get('wscl_no_update_mod')
+            "niter": config['make_cube'].get('niter'),
+            "gain": config['make_cube'].get('gain'),
+            "mgain": config['make_cube'].get('wscl_mgain'),
+            "auto-threshold": config['make_cube'].get('wscl_auto_threshold'),
+            "multiscale": config['make_cube'].get('wscl_multi_scale'),
+            "multiscale-scales": config['make_cube'].get('wscl_multi_scale_scales'),
+            "multiscale-scale-bias": config['make_cube'].get('wscl_multi_scale_bias'),
+            "no-update-model-required": config['make_cube'].get('wscl_no_update_mod')
         }
 
         for target in (all_targets):
+            meerkathi.log.info('Starting to make line cube for target {0:}'.format(target))
             mslist = ms_dict[target]
             field = utils.filter_name(target)
             line_clean_mask_file = None
             rms_values=[]
+            if 'fitsmask' in line_image_opts:
+                del(line_image_opts['fitsmask'])
+            if 'auto-mask' in line_image_opts:
+                del(line_image_opts['auto-mask'])
             for j in range(1, wscl_niter + 1):
                 cube_path = "{0:s}/cube_{1:d}".format(
                     pipeline.cubes, j)
@@ -608,15 +615,15 @@ def worker(pipeline, recipe, config):
                     })
 
                 if j == 1:
-                    own_line_clean_mask = config['make_image'].get(
+                    own_line_clean_mask = config['make_cube'].get(
                         'wscl_user_clean_mask')
                     if own_line_clean_mask:
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                             get_dir_path(pipeline.masking, pipeline), own_line_clean_mask)})
-                        step = 'make_image_{0:s}_{1:d}_with_user_mask'.format(line_name, j)
+                        step = 'make_cube_{0:s}_{1:d}_with_user_mask'.format(line_name, j)
                     else:
-                        line_image_opts.update({"auto-mask": config['make_image'].get('wscl_auto_mask')})
-                        step = 'make_image_{0:s}_{1:d}_with_automasking'.format(line_name, j)
+                        line_image_opts.update({"auto-mask": config['make_cube'].get('wscl_auto_mask')})
+                        step = 'make_cube_{0:s}_{1:d}_with_automasking'.format(line_name, j)
                     
                 else:
                     step = 'make_sofia_mask_' + str(j - 1)
@@ -668,7 +675,7 @@ def worker(pipeline, recipe, config):
                         j -= 1
                         break
 
-                    step = 'make_image_{0:s}_{1:d}_with_SoFiA_mask'.format(line_name, j)
+                    step = 'make_cube_{0:s}_{1:d}_with_SoFiA_mask'.format(line_name, j)
                     line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(cube_dir, line_clean_mask)})
                     if 'auto-mask' in line_image_opts:
                         del(line_image_opts['auto-mask'])
@@ -687,12 +694,12 @@ def worker(pipeline, recipe, config):
                     os.remove(mfs)
 
                 # Stack channels together into cubes and fix spectral frame
-                if config['make_image']['wscl_make_cube']:
-                    if not config['make_image'].get('niter'):
+                if config['make_cube']['wscl_make_cube']:
+                    if not config['make_cube'].get('niter'):
                         imagetype = ['dirty', 'image']
                     else:
                         imagetype = ['dirty', 'image', 'psf', 'residual', 'model']
-                        if config['make_image'].get('wscl_mgain') < 1.0:
+                        if config['make_cube'].get('wscl_mgain') < 1.0:
                             imagetype.append('first-residual')
                     for mm in imagetype:
                         step = 'make_{0:s}_cube'.format(
@@ -792,7 +799,7 @@ def worker(pipeline, recipe, config):
                     os.rename(MFScubename, finalMFScubename)
 
             for j in range(1, wscl_niter):
-                if config['make_image'].get('wscl_keep_final_products_only'):
+                if config['make_cube'].get('wscl_keep_final_products_only'):
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
@@ -807,7 +814,7 @@ def worker(pipeline, recipe, config):
                         if os.path.exists(MFScubename):
                             os.remove(MFScubename)
 
-    if pipeline.enable_task(config, 'make_image') and config['make_image'].get('image_with')=='casa':
+    if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='casa':
         cube_dir = get_dir_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
         label = config['label']
@@ -815,7 +822,7 @@ def worker(pipeline, recipe, config):
             flabel = '_' + label
         else:
             flabel = label
-        if config['make_image'].get('use_mstransform'):
+        if config['make_cube'].get('use_mstransform'):
             all_targets, all_msfiles, ms_dict = target_to_msfiles(
                 pipeline.target, pipeline.msnames, flabel, True)
             for i, msfile in enumerate(all_msfiles):
@@ -866,8 +873,8 @@ def worker(pipeline, recipe, config):
             meerkathi.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
-        spwid = config['make_image'].get('spwid')
-        nchans = config['make_image'].get('nchans')
+        spwid = config['make_cube'].get('spwid')
+        nchans = config['make_cube'].get('nchans')
         if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
@@ -875,43 +882,44 @@ def worker(pipeline, recipe, config):
         # Assuming user wants same spw for all msfiles and they have same
         # specframe
         specframe_all = [ss[spwid] for ss in specframe_all][0]
-        firstchan = config['make_image'].get('firstchan')
-        binchans = config['make_image'].get('binchans')
+        firstchan = config['make_cube'].get('firstchan')
+        binchans = config['make_cube'].get('binchans')
         channelrange = [firstchan, firstchan + nchans * binchans]
         # Construct weight specification
-        if config['make_image'].get('weight') == 'briggs':
+        if config['make_cube'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['make_image'].get('robust', robust))
+                config['make_cube'].get('robust', robust))
         else:
-            weight = config['make_image'].get('weight', weight)
+            weight = config['make_cube'].get('weight', weight)
 
         for target in (all_targets):
             mslist = ms_dict[target]
             field = utils.filter_name(target)
 
-            step = 'make_image_line'
+            step = 'make_cube_line'
             image_opts = {
                 "msname": mslist,
                 "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(cube_dir, pipeline.prefix, field, line_name),
                 "mode": 'channel',
                 "nchan": nchans,
-                "start": config['make_image'].get('firstchan'),
+                "start": config['make_cube'].get('firstchan'),
                 "interpolation": 'nearest',
-                "niter": config['make_image'].get('niter'),
+                "niter": config['make_cube'].get('niter'),
+                "gain": config['make_cube'].get('gain'),
                 "psfmode": 'hogbom',
-                "threshold": config['make_image'].get('casa_threshold'),
-                "npix": config['make_image'].get('npix'),
-                "cellsize": config['make_image'].get('cell'),
-                "weight": config['make_image'].get('weight'),
-                "robust": config['make_image'].get('robust'),
-                "stokes": config['make_image'].get('pol'),
-                "port2fits": config['make_image'].get('casa_port2fits'),
+                "threshold": config['make_cube'].get('casa_threshold'),
+                "npix": config['make_cube'].get('npix'),
+                "cellsize": config['make_cube'].get('cell'),
+                "weight": config['make_cube'].get('weight'),
+                "robust": config['make_cube'].get('robust'),
+                "stokes": config['make_cube'].get('pol'),
+                "port2fits": config['make_cube'].get('casa_port2fits'),
                 "restfreq": restfreq,
             }
-            if config['make_image'].get('taper') != '':
+            if config['make_cube'].get('taper') != '':
                 image_opts.update({
                     "uvtaper": True,
-                    "outertaper": config['make_image'].get('taper'),
+                    "outertaper": config['make_cube'].get('taper'),
                 })
             recipe.add('cab/casa_clean', step, image_opts,
                        input=pipeline.input,

@@ -591,6 +591,7 @@ def worker(pipeline, recipe, config):
         }
 
         for target in (all_targets):
+            meerkathi.log.info('Starting to make line cube for target {0:}'.format(target))
             mslist = ms_dict[target]
             field = utils.filter_name(target)
             line_clean_mask_file = None

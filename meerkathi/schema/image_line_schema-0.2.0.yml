@@ -230,12 +230,12 @@ mapping:
             required: false
             example: '1000000'
           gain:
-            desc: Fraction of the peak that will be subtracted in each clean iteration.
+            desc: Fraction of the peak that will be cleaned in each minor iteration.
             type: float
             required: false
             example: '0.1'
           wscl_mgain:
-            desc: WSclean gain for major iterations, i.e., maximum fraction of peak that will be subtracted in each major cycle.
+            desc: WSclean gain for major iterations, i.e., maximum fraction of peak that will be cleaned in each major iteration.
             type: float
             required: false
             example: '1.0'
@@ -291,7 +291,7 @@ mapping:
             required: false
             example: '0, 10, 20, 30'
           wscl_multi_scale_bias:
-            desc: Parameter to prevent cleaning small scales in the large-scale iterations. A higher bias will give more focus to larger scales.
+            desc: Parameter to set the bias towards larger scales during multi-scale cleaning. A higher bias will give more focus to larger scales.
             type: float
             required: false
             example: '0.6'

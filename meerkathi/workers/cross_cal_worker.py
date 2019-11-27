@@ -12,7 +12,10 @@ NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
 
 
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def get_dir_path(string, pipeline):
+    print(pipeline.output)
+    
+    return string.split(pipeline.output)[1][1:]
 
 
 # Rules for interpolation mode to use when applying calibration solutions
@@ -450,14 +453,16 @@ found in our database or in the CASA NRAO database'.format(field))
             for gain_table, info in gain_tables_to_plot.items():
                 gain_tables.append('{0:s}/{1:s}:{2:s}'.format(table_path, info[0], 'output'))
                 gain_types.append(info[1])
+                
+            # Check if the directory for the gain tables exist, and create if not
+            html_path = '{0:s}/{1:s}'.format(get_dir_path(pipeline.diagnostic_plots, pipeline),'crosscal')
+            os.makedirs('{0:s}/{1:s}'.format(pipeline.output,html_path), exist_ok=True)
+
             recipe.add("cab/ragavi", step,
                        {
                            "table"   :   gain_tables,
                            "gaintype":   gain_types,
-                           "htmlname":   "{0:s}/{1:s}/{2:s}_{3:d}_gain_plots".format(
-                                             get_dir_path(pipeline.diagnostic_plots,
-                                                          pipeline),
-                                             'crosscal', prefix, i)
+                           "htmlname":   "{0:s}/{1:s}_{2:d}_gain_plots".format(html_path, prefix, i)
                        },
                        input=pipeline.input,
                        output=pipeline.output,

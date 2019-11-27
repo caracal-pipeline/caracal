@@ -595,6 +595,10 @@ def worker(pipeline, recipe, config):
             field = utils.filter_name(target)
             line_clean_mask_file = None
             rms_values=[]
+            if 'fitsmask' in line_image_opts:
+                del(line_image_opts['fitsmask'])
+            if 'auto-mask' in line_image_opts:
+                del(line_image_opts['auto-mask'])
             for j in range(1, wscl_niter + 1):
                 cube_path = "{0:s}/cube_{1:d}".format(
                     pipeline.cubes, j)

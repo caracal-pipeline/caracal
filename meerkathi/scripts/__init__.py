@@ -94,7 +94,7 @@ class reporter:
                 map(__customize, sols_rep.cells[0]['source'].split('\n')))
 
             # roll
-            ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+            ep = ExecutePreprocessor(timeout=None, kernel_name='python3')
             try:
                 ep.preprocess(
                     sols_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
@@ -137,7 +137,7 @@ class reporter:
             map(__customize, ms_rep.cells[0]['source'].split('\n')))
 
         # roll
-        ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+        ep = ExecutePreprocessor(timeout=None, kernel_name='python3')
         try:
             ep.preprocess(
                 ms_rep, {'metadata': {'path': os.path.abspath(os.path.dirname(__file__))}})
@@ -186,7 +186,7 @@ class reporter:
                 map(__customize, ms_rep.cells[0]['source'].split('\n')))
 
             # roll
-            ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+            ep = ExecutePreprocessor(timeout=None, kernel_name='python3')
 
             try:
                 ep.preprocess(
@@ -239,7 +239,7 @@ class reporter:
                 map(__customize, ms_rep.cells[0]['source'].split('\n')))
 
             # roll
-            ep = ExecutePreprocessor(timeout=None, kernel_name='python2')
+            ep = ExecutePreprocessor(timeout=None, kernel_name='python3')
             try:
                 ep.preprocess(
                     ms_rep, {'metadata': {'path': os.path.abspath(self.__outputdir)}})

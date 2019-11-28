@@ -1,3 +1,4 @@
+import meerkathi
 from meerkathi import log, pckgdir
 from meerkathi.dispatch_crew import worker_help
 import subprocess
@@ -8,6 +9,7 @@ import traceback
 from datetime import datetime
 import stimela
 import glob
+import shutil
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
 import logging
 import traceback
@@ -204,6 +206,22 @@ class worker_administrator(object):
             f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
             if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
                 subprocess.check_call(["cp", "-r", f, self.input])
+
+        # Copy standard notebooks
+        if self.config['general']['init_notebooks']:
+            nbdir = os.path.join(os.path.dirname(meerkathi.__file__), "notebooks")
+            for notebook in self.config['general']['init_notebooks']:
+                nbfile = notebook + ".ipynb"
+                nbsrc = os.path.join(nbdir, nbfile)
+                nbdest = os.path.join(self.output, nbfile)
+                if os.path.exists(nbsrc):
+                    if os.path.exists(nbdest):
+                        log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+                    else:
+                        log.info("Creating standard notebook {}".format(nbdest))
+                        shutil.copyfile(nbsrc, nbdest)
+                else:
+                    log.error("Standard notebook {} does not exist".format(nbsrc))
 
     def enable_task(self, config, task):
         a = config.get(task)

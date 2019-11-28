@@ -124,27 +124,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'K'
-              field:
-                seq: 
-                - type: str 
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'bpcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
           flag:
             type: map
             desc: Flagging based on delay correction solutions.
@@ -274,27 +253,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'B'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'bpcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
 
       gain_cal_flux:
         type: map
@@ -367,27 +325,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'fcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
 
       gain_cal_gain:
         type: map
@@ -460,27 +397,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                  - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'gcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
       
       transfer_fluxscale:    
         type: map
@@ -512,27 +428,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'gcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
       
       apply_delay_cal:
         type: map

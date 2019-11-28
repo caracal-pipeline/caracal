@@ -58,8 +58,9 @@ mapping:
             required: false
             example: 'True'
           mode:
-            desc: Regridding mode (channel/velocity/frequency/channel_b).
+            desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT - Currently only frequency mode is supported.
             type: str
+            enum: ['frequency', ]
             required: false
             example: 'frequency'
           outframe:
@@ -148,18 +149,19 @@ mapping:
             required: false
             example: '0.'
 
-      make_image:
-        desc: Image either with WSclean + SoFiA (for clean masks) or with Casa.
+      make_cube:
+        desc: Make a line cube with either WSclean + SoFiA (for clean masks) or Casa.
         type: map
         mapping:
           enable:
-            desc: Execute segment make_image.
+            desc: Execute segment make_cube.
             type: bool
             required: false
             example: 'True'
           image_with:
             desc: Choose whether to image with WSclean + SoFiA ("wsclean") or with Casa ("casa").
             type: str
+            enum: ["wsclean", "casa"]
             required: false
             example: wsclean
           use_mstransform:
@@ -229,8 +231,13 @@ mapping:
             type: int
             required: false
             example: '1000000'
+          gain:
+            desc: Fraction of the peak that will be cleaned in each minor iteration.
+            type: float
+            required: false
+            example: '0.1'
           wscl_mgain:
-            desc: WSclean gain for major iterations, Ratio of peak that will be subtracted in each major iteration.
+            desc: WSclean gain for major iterations, i.e., maximum fraction of peak that will be cleaned in each major iteration.
             type: float
             required: false
             example: '1.0'
@@ -282,9 +289,14 @@ mapping:
           wscl_multi_scale_scales:
             seq:
               - type: int
-            desc: Scales of WSclean multiscale [0,10,20,etc, etc].
+            desc: List of scales of WSclean multiscale in units of pixels. Only used is wscl_multi_scale is set to True.
             required: false
             example: '0, 10, 20, 30'
+          wscl_multi_scale_bias:
+            desc: Parameter to set the bias towards larger scales during multi-scale cleaning. A lower bias will give preference to larger scales.
+            type: float
+            required: false
+            example: '0.6'
           casa_threshold:
             desc: Flux level to stop CASA cleaning, must include units, e.g. '1.0mJy'.
             type: str

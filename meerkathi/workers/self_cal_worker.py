@@ -32,12 +32,6 @@ CUBICAL_MT = {
     "GainDiagPhase": 'phase-diag',
 }
 
-corr_indexes = {'H': 0,
-                'X': 0,
-                'V': 1,
-                'Y': 1,
-                }
-
 SOL_TERMS = {
     "G": "50",
     "B": "50",
@@ -63,6 +57,7 @@ def worker(pipeline, recipe, config):
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
+    min_uvw = config.get('minuvw_m')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -247,6 +242,8 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
+        if min_uvw > 0:
+            image_opts.update({"minuvw-m": min_uvw})
 
         if config[key].get('mask_from_sky'):
             fitmask = config[key].get('fits_mask')[
@@ -1016,7 +1013,8 @@ def worker(pipeline, recipe, config):
                 "madmax-estimate": 'corr',
                 "log-boring": True,
             }
-
+            if min_uvw > 0:
+                cubical_opts.update({"sol-min-bl": min_uvw})
             if config[key].get('two_step', False) and ddsols_[0] != -1:
                 cubical_opts.update({
                     "g-update-type": gupdate,
@@ -1383,7 +1381,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_G_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },
@@ -1403,7 +1400,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_D_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },
@@ -1692,7 +1688,7 @@ def worker(pipeline, recipe, config):
                            "spectra": config['transfer_model'].get('spectra'),
                            "row-chunks": config['transfer_model'].get('row_chunks'),
                            "model-chunks": config['transfer_model'].get('model_chunks'),
-                           "invert-uvw": config['transfer_model'].get('invert_uvw'),
+                           "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
                            "within": sdm.dismissable(config['transfer_model'].get('within') or None),
                            "points-only": config['transfer_model'].get('points_only'),
                            "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),

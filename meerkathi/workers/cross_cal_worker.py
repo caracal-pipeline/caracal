@@ -13,8 +13,6 @@ NAME = "Cross calibration"
 
 
 def get_dir_path(string, pipeline):
-    print(pipeline.output)
-    
     return string.split(pipeline.output)[1][1:]
 
 

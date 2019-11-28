@@ -39,9 +39,12 @@ def worker(pipeline, recipe, config):
 
         max_num = 0  # Initialisation
 
-        # Same subdirectory prefix whether looking in pipeline.continuum or pipeline.cubes 
-        subdirectory_prefix = 'image_'
-    
+        # Subdirectory prefix depends on whether we are looking in pipeline.continuum or pipeline.cubes 
+        if mosaictype == 'continuum':
+            subdirectory_prefix = 'image_'
+        else: # i.e.  mosaictype == 'spectral'
+            subdirectory_prefix = 'cube_'
+
         matching_subdirectories = glob.glob(directory_to_check+'/'+subdirectory_prefix+'*') # '*' to pick up the number
 
         for subdirectory in matching_subdirectories:

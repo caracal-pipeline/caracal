@@ -93,7 +93,7 @@ def worker(pipeline, recipe, config):
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}-obsinfo.json (if present) and {2:s}'.format(
+        meerkathi.log.info('Extracting info from {2:s} and (if present, and only for the purpose of automatically setting the reference antenna) the metadata file {0:s}/{1:s}-obsinfo.json'.format(
             pipeline.data_path, pipeline.dataid[i], msinfo))
 
         # get reference antenna
@@ -106,7 +106,10 @@ def worker(pipeline, recipe, config):
                     pipeline.reference_antenna[i]))
             else:
                 meerkathi.log.error(
-                    'Cannot auto select reference antenna because the file {0:s} does not exist.'.format(msmeta))
+                    'Cannot auto select reference antenna because the metadata file {0:s}, which should have been provided by the observatory, does not exist.'.format(msmeta))
+ does not exist.'.format(msmeta))
+                meerkathi.log.error(
+                    'Note that this file is generally available only for MeerKAT-16/ROACH2 data.')
                 meerkathi.log.error(
                     'Please set the reference antenna manually in the config file and try again.')
                 sys.exit(1)

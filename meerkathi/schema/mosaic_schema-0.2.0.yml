@@ -68,6 +68,12 @@ mapping:
         desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that rudimentary primary beams can be created.
         example: '1383685546.875'
 
+      label:
+        type: str
+        required: false
+        desc: For autoselection of images, this needs to match the label setting used for the self_cal worker (when mosaicking continuum images) or the image_line worker (when mosaicking cubes).
+        example: 'corr' 
+
       line_name:
         type: str
         required: false

@@ -9,7 +9,6 @@ from datetime import datetime
 import stimela
 import glob
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
-import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
 from http.server import SimpleHTTPRequestHandler

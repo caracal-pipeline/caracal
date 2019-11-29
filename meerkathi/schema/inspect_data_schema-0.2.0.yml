@@ -18,6 +18,12 @@ mapping:
         desc: Label for output products (plots etc.) for this step.
         required: false
         example: ''
+      plotter:
+        type: str
+        desc: Application to use for making plots
+        enum: [plotms, shadems]
+        example: plotms
+        required: false
       correlation: 
         type: str
         desc: Label specifying the correlations.
@@ -210,6 +216,66 @@ mapping:
             required: false
             example: 'corrected'
           avgtime:
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+      amp_chan:
+        type: map
+        desc: Plot Amplitude vs Channel data.    
+        mapping:
+          enable:
+            type: bool
+            desc: Executes the plotting of amplitude v/s phase for data.
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: ''
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:    
+            type: str
+            desc: Time to average for plotting, in seconds.
+            required: false
+            example: '10'
+          avgchannel:
+            type: str
+            desc: Number of channels to average for plotting.
+            required: false
+            example: '10'
+      phase_chan:
+        type: map
+        desc: Plot Phase vs Chan.    
+        mapping:
+          enable:
+            type: bool
+            desc: Executes the plotting of amplitude v/s phase for data.
+            required: false
+            example: 'True'
+          fields:
+            seq:
+              - type: str
+            desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
+            required: false
+            example: ''
+          column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'corrected'
+          avgtime:    
             type: str
             desc: Time to average for plotting, in seconds.
             required: false

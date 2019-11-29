@@ -119,7 +119,7 @@ def worker(pipeline, recipe, config):
 
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_flagset(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):

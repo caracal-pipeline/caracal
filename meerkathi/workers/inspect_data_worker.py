@@ -1,23 +1,68 @@
 import os
 import sys
 import yaml
+from stimela.dismissable import dismissable as sdm
+from meerkathi import log
 
 NAME = 'Inspect data'
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 
+def get_dir_path(string, pipeline): 
+    return string.split(pipeline.output)[1][1:]
 
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts):
+    step = 'plot_{0:s}_{1:d}'.format(plotname, iobs)
+    colouraxis = opts.get("colouraxis", None)
+    recipe.add("cab/casa_plotms", step, {
+                "vis": msname,
+                "field": getattr(pipeline, field)[iobs],
+                "correlation": opts['corr'],
+                "timerange": '',
+                "antenna": '',
+                "xaxis": opts['xaxis'],
+                "xdatacolumn": config[plotname].get('column'),
+                "yaxis": opts['yaxis'],
+                "ydatacolumn": config[plotname].get('column'),
+                "avgtime": config[plotname].get('avgtime'),
+                "avgchannel": config[plotname].get('avgchannel'),
+                "coloraxis": sdm(colouraxis),
+                "iteraxis": sdm(opts.get('iteraxis', None)),
+                "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}.png'.format(prefix, label, field, plotname),
+                "expformat": 'png',
+                "exprange": 'all',
+                "overwrite": True,
+                "showgui": False,
+                "uvrange": config["uvrange"],
+        }, 
+        input=pipeline.input,
+        output=os.path.join(pipeline.diagnostic_plots, "crosscal") ,
+        label="{0:s}:: Plotting corrected {1:s}".format(step, plotname))
+
+
+def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts):
+    step = 'plot_{0:s}_{1:d}'.format(plotname, iobs)
+    column = config[plotname]['column']
+    if column == "corrected":
+        column = "CORRECTED_DATA"
+    elif column == "data":
+        column = "DATA"
+
+    recipe.add("cab/shadems", step, {
+                "ms": msname,
+                "field": str(getattr(pipeline, field+"_id")[iobs]),
+#                "corr": opts['corr'],
+                "xaxis": opts['xaxis'],
+                "yaxis": opts['yaxis'],
+                "col": column,
+                "png": '{0:s}-{1:s}-{2:s}-{3:s}.png'.format(prefix, label, field, plotname),
+        }, 
+        input=pipeline.input,
+        output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
+        label="{0:s}:: Plotting corrected ".format(step, plotname))
 
 
 def worker(pipeline, recipe, config):
-
-    def get_field(field):
-        if field in ['bpcal', 'gcal', 'target', 'fcal']:
-            name = getattr(pipeline, field)[i]
-        else:
-            name = field
-        return str(name)
 
     def isempty(sec):
         if config[sec].get('fields') in ["", [""], None, "null"]:
@@ -27,6 +72,7 @@ def worker(pipeline, recipe, config):
 
     uvrange = config.get('uvrange')
     fields = config.get('fields')
+    plotter = config["plotter"]
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -50,196 +96,33 @@ def worker(pipeline, recipe, config):
             corrs = ','.join(corrs)
             corr = corrs
 
-        if pipeline.enable_task(config, 'real_imag') or pipeline.enable_task(config, 'amp_phase') or pipeline.enable_task(config, 'amp_uvwave') or pipeline.enable_task(config, 'amp_ant') or pipeline.enable_task(config, 'phase_uvwave') or pipeline.enable_task(config, 'amp_scan'):
-            plot_path = "{0:s}/{1:s}".format(
-                pipeline.diagnostic_plots, 'crosscal')
-            if not os.path.exists(plot_path):
-                os.mkdir(plot_path)
+        # define plot attributes
+        diagnostic_plots = {}
+        diagnostic_plots["real_imag"] = dict(plotms={"xaxis": "imag", "yaxis" : "real", 
+                    "colouraxis" : "baseline", "iteraxis": "corr"}, 
+                    shadems={"xaxis": "r", "yaxis": "i"})
+        diagnostic_plots["amp_phase"] = dict(plotms={"xaxis": "amp", "yaxis" : "phase",
+                    "colouraxis": "baseline", "iteraxis": "corr"},
+                    shadems={"xaxis": "a", "yaxis": "p"})
+        diagnostic_plots["amp_ant"] = dict(plotms={"xaxis": "antenna", "yaxis" :"amp",
+                    "colouraxis": "baseline", "iteraxis" : "corr"}, shadems=None)
+        diagnostic_plots["amp_uvwave"] = dict(plotms={"xaxis": "uvwave", "yaxis": "amp",
+                    "colouraxis" : "baseline", "iteraxis" : "corr"}, shadems={"xaxis": "uv", "yaxis": "a"})
+        diagnostic_plots["phase_uvwave"] = dict(plotms={"xaxis" : "uvwave", "yaxis": "phase", 
+                    "colouraxis" : "baseline", "iteraxis" : "corr"}, shadems={"xaxis": "uv", "yaxis": "p"})
+        diagnostic_plots["amp_scan"] = dict(plotms={"xaxis": "scan", "yaxis": "amp"}, shadems=None)
+        diagnostic_plots["amp_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "amp"}, shadems={"xaxis": "c", "yaxis" :"a"})
+        diagnostic_plots["phase_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "phase"}, shadems={"xaxis": "c", "yaxis" :"p"})
+                
 
-        if pipeline.enable_task(config, 'real_imag'):
-            fields =  isempty("real_imag") or fields
-            for field_ in fields:
-
-                for col in ['baseline', 'scan']:
-                    field = get_field(field_)
-                    step = 'plot_real_imag_{0:d}'.format(i)
-                    recipe.add('cab/casa_plotms', step,
-                               {
-                                   "vis": msname,
-                                   "field": field,
-                                   "correlation": corr,
-                                   "timerange": '',
-                                   "antenna": '',
-                                   "xaxis": 'imag',
-                                   "xdatacolumn": config['real_imag'].get('column'),
-                                   "yaxis": 'real',
-                                   "ydatacolumn": config['real_imag'].get('column'),
-                                   "avgtime": config['real_imag'].get('avgtime'),
-                                   "avgchannel": config['real_imag'].get('avgchannel'),
-                                   "coloraxis": col,
-                                   "iteraxis": 'corr',
-                                   "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-{4:s}-reim.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_, col),
-                                   "expformat": 'png',
-                                   "exprange": 'all',
-                                   "overwrite": True,
-                                   "showgui": False,
-                                   "uvrange": uvrange,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{0:s}:: Plot imag vs real for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
-
-        if pipeline.enable_task(config, 'amp_phase'):
-            fields =  isempty("amp_phase") or fields
-            for field_ in fields:
-                for col in ['baseline', 'scan']:
-                    field = get_field(field_)
-                    step = 'plot_amp_phase_{0:d}'.format(i)
-                    recipe.add('cab/casa_plotms', step,
-                               {
-                                   "vis": msname,
-                                   "field": field,
-                                   "correlation": corr,
-                                   "timerange": '',
-                                   "antenna": '',
-                                   "xaxis": 'phase',
-                                   "xdatacolumn": config['amp_phase'].get('column'),
-                                   "yaxis": 'amp',
-                                   "ydatacolumn": config['amp_phase'].get('column'),
-                                   "avgtime": config['amp_phase'].get('avgtime'),
-                                   "avgchannel": config['amp_phase'].get('avgchannel'),
-                                   "coloraxis": col,
-                                   "iteraxis": 'corr',
-                                   "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-{4:s}-ap.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_, col),
-                                   "expformat": 'png',
-                                   "exprange": 'all',
-                                   "overwrite": True,
-                                   "showgui": False,
-                                   "uvrange": uvrange,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.output,
-                               label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
-
-        if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = isempty('amp_uvwave') or fields
-            for field_ in fields:
-                field = get_field(field_)
-                step = 'plot_uvwave_{0:d}'.format(i)
-                recipe.add('cab/casa_plotms', step,
-                           {
-                               "vis": msname,
-                               "field": field,
-                               "correlation": corr,
-                               "timerange": '',
-                               "antenna": '',
-                               "xaxis": 'uvwave',
-                               "xdatacolumn": config['amp_uvwave'].get('column'),
-                               "yaxis": 'amp',
-                               "ydatacolumn": config['amp_uvwave'].get('column'),
-                               "avgtime": config['amp_uvwave'].get('avgtime'),
-                               "avgchannel": config['amp_uvwave'].get('avgchannel'),
-                               "coloraxis": 'baseline',
-                               "iteraxis": 'corr',
-                               "expformat": 'png',
-                               "exprange": 'all',
-                               "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-ampuvwave.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
-                               "overwrite": True,
-                               "showgui": False,
-                               "uvrange": uvrange,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
-
-        if pipeline.enable_task(config, 'amp_ant'):
-            fields = isempty('amp_ant') or fields
-            for field_ in fields:
-                field = get_field(field_)
-                step = 'plot_uvwave_{0:d}'.format(i)
-                recipe.add('cab/casa_plotms', step,
-                           {
-                               "vis": msname,
-                               "field": field,
-                               "correlation": corr,
-                               "timerange": '',
-                               "antenna": '',
-                               "xaxis": 'antenna1',
-                               "xdatacolumn": config['amp_ant'].get('column'),
-                               "yaxis": 'amp',
-                               "ydatacolumn": config['amp_ant'].get('column'),
-                               "avgtime": config['amp_ant'].get('avgtime'),
-                               "avgchannel": config['amp_ant'].get('avgchannel'),
-                               "coloraxis": 'corr',
-                               "expformat": 'png',
-                               "exprange": 'all',
-                               "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-ampant.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
-                               "overwrite": True,
-                               "showgui": False,
-                               "uvrange": uvrange,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot ampant for field {1:s} ms={2:s}'.format(step, field, msname))
-
-        if pipeline.enable_task(config, 'phase_uvwave'):
-            fields = isempty("phase_uvwave") or fields
-            for field_ in fields:
-                field = get_field(field_)
-                step = 'phase_uvwave_{0:d}'.format(i)
-                recipe.add('cab/casa_plotms', step,
-                           {
-                               "vis": msname,
-                               "field": field,
-                               "correlation": corr,
-                               "timerange": '',
-                               "antenna": '',
-                               "xaxis": 'uvwave',
-                               "xdatacolumn": config['phase_uvwave'].get('column'),
-                               "yaxis": 'phase',
-                               "ydatacolumn": config['phase_uvwave'].get('column'),
-                               "avgtime": config['phase_uvwave'].get('avgtime'),
-                               "avgchannel": config['phase_uvwave'].get('avgchannel'),
-                               "coloraxis": 'baseline',
-                               "iteraxis": 'corr',
-                               "expformat": 'png',
-                               "exprange": 'all',
-                               "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-phaseuvwave.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
-                               "overwrite": True,
-                               "showgui": False,
-                               "uvrange": uvrange,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot phase uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
-
-        if pipeline.enable_task(config, 'amp_scan'):
-            fields = isempty('amp_scan') or fields
-            for field_ in fields:
-                field = get_field(field_)
-                step = 'plot_ampscan_{0:d}'.format(i)
-                recipe.add('cab/casa_plotms', step,
-                           {
-                               "vis": msname,
-                               "field": field,
-                               "correlation": corr,
-                               "timerange": '',
-                               "antenna": '',
-                               "xaxis": 'scan',
-                               "xdatacolumn": config['amp_scan'].get('column'),
-                               "yaxis": 'amp',
-                               "ydatacolumn": config['amp_scan'].get('column'),
-                               "avgtime": config['amp_scan'].get('avgtime'),
-                               "avgchannel": config['amp_scan'].get('avgchannel'),
-                               "coloraxis": 'baseline',
-                               "iteraxis": 'corr',
-                               "expformat": 'png',
-                               "exprange": 'all',
-                               "plotfile": '{0:s}/{1:s}-{2:s}-{3:s}-ampscan.png'.format(get_dir_path(plot_path, pipeline), prefix, label, field_),
-                               "overwrite": True,
-                               "showgui": False,
-                               "uvrange": uvrange,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Plot amp_v_scan for field {1:s} ms={2:s}'.format(step, field, msname))
+        for plotname in diagnostic_plots:
+            if not pipeline.enable_task(config, plotname):
+                continue
+            opts = diagnostic_plots[plotname][plotter]
+            if opts is None:
+                log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(plotter, plotname)) 
+                continue
+            opts["corr"] = corr
+            for field in isempty(plotname) or fields:
+                globals()[plotter](pipeline, recipe, config, 
+                    plotname, msname, field, i, label, prefix, opts)

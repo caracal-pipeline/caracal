@@ -108,7 +108,6 @@ def worker(pipeline, recipe, config):
     # Prioritise parameters specified in the config file, under the 'mosaic' worker 
     specified_mosaictype = config['mosaic_type'] # i.e. 'continuum' or 'spectral'
     use_MFS_images = config['use_MFS_images']
-    #specified_prefix = config['name'] ### Come back to. I'd said in the schema that this does not need to be specified...
     specified_images = config['target_images']
     label = config['label'] 
     line_name = config['line_name']
@@ -267,6 +266,10 @@ def worker(pipeline, recipe, config):
 
     os.chdir(original_working_directory) # To get back to where we were before symlink creation
 
+    # Prefix of the output files should be either the default (pipeline.prefix) or that specified by the user via the config file
+    mosaic_prefix = config['name']
+    if mosaic_prefix == '': # i.e. this has been set via the schema
+        mosaic_prefix = pipeline.prefix
 
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe
@@ -276,7 +279,7 @@ def worker(pipeline, recipe, config):
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : True,
                 "cutoff"         : config.get('cutoff'),
-                "name"           : prefix,
+                "name"           : mosaic_prefix,
                 "target-images"  : image_filenames,
             },
             input=input_directory,
@@ -289,7 +292,7 @@ def worker(pipeline, recipe, config):
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : False,
                 "cutoff"         : config.get('cutoff'),
-                "name"           : prefix,
+                "name"           : mosaic_prefix,
                 "target-images"  : image_filenames,
             },
             input=input_directory,

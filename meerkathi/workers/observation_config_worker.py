@@ -107,9 +107,8 @@ def worker(pipeline, recipe, config):
             else:
                 meerkathi.log.error(
                     'Cannot auto select reference antenna because the metadata file {0:s}, which should have been provided by the observatory, does not exist.'.format(msmeta))
- does not exist.'.format(msmeta))
                 meerkathi.log.error(
-                    'Note that this file is generally available only for MeerKAT-16/ROACH2 data.')
+                    'Note that this metadata file is generally available only for MeerKAT-16/ROACH2 data.')
                 meerkathi.log.error(
                     'Please set the reference antenna manually in the config file and try again.')
                 sys.exit(1)

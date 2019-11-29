@@ -145,13 +145,9 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info("It is assumed that they are all in the highest-numbered subdirectory of 'output/continuum' and 'output/cubes'.")
         meerkathi.log.info("You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
-        # Needed for working out the field names for the targets 
+        # Needed for working out the field names for the targets, so that the correct files can be selected 
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(pipeline.target,pipeline.msnames,label) 
-        meerkathi.log.info('all_targets:')
-        meerkathi.log.info(all_targets)
-        
-        # Due to the way the output is now sorted, need to know the total number of targets
-        n_targets = len(all_targets)  ### Assuming that all_targets is a list or an array
+        n_targets = len(all_targets)
         meerkathi.log.info('The number of targets to be mosaicked is {0:d}'.format(n_targets))
 
         # Where the targets are in the output directory
@@ -161,13 +157,10 @@ def worker(pipeline, recipe, config):
         pathnames = []
         specified_images = []
 
-        fields = ['j0831', 'j0836', 'j0839'] ### ONLY FOR SIMPLE TESTING. TO BE REMOVED
-
         # Expecting the same prefix and mfsprefix to apply for all fields to be mosaicked together
-        #for target in all_targets:  ### UNCOMMENT ONCE SIMPLE TESTS ARE DONE
-        for field in fields: ### ONLY FOR SIMPLE TESTING. TO BE REMOVED
+        for target in all_targets:  
 
-            #field = utils.filter_name(target)  ### UNCOMMENT ONCE SIMPLE TESTS ARE DONE
+            field = utils.filter_name(target)
             
             # Use the mosaictype to infer the filenames of the images
             if specified_mosaictype == 'continuum':  # Add name of 2D image output by selfcal

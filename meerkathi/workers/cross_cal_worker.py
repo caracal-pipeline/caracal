@@ -7,6 +7,7 @@ import stimela.dismissable as sdm
 from meerkathi.workers.utils import manage_flagsets as manflags
 from meerkathi.workers.utils import manage_fields as manfields
 import copy
+import re
 
 NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
@@ -116,7 +117,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
 
             # apply existing gaintables before flagging
             if gaintables:
-                applycal(recipe, [gtab+":output" for gtab in gaintables],
+                applycal(recipe, gaintables,
                     interps, fields, "bpcal", pipeline, iobs, calmode="calonly")
             recipe.add(RULES[term]["cab"], step, 
                     copy.deepcopy(params),
@@ -137,7 +138,8 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                 params["interp"] = [interps[count] for count in otf_apply]
                 params["gainfield"] = [fields[count] for count in otf_apply]
 
-            params["uvrange"] = config["uvrange"]
+            if term != "K":
+                params["uvrange"] = config["uvrange"]
             params["refant"] = pipeline.reference_antenna[iobs]
             params["caltable"] = caltable
             params["field"] = field
@@ -176,9 +178,31 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                 iters_gcal[term] = 0
 
             step = "%s_%s_%d_%d_gcal" % (name, label, itern, iobs)
-            if term == "I":
+
+            if term == "A":
+                params["mode"] = RULES[term]["mode"]
+                params["field"] = field
+                params["datacolumn"] = config["gcal"]["flag"]["column"]
+                params["usewindowstats"] = config["gcal"]["flag"]["usewindowstats"]
+                params["combinescans"] = config["gcal"]["flag"]["combinescans"]
+                params["flagdimension"] = config["gcal"]["flag"]["flagdimension"]
+                params["flagbackup"] = False
+                params["timecutoff"] = config["gcal"]["flag"]["timecutoff"]
+                params["freqcutoff"] = config["gcal"]["flag"]["freqcutoff"]
+                params["correlation"] = config["gcal"]["flag"]["correlation"]
+
+                # apply existing gaintables before flagging
+                if gaintables:
+                    applycal(recipe, gaintables,
+                        interps_gcal, fields_gcal, "gcal", pipeline, iobs, calmode="calonly")
+                recipe.add(RULES[term]["cab"], step, 
+                        copy.deepcopy(params),
+                        input=pipeline.input, output=pipeline.caltables,
+                        label="%s::" % step)
+
+            elif term == "I":
                 step = "%s_%s_%d_%d" % (name, label, itern, obs)
-                applycal(recipe, [gtab+":output" for gtab in gaintables_gcal], 
+                applycal(recipe, gaintables_gcal, 
                     interps_gcal, fields_gcal, "gcal", pipeline, iobs, calmode="calonly")
                 recipe.add(RULES[term]["cab"], step, {
                         "msname" : ms,
@@ -253,7 +277,8 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                     caltable = "%s_gcal.%s%d" % (prefix, term, iters_gcal[term])
                 params["solint"] = first_if_single(config["gcal"]["solint"], i)
                 params["combine"] = first_if_single(config["gcal"]["combine"], i)
-                params["uvrange"] = config["uvrange"]
+                if term != "K":
+                    params["uvrange"] = config["uvrange"]
                 params["refant"] = pipeline.reference_antenna[iobs]
                 params["caltable"] = caltable
                 params["field"] = field
@@ -298,7 +323,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i):
          "table"        : '{0:s}/{1:s}:{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), gtab, 'output'),
     
          "gaintype"     : gtab[-2],
-         "field"        : " ".join(map(str,field_id)),
+         "field"        : ",".join(map(str,field_id)),
          "corr"         : 0,
          "htmlname"     : '{0:s}/{1:s}'.format(get_dir_path(pipeline.reports, pipeline), gtab),
         },
@@ -321,7 +346,7 @@ def transfer_fluxscale(recipe, gaintable, fluxtable, pipeline, i, label=""):
         input=pipeline.input, output=pipeline.caltables,
         label="Transfer fluxscale")
 
-def applycal(recipe, gaintable, interp, gainfield, field, pipeline, i, calmode="calflag", label=""):
+def applycal(recipe, gaintable, interp, gainfield, field, pipeline, i, calmode="calflag", label="", fluxtable=None):
     """
     Apply gains
     -----------------
@@ -329,15 +354,38 @@ def applycal(recipe, gaintable, interp, gainfield, field, pipeline, i, calmode="
     Parameters:
       order: order in which to apply gains
     """ 
+
+
+    lidx = get_last_gain(gaintable)
+    gaintables = []
+    interps = []
+    fields = []
+    for idx in lidx:
+        gaintables.append(gaintable[idx])
+        interps.append(interp[idx])
+        fields.append(gainfield[idx])
+
+    if fluxtable:
+        replaced = False
+        for gtab in gaintables:
+            print(gtab)
+            gtab_re = re.search(r"(^\S+)(.G\d)", gtab)
+            if gtab_re:
+                idx = gaintables.index(gtab)
+                gaintables[idx] = fluxtable
+                replaced = True
+        if replaced is False:
+            raise RuntimeError("There is no gaintable to replace with the fluxtable")
+
     step = "apply_gains_%s_%s_%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
         "vis" : pipeline.msnames[i],
         "field" : getattr(pipeline, field)[i],
         "applymode" : calmode,
-        "gaintable" : gaintable,
-        "interp" : interp,
+        "gaintable" : [tab+":output" for tab in gaintables],
+        "interp" : interps,
         "calwt" : [False],
-        "gainfield" : gainfield,
+        "gainfield" : fields,
         "parang" : False,
         },
             input=pipeline.input, output=pipeline.caltables,
@@ -448,7 +496,6 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be \
 found in our database or in the CASA NRAO database'.format(field))
             step = 'set_model_cal_{0:d}'.format(i)
-#            cabtouse = 'cab/casa47_setjy' if config['casa_version']=='47' else 'cab/casa_setjy'
             cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
                opts,
@@ -458,29 +505,25 @@ found in our database or in the CASA NRAO database'.format(field))
 
         solve_outs = solve(recipe, config, pipeline, i, prefix, label=label)
         gaintables_bpcal = solve_outs["bpcal"]["gaintables"]
-        apply_bpcal = get_last_gain(gaintables_bpcal)
-        # only apply best gain from each gain term
-        gaintables_bpcal = [solve_outs["bpcal"]["gaintables"][count] for count in apply_bpcal]
-        interps_bpcal = [solve_outs["bpcal"]["interps"][count] for count in apply_bpcal]
-        gainfield_bpcal = [solve_outs["bpcal"]["gainfield"][count] for count in apply_bpcal]
+        gaintables_bpcal = solve_outs["bpcal"]["gaintables"]
+        interps_bpcal = solve_outs["bpcal"]["interps"]
         iters_bpcal = solve_outs["bpcal"]["iters"]
+        gainfield_bpcal = solve_outs["bpcal"]["gainfield"]
         calmode = config["apply_cal"]["calmode"]
         gcal_field = getattr(pipeline, "gcal")[i]
         bpcal_field = getattr(pipeline, "bpcal")[i]
         if solve_outs["fluxscale"]:
             gaintables_gcal = solve_outs["gcal"]["gaintables"]
-            apply_gcal = get_last_gain(gaintables_gcal)
             # only apply best gain from each gain term
-            gaintables_gcal = [solve_outs["gcal"]["gaintables"][count] for count in apply_gcal]
-            interps_gcal = [solve_outs["gcal"]["interps"][count] for count in apply_gcal]
-            gainfield_gcal = [solve_outs["gcal"]["gainfield"][count] for count in apply_gcal]
-            iters_gcal = solve_outs["gcal"]["iters"]
+            gaintables_gcal = solve_outs["gcal"]["gaintables"]
+            interps_gcal = solve_outs["gcal"]["interps"]
+            gainfield_gcal = solve_outs["gcal"]["gainfield"]
             # apply to bpcal
-            _gaintables = [gtab+":output" for gtab in gaintables_bpcal]
             if "bpcal" in config["apply_cal"]["applyto"]:
-                applycal(recipe, copy.deepcopy(_gaintables), interps_bpcal, 
+                applycal(recipe, copy.deepcopy(gaintables_bpcal), interps_bpcal, 
                         gainfield_bpcal, "bpcal", pipeline, i, calmode=calmode, label=label)
-            # prepare to apply to gcal 
+            # prepare to apply to gcal
+
             gtable = '%s_bpcal.G%d' %(prefix, iters_bpcal["G"])
             ftable = '%s.F%d' %(prefix, iters_bpcal["G"])
             fluxtable = transfer_fluxscale(recipe, gtable+":output", ftable, 
@@ -489,25 +532,21 @@ found in our database or in the CASA NRAO database'.format(field))
             if config["gcal"]["plotgains"]:
                 plotgains(recipe, pipeline, [getattr(pipeline, "gcal_id")[i], 
                     getattr(pipeline, "fcal_id")[i]], ftable, i)
-            replace_index = gaintables_gcal.index(gtable)
-            gaintables_gcal[replace_index] = ftable
-            _gaintables = [gtab+":output" for gtab in gaintables_gcal]
             # apply to gcal
             if "gcal" in config["apply_cal"]["applyto"]:
-                applycal(recipe, copy.deepcopy(_gaintables), interps_gcal, 
-                        gainfield_gcal, "gcal", pipeline, i, calmode=calmode, label=label)
+                applycal(recipe, copy.deepcopy(gaintables_gcal), interps_gcal, 
+                        gainfield_gcal, "gcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
             if "target" in config["apply_cal"]["applyto"]:
-                applycal(recipe, copy.deepcopy(_gaintables), interps_gcal,
-                        gainfield_gcal, "target", pipeline, i, calmode=calmode, label=label)
+                applycal(recipe, copy.deepcopy(gaintables_gcal), interps_gcal,
+                        gainfield_gcal, "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
         else:
             same_gcal_bpcal = pipeline.gcal == pipeline.bpcal
-            _gaintables = [gtab+":output" for gtab in gaintables_bpcal]
             # apply to bpcal
             if "bpcal" in config["apply_cal"]["applyto"] or same_gcal_bpcal:
-                applycal(recipe, copy.deepcopy(_gaintables), interps_bpcal,
+                applycal(recipe, copy.deepcopy(gaintables_bpcal), interps_bpcal,
                         gainfield_bpcal, "bpcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
-                applycal(recipe, copy.deepcopy(_gaintables), interps_bpcal,
+                applycal(recipe, copy.deepcopy(gaintables_bpcal), interps_bpcal,
                         gainfield_bpcal, "target", pipeline, i, calmode=calmode, label=label)
         substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
         manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)

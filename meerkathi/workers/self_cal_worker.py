@@ -1877,10 +1877,11 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(hires_path):
             os.mkdir(hires_path)
         # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
+
         for i, prfx in enumerate(['{0:s}-{1:s}-{2:s}'.format(prefix, did, config['label']) for did in pipeline.dataid]):
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
-            with open(msinfo, 'r') as stdr:
-                pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
+            #msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
+            #with open(msinfo, 'r') as stdr:
+            #    pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
             step = 'highfreqres_contim'
             image_opts = {
                 "msname": hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,

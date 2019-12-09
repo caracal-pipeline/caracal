@@ -915,23 +915,17 @@ def worker(pipeline, recipe, config):
             take_diag_terms = False
         else:
             take_diag_terms = True
-
+        # set the update type correctly
         if matrix_type == 'GainDiagPhase':
             gupdate = 'phase-diag'
-            bupdate = 'phase-diag'
         elif matrix_type == 'GainDiagAmp':
             gupdate = 'amp-diag'
-            bupdate = 'amp-diag'
         elif matrix_type == 'GainDiag':
             gupdate = 'diag'
-            bupdate = 'diag'
         elif matrix_type == 'Gain2x2':
             gupdate = 'full'
-            bupdate = 'full'
         else:
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
-        if config[key].get('two_step'):
-            gupdate= 'phase-diag'
 
         jones_chain = 'G'
         gsols_ = [config[key].get('Gsols_time')[num - 1 if num <= len(config[key].get('Gsols_time')) else -1],
@@ -945,14 +939,18 @@ def worker(pipeline, recipe, config):
                                            len(config[key].get('GAsols_time')) else -1],
             config[key].get('GAsols_channel')[num - 1 if num <= 
                                               len(config[key].get('GAsols_channel')) else -1]]
-
-        if (config[key].get('two_step') and gasols_[0] != -1):
-            jones_chain += ',DD'
-            matrix_type = 'Gain2x2'
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        
+            bupdate = gupdate
+        # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
+        # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
+        if config[key].get('two_step'):
+            gupdate = 'phase-diag'
+            if gasols_[0] != -1:
+                jones_chain += ',DD'
+                matrix_type = 'Gain2x2'
+        # Need to ad the solution term iterations
         sol_term_iters = config[key].get('sol_term_iters')
         if sol_term_iters == 'auto':
            sol_terms_add = []
@@ -1086,37 +1084,34 @@ def worker(pipeline, recipe, config):
             take_diag_terms = False
         else:
             take_diag_terms = True
-         #Decide the update type
-        if config[key].get('two_step') or config[key].get('Bjones'):
-            if matrix_type == 'GainDiagPhase':
-                gupdate = 'phase-diag'
-                bupdate = 'phase-diag'
-            elif matrix_type == 'GainDiagAmp':
-                gupdate = 'amp-diag'
-                bupdate = 'amp-diag'
-            elif matrix_type == 'GainDiag':
-                gupdate = 'diag'
-                bupdate = 'diag'
-            elif matrix_type == 'Gain2x2':
-                gupdate = 'full'
-                bupdate = 'full'
-            else:
-                raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
-            if config[key].get('two_step'):
-                gupdate = 'phase-diag'
-        #Always g in the jones chain
+
+
+        # set the update type correctly
+        if matrix_type == 'GainDiagPhase':
+            gupdate = 'phase-diag'
+        elif matrix_type == 'GainDiagAmp':
+            gupdate = 'amp-diag'
+        elif matrix_type == 'GainDiag':
+            gupdate = 'diag'
+        elif matrix_type == 'Gain2x2':
+            gupdate = 'full'
+        else:
+            raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
+
         jones_chain = 'G'
-        # Determine solution intervals
         gsols_ = [config[key].get('Gsols_time')[num - 1 if num <= len(config[key].get('Gsols_time')) else -1],
                   config[key].get('Gsols_channel')[
                       num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
         bsols_ = [config[key].get('Bsols_time')[num - 1 if num <= len(config[key].get('Bsols_time')) else -1],
                   config[key].get('Bsols_channel')[
-                      num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
+                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
         gasols_ = [
-            config[key].get('GAsols_time')[num - 1 if num <= len(config[key].get('GAsols_time')) else -1],
-            config[key].get('GAsols_channel')[
-                num - 1 if num <= len(config[key].get('GAsols_channel')) else -1]]
+            config[key].get('GAsols_time')[num - 1 if num <=
+                                                      len(config[key].get('GAsols_time')) else -1],
+            config[key].get('GAsols_channel')[num - 1 if num <=
+                                                         len(config[key].get('GAsols_channel')) else -1]]
+
+
         # If we want to interpolate our frequency interval is always 1 no matter what
         if enable_inter:
             key_apply = 'transfer_apply_gains'
@@ -1130,23 +1125,26 @@ def worker(pipeline, recipe, config):
 
         time_chunk_apply = gsols_[0]
         freq_chunk_apply = gsols_[1]
-
-        # expand the Jones chain if necessary, for multiple Jones terms we always need matrix complex2x2
-        if (config[key].get('two_step') and gasols_[0] != -1):
-            jones_chain += ',DD'
-            matrix_type = 'Gain2x2'
-            if gasols_[0] > time_chunk_apply:
-                time_chunk_apply = gasols_[0]
-            if gasols_[1] > freq_chunk_apply:
-                freq_chunk_apply = gasols_[1]
-
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
+            bupdate = gupdate
             if bsols_[0] > time_chunk_apply:
                 time_chunk_apply = bsols_[0]
             if bsols_[1] > freq_chunk_apply:
                 freq_chunk_apply = bsols_[1]
+        # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
+        # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
+        if config[key].get('two_step'):
+            gupdate = 'phase-diag'
+            if gasols_[0] != -1:
+                jones_chain += ',DD'
+                matrix_type = 'Gain2x2'
+                if gasols_[0] > time_chunk_apply:
+                    time_chunk_apply = gasols_[0]
+                if gasols_[1] > freq_chunk_apply:
+                    freq_chunk_apply = gasols_[1]
+
         if freq_chunk_apply == 1:
             freq_chunk_apply = freq_chunk
         if time_chunk_apply == 1:
@@ -1159,6 +1157,8 @@ def worker(pipeline, recipe, config):
                 apmode = 'ar'
             else:
                 apmode = 'ac'
+        # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
+        # Hence the following fix. This should be removed once the fix makes it into stimela.
         matrix_type = 'Gain2x2'
         # loop through measurement sets
         for i,msname_out in enumerate(mslist_out):

@@ -1543,16 +1543,6 @@ def worker(pipeline, recipe, config):
             if config['calibrate']['ragavi_plot']['enable']:
                 ragavi_plotting_cubical_tables()
 
-    # DO NOT ERASE THIS LOOP IT IS NEEDED FOR PIPELINE OUTSIDE DATA QUALITY CHECK!!!!!!!!!!!!!!!!!!!!!
-    # else:
-    #   for kk in xrange(config.get('start_at_iter', 1), config.get('cal_niter', 2)+1):
-    #        if pipeline.enable_task(config, 'calibrate'):
-    #            calibrate(kk)
-    #        if pipeline.enable_task(config, 'image'):
-    #            image(kk+1)
-    #        if pipeline.enable_task(config, 'sofia_mask'):
-    #            sofia_mask(kk+1)
-
         if pipeline.enable_task(config, 'restore_model'):
             if config['restore_model']['model']:
                 num = config['restore_model']['model']
@@ -1698,62 +1688,4 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 
-    if pipeline.enable_task(config, 'highfreqres_contim'):
-        hires_path = "{0:s}/image_{1:s}".format(pipeline.continuum, 'hires')
-        if not os.path.exists(hires_path):
-            os.mkdir(hires_path)
-        # Upate pipeline attributes (useful if, e.g., channel averaging was performed by the split_data worker)
-        for i, prfx in enumerate(['{0:s}-{1:s}-{2:s}'.format(prefix, did, config['label']) for did in pipeline.dataid]):
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prfx)
-            with open(msinfo, 'r') as stdr:
-                pipeline.nchans[i] = yaml.load(stdr)['SPW']['NUM_CHAN']
-            step = 'highfreqres_contim'
-            image_opts = {
-                "msname": hires_mslist if pipeline.enable_task(config, 'transfer_apply_gains') else mslist,
-                "column": config['highfreqres_contim'].get('column'),
-                "weight": 'briggs {}'.format(config['highfreqres_contim'].get('robust', robust)),
-                "npix": config['highfreqres_contim'].get('npix', npix),
-                "padding": config['highfreqres_contim'].get('padding', padding),
-                "scale": config['highfreqres_contim'].get('cell', cell),
-                "prefix": '{0:s}/{1:s}_{2:s}'.format(get_dir_path(hires_path, pipeline), prefix, 'fine'),
-                "niter": config['highfreqres_contim'].get('niter', niter),
-                "mgain": config['highfreqres_contim'].get('mgain', mgain),
-                "pol": config['highfreqres_contim'].get('pol', pol),
-                "taper-gaussian": sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
-                "deconvolution-channels": config['highfreqres_contim'].get('deconv_chans', nchans),
-                "channelsout": config['highfreqres_contim'].get('chans', pipeline.nchans[0][0]),
-                "joinchannels": True,
-                "fit-spectral-pol": config['highfreqres_contim'].get('fit_spectral_pol'),
-                "auto-mask": sdm.dismissable(config['highfreqres_contim'].get('auto_mask')),
-                "auto-threshold": config['highfreqres_contim'].get('auto_threshold'),
-                "multiscale": config['highfreqres_contim'].get('multi_scale'),
-                "multiscale-scales": sdm.dismissable(config['highfreqres_contim'].get('multi_scale_scales')),
-                "fitsmask": sdm.dismissable(config['highfreqres_contim'].get('fits_mask')),
-            }
-            recipe.add('cab/wsclean', step,
-                       image_opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{:s}:: Make image and model at fine frequency resolution'.format(step))
 
-        if not config['highfreqres_contim'].get('niter', niter):
-            imagetype = ['image', 'dirty']
-        else:
-            imagetype = ['image', 'dirty', 'psf', 'residual', 'model']
-        if config['highfreqres_contim'].get('mgain', mgain) < 1.0:
-            imagetype.append('first-residual')
-        for mm in imagetype:
-            step = 'finechancontcube'
-            recipe.add('cab/fitstool', step, {
-                "image": ['{0:s}/'.format(get_dir_path(hires_path,
-                                                       pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,
-                                                                                                                             mm) for d in xrange(config['highfreqres_contim'].get('chans', pipeline.nchans[0][0]))],
-                "output": '{0:s}/'.format(get_dir_path(hires_path,
-                                                       pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
-                "stack": True,
-                "delete-files": True,
-                "fits-axis": 'FREQ',
-            },
-                input=pipeline.input,
-                output=pipeline.output,
-                label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(step, mm.replace('-', '_')))

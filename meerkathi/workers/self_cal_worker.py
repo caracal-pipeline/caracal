@@ -1896,7 +1896,7 @@ def worker(pipeline, recipe, config):
                 "pol": config['highfreqres_contim'].get('pol', pol),
                 "taper-gaussian": sdm.dismissable(config['highfreqres_contim'].get('uvtaper', taper)),
                 "deconvolution-channels": config['highfreqres_contim'].get('deconv_chans', nchans),
-                "channelsout": config['highfreqres_contim'].get('chans', pipeline.nchans[0][0]),
+                "channelsout": config['highfreqres_contim'].get('chans'),
                 "joinchannels": True,
                 "fit-spectral-pol": config['highfreqres_contim'].get('fit_spectral_pol'),
                 "auto-mask": sdm.dismissable(config['highfreqres_contim'].get('auto_mask')),
@@ -1922,7 +1922,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/fitstool', step, {
                 "image": ['{0:s}/'.format(get_dir_path(hires_path,
                                                        pipeline)) + pipeline.prefix+'_fine-{0:04d}-{1:s}.fits:output'.format(d,
-                                                                                                                             mm) for d in xrange(config['highfreqres_contim'].get('chans', pipeline.nchans[0][0]))],
+                                                                                                                             mm) for d in xrange(config['highfreqres_contim'].get('chans'))],
                 "output": '{0:s}/'.format(get_dir_path(hires_path,
                                                        pipeline)) + pipeline.prefix+'_fine-contcube.{0:s}.fits'.format(mm),
                 "stack": True,

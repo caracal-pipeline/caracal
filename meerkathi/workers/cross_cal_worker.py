@@ -137,7 +137,12 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                 params["interp"] = [interps[count] for count in otf_apply]
                 params["gainfield"] = [fields[count] for count in otf_apply]
 
-            params["uvrange"] = config["uvrange"]
+            if term != 'K':
+                params["uvrange"] = config["uvrange"]
+                
+#            if term == "G":
+#                params["smodel"] = ["1","0","0","0"]
+                
             params["refant"] = pipeline.reference_antenna[iobs]
             params["caltable"] = caltable
             params["field"] = field
@@ -151,6 +156,8 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
             fields.append(field)
             interps.append(interp)
             gaintables.append(caltable)
+            
+            meerkathi.log.error("params are {}".format(params))
 
     if pipeline.gcal[iobs] != pipeline.fcal[iobs]:
         fluxscale = True
@@ -253,7 +260,10 @@ def solve(recipe, config, pipeline, iobs, prefix, label):
                     caltable = "%s_gcal.%s%d" % (prefix, term, iters_gcal[term])
                 params["solint"] = first_if_single(config["gcal"]["solint"], i)
                 params["combine"] = first_if_single(config["gcal"]["combine"], i)
-                params["uvrange"] = config["uvrange"]
+                
+                if term != "K":
+                    params["uvrange"] = config["uvrange"]
+                
                 params["refant"] = pipeline.reference_antenna[iobs]
                 params["caltable"] = caltable
                 params["field"] = field

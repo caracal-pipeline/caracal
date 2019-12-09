@@ -667,7 +667,7 @@ mapping:
             type: str
             desc: Column to image
             required: false
-            example: 'CORR_DATA'
+            example: 'CORRECTED_DATA'
           multi_scale:
             type: bool
             desc: switch on multiscale cleaning

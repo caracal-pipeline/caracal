@@ -23,6 +23,7 @@ def get_dir_path(string, pipeline):
 
 
 CUBICAL_OUT = {
+    "CORRECTED_DATA": 'sc',
     "CORR_DATA": 'sc',
     "CORR_RES": 'sr',
 }

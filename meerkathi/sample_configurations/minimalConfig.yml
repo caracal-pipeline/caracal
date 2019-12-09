@@ -63,11 +63,13 @@
       enable: true
       Gsols_time: [120]
 
-- image_HI:
+- image_line:
     enable: true
-    npix: [1800]
-    cell: 2
     restfreq: '1.420405752GHz'
+    make_cube:
+      enable: true
+      npix: [1800]
+      cell: 2
     mstransform: 
       enable: true
       telescope: meerkat

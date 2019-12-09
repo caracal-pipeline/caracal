@@ -66,7 +66,7 @@ def get_field_id(msinfo, field_name):
     results = []
     for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
         if fn not in names:
-            raise KeyError("Could not find field '%s'" % field_name)
+            raise KeyError("Could not find field '{0:s}' in the field list {1:}".format(fn,names))
         else:
             results.append(names.index(fn))
     return results

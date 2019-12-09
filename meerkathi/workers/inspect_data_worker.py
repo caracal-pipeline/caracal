@@ -19,7 +19,14 @@ def worker(pipeline, recipe, config):
             name = field
         return str(name)
 
+    def isempty(sec):
+        if config[sec].get('fields') in ["", [""], None, "null"]:
+            return False
+        else:
+            return config[sec].get('fields')
+
     uvrange = config.get('uvrange')
+    fields = config.get('fields')
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -34,7 +41,7 @@ def worker(pipeline, recipe, config):
         prefix = prefixes[i]
         label = config.get('label')
 
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
 
         corr = config.get('correlation')
         if corr == 'auto':
@@ -50,7 +57,7 @@ def worker(pipeline, recipe, config):
                 os.mkdir(plot_path)
 
         if pipeline.enable_task(config, 'real_imag'):
-            fields = config['real_imag'].get('fields')
+            fields =  isempty("real_imag") or fields
             for field_ in fields:
 
                 for col in ['baseline', 'scan']:
@@ -83,7 +90,7 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Plot imag vs real for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_phase'):
-            fields = config['amp_phase'].get('fields', ['gcal', 'bpcal'])
+            fields =  isempty("amp_phase") or fields
             for field_ in fields:
                 for col in ['baseline', 'scan']:
                     field = get_field(field_)
@@ -115,7 +122,7 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Plot amp vs phase for field {1:s} ms={2:s} col={3:s}'.format(step, field, msname, col))
 
         if pipeline.enable_task(config, 'amp_uvwave'):
-            fields = config['amp_uvwave'].get('fields', ['gcal', 'bpcal'])
+            fields = isempty('amp_uvwave') or fields
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -146,7 +153,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Plot uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_ant'):
-            fields = config['amp_ant'].get('fields')
+            fields = isempty('amp_ant') or fields
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_uvwave_{0:d}'.format(i)
@@ -176,7 +183,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Plot ampant for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'phase_uvwave'):
-            fields = config['phase_uvwave'].get('fields')
+            fields = isempty("phase_uvwave") or fields
             for field_ in fields:
                 field = get_field(field_)
                 step = 'phase_uvwave_{0:d}'.format(i)
@@ -207,7 +214,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Plot phase uv-wave for field {1:s} ms={2:s}'.format(step, field, msname))
 
         if pipeline.enable_task(config, 'amp_scan'):
-            fields = config['amp_scan'].get('fields')
+            fields = isempty('amp_scan') or fields
             for field_ in fields:
                 field = get_field(field_)
                 step = 'plot_ampscan_{0:d}'.format(i)

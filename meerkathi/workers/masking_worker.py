@@ -33,7 +33,7 @@ def worker(pipeline, recipe, config):
             conv_units.rarad: ra in radians
         '''
 
-        ra = string.split(ra_hms, ':')
+        ra = ra_hms.split(':')
 
         hh = float(ra[0])*15
         mm = (float(ra[1])/60)*15
@@ -51,7 +51,7 @@ def worker(pipeline, recipe, config):
             conv_units.rarad: ra in radians
         '''
 
-        dec = string.split(dec_dms, ':')
+        dec = dec_dms.split(':')
 
         hh = abs(float(dec[0]))
         mm = float(dec[1])/60
@@ -126,11 +126,9 @@ def worker(pipeline, recipe, config):
         pix_y = np.empty([len(tab['RAJ2000'])])
 
         for i in range(0, len(tab['RAJ2000'])):
-            tab['RAJ2000'][i] = string.join(
-                string.split(tab['RAJ2000'][i], ' '), ':')
+            tab['RAJ2000'][i] = tab['RAJ2000'][i].replace(' ',':')
             ra_deg[i] = ra2deg(tab['RAJ2000'][i])
-            tab['DEJ2000'][i] = string.join(
-                string.split(tab['DEJ2000'][i], ' '), ':')
+            tab['DEJ2000'][i] = tab['DEJ2000'][i].replace(' ',':')
             dec_deg[i] = dec2deg(tab['DEJ2000'][i])
             flux_corr[i], pix_x[i], pix_y[i] = nvss_pbcorr(
                 ra_deg[i], dec_deg[i], centre, cell, imsize, obs_freq, tab['S1.4'][i])
@@ -342,6 +340,7 @@ def worker(pipeline, recipe, config):
         hdr['SIMPLE'] = 'T'
         hdr['BITPIX'] = -32
         hdr['NAXIS'] = 2
+        hdr['EQUINOX'] = 2000.
         hdr.set('NAXIS1',  imsize, after='NAXIS')
         hdr.set('NAXIS2',  imsize, after='NAXIS1')
 
@@ -356,6 +355,7 @@ def worker(pipeline, recipe, config):
 
         major = tab['MajAxis']
         minor = tab['MinAxis']
+        minor = major
         ra = tab['RADEG']
         dec = tab['DECDEG']
 
@@ -425,8 +425,8 @@ def worker(pipeline, recipe, config):
 
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
         maskName = str.split(pipeline.msnames[0], '.ms')[0]
-        msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
-            pipeline.output, pipeline.prefix, msfileName)
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
+            pipeline.output, msfileName)
         with open(msinfo, 'r') as stdr:
             tinfo = yaml.safe_load(stdr)['FIELD']
             targetpos = tinfo['REFERENCE_DIR']

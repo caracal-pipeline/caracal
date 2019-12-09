@@ -44,6 +44,11 @@ mapping:
         desc: number of cpu's to use
         required: false
         example: '5'
+      minuvw_m:
+        type: int
+        desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop.
+        required: false
+        example: '0'
       img_npix:
         type: int
         desc: Number of pixels in output image
@@ -231,12 +236,7 @@ mapping:
               - type: int
             desc: scales of multiscale [0,10,20,etc, etc] in pixels
             required: false
-            example: '10, 20, 30' 
-          minuvw_m:
-            type: int
-            desc: exclude short baselines [m]
-            required: false
-            example: '0'
+            example: '10, 20, 30'
           local_rms:
             type: bool
             desc: switch on local rms measurement for cleaning
@@ -593,11 +593,11 @@ mapping:
             desc: Number of sky model components that are processed in a single chunk.
             required: false
             example: '0'
-          invert_uvw:
-            type: bool
-            desc: Invert UVW coordinates. Useful if we want compare our visibilities against MeqTrees.
+          exp-sign-convention:
+            type: str
+            desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
             required: false
-            example: 'True'
+            example: 'casa'
           within:
             type: str
             desc: Give JS9 region file. Only sources within those regions will be included.

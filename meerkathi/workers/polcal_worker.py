@@ -24,7 +24,7 @@ def worker(pipeline, recipe, config):
         msname = msnames[i]
         REFANT = refant = pipeline.reference_antenna[i] or '0'
         prefix = prefixes[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
         PREFIX = prefix = '{0:s}-{1:s}'.format(prefix, config.get('label'))
         avgmsname = PREFIX + ".avg.ms"
         INPUT = pipeline.input

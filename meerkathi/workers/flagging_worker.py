@@ -25,6 +25,9 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
 
     for i in range(nobs):
+        # loop over all input .MS files
+        # the additional 'for loop' below loops over all single target .MS files
+        #   produced by the pipeline (see "if label" below)
 
         prefix = pipeline.prefixes[i]
 
@@ -52,13 +55,8 @@ def worker(pipeline, recipe, config):
         # Also compares antenna to median of the array per scan per field per channel
         # This should catch any antenna with severe temperature problems
         for j, msname in enumerate(mslist):
-            if label:
-                fieldName = utils.filter_name(target_ls[j])
-                msinfo = '{0:s}/{1:s}-{2:s}-obsinfo.json'.format(
-                    pipeline.output, pipeline.prefix, msname[:-3])
-            else:
-                msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                    pipeline.output, prefix)
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
+                pipeline.output, msname[:-3])
 
             if not os.path.exists(msinfo):
                 raise IOError(
@@ -118,10 +116,11 @@ def worker(pipeline, recipe, config):
             # clear static flags if any of them are enabled
             static_flagging = True in [pipeline.enable_task(config, sflag) for sflag in ["flag_autocorr", "quack_flagging",
                                                                                          "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"]]
+
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.clear_flagset(pipeline, recipe, "_".join(
-                    [wname, "static"]), msname, substep)
+                    [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
                 step = 'flag_autocorr_{0:s}_{1:d}'.format(wname, i)
@@ -148,9 +147,22 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
 
+            if pipeline.enable_task(config, 'flag_elevation'):
+                step = 'flag_elevation_{0:s}_{1:d}'.format(wname, i)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'elevation',
+                               "lowerlimit": config['flag_elevation'].get('low'),
+                               "upperlimit": config['flag_elevation'].get('high'),
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
+
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow'].get('include_full_mk64'):
-                    #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
+                    #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
                     with open(msinfo, 'r') as stdr:
                         subarray = yaml.load(stdr)['ANT']['NAME']
@@ -279,7 +291,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Apply static mask ms={1:s}'.format(step, msname))
 
             if static_flagging:
-                substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
+                substep = 'flagset_update_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
@@ -301,10 +313,8 @@ def worker(pipeline, recipe, config):
                         "autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
 
                 if label:
-                    fields = 'target'
-                    field_names = manfields.get_field(pipeline, i, fields)
                     fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
+                        map(str, utils.get_field_id(msinfo, target_ls[j])))
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 elif config['autoflag_rfi'].get('fields') == 'auto':
@@ -326,9 +336,6 @@ def worker(pipeline, recipe, config):
                        tricolour_mode = 'total_power'
                        tricolour_strat = config['autoflag_rfi'].get('tricolour_calibrator_strat')
           
-
-                field_names = list(set(field_names))
-
                 # Make sure no field IDs are duplicated
                 fields = ",".join(set(fields.split(",")))
                 if config['autoflag_rfi']["flagger"] == "aoflagger":
@@ -367,28 +374,16 @@ def worker(pipeline, recipe, config):
                 manflags.update_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
-               # recipe.add('cab/autoflagger', step,
-               #            {
-               #                "msname": msname,
-               #                "column": config['autoflag_rfi'].get('column'),
-               #                # flag the calibrators for RFI and apply to target
-               #                "fields": fields,
-               #                # "bands"       : config['autoflag_rfi'].get('bands', "0"),
-               #                "strategy": config['autoflag_rfi']['strategy'],
-               #            #},
-               #            input=pipeline.input,
-               #            output=pipeline.output,
-               #            label='{0:s}:: Aoflagger flagging pass ms={1:s}'.format(step, msname))
-
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
                 if label:
+                    fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                     outlabel = '_{0:s}_{1:d}'.format(fieldName, i)
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
                         pipeline, i, config['rfinder'].get('field')).split(","))))
-                    outlabel = '_{0:s}'.format(i)
+                    outlabel = '_{0:d}'.format(i)
                 recipe.add('cab/rfinder', step,
                            {
                                "msname": msname,

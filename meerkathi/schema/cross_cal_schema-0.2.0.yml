@@ -40,7 +40,7 @@ mapping:
           enable:
             type: bool
             desc: Execute intialization step
-            required: true
+            required: false
             example: 'True'
           field:
             seq:
@@ -98,7 +98,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: ''
+            example: 'scan'
           solint:
             type: str
             desc: Solution interval for delay-correction calibration.
@@ -124,27 +124,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'K'
-              field:
-                seq: 
-                - type: str 
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'bpcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
           flag:
             type: map
             desc: Flagging based on delay correction solutions.
@@ -181,7 +160,7 @@ mapping:
             desc: Parameter to combine different data axis for solving.
             enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
             required: false
-            example: ''
+            example: 'scan'
           field: 
             seq: 
               - type: str 
@@ -205,7 +184,7 @@ mapping:
             example: 'True'
           solint:
             type: str
-            desc: Solution interval for delay-correction calibration.
+            desc: Solution interval for bandpass calibration.
             required: false
             example: 'inf'
           set_refant:
@@ -214,10 +193,36 @@ mapping:
             required: false
             example: 'False' 
           remove_ph_time_var:
-            type: bool
-            desc: Remove large temporal phase variations from bandpass calibrator before solving.
-            required: false  
-            example: 'False'          
+            type: map
+            desc: Remove large temporal phase variations from the bandpass calibrator before solving for the bandpass.
+            mapping:
+              enable:
+                type: bool
+                desc: Enable removal of gain phase variations with time prior to solving for final bandpass.
+                required: false
+                example: 'False'
+              bp_solint:
+                type: str
+                desc: Solution interval for bandpass calibration before determining the variation of the gain phase with time.
+                required: false
+                example: 'inf'
+              bp_combine:
+                type: str
+                desc: Parameter to combine different data axis for solving.
+                enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
+                required: false
+                example: ''
+              g_solint:
+                type: str
+                desc: Solution interval for gain phase calibration to be applied when solving for the final bandpass.
+                required: false
+                example: 'inf'
+              g_combine:
+                type: str
+                desc: Parameter to combine different data axis for solving.
+                enum: ["","obs", "scan", "spw", "field", "obs,scan", "scan,obs"]
+                required: false
+                example: ''
           flag:
             type: map
             desc: Flagging based on bandpass amplitude solutions.
@@ -248,27 +253,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'B'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'bpcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
 
       gain_cal_flux:
         type: map
@@ -341,27 +325,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'fcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
 
       gain_cal_gain:
         type: map
@@ -398,7 +361,7 @@ mapping:
             type: str
             desc: Time solution interval
             required: false
-            example: '30s'
+            example: 'inf'
           set_refant:
             type: bool
             desc: Should a reference antenna be used for this calibration
@@ -434,27 +397,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                  - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'gcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
       
       transfer_fluxscale:    
         type: map
@@ -486,27 +428,6 @@ mapping:
                 desc: Enables plotting dignostics
                 required: false
                 example: 'True'
-              gaintype:
-                type: str
-                desc: "Type of gain solution table"
-                required: false
-                example: 'G'
-              field:
-                seq: 
-                - type: str
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: 'gcal'
-              corr:
-                type: str
-                desc: "Correlation to plot. E.g. X/Y or H/V"
-                required: false
-                example: 'X'
-              htmlname:
-                type: str
-                desc: "Output HTML file name"
-                required: false
-                example: ''
       
       apply_delay_cal:
         type: map
@@ -528,7 +449,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the delay correction calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode: 
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -556,7 +477,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the bandpass table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -584,7 +505,7 @@ mapping:
               - type: str 
             desc: Field(s) to apply the gain calibration table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
@@ -612,7 +533,7 @@ mapping:
               - type: str
             desc: Field(s) to apply the fluxscale table to. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal, gcal, target'.
             required: false
-            example: 'bpcal, gcal, xcal'
+            example: 'bpcal, gcal, xcal, target'
           applymode:
             type: str
             desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.

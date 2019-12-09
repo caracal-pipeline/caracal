@@ -21,6 +21,7 @@ def worker(pipeline, recipe, config):
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]
+        msroot = msname[:-3]
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo'].get('listobs'):
@@ -28,7 +29,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/casa_listobs', step,
                            {
                                "vis": msname,
-                               "listfile": prefix+'-obsinfo.txt',
+                               "listfile": '{0:s}-obsinfo.txt'.format(msroot),
                                "overwrite": True,
                            },
                            input=pipeline.input,
@@ -42,7 +43,7 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "command": 'summary',
                                "display": False,
-                               "outfile": prefix+'-obsinfo.json',
+                               "outfile": '{0:s}-obsinfo.json'.format(msroot),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -92,13 +93,13 @@ def worker(pipeline, recipe, config):
         setattr(pipeline, item + "_id", [])
 
     for i, prefix in enumerate(prefixes):
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, prefix)
-        meerkathi.log.info('Extracting info from {0:s}/{1:s}.json (if present) and {2:s}'.format(
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
+        meerkathi.log.info('Extracting info from {2:s} and (if present, and only for the purpose of automatically setting the reference antenna) the metadata file {0:s}/{1:s}-obsinfo.json'.format(
             pipeline.data_path, pipeline.dataid[i], msinfo))
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':
-            msmeta = '{0:s}/{1:s}.json'.format(
+            msmeta = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.data_path, pipeline.dataid[i])
             if path.exists(msmeta):
                 pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
@@ -106,7 +107,9 @@ def worker(pipeline, recipe, config):
                     pipeline.reference_antenna[i]))
             else:
                 meerkathi.log.error(
-                    'Cannot auto select reference antenna because the file {0:s} does not exist.'.format(msmeta))
+                    'Cannot auto select reference antenna because the metadata file {0:s}, which should have been provided by the observatory, does not exist.'.format(msmeta))
+                meerkathi.log.error(
+                    'Note that this metadata file is generally available only for MeerKAT-16/ROACH2 data.')
                 meerkathi.log.error(
                     'Please set the reference antenna manually in the config file and try again.')
                 sys.exit(1)

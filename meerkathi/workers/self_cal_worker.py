@@ -58,10 +58,7 @@ def worker(pipeline, recipe, config):
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
-    minbl = config.get('cal_minuvw_m')
-    img_min_bl = config['image'].get('minuvw_m')
-    if img_min_bl > 0. and minbl < img_min_bl:
-        minbl = img_min_bl
+    min_uvw = config.get('minuvw_m')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
     cal_niter = config.get('cal_niter')
@@ -235,8 +232,8 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
-        if img_min_bl > 0:
-            image_opts.update({"minuvw-m": img_min_bl})
+        if min_uvw > 0:
+            image_opts.update({"minuvw-m": min_uvw})
 
         if config[key].get('mask_from_sky'):
             fitmask = config[key].get('fits_mask')[
@@ -780,7 +777,7 @@ def worker(pipeline, recipe, config):
                     matrix_type = trace_matrix[num-2]
                     SN = trace_SN[num-2]
                 fidelity_data = get_aimfast_data()
-                obs_data = get_obs_data(prefix, field, label)
+                obs_data = get_obs_data(msname)
                 int_time = obs_data['EXPOSURE']
                 tot_time = 0.0
 
@@ -972,7 +969,7 @@ def worker(pipeline, recipe, config):
                 "data-column": 'DATA',
                 "model-list": ":".join(modellist),
                 "data-time-chunk": time_chunk,
-                "data-freq-chunk"  : freq_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -989,10 +986,7 @@ def worker(pipeline, recipe, config):
                 "g-type": CUBICAL_MT[matrix_type],                
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
-                "g-freq-int": int(gsols_[1]),
-                "g-max-prior-error":1.3,
-                "g-max-post-error":1.3,
-                "g-prop-flags": 'never',     #This is temporary for testing
+                "g-freq-int": int(gsols_[1]),                
                 "out-overwrite": config[key].get('overwrite'),
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
@@ -1004,12 +998,12 @@ def worker(pipeline, recipe, config):
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
-                "madmax-offdiag": False,
+                "log-boring": True,
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
-            if minbl > 0:
-                cubical_opts.update({"sol-min-bl": minbl})
+            if min_uvw > 0:
+                cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":
                 cubical_opts.update({
                     "flags-apply": flags,
@@ -1025,10 +1019,7 @@ def worker(pipeline, recipe, config):
                     "dd-solvable": True,
                     "dd-type": CUBICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_[0]),
-                    "dd-freq-int": int(gasols_[1]),
-                    "dd-max-prior-error": 1.3,
-                    "dd-max-post-error": 1.3,
-                    "dd-prop-flags": 'never',  # This is temporary for testing
+                    "dd-freq-int": int(gasols_[1]),                 
                     "dd-save-to": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                     pipeline), num, msname.split('.ms')[0]),
                     "dd-clip-low": config.get('cal_gain_amplitude_clip_low'),
@@ -1160,6 +1151,15 @@ def worker(pipeline, recipe, config):
         # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
         # Hence the following fix. This should be removed once the fix makes it into stimela.
         matrix_type = 'Gain2x2'
+        #Should this matter for applying?????
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+           sol_terms_add = []
+           for term in jones_chain.split(","):
+               sol_terms_add.append(SOL_TERMS[term])
+           sol_terms = ','.join(sol_terms_add)
+        else: 
+           sol_terms = sol_term_iters
         # loop through measurement sets
         for i,msname_out in enumerate(mslist_out):
             #If we are restoring a step we need to restore the flags of the 2gc process
@@ -1189,8 +1189,8 @@ def worker(pipeline, recipe, config):
                "data-ms": msname_out,
                "data-column": 'DATA',
                "sel-ddid": sdm.dismissable(config[key].get('spwid')),
-               "sol-jones": jones_chain,
-               "sol-term-iters": "5,0",
+               "sol-jones": jones_chain,  
+               "sol-term-iters": ",".join(sol_terms),
                "sel-diag": take_diag_terms,
                "dist-ncpu": ncpu,
                "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
@@ -1286,13 +1286,9 @@ def worker(pipeline, recipe, config):
             data = json.load(f)
         return data
 
-    def get_obs_data(prefix, field, label):
+    def get_obs_data(msname):
         "Extracts data from the json data file"
-        if label:
-            filename='{0:s}/{1:s}-{2:s}_{3:s}-obsinfo.json'.format(pipeline.output, prefix, field, label)
-        else: 
-            filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,prefix)
-
+        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,msname[:-3])
         with open(filename) as f:
             data = json.load(f)
         return data
@@ -1554,7 +1550,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_G_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },
@@ -1574,7 +1569,6 @@ def worker(pipeline, recipe, config):
                            "table": [tab+":output" for tab in gain_table_name],
                            "gaintype": config['calibrate']['ragavi_plot'].get('gaintype'),
                            "field": config['calibrate']['ragavi_plot'].get('field'),
-                           "corr": corr_indexes[config['calibrate']['ragavi_plot'].get('corr')],
                            "htmlname": '{0:s}/{1:s}/{2:s}_self-cal_D_gain_plots'.format(get_dir_path(pipeline.diagnostic_plots,
                                                                                                      pipeline), 'selfcal', prefix)
                        },
@@ -1606,7 +1600,7 @@ def worker(pipeline, recipe, config):
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_HI worker
+        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_line worker
         if config.get('undo_subtractmodelcol'):
             for i, msname in enumerate(mslist):
                 step = 'undo_modelsub_{:d}'.format(i)
@@ -1867,7 +1861,7 @@ def worker(pipeline, recipe, config):
                            "spectra": config['transfer_model'].get('spectra'),
                            "row-chunks": config['transfer_model'].get('row_chunks'),
                            "model-chunks": config['transfer_model'].get('model_chunks'),
-                           "invert-uvw": config['transfer_model'].get('invert_uvw'),
+                           "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
                            "within": sdm.dismissable(config['transfer_model'].get('within') or None),
                            "points-only": config['transfer_model'].get('points_only'),
                            "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),

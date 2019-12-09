@@ -1,4 +1,4 @@
-mimport os
+import os
 import shutil
 import glob
 import sys

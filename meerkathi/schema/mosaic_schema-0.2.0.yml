@@ -6,7 +6,7 @@ mapping:
 
   mosaic:
     type: map       
-    desc: Mosaic images output by selfcal or imageHI.
+    desc: Mosaic images output by selfcal or image_line worker.
     mapping:
       enable:
         type: bool

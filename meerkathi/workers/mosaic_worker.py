@@ -274,7 +274,7 @@ def worker(pipeline, recipe, config):
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the meerkathi recipe
     if pipeline.enable_task(config, 'domontage'):
-        recipe.add('cab/montage_mosaic', 'montage_mosaic',
+        recipe.add('cab/mosaicsteward', 'mosaicsteward',
             {
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : True,
@@ -284,10 +284,10 @@ def worker(pipeline, recipe, config):
             },
             input=input_directory,
             output=pipeline.mosaics,
-            label='montage_mosaic:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
+            label='MosaicSteward:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
         
     else:  # Written out for clarity as to what difference the 'domontage' setting makes 
-        recipe.add('cab/montage_mosaic', 'montage_mosaic',
+        recipe.add('cab/mosaicsteward', 'mosaicsteward',
             {
                 "mosaic-type"    : specified_mosaictype,
                 "domontage"      : False,
@@ -297,7 +297,7 @@ def worker(pipeline, recipe, config):
             },
             input=input_directory,
             output=pipeline.mosaics,
-            label='montage_mosaic:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
+            label='MosaicSteward:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
      
 
 

@@ -1112,6 +1112,7 @@ def worker(pipeline, recipe, config):
                           config[key_apply].get('Gsols_channel')[num - 1 if num <= len(config[key_apply].get('Gsols_channel')) else -1]]
                 bsols_ = [config[key_apply].get('Bsols_time')[num - 1 if num <= len(config[key_apply].get('Bsols_time')) else -1],
                           config[key_apply].get('Bsols_channel')[num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
+                if gasols_[0] != -1:
                     gasols_ = [config[key_apply].get('GAsols_time')[num - 1 if num <= len(config[key_apply].get('GAsols_time')) else -1],
                                config[key_apply].get('GAsols_channel')[num - 1 if num <= len(config[key_apply].get('GAsols_channel')) else -1]]
 

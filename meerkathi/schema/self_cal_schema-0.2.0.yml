@@ -512,16 +512,21 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'False'
+          user_sol_int:
+            type: bool
+            desc: If True the solution intervals that are applied will be read from this section. If false solints will be the same as the last calibration iteration.
+            required: false
+            example: 'True'
           Gsols_time:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Gsols for individual calibration steps
             required: false
             example: '1'
           Gsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Gsols for individual calibration steps
             required: false
             example: '1'
           Bjones:
@@ -532,13 +537,13 @@ mapping:
           Bsols_time:
             seq:
               - type: int
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps
             required: false
             example: '1'
           Bsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps
             required: false
             example: '1'
           GAsols_time:

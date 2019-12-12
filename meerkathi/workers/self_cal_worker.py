@@ -1107,13 +1107,13 @@ def worker(pipeline, recipe, config):
         # If we want to interpolate our frequency interval is always 1 no matter what
         if enable_inter:
             key_apply = 'transfer_apply_gains'
-            gsols_ = [config[key_apply].get('Gsols_time')[num - 1 if num <= len(config[key_apply].get('Gsols_time')) else -1],
-                      config[key_apply].get('Gsols_channel')[num - 1 if num <= len(config[key_apply].get('Gsols_channel')) else -1]]
-            bsols_ = [config[key_apply].get('Bsols_time')[num - 1 if num <= len(config[key_apply].get('Bsols_time')) else -1],
-                      config[key_apply].get('Bsols_channel')[num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
-            if gasols_[0] != -1:
-                gasols_ = [config[key_apply].get('GAsols_time')[num - 1 if num <= len(config[key_apply].get('GAsols_time')) else -1],
-                           config[key_apply].get('GAsols_channel')[num - 1 if num <= len(config[key_apply].get('GAsols_channel')) else -1]]
+            if config[key_apply].get('user_sol_int'):
+                gsols_ = [config[key_apply].get('Gsols_time')[num - 1 if num <= len(config[key_apply].get('Gsols_time')) else -1],
+                          config[key_apply].get('Gsols_channel')[num - 1 if num <= len(config[key_apply].get('Gsols_channel')) else -1]]
+                bsols_ = [config[key_apply].get('Bsols_time')[num - 1 if num <= len(config[key_apply].get('Bsols_time')) else -1],
+                          config[key_apply].get('Bsols_channel')[num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
+                    gasols_ = [config[key_apply].get('GAsols_time')[num - 1 if num <= len(config[key_apply].get('GAsols_time')) else -1],
+                               config[key_apply].get('GAsols_channel')[num - 1 if num <= len(config[key_apply].get('GAsols_channel')) else -1]]
 
         time_chunk_apply = gsols_[0]
         freq_chunk_apply = gsols_[1]

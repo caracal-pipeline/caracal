@@ -64,11 +64,11 @@ flagging:
 cross_cal:
   enable: true
   otfdelay: true
-  uvrange: '>250'
+  uvrange: '>150'
   label: 1gc1
   set_model:
     enable: true
-  bpcal:
+  primary_cal:
     enable: true
     order: KGBKGB
     combine: ["", "", "", "","", scan]
@@ -76,7 +76,7 @@ cross_cal:
     calmode: [a, ap, ap, a, ap, ap] 
     B_fillgaps: 70
     plotgains: true
-  gcal:
+  secondary_cal:
     enable: true
     order: KG
     apply: B

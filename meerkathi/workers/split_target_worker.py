@@ -74,7 +74,7 @@ def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
 
-        target_ls = pipeline.target[i].split(',')
+        target_ls = pipeline.target[i]
         prefix = pipeline.prefixes[i]
         msname = pipeline.msnames[i][:-3]
 

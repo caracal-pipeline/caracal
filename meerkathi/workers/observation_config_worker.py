@@ -69,15 +69,14 @@ def worker(pipeline, recipe, config):
     # initialse things
     for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
         val = config.get(item)
-        if val and not isinstance(val, list):
-            setattr(pipeline, item, [val]*pipeline.nobs)
-        elif isinstance(val, list):
-            setattr(pipeline, item, val)
-        else:
-            setattr(pipeline, item, [None]*pipeline.nobs)
+        for attr in ["", "_ra", "_dec", "_id"]:
+            if val and not isinstance(val, list):
+                setattr(pipeline, item+attr, [val]*pipeline.nobs)
+            elif isinstance(val, list):
+                setattr(pipeline, item+attr, val)
+            else:
+                setattr(pipeline, item+attr, [None]*pipeline.nobs)
 
-    setattr(pipeline, 'TRA', [None]*pipeline.nobs)
-    setattr(pipeline, 'TDec', [None]*pipeline.nobs)
     setattr(pipeline, 'nchans', [None]*pipeline.nobs)
     setattr(pipeline, 'firstchanfreq', [None]*pipeline.nobs)
     setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
@@ -89,7 +88,7 @@ def worker(pipeline, recipe, config):
     pipeline.dish_diameter = config.get('dish_diameter')
 
     for item in 'xcal fcal bpcal gcal target'.split():
-        setattr(pipeline, item + "_id", [])
+        setattr(pipeline, item + "_id", [None]*pipeline.nobs)
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
@@ -138,105 +137,35 @@ def worker(pipeline, recipe, config):
             pipeline.specframe[i] = yaml.safe_load(
                 stdr)['SPW']['MEAS_FREQ_REF']
 
-        # Auto select some/all fields if user didn't manually override all of them
-        if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
-            intents = utils.categorize_fields(msinfo)
-            # Get fields and their purposes
-            fcals = intents['fcal'][-1]
-            gcals = intents['gcal'][-1]
-            bpcals = intents['bpcal'][-1]
-            targets = intents['target'][-1]
-            xcals = []
-            # Set crosshand angle calibrator
-            if config.get('xcal') == 'auto':
-                if len(intents['xcal']) > 0:
-                    # last on the list if auto
-                    pipeline.xcal[i] = intents['xcal'][-1]
-                else:
-                    # empty string to be picked up as no cross phase calibrator
-                    pipeline.xcal[i] = ""
-                    meerkathi.log.warn(
-                        "No crosshand angle reference calibrator specified. This calibration will not be performed.")
-            else:
-                pipeline.xcal[i] = config['xcal']  # user specified
-            # Set gain calibrator
-            if config['gcal'] == 'auto':
-                pipeline.gcal[i] = utils.select_gcal(
-                    msinfo, targets, gcals, mode='nearest')
-                meerkathi.log.info(
-                    'Auto selecting gain calibrator as {:s}'.format(pipeline.gcal[i]))
-            else:
-                pipeline.gcal[i] = config['gcal']
-            tobs = utils.field_observation_length(
-                msinfo, pipeline.gcal[i])/60.0
-            meerkathi.log.info('Gain calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(
-                pipeline.gcal[i], tobs))
-
-            # Set flux calibrator
-            if config['fcal'] == 'auto':
-                while len(fcals) > 0:
-                    fcal = utils.observed_longest(msinfo, fcals)
-                    if utils.find_in_casa_calibrators(msinfo, fcal) or utils.find_in_native_calibrators(msinfo, fcal):
-                        pipeline.fcal[i] = fcal
-                        break
-                    fcals.remove(fcal)
-                meerkathi.log.info(
-                    'Auto selecting flux calibrator as {:s}'.format(pipeline.fcal[i]))
-            else:
-                pipeline.fcal[i] = config['fcal']
-            tobs = utils.field_observation_length(
-                msinfo, pipeline.fcal[i])/60.0
-            meerkathi.log.info('Flux calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(
-                pipeline.fcal[i], tobs))
-
-            # Set bandpass calibrator
-            if config['bpcal'] == 'auto':
-                pipeline.bpcal[i] = utils.observed_longest(msinfo, bpcals)
-                meerkathi.log.info(
-                    'Auto selecting bandpass calibrator field as {:s}'.format(pipeline.bpcal[i]))
-            else:
-                pipeline.bpcal[i] = config['bpcal']
-            tobs = utils.field_observation_length(
-                msinfo, pipeline.bpcal[i])/60.0
-            meerkathi.log.info('Bandpass calibrator field "{0:s}" was observed for {1:.2f} minutes'.format(
-                pipeline.bpcal[i], tobs))
-
-            # Select target field(s)
-            if config['target'] == 'auto':
-                pipeline.target[i] = ','.join(targets)
-                meerkathi.log.info(
-                    'Auto selecting target field as {:s}'.format(pipeline.target[i]))
-            else:
-                targets = config['target'].split(',')
-                pipeline.target[i] = ','.join(targets)
-            meerkathi.log.info('Found {0:d} target fields {1:s}'.format(
-                len(targets), pipeline.target[i]))
-            for target in targets:
-                tobs = utils.field_observation_length(msinfo, target)/60.0
-                meerkathi.log.info(
-                    'Target field "{0:s}" was observed for {1:.2f} minutes'.format(target, tobs))
-
-        # Get the target RA and Dec
         with open(msinfo, 'r') as stdr:
-            # WARNING: this sets a single RA,Dec value even in case of multiple targets (e.g., in a mosaic obs; in this case it takes the RA,Dec of the first target in the targets list).
-            # A similar approach is taken by the split_target worker, which is hardcoded to split pipeline.target[i].split(',')[0] only
             targetinfo = yaml.safe_load(stdr)['FIELD']
-            targetpos = targetinfo['REFERENCE_DIR'][targetinfo['NAME'].index(
-                pipeline.target[i].split(',')[0])][0]
-            pipeline.TRA[i] = targetpos[0]/np.pi*180.
-            pipeline.TDec[i] = targetpos[1]/np.pi*180.
-            meerkathi.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(
-                pipeline.TRA[i], pipeline.TDec[i]))
 
-        # update ids for all fields now that auto fields were selected
-        for item in 'xcal fcal bpcal gcal target'.split():
-                setattr(pipeline, item+"_id", utils.get_field_id(msinfo, 
-                        getattr(pipeline, item)[i]))
-        else:
-            flds = getattr(pipeline, 'target')[i].split(',') \
-                if isinstance(getattr(pipeline, 'target')[i], str) else getattr(pipeline, 'target')[i]
-            getattr(pipeline, "target_id").append(
-                ','.join([str(utils.get_field_id(msinfo, f)) for f in flds]))
+        intents = utils.categorize_fields(msinfo)
+        for term in "fcal bpcal gcal target xcal".split():
+            if term == "xcal":
+                print(getattr(pipeline, term)[i])
+            if "auto" in getattr(pipeline, term)[i]:
+                label, fields = intents[term]
+                if fields in [None, []]:
+                    getattr(pipeline, term)[i] = []
+                    continue
+                getattr(pipeline, term)[i] = fields
+
+                meerkathi.log.info("====================================")
+                meerkathi.log.info(label[0])
+                meerkathi.log.info(" ---------------------------------- ")
+                for f in fields:
+                    fid = utils.get_field_id(msinfo, f)[0]
+
+                    targetpos = targetinfo['REFERENCE_DIR'][fid][0]
+                    ra = targetpos[0]/np.pi*180
+                    dec = targetpos[1]/np.pi*180
+                    getattr(pipeline, term+"_ra")[i] = ra
+                    getattr(pipeline, term+"_dec")[i] = dec
+                    getattr(pipeline, term+"_id")[i] = fid
+                    tobs = utils.field_observation_length(msinfo, f)/60.0
+                    meerkathi.log.info(
+                            '{0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
 
     if pipeline.enable_task(config, 'primary_beam'):
         meerkathi.log.info('Generating primary beam')

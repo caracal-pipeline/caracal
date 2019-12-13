@@ -35,7 +35,7 @@ def worker(pipeline, recipe, config):
         mslist = []
 
         if label:
-            target_ls = pipeline.target[i].split(',')
+            target_ls = pipeline.target[i]
             for target in target_ls:
                 field = utils.filter_name(target)
                 mslist.append(
@@ -289,53 +289,37 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
                 # Clear autoflags if need be
+
+                if label:
+                    fields = target_ls[j]
+                    tricolour_mode = 'polarisation'
+                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
+                elif config['autoflag_rfi'].get('fields') == 'auto':
+                    fields = []
+                    for item in "gcal bpcal xcal fcal".split():
+                        if hasattr(pipeline, item):
+                            tfld = getattr(pipeline, item)[i]
+                        else:
+                            raise ValueError("Field given is invalid. Options are 'xcal bpcal gcal fcal'.")
+                        if tfld:
+                            fields += tfld
+                    fields = list(set(fields))
+                    tricolour_mode = 'polarisation'
+                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(
                     wname, i)
                 manflags.clear_flagset(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
-
-                if config['autoflag_rfi'].get('fields') != 'auto' and \
-                   not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
-                    raise KeyError(
-                        "autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
-                if config['autoflag_rfi'].get('calibrator_fields') != 'auto' and \
-                   not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
-                    raise KeyError(
-                        "autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
-
-                if label:
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, target_ls[j])))
-                    tricolour_mode = 'polarisation'
-                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                elif config['autoflag_rfi'].get('fields') == 'auto':
-                    fields = 'target,bpcal,gcal,xcal'
-                    tricolour_mode = 'polarisation'
-                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                    field_names = manfields.get_field(pipeline, i, fields)
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
-                else:
-                    field_names = manfields.get_field(
-                        pipeline, i, config['autoflag_rfi'].get('fields')).split(",")
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
-                    if 'target' in fields:
-                       tricolour_mode = 'polarisation'
-                       tricolour_strt = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                    else: 
-                       tricolour_mode = 'total_power'
-                       tricolour_strat = config['autoflag_rfi'].get('tricolour_calibrator_strat')
           
-                # Make sure no field IDs are duplicated
-                fields = ",".join(set(fields.split(",")))
+                field_ids = utils.get_field_id(msinfo, fields)
+                fields = ",".join(fields)
                 if config['autoflag_rfi']["flagger"] == "aoflagger":
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,
                                    "column": config['autoflag_rfi'].get('column'),
                                    # flag the calibrators for RFI and apply to target
-                                   "fields": fields,
+                                   "fields": ",".join(map(str, field_ids)),
                                    # "bands"       : config['autoflag_rfi'].get('bands', "0"),
                                    "strategy": config['autoflag_rfi']['strategy'],
                                },
@@ -405,6 +389,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'summary',
+                               "flagbackup": False,
                            },
                            input=pipeline.input,
                            output=pipeline.output,

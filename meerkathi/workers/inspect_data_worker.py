@@ -3,6 +3,7 @@ import sys
 import yaml
 from stimela.dismissable import dismissable as sdm
 from meerkathi import log
+import meerkathi.dispatch_crew.utils as utils
 
 NAME = 'Inspect data'
 
@@ -11,12 +12,12 @@ NAME = 'Inspect data'
 def get_dir_path(string, pipeline): 
     return string.split(pipeline.output)[1][1:]
 
-def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts):
-    step = 'plot_{0:s}_{1:d}'.format(plotname, iobs)
+def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
+    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
     colouraxis = opts.get("colouraxis", None)
     recipe.add("cab/casa_plotms", step, {
                 "vis": msname,
-                "field": getattr(pipeline, field)[iobs],
+                "field": field,
                 "correlation": opts['corr'],
                 "timerange": '',
                 "antenna": '',
@@ -28,7 +29,7 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
                 "avgchannel": config[plotname].get('avgchannel'),
                 "coloraxis": sdm(colouraxis),
                 "iteraxis": sdm(opts.get('iteraxis', None)),
-                "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}.png'.format(prefix, label, field, plotname),
+                "plotfile": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
                 "expformat": 'png',
                 "exprange": 'all',
                 "overwrite": True,
@@ -40,8 +41,8 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         label="{0:s}:: Plotting corrected {1:s}".format(step, plotname))
 
 
-def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts):
-    step = 'plot_{0:s}_{1:d}'.format(plotname, iobs)
+def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
+    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
     column = config[plotname]['column']
     if column == "corrected":
         column = "CORRECTED_DATA"
@@ -50,12 +51,12 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
 
     recipe.add("cab/shadems", step, {
                 "ms": msname,
-                "field": str(getattr(pipeline, field+"_id")[iobs]),
+                "field": field,
 #                "corr": opts['corr'],
                 "xaxis": opts['xaxis'],
                 "yaxis": opts['yaxis'],
                 "col": column,
-                "png": '{0:s}-{1:s}-{2:s}-{3:s}.png'.format(prefix, label, field, plotname),
+                "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
         }, 
         input=pipeline.input,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
@@ -113,7 +114,6 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["amp_scan"] = dict(plotms={"xaxis": "scan", "yaxis": "amp"}, shadems=None)
         diagnostic_plots["amp_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "amp"}, shadems={"xaxis": "c", "yaxis" :"a"})
         diagnostic_plots["phase_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "phase"}, shadems={"xaxis": "c", "yaxis" :"p"})
-                
 
         for plotname in diagnostic_plots:
             if not pipeline.enable_task(config, plotname):
@@ -123,6 +123,8 @@ def worker(pipeline, recipe, config):
                 log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(plotter, plotname)) 
                 continue
             opts["corr"] = corr
-            for field in isempty(plotname) or fields:
-                globals()[plotter](pipeline, recipe, config, 
-                    plotname, msname, field, i, label, prefix, opts)
+            for fields_ in isempty(plotname) or fields:
+                for field in getattr(pipeline, fields_)[i]:
+                    fid = utils.get_field_id(msinfo, field)[0]
+                    globals()[plotter](pipeline, recipe, config, 
+                        plotname, msname, field, i, label, prefix, opts, ftype=fields_, fid=fid)

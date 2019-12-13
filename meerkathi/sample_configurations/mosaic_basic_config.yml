@@ -6,7 +6,7 @@
 
 - observation_config:
     target: auto
-    reference_antenna: '0' 
+    reference_antenna: '0'
 
 - general:
     data_path: input/data
@@ -19,5 +19,3 @@
 - mosaic:
     enable: true
     mosaic_type: spectral
-    
-

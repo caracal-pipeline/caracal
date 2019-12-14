@@ -132,7 +132,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                     interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
             recipe.add(RULES[term]["cab"], step, 
                     copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.caltables,
+                    input=pipeline.input, output=pipeline.output,
                     label="%s::" % step)
         elif term == "I":
             step = "%s_%s_%d_%d_%s" % (name, label, itern, iobs, ftype)
@@ -220,8 +220,8 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                 params["caltable"] = caltable
 
             if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
-                    params["caltable"]):
-                meerkathi.log.info("Reusing existing gain table '%s' as requested" % params["caltable"])
+                    caltable):
+                meerkathi.log.info("Reusing existing gain table '%s' as requested" % caltable)
             else:
                 recipe.add(RULES[term]["cab"], step, 
                         copy.deepcopy(params),

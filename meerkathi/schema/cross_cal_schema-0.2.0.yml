@@ -71,6 +71,11 @@ mapping:
             desc: Execute this section
             required: false
             example: 'True'
+          reuse_existing_gains:
+            type: bool
+            required: false
+            desc: Reuse gain tables if they exist
+            example: "False"
           order:
             type: str
             required: false
@@ -155,6 +160,11 @@ mapping:
             desc: Execute this section
             required: false
             example: 'True'
+          reuse_existing_gains:
+            type: bool
+            required: false
+            desc: Reuse gain tables if they exist
+            example: "False"
           order:
             type: str
             required: false

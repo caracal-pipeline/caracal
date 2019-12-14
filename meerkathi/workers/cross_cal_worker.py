@@ -11,12 +11,14 @@ import re
 
 NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
-
-
 def get_dir_path(string, pipeline): 
     return string.split(pipeline.output)[1][1:]
 
 FLAG_NAMES = [""]
+
+def exists(outdir, path):
+    _path = os.path.join(outdir, path)
+    return os.path.exists(_path)
 
 # Rules for interpolation mode to use when applying calibration solutions
 RULES = {
@@ -217,10 +219,14 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
             else:
                 params["caltable"] = caltable
 
-            recipe.add(RULES[term]["cab"], step, 
-                    copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.caltables,
-                    label="%s:: %s calibration" % (step, term))
+            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                    params["caltable"]):
+                meerkathi.log.info("Reusing existing gain table '%s' as requested" % params["caltable"])
+            else:
+                recipe.add(RULES[term]["cab"], step, 
+                        copy.deepcopy(params),
+                        input=pipeline.input, output=pipeline.caltables,
+                        label="%s:: %s calibration" % (step, term))
 
             if config[ftype]["plotgains"]:
                 plotgains(recipe, pipeline, [field_id], caltable+":output", iobs, term=term)
@@ -450,8 +456,12 @@ found in our database or in the CASA NRAO database'.format(fluxscale_field))
                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
             # Transfer fluxscale
             ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
-            transfer_fluxscale(recipe, gtable+":output", ftable, 
-                    pipeline, i, reference=fluxscale_field, label=label)
+            if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                    ftable):
+                meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
+            else:
+                transfer_fluxscale(recipe, gtable+":output", ftable, 
+                        pipeline, i, reference=fluxscale_field, label=label)
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]

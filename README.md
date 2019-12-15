@@ -5,6 +5,8 @@
 https://meerkathi.readthedocs.io
 
 ## Download & Install
+### Usage and publication policy
+When using MeerKATHI/CARACal please be aware of and adhere to the [MeerKATHI publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
 
 ### On Linux
 

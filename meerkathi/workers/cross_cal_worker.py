@@ -117,7 +117,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
         params["vis"] = ms
         if term == "A":
             params["mode"] = RULES[term]["mode"]
-            params["field"] = ",".join(field),
+            params["field"] = ",".join(field)
             params["datacolumn"] = config[ftype]["flag"]["column"]
             params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
             params["combinescans"] = config[ftype]["flag"]["combinescans"]

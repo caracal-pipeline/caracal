@@ -995,6 +995,8 @@ def worker(pipeline, recipe, config):
                                                                                                pipeline), num, msname.split('.ms')[0]),
                 "g-clip-low": config.get('cal_gain_amplitude_clip_low'),
                 "g-clip-high": config.get('cal_gain_amplitude_clip_high'),
+                "g-max-prior-error": config.get('cal_max_prior_error'),
+                "g-max-post-error": config.get('cal_max_post_error'),
                 "madmax-enable": config[key].get('madmax_flagging'),
                 "madmax-plot": True if (config[key].get('madmax_flagging')) else False,
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
@@ -1025,6 +1027,8 @@ def worker(pipeline, recipe, config):
                                                                                                     pipeline), num, msname.split('.ms')[0]),
                     "dd-clip-low": config.get('cal_gain_amplitude_clip_low'),
                     "dd-clip-high": config.get('cal_gain_amplitude_clip_high'),
+                    "dd-max-prior-error": config.get('cal_max_prior_error'),
+                    "dd-max-post-error": config.get('cal_max_post_error'),
                 })
             if config[key].get('Bjones', False):
                 cubical_opts.update({
@@ -1036,7 +1040,10 @@ def worker(pipeline, recipe, config):
                     "b-clip-low": config.get('cal_gain_amplitude_clip_low'),
                     "b-save-to": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msname.split('.ms')[0]),
-                    "b-clip-high": config.get('cal_gain_amplitude_clip_high')})
+                    "b-clip-high": config.get('cal_gain_amplitude_clip_high'),
+                    "b-max-prior-error": config.get('cal_max_prior_error'),
+                    "b-max-post-error": config.get('cal_max_post_error'),}
+                )
             recipe.add('cab/cubical', step, cubical_opts,  
                        input=pipeline.input,
                        output=pipeline.output,

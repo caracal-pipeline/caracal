@@ -125,6 +125,16 @@ mapping:
         desc: Higher gain amplitude clipping
         required: false
         example: '2.'
+      cal_max_prior_error:
+        type: float
+        desc: Flag solution intervals where the prior variance estimate is above this value.
+        required: false
+        example: '0.1'
+      cal_max_post_error:
+        type: float
+        desc: Flag solution intervals where the posterior variance estimate is above this value.
+        required: false
+        example: '0.1'
       cal_niter:
         type: int
         desc: Number of self-calibration iterations to perform

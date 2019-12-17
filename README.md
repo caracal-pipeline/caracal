@@ -1,8 +1,12 @@
 [![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/)
 
-## Install
+## Documentation
+
+https://meerkathi.readthedocs.io
 
 ## Download & Install
+### Usage and publication policy
+When using MeerKATHI/CARACal please be aware of and adhere to the [MeerKATHI publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
 
 ### On Linux
 
@@ -25,7 +29,7 @@ $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 ```
 3. Install meerKATHI
 ```
-$ pip install <absolute path to meerkathi folder>[extra_diagnostics]
+$ pip install <absolute path to meerkathi folder>"[extra_diagnostics]"
 $ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
@@ -49,7 +53,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     
   - **Docker**
     ```
-    $ stimela pull
+    $ stimela pull -d
     $ stimela build
     ```
 

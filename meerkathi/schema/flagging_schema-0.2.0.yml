@@ -87,6 +87,25 @@ mapping:
             enum: ["beg", "endb", "end", "tail"]
             required: False
             example: 'beg'
+      flag_elevation:
+        desc: Flag antennas with pointing elevation outisde the selected range through CASA FLAGDATA.
+        type: map
+        mapping:
+          enable:
+            desc: Enable flagging based on pointing elevation.
+            type: bool
+            required: False
+            example: 'False'
+          low:
+            desc: Lower elevation limit. Antennas pointing at elevation below this value are flagged.
+            type: float
+            required: False
+            example: '0'
+          high:
+            desc: Upper elevation limit. Antennas pointing at elevation above this value are flagged.
+            type: float
+            required: False
+            example: '90'
       flag_shadow:
         desc: Flag shadowed antennas through the CASA task FLAGDATA.
         type: map

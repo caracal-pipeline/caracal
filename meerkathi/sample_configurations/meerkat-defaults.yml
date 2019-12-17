@@ -159,6 +159,6 @@ self_cal:
   enable: true
   label: corr
 
-image_HI: 
+image_line: 
   enable: true
   label: corr

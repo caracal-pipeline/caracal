@@ -373,7 +373,7 @@ self_cal:
     deconv_chans: 3
     fit_spectral_pol: 2
 
-image_HI:
+image_line:
   enable: true
   label: corr
   hires_label: hires

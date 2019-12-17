@@ -344,7 +344,7 @@ def worker(pipeline, recipe, config):
             opts = dict(opts)
             if 'enable' in opts:
                 del(opts['enable'])
-            step = 'flag_{0:s}_{1:d}'.format(cal, i)
+            step = 'flag_{0:s}_{1:s}_{2:d}'.format(cal, worker_label, i)
             opts["vis"] = '{0:s}/{1:s}.{2:s}'.format(get_dir_path(
                 pipeline.caltables, pipeline), prefix, table_suffix[cal]+':output')
             opts["datacolumn"] = datacolumn
@@ -414,12 +414,6 @@ def worker(pipeline, recipe, config):
 found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = 'set_model_cal_{0:d}'.format(i)
             cabtouse = 'cab/casa_setjy'
-            recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
-               opts,
-               input=pipeline.input,
-               output=pipeline.output,
-               label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
-
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
@@ -478,7 +472,7 @@ found in our database or in the CASA NRAO database'.format(fluxscale_field))
         manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_crosscal_{0:d}'.format(i)
+            step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(worker_label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
                            "vis": msname,

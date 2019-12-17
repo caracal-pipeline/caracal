@@ -198,6 +198,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
             params["refant"] = pipeline.reference_antenna[iobs]
             params["solint"] = first_if_single(config[ftype]["solint"], i)
             params["combine"] = first_if_single(config[ftype]["combine"], i)
+            params["solnorm"] = config[ftype]["solnorm"]]
             params["field"] = ",".join(field)
             if term == "B":
                 params["bandtype"] = term
@@ -472,7 +473,7 @@ found in our database or in the CASA NRAO database'.format(fluxscale_field))
         manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(worker_label, i)
+            step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
                            "vis": msname,

@@ -62,13 +62,13 @@ self_cal:
     enable: true
     Gsols_time: [120]
 
-- image_line:
+image_line:
+  enable: true
+  restfreq: '1.420405752GHz'
+  make_cube:
     enable: true
-    restfreq: '1.420405752GHz'
-    make_cube:
-      enable: true
-      npix: [1800]
-      cell: 2
-    mstransform: 
-      enable: true
-      telescope: meerkat
+    npix: [1800]
+    cell: 2
+  mstransform: 
+    enable: true
+    telescope: meerkat

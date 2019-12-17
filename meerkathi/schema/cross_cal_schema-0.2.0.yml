@@ -81,6 +81,11 @@ mapping:
             required: false
             desc: "Order in which to solve for gains for this field. E.g, if order is set to 'KGB', the we solve for delays, then the phase and amplitude, and finally the bandpass. The full options are: K-delay calibration; G-amplitude and phase calibration; B-bandpass calibration; A-automatic flagging (existing gains will be applied first)."
             example: KGB
+          solnorm:
+            type: bool
+            required: false
+            desc: Normalise average solution amplitude to 1.0
+            example: "False"
           combine: 
             seq:
               - type: str
@@ -170,6 +175,11 @@ mapping:
             required: false
             desc: "Order in which to solve for gains for this field. E.g, if order is set to 'KGB', the we solve for delays, then the phase and amplitude, and finally the bandpass. The full options are: K-delay calibration; G-amplitude and phase calibration; B-bandpass calibration; A-automatic flagging (existing gains will be applied first); I-Do a self-callibration"
             example: KG
+          solnorm:
+            type: bool
+            required: false
+            desc: Normalise average solution amplitude to 1.0
+            example: "False"
           combine: 
             seq:
               - type: str

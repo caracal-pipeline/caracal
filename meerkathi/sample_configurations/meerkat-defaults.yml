@@ -155,10 +155,23 @@ masking:
     - DD:MM:SS
   label: corr
 
-self_cal: 
+self_cal:
   enable: true
-  label: corr
+  img_npix: 4096
+  img_cell: 1.3
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    Gsols_time: [120]
 
-image_line: 
+image_line:
   enable: true
-  label: corr
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+  mstransform:
+    enable: true
+    telescope: meerkat

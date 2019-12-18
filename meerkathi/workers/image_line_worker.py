@@ -24,37 +24,6 @@ import itertools
 # To split out cubes/<dir> from output/cubes/dir
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
-def target_to_msfiles(targets, msnames, label, doppler=False):
-    target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
-
-    for t in targets:  # list all targets per input ms and make a unique list of all target fields
-        tmp = t.split(',')
-        target_ls.append(tmp)
-        for tt in tmp:
-            all_target.append(tt)
-    all_target = list(set(all_target))
-
-    # make a list of all input ms file names for each target field
-    for i, ms in enumerate(msnames):
-
-        for t in target_ls[i]:
-            tmp = utils.filter_name(t)
-            if doppler:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}{2:s}_mst.ms'.format(ms[:-3], tmp, label))
-            else:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}{2:s}.ms'.format(ms[:-3], tmp, label))
-
-    for t in all_target:  # group ms files by target field name
-        tmp = []
-        for m in target_ms_ls:
-            if m.find(utils.filter_name(t)) > -1:
-                tmp.append(m)
-        target_msfiles.append(tmp)
-
-    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))
-
 
 def freq_to_vel(filename, reverse):
     C = 2.99792458e+8       # m/s
@@ -218,7 +187,7 @@ def worker(pipeline, recipe, config):
         flabel = '_' + label
     else:
         flabel = label
-    all_targets, all_msfiles, ms_dict = target_to_msfiles(
+    all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, flabel, False)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []

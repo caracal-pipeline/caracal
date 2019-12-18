@@ -1,3 +1,4 @@
+import meerkathi
 from meerkathi import log, pckgdir
 from meerkathi.dispatch_crew import worker_help
 import subprocess
@@ -8,8 +9,8 @@ import traceback
 from datetime import datetime
 import stimela
 import glob
+import shutil
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
-import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
 from http.server import SimpleHTTPRequestHandler
@@ -90,7 +91,7 @@ class worker_administrator(object):
         self.stimela_build = stimela_build
 
         # Get possible flagsets for reduction
-        self.flagsets = {"legacy": ["legacy"]}
+        self.flags = {"legacy": ["legacy"]}
         for _name, _worker, i in self.workers:
             try:
                 wkr = __import__(_worker)
@@ -99,9 +100,9 @@ class worker_administrator(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
                     _worker, self.workers_directory))
 
-            if hasattr(wkr, "FLAGSETS_SUFFIX"):
-                self.flagsets[_name] = ["_".join(
-                    [_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
+            if hasattr(wkr, "FLAG_NAMES"):
+                self.flags[_name] = ["_".join(
+                    [_name, suffix]) if suffix else _name for suffix in wkr.FLAG_NAMES]
 
         self.recipes = {}
         # Workers to skip
@@ -190,6 +191,9 @@ class worker_administrator(object):
             os.mkdir(self.continuum)
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
+        # create proper logfile and start flushing
+        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
+        meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -204,6 +208,22 @@ class worker_administrator(object):
             f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
             if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
                 subprocess.check_call(["cp", "-r", f, self.input])
+
+        # Copy standard notebooks
+        if self.config['general']['init_notebooks']:
+            nbdir = os.path.join(os.path.dirname(meerkathi.__file__), "notebooks")
+            for notebook in self.config['general']['init_notebooks']:
+                nbfile = notebook + ".ipynb"
+                nbsrc = os.path.join(nbdir, nbfile)
+                nbdest = os.path.join(self.output, nbfile)
+                if os.path.exists(nbsrc):
+                    if os.path.exists(nbdest):
+                        log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+                    else:
+                        log.info("Creating standard notebook {}".format(nbdest))
+                        shutil.copyfile(nbsrc, nbdest)
+                else:
+                    log.error("Standard notebook {} does not exist".format(nbsrc))
 
     def enable_task(self, config, task):
         a = config.get(task)

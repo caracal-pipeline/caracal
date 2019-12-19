@@ -230,7 +230,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                         label="%s:: %s calibration" % (step, term))
 
             if config[ftype]["plotgains"]:
-                plotgains(recipe, pipeline, [field_id], caltable+":output", iobs, term=term)
+                plotgains(recipe, pipeline, field_id, caltable+":output", iobs, term=term)
 
             fields.append(",".join(field))
             interps.append(interp)
@@ -359,7 +359,6 @@ def worker(pipeline, recipe, config):
         manflags.delete_flagset(pipeline, recipe, wname,
                                msname, cab_name=substep)
 
-
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             meerkathi.log.info("Found more than one flux calibrator."\
@@ -411,10 +410,17 @@ def worker(pipeline, recipe, config):
                         "scalebychan": True,
                     }
                 else:
-                    raise RuntimeError('The flux calibrator field "{}" could not be \
-found in our database or in the CASA NRAO database'.format(fluxscale_field))
+                    raise RuntimeError('The flux calibrator field "{}" could not be '
+                                       'found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = 'set_model_cal_{0:d}'.format(i)
             cabtouse = 'cab/casa_setjy'
+            recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
+               opts,
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+
+
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]

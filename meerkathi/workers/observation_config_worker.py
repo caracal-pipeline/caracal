@@ -7,6 +7,11 @@ from os import path
 
 NAME = 'Automatically catergorize observed fields'
 
+def repeat_val(val, n):
+    l = []
+    for x in range(n):
+        l.append(val)
+    return l
 
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:
@@ -70,25 +75,17 @@ def worker(pipeline, recipe, config):
     for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
         val = config.get(item)
         for attr in ["", "_ra", "_dec", "_id"]:
-            if val and not isinstance(val, list):
-                setattr(pipeline, item+attr, [val]*pipeline.nobs)
-            elif isinstance(val, list):
-                setattr(pipeline, item+attr, val)
-            else:
-                setattr(pipeline, item+attr, [None]*pipeline.nobs)
+            setattr(pipeline, item+attr, repeat_val(val, pipeline.nobs))
 
-    setattr(pipeline, 'nchans', [None]*pipeline.nobs)
-    setattr(pipeline, 'firstchanfreq', [None]*pipeline.nobs)
-    setattr(pipeline, 'lastchanfreq', [None]*pipeline.nobs)
-    setattr(pipeline, 'chanwidth', [None]*pipeline.nobs)
-    setattr(pipeline, 'specframe', [None]*pipeline.nobs)
+    setattr(pipeline, 'nchans', repeat_val(None,pipeline.nobs))
+    setattr(pipeline, 'firstchanfreq', repeat_val(None, pipeline.nobs))
+    setattr(pipeline, 'lastchanfreq', repeat_val(None, pipeline.nobs))
+    setattr(pipeline, 'chanwidth', repeat_val(None, pipeline.nobs))
+    setattr(pipeline, 'specframe', repeat_val(None, pipeline.nobs))
 
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta')
     pipeline.dish_diameter = config.get('dish_diameter')
-
-    for item in 'xcal fcal bpcal gcal target'.split():
-        setattr(pipeline, item + "_id", [None]*pipeline.nobs)
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
@@ -144,27 +141,23 @@ def worker(pipeline, recipe, config):
 
         intents = utils.categorize_fields(msinfo)
         for term in "fcal bpcal gcal target xcal".split():
-            if term == "xcal":
-                print(getattr(pipeline, term)[i])
             if "auto" in getattr(pipeline, term)[i]:
                 label, fields = intents[term]
                 if fields in [None, []]:
                     getattr(pipeline, term)[i] = []
                     continue
                 getattr(pipeline, term)[i] = fields
-
                 meerkathi.log.info("====================================")
                 meerkathi.log.info(label[0])
                 meerkathi.log.info(" ---------------------------------- ")
-                for f in fields:
+                for j,f in enumerate(fields):
                     fid = utils.get_field_id(msinfo, f)[0]
-
                     targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                     ra = targetpos[0]/np.pi*180
                     dec = targetpos[1]/np.pi*180
-                    getattr(pipeline, term+"_ra")[i] = ra
-                    getattr(pipeline, term+"_dec")[i] = dec
-                    getattr(pipeline, term+"_id")[i] = fid
+                    getattr(pipeline, term+"_ra")[i][j] = ra
+                    getattr(pipeline, term+"_dec")[i][j] = dec
+                    getattr(pipeline, term+"_id")[i][j] = fid
                     tobs = utils.field_observation_length(msinfo, f)/60.0
                     meerkathi.log.info(
                             '{0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))

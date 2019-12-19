@@ -32,35 +32,34 @@ mapping:
             type: bool
             required: false
             example: 'False'            
-
-      Check_Cals:
-        desc: Should the existence of the  calibrators be checked for or only the target. Setting this to false allows the pipeline to run on split datasets. Default True
-        type: bool
-        required: false
-        example: 'True'
       target:
         desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
-        type: str
+        seq:
+          - type: str
         required: false
         example: 'auto'
       gcal:
         desc: Gain calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
-        type: str
+        seq:
+          - type: str
         required: false
         example: 'auto'
       bpcal:
         desc: Bandpass calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
-        type: str
+        seq:
+          - type: str
         required: false
         example: 'auto'
       fcal:
         desc: Fluxscale calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
-        type: str
+        seq:
+          - type: str
         required: false
         example: 'auto'
       xcal:
         desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
-        type: str
+        seq:
+          - type: str
         required: false
         example: 'auto'
       reference_antenna:

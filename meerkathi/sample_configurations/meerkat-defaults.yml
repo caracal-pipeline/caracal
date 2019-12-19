@@ -14,11 +14,16 @@ get_data:
 observation_config: 
   obsinfo: 
     enable: true
-  target: auto
-  gcal: auto
-  bpcal: auto
-  fcal: auto
-  xcal: auto
+  target:
+    - auto
+  gcal: 
+    - auto
+  bpcal:
+    - auto
+  fcal:
+    - auto
+  xcal:
+    - auto
   reference_antenna: '0'
   primary_beam: 
     enable: false
@@ -70,19 +75,21 @@ cross_cal:
     enable: true
   primary_cal:
     enable: true
-    order: KGBKGB
-    combine: ["", "", "", "","", scan]
-    solint: [inf, inf, inf, 60s, 60s, inf]
-    calmode: [a, ap, ap, a, ap, ap] 
+    reuse_existing_gains: true
+    order: KGBAKGB
+    combine: ["", "", "", null, "","", scan]
+    solint: [inf, inf, inf, null, 60s, 60s, inf]
+    calmode: [a, ap, ap, null, a, ap, ap] 
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
     enable: true
-    order: KG
+    reuse_existing_gains: true
+    order: KGAKG
     apply: B
-    combine: ["", "", "", ""] 
-    solint: [inf, inf, 120s, 120s]
-    calmode: [a, ap, a, ap] 
+    combine: ["", "", null, "", ""] 
+    solint: [inf, inf, null, inf, inf]
+    calmode: [a, ap, null, a, ap] 
     plotgains: true
   apply_cal: 
     enable: true

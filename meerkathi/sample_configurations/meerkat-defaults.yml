@@ -84,10 +84,11 @@ cross_cal:
     plotgains: true
   secondary_cal:
     enable: true
+    reuse_existing_gains: true
     order: KGAKG
     apply: B
     combine: ["", "", null, "", ""] 
-    solint: [inf, inf, null, 120s, 120s]
+    solint: [inf, inf, null, inf, inf]
     calmode: [a, ap, null, a, ap] 
     plotgains: true
   apply_cal: 

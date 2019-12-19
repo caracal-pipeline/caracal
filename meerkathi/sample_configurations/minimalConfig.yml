@@ -7,11 +7,16 @@ get_data:
   dataid: ['']
 
 observation_config:
-  target: auto
-  fcal: auto
-  bpcal: auto
-  gcal: auto
-  xcal: auto
+  target: 
+    - auto
+  fcal: 
+    - auto
+  bpcal: 
+    - auto
+  gcal: 
+    - auto
+  xcal: 
+    - auto
   reference_antenna: '0'
 
 prepare_data:
@@ -53,7 +58,6 @@ masking:
 
 self_cal:
   enable: true
-
   img_npix: 1800
   img_cell: 2
   image:

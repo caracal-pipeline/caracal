@@ -150,17 +150,23 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.info("====================================")
                 meerkathi.log.info(label[0])
                 meerkathi.log.info(" ---------------------------------- ")
-                for j,f in enumerate(fields):
+                _ra = []
+                _dec = []
+                _fid = []
+                for f in fields:
                     fid = utils.get_field_id(msinfo, f)[0]
                     targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                     ra = targetpos[0]/np.pi*180
                     dec = targetpos[1]/np.pi*180
-                    getattr(pipeline, term+"_ra")[i][j] = ra
-                    getattr(pipeline, term+"_dec")[i][j] = dec
-                    getattr(pipeline, term+"_id")[i][j] = fid
+                    _ra.append(ra)
+                    _dec.append(dec)
+                    _fid.append(fid)
                     tobs = utils.field_observation_length(msinfo, f)/60.0
                     meerkathi.log.info(
                             '{0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
+                getattr(pipeline, term+"_ra")[i] = _ra
+                getattr(pipeline, term+"_dec")[i] = _dec
+                getattr(pipeline, term+"_id")[i] = _fid
 
     if pipeline.enable_task(config, 'primary_beam'):
         meerkathi.log.info('Generating primary beam')

@@ -318,6 +318,7 @@ def applycal(recipe, gaintable, interp, gainfield, field, pipeline, i,
         "calwt" : [False],
         "gainfield" : fields,
         "parang" : False,
+        "flagbackup" : False,
         },
             input=pipeline.input, output=pipeline.caltables,
             label="%s::Apply gain tables" % step)
@@ -356,7 +357,7 @@ def worker(pipeline, recipe, config):
 
         # Clear flags from this worker if they already exist
         substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
-        manflags.delete_flagset(pipeline, recipe, wname,
+        manflags.delete_cflags(pipeline, recipe, wname,
                                msname, cab_name=substep)
 
         if len(pipeline.fcal[i]) > 1:
@@ -476,7 +477,7 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
         substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
-        manflags.update_flagset(pipeline, recipe, wname, msname, cab_name=substep)
+        manflags.add_cflags(pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)

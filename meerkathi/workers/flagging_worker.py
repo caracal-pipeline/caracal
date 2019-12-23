@@ -305,7 +305,7 @@ def worker(pipeline, recipe, config):
                 # Clear autoflags if need be
 
                 if label:
-                    fields = target_ls[j]
+                    fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 elif config['autoflag_rfi'].get('fields') == 'auto':

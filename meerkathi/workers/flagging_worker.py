@@ -90,7 +90,7 @@ def worker(pipeline, recipe, config):
                 # Clear autocorr_spectrum flags if they exist. Else, create the flagset
                 substep = 'flagset_clear_autocorr_spectra_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "autocorr_spectrum"]), msname, cab_name=substep)
 
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
@@ -110,16 +110,17 @@ def worker(pipeline, recipe, config):
 
                 substep = 'flagset_update_autocorr_spectra_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "autocorr_spectrum"]), msname, cab_name=substep)
 
             # clear static flags if any of them are enabled
-            static_flagging = True in [pipeline.enable_task(config, sflag) for sflag in ["flag_autocorr", "quack_flagging",
-                                                                                         "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"]]
-
+            static_flagging = True in [pipeline.enable_task(config, 
+                sflag) for sflag in ["flag_autocorr", "quack_flagging",
+                                     "flag_shadow", "flag_spw", "flag_time", 
+                                     "flag_scan", "flag_antennas", "static_mask"]]
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.delete_flagset(pipeline, recipe, "_".join(
+                manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
@@ -296,7 +297,7 @@ def worker(pipeline, recipe, config):
 
             if static_flagging:
                 substep = 'flagset_update_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
@@ -304,7 +305,7 @@ def worker(pipeline, recipe, config):
                 # Clear autoflags if need be
 
                 if label:
-                    fields = target_ls[j]
+                    fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 elif config['autoflag_rfi'].get('fields') == 'auto':
@@ -321,7 +322,7 @@ def worker(pipeline, recipe, config):
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
                 substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
           
                 field_ids = utils.get_field_id(msinfo, fields)
@@ -359,7 +360,7 @@ def worker(pipeline, recipe, config):
 
                 substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'rfinder'):

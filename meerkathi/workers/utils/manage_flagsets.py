@@ -2,36 +2,49 @@
 import os
 import sys
 
+def get_flags(pipeline, ms):
+    flaglist_file = "{folder:s}/{ms:s}.flagversions/FLAG_VERSION_LIST".format(folder=pipeline.msdir, ms=ms)
+    flaglist = []
+    if not os.path.exists(flaglist_file):
+        return []
+    with open(flaglist_file) as stdr:
+        for line in stdr.readlines():
+            flag = line.split()[0]
+            flaglist.append(flag)
+    return flaglist
+
 
 def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
-    flagversions = "{folder:s}/{ms:s}.flagversions".format(folder=pipeline.msdir, ms=ms)
-
-    index = pipeline.flag_names.index(flagname)
-    remove_us = pipeline.flag_names[index:]
+    flaglist = get_flags(pipeline, ms)
+    if flagname == "all":
+        remove_us = flaglist
+    elif flagname in flaglist:
+        index = flaglist.index(flagname)
+        remove_us = flaglist[index:]
+    else:
+        return
+            
     for i,flag in enumerate(remove_us):
-        step = "{0:s}_{0:d}".format(cab_name, i)
-        recipe.add("cab/casa_flagmanager", step, {
+        recipe.add("cab/casa_flagmanager", cab_name, {
             "vis": ms,
             "mode": "delete",
             "versionname": flag,
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="{0:s}:: Delete flags".format(step))
-        pipeline.flag_names.remove(flag)
+            label="{0:s}:: Delete flags".format(label or cab_name))
 
 def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
-    step = "{0:s}_{0:d}".format(cab_name)
-    recipe.add("cab/casa_flagmanager", step, {
+    if flagname in get_flags(pipeline, ms):
+        return
+    recipe.add("cab/casa_flagmanager", cab_name, {
         "vis": ms,
-        "mode": "replace",
-        "versionname": flag,
+        "mode": "save",
+        "versionname": flagname,
         },
         input=pipeline.input,
         output=pipeline.output,
-        label="{0:s}:: Delete flags".format(label or step))
-    pipeline.flag_names.remove(flag)
-
+        label="{0:s}:: Delete flags".format(label or cab_name))
 
 
 def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

@@ -177,10 +177,10 @@ def worker(pipeline, recipe, config):
                     sys.exit(1)
                 dirty_image_opts.update({
                     "maxuv-l": maxuvl,
-                    "taper-tukey": config.get('img_transuv-l'),
+                    "taper-tukey": transuvl,
                 })
             if taper > 0.:
-                if config.get('img_maxuv-l') > 0.:
+                if maxuvl > 0.:
                     meerkathi.log.error(
                         "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
                     sys.exit(1)
@@ -257,10 +257,10 @@ def worker(pipeline, recipe, config):
                 sys.exit(1)
             image_opts.update({
                 "maxuv-l": maxuvl,
-                "taper-tukey": config.get('img_tukeyuv-l'),
+                "taper-tukey": transuvl,
             })
         if taper > 0.:
-            if config.get('img_maxuv-l')  > 0.:
+            if maxuvl  > 0.:
                 meerkathi.log.error(
                     "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
                 sys.exit(1)

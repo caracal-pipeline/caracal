@@ -54,7 +54,7 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_taper')
-    maxuvl = config.get('img_maxuv-l')
+    maxuvl = config.get('img_maxuv_l')
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')

@@ -85,12 +85,12 @@ mapping:
         desc: Taper for imaging (arcsec)
         required: false
         example: '0.'
-      img_maxuv-l:
+      img_maxuv_l:
         type: float
         desc: Taper for imaging (lambda)
         required: false
         example: '0.'
-      img_transuv-l:
+      img_transuv_l:
         type: float
         desc: Transition length of tukey taper (taper-tukey in wsclean, in lamda)
         required: false

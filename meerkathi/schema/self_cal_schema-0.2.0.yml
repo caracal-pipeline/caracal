@@ -81,20 +81,20 @@ mapping:
         required: false
         example: '0.'
       img_taper:
-        type: str
+        type: float
         desc: Taper for imaging (arcsec)
         required: false
-        example: '0'
+        example: '0.'
       img_maxuv-l:
-        type: str
-        desc: Taper for imaging (klambda)
+        type: float
+        desc: Taper for imaging (lambda)
         required: false
-        example: '0'
+        example: '0.'
       img_transuv-l:
-        type: str
-        desc: Transition length of tukey taper (taper-tukey in wsclean)
+        type: float
+        desc: Transition length of tukey taper (taper-tukey in wsclean, in lamda)
         required: false
-        example: '1'
+        example: '500.'
       img_niter:
         type: int
         desc: Number of cleaning iterations

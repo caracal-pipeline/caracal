@@ -55,7 +55,7 @@ def worker(pipeline, recipe, config):
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_taper')
     maxuvl = config.get('img_maxuv_l')
-    transuvl = config.get('img_transuv_l')
+    transuvl = maxuvl*config.get('img_transuv_l')/100.
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')

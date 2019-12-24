@@ -53,9 +53,7 @@ def worker(pipeline, recipe, config):
     pol = config.get('img_pol')
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
-    taper = config.get('img_uvtaper')
-    if taper == '':
-        taper = None
+    taper = config.get('img_taper')
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
@@ -159,8 +157,7 @@ def worker(pipeline, recipe, config):
         if config[key].get('peak_based_mask_on_dirty'):
             mask = True
             step = 'image_{}_dirty'.format(num)
-            recipe.add('cab/wsclean', step,
-                       {
+            dirty_image_opts = {
                            "msname": mslist,
                            "column": imcolumn,
                            "weight": 'briggs {}'.format(config.get('robust', robust)),
@@ -169,9 +166,28 @@ def worker(pipeline, recipe, config):
                            "scale": config[key].get('cell', cell),
                            "pol": config[key].get('pol', pol),
                            "channelsout": nchans,
-                           "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
                            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
-                       },
+                }
+            if config.get('img_maxuv-l') > 0.:
+                if taper > 0.:
+                    meerkathi.log.error(
+                        "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+                    sys.exit(1)
+                dirty_image_opts.update({
+                    "maxuv-l": config.get('img_maxuv-l'),
+                    "taper-tukey": config.get('img_transuv-l'),
+                })
+            if taper > 0.:
+                if config.get('img_maxuv-l') > 0.:
+                    meerkathi.log.error(
+                        "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+                    sys.exit(1)
+                dirty_image_opts.update({
+                    "taper-gaussian": taper,
+                })
+            if min_uvw > 0:
+                dirty_image_opts.update({"minuvw-m": min_uvw})
+            recipe.add('cab/wsclean', step, dirty_image_opts,
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{:s}:: Make dirty image to create clean mask'.format(step))
@@ -223,7 +239,6 @@ def worker(pipeline, recipe, config):
             "niter": config[key].get('niter', niter),
             "mgain": config[key].get('mgain', mgain),
             "pol": config[key].get('pol', pol),
-            "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "local-rms": config[key].get('local_rms'),
@@ -233,6 +248,23 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
+        if config.get('img_maxuv-l') > 0.:
+            if taper > 0.:
+                meerkathi.log.error(
+                    "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+                sys.exit(1)
+            image_opts.update({
+                "maxuv-l": config.get('img_maxuv-l'),
+                "taper-tukey": config.get('img_tukeyuv-l'),
+            })
+        if taper > 0.:
+            if config.get('img_maxuv-l')  > 0.:
+                meerkathi.log.error(
+                    "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+                sys.exit(1)
+            image_opts.update({
+                "taper-gaussian": taper,
+            })
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 

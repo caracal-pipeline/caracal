@@ -80,11 +80,21 @@ mapping:
         desc: Briggs robust value
         required: false
         example: '0.'
-      img_uvtaper:
+      img_taper:
         type: str
         desc: Taper for imaging (arcsec)
         required: false
         example: '0'
+      img_maxuv-l:
+        type: str
+        desc: Taper for imaging (klambda)
+        required: false
+        example: '0'
+      img_transuv-l:
+        type: str
+        desc: Transition length of tukey taper (taper-tukey in wsclean)
+        required: false
+        example: '1'
       img_niter:
         type: int
         desc: Number of cleaning iterations

@@ -54,6 +54,7 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_taper')
+    maxuvl = config.get('img_maxuv-l')
     label = config['label']
     time_chunk = config.get('cal_time_chunk')
     freq_chunk = config.get('cal_freq_chunk')
@@ -168,13 +169,13 @@ def worker(pipeline, recipe, config):
                            "channelsout": nchans,
                            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
                 }
-            if config.get('img_maxuv-l') > 0.:
+            if maxuvl > 0.:
                 if taper > 0.:
                     meerkathi.log.error(
                         "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
                     sys.exit(1)
                 dirty_image_opts.update({
-                    "maxuv-l": config.get('img_maxuv-l'),
+                    "maxuv-l": maxuvl,
                     "taper-tukey": config.get('img_transuv-l'),
                 })
             if taper > 0.:
@@ -248,13 +249,13 @@ def worker(pipeline, recipe, config):
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
-        if config.get('img_maxuv-l') > 0.:
+        if maxuvl > 0.:
             if taper > 0.:
                 meerkathi.log.error(
                     "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
                 sys.exit(1)
             image_opts.update({
-                "maxuv-l": config.get('img_maxuv-l'),
+                "maxuv-l": maxuvl,
                 "taper-tukey": config.get('img_tukeyuv-l'),
             })
         if taper > 0.:

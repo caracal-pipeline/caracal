@@ -308,9 +308,14 @@ def worker(pipeline, recipe, config):
                     fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                elif config['autoflag_rfi'].get('fields') == 'auto':
+                else:
                     fields = []
-                    for item in "gcal bpcal xcal fcal".split():
+                    fld_string = config['autoflag_rfi']["fields"]
+                    if fld_string == "auto":
+                        iter_fields = "gcal bpcal xcal fcal".split()
+                    else:
+                        iter_fields = fld_string.split(",")
+                    for item in iter_fields:
                         if hasattr(pipeline, item):
                             tfld = getattr(pipeline, item)[i]
                         else:
@@ -324,7 +329,6 @@ def worker(pipeline, recipe, config):
                     wname, i)
                 manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
-          
                 field_ids = utils.get_field_id(msinfo, fields)
                 fields = ",".join(fields)
                 if config['autoflag_rfi']["flagger"] == "aoflagger":

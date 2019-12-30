@@ -87,12 +87,12 @@ class worker_administrator(object):
             else:
                 worker = name + '_worker'
             if  name == start_worker:
-                start_idx = i
+                start_idx = len(workers)
             elif name == end_worker:
-                end_idx = i
+                end_idx = len(workers)
             workers.append((name, worker, i))
 
-        self.workers = workers[:last_mandatory] + workers[start_idx-1:end_idx]
+        self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 

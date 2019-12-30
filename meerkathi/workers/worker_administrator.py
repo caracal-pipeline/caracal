@@ -73,10 +73,10 @@ class worker_administrator(object):
         # Add workers to packages
         sys.path.append(self.workers_directory)
         self.workers = []
-        last_mendatory = 2 # index of last mendatory worker
+        last_mandatory = 2 # index of last mendatory worker
         # general, get_data and observation config are all mendatory. 
         # That's why the lowest starting index is 2 (third element)
-        start_idx = last_mendatory
+        start_idx = last_mandatory
         end_idx = len(self.config.keys())
         workers = []
         for i, (name, opts) in enumerate(self.config.items()):
@@ -92,7 +92,7 @@ class worker_administrator(object):
                 end_idx = i
             workers.append((name, worker, i))
 
-        self.workers = workers[:last_mendatory] + workers[start_idx-1:end_idx]
+        self.workers = workers[:last_mandatory] + workers[start_idx-1:end_idx]
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 

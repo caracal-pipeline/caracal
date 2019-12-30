@@ -82,7 +82,6 @@ class worker_administrator(object):
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue
-
             if name.find('__') >= 0:
                 worker = name.split('__')[0] + '_worker'
             else:
@@ -93,7 +92,7 @@ class worker_administrator(object):
                 end_idx = i
             workers.append((name, worker, i))
 
-        self.workers = workers[:last_mendatory] + workers[start_idx:end_idx]
+        self.workers = workers[:last_mendatory] + workers[start_idx-1:end_idx]
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 

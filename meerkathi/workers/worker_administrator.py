@@ -86,10 +86,11 @@ class worker_administrator(object):
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
-            if  name == start_worker:
-                start_idx = len(workers)
-            elif name == end_worker:
-                end_idx = len(workers)
+            if i > last_mandatory:
+                if  name == start_worker:
+                    start_idx = len(workers)
+                elif name == end_worker:
+                    end_idx = len(workers)
             workers.append((name, worker, i))
 
         self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]

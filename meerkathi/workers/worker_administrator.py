@@ -42,6 +42,7 @@ class worker_administrator(object):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
+                 start_worker=None, end_worker=None,
                  container_tech='docker'):
 
         self.config = config
@@ -72,21 +73,27 @@ class worker_administrator(object):
         # Add workers to packages
         sys.path.append(self.workers_directory)
         self.workers = []
-
+        last_mendatory = 2 # index of last mendatory worker
+        # general, get_data and observation config are all mendatory. 
+        # That's why the lowest starting index is 2 (third element)
+        start_idx = last_mendatory
+        end_idx = len(self.config.keys())
+        workers = []
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue
-            order = opts.get('order', i+1)
 
             if name.find('__') >= 0:
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
+            if  name == start_worker:
+                start_idx = i
+            elif name == end_worker:
+                end_idx = i
+            workers.append((name, worker, i))
 
-            self.workers.append((name, worker, i))
-
-        self.workers = sorted(self.workers, key=lambda a: a[2])
-
+        self.workers = workers[:last_mendatory] + workers[start_idx:end_idx]
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 
@@ -272,8 +279,8 @@ class worker_administrator(object):
                 log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
                 casa_last = glob.glob(self.output + '/*.last')
-                for file in casa_last:
-                    os.remove(file)
+                for file_ in casa_last:
+                    os.remove(file_)
 
         # Execute all workers if they saved for later execution
         try:

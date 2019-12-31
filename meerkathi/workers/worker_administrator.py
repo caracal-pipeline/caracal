@@ -18,6 +18,7 @@ from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
+import collections
 try:
    from urllib.parse import urlencode
 except ImportError:
@@ -26,7 +27,6 @@ except ImportError:
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
-
 
 try:
     import meerkathi.scripts as scripts
@@ -86,14 +86,22 @@ class worker_administrator(object):
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
-            if i > last_mandatory:
-                if  name == start_worker:
-                    start_idx = len(workers)
-                elif name == end_worker:
-                    end_idx = len(workers)
+            if name == start_worker and name == end_worker:
+                start_idx = len(workers)
+                end_idx = len(workers)
+            elif  name == start_worker:
+                start_idx = len(workers)
+            elif name == end_worker:
+                end_idx = len(workers)
             workers.append((name, worker, i))
+        
+        if end_worker in list(self.config.keys())[:last_mandatory]:
+            self.workers = workers[:last_mandatory]
+        else:
+            start_idx = max(start_idx, last_mandatory)
+            end_idx = max(end_idx, last_mandatory)
+            self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
 
-        self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 

@@ -1107,6 +1107,23 @@ def worker(pipeline, recipe, config):
         time_chunk_interp = config['transfer_apply_gains'].get('time_chunk')
         freq_chunk_interp = config['transfer_apply_gains'].get('freq_chunk')
         for i, msname_out in enumerate(mslist_out):
+            ##Read the time and frequency channels of the  'fullres' 
+            fullres_data = get_obs_data(msname_out)
+            print(fullres_data.keys())
+            int_time_fullres = fullres_data['EXPOSURE']
+            channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0]/fullres_data['SPW']['NUM_CHAN'][0]
+            print("Integration time of full-resolution data is:", int_time_fullres)
+            print("Channel size of full-resolution data is:", channelsize_fullres)
+            #Corresponding numbers for the self-cal -ed MS:
+            avg_data = get_obs_data(mslist[i])
+            int_time_avg = avg_data['EXPOSURE']
+            channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0]/avg_data['SPW']['NUM_CHAN'][0]
+            print("Integration time of averaged data is:", int_time_avg)
+            print("Channel size of averaged data is:", channelsize_avg)
+            #Compare the channel and timeslot ratios:
+            ratio_timeslot = int_time_avg / int_time_fullres
+            ratio_channelsize = channelsize_avg / channelsize_fullres
+
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',

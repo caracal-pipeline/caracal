@@ -546,7 +546,7 @@ mapping:
                  type: int
                  desc: Solution interval in time (units of timeslots/intergration time) to transfer gains.
                  required: false
-                 example: '16'
+                 example: '1'
               freq_int:
                  type: int
                  desc: Solution interval in frequency (units of channels) to transfer gains.

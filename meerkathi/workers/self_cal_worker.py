@@ -1073,6 +1073,17 @@ def worker(pipeline, recipe, config):
             enable = False
             meerkathi.log.info(
                 'Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
+            sys.exit(1)
+        if (config['calibrate'].get('gain_matrix_type')[-1]=='GainDiagPhase'):
+            enable = False
+            meerkathi.log.info(
+                'Gains cannot be interpolated with GainDiagPhase currently, sorry. Please pester Oleg Smirnov and Jonathan Kenyon')
+            meerkathi.log.info(
+                'Or get Sphe a nice bottle of gin and he shall do it for you')
+            meerkathi.log.info('If you do not know any of these people, write to kthorat@ska.ac.za')
+            sys.exit(1)
+
+
         if config['calibrate'].get('Bjones'):
             jones_chain = 'G,B'
         else:

@@ -1,75 +1,79 @@
-!!omap
-- schema_version: 0.2.0
+schema_version: 0.2.0
 
-- general:
-    prefix: mypipelinerun
+general:
+  prefix: mypipelinerun
 
-- get_data:
-    dataid: ['']
+get_data:
+  dataid: ['']
 
-- observation_config:
-    target: auto
-    fcal: auto
-    bpcal: auto
-    gcal: auto
-    xcal: auto
-    reference_antenna: '0'
+observation_config:
+  target: 
+    - auto
+  fcal: 
+    - auto
+  bpcal: 
+    - auto
+  gcal: 
+    - auto
+  xcal: 
+    - auto
+  reference_antenna: '0'
 
-- prepare_data:
+prepare_data:
+  enable: true
+
+flagging:
+  enable: true
+  autoflag_rfi:
     enable: true
-
-- flagging:
+    flagger: aoflagger
+    fields: 'auto'
+  flag_autocorr:
     enable: true
-    autoflag_rfi:
-      enable: true
-      flagger: aoflagger
-      fields: 'bpcal,gcal,fcal'
-    flag_autocorr:
-      enable: true
-    flag_shadow:
-      enable: true
-      
-- cross_cal:
-    enable: true
-
-- polcal:
-    enable: false
-
-- inspect_data:
-    enable: true
-
-- split_target:
+  flag_shadow:
     enable: true
     
-- flagging__2:
-    enable: true
-    label: corr
-    autoflag_rfi:
-      enable: true
-      flagger: aoflagger
-      fields: target
-      
-- masking:
-    enable: false
+cross_cal:
+  enable: true
 
-- self_cal:
-    enable: true
+polcal:
+  enable: false
 
-    img_npix: 1800
-    img_cell: 2
-    image:
-      enable: true
-    calibrate:
-      enable: true
-      Gsols_time: [1]
+inspect_data:
+  enable: true
 
-- image_line:
+split_target:
+  enable: true
+  
+flagging__2:
+  enable: true
+  label: corr
+  autoflag_rfi:
     enable: true
-    restfreq: '1.420405752GHz'
-    make_cube:
-      enable: true
-      npix: [1800]
-      cell: 2
-    mstransform: 
-      enable: true
-      telescope: meerkat
+    flagger: aoflagger
+    fields: target
+    
+masking:
+  enable: false
+
+self_cal:
+  enable: true
+  img_npix: 1800
+  img_cell: 2
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    Gsols_time: [120]
+
+
+image_line:
+  enable: true
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+  mstransform: 
+    enable: true
+    telescope: meerkat

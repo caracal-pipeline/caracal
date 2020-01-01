@@ -38,4 +38,10 @@ mapping:
         required: false
         type: bool
         example: 'True'
+      init_notebooks:
+        desc: Install standard radiopadre notebooks, given by list of basenames
+        seq:
+          - type: str
+        required: false
+        example: std-progress-report
 

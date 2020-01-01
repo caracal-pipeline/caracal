@@ -18,6 +18,7 @@ from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
+import collections
 try:
    from urllib.parse import urlencode
 except ImportError:
@@ -26,7 +27,6 @@ except ImportError:
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
-
 
 try:
     import meerkathi.scripts as scripts
@@ -42,6 +42,7 @@ class worker_administrator(object):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
+                 start_worker=None, end_worker=None,
                  container_tech='docker'):
 
         self.config = config
@@ -72,20 +73,34 @@ class worker_administrator(object):
         # Add workers to packages
         sys.path.append(self.workers_directory)
         self.workers = []
-
+        last_mandatory = 2 # index of last mendatory worker
+        # general, get_data and observation config are all mendatory. 
+        # That's why the lowest starting index is 2 (third element)
+        start_idx = last_mandatory
+        end_idx = len(self.config.keys())
+        workers = []
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue
-            order = opts.get('order', i+1)
-
             if name.find('__') >= 0:
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
-
-            self.workers.append((name, worker, i))
-
-        self.workers = sorted(self.workers, key=lambda a: a[2])
+            if name == start_worker and name == end_worker:
+                start_idx = len(workers)
+                end_idx = len(workers)
+            elif  name == start_worker:
+                start_idx = len(workers)
+            elif name == end_worker:
+                end_idx = len(workers)
+            workers.append((name, worker, i))
+        
+        if end_worker in list(self.config.keys())[:last_mandatory]:
+            self.workers = workers[:last_mandatory]
+        else:
+            start_idx = max(start_idx, last_mandatory)
+            end_idx = max(end_idx, last_mandatory)
+            self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
 
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
@@ -272,8 +287,8 @@ class worker_administrator(object):
                 log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
                 casa_last = glob.glob(self.output + '/*.last')
-                for file in casa_last:
-                    os.remove(file)
+                for file_ in casa_last:
+                    os.remove(file_)
 
         # Execute all workers if they saved for later execution
         try:

@@ -528,16 +528,6 @@ mapping:
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
             required: false
             example: 'corr'
-          time_chunk:
-            type: int
-            desc: Time chunk in units of timeslots for transferring gains with Cubical.
-            required: false
-            example: '128'
-          freq_chunk:
-            type: int
-            desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw.
-            required: false
-            example: '0'
           interpolate:
             type: map
             desc: To interpolate the gains or not to interpolate the gains. That is indeed the question.
@@ -557,7 +547,16 @@ mapping:
                  desc: Solution interval in frequency (units of channels) to transfer gains.
                  required: false
                  example: '0'     
-          
+              time_chunk:
+                 type: int
+                 desc: Time chunk in units of timeslots for transferring gains with Cubical.
+                 required: false
+                 example: '128'
+              freq_chunk:
+                 type: int
+                 desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw.
+                 required: false
+                 example: '0'
 
       transfer_model:
         type: map

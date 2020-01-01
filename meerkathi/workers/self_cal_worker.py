@@ -1129,8 +1129,6 @@ def worker(pipeline, recipe, config):
                 "data-column": 'DATA',
                 "log-boring": True,
                 "sol-jones": jones_chain,
-                "data-time-chunk": time_chunk_interp,
-                "data-freq-chunk": freq_chunk_interp,
                 "sel-ddid": sdm.dismissable(config['calibrate'].get('spwid')),
                 "dist-ncpu": ncpu,
                 "dist-max-chunks": config['calibrate'].get('dist_max_chunks'),
@@ -1142,10 +1140,14 @@ def worker(pipeline, recipe, config):
                 "montblanc-dtype": 'float',}
             if config['transfer_apply_gains']['interpolate'].get('enable'):
                 cubical_gain_interp_opts.update({"g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": config['transfer_apply_gains']['interpolate'].get('time_int'), "g-freq-int": config['transfer_apply_gains']['interpolate'].get('freq_int')})
+                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": config['transfer_apply_gains']['interpolate'].get('time_int'), "g-freq-int": config['transfer_apply_gains']['interpolate'].get('freq_int'), "data-time-chunk": time_chunk_interp, "data-freq-chunk": freq_chunk_interp})
             else:
                 cubical_gain_interp_opts.update({"g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": config['transfer_apply_gains']['interpolate'].get('time_int'), "g-freq-int": config['transfer_apply_gains']['interpolate'].get('freq_int')})
+                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": int(ratio_timeslot*config['calibrate'].get('Gsols_time')[-1]), "g-freq-int": int(ratio_channelsize*config['calibrate'].get('Gsols_channel')[-1])})
+                #Make sure the chunk size is atleast the same as solution interval and not smaller
+                cubical_gain_interp_opts.update({"data-time-chunk": int(ratio_timeslot*config['calibrate'].get('Gsols_time')[-1]), "data-freq-chunk": int(ratio_channelsize*config['calibrate'].get('Gsols_channel')[-1])})
+                             
+
 
             if config['calibrate'].get('DDjones'):
                 cubical_gain_interp_opts.update({"dd-load-from": "{0:s}/dE-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,

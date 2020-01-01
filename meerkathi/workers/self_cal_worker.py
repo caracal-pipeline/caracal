@@ -1102,8 +1102,8 @@ def worker(pipeline, recipe, config):
        #     bupdate = 'full'
        #     dupdate = 'full'
 
-        time_chunk_interp = config['transfer_apply_gains'].get('time_chunk')
-        freq_chunk_interp = config['transfer_apply_gains'].get('freq_chunk')
+        time_chunk_interp = config['transfer_apply_gains']['interpolate'].get('time_chunk')
+        freq_chunk_interp = config['transfer_apply_gains']['interpolate'].get('freq_chunk')
         for i, msname_out in enumerate(mslist_out):
             ##Read the time and frequency channels of the  'fullres' 
             fullres_data = get_obs_data(msname_out)
@@ -1126,6 +1126,7 @@ def worker(pipeline, recipe, config):
                 "data-ms": msname_out,
                 "data-column": 'DATA',
                 "log-boring": True,
+                "g-solvable" : False,
                 "sol-jones": jones_chain,
                 "sel-ddid": sdm.dismissable(config['calibrate'].get('spwid')),
                 "dist-ncpu": ncpu,

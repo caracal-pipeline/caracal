@@ -36,10 +36,11 @@ def worker(pipeline, recipe, config):
 
         if config["clear_cal"]:
             step = 'clear_cal_{:d}'.format(i)
+            fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
             recipe.add('cab/casa_clearcal', step,
                        {
                            "vis": msname,
-                           "field" : "",
+                           "field" : ",".join(fields),
                        },
                        input=pipeline.input,
                        output=pipeline.output,

@@ -85,7 +85,7 @@ def get_last_gain(gaintables, my_term="dummy"):
         return []
 
 def solve(recipe, config, pipeline, iobs, prefix, label, ftype, 
-        append_last_secondary=None, prev=None, prev_name=None):
+        append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
     gaintables = []
@@ -219,6 +219,9 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                 caltable = append_last_secondary
             else:
                 params["caltable"] = caltable
+
+            if "I" not in order and smodel:
+                params["smodel"] = ["1", "0", "0", "0"]
 
             if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
                     caltable):
@@ -425,10 +428,9 @@ def worker(pipeline, recipe, config):
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
-        if gcal_set == set() or len(gcal_set - fcal_set) == set():
+        if gcal_set == set() or len(gcal_set - fcal_set) == 0:
             primary = solve(recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
-
             meerkathi.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
@@ -448,7 +450,7 @@ def worker(pipeline, recipe, config):
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
             secondary = solve(recipe, config, pipeline, i,
                     prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable, 
-                    prev=primary, prev_name="primary_cal")
+                    prev=primary, prev_name="primary_cal", smodel=True)
 
             interps = primary["interps"]
             gainfields = primary["gainfield"]

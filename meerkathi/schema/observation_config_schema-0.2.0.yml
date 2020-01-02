@@ -67,6 +67,15 @@ mapping:
         type: str
         required: false
         example: 'auto'
+      plot_elevation_tracks:
+        desc: Make Elevation vs Hour angle plots for observed fields
+        type: map
+        mapping:
+          enable:
+            desc: enable this section
+            type: bool
+            example: "True"
+            required: False
       primary_beam:
         desc: Generate primary beam model
         type: map

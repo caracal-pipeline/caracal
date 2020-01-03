@@ -33,49 +33,45 @@ mapping:
             required: false
             example: 'False'            
       target:
-        desc: Target field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        desc: Field name of target field. Or 'all' for all the target fields. 
         seq:
           - type: str
         required: false
-        example: 'auto'
+        example: 'all'
       gcal:
-        desc: Gain calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        desc: Field name of gain (amplitude/phase) calibrator field. Or set as 'all' for all the gcal fields, 'longest' to setlect the gcal field observed for the longest time, 'nearest' to select the gcal field closest to the target. Note that if multiple targets and gcals are present, then 'all' (for both) means each target will be paired with the closest gcal.
         seq:
           - type: str
         required: false
-        example: 'auto'
+        example: 'all'
       bpcal:
-        desc: Bandpass calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        desc: Field name of bandpass calibrator field. Or set as 'all' for all the bpcal fields, 'longest' to setlect the bpcal field observed for the longest time, 'nearest' to select the bpcal field closest to the target.
         seq:
           - type: str
         required: false
-        example: 'auto'
+        example: 'longest'
       fcal:
-        desc: Fluxscale calibrator field. If set to 'auto' then will automatically set using JSON file from 'obsinfo'
+        desc: Field name of fluxscale calibrator field. Or set as 'all' for all the fcal fields, 'longest' to setlect the fcal field observed for the longest time, 'nearest' to select the fcal field closest   to the target.
         seq:
           - type: str
         required: false
-        example: 'auto'
+        example: 'longest'
       xcal:
         desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
         seq:
           - type: str
         required: false
-        example: 'auto'
+        example: 'longest'
       reference_antenna:
-        desc: Reference antenna. If 'auto' then MeerKATHI will automatically pick the reference antenna from the .JSON metadata file if available. The file name is the same as the input .MS file but with .JSON extension. This file is typically available only for old (ROACH2) MeerKAT data. For all other data the pipeline will likely throw an error and gracefully terminate. In that case the reference antenna should be set manually.
+        desc: Reference antenna. 
         type: str
-        required: false
-        example: 'auto'
+        required: true
+        example: '0'
       plot_elevation_tracks:
         desc: Make Elevation vs Hour angle plots for observed fields
-        type: map
-        mapping:
-          enable:
-            desc: enable this section
-            type: bool
-            example: "True"
-            required: False
+        type: bool
+        example: "True"
+        required: false
       primary_beam:
         desc: Generate primary beam model
         type: map

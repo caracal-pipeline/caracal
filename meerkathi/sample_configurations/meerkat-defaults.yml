@@ -25,6 +25,7 @@ observation_config:
   xcal:
     - auto
   reference_antenna: '0'
+  plot_elevation_tracks: true
   primary_beam: 
     enable: false
 
@@ -37,6 +38,7 @@ prepare_data:
   add_spectral_weights: 
     enable: false
   clear_cal: true
+  init_weights: true
 
 flagging:
   enable: true

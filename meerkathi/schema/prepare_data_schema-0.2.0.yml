@@ -51,6 +51,11 @@ mapping:
             type: bool
             required: false
             example: 'true'
+      init_weights: 
+        desc: Flatten spectral weights
+        type: bool
+        required: false
+        example: 'False'
       add_spectral_weights: 
         desc: Add spectral weights column to the measurement set.
         type: map
@@ -59,7 +64,7 @@ mapping:
             desc: Enables addition of spectral weights column to the measurement set.
             type: bool
             required: false
-            example: 'false'
+            example: 'False'
           weight_columns:
             seq:
               - type: str
@@ -76,7 +81,7 @@ mapping:
             desc: write columns to file
             type: bool
             required: false
-            example: 'true'
+            example: 'True'
           stats_data:
             desc: which statistics for the file.
             type: str

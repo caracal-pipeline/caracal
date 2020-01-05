@@ -15,19 +15,18 @@ observation_config:
   obsinfo: 
     enable: true
   target:
-    - auto
+    - 'all'
   gcal: 
-    - auto
+    - 'all'
   bpcal:
-    - auto
+    - 'longest'
   fcal:
-    - auto
+    - 'longest'
   xcal:
-    - auto
+    - 'longest'
   reference_antenna: '0'
   plot_elevation_tracks: true
-  primary_beam: 
-    enable: false
+  
 
 prepare_data: 
   enable: true

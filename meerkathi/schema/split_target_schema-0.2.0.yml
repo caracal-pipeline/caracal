@@ -44,7 +44,7 @@ mapping:
             required: false
             example: '1'
           column:
-            desc: Column to split, default is 'data'. Which means use otf calibration.
+            desc: Column to split, default is 'corrected'. 
             type: str
             required: false
             example: 'corrected'

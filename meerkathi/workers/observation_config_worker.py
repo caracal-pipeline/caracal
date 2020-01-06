@@ -91,6 +91,7 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
         meerkathi.log.info('Extracting info from {2:s} and (if present, and only for the purpose of automatically setting the reference antenna) the metadata file {0:s}/{1:s}-obsinfo.json'.format(
             pipeline.data_path, pipeline.dataid[i], msinfo))
+        msname = msnames[i]
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':
@@ -140,17 +141,32 @@ def worker(pipeline, recipe, config):
             targetinfo = yaml.safe_load(stdr)['FIELD']
 
         intents = utils.categorize_fields(msinfo)
-        for term in "fcal bpcal gcal target xcal".split():
-            if "auto" in getattr(pipeline, term)[i]:
-                label, fields = intents[term]
-                if fields in [None, []]:
-                    getattr(pipeline, term)[i] = []
-                    continue
+        # The order of fields here is important
+        for term in "target gcal fcal bpcal xcal".split():
+            conf_fields = getattr(pipeline, term)[i]
+            label, fields = intents[term]
+            label = ",".join(label)
+            # check if user set fields manually
+            if set(fields).intersection(conf_fields):
+                label = term
+            elif fields in [None, []]:
+                getattr(pipeline, term)[i] = []
+                continue
+            elif "all" in conf_fields:
                 getattr(pipeline, term)[i] = fields
-                _label = label[0]
-            _label = term
+            elif "longest" in conf_fields:
+                f = utils.observed_longest(msinfo, fields)
+                getattr(pipeline, term)[i] = [f]
+            elif "nearest" in conf_fields:
+                f = utils.set_gcal(msinfo, fields, mode="nearest")
+                getattr(pipeline, term)[i] = [f]
+            else:
+                raise RuntimeError("Could not find field/selction {0}."\
+                        " Please check the [observation_config.{1}] "\
+                        "section of the config file".format(conf_fields, term))
+
             meerkathi.log.info("====================================")
-            meerkathi.log.info(_label)
+            meerkathi.log.info(label)
             meerkathi.log.info(" ---------------------------------- ")
             _ra = []
             _dec = []
@@ -170,27 +186,16 @@ def worker(pipeline, recipe, config):
             getattr(pipeline, term+"_dec")[i] = _dec
             getattr(pipeline, term+"_id")[i] = _fid
 
-    if pipeline.enable_task(config, 'primary_beam'):
-        meerkathi.log.info('Generating primary beam')
-        recipe.add('cab/eidos', 'primary_beam',
-                   {
-                       "diameter": config['primary_beam'].get('diameter'),
-                       "pixels": config['primary_beam'].get('pixels'),
-                       "freq": config['primary_beam'].get('freq'),
-                       "coeff": config['primary_beam'].get('coefficients'),
-                       "coefficients-file": config['primary_beam'].get('coefficients_file'),
-                       "prefix": pipeline.prefix,
-                       "output-eight": True,
-                   },
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label="generate_primary_beam:: Generate primary beam")
-
-        pipeline.primary_beam = pipeline.prefix + "-$\(xy\)_$\(reim).fits"
-        pipeline.primary_beam_l_axis = "X"
-        pipeline.primary_beam_m_axis = "Y"
-        meerkathi.log.info('Primary beam registered as : \\ Pattern - {0:s}\
-                                                         \\ l-axis  - {1:s}\
-                                                         \\ m-axis  - {2:s}'.format(pipeline.primary_beam,
-                                                                                    pipeline.primary_beam_l_axis,
-                                                                                    pipeline.primary_beam_m_axis))
+        if config["plot_elevation_tracks"]:
+            step = "elevation_plots_{:d}".format(i)
+            recipe.add("cab/casa_plotms", step, {
+                    "vis" : msname,
+                    "xaxis" : "hourangle",
+                    "yaxis" : "elevation",
+                    "coloraxis" : "field",
+                    "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
+                    "overwrite" : True,
+                },
+                    input=pipeline.input,
+                    output=pipeline.diagnostic_plots,
+                    label="{:s}:: Plotting elevation tracks".format(step))

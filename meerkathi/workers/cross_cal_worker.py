@@ -85,7 +85,7 @@ def get_last_gain(gaintables, my_term="dummy"):
         return []
 
 def solve(recipe, config, pipeline, iobs, prefix, label, ftype, 
-        append_last_secondary=None, prev=None, prev_name=None):
+        append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
     gaintables = []
@@ -219,6 +219,9 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                 caltable = append_last_secondary
             else:
                 params["caltable"] = caltable
+
+            if "I" not in order and smodel:
+                params["smodel"] = ["1", "0", "0", "0"]
 
             if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
                     caltable):
@@ -362,10 +365,12 @@ def worker(pipeline, recipe, config):
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
+            fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
             meerkathi.log.info("Found more than one flux calibrator."\
                                "Will use the one observed the logest (%s)." % fluxscale_field)
         else:
             fluxscale_field = pipeline.fcal[i][0]
+            fluxscale_field_id = pipeline.fcal_id[i][0]
        
         if pipeline.enable_task(config, 'set_model'):
             if config['set_model'].get('no_verify'):
@@ -423,26 +428,37 @@ def worker(pipeline, recipe, config):
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
 
-
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
-        if gcal_set == set() or len(gcal_set - fcal_set) == set():
+        if gcal_set == set() or len(gcal_set - fcal_set) == 0:
             primary = solve(recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
-
             meerkathi.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
             gaintables = primary["gaintables"]
             # apply to calibration fields
-            cfields = ",".join(pipeline.fcal[i])
+            if len(pipeline.bpcal[i]) > 1:
+                ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
+                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                        ftable):
+                    meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
+                else:
+                    transfer_fluxscale(recipe, gtable+":output", ftable, 
+                            pipeline, i, reference=fluxscale_field, label=label)
+                    fstrings = map(str, pipeline.bpcal_id[i])
+                    fstrings = ",".join(fstrings)
+                    plotgains(recipe, pipeline, fstrings, ftable+":output", i, term='F')
+            else:
+                ftable = None
+
             if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
                 applycal(recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
         else:
             primary = solve(recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
@@ -450,27 +466,50 @@ def worker(pipeline, recipe, config):
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
             secondary = solve(recipe, config, pipeline, i,
                     prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable, 
-                    prev=primary, prev_name="primary_cal")
+                    prev=primary, prev_name="primary_cal", smodel=True)
 
             interps = primary["interps"]
             gainfields = primary["gainfield"]
             gaintables = primary["gaintables"]
+            # Transfer fluxscale
+            if len(pipeline.bpcal[i]) > 1:
+                ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
+                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                        ftable):
+                    meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
+                else:
+                    transfer_fluxscale(recipe, gtable+":output", ftable, 
+                            pipeline, i, reference=fluxscale_field, label=label)
+                    plotgains(recipe, pipeline, pipeline.bpcal_id[i], 
+                            ftable+":output", i, term='F')
+            else:
+                ftable = None
+
             if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
                 applycal(recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
+
             # Transfer fluxscale
-            ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
+            ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
             if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
                     ftable):
                 meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
             else:
                 transfer_fluxscale(recipe, gtable+":output", ftable, 
                         pipeline, i, reference=fluxscale_field, label=label)
+                plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
+                    ftable+":output", i, term='F')
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]
             gaintables = secondary["gaintables"]
 
+            if "gcal" in config["apply_cal"]["applyto"]:
+                applycal(recipe, copy.deepcopy(gaintables), interps, 
+                        gainfields, "gcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
+            if "target" in config["apply_cal"]["applyto"]:
+                applycal(recipe, copy.deepcopy(gaintables), interps,
+                        "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
         substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
         manflags.add_cflags(pipeline, recipe, wname, msname, cab_name=substep)

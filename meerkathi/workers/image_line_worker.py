@@ -184,11 +184,11 @@ def worker(pipeline, recipe, config):
     label = config['label']
     line_name = config['line_name']
     if label != '':
-        flabel = '_' + label
+        flabel = label
     else:
         flabel = label
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, flabel, False)
+        pipeline.target, pipeline.msnames, flabel)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
     mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])
@@ -458,13 +458,13 @@ def worker(pipeline, recipe, config):
         nchans_all, specframe_all = [], []
         label = config['label']
         if label != '':
-            flabel = '_' + label
+            flabel = label
         else:
             flabel = label
 
         if config['make_cube'].get('use_mstransform'):
-            all_targets, all_msfiles, ms_dict = target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel, True)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
+                pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 # If channelisation changed during a previous pipeline run
                 # as stored in the obsinfo.json file

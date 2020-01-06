@@ -36,14 +36,27 @@ def worker(pipeline, recipe, config):
 
         if config["clear_cal"]:
             step = 'clear_cal_{:d}'.format(i)
+            fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
             recipe.add('cab/casa_clearcal', step,
                        {
                            "vis": msname,
-                           "field" : "",
+                           "field" : ",".join(fields),
                        },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
+
+        if config['init_weights']:
+            step = 'init_weights_{:d}'.format(i)
+            recipe.add('cab/casa_script', step,
+                       {
+                           "vis": msname,
+                           "script" : "vis = os.path.join(os.environ['MSDIR'], '{:s}')\n" \
+                                      "initweights(vis=vis, wtmode='weight', dowtsp=True)".format(msname),
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'add_spectral_weights'):
             step = 'estimate_weights_{:d}'.format(i)

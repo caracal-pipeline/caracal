@@ -8,15 +8,15 @@ get_data:
 
 observation_config:
   target: 
-    - auto
+    - 'all'
   fcal: 
-    - auto
+    - 'longest'
   bpcal: 
-    - auto
+    - 'longest'
   gcal: 
-    - auto
+    - 'all'
   xcal: 
-    - auto
+    - 'longest'
   reference_antenna: '0'
 
 prepare_data:

@@ -358,6 +358,25 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                elif config['autoflag_rfi']["flagger"] == "tfcrop":
+                    column = config['autoflag_rfi'].get('column').split("_DATA")[0].lower()
+                    recipe.add('cab/casa_flagdata', step,
+                               {
+                                   "vis" : msname,
+                                   "datacolumn" : column,
+                                   "mode" : "tfcrop",
+                                   "field" : fields,
+                                   "usewindowstats" : config["autoflag_rfi"]["usewindowstats"],
+                                   "combinescans" : config["autoflag_rfi"]["combinescans"],
+                                   "flagdimension" : config["autoflag_rfi"]["flagdimension"],
+                                   "flagbackup" : False,
+                                   "timecutoff" : config["autoflag_rfi"]["timecutoff"],
+                                   "freqcutoff" : config["autoflag_rfi"]["freqcutoff"],
+                                   "correlation" : config["autoflag_rfi"]["correlation"],
+                               },
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
                 else:
                     raise RuntimeError(
                         "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour'.")

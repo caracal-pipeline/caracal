@@ -18,7 +18,6 @@ mapping:
         type: str
         required: false
         example: ''
-        
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
@@ -227,7 +226,7 @@ mapping:
           flagger:
             desc: Choose flagger for automatic flagging
             type: str
-            enum: ["aoflagger", "tricolour"] #TODO(sphe) add casa tfcrop
+            enum: ["aoflagger", "tricolour", "tfcrop"]
             required: false
             example: "aoflagger"
           strategy: 
@@ -265,8 +264,38 @@ mapping:
             type: str
             required: False
             example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
-            
-
+          usewindowstats:
+            type: str 
+            desc: Calculate additional flags using sliding window statistics
+            enum: ["none", "sum", "std", "both"]
+            example: "std"
+            required: false
+          combinescans:
+            type: bool
+            desc: Accumulate data across scans depending on the value of ntime
+            example: "False"
+            required: false
+          flagdimension:
+            type: str 
+            desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
+            enum: [freq, time, freqtime, timefreq]
+            example: freqtime
+            required: false
+          timecutoff:
+            type: float
+            desc: Flagging thresholds in units of deviation from the fit 
+            example: "4.0"
+            required: false
+          freqcutoff:
+            type: float
+            desc: Flagging thresholds in units of deviation from the fit 
+            example: "3.0"
+            required: false
+          correlation:
+            type: str 
+            desc: Correlation
+            example: ""
+            required: false
       rfinder:
         desc: A tool to investigate the presence of RFI
         type: map

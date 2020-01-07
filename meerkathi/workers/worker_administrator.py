@@ -43,7 +43,7 @@ class worker_administrator(object):
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
-                 container_tech='docker'):
+                 container_tech='docker', generate_reports=True):
 
         self.config = config
         self.add_all_first = add_all_first
@@ -61,6 +61,7 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
+        self.generate_reports = generate_reports
 
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
@@ -297,6 +298,6 @@ class worker_administrator(object):
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
         finally:  # write reports even if the pipeline only runs partially
-            if REPORTS:
+            if REPORTS and self.generate_reports:
                 reporter = mrr(self)
                 reporter.generate_reports()

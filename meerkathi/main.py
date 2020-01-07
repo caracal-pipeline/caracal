@@ -161,7 +161,7 @@ def execute_pipeline(args, arg_groups, block):
                                add_all_first=args.add_all_first, prefix=args.general_prefix,
                                configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
                                container_tech=args.container_tech, start_worker=args.start_worker, 
-                               end_worker=args.end_worker)
+                               end_worker=args.end_worker, generate_reports=not args.no_reports)
 
                 pipeline.run_workers()
             except SystemExit as e:

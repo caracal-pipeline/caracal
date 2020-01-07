@@ -80,6 +80,12 @@ class worker_administrator(object):
         start_idx = last_mandatory
         end_idx = len(self.config.keys())
         workers = []
+
+        if start_worker and start_worker not in self.config.keys():
+            raise RuntimeError("Requested --start-worker '{0:s}' is unknown. Please check your options".format(start_worker))
+        if end_worker and end_worker not in self.config.keys():
+            raise RuntimeError("Requested --end-worker '{0:s}' is unknown. Please check your options".format(end_worker))
+
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue

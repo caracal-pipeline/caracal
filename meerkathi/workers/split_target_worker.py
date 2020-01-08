@@ -138,6 +138,7 @@ def worker(pipeline, recipe, config):
                                "spw": config['split_target'].get('spw'),
                                "datacolumn": config['split_target'].get('column'),
                                "correlation": config['split_target'].get('correlation'),
+                               "usewtspectrum": config['split_target'].get('usewtspectrum'),
                                "field": target,
                                "keepflags": True,
                                "docallib": docallib,

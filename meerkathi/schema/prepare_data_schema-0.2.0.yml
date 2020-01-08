@@ -51,39 +51,53 @@ mapping:
             type: bool
             required: false
             example: 'true'
-      init_weights: 
-        desc: Flatten spectral weights
-        type: bool
-        required: false
-        example: 'False'
-      add_spectral_weights: 
-        desc: Add spectral weights column to the measurement set.
+      spectral_weights: 
+        desc: How to initialize spectral weights
         type: map
         mapping: 
           enable: 
-            desc: Enables addition of spectral weights column to the measurement set.
+            desc: Enable this segment
             type: bool
             required: false
             example: 'False'
-          weight_columns:
-            seq:
-              - type: str
-            desc: column names
-            required: false
-            example: 'WEIGHT, WEIGHT_SPECTRUM'
-          noise_columns:
-            seq:
-              - type: str
-            desc: column names for noise
-            required: false
-            example: 'SIGMA, SIGMA_SPECTRUM'
-          write_to_ms:
-            desc: write columns to file
+          uniform:
+            desc: Set all weights to unity
             type: bool
             required: false
-            example: 'True'
-          stats_data:
-            desc: which statistics for the file.
-            type: str
+            example: 'False'
+          estimate:
+            desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values
+            type: map
+            mapping:
+              enable:
+                desc: Enable this segment
+                type: bool
+                example: 'False'
+                required: false
+              stats_data: 
+                desc: File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
+                type: str
+                example: 'use_package_meerkat_spec'
+                required: false
+              weight_columns:
+                seq:
+                  - type: str
+                desc: column names
+                required: false
+                example: 'WEIGHT, WEIGHT_SPECTRUM'
+              noise_columns:
+                seq:
+                  - type: str
+                desc: column names for noise
+                required: false
+                example: 'SIGMA, SIGMA_SPECTRUM'
+              write_to_ms:
+                desc: write columns to file
+                type: bool
+                required: false
+                example: 'True'
+          delete:  
+            desc: Delete WEIGHT_SPECTRUM column if it exists
+            type: bool
+            example: "False"
             required: false
-            example: 'use_package_meerkat_spec'

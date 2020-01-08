@@ -34,10 +34,13 @@ prepare_data:
     enable: false
   manage_flags: 
     enable: true
-  add_spectral_weights: 
-    enable: false
   clear_cal: true
-  init_weights: true
+  spectral_weights:
+    enable: true
+    uniform: true
+    delete: false
+    estimate:
+      enable: false
 
 flagging:
   enable: true

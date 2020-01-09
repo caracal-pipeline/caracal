@@ -47,8 +47,8 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, "spectral_weights"):
-            _config = config['spectral_weights']
-            if _config["uniform"]:
+            specwts = config['spectral_weights']["mode"]
+            if specwts == "uniform":
                 step = 'init_weights_{:d}'.format(i)
                 recipe.add('cab/casa_script', step,
                            {
@@ -60,7 +60,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
-            elif _config["estimate"]["enable"]:
+            elif specwts == "estimate":
+                _config = config["spectral_weights"]
                 step = 'estimate_weights_{:d}'.format(i)
                 recipe.add('cab/msutils', step,
                            {
@@ -76,7 +77,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.diagnostic_plots,
                            label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
-            elif _config["delete"]:
+            elif specwts == "delete":
                 step = 'delete_weight_spectrum{:d}'.format(i)
                 recipe.add('cab/casa_script', step,
                            {
@@ -95,3 +96,5 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}'.format(step, msname))
+        else:
+            raise RuntimeError("Specified spectral_weights [{0:s}] mode is unknown".format(specwts))

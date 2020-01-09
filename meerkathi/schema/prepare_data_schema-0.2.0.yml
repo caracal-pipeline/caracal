@@ -60,20 +60,16 @@ mapping:
             type: bool
             required: false
             example: 'False'
-          uniform:
-            desc: Set all weights to unity
-            type: bool
+          mode:
+            desc: "uniform: Set all weights to unity, estimate: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, delete: Delete WEIGHT_SPECTRUM column if it exists. if 'estimate', then further settings are available in the 'estimate' segement of this section"
+            type: str
+            enum: [uniform, estimate, delete]
             required: false
-            example: 'False'
+            example: uniform
           estimate:
             desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values
             type: map
             mapping:
-              enable:
-                desc: Enable this segment
-                type: bool
-                example: 'False'
-                required: false
               stats_data: 
                 desc: File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
                 type: str
@@ -96,8 +92,3 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
-          delete:  
-            desc: Delete WEIGHT_SPECTRUM column if it exists
-            type: bool
-            example: "False"
-            required: false

@@ -37,10 +37,7 @@ prepare_data:
   clear_cal: true
   spectral_weights:
     enable: true
-    uniform: true
-    delete: false
-    estimate:
-      enable: false
+    mode: uniform
 
 flagging:
   enable: true

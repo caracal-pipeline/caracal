@@ -141,13 +141,17 @@ def worker(pipeline, recipe, config):
             targetinfo = yaml.safe_load(stdr)['FIELD']
 
         intents = utils.categorize_fields(msinfo)
+        # Save all fields in a list
+        all_fields = []
+        for key in intents:
+            all_fields += intents[key][1]
         # The order of fields here is important
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
             label = ",".join(label)
             # check if user set fields manually
-            if set(fields).intersection(conf_fields):
+            if set(all_fields).intersection(conf_fields):
                 label = term
             elif fields in [None, []]:
                 getattr(pipeline, term)[i] = []

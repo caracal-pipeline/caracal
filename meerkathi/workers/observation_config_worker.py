@@ -146,11 +146,11 @@ def worker(pipeline, recipe, config):
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
-            print(label,fields)
             if len(fields) == 0:
-                fields = conf_fields
+                print("We are modifying stuff but why")
+                if conf_fields != 'longest' and conf_fields != 'all' and conf_fields != 'nearest':
+                    fields = conf_fields
             label = ",".join(label)
-            print(label,fields)
             # check if user set fields manually
             if set(fields).intersection(conf_fields):
                 label = term

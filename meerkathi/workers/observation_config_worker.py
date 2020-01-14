@@ -147,7 +147,7 @@ def worker(pipeline, recipe, config):
             conf_fields = getattr(pipeline, term)[i]
             print(conf_fields)
             label, fields = intents[term]
-            if conf_fields[0] != 'auto':
+            if len(fields) == 0:
                 fields = conf_fields
             print(label,fields)
             label = ",".join(label)

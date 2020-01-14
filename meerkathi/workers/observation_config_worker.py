@@ -147,11 +147,9 @@ def worker(pipeline, recipe, config):
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
             if len(fields) == 0:
-                print(conf_fields)
                 if "all" in conf_fields or "nearest" in conf_fields or "longest" in conf_fields:
                     meerkathi.log.info("We could not find this field in the ms")
                 else:
-                    print("We are modifying stuff but why")
                     fields = conf_fields
             label = ",".join(label)
             # check if user set fields manually

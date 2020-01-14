@@ -147,6 +147,7 @@ def worker(pipeline, recipe, config):
             conf_fields = getattr(pipeline, term)[i]
             print(conf_fields)
             label, fields = intents[term]
+            print(label,fields)
             label = ",".join(label)
             # check if user set fields manually
             if set(fields).intersection(conf_fields):

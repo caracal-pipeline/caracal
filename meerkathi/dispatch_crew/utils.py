@@ -47,9 +47,11 @@ def categorize_fields(msinfo):
 
     for i, field in enumerate(names):
         ints = intents[intent_ids[i]].split(',')
+        print(ints)
         for intent in ints:
             for ftype in mapping:
                 if intent in mapping[ftype][0]:
+                    print(field)
                     mapping[ftype][-1].append(field)
 
     return mapping

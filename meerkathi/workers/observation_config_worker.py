@@ -147,8 +147,8 @@ def worker(pipeline, recipe, config):
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
             if len(fields) == 0:
-                print("We are modifying stuff but why")
                 if conf_fields != 'longest' and conf_fields != 'all' and conf_fields != 'nearest':
+                    print("We are modifying stuff but why")
                     fields = conf_fields
             label = ",".join(label)
             # check if user set fields manually

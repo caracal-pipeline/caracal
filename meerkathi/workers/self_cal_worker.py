@@ -259,7 +259,7 @@ def worker(pipeline, recipe, config):
                 "maxuv-l": maxuvl,
                 "taper-tukey": transuvl,
             })
-        if taper > 0.:
+        if float(taper) > 0.:
             if maxuvl  > 0.:
                 meerkathi.log.error(
                     "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")

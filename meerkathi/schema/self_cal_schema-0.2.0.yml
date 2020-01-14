@@ -81,7 +81,7 @@ mapping:
         required: false
         example: '0.'
       img_taper:
-        type: float
+        type: str
         desc: Taper for imaging (arcsec)
         required: false
         example: '0.'

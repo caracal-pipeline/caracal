@@ -148,7 +148,9 @@ def worker(pipeline, recipe, config):
             label, fields = intents[term]
             if len(fields) == 0:
                 print(conf_fields)
-                if conf_fields != 'longest' and conf_fields != 'all' and conf_fields != 'nearest':
+                if "all" in conf_fields or "nearest" in conf_fields or "longest" in conf_fields:
+                    meerkathi.log.info("We could not find this field in the ms")
+                else:
                     print("We are modifying stuff but why")
                     fields = conf_fields
             label = ",".join(label)

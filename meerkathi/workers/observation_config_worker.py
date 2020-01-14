@@ -147,6 +147,7 @@ def worker(pipeline, recipe, config):
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
             if len(fields) == 0:
+                print(conf_fields)
                 if conf_fields != 'longest' and conf_fields != 'all' and conf_fields != 'nearest':
                     print("We are modifying stuff but why")
                     fields = conf_fields

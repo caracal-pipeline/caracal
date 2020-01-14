@@ -38,6 +38,7 @@ def categorize_fields(msinfo):
 
 
     mapping = {
+        'fcal': (['CALIBRATE_FLUX'], []),
         'gcal': (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
         'bpcal': (['CALIBRATE_BANDPASS'], []),
         'target': (['TARGET'], []),

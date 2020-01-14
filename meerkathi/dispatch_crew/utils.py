@@ -36,20 +36,21 @@ def categorize_fields(msinfo):
     intents = info['FIELD']['INTENTS']
     intent_ids = info['FIELD']['STATE_ID']
 
-    mapping = {
-        'fcal': (['CALIBRATE_FLUX'], []),
-        'gcal': (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], []),
-        'bpcal': (['CALIBRATE_BANDPASS'], []),
-        'target': (['TARGET'], []),
-        'xcal': (['CALIBRATE_POLARIZATION'], [])
-    }
 
-    for i, field in enumerate(names):
-        ints = intents[intent_ids[i]].split(',')
-        for intent in ints:
-            for ftype in mapping:
-                if intent in mapping[ftype][0]:
-                    mapping[ftype][-1].append(field)
+    mapping = {
+        'fcal': (['CALIBRATE_FLUX'], [None]),
+        'gcal': (['CALIBRATE_AMPL', 'CALIBRATE_PHASE'], [None]),
+        'bpcal': (['CALIBRATE_BANDPASS'], [None]),
+        'target': (['TARGET'], [None]),
+        'xcal': (['CALIBRATE_POLARIZATION'], [None])
+        }
+    if intents != None:
+        for i, field in enumerate(names):
+            ints = intents[intent_ids[i]].split(',')
+            for intent in ints:
+                for ftype in mapping:
+                    if intent in mapping[ftype][0]:
+                        mapping[ftype][-1].append(field)
 
     return mapping
 

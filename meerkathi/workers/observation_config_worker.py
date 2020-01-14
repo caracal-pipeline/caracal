@@ -140,11 +140,8 @@ def worker(pipeline, recipe, config):
         with open(msinfo, 'r') as stdr:
             targetinfo = yaml.safe_load(stdr)['FIELD']
 
-        if 'auto' in [config[item] for item in 'fcal bpcal gcal target xcal'.split()]:
-            intents = utils.categorize_fields(msinfo)
-        else:
-            intents = None
-            # The order of fields here is important
+        intents = utils.categorize_fields(msinfo)
+        # The order of fields here is important
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]

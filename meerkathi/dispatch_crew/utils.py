@@ -41,7 +41,7 @@ def categorize_fields(msinfo):
         'bpcal': (['CALIBRATE_BANDPASS'], []),
         'target': (['TARGET'], []),
         'xcal': (['CALIBRATE_POLARIZATION'], [])
-        }
+    }
     if intents != None:
         for i, field in enumerate(names):
             ints = intents[intent_ids[i]].split(',')

@@ -35,7 +35,10 @@ def categorize_fields(msinfo):
     ids = info['FIELD']['SOURCE_ID']
     intents = info['FIELD']['INTENTS']
     intent_ids = info['FIELD']['STATE_ID']
-
+    print("Names ={}".format(names))
+    print("ids ={}".format(ids))
+    print("intents ={}".format(intents))
+    print("intent_ids ={}".format(intent_ids))
 
     mapping = {
         'fcal': (['CALIBRATE_FLUX'], []),

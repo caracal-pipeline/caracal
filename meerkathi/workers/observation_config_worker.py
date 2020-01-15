@@ -112,21 +112,21 @@ def worker(pipeline, recipe, config):
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:
-            spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
+            msdict = yaml.safe_load(stdr)
+            spw = msdict['SPW']['NUM_CHAN']
             pipeline.nchans[i] = spw
         meerkathi.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
             len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
-        with open(msinfo, 'r') as stdr:
-            chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
-            firstchanfreq = [ss[0] for ss in chfr]
-            lastchanfreq = [ss[-1] for ss in chfr]
-            chanwidth = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
-            pipeline.firstchanfreq[i] = firstchanfreq
-            pipeline.lastchanfreq[i] = lastchanfreq
-            pipeline.chanwidth[i] = chanwidth
-            meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+        chfr = msdict['SPW']['CHAN_FREQ']
+        firstchanfreq = [ss[0] for ss in chfr]
+        lastchanfreq = [ss[-1] for ss in chfr]
+        chanwidth = [(ss[-1]-ss[0])/(len(ss)-1) for ss in chfr]
+        pipeline.firstchanfreq[i] = firstchanfreq
+        pipeline.lastchanfreq[i] = lastchanfreq
+        pipeline.chanwidth[i] = chanwidth
+        meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                 ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
         if i == len(prefixes)-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             meerkathi.log.info(
@@ -142,9 +142,7 @@ def worker(pipeline, recipe, config):
 
         intents = utils.categorize_fields(msinfo)
         # Save all fields in a list
-        all_fields = []
-        for key in intents:
-            all_fields += intents[key][1]
+        all_fields = msdict["FIELD"]["NAME"]
         # The order of fields here is important
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]

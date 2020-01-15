@@ -1,0 +1,61 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  mosaic:
+    desc: Mosaic images output by selfcal or imageHI.
+    type: map
+    mapping:
+      enable:
+        desc: Execute mosaic segment (yes/no). Default is no.
+        type: bool
+        required: true
+
+      mosaic_type:
+        desc: Type of mosaic to be made (continuum/spectral). Default is continuum.
+        type: str
+        required: true
+
+      domontage:
+        desc: Re-grid the input images, and associated beams. Default is true.
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section 
+            type: bool
+            required: false
+
+      cutoff:
+        desc: The cutoff in the primary beam to use, assuming a Gaussian at the moment. Default is 0.1.
+        type: float
+        required: false
+
+      use_MFS_images:
+        desc: Indicate that the images to be mosaicked were created using MFS. Default is false.
+        type: bool
+        required: false
+
+      name:
+        desc: The prefix to be used for output files. Default is the pipeline prefix.
+        type: str
+        required: false
+
+      target_images:
+        desc: List of images to be mosaicked, with suffix of image.fits being expected. 
+        type: seq
+        seq:
+          - type: str
+        required: false
+
+      dish_diameter:
+        desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter so that rudimentary primary beams can be created.
+        type: float
+        required: false
+
+      ref_frequency:
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency so that rudimentary primary beams can be created.
+        type: float
+        required: false
+

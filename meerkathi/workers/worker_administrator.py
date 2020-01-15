@@ -61,6 +61,7 @@ class worker_administrator(object):
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
+        self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
 
         if not self.config['general']['data_path']:

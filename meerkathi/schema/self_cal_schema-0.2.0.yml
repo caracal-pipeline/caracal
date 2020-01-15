@@ -92,9 +92,9 @@ mapping:
         example: '0.'
       img_transuv_l:
         type: float
-        desc: Transition length of tukey taper (taper-tukey in wsclean, in lamda)
+        desc: Transition length of tukey taper (taper-tukey in wsclean, in % of maxuv)
         required: false
-        example: '500.'
+        example: '10.'
       img_niter:
         type: int
         desc: Number of cleaning iterations

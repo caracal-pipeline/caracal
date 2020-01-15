@@ -137,7 +137,7 @@ def worker(pipeline, recipe, config):
             specified_mosaictype = 'continuum'
 
     # To ease finding the appropriate files, and to keep this worker self-contained
-    if use_MFS_images == 'true':
+    if use_MFS_images == True:
         mfsprefix = '-MFS'
     else:
         mfsprefix = ''

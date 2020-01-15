@@ -1709,46 +1709,46 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Add extracted skymodel'.format(step))
 
-    for i, msname in enumerate(mslist):
-        if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'summary',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+        for i, msname in enumerate(mslist):
+            if pipeline.enable_task(config, 'flagging_summary'):
+                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'summary',
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-    if pipeline.enable_task(config, 'transfer_model'):
-        meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
-.MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
-                                   prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
+        if pipeline.enable_task(config, 'transfer_model'):
+            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
+    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
+                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
 
-        crystalball_model = config['transfer_model'].get('model')
-        mslist_out = ms_dict_tmodel[target]
+            crystalball_model = config['transfer_model'].get('model')
+            mslist_out = ms_dict_tmodel[target]
 
-        if crystalball_model == 'auto':
-            crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
-                                                                                          pipeline), prefix, field, self_cal_iter_counter)
-        for i, msname in enumerate(mslist_out):
-            step = 'transfer_model_{0:d}'.format(i)
-            recipe.add('cab/crystalball', step,
-                       {
-                           "ms": msname,
-                           "sky-model": crystalball_model+':output',
-                           "spectra": config['transfer_model'].get('spectra'),
-                           "row-chunks": config['transfer_model'].get('row_chunks'),
-                           "model-chunks": config['transfer_model'].get('model_chunks'),
-                           "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
-                           "within": sdm.dismissable(config['transfer_model'].get('within') or None),
-                           "points-only": config['transfer_model'].get('points_only'),
-                           "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),
-                           "num-workers": sdm.dismissable(config['transfer_model'].get('num_workers')),
-                           "memory-fraction": config['transfer_model'].get('memory_fraction'),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+            if crystalball_model == 'auto':
+                crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
+                                                                                              pipeline), prefix, field, self_cal_iter_counter)
+            for i, msname in enumerate(mslist_out):
+                step = 'transfer_model_{0:d}'.format(i)
+                recipe.add('cab/crystalball', step,
+                           {
+                               "ms": msname,
+                               "sky-model": crystalball_model+':output',
+                               "spectra": config['transfer_model'].get('spectra'),
+                               "row-chunks": config['transfer_model'].get('row_chunks'),
+                               "model-chunks": config['transfer_model'].get('model_chunks'),
+                               "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
+                               "within": sdm.dismissable(config['transfer_model'].get('within') or None),
+                               "points-only": config['transfer_model'].get('points_only'),
+                               "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),
+                               "num-workers": sdm.dismissable(config['transfer_model'].get('num_workers')),
+                               "memory-fraction": config['transfer_model'].get('memory_fraction'),
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 

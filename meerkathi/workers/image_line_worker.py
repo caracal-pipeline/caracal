@@ -191,8 +191,6 @@ def worker(pipeline, recipe, config):
         pipeline.target, pipeline.msnames, flabel)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
-    mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])
-              for did in pipeline.dataid]
     pipeline.prefixes = [
         '{2:s}-{0:s}-{1:s}'.format(did, config['label'],
             pipeline.prefix) for did in pipeline.dataid]
@@ -561,7 +559,10 @@ def worker(pipeline, recipe, config):
 
         for target in (all_targets):
             meerkathi.log.info('Starting to make line cube for target {0:}'.format(target))
-            mslist = ms_dict[target]
+            if config['make_cube'].get('use_mstransform'):
+                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+            else:
+                mslist = ms_dict[target]
             field = utils.filter_name(target)
             line_clean_mask_file = None
             rms_values=[]
@@ -862,7 +863,10 @@ def worker(pipeline, recipe, config):
             weight = config['make_cube'].get('weight', weight)
 
         for target in (all_targets):
-            mslist = ms_dict[target]
+            if config['make_cube'].get('use_mstransform'):
+                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+            else:
+                mslist = ms_dict[target]
             field = utils.filter_name(target)
 
             step = 'make_line_cube'
@@ -902,7 +906,6 @@ def worker(pipeline, recipe, config):
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
     cube_dir = get_dir_path(pipeline.cubes, pipeline)
     for target in all_targets:
-        mslist = ms_dict[target]
         field = utils.filter_name(target)
 
         casa_cube_list=glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits'.format(

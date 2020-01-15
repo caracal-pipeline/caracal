@@ -66,6 +66,7 @@ self_cal:
     enable: true
     Gsols_time: [120]
 
+
 image_line:
   enable: true
   restfreq: '1.420405752GHz'

@@ -72,9 +72,4 @@ mapping:
         type: bool
         example: "True"
         required: false
-      
-        
-        
-        
-          
-    
+

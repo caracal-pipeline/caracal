@@ -416,6 +416,7 @@ def worker(pipeline, recipe, config):
                         "scalebychan": True,
                     }
                 else:
+
                     raise RuntimeError('The flux calibrator field "{}" could not be '
                                        'found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = 'set_model_cal_{0:d}'.format(i)
@@ -425,6 +426,7 @@ def worker(pipeline, recipe, config):
                input=pipeline.input,
                output=pipeline.output,
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+
 
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
@@ -501,6 +503,7 @@ def worker(pipeline, recipe, config):
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]
             gaintables = secondary["gaintables"]
+
             if "gcal" in config["apply_cal"]["applyto"]:
                 applycal(recipe, copy.deepcopy(gaintables), interps, 
                         gainfields, "gcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)

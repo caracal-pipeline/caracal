@@ -865,7 +865,7 @@ def worker(pipeline, recipe, config):
             mslist = ms_dict[target]
             field = utils.filter_name(target)
 
-            step = 'make_cube_line'
+            step = 'make_line_cube'
             image_opts = {
                 "msname": mslist,
                 "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(cube_dir, pipeline.prefix, field, line_name),

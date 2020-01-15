@@ -175,13 +175,3 @@ mapping:
             type: bool
             required: false
             example: 'True'
-
-      init_legacy_flagset:
-        desc: Save existing flags to legacy flagset
-        type: map
-        mapping:
-          enable:
-            desc: Run this section
-            type: bool
-            required: false
-            example: 'True'

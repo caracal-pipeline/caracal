@@ -152,11 +152,6 @@ def worker(pipeline, recipe, config):
             msname = tms if pipeline.enable_task(
                 config, 'split_target') else fms
 
-            if pipeline.enable_task(config, 'init_legacy_flagset'):
-                step = "init_legacy_flagset_{0:s}_{1:d}".format(wname, i)
-                manage_flagsets.update_flagset(pipeline, recipe, "legacy", msname, clear_existing=True, cab_name=step,
-                                               label="{0:s}:: Save current flags in legacy flagset".format(step, msname))
-
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
                     meerkathi.log.error(

@@ -518,8 +518,9 @@ def worker(pipeline, recipe, config):
             step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
-                           "vis": msname,
-                           "mode": 'summary',
+                           "vis" : msname,
+                           "mode" : 'summary',
+                           "field" : ",".join(set(pipeline.bpcal[i]+pipeline.fcal[i]+pipeline.gcal[i]))
                        },
                        input=pipeline.input,
                        output=pipeline.output,

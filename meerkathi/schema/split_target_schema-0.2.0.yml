@@ -53,6 +53,11 @@ mapping:
             type: str
             required: false
             example: ''
+          usewtspectrum:
+            desc: Create a WEIGHT_SPECTRUM column in the output MS.
+            type: bool
+            required: false
+            example: 'True'
           spw:
             desc: Select spectral windows and channels
             type: str

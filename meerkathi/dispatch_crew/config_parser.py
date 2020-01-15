@@ -243,6 +243,10 @@ class config_parser:
             help='Disable interactivity',
             action='store_true')
 
+        add('-nr','--no-reports',
+            help='Disable generation of report about the pipeline run.',
+            action='store_true')
+
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
             help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
 

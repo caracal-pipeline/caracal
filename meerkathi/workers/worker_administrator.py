@@ -1,3 +1,4 @@
+import meerkathi
 from meerkathi import log, pckgdir
 from meerkathi.dispatch_crew import worker_help
 import subprocess
@@ -8,8 +9,8 @@ import traceback
 from datetime import datetime
 import stimela
 import glob
+import shutil
 from meerkathi.dispatch_crew.config_parser import config_parser as cp
-import logging
 import traceback
 import meerkathi.dispatch_crew.caltables as mkct
 from http.server import SimpleHTTPRequestHandler
@@ -17,6 +18,7 @@ from http.server import HTTPServer
 from multiprocessing import Process
 import webbrowser
 import base64
+import collections
 try:
    from urllib.parse import urlencode
 except ImportError:
@@ -25,7 +27,6 @@ except ImportError:
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
-
 
 try:
     import meerkathi.scripts as scripts
@@ -41,7 +42,8 @@ class worker_administrator(object):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
-                 container_tech='docker'):
+                 start_worker=None, end_worker=None,
+                 container_tech='docker', generate_reports=True):
 
         self.config = config
         self.add_all_first = add_all_first
@@ -60,6 +62,7 @@ class worker_administrator(object):
         self.continuum = self.config['general']['output'] + '/continuum'
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
+        self.generate_reports = generate_reports
 
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
@@ -72,26 +75,46 @@ class worker_administrator(object):
         # Add workers to packages
         sys.path.append(self.workers_directory)
         self.workers = []
+        last_mandatory = 2 # index of last mendatory worker
+        # general, get_data and observation config are all mendatory. 
+        # That's why the lowest starting index is 2 (third element)
+        start_idx = last_mandatory
+        end_idx = len(self.config.keys())
+        workers = []
+
+        if start_worker and start_worker not in self.config.keys():
+            raise RuntimeError("Requested --start-worker '{0:s}' is unknown. Please check your options".format(start_worker))
+        if end_worker and end_worker not in self.config.keys():
+            raise RuntimeError("Requested --end-worker '{0:s}' is unknown. Please check your options".format(end_worker))
 
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue
-            order = opts.get('order', i+1)
-
             if name.find('__') >= 0:
                 worker = name.split('__')[0] + '_worker'
             else:
                 worker = name + '_worker'
-
-            self.workers.append((name, worker, i))
-
-        self.workers = sorted(self.workers, key=lambda a: a[2])
+            if name == start_worker and name == end_worker:
+                start_idx = len(workers)
+                end_idx = len(workers)
+            elif  name == start_worker:
+                start_idx = len(workers)
+            elif name == end_worker:
+                end_idx = len(workers)
+            workers.append((name, worker, i))
+        
+        if end_worker in list(self.config.keys())[:last_mandatory]:
+            self.workers = workers[:last_mandatory]
+        else:
+            start_idx = max(start_idx, last_mandatory)
+            end_idx = max(end_idx, last_mandatory)
+            self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
 
         self.prefix = prefix or self.config['general']['prefix']
         self.stimela_build = stimela_build
 
         # Get possible flagsets for reduction
-        self.flagsets = {"legacy": ["legacy"]}
+        self.flags = {"legacy": ["legacy"]}
         for _name, _worker, i in self.workers:
             try:
                 wkr = __import__(_worker)
@@ -100,9 +123,9 @@ class worker_administrator(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
                     _worker, self.workers_directory))
 
-            if hasattr(wkr, "FLAGSETS_SUFFIX"):
-                self.flagsets[_name] = ["_".join(
-                    [_name, suffix]) if suffix else _name for suffix in wkr.FLAGSETS_SUFFIX]
+            if hasattr(wkr, "FLAG_NAMES"):
+                self.flags[_name] = ["_".join(
+                    [_name, suffix]) if suffix else _name for suffix in wkr.FLAG_NAMES]
 
         self.recipes = {}
         # Workers to skip
@@ -191,6 +214,9 @@ class worker_administrator(object):
             os.mkdir(self.continuum)
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
+        # create proper logfile and start flushing
+        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
+        meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -205,6 +231,22 @@ class worker_administrator(object):
             f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
             if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
                 subprocess.check_call(["cp", "-r", f, self.input])
+
+        # Copy standard notebooks
+        if self.config['general']['init_notebooks']:
+            nbdir = os.path.join(os.path.dirname(meerkathi.__file__), "notebooks")
+            for notebook in self.config['general']['init_notebooks']:
+                nbfile = notebook + ".ipynb"
+                nbsrc = os.path.join(nbdir, nbfile)
+                nbdest = os.path.join(self.output, nbfile)
+                if os.path.exists(nbsrc):
+                    if os.path.exists(nbdest):
+                        log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+                    else:
+                        log.info("Creating standard notebook {}".format(nbdest))
+                        shutil.copyfile(nbsrc, nbdest)
+                else:
+                    log.error("Standard notebook {} does not exist".format(nbsrc))
 
     def enable_task(self, config, task):
         a = config.get(task)
@@ -253,8 +295,8 @@ class worker_administrator(object):
                 log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
                 casa_last = glob.glob(self.output + '/*.last')
-                for file in casa_last:
-                    os.remove(file)
+                for file_ in casa_last:
+                    os.remove(file_)
 
         # Execute all workers if they saved for later execution
         try:
@@ -263,6 +305,6 @@ class worker_administrator(object):
                     if worker not in self.skip:
                         self.recipes[worker[1]].run()
         finally:  # write reports even if the pipeline only runs partially
-            if REPORTS:
+            if REPORTS and self.generate_reports:
                 reporter = mrr(self)
                 reporter.generate_reports()

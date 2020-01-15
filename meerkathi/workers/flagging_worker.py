@@ -9,7 +9,7 @@ import sys
 NAME = 'Pre-calibration flagging'
 
 
-FLAGSETS_SUFFIX = "static automatic autocorr_spectrum".split()
+FLAG_NAMES = "static automatic autocorr_spectrum".split()
 
 
 def worker(pipeline, recipe, config):
@@ -35,7 +35,7 @@ def worker(pipeline, recipe, config):
         mslist = []
 
         if label:
-            target_ls = pipeline.target[i].split(',')
+            target_ls = pipeline.target[i]
             for target in target_ls:
                 field = utils.filter_name(target)
                 mslist.append(
@@ -90,7 +90,7 @@ def worker(pipeline, recipe, config):
                 # Clear autocorr_spectrum flags if they exist. Else, create the flagset
                 substep = 'flagset_clear_autocorr_spectra_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "autocorr_spectrum"]), msname, cab_name=substep)
 
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
@@ -110,16 +110,17 @@ def worker(pipeline, recipe, config):
 
                 substep = 'flagset_update_autocorr_spectra_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "autocorr_spectrum"]), msname, cab_name=substep)
 
             # clear static flags if any of them are enabled
-            static_flagging = True in [pipeline.enable_task(config, sflag) for sflag in ["flag_autocorr", "quack_flagging",
-                                                                                         "flag_shadow", "flag_spw", "flag_time", "flag_scan", "flag_antennas", "static_mask"]]
-
+            static_flagging = True in [pipeline.enable_task(config, 
+                sflag) for sflag in ["flag_autocorr", "quack_flagging",
+                                     "flag_shadow", "flag_spw", "flag_time", 
+                                     "flag_scan", "flag_antennas", "static_mask"]]
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
+                manflags.delete_cflags(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
@@ -129,6 +130,7 @@ def worker(pipeline, recipe, config):
                                "vis": msname,
                                "mode": 'manual',
                                "autocorr": True,
+                               "flagbackup": False
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -186,6 +188,7 @@ def worker(pipeline, recipe, config):
                                "mode": 'shadow',
                                "tolerance": config['flag_shadow'].get('tolerance'),
                                "addantenna": addantennafile,
+                               "flagbackup": False
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -232,6 +235,7 @@ def worker(pipeline, recipe, config):
                                    "vis": msname,
                                    "mode": 'manual',
                                    "spw": flagspwselection,
+                                   "flagbackup": False,
                                },
                                input=pipeline.input,
                                output=pipeline.output,
@@ -244,6 +248,7 @@ def worker(pipeline, recipe, config):
                                "vis": msname,
                                "mode": 'manual',
                                "timerange": config['flag_time']['timerange'],
+                               "flagbackup": False,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -256,6 +261,7 @@ def worker(pipeline, recipe, config):
                                "vis": msname,
                                "mode": 'manual',
                                "scan": config['flag_scan']['scans'],
+                               "flagbackup": False,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -269,6 +275,7 @@ def worker(pipeline, recipe, config):
                                "mode": 'manual',
                                "antenna": config['flag_antennas']['antennas'],
                                "timerange": config['flag_antennas'].get('timerange'),
+                               "flagbackup": False,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -290,59 +297,47 @@ def worker(pipeline, recipe, config):
 
             if static_flagging:
                 substep = 'flagset_update_static_{0:s}_{1:d}'.format(wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "static"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
                 # Clear autoflags if need be
-                substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(
-                    wname, i)
-                manflags.clear_flagset(pipeline, recipe, "_".join(
-                    [wname, "automatic"]), msname, cab_name=substep)
-
-                if config['autoflag_rfi'].get('fields') != 'auto' and \
-                   not set(config['autoflag_rfi'].get('fields', 'auto').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'target', 'fcal']):
-                    raise KeyError(
-                        "autoflag rfi can only be 'auto' or be a combination of 'xcal', 'gcal', 'fcal', 'bpcal' or 'target'")
-                if config['autoflag_rfi'].get('calibrator_fields') != 'auto' and \
-                   not set(config['autoflag_rfi'].get('calibrator_fields').split(',')) <= set(['xcal', 'gcal', 'bpcal', 'fcal']):
-                    raise KeyError(
-                        "autoflag rfi fields can only be 'auto' or be a combination of 'xcal', 'gcal', 'bpcal', 'fcal'")
 
                 if label:
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, target_ls[j])))
+                    fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                elif config['autoflag_rfi'].get('fields') == 'auto':
-                    fields = 'target,bpcal,gcal,xcal'
-                    tricolour_mode = 'polarisation'
-                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                    field_names = manfields.get_field(pipeline, i, fields)
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
                 else:
-                    field_names = manfields.get_field(
-                        pipeline, i, config['autoflag_rfi'].get('fields')).split(",")
-                    fields = ",".join(
-                        map(str, utils.get_field_id(msinfo, field_names)))
-                    if 'target' in fields:
-                       tricolour_mode = 'polarisation'
-                       tricolour_strt = 'mk_rfi_flagging_target_fields_firstpass.yaml'
-                    else: 
-                       tricolour_mode = 'total_power'
-                       tricolour_strat = config['autoflag_rfi'].get('tricolour_calibrator_strat')
-          
-                # Make sure no field IDs are duplicated
-                fields = ",".join(set(fields.split(",")))
+                    fields = []
+                    fld_string = config['autoflag_rfi']["fields"]
+                    if fld_string == "auto":
+                        iter_fields = "gcal bpcal xcal fcal".split()
+                    else:
+                        iter_fields = fld_string.split(",")
+                    for item in iter_fields:
+                        if hasattr(pipeline, item):
+                            tfld = getattr(pipeline, item)[i]
+                        else:
+                            raise ValueError("Field given is invalid. Options are 'xcal bpcal gcal fcal'.")
+                        if tfld:
+                            fields += tfld
+                    fields = list(set(fields))
+                    tricolour_mode = 'polarisation'
+                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
+                substep = 'flagset_clear_automatic_{0:s}_{1:d}'.format(
+                    wname, i)
+                manflags.delete_cflags(pipeline, recipe, "_".join(
+                    [wname, "automatic"]), msname, cab_name=substep)
+                field_ids = utils.get_field_id(msinfo, fields)
+                fields = ",".join(fields)
                 if config['autoflag_rfi']["flagger"] == "aoflagger":
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,
                                    "column": config['autoflag_rfi'].get('column'),
                                    # flag the calibrators for RFI and apply to target
-                                   "fields": fields,
+                                   "fields": ",".join(map(str, field_ids)),
                                    # "bands"       : config['autoflag_rfi'].get('bands', "0"),
                                    "strategy": config['autoflag_rfi']['strategy'],
                                },
@@ -363,13 +358,32 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                elif config['autoflag_rfi']["flagger"] == "tfcrop":
+                    column = config['autoflag_rfi'].get('column').split("_DATA")[0].lower()
+                    recipe.add('cab/casa_flagdata', step,
+                               {
+                                   "vis" : msname,
+                                   "datacolumn" : column,
+                                   "mode" : "tfcrop",
+                                   "field" : fields,
+                                   "usewindowstats" : config["autoflag_rfi"]["usewindowstats"],
+                                   "combinescans" : config["autoflag_rfi"]["combinescans"],
+                                   "flagdimension" : config["autoflag_rfi"]["flagdimension"],
+                                   "flagbackup" : False,
+                                   "timecutoff" : config["autoflag_rfi"]["timecutoff"],
+                                   "freqcutoff" : config["autoflag_rfi"]["freqcutoff"],
+                                   "correlation" : config["autoflag_rfi"]["correlation"],
+                               },
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
                 else:
                     raise RuntimeError(
                         "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour'.")
 
                 substep = 'flagset_update_automatic_{0:s}_{1:d}'.format(
                     wname, i)
-                manflags.update_flagset(pipeline, recipe, "_".join(
+                manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "automatic"]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'rfinder'):
@@ -412,6 +426,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'summary',
+                               "flagbackup": False,
                            },
                            input=pipeline.input,
                            output=pipeline.output,

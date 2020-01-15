@@ -90,6 +90,11 @@ mapping:
         desc: Number of cleaning iterations
         required: false
         example: '1000000'
+      img_nmiter: 
+        type: int
+        desc: Number of major cycles
+        required: False
+        example: '0'   
       img_cleanborder:
         type: float
         desc: Clean border
@@ -139,12 +144,12 @@ mapping:
         desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries.
         type: int
         required: false
-        example: '128'
+        example: '1'
       cal_freq_chunk:
         desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries.
         type: int
         required: false
-        example: '1024'
+        example: '0'
 
       aimfast:
         type: map
@@ -384,7 +389,7 @@ mapping:
               - type: float
             desc: G-Jones time solution interval. The parameter cal_time_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time chunk.
             required: false
-            example: '16'
+            example: '1'
           Gsols_channel:
             seq:
               - type: float
@@ -446,6 +451,12 @@ mapping:
             type: str
             required: false
             example: 'auto'
+          dist_max_chunks:
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
+            type: int
+            required: false
+            example: '4'
+          
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -512,6 +523,35 @@ mapping:
             desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
             required: false
             example: 'corr'
+          interpolate:
+            type: map
+            desc: To interpolate the gains or not to interpolate the gains. That is indeed the question.
+            mapping:
+              enable:
+                 type: bool
+                 desc: Enable gain interpolation. 
+                 required: false
+                 example: 'True'
+              time_int:   
+                 type: int
+                 desc: Solution interval in time (units of timeslots/intergration time) to transfer gains.
+                 required: false
+                 example: '1'
+              freq_int:
+                 type: int
+                 desc: Solution interval in frequency (units of channels) to transfer gains.
+                 required: false
+                 example: '0'     
+              time_chunk:
+                 type: int
+                 desc: Time chunk in units of timeslots for transferring gains with Cubical.
+                 required: false
+                 example: '128'
+              freq_chunk:
+                 type: int
+                 desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw.
+                 required: false
+                 example: '0'
 
       transfer_model:
         type: map

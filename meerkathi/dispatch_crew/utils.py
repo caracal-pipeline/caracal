@@ -312,9 +312,8 @@ def target_to_msfiles(targets, msnames, label):
     target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
 
     for t in targets:  # list all targets per input ms and make a unique list of all target fields
-        tmp = t.split(',')
-        target_ls.append(tmp)
-        for tt in tmp:
+        target_ls.append(t)
+        for tt in t:
             all_target.append(tt)
     all_target = list(set(all_target))
 

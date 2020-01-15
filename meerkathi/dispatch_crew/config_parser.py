@@ -213,6 +213,12 @@ class config_parser:
                 default="minimal",
                 help='Default template to get. Choices are minimal and config')
 
+        add('-sw', '--start-worker',
+            help='Start processing with this worker')
+
+        add('-ew', '--end-worker',
+            help='Stop processing with this worker')
+
         add('-aaf', '--add-all-first', action='store_true',
             help='Add steps from all workers to pipeline before execucting. Default is execute each workers as they are encountered.')
 
@@ -235,6 +241,10 @@ class config_parser:
 
         add('--no-interactive',
             help='Disable interactivity',
+            action='store_true')
+
+        add('-nr','--no-reports',
+            help='Disable generation of report about the pipeline run.',
             action='store_true')
 
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),

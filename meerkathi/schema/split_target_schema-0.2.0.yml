@@ -44,7 +44,7 @@ mapping:
             required: false
             example: '1'
           column:
-            desc: Column to split, default is 'data'. Which means use otf calibration.
+            desc: Column to split, default is 'corrected'. 
             type: str
             required: false
             example: 'corrected'
@@ -53,6 +53,11 @@ mapping:
             type: str
             required: false
             example: ''
+          usewtspectrum:
+            desc: Create a WEIGHT_SPECTRUM column in the output MS.
+            type: bool
+            required: false
+            example: 'True'
           spw:
             desc: Select spectral windows and channels
             type: str
@@ -167,16 +172,6 @@ mapping:
             example: 'True'
           summary_json:
             desc: Run MSUtils function
-            type: bool
-            required: false
-            example: 'True'
-
-      init_legacy_flagset:
-        desc: Save existing flags to legacy flagset
-        type: map
-        mapping:
-          enable:
-            desc: Run this section
             type: bool
             required: false
             example: 'True'

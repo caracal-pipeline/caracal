@@ -74,7 +74,7 @@ def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
 
-        target_ls = pipeline.target[i].split(',')
+        target_ls = pipeline.target[i]
         prefix = pipeline.prefixes[i]
         msname = pipeline.msnames[i][:-3]
 
@@ -138,6 +138,7 @@ def worker(pipeline, recipe, config):
                                "spw": config['split_target'].get('spw'),
                                "datacolumn": config['split_target'].get('column'),
                                "correlation": config['split_target'].get('correlation'),
+                               "usewtspectrum": config['split_target'].get('usewtspectrum'),
                                "field": target,
                                "keepflags": True,
                                "docallib": docallib,
@@ -150,11 +151,6 @@ def worker(pipeline, recipe, config):
 
             msname = tms if pipeline.enable_task(
                 config, 'split_target') else fms
-
-            if pipeline.enable_task(config, 'init_legacy_flagset'):
-                step = "init_legacy_flagset_{0:s}_{1:d}".format(wname, i)
-                manage_flagsets.update_flagset(pipeline, recipe, "legacy", msname, clear_existing=True, cab_name=step,
-                                               label="{0:s}:: Save current flags in legacy flagset".format(step, msname))
 
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':

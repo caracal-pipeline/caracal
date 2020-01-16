@@ -96,5 +96,5 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}'.format(step, msname))
-        else:
-            raise RuntimeError("Specified spectral_weights [{0:s}] mode is unknown".format(specwts))
+            else:
+                raise RuntimeError("Specified spectral_weights [{0:s}] mode is unknown".format(specwts))

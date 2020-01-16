@@ -65,7 +65,7 @@ mapping:
             type: str
             enum: [uniform, estimate, delete]
             required: false
-            example: uniform
+            example: 'uniform'
           estimate:
             desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values
             type: map

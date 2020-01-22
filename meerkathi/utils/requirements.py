@@ -4,8 +4,6 @@ import logging
 
 from decorator import decorate
 
-log = logging.getLogger(__name__)
-
 
 class OptionalImportError(ImportError):
     pass
@@ -34,7 +32,10 @@ def logging_decorator(msg):
     """ Return a decorator logging ``msg`` """
     def _function_decorator(fn):
         def _wrapper(*args, **kwargs):
+            # Delay meerkathi log import
+            from meerkathi import log
             log.warning("Skipping %s.\n%s", fn.__name__, msg)
+            return msg
 
         return decorate(fn, _wrapper)
 
@@ -42,6 +43,47 @@ def logging_decorator(msg):
 
 
 def requires(*args, skip=False):
+    """
+    Decorator returning either the original function, or a
+    dummy function returning a :class:`OptionalImportError` when called,
+    depending on whether ``ImportError` objects are supplied
+    as decorator arguments.
+
+    Used in the following way:
+
+    .. code-block:: python
+
+        try:
+            from scipy import interpolate
+        except ImportError as e:
+            # https://stackoverflow.com/a/29268974/1611416, pep 3110 and 344
+            opt_import_err = e
+        else:
+            opt_import_err = None
+
+        @requires('pip install scipy', opt_import_err)
+        def function(*args, **kwargs):
+            return interpolate(...)
+
+    Parameters
+    ----------
+    *args : tuple of ``None``, str or ImportError
+        ``None`` values are ignored.
+        ``str`` values are treated as messages that will be
+        raised in the :class:`OptionalImportError`.
+        ``ImportError`` values will be mentioned in the
+        :class:`OptionalImportError`
+    skip : {False, True}
+        If False, the dummy function raises an
+        :class:`OptionalImportError`
+        If True, the dummy function instead logs
+        a warning and returns a message describing the problem.
+
+    Returns
+    -------
+    decorated_function : callable
+        A function
+    """
     messages = []
     import_errors = []
 

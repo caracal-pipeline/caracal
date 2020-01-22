@@ -5,18 +5,28 @@ import shutil
 import glob
 import yaml
 import numpy as np
-from astroquery.vizier import Vizier
-from astropy import units as u
-import astropy.coordinates as coord
-from astropy import wcs
-from astropy.io import fits, ascii
-from astropy.table import Table, Column, MaskedColumn
 from meerkathi.dispatch_crew import utils
+from meerkathi.utils.requirements import requires
+
+# Import Optional dependencies
+require_msg = "pip install astropy, astroquery"
+
+try:
+    from astropy import units as u
+    import astropy.coordinates as coord
+    from astropy import wcs
+    from astropy.io import fits, ascii
+    from astropy.table import Table, Column, MaskedColumn
+    from astroquery.vizier import Vizier
+except ImportError as e:
+    opt_import_error = e
+else:
+    opt_import_error = None
 
 
 NAME = 'Make masks'
 
-
+@requires(require_msg, opt_import_error)
 def worker(pipeline, recipe, config):
 
     ################################################################################

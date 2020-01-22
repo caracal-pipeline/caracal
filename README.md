@@ -72,6 +72,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     ```$ meerkathi -c< path to configuration file>```
 
 ### Troubleshooting
+
 - **Stimela cache file**
 When re-building/pullng/updating stimela (any stimela call above), sometimes problems will arise with the cache file of stimela, whose standard location is
 ```

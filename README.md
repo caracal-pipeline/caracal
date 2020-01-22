@@ -71,7 +71,24 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
   - **Docker**
     ```$ meerkathi -c< path to configuration file>```
 
+### Troubleshooting
+- **Stimela cache file**
+When re-building/pullng/updating stimela (any stimela call above), sometimes problems will arise with the cache file of stimela, whose standard location is
+```
+~/.stimela
+```
+If you run into unexplicable errors when installing a stimela version, including a failed update (possibly resulting in a repeating error when running CARACal), do:
+```
+> rm ~/.stimela/*
+> stimela ...
+```
 
+before re-building. If that does not work, re-building the dependencies might help.
+```
+> pip install --upgrade --force-reinstall -r <absolute path to meerkathi folder>/requirements.txt
+> rm ~/.stimela/*
+> stimela ...
+```
 ### On Mac
 
 0. create a python environment

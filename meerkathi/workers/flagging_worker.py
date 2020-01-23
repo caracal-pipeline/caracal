@@ -297,17 +297,14 @@ def worker(pipeline, recipe, config):
                 if ensure:
                     if pipeline.startdate[i]:
                         antennas = config['flag_antennas']['antennas'].split(',')
-                        if len(antennas) == 1:
-                            antennas =[antennas]
                         times = config['flag_antennas']['timerange'].split(',')
-                        if len(times) == 1:
-                            times =[times]
                         while len(times) < len(antennas):
                             times.append(times[-1])
                         while len(found_valid_data) < len(antennas):
                             found_valid_data.append(0)
                         for nn,time_range in enumerate(times):
                             start_flagrange,end_flagrange=time_range.split('~')
+                            print(start_flagrange)
                             flag_start = float(''.join(re.split('/|:', start_flagrange)))
                             flag_end  = float(''.join(re.split('/|:', end_flagrange)))
                             if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):

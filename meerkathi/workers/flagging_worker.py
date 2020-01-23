@@ -45,6 +45,7 @@ def worker(pipeline, recipe, config):
             mslist.append(msnames[i])
 
         for m in mslist:  # check whether all ms files to be used exist
+            print(os.path.join(pipeline.msdir, m))
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
@@ -244,35 +245,33 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_time'):
                 step = 'flag_time_{0:s}_{1:d}'.format(wname, i)
-                not_valid_data = 1
+                found_valid_data = 0
                 if config['flag_time'].get('ensure_valid_selection'):
-                    try:
-                        obs_start = re.split('/|:',pipeline.startdate)
-                        obs_end = re.split('/|:',pipeline.enddate)
-                    except:
+                    if pipeline.startdate[i]:
+                        start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
+                        flag_start = float(''.join(re.split('/|:', start_flagrange)))
+                        flag_end  = float(''.join(re.split('/|:', end_flagrange)))
+                        if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):
+                            found_valid_data = 1
+                    else:
                         raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
-                    start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
-                    flag_start =re.split('/|:', start_flagrange)
-                    flag_end  = re.split('/|:',end_flagrange)
-                    print(flag_start)
-                    exit()
-                    for i in range(len(obs_start)):
-                        if int(obs_start[i]) <= int(flag_start[i]) <= int(obs_end[i]):
-                            continue
-                        else:
-                            not_valid_data = 0
+                    if not found_valid_data:
+                        meerkathi.log.warn(
+                            'The following time selection has been made in the flag_time module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_time']['timerange'], step))
 
 
-                recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "mode": 'manual',
-                               "timerange": config['flag_time']['timerange'],
-                               "flagbackup": False,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+
+                if found_valid_data or not config['flag_time'].get('ensure_valid_selection'):
+                    recipe.add('cab/casa_flagdata', step,
+                               {
+                                    "vis": msname,
+                                    "mode": 'manual',
+                                    "timerange": config['flag_time']['timerange'],
+                                    "flagbackup": False,
+                                },
+                                input=pipeline.input,
+                                output=pipeline.output,
+                                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flag_scan'):
                 step = 'flag_scan_{0:s}_{1:d}'.format(wname, i)
@@ -289,17 +288,52 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_antennas'):
                 step = 'flag_antennas_{0:s}_{1:d}'.format(wname, i)
-                recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "mode": 'manual',
-                               "antenna": config['flag_antennas']['antennas'],
-                               "timerange": config['flag_antennas'].get('timerange'),
-                               "flagbackup": False,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Flagging bad antennas ms={1:s}'.format(step, msname))
+                antennas = [config['flag_antennas']['antennas']]
+                times = [config['flag_antennas'].get('timerange')]
+                found_valid_data = [0]
+                ensure = config['flag_antennas'].get('ensure_valid_selection')
+                if times[0] == '':
+                    ensure = False
+                if ensure:
+                    if pipeline.startdate[i]:
+                        antennas = config['flag_antennas']['antennas'].split(',')
+                        if len(antennas) == 1:
+                            antennas =[antennas]
+                        times = config['flag_antennas']['timerange'].split(',')
+                        if len(times) == 1:
+                            times =[times]
+                        while len(times) < len(antennas):
+                            times.append(times[-1])
+                        while len(found_valid_data) < len(antennas):
+                            found_valid_data.append(0)
+                        for nn,time_range in enumerate(times):
+                            start_flagrange,end_flagrange=time_range.split('~')
+                            flag_start = float(''.join(re.split('/|:', start_flagrange)))
+                            flag_end  = float(''.join(re.split('/|:', end_flagrange)))
+                            if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):
+                                found_valid_data[nn] = 1
+                    else:
+                        raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
+
+
+                for nn,antenna in enumerate(antennas):
+                    if found_valid_data[nn] or not ensure:
+                        step = 'flag_antennas_{0:s}_{1:d}_ant{2:s}'.format(wname, i,antenna.replace(',','_'))
+                        recipe.add('cab/casa_flagdata', step,
+                                    {
+                                        "vis": msname,
+                                        "mode": 'manual',
+                                        "antenna": antenna,
+                                        "timerange": times[nn],
+                                        "flagbackup": False,
+                                    },
+                                    input=pipeline.input,
+                                    output=pipeline.output,
+                                    label='{0:s}:: Flagging bad antenna {2:s} ms={1:s}'.format(step, msname,antenna))
+                    elif ensure and not found_valid_data[nn]:
+                        meerkathi.log.warn(
+                            'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_antennas']['timerange'], step))
+
 
             if pipeline.enable_task(config, 'static_mask'):
                 step = 'static_mask_{0:s}_{1:d}'.format(wname, i)

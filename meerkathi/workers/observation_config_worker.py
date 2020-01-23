@@ -106,15 +106,17 @@ def worker(pipeline, recipe, config):
                     calender_month_abbr = ['jan', 'feb', 'mar', 'apr', 'may','jun', 'jul', 'aug', 'sep', 'oct', 'nov',
                                            'dec']
                     startdate,starttime =info_on_line[2].split('/')
+                    hr,min,sec = starttime.split(':')
                     day,month_abbr,year = startdate.split('-')
                     month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
-                    correct_date = '/'.join([year,month_num,day])
-                    pipeline.startdate = correct_date+'/'+starttime
+                    correct_date = ''.join([year,month_num,day,hr,min,sec])
+                    pipeline.startdate[i] = float(correct_date)
                     enddate,endtime =info_on_line[4].split('/')
+                    hr,min,sec = endtime.split(':')
                     day,month_abbr,year = enddate.split('-')
                     month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
-                    correct_date = '/'.join([year,month_num,day])
-                    pipeline.enddate = correct_date+'/'+endtime
+                    correct_date = ''.join([year,month_num,day,hr,min,sec])
+                    pipeline.enddate[i] = float(correct_date)
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':

@@ -45,7 +45,6 @@ def worker(pipeline, recipe, config):
             mslist.append(msnames[i])
 
         for m in mslist:  # check whether all ms files to be used exist
-            print(os.path.join(pipeline.msdir, m))
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s} does not exist. Please check that is where it should be.".format(m))

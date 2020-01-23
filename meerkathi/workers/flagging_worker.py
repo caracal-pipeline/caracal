@@ -252,8 +252,10 @@ def worker(pipeline, recipe, config):
                     except:
                         raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
                     start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
-                    flag_start =re.split('/|:', start_flagrange.split)
-                    flag_end  = re.split('/|:',end_flagrange.split)
+                    flag_start =re.split('/|:', start_flagrange)
+                    flag_end  = re.split('/|:',end_flagrange)
+                    print(flag_start)
+                    exit()
                     for i in range(len(obs_start)):
                         if int(obs_start[i]) <= int(flag_start[i]) <= int(obs_end[i]):
                             continue

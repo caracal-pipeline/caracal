@@ -203,10 +203,10 @@ def worker(pipeline, recipe, config):
                         'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3}
                     for ff in flagspwselection.split(','):
                         for dd in scalefactor_dict:
-                            if dd in ff:
-                                ff, scalefactor = ff.replace(
-                                    dd, ''), scalefactor_dict[dd]
-                        ff = ff.replace('Hz', '').split(':')
+                            if dd.lower() in ff.lower():
+                                ff, scalefactor = ff.lower().replace(
+                                    dd.lower(), ''), scalefactor_dict[dd]
+                        ff = ff.lower().replace('hz', '').split(':')
                         if len(ff) > 1:
                             spws = ff[0]
                         else:
@@ -219,7 +219,7 @@ def worker(pipeline, recipe, config):
                             spws = list(
                                 range(int(spws.split('~')[0]), int(spws.split('~')[1])+1))
                         else:
-                            spws = [spws, ]
+                            spws = [int(spws), ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
                             if ss < len(pipeline.lastchanfreq[i]) and min(edges[ss][1], pipeline.lastchanfreq[i][ss])-max(edges[ss][0], pipeline.firstchanfreq[i][ss]) > 0:

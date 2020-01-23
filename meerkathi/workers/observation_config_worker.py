@@ -14,6 +14,7 @@ def repeat_val(val, n):
     return l
 
 def worker(pipeline, recipe, config):
+
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -82,6 +83,8 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'lastchanfreq', repeat_val(None, pipeline.nobs))
     setattr(pipeline, 'chanwidth', repeat_val(None, pipeline.nobs))
     setattr(pipeline, 'specframe', repeat_val(None, pipeline.nobs))
+    setattr(pipeline, 'startdate', repeat_val(None, pipeline.nobs))
+    setattr(pipeline, 'enddate', repeat_val(None, pipeline.nobs))
 
     # Set antenna properties
     pipeline.Tsys_eta = config.get('Tsys_eta')
@@ -92,6 +95,26 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('Extracting info from {2:s} and (if present, and only for the purpose of automatically setting the reference antenna) the metadata file {0:s}/{1:s}-obsinfo.json'.format(
             pipeline.data_path, pipeline.dataid[i], msinfo))
         msname = msnames[i]
+        # get the  actual date stamp for the start and end of the observations.
+        # This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file
+        with open('{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, pipeline.dataid[i]), 'r') as stdr:
+            content = stdr.readlines()
+        for line in content:
+            info_on_line = [x for x in line.split() if x != '']
+            if len(info_on_line) > 2:
+                if info_on_line[0].lower() == 'observed' and info_on_line[1].lower() == 'from':
+                    calender_month_abbr = ['jan', 'feb', 'mar', 'apr', 'may','jun', 'jul', 'aug', 'sep', 'oct', 'nov',
+                                           'dec']
+                    startdate,starttime =info_on_line[2].split('/')
+                    day,month_abbr,year = startdate.split('-')
+                    month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
+                    correct_date = '/'.join([year,month_num,day])
+                    pipeline.startdate = correct_date+'/'+starttime
+                    enddate,endtime =info_on_line[4].split('/')
+                    day,month_abbr,year = enddate.split('-')
+                    month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
+                    correct_date = '/'.join([year,month_num,day])
+                    pipeline.enddate = correct_date+'/'+endtime
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':
@@ -163,7 +186,7 @@ def worker(pipeline, recipe, config):
                 f = utils.set_gcal(msinfo, fields, mode="nearest")
                 getattr(pipeline, term)[i] = [f]
             else:
-                raise RuntimeError("Could not find field/selction {0}."\
+                raise RuntimeError("Could not find field/selection {0}."\
                         " Please check the [observation_config.{1}] "\
                         "section of the config file".format(conf_fields, term))
 

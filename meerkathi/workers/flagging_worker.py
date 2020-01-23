@@ -4,6 +4,7 @@ import os
 from meerkathi.dispatch_crew import utils
 import stimela.dismissable as sdm
 import yaml
+import re
 import meerkathi
 import sys
 NAME = 'Pre-calibration flagging'
@@ -243,6 +244,23 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_time'):
                 step = 'flag_time_{0:s}_{1:d}'.format(wname, i)
+                not_valid_data = 1
+                if config['flag_time'].get('ensure_valid_selection'):
+                    try:
+                        obs_start = re.split('/|:',pipeline.startdate)
+                        obs_end = re.split('/|:',pipeline.enddate)
+                    except:
+                        raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
+                    start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
+                    flag_start =re.split('/|:', start_flagrange.split)
+                    flag_end  = re.split('/|:',end_flagrange.split)
+                    for i in range(len(obs_start)):
+                        if int(obs_start[i]) <= int(flag_start[i]) <= int(obs_end[i]):
+                            continue
+                        else:
+                            not_valid_data = 0
+
+
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,

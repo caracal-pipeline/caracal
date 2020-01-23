@@ -154,11 +154,15 @@ mapping:
             required: False
             example: 'False'
           timerange: 
-            desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
+            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
             example: ''
-      
+          ensure_valid_selection:
+            desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
+            type: bool
+            required: False
+            example: 'False'
       flag_antennas:
         desc: Flag bad antennas. Or just the ones you have sworn a vendetta against.
         type: map
@@ -174,11 +178,15 @@ mapping:
             required: False
             example: '0'
           timerange: 
-            desc: Timerange to flag. Given in format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
+            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
             example: ''
-
+          ensure_valid_selection:
+            desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
+            type: bool
+            required: False
+            example: 'False'
       flag_scan:
         desc: Flag bad scans. Uses CASA Flagdata task.
         type: map

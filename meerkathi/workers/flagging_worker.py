@@ -303,7 +303,6 @@ def worker(pipeline, recipe, config):
                             found_valid_data.append(0)
                         for nn,time_range in enumerate(times):
                             start_flagrange,end_flagrange=time_range.split('~')
-                            print(start_flagrange)
                             flag_start = float(''.join(re.split('/|:', start_flagrange)))
                             flag_end  = float(''.join(re.split('/|:', end_flagrange)))
                             if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):

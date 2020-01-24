@@ -119,6 +119,7 @@ def worker(pipeline, recipe, config):
                 sflag) for sflag in ["flag_autocorr", "quack_flagging",
                                      "flag_shadow", "flag_spw", "flag_time", 
                                      "flag_scan", "flag_antennas", "static_mask"]]
+
             if static_flagging:
                 substep = 'flagset_clear_static_{0:s}_{1:d}'.format(wname, i)
                 manflags.delete_cflags(pipeline, recipe, "_".join(
@@ -250,7 +251,7 @@ def worker(pipeline, recipe, config):
                         start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
                         flag_start = float(''.join(re.split('/|:', start_flagrange)))
                         flag_end  = float(''.join(re.split('/|:', end_flagrange)))
-                        if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):
+                        if (flag_start <= pipeline.enddate[i]) and (pipeline.startdate[i] <= flag_end):
                             found_valid_data = 1
                     else:
                         raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
@@ -305,15 +306,15 @@ def worker(pipeline, recipe, config):
                             start_flagrange,end_flagrange=time_range.split('~')
                             flag_start = float(''.join(re.split('/|:', start_flagrange)))
                             flag_end  = float(''.join(re.split('/|:', end_flagrange)))
-                            if (pipeline.startdate[i] <= flag_start <= pipeline.enddate[i]) or (pipeline.startdate[i] <= flag_end <= pipeline.enddate[i]):
+                            if (flag_start <= pipeline.enddate[i]) and (pipeline.startdate[i] <= flag_end):
                                 found_valid_data[nn] = 1
                     else:
                         raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
 
 
                 for nn,antenna in enumerate(antennas):
+                    step = 'flag_antennas_{0:s}_{1:d}_ant{2:s}'.format(wname, i,antenna.replace(',','_'))
                     if found_valid_data[nn] or not ensure:
-                        step = 'flag_antennas_{0:s}_{1:d}_ant{2:s}'.format(wname, i,antenna.replace(',','_'))
                         recipe.add('cab/casa_flagdata', step,
                                     {
                                         "vis": msname,
@@ -327,8 +328,7 @@ def worker(pipeline, recipe, config):
                                     label='{0:s}:: Flagging bad antenna {2:s} ms={1:s}'.format(step, msname,antenna))
                     elif ensure and not found_valid_data[nn]:
                         meerkathi.log.warn(
-                            'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_antennas']['timerange'], step))
-
+                            'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, times[nn], step))
 
             if pipeline.enable_task(config, 'static_mask'):
                 step = 'static_mask_{0:s}_{1:d}'.format(wname, i)

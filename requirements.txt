@@ -1,4 +1,4 @@
-ruamel.yaml==0.15.22
+ruamel.yaml>=0.15.22
 numpy>=1.15.4
 scipy>=0.19.1
 pysolr>=3.4.0

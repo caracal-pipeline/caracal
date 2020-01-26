@@ -70,6 +70,6 @@ mapping:
       plot_elevation_tracks:
         desc: Make Elevation vs Hour angle plots for observed fields
         type: bool
-        example: "True"
+        example: "False"
         required: false
 

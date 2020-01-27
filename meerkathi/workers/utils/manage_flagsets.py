@@ -1,4 +1,88 @@
 # Manage flagsets
+import os
+import sys
+
+def get_flags(pipeline, ms):
+    flaglist_file = "{folder:s}/{ms:s}.flagversions/FLAG_VERSION_LIST".format(folder=pipeline.msdir, ms=ms)
+    flaglist = []
+    if not os.path.exists(flaglist_file):
+        return []
+    with open(flaglist_file) as stdr:
+        for line in stdr.readlines():
+            flag = line.split()[0]
+            flaglist.append(flag)
+    return flaglist
+
+
+def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
+    flaglist = get_flags(pipeline, ms)
+    if flagname == "all":
+        remove_us = flaglist
+    elif flagname in flaglist:
+        index = flaglist.index(flagname)
+        remove_us = flaglist[index:]
+    else:
+        return
+            
+    for i,flag in enumerate(remove_us):
+        recipe.add("cab/casa_flagmanager", cab_name, {
+            "vis": ms,
+            "mode": "delete",
+            "versionname": flag,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="{0:s}:: Delete flags".format(label or cab_name))
+
+def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
+    if flagname in get_flags(pipeline, ms):
+        return
+    recipe.add("cab/casa_flagmanager", cab_name, {
+        "vis": ms,
+        "mode": "save",
+        "versionname": flagname,
+        },
+        input=pipeline.input,
+        output=pipeline.output,
+        label="{0:s}:: Delete flags".format(label or cab_name))
+
+
+def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):
+    """ Add flagset if it does not exist, clear its flags if exists"""
+
+    recipe.add("cab/pycasacore", cab_name, {
+        "msname": ms,
+        "script": """
+import Owlcat.Flagger
+import os
+import subprocess
+
+Owlcat.Flagger.has_purr = False
+MSDIR = os.environ["MSDIR"]
+ms = os.path.join(MSDIR, "{ms:s}")
+
+fms = Owlcat.Flagger.Flagger(ms)
+
+fms.add_bitflags()
+
+if hasattr(fms.flagsets, "names"):
+    names = fms.flagsets.names()
+else:
+    names = []
+
+fms.close()
+flagset = "{flagset:s}"
+if names and flagset in names:
+    idx = names.index(flagset)
+    remove_us = names[idx:]
+    subprocess.check_call(["flag-ms.py", "--remove", ",".join(remove_us), ms])
+else:
+    print("INFO::: Flagset does not exist. Will exit gracefully (exit status 0).")
+""".format(ms=ms, flagset=flagset),
+    },
+        input=pipeline.input,
+        output=pipeline.output, label=label or cab_name)
+
 
 
 def clear_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

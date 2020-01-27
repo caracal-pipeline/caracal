@@ -24,37 +24,6 @@ import itertools
 # To split out cubes/<dir> from output/cubes/dir
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
-def target_to_msfiles(targets, msnames, label, doppler=False):
-    target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
-
-    for t in targets:  # list all targets per input ms and make a unique list of all target fields
-        tmp = t.split(',')
-        target_ls.append(tmp)
-        for tt in tmp:
-            all_target.append(tt)
-    all_target = list(set(all_target))
-
-    # make a list of all input ms file names for each target field
-    for i, ms in enumerate(msnames):
-
-        for t in target_ls[i]:
-            tmp = utils.filter_name(t)
-            if doppler:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}{2:s}_mst.ms'.format(ms[:-3], tmp, label))
-            else:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}{2:s}.ms'.format(ms[:-3], tmp, label))
-
-    for t in all_target:  # group ms files by target field name
-        tmp = []
-        for m in target_ms_ls:
-            if m.find(utils.filter_name(t)) > -1:
-                tmp.append(m)
-        target_msfiles.append(tmp)
-
-    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))
-
 
 def freq_to_vel(filename, reverse):
     C = 2.99792458e+8       # m/s
@@ -215,15 +184,13 @@ def worker(pipeline, recipe, config):
     label = config['label']
     line_name = config['line_name']
     if label != '':
-        flabel = '_' + label
+        flabel = label
     else:
         flabel = label
-    all_targets, all_msfiles, ms_dict = target_to_msfiles(
-        pipeline.target, pipeline.msnames, flabel, False)
+    all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
+        pipeline.target, pipeline.msnames, flabel)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
-    mslist = ['{0:s}_{1:s}.ms'.format(did, config['label'])
-              for did in pipeline.dataid]
     pipeline.prefixes = [
         '{2:s}-{0:s}-{1:s}'.format(did, config['label'],
             pipeline.prefix) for did in pipeline.dataid]
@@ -489,13 +456,13 @@ def worker(pipeline, recipe, config):
         nchans_all, specframe_all = [], []
         label = config['label']
         if label != '':
-            flabel = '_' + label
+            flabel = label
         else:
             flabel = label
 
         if config['make_cube'].get('use_mstransform'):
-            all_targets, all_msfiles, ms_dict = target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel, True)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
+                pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 # If channelisation changed during a previous pipeline run
                 # as stored in the obsinfo.json file
@@ -592,7 +559,10 @@ def worker(pipeline, recipe, config):
 
         for target in (all_targets):
             meerkathi.log.info('Starting to make line cube for target {0:}'.format(target))
-            mslist = ms_dict[target]
+            if config['make_cube'].get('use_mstransform'):
+                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+            else:
+                mslist = ms_dict[target]
             field = utils.filter_name(target)
             line_clean_mask_file = None
             rms_values=[]
@@ -893,10 +863,13 @@ def worker(pipeline, recipe, config):
             weight = config['make_cube'].get('weight', weight)
 
         for target in (all_targets):
-            mslist = ms_dict[target]
+            if config['make_cube'].get('use_mstransform'):
+                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+            else:
+                mslist = ms_dict[target]
             field = utils.filter_name(target)
 
-            step = 'make_cube_line'
+            step = 'make_line_cube'
             image_opts = {
                 "msname": mslist,
                 "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(cube_dir, pipeline.prefix, field, line_name),
@@ -933,7 +906,6 @@ def worker(pipeline, recipe, config):
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
     cube_dir = get_dir_path(pipeline.cubes, pipeline)
     for target in all_targets:
-        mslist = ms_dict[target]
         field = utils.filter_name(target)
 
         casa_cube_list=glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits'.format(

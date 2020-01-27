@@ -32,6 +32,7 @@ CUBICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
     "GainDiagPhase": 'phase-diag',
+    "ComplexDiag": 'complex-diag'
 }
 
 SOL_TERMS = {
@@ -48,6 +49,8 @@ def worker(pipeline, recipe, config):
     cell = config['img_cell']
     mgain = config['img_mgain']
     niter = config['img_niter']
+    imgweight = config['img_weight']
+    img_nmiter = config['img_nmiter']
     robust = config['img_robust']
     nchans = config['img_nchans']
     pol = config.get('img_pol')
@@ -99,7 +102,8 @@ def worker(pipeline, recipe, config):
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
-    # functions for convience
+    # functions for convenience
+
 
     def cleanup_files(mask_name):
         # This function is never used
@@ -162,7 +166,8 @@ def worker(pipeline, recipe, config):
             dirty_image_opts = {
                            "msname": mslist,
                            "column": imcolumn,
-                           "weight": 'briggs {}'.format(config.get('robust', robust)),
+                           "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+                           "nmiter": sdm.dismissable(config['img_nmiter']),
                            "npix": config[key].get('npix', npix),
                            "padding": config[key].get('padding', padding),
                            "scale": config[key].get('cell', cell),
@@ -233,7 +238,8 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
-            "weight": 'briggs {}'.format(config[key].get('robust', robust)),
+            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+            "nmiter": sdm.dismissable(config['img_nmiter']),
             "npix": config[key].get('npix', npix),
             "padding": config[key].get('padding', padding),
             "scale": config[key].get('cell', cell),
@@ -1003,8 +1009,8 @@ def worker(pipeline, recipe, config):
                 "data-ms": msname,
                 "data-column": 'DATA',
                 "model-list": ":".join(modellist),
-                "data-time-chunk": time_chunk,
-                "data-freq-chunk": freq_chunk,
+                "data-time-chunk": max(int(gsols_[0]),time_chunk) if not(int(gsols_[0]) == 0 or time_chunk == 0) else 0,
+                "data-freq-chunk": max(int(gsols_[1]),freq_chunk) if not(int(gsols_[1]) == 0 or time_chunk == 0) else 0,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -1014,6 +1020,7 @@ def worker(pipeline, recipe, config):
                                                                                   pipeline), prefix, msname[:-3], num),
                 "out-mode": CUBICAL_OUT[config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]],
                 "out-plots": True,
+                "dist-max-chunks": config[key].get('dist_max_chunks'),
                 "out-casa-gaintables": True,
                 "weight-column": config[key].get('weight_column'),
                 "montblanc-dtype": 'float',
@@ -1044,11 +1051,6 @@ def worker(pipeline, recipe, config):
             if flags != "":
                 cubical_opts.update({
                     "flags-apply": flags,
-                })
-            #if this is the first iteration let's ensure all the flag are applied by reinitializing the bitflag column
-            if self_cal_iter_counter == 1:
-                cubical_opts.update({
-                    "flags-reinit-bitflags": True,
                 })
             if config[key].get('two_step') and gasols_[0] != -1:
                 cubical_opts.update({
@@ -1083,19 +1085,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        shared_memory= config[key].get('shared_memory'),
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-            # We need a version of the flags to restore to at every step
-            #mspref = msname.split(".ms")[0].replace("-", "_")
-            #recipe.add("cab/flagms", "save_2gc_flags_{0:s}_step_{1:d}".format(mspref,num),
-            #           {
-            #               "msname": msname,
-            #               "create": True,
-            #               "flag": "step_{0:d}_2gc_flags".format(num),
-            #               "flagged-any": ["+L"]
-            #           },
-            #           input=pipeline.input,
-            #           output=pipeline.output,
-            #           label="save_2gc_flags_{0:s}_step_{1:d}:: Save 2GC flags step {1:d} ".format(mspref, num))
-
+           
     def restore(num,  prod_path,mslist_out,enable_inter=True):
         key = 'calibrate'
         calwith = config.get('calibrate_with').lower()
@@ -1187,15 +1177,6 @@ def worker(pipeline, recipe, config):
         if enable_inter:
             apmode= 'ac'
         else:
-            if  CUBICAL_OUT[config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]] == 'sr':
-                apmode = 'ar'
-            else:
-                apmode = 'ac'
-        # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
-        # Hence the following fix. This should be removed once the fix makes it into stimela.
-        matrix_type = 'Gain2x2'
-        #Should this matter for applying?????
-        sol_term_iters = config[key].get('sol_term_iters')
         if sol_term_iters == 'auto':
            sol_terms_add = []
            for term in jones_chain.split(","):
@@ -1682,8 +1663,6 @@ def worker(pipeline, recipe, config):
             restore(self_cal_iter_counter-1,selfcal_products, mslist,enable_inter=False)
 
 
-        image_path = "{0:s}/image_{1:d}".format(
-            pipeline.continuum, self_cal_iter_counter)
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
@@ -1872,47 +1851,46 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Add extracted skymodel'.format(step))
 
-    for i, msname in enumerate(mslist):
-        if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
-            recipe.add('cab/casa_flagdata', step,
-                       {
-                           "vis": msname,
-                           "mode": 'summary',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+        for i, msname in enumerate(mslist):
+            if pipeline.enable_task(config, 'flagging_summary'):
+                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'summary',
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-    if pipeline.enable_task(config, 'transfer_model'):
-        meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
-.MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
-                                   prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
+        if pipeline.enable_task(config, 'transfer_model'):
+            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
+    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
+                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
 
-        crystalball_model = config['transfer_model'].get('model')
-        mslist_out = ms_dict_tmodel[target]
+            crystalball_model = config['transfer_model'].get('model')
+            mslist_out = ms_dict_tmodel[target]
 
-        if crystalball_model == 'auto':
-            crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
-                                                                                          pipeline), prefix, field, self_cal_iter_counter)
-        for i, msname in enumerate(mslist_out):
-            step = 'transfer_model_{0:d}'.format(i)
-            recipe.add('cab/crystalball', step,
-                       {
-                           "ms": msname,
-                           "sky-model": crystalball_model+':output',
-                           "spectra": config['transfer_model'].get('spectra'),
-                           "row-chunks": config['transfer_model'].get('row_chunks'),
-                           "model-chunks": config['transfer_model'].get('model_chunks'),
-                           "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
-                           "within": sdm.dismissable(config['transfer_model'].get('within') or None),
-                           "points-only": config['transfer_model'].get('points_only'),
-                           "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),
-                           "num-workers": sdm.dismissable(config['transfer_model'].get('num_workers')),
-                           "memory-fraction": config['transfer_model'].get('memory_fraction'),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
-
+            if crystalball_model == 'auto':
+                crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
+                                                                                              pipeline), prefix, field, self_cal_iter_counter)
+            for i, msname in enumerate(mslist_out):
+                step = 'transfer_model_{0:d}'.format(i)
+                recipe.add('cab/crystalball', step,
+                           {
+                               "ms": msname,
+                               "sky-model": crystalball_model+':output',
+                               "spectra": config['transfer_model'].get('spectra'),
+                               "row-chunks": config['transfer_model'].get('row_chunks'),
+                               "model-chunks": config['transfer_model'].get('model_chunks'),
+                               "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
+                               "within": sdm.dismissable(config['transfer_model'].get('within') or None),
+                               "points-only": config['transfer_model'].get('points_only'),
+                               "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),
+                               "num-workers": sdm.dismissable(config['transfer_model'].get('num_workers')),
+                               "memory-fraction": config['transfer_model'].get('memory_fraction'),
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 

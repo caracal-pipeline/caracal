@@ -9,6 +9,7 @@ except ImportError as e:
 
 requirements = [
     'ruamel.yaml>=0.15.22',
+    'decorator',
     'numpy>=1.15.4',
     'stimela>=1.1.4',
     'scipy>=0.19.1',
@@ -45,7 +46,8 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       install_requires=requirements,
       extras_require={
-          'extra_diagnostics': extra_diagnostics
+          'extra_diagnostics': extra_diagnostics,
+          'testing': 'pytest'
       },
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in

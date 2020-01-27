@@ -476,6 +476,11 @@ mapping:
             type: bool
             required: false
             example: 'True'
+          dist_max_chunks:
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
+            type: int
+            required: false
+            example: '4'
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -560,7 +565,7 @@ mapping:
                  type: int
                  desc: Solution interval in frequency (units of channels) to transfer gains.
                  required: false
-                 example: '0'     
+                 example: '0'
               time_chunk:
                  type: int
                  desc: Time chunk in units of timeslots for transferring gains with Cubical.

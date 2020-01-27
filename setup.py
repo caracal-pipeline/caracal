@@ -8,30 +8,30 @@ except ImportError as e:
     from distutils.core import setup
 
 requirements = [
-    'ruamel.yaml>=0.15.22',
-    'decorator',
-    'numpy>=1.15.4',
-    'stimela>=1.1.4',
-    'scipy>=0.19.1',
-    'pysolr>=3.4.0',
-    'progressbar2>=3.11.0',
-    'pykwalify>=1.6.0',
-    'yamlordereddictloader',
-    'astroquery>0.3.8',
-    'npyscreen>=4.10.5',
-    'ipdb>=0.11',
+    'ruamel.yaml==0.16.6',
+    'decorator==4.4.1',
+    'numpy==1.18.1',
+    'stimela==1.2.4',
+    'scipy==1.4.1',
+    'pysolr==3.8.1',
+    'progressbar2==3.47.0',
+    'pykwalify==1.7.0',
+    'yamlordereddictloader==0.4.0',
+    'astroquery==0.4',
+    'npyscreen==4.10.5',
+    'ipdb>=0.12.3',
 ]
 
 # these are only there for diagnostics, make them optional
-extra_diagnostics = [
-    'python-casacore>=2.2.0',
-    'astropy<3.1.2',
-    'matplotlib>=2.1.0',
-    'tornado>=4.0.0,<5.0.0',
+beta = [
+    'python-casacore==3.2.0',
+    'astropy==3.2.3',
+    'matplotlib==3.0.3',
+    'tornado>=4.0.0',
     'jupyter>=1.0.0',
-    'aplpy>=1.1.1',
-    'pandas>=0.24.0',
-    'nbconvert>=5.3.1',
+    'aplpy==2.0.3',
+    'pandas==0.24.2',
+    'nbconvert==5.6.1',
 ]
 
 PACKAGE_NAME = 'meerkathi'
@@ -46,7 +46,7 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       install_requires=requirements,
       extras_require={
-          'extra_diagnostics': extra_diagnostics,
+          'beta': beta,
           'testing': 'pytest'
       },
       include_package_data=True,

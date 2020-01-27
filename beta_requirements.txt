@@ -1,0 +1,2 @@
+-e git+https://github.com/SpheMakh/Stimela@795a566e#egg=stimela
+

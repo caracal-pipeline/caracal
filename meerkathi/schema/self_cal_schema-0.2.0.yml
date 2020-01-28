@@ -443,7 +443,7 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '0'
+            example: '-1'
           GAsols_channel:
             desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
             seq:

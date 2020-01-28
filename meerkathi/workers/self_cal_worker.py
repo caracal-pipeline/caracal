@@ -1153,10 +1153,7 @@ def worker(pipeline, recipe, config):
 
         # If we want to interpolate our frequency interval is always 1 no matter what
         if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
-            key_apply = 'transfer_apply_gains'
             gsols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
-            bsols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
-            gasols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
             time_chunk_in = gsols_[0] if (gsols_[0] > config['transfer_apply_gains']['interpolate'].get('time_chunk') != 0.) else  \
                                             config['transfer_apply_gains']['interpolate'].get('time_chunk')
             freq_chunk_in = gsols_[1] if (gsols_[1] > config['transfer_apply_gains']['interpolate'].get('freq_chunk') != 0)  else  \
@@ -1170,6 +1167,8 @@ def worker(pipeline, recipe, config):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
             bupdate = gupdate
+            if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                  bsols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
             if bsols_[0] > time_chunk_in:
                 time_chunk_in = bsols_[0]
             if bsols_[1] > freq_chunk_in:
@@ -1181,6 +1180,8 @@ def worker(pipeline, recipe, config):
             if gasols_[0] != -1:
                 jones_chain += ',DD'
                 matrix_type = 'Gain2x2'
+                if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                      gasols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
                 if gasols_[0] > time_chunk_in:
                     time_chunk_in = gasols_[0]
                 if gasols_[1] > freq_chunk_in:
@@ -1213,6 +1214,8 @@ def worker(pipeline, recipe, config):
            sol_terms = sol_term_iters
         # loop through measurement sets
         for i,msname_out in enumerate(mslist_out):
+            print(gsols_,gasols_)
+            print("It was here")
             #Python is really the dumbest language ever so need deep copies else the none apply variables change along with apply
             gsols_apply=copy.deepcopy(gsols_)
             bsols_apply=copy.deepcopy(bsols_)

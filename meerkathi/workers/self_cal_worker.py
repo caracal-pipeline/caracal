@@ -5,6 +5,7 @@ import sys
 import yaml
 import json
 import re
+import copy
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -1156,21 +1157,23 @@ def worker(pipeline, recipe, config):
             gsols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
             bsols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
             gasols_ = [config['transfer_apply_gains']['interpolate'].get('time_int'), config['transfer_apply_gains']['interpolate'].get('freq_int')]
-            time_chunk_apply = gsols_[0] if (gasols_[0] > config['transfer_apply_gains']['interpolate'].get('time_chunk') != 0.) else  \
+            time_chunk_in = gsols_[0] if (gsols_[0] > config['transfer_apply_gains']['interpolate'].get('time_chunk') != 0.) else  \
                                             config['transfer_apply_gains']['interpolate'].get('time_chunk')
-            freq_chunk_apply = gsols_[1] if (gasols_[1] > config['transfer_apply_gains']['interpolate'].get('freq_chunk') != 0)  else  \
+            freq_chunk_in = gsols_[1] if (gsols_[1] > config['transfer_apply_gains']['interpolate'].get('freq_chunk') != 0)  else  \
                                             config['transfer_apply_gains']['interpolate'].get('freq_chunk')
         else:
-            time_chunk_apply = gsols_[0]
-            freq_chunk_apply = gsols_[1]
+            time_chunk_in = gsols_[0] if (gsols_[0] > time_chunk != 0.) else  \
+                                            time_chunk
+            freq_chunk_in = gsols_[1] if (gsols_[1] > freq_chunk != 0.) else  \
+                                            freq_chunk
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
             bupdate = gupdate
-            if bsols_[0] > time_chunk_apply:
-                time_chunk_apply = bsols_[0]
-            if bsols_[1] > freq_chunk_apply:
-                freq_chunk_apply = bsols_[1]
+            if bsols_[0] > time_chunk_in:
+                time_chunk_in = bsols_[0]
+            if bsols_[1] > freq_chunk_in:
+                freq_chunk_in = bsols_[1]
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
         if config[key].get('two_step'):
@@ -1178,15 +1181,15 @@ def worker(pipeline, recipe, config):
             if gasols_[0] != -1:
                 jones_chain += ',DD'
                 matrix_type = 'Gain2x2'
-                if gasols_[0] > time_chunk_apply:
-                    time_chunk_apply = gasols_[0]
-                if gasols_[1] > freq_chunk_apply:
-                    freq_chunk_apply = gasols_[1]
+                if gasols_[0] > time_chunk_in:
+                    time_chunk_in = gasols_[0]
+                if gasols_[1] > freq_chunk_in:
+                    freq_chunk_in = gasols_[1]
         # if we are interpolating to 1 without setting the chunks th
-        if freq_chunk_apply == 1:
-            freq_chunk_apply = freq_chunk
-        if time_chunk_apply == 1:
-            time_chunk_apply = time_chunk
+        if freq_chunk_in == 1:
+            freq_chunk_in = freq_chunk
+        if time_chunk_in == 1:
+            time_chunk_in = time_chunk
 
         # select the right datasets
         if enable_inter:
@@ -1210,6 +1213,12 @@ def worker(pipeline, recipe, config):
            sol_terms = sol_term_iters
         # loop through measurement sets
         for i,msname_out in enumerate(mslist_out):
+            #Python is really the dumbest language ever so need deep copies else the none apply variables change along with apply
+            gsols_apply=copy.deepcopy(gsols_)
+            bsols_apply=copy.deepcopy(bsols_)
+            gasols_apply = copy.deepcopy(gasols_)
+            time_chunk_apply =copy.deepcopy(time_chunk_in)
+            freq_chunk_apply =copy.deepcopy(freq_chunk_in)
             ##Read the time and frequency channels of the  'fullres'
             fullres_data = get_obs_data(msname_out)
             print(fullres_data.keys())
@@ -1248,10 +1257,10 @@ def worker(pipeline, recipe, config):
             else:
                 fromname = msname_out.replace(label_tgain, label)
                 if not config['transfer_apply_gains']['interpolate'].get('enable'):
-                    gsols_[0] = int(ratio_timeslot*gsols_[0])
-                    gsols_[1] = int(ratio_channelsize*gsols_[1])
-                    time_chunk_apply = int(max(gsols_[0],time_chunk_apply)) if not(int(gsols_[0]) == 0 or time_chunk_apply == 0) else 0
-                    freq_chunk_apply = int(max(gsols_[1],freq_chunk_apply)) if not(int(gsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                    gsols_apply[0] = int(ratio_timeslot*gsols_[0])
+                    gsols_apply[1] = int(ratio_channelsize*gsols_[1])
+                    time_chunk_apply = int(max(gsols_[0],time_chunk_in)) if not(int(gsols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(gsols_[1],freq_chunk_in)) if not(int(gsols_[1]) == 0 or freq_chunk_in == 0) else 0
 
             # build cubical commands
             cubical_gain_interp_opts = {
@@ -1271,8 +1280,8 @@ def worker(pipeline, recipe, config):
                "g-solvable": True,
                "g-update-type": gupdate,
                "g-type": CUBICAL_MT[matrix_type],
-               "g-time-int": int(gsols_[0]),
-               "g-freq-int": int(gsols_[1]),
+               "g-time-int": int(gsols_apply[0]),
+               "g-freq-int": int(gsols_apply[1]),
                "madmax-enable": config[key].get('madmax_flagging'),
                "madmax-plot": False,
                "madmax-threshold": config[key].get('madmax_flag_thresh'),
@@ -1295,15 +1304,15 @@ def worker(pipeline, recipe, config):
             # expand
             if config[key].get('Bjones'):
                 if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
-                    bsols_[0] = int(ratio_timeslot * bsols_[0])
-                    bsols_[1] = int(ratio_channelsize * bsols_[1])
-                    time_chunk_apply = int(max(bsols_[0], time_chunk_apply)) if not(int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
-                    freq_chunk_apply = int(max(bsols_[1], freq_chunk_apply)) if not(int(bsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                    bsols_apply[0] = int(ratio_timeslot * bsols_[0])
+                    bsols_apply[1] = int(ratio_channelsize * bsols_[1])
+                    time_chunk_apply = int(max(bsols_[0], time_chunk_in)) if not(int(bsols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(bsols_[1], freq_chunk_in)) if not(int(bsols_[1]) == 0 or freq_chunk_in == 0) else 0
                 cubical_gain_interp_opts.update({
                         "b-update-type": bupdate,
                         "b-type": CUBICAL_MT[matrix_type],
-                        "b-time-int": int(bsols_[0]),
-                        "b-freq-int": int(bsols_[1]),
+                        "b-time-int": int(bsols_apply[0]),
+                        "b-freq-int": int(bsols_apply[1]),
                         "b-solvable": False
                         })
                 if config['transfer_apply_gains']['interpolate'].get('enable'):
@@ -1318,15 +1327,15 @@ def worker(pipeline, recipe, config):
                      })
             if config[key].get('two_step') and gasols_[0] != -1:
                 if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
-                    gasols_[0] = int(ratio_timeslot * gasols_[0])
-                    gasols_[1] = int(ratio_channelsize * gasols_[1])
-                    time_chunk_apply = int(max(gasols_[0], time_chunk_apply)) if not(int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
-                    freq_chunk_apply = int(max(gasols_[1], freq_chunk_apply)) if not(int(gasols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                    gasols_apply[0] = int(ratio_timeslot * gasols_[0])
+                    gasols_apply[1] = int(ratio_channelsize * gasols_[1])
+                    time_chunk_apply = int(max(gasols_[0], time_chunk_in)) if not(int(gasols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(gasols_[1], freq_chunk_in)) if not(int(gasols_[1]) == 0 or freq_chunk_in == 0) else 0
                 cubical_gain_interp_opts.update({
                         "dd-update-type": 'amp-diag',
                         "dd-type": CUBICAL_MT[matrix_type],
-                        "dd-time-int": int(gasols_[0]),
-                        "dd-freq-int": int(gasols_[1]),
+                        "dd-time-int": int(gasols_apply[0]),
+                        "dd-freq-int": int(gasols_apply[1]),
                         "dd-solvable": False
                         })
                 if config['transfer_apply_gains']['interpolate'].get('enable'):

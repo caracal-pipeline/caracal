@@ -252,5 +252,89 @@ def worker(pipeline, recipe, config):
               output=OUTPUT,
               label="transfer_tags: Transfer dE tags to the complete lsm")
 
+brate():
+        key = 'calibrate_dd'
+        flagms_postcal_opts = {
+         "create"  : True,
+         "flag"    : "final_3gc_flags",
+         "flagged-any": ["+L"],}
+        DDF_LSM = "DDF_lsm_manual.lsm.html"
+        #lsmfile = pipeline.output+"/"+DDF_LSM
+        #shutil.copy(lsmfile, pipeline.input)
+        model_list = ["MODEL_DATA",DDF_LSM+"@dE"]
 
+        de_sources_mode = config[key].get('de_sources_mode', 'auto')
+        if de_sources_mode == 'auto':
+           print "de_sources_mode:", de_sources_mode, type(de_sources_mode)
+        if de_sources_mode == 'auto':
+           DDF_LSM = "DDF_lsm.lsm.html.de_tagged.lsm.html"
+           print "DDF_LSM is:", DDF_LSM
+           lsmfile = pipeline.output+"/"+DDF_LSM
+           shutil.copy(lsmfile, pipeline.input)
+           model_list = ["MODEL_DATA",DDF_LSM+"@dE"]
+        for ms in mslist:
+           mspref = ms.split('.ms')[0].replace('-','_')
+           step = 'dd_calibrate_{0:s}'.format(mspref)
+           recipe.add('cab/cubical', step, {
+              "data-ms"           : ms,
+              "data-column"       : "CORRECTED_DATA",
+              "out-column"        : "SUBDD_DATA",
+              "weight-column"     : "WEIGHT_SPECTRUM",
+              "sol-jones"         : "G,DD",  # Jones terms to solve
+              "sol-min-bl"        : config[key].get('sol_min_bl',300.0),  # only solve for |uv| > 300 m
+              "g-type"            : "complex-2x2",
+              "g-clip-high"       : 1.5,
+              "g-clip-low"        : 0.5,
+              "g-solvable"        : True,
+           #   "g-update-type"     : "phase-diag",
+              #"g-time-int"        : gsols[0],
+              "g-time-int"        : 5,
+              "g-freq-int"        : 20000,
+              #"g-freq-int"        : gsols[1],
+              "dist-ncpu"         :  dist_ncpu,
+              "dist-nworker"      : 5,
+            #  "model-beam-pattern": prefix+"'_$(corr)_$(reim).fits':output",
+            #  "montblanc-feed-type": "linear",
+            #  "model-beam-l-axis" : "px",
+            #  "model-beam-m-axis" : "py",
+             # "g-save-to"         : "g_final-cal_{0:s}.parmdb".format(mspref),
+              "dd-save-to"        : "dd_cal_final_{0:s}.parmdb".format(mspref),
+              "dd-type"           : "complex-2x2",
+              "dd-clip-high"      : 0.0,
+              "dd-clip-low"       : 0.0,
+              "dd-solvable"       : True,
+              "dd-time-int"       : ddsols[0],
+              "dd-freq-int"       : ddsols[1],
+              "dd-dd-term"        : True,
+              "dd-prop-flags"     : 'always',
+              "dd-fix-dirs"       : "0",
+              "out-subtract-dirs" : "1:",
+              "model-list"        : model_list,
+              "out-name"          : prefix + "dE_sub",
+              "out-mode"          : 'sr',
+              "data-freq-chunk"   : 4*ddsols[1],
+              "data-time-chunk"   : 4*ddsols[0],
+              "sol-term-iters"    : "200",
+#              "madmax-enable"     : True,
+              "madmax-plot"       : False,
+              "out-plots"          : True,
+              "madmax-enable"     : config[key].get('madmax_enable',True),
+              "madmax-threshold"  : config[key].get('madmax_threshold',[50.0, 40.0, 30.0, 20.0, 10.0]),
+              "madmax-global-threshold": config[key].get('madmax_global_threshold', [40.0, 30.0, 20.0, 10.0, 5.0]),
+              "madmax-estimate"   : "corr",
+              "out-casa-gaintables" : True,
+               },
+               input=INPUT,
+               output=OUTPUT,
+               shared_memory="400gb",
+               label='dd_calibrate_{0:s}:: Carry out DD calibration'.format(mspref))
+
+
+    make_primary_beam()
+    add_weights()
+    dd_precal_image()
+    sfind_intrinsic()
+    dagga()
+    dd_calibrate()
+    dd_postcal_image()
 

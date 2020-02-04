@@ -165,10 +165,9 @@ def worker(pipeline, recipe, config):
         #make a skymodel with only dE taggable sources.
         de_only_model = 'de-only-model.txt'
         de_sources_mode = config[key].get('de_sources_mode', 'auto')
-        print "de_sources_mode:", de_sources_mode
-        print 'de_sources_mode:', de_sources_mode
+        print("de_sources_mode:", de_sources_mode)
         if de_sources_mode == 'auto':
-           print "Carrying out automatic source taggig for direction dependent calibration"
+           print("Carrying out automatic source taggig for direction dependent calibration")
            meerkathi.log.info('Carrying out automatic dE tagging')
            #make a cube of the pre-dd-cal model images
 
@@ -238,7 +237,7 @@ def worker(pipeline, recipe, config):
                    stdw.write('#format: ra_d dec_d i tags...\n')
                    for i in range(len(de_sources_manual)):
                        de_str =  de_sources[i]+"  dE"
-                       print "de_str=", de_str
+                       print("de_str=", de_str)
                        stdw.write(de_str)
            recipe.add('cab/tigger_tag', 'transfer_tags', {
               "skymodel" : de_only_model,
@@ -252,7 +251,7 @@ def worker(pipeline, recipe, config):
               output=OUTPUT,
               label="transfer_tags: Transfer dE tags to the complete lsm")
 
-brate():
+    def dd_calibrate():
         key = 'calibrate_dd'
         flagms_postcal_opts = {
          "create"  : True,
@@ -265,10 +264,10 @@ brate():
 
         de_sources_mode = config[key].get('de_sources_mode', 'auto')
         if de_sources_mode == 'auto':
-           print "de_sources_mode:", de_sources_mode, type(de_sources_mode)
+           print("de_sources_mode:", de_sources_mode, type(de_sources_mode))
         if de_sources_mode == 'auto':
            DDF_LSM = "DDF_lsm.lsm.html.de_tagged.lsm.html"
-           print "DDF_LSM is:", DDF_LSM
+           print("DDF_LSM is:", DDF_LSM)
            lsmfile = pipeline.output+"/"+DDF_LSM
            shutil.copy(lsmfile, pipeline.input)
            model_list = ["MODEL_DATA",DDF_LSM+"@dE"]
@@ -331,7 +330,6 @@ brate():
 
 
     make_primary_beam()
-    add_weights()
     dd_precal_image()
     sfind_intrinsic()
     dagga()

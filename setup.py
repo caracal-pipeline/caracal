@@ -8,30 +8,30 @@ except ImportError as e:
     from distutils.core import setup
 
 requirements = [
-    'ruamel.yaml==0.16.6',
-    'decorator==4.4.1',
-    'numpy==1.18.1',
-    'stimela==1.2.4',
-    'scipy==1.4.1',
-    'pysolr==3.8.1',
-    'progressbar2==3.47.0',
-    'pykwalify==1.7.0',
-    'yamlordereddictloader==0.4.0',
-    'astroquery==0.4',
-    'npyscreen==4.10.5',
+    'ruamel.yaml>=0.16.6',
+    'decorator>=4.4.1',
+    'numpy>=1.18.1',
+    'stimela>=1.2.4',
+    'scipy>=1.4.1',
+    'pysolr>=3.8.1',
+    'progressbar2>=3.47.0',
+    'pykwalify>=1.7.0',
+    'yamlordereddictloader>=0.4.0',
+    'astroquery>=0.4',
+    'npyscreen>=4.10.5',
     'ipdb>=0.12.3',
 ]
 
 # these are only there for diagnostics, make them optional
 beta = [
-    'python-casacore==3.2.0',
-    'astropy==3.2.3',
-    'matplotlib==3.0.3',
+    'python-casacore>=3.2.0',
+    'astropy>=3.2.3',
+    'matplotlib>=3.0.3',
     'tornado>=4.0.0',
     'jupyter>=1.0.0',
-    'aplpy==2.0.3',
-    'pandas==0.24.2',
-    'nbconvert==5.6.1',
+    'aplpy>=2.0.3',
+    'pandas>=0.24.2',
+    'nbconvert>=5.6.1',
 ]
 
 PACKAGE_NAME = 'meerkathi'

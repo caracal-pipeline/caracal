@@ -1,3 +1,1 @@
-git+https://github.com/SpheMakh/Stimela
-
-
+-e git+https://github.com/SpheMakh/Stimela@21f07e9fe883feeb2d46e69ab183b03315477a85#egg=stimela

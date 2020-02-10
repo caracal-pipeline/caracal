@@ -691,10 +691,11 @@ def worker(pipeline, recipe, config):
             label='{0:s}:: Predict from FITS ms={1:s}'.format(step, mslist[index]))
 
     def combine_models(models, num, img_dir, field, enable=True):
-        model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(img_dir,
-                                                                               prefix, field, m) for m in models]
-        model_names_fits = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits'.format(
-                            img_dir, prefix, field, m) for m in models]
+      #  model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(img_dir,
+                         #                                                      prefix, field, m) for m in models]
+        model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)),pipeline), prefix, field, m) for m in models]
+
+        model_names_fits = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits'.format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)),pipeline), prefix, field, m) for m in models]
         calmodel = '{0:s}/{1:s}_{2:d}-pybdsm-combined.lsm.html:output'.format(
             img_dir, prefix, num)
 
@@ -899,6 +900,7 @@ def worker(pipeline, recipe, config):
         # If the model string contains a +, then combine the appropriate models
         if isinstance(model, str) and len(model.split('+')) > 1:
             mm = model.split('+')
+            print(mm,num, img_dir, field)
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
         # If it doesn't then don't combine. 
         else:

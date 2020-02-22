@@ -32,7 +32,7 @@ mapping:
            type: int
            desc: Number of pixels in the image
            required: False
-           example: "4096"
+           example: "5100"
          cell:
            type: float
            desc: Pixel size in arcsec

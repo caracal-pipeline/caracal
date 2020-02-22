@@ -86,6 +86,7 @@ def worker(pipeline, recipe, config):
         recipe.add("cab/ddfacet", "ddf_image_1", dd_precal_image_opts,
         input=INPUT,
         output=OUTPUT,
+        shared_memory="500g",
         label="ddf:: Primary beam corrected image")
 
     def dd_postcal_image():

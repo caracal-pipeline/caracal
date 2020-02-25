@@ -9,7 +9,6 @@ def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
     for i in range(pipeline.nobs):
-
         msname = pipeline.msnames[i]
         prefix = pipeline.prefixes[i]
 
@@ -26,13 +25,43 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Fix UVW coordinates ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, "manage_flags"):
-
-            if config["manage_flags"].get("remove_flagsets", False):
-                step = "remove_flags_{0:s}_{1:d}".format(wname, i)
+            mode = config["manage_flags"]["mode"]
+            version = config["manage_flags"]["version_name"]
+            if mode == "reset":
+                step = "reset_flags_{0:s}_{1:d}".format(wname, i)
                 manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
+                # Unflag data
+                step = "unflag_all_{0:s}_{1:d}".format(wname, i)
+                recipe.add("cab/casa_flagdata", step, 
+                        {
+                            "vis" : msname,
+                            "mode" : "unflag",
+                            "flagbackup" : False,
+                        }, 
+                        input=pipeline.input, 
+                        output=pipeline.output, 
+                        label="{0:s}:: Save current flags".format(step))
 
-            step = "init_legacy_flags_{0:s}_{1:d}".format(wname, i)
-            manflags.add_cflags(pipeline, recipe, "legacy", msname, cab_name=step)
+            elif mode == "restore":
+                step = "restore_flags_{0:s}_{1:d}".format(wname, i)
+                manflags.restore_cflags(pipeline, recipe, version, 
+                        msname, cab_name=step)
+            elif mode == "save":
+                step = "save_flags_{0:s}_{1:d}".format(wname, i)
+                add_cflags(pipeline, recipe, version, ms, cab_name=step)
+            elif mode == "list":
+                step = "list_flags_{0:s}_{1:d}".format(wname, i)
+                recipe.add("cab/casa_flagmanager", step, 
+                        {
+                            "vis" : msname,
+                            "mode" : "list",
+                        }, 
+                        input=pipeline.input, 
+                        output=pipeline.output,
+                        label="{0:s}:: List flag versions".format(step))
+                sys.exit(0)
+            else:
+                raise ValueError("Mode given for manage_flags worker is invalid. Valid options are reset, restore, save, list")
 
         if config["clear_cal"]:
             step = 'clear_cal_{:d}'.format(i)

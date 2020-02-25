@@ -18,6 +18,25 @@ mapping:
         type: str
         required: false
         example: ''
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          flag_version: 
+            type: str
+            desc: Flag version name
+            example: 'before_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map

@@ -13,6 +13,25 @@ mapping:
         required: true
         desc: Execute this segment.
         example: 'True'
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          flag_version: 
+            type: str
+            desc: Flag version name
+            example: 'after_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       otfdelay:  
         type: bool
         required: false

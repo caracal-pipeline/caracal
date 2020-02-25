@@ -395,6 +395,16 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
 
                 elif config['autoflag_rfi']["flagger"] == "tricolour":
+                    if config['autoflag_rfi']['tricolour_mode'] == 'auto':
+                        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
+                        with open(msinfo, 'r') as stdr:
+                                  bandwidth = yaml.load(stdr)['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
+                                  print("Total Bandwidth =", bandwidth, "MHz")
+                                  if bandwidth <= 20.0:
+                                      print("Narrowband data detected, selecting appropriate flagging strategy")
+                                      tricolour_strat = config['autoflag_rfi']['tricolour_calibrator_strat_narrowband']
+                              
+                    print("Flagging strategy in use:", tricolour_strat)
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,

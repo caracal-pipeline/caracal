@@ -1,0 +1,21 @@
+!!omap
+- schema_version: 0.2.0
+
+- get_data:
+    dataid: ['']
+
+- observation_config:
+    target: auto
+    reference_antenna: '0'
+
+- general:
+    data_path: input/data
+    msdir: msdir
+    input: input
+    output: output
+    prefix: mymosaic
+    init_pipeline: true
+
+- mosaic:
+    enable: true
+    mosaic_type: spectral

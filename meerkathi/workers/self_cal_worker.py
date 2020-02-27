@@ -10,6 +10,8 @@ import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
+from stimela.pathformatter import pathformatter as spf
+
 
 NAME = 'Self calibration loop'
 
@@ -100,7 +102,8 @@ def worker(pipeline, recipe, config):
     prefix = pipeline.prefix
 
     # Define image() extract_sources() calibrate()
-    # functions for convience
+    # functions for convenience
+
 
     def cleanup_files(mask_name):
 
@@ -688,10 +691,11 @@ def worker(pipeline, recipe, config):
             label='{0:s}:: Predict from FITS ms={1:s}'.format(step, mslist[index]))
 
     def combine_models(models, num, img_dir, field, enable=True):
-        model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(img_dir,
-                                                                               prefix, field, m) for m in models]
-        model_names_fits = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits'.format(
-                            img_dir, prefix, field, m) for m in models]
+      #  model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(img_dir,
+                         #                                                      prefix, field, m) for m in models]
+        model_names = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.lsm.html:output'.format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)),pipeline), prefix, field, m) for m in models]
+
+        model_names_fits = ['{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits'.format(get_dir_path("{0:s}/image_{1:d}".format(pipeline.continuum, int(m)),pipeline), prefix, field, m) for m in models]
         calmodel = '{0:s}/{1:s}_{2:d}-pybdsm-combined.lsm.html:output'.format(
             img_dir, prefix, num)
 
@@ -892,28 +896,34 @@ def worker(pipeline, recipe, config):
 
         modellist = []
         model = config[key].get('model', num)[num-1]
+        ### Defines the pybdsf models (and fitsmodels for some weird reasons)
+        # If the model string contains a +, then combine the appropriate models
         if isinstance(model, str) and len(model.split('+')) > 1:
             mm = model.split('+')
+            print(mm,num, img_dir, field)
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
+        # If it doesn't then don't combine. 
         else:
             model = int(model)
             calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
                 img_dir, prefix, field, model)
             fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
                 img_dir, prefix, field, model)
-
+        ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA. 
         if config[key].get('model_mode') == 'pybdsm_vis':
             if (num == cal_niter):
                 modellist = [calmodel, 'MODEL_DATA']
+        # otherwise, just calmodel (pybdsf)
             else:
                 modellist = [calmodel]
             # This is incorrect and will result in the lsm being used in the first direction
             # and the model_data in the others. They need to be added as + however
-            # that messes up the output identifier structure
+            # that messes up the output identifier structure    
         if config[key].get('model_mode') == 'pybdsm_only':
-            modellist = [calmodel]
+            cmodel = calmodel.split(":output")[0]
+            modellist = spf('{}/'+cmodel,"output")
         if config[key].get('model_mode') == 'vis_only':
-            modellist = ['MODEL_DATA']
+            modellist = spf("MODEL_DATA")
         matrix_type = config[key].get('gain_matrix_type')[
             num-1 if len(config[key].get('gain_matrix_type')) >= num else -1]
         if matrix_type == 'GainDiagPhase' or config[key].get('two_step'):
@@ -988,7 +998,7 @@ def worker(pipeline, recipe, config):
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
-                "model-list": ":".join(modellist),
+                "model-list": modellist,
                 "data-time-chunk": max(int(gsols_[0]),time_chunk) if not(int(gsols_[0]) == 0 or time_chunk == 0) else 0,
                 "data-freq-chunk": max(int(gsols_[1]),freq_chunk) if not(int(gsols_[1]) == 0 or time_chunk == 0) else 0,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),

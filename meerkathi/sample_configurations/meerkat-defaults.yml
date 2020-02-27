@@ -14,7 +14,6 @@ get_data:
 observation_config: 
   obsinfo: 
     enable: true
-    plot_elevation_tracks: true
   target:
     - 'all'
   gcal: 
@@ -27,18 +26,15 @@ observation_config:
     - 'longest'
   reference_antenna: '0'
 
-prepare_data: 
+  prepare_data: 
   enable: true
   fixvis: 
     enable: false
   manage_flags: 
-    enable: true
+    mode: "initialize"
   clear_cal: true
   spectral_weights:
-    enable: true
     mode: uniform
-  manage_flags:
-    mode: "initialize"
 
 flagging:
   enable: true
@@ -48,7 +44,7 @@ flagging:
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: false #TODO(Paolo, I think) this is not working
+    ensure_valid_selection: false
   flag_antennas:
     enable: false
     antennas: '0'

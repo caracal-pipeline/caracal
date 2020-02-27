@@ -54,16 +54,30 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-        if config['obsinfo'].get('vampirisms'):
-            step = 'vampirisms_{0:d}'.format(i)
-            recipe.add('cab/sunblocker', step,
-                       {
-                           "command": 'vampirisms',
-                           "inset": msname,
-                           "dryrun": True,
-                           "nononsoleil": True,
-                           "verb": True,
-                       },
+            if config['obsinfo']["plot_elevation_tracks"]:
+                step = "elevation_plots_{:d}".format(i)
+                recipe.add("cab/casa_plotms", step, {
+                        "vis" : msname,
+                        "xaxis" : "hourangle",
+                        "yaxis" : "elevation",
+                        "coloraxis" : "field",
+                        "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
+                        "overwrite" : True,
+                    },
+                        input=pipeline.input,
+                        output=pipeline.diagnostic_plots,
+                        label="{:s}:: Plotting elevation tracks".format(step))
+
+            if config['obsinfo'].get('vampirisms'):
+                step = 'vampirisms_{0:d}'.format(i)
+                recipe.add('cab/sunblocker', step,
+                           {
+                               "command": 'vampirisms',
+                               "inset": msname,
+                               "dryrun": True,
+                               "nononsoleil": True,
+                               "verb": True,
+                           },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
@@ -188,16 +202,4 @@ def worker(pipeline, recipe, config):
             getattr(pipeline, term+"_dec")[i] = _dec
             getattr(pipeline, term+"_id")[i] = _fid
 
-        if config["plot_elevation_tracks"]:
-            step = "elevation_plots_{:d}".format(i)
-            recipe.add("cab/casa_plotms", step, {
-                    "vis" : msname,
-                    "xaxis" : "hourangle",
-                    "yaxis" : "elevation",
-                    "coloraxis" : "field",
-                    "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
-                    "overwrite" : True,
-                },
-                    input=pipeline.input,
-                    output=pipeline.diagnostic_plots,
-                    label="{:s}:: Plotting elevation tracks".format(step))
+

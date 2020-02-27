@@ -27,7 +27,10 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, "manage_flags"):
             mode = config["manage_flags"]["mode"]
             version = config["manage_flags"]["version_name"]
-            if mode == "reset":
+            if mode == "initialize":
+                step = "save_legacy_{0:s}_{1:d}".format(wname, i)
+                manflags.add_cflags(pipeline, recipe, "legacy", msname, cab_name=step)
+            elif mode == "reset":
                 step = "reset_flags_{0:s}_{1:d}".format(wname, i)
                 manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
                 # Unflag data
@@ -48,7 +51,7 @@ def worker(pipeline, recipe, config):
                         msname, cab_name=step)
             elif mode == "save":
                 step = "save_flags_{0:s}_{1:d}".format(wname, i)
-                add_cflags(pipeline, recipe, version, ms, cab_name=step)
+                manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
             elif mode == "list":
                 step = "list_flags_{0:s}_{1:d}".format(wname, i)
                 recipe.add("cab/casa_flagmanager", step, 

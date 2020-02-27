@@ -37,11 +37,11 @@ mapping:
             required: false
             example: 'True'
           mode: 
-            desc: Manage flag mode. 'reset' unflag all data and delete all flagsets, 'restore' Restore flags from user specified flagset. 
+            desc: Manage flag mode. 'reset' unflag all data and delete all flagsets, 'restore' Restore flags from user specified flagset, 'initialize'. 
             type: str
             required: false
-            example: 'restore'
-            enum: [reset, restore]
+            example: 'initialize'
+            enum: [initialize, reset, restore]
           version_name:
             desc: flagversion to restore
             type: str

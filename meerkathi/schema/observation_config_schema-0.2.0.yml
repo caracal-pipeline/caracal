@@ -32,6 +32,11 @@ mapping:
             type: bool
             required: false
             example: 'False'            
+          plot_elevation_tracks:
+            desc: Make Elevation vs Hour angle plots for observed fields
+            type: bool
+            example: "True"
+            required: false
       target:
         desc: Field name of target field. Or 'all' for all the target fields. 
         seq:
@@ -67,9 +72,4 @@ mapping:
         type: str
         required: true
         example: '0'
-      plot_elevation_tracks:
-        desc: Make Elevation vs Hour angle plots for observed fields
-        type: bool
-        example: "True"
-        required: false
 

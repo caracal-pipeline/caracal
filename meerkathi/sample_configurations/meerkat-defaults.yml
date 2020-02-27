@@ -14,6 +14,7 @@ get_data:
 observation_config: 
   obsinfo: 
     enable: true
+    plot_elevation_tracks: true
   target:
     - 'all'
   gcal: 
@@ -25,8 +26,6 @@ observation_config:
   xcal:
     - 'longest'
   reference_antenna: '0'
-  plot_elevation_tracks: true
-  
 
 prepare_data: 
   enable: true
@@ -38,6 +37,8 @@ prepare_data:
   spectral_weights:
     enable: true
     mode: uniform
+  manage_flags:
+    mode: "initialize"
 
 flagging:
   enable: true
@@ -72,6 +73,9 @@ cross_cal:
   otfdelay: true
   uvrange: '>150'
   label: 1gc1
+  load_flags:
+    flag_version: after_flagging_automatic
+    merge: False
   set_model:
     enable: true
   primary_cal:

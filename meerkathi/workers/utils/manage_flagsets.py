@@ -59,7 +59,7 @@ def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
         },
         input=pipeline.input,
         output=pipeline.output,
-        label="{0:s}:: Delete flags".format(label or cab_name))
+        label="{0:s}:: Save flag version".format(label or cab_name))
 
 
 def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

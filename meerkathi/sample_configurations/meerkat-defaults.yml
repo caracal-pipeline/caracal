@@ -26,7 +26,7 @@ observation_config:
     - 'longest'
   reference_antenna: '0'
 
-  prepare_data: 
+prepare_data: 
   enable: true
   fixvis: 
     enable: false
@@ -39,8 +39,8 @@ observation_config:
 flagging:
   enable: true
   label: ''
-  quack_flagging:
-    enable: false
+  flag_autocorr:
+    enable: true
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'

@@ -39,7 +39,8 @@ mapping:
               enable:
                 desc: Enable this segment
                 type: bool
-                exampe: "True"
+                example: "True"
+                required: false
               plotter:
                 desc: Application to use for making plots
                 type: str
@@ -81,7 +82,3 @@ mapping:
         type: str
         required: true
         example: '0'
-<<<<<<< HEAD
-
-=======
->>>>>>> 5d56adb37b637575d679fd13832040a7f1f4ed2f

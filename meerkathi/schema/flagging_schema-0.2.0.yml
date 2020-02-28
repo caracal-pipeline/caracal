@@ -84,7 +84,7 @@ mapping:
             desc: Enables flagging of autocorrelations.
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
@@ -220,7 +220,6 @@ mapping:
             type: str
             required: False
             example: '0'
-
       static_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
@@ -249,7 +248,7 @@ mapping:
             desc: Enable RFI flagging with AOFlagger or tricolour (not active yet)
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
           flagger:
             desc: Choose flagger for automatic flagging
             type: str
@@ -373,7 +372,6 @@ mapping:
             type: bool
             required: False
             example: 'True'
-
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map

@@ -52,7 +52,7 @@ polcal:
   enable: false
 
 inspect_data:
-  enable: true
+  enable: false
 
 split_target:
   enable: true

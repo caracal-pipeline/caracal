@@ -375,7 +375,7 @@ then
     echo " In the user's rc:"
     echo "   export CARATE_WORKSPACE=/home/tester/software/meerkathi_tests"
     echo "   export CARATE_TEST_DATA_DIR=/home/jozsa/software/meerkathi_tests/rawdata"
-    echo "   export PATH=$PATH:/home/user/software/meerkathi/meerkathi/utils/carate.sh"
+    echo "   export PATH=\$PATH:/home/user/software/meerkathi/meerkathi/utils/carate.sh"
     echo " or"
     echo "   setenv CARATE_WORKSPACE \"/home/tester/software/meerkathi_tests\""
     echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/meerkathi_tests/rawdata\""

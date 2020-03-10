@@ -18,6 +18,11 @@ mapping:
         desc: Label to tag the output files
         required: False
         example: 'DD'
+     use_pb:
+        type: bool
+        desc: Enable primary beam usage (only MeerKAT for the moment)
+        required: False
+        example: 'False' 
 
      image_dd:
        type: map
@@ -77,12 +82,17 @@ mapping:
            desc: Number of cpus
            required: false
            example: '1'
-         ddsols:
-           seq:
-              - type: int
+         ddsols_time:
+           type: int
            desc: Solution intervals for ddjones in time
            required: false 
            example: '100'
+         ddsols_freq:
+           type: int
+           desc: Solution intervals for ddjones in frequency
+           required: false 
+           example: '100'
+
          de_sources_mode:
            type: str
            desc: Mode in which dE sources are tagged. 'auto' uses catdagger, while in 'manual' mode, one needs to give a list of sources.

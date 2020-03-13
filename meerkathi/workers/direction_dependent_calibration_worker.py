@@ -83,8 +83,10 @@ def worker(pipeline, recipe, config):
         label="ddf:: Primary beam corrected image")
 
     def dd_postcal_image():
-        dd_imagename = {"Output-Name": prefix+"-DD-precal"}
+        dd_imagename = {"Output-Name": prefix+"-DD-postcal"}
+        dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
         dd_image_opts.update(dd_imagename)
+        dd_image_opts.update(dd_imagecol)
 
         recipe.add("cab/ddfacet", "ddf_image_1", dd_image_opts,
         input=INPUT,
@@ -123,10 +125,10 @@ def worker(pipeline, recipe, config):
         de_only_model = 'de-only-model.txt'
         de_sources_mode = config[key].get('de_sources_mode', 'auto')
         print("de_sources_mode:", de_sources_mode)
-        if usepb:
-           model_cube = prefix+"-DD-precal.cube.int.model.fits"
-        else: 
-           model_cube = prefix+"-DD-precal.cube.app.model.fits"
+       # if usepb:
+       #    model_cube = prefix+"-DD-precal.cube.int.model.fits"
+       # else: 
+       #    model_cube = prefix+"-DD-precal.cube.app.model.fits"
         if de_sources_mode == 'auto':
            print("Carrying out automatic source taggig for direction dependent calibration")
            meerkathi.log.info('Carrying out automatic dE tagging')
@@ -135,7 +137,7 @@ def worker(pipeline, recipe, config):
            "noise-map" : prefix+"-DD-precal.app.residual.fits",
            "psf-image" : prefix+"-DD-precal.psf.fits",
            "input-lsm" : "DDF_lsm.lsm.html",
-           "remove-tagged-dE-components-from-model-images": model_cube,
+           #"remove-tagged-dE-components-from-model-images": model_cube,
            "only-dEs-in-lsm" : True,
            "sigma" : config[key].get('sigma'),
            "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre', 1300),
@@ -150,17 +152,19 @@ def worker(pipeline, recipe, config):
     def dd_calibrate():
         key = 'calibrate_dd'
         dicomod = prefix+"-DD-precal.DicoModel"
-        dereg = "de.reg"
+        #dereg = "dE.reg"
+        dereg = "test2.reg"
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'dd_calibrate_{0:s}'.format(mspref)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
-              "data-column"       : "CORRECTED_DATA",
+              "data-column"       : "DATA",
               "out-column"        : "SUBDD_DATA",
               "weight-column"     : "WEIGHT_SPECTRUM",
               "sol-jones"         : "G,DD",  # Jones terms to solve
               "sol-min-bl"        : config[key].get('sol_min_bl'),  # only solve for |uv| > 300 m
+              "sol-stall-quorum"  : 0.95,
               "g-type"            : "complex-2x2",
               "g-clip-high"       : 1.5,
               "g-clip-low"        : 0.5,
@@ -195,6 +199,7 @@ def worker(pipeline, recipe, config):
               "model-list"        : spf("MODEL_DATA+-{{}}{}@{{}}{}:{{}}{}@{{}}{}".format(dicomod, dereg, dicomod, dereg), "output", "output", "output", "output"),
               "out-name"          : prefix + "dE_sub",
               "out-mode"          : 'sr',
+              "out-model-column"  : "MODEL_OUT",
               "data-freq-chunk"   : 4*ddsols_f,
               "data-time-chunk"   : 4*ddsols_t,
               "sol-term-iters"    : "[50,90,50,90]",
@@ -213,11 +218,11 @@ def worker(pipeline, recipe, config):
                shared_memory="400gb",
                label='dd_calibrate_{0:s}:: Carry out DD calibration'.format(mspref))
      
-    if usepb:
-        make_primary_beam()
-    dd_precal_image()
-    sfind_intrinsic()
-    dagga()
+    #if usepb:
+    #    make_primary_beam()
+    #dd_precal_image()
+    #sfind_intrinsic()
+    #dagga()
     dd_calibrate()
     dd_postcal_image()
 

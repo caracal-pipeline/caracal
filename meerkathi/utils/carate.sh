@@ -8,12 +8,19 @@ printf "###########################\n"
 printf "# Testing CARACal at home #\n"
 printf "###########################\n"
 
+echo "carate.sh $*"
+echo
+
 # Control if help should be switched on
 #(( $# > 0 )) || NOINPUT=1
 
 # Default variables
 FN=42000
 FORCE=0
+SS="/dev/null"
+
+# current working directory
+cwd=`pwd`
 
 argcount=0
 for arg in "$@"
@@ -82,6 +89,8 @@ do
         (( nextcount=argcount+1 ))
         (( $nextcount <= $# )) || { echo "Argument expected for --workspace or -ws switch, stopping."; kill "$PPID"; exit 0; }
         CARATE_WORKSPACE=${!nextcount}
+	firstletter=`echo ${CARATE_WORKSPACE} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_WORKSPACE="${cwd}/${CARATE_WORKSPACE}" 
     fi
     if [[ "$arg" == "--test-data-dir" ]] || [[ "$arg" == "-td" ]]
     then
@@ -89,32 +98,44 @@ do
  (( $nextcount <= $# )) || { echo "Argument expected for --test-data-dir or -td switch, stopping."; kill "$PPID"; exit 0; }
     
  CARATE_TEST_DATA_DIR=${!nextcount}
+ 	firstletter=`echo ${CARATE_TEST_DATA_DIR} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_TEST_DATA_DIR="${cwd}/${CARATE_TEST_DATA_DIR}" 
     fi
     if [[ "$arg" == "--caracal-build-number" ]] || [[ "$arg" == "-cb" ]]
     then
  (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --caracal-build-number or -cb switch, stopping."; kill "$PPID"; exit 0; }
-    
+ (( $nextcount <= $# )) || { echo "Argument expected for --caracal-build-number or -cb switch, stopping."; kill "$PPID"; exit 0; }    
  CARATE_CARACAL_BUILD_NUMBER=${!nextcount}
     fi
     if [[ "$arg" == "--caracal-test-number" ]] || [[ "$arg" == "-ct" ]]
     then
- (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --caracal-test-number or -ct switch, stopping."; kill "$PPID"; exit 0; }
-    
- CARATE_CARACAL_TEST_NUMBER=${!nextcount}
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --caracal-test-number or -ct switch, stopping."; kill "$PPID"; exit 0; }
+        CARATE_CARACAL_TEST_NUMBER=${!nextcount}
     fi
     if [[ "$arg" == "--local-source" ]] || [[ "$arg" == "-ls" ]]
     then
- (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --local-source or -ls switch, stopping."; kill "$PPID"; exit 0; }
- CARATE_LOCAL_SOURCE=${!nextcount}
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --local-source or -ls switch, stopping."; kill "$PPID"; exit 0; }
+        CARATE_LOCAL_SOURCE=${!nextcount}
+ 	firstletter=`echo ${CARATE_LOCAL_SOURCE} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_LOCAL_SOURCE="${cwd}/${CARATE_LOCAL_SOURCE}" 
     fi
     if [[ "$arg" == "--config-source" ]] || [[ "$arg" == "-cs" ]]
     then
- (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --config-source or -cs switch, stopping."; kill "$PPID"; exit 0; }
- CARATE_CONFIG_SOURCE=${!nextcount}
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --config-source or -cs switch, stopping."; kill "$PPID"; exit 0; }
+        CARATE_CONFIG_SOURCE=${!nextcount}
+ 	firstletter=`echo ${CARATE_CONFIG_SOURCE} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_CONFIG_SOURCE="${cwd}/${CARATE_CONFIG_SOURCE}" 
+    fi
+    if [[ "$arg" == "--small-script" ]] || [[ "$arg" == "-ss" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --small-script or -ss switch, stopping."; kill "$PPID"; exit 0; }
+	SS=${!nextcount}
+	firstletter=`echo ${SS} | head -c 1`
+	[[ ${firstletter} == "/" ]] || SS="${cwd}/${SS}" 
     fi
 done
 
@@ -219,8 +240,9 @@ then
     echo "  --force -f                          Force replacement and re-installation of" 
     echo "                                      all components (you will probably want" 
     echo "                                      that)"
-    echo "  --override -or                      Override security question (showing root\n"
+    echo "  --override -or                      Override security question (showing root"
     echo "                                      directory and asking whether to proceed.)"
+    echo "  --small-script -ss                  Generate a small script"
     echo ""
 fi
 
@@ -417,56 +439,44 @@ printf "############\n"
 printf "\n"
 
 # Environment variables
-# [ -n "$CARATE_JOB_NAME" ] || { printf "You have to define a global CARATE_JOB_NAME variable,
-# like (if you're\nusing bash):\n$ export CARATE_JOB_NAME="CARCal test"\n\n"; kill "$PPID"; exit 1; }
+#[ -n "$CARATE_JOB_NAME" ] || { printf "You have to define a global CARATE_JOB_NAME variable
+# like (if you're\nusing bash):\n$ export CARATE_JOB_NAME="CARCal test"\nOr use the -\n"; kill "$PPID"; exit 1; }
 [[ -n "$CARATE_WORKSPACE" ]] || { \
     printf "You have to define a global CARATE_WORKSPACE variable, like (if you're\nusing bash):\n";\
     printf "$ export CARATE_WORKSPACE=\"/home/username/meerkathi_tests\"\n";\
-    printf "It is the top level directory of all tests.\n\n";\
+    printf "Or use the -ws switch. It is the top level directory of all tests.\n\n";\
     kill "$PPID"; exit 1;\
 }
 
 [[ -n "$CARATE_TEST_DATA_DIR" ]] || { \
-    printf "You have to define a global CARATE_TEST_DATA_DIR variable, like (if\n";\
+    printf "You have to define a CARATE_TEST_DATA_DIR variable, like (if\n";\
     printf "you're using bash):\n";\
     printf "$ export CARATE_TEST_DATA_DIR=\"/home/username/meerkathi_tests/rawdata\"\n";\
     printf "And put test rawdata therein: a.ms  b.ms c.ms ...\n";\
-    printf "These test data will be copied across for the test.\n\n";\
+    printf "Or use the -td switch. These test data will be copied across for the test.\n\n";\
     kill "$PPID"; exit 1;\
-}
-
-[[ -n "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
-    printf "You can define a global variable CARATE_CARACAL_BUILD_NUMBER, like (if you're\n";\
-    printf "using bash):\n";\
-    printf "$ export CARATE_CARACAL_BUILD_NUMBER=\"b027661de6ff93a183ff240b96af86583932fc1e\"\n";
-    printf "You can find the build number when running e.g.\n";\
-    printf "$ git log        in your MeerKATHI folder.\n";\
-    printf "Or you can look up the build number in github.\n";\
-    printf "If defined this test will check out that build number.\n";\
-    printf "If not defined, either the local installation or the current remote master\n";\
-    printf "will be checked out.\n\n";\
 }
 
 # Force test number to be identical with build number, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
-    export CARATE_CARACAL_TEST_NUMBER=$CARATE_CARACAL_BUILD_NUMBER; \
+    CARATE_CARACAL_TEST_NUMBER=$CARATE_CARACAL_BUILD_NUMBER; \
 }
 
 [[ -n "$CARATE_CARACAL_TEST_NUMBER" ]] || { \
     printf "Without build number you have to define a global CARATE_CARACAL_TEST_NUMBER\n";\
     printf "variable, giving your test directory a name, like (if you're using bash):\n";\
-    printf "$ export CARATE_CARACAL_TEST_NUMBER=\"b027661de6ff93a183ff240b96af86583932fc1e\"\n";\
-    printf "Otherwise choose any unique identifyer\n\n";\
+    printf "$export CARATE_CARACAL_TEST_NUMBER=\"b027661de6ff93a183ff240b96af86583932fc1e\"\n";\
+    printf "Otherwise choose any unique identifyer. You can also use the -ct switch.\n\n";\
     kill "$PPID"; exit 1; \
 }
 
 [[ -n "$CARATE_LOCAL_SOURCE" ]] || { \
-    printf "The global variable CARATE_LOCAL_SOURCE is not set, meaning that MeerKATHI\n";\
+    printf "The variable CARATE_LOCAL_SOURCE is not set, meaning that MeerKATHI\n";\
     printf "will be downloaded from https://github.com/ska-sa/meerkathi\n\n";\
 }
 
 [[ -n "$CARATE_CONFIG_SOURCE" ]] || { \
-    printf "The global variable CARATE_CONFIG_SOURCE is not set, meaning that no CARACal\n";\
+    printf "The variable CARATE_CONFIG_SOURCE is not set, meaning that no CARACal\n";\
     printf "test will be made on own supplied configuration.\n\n";\
 }
 
@@ -511,7 +521,7 @@ echo "##########################################"
 echo
 
 #(( $FORCE==0 )) || { rm -rf $WORKSPACE_ROOT; }
-####==
+[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p $WORKSPACE_ROOT" > ${SS}
 mkdir -p $WORKSPACE_ROOT
 
 # Save home for later 
@@ -522,6 +532,7 @@ fi
 
 # This ensures that when stopping, the $HOME environment variable is restored
 function cleanup {
+  [[ "${SS}" == "/dev/null" ]] || echo "export HOME=$OLD_HOME" >> ${SS}
   export HOME=$OLD_HOME
 }
 trap cleanup EXIT
@@ -530,11 +541,11 @@ if [[ -n "$CARATE_CONFIG_SOURCE" ]]
 then
     if [[ -z $DI ]] && [[ -z $SI ]]
     then
- echo "No Stimela installation made in context with specifying an additional config"
- echo "file. Ommitting testing that file"
+        echo "No Stimela installation made in context with specifying an additional config"
+        echo "file. Ommitting testing that file"
     else
  # Get the config file name
- configfilename=`echo $CARATE_CONFIG_SOURCE | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
+        configfilename=`echo $CARATE_CONFIG_SOURCE | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
     fi
 fi
 
@@ -558,12 +569,20 @@ fi
 
 
 # The following would only work in an encapsulated environment
+[[ "${SS}" == "/dev/null" ]] || echo "export HOME=$WORKSPACE_ROOT/home" >> ${SS}
 export HOME=$WORKSPACE_ROOT/home
-####==
-(( $FORCE==0 )) || { rm -rf $HOME; }
+if (( $FORCE != 0 ))
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "rm -rf $HOME" >> ${SS}
+    ####==
+    rm -rf $HOME
+fi
+
+[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p $HOME" >> ${SS}
 mkdir -p $HOME
 
 # For some reason we have to be somewhere
+[[ "${SS}" == "/dev/null" ]] || echo "cd $HOME" >> ${SS}
 cd $HOME
 
 # Create virtualenv and start
@@ -572,11 +591,22 @@ echo "##########################################"
 echo "Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
 echo
+if (( $FORCE != 0 ))
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${WORKSPACE_ROOT}/caracal_venv" >> ${SS}
 ####==
-(( $FORCE==0 )) || { rm -rf ${WORKSPACE_ROOT}/caracal_venv; }
-[[ -d ${WORKSPACE_ROOT}/caracal_venv ]] || { virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv; }
+    rm -rf ${WORKSPACE_ROOT}/caracal_venv
+fi
+if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv" >> ${SS}
+    virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv
+fi
+
 echo "Entering virtualenv in $WORKSPACE_ROOT"
+[[ "${SS}" == "/dev/null" ]] || echo ". ${WORKSPACE_ROOT}/caracal_venv/bin/activate"  >> ${SS}
 . ${WORKSPACE_ROOT}/caracal_venv/bin/activate
+[[ "${SS}" == "/dev/null" ]] || echo "pip install pip setuptools wheel -U"  >> ${SS}
 ####==
 pip install pip setuptools wheel -U
 
@@ -586,21 +616,26 @@ echo "##########################################"
 echo "Fetching CARACal"
 echo "##########################################"
 echo
+if (( $FORCE==1 ))
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${WORKSPACE_ROOT}/meerkathi" >> ${SS}
 ####==
-(( $FORCE==0 )) || { rm -rf ${WORKSPACE_ROOT}/meerkathi; }
+    rm -rf ${WORKSPACE_ROOT}/meerkathi
+fi
+
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
  echo "Not re-fetching MeerKATHI, use -f if you want that."
     else
+[[ "${SS}" == "/dev/null" ]] || echo "cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/"  >> ${SS}
 	####==
         cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
- ####==
-
  true
     fi
 else
+    [[ "${SS}" == "/dev/null" ]] || echo "cd ${WORKSPACE_ROOT}"  >> ${SS}
     cd ${WORKSPACE_ROOT}
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
@@ -608,32 +643,32 @@ else
             then
                 echo "Not re-fetching MeerKATHI, use -f if you want that."
             else
+		[[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${WORKSPACE_ROOT}/meerkathi" >> ${SS}
 		####==
                 rm -rf ${WORKSPACE_ROOT}/meerkathi
-		####==
-                git clone https://github.com/ska-sa/meerkathi.git
-  ####==
 
-  true
+[[ "${SS}" == "/dev/null" ]] || echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
+####==
+                git clone https://github.com/ska-sa/meerkathi.git
             fi
     else
+	[[ "${SS}" == "/dev/null" ]] || echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
 	####==
         git clone https://github.com/ska-sa/meerkathi.git
- ####==
-
- true
     fi
 fi
 
 if [[ -n "$CARATE_CARACAL_BUILD_NUMBER" ]]
 then
+    [[ "${SS}" == "/dev/null" ]] || echo "cd ${WORKSPACE_ROOT}/meerkathi" >> ${SS}
     cd ${WORKSPACE_ROOT}/meerkathi
     [[ -z $CARATE_LOCAL_SOURCE ]] || { \
- echo "If an error occurs here, it likely means that the local installation";\
- echo "of CARACal does not contain the build number. You may want to use the";\
- echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_NUMBER:";\
- echo "In bash: $ unset CARATE_CARACAL_BUILD_NUMBER";\
+	echo "If an error occurs here, it likely means that the local installation";\
+	echo "of CARACal does not contain the build number. You may want to use the";\
+	echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_NUMBER:";\
+	echo "In bash: $ unset CARATE_CARACAL_BUILD_NUMBER";\
     }
+    [[ "${SS}" == "/dev/null" ]] || echo "git checkout ${CARATE_CARACAL_BUILD_NUMBER}" >> ${SS}
     git checkout ${CARATE_CARACAL_BUILD_NUMBER}
 fi
           
@@ -645,11 +680,13 @@ echo
 
 #PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 #LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
+[[ "${SS}" == "/dev/null" ]] || echo "pip install -U -I ${WORKSPACE_ROOT}/meerkathi[beta]" >> ${SS}
 ####==
 pip install -U -I ${WORKSPACE_ROOT}/meerkathi\[beta\]
 if [[ -n $UR ]]
 then
     echo "Intstalling requirements.txt"
+    [[ "${SS}" == "/dev/null" ]] || echo "pip install -U -I -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt" >> ${SS}
     ####==
     pip install -U -I -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt
 fi
@@ -681,16 +718,20 @@ then
         echo "Installing Stimela (Docker)"
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -f ${HOME}/.stimela/*" >> ${SS}
 ####==
-        rm -f $HOME/.stimela/*
+        rm -f ${HOME}/.stimela/*
        echo "Running $docker system prune"
+       [[ "${SS}" == "/dev/null" ]] || echo "docker system prune" >> ${SS}
 ####==
        docker system prune
+       [[ "${SS}" == "/dev/null" ]] || echo "stimela build" >> ${SS}
 ####==
        stimela build
     fi
 fi
 testingoutput () {
+    
     # Function to test output after running a pipeline
     # Argument 1: $WORKSPACE_ROOT
     # Argument 2: Test directory, e.g. test_extendedConfig_docker
@@ -701,14 +742,16 @@ testingoutput () {
     echo "#####################"
     echo "# Checking logfiles #"
     echo "#####################"
-
+    echo 
     echo "Checking logfiles in directory ${1}/${2}"
-    echo "Will return error if $2 files do not report success in the last two lines"
+    echo "Will return error if $3 files do not report success in the last two lines"
 #    [[ -z $4 ]] || echo "Will also return error if no success is reported in the file"
-#    [[ -z $4 ]] || echo "changed before log-meerkathi.txt was last changed"
+    #    [[ -z $4 ]] || echo "changed before log-meerkathi.txt was last changed"
+    allogs=""
+####==
     allogs=`ls -t ${1}/${2}/output/logs/`
-    total=$(( 0 ))
-    failed=$(( 0 ))
+    total=0
+    failed=0
 
     for log in $allogs
     do
@@ -717,7 +760,7 @@ testingoutput () {
         then
             echo "$log does not report success in the last two lines"
             (( failed+=1 ))
-     [[ -z $hadmeerkathi ]] || { echo "This was the last report before log-meerkathi.txt"; }
+            [[ -z $hadmeerkathi ]] || { echo "This was the last report before log-meerkathi.txt"; }
             [[ -z $hadmeerkathi ]] || failedbeforemeerkathi=1
         fi
         (( total+=1 ))
@@ -729,19 +772,22 @@ testingoutput () {
         fi
     done
     echo "$failed logfiles of $total logfiles did not report success in the last two lines"
+    (( $3 >= $failed)) || { echo "Returning error because of this (${3} were allowed)."; return 1; }
 
     # Count number of runs of workers and the number of finishes
-    worker_runs=`grep "Running worker" log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
-    worker_fins=`grep "Finished worker" log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
-    (( $worker_runs == $worker_fins )) || return 0
-    (( $worker_runs > 0 )) || return 0
-    
+    mkdir -p ${1}/${2}/output/logs/ # This is debugging code and can be removed
+    touch ${1}/${2}/output/logs/log-meerkathi.txt # This is debugging code and can be removed
+    worker_runs=`grep "Running worker" ${1}/${2}/output/logs/log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
+    worker_fins=`grep "Finished worker" ${1}/${2}/output/logs/log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
+#    worker_runs=0
+#    worker_fins=1
+    (( $worker_runs == $worker_fins )) || { echo "Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; echo "Returning error"; return 1; }
+    (( $worker_runs > 0 )) || { echo "No workers have started according to log-meerkathi.txt"; echo "Returning error"; return 1; }
     # Notice that 0 is true in bash
-    (( $3 >= $failed)) || return 0
-    (( $total > 0 )) || { echo No logfiles produced; }
-    (( $total > 0 )) || return 0
+    (( $total > 0 )) || { echo "No logfiles produced. Returning error."; return 1; }
+    (( $total > 0 )) || return 1
 #    [[ -z $4 ]] || [[ -z $failedbeforemeerkathi ]] || return 0
-    return 1
+    return 0
 }
 
 runtest () {
@@ -754,7 +800,6 @@ runtest () {
     # Argument 6: Number of logs which are allowed to fail
     # Argument 7: Switches to pass to meerkathi
 
-    
     local greetings_line=$1
     local WORKSPACE_ROOT=$2
     local configfilename=$3
@@ -763,7 +808,6 @@ runtest () {
     local FN=$6
     local configlocation=$7
     local caracalswitches=$8
-
 
     echo
     echo "##########################"
@@ -779,35 +823,43 @@ runtest () {
     # echo 6 FN              $6
     # echo 7 configlocation  $7
     # echo 8 caracalswitches $8
+
+    failedrun=0
     
     if [[ -e ${WORKSPACE_ROOT}/test_${configfilename}_${contarch} ]] && (( $FORCE==0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
         echo "and use old results. Use -f to override."
     else
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}" >> ${SS}
 ####==
         rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
- 
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
-####==
+	[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir" >> ${SS}
         mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir
+        [[ "${SS}" == "/dev/null" ]] || echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}
 	####==
+	
         sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
-####==
+	[[ "${SS}" == "/dev/null" ]] || echo "cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/" >> ${SS}
+	####==
         cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/
-
         echo "Running extended ${contarch} test (using ${configfilename}.yml)"
+	[[ "${SS}" == "/dev/null" ]] || echo "cd ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}" >> ${SS}
         cd ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
         # Notice that currently all output will be false, such that || true is required to ignore this
-	####==
-
+	failed=0
 	echo 	meerkathi -c ${configfilename}.yml ${caracalswitches} || true
-	meerkathi -c ${configfilename}.yml ${caracalswitches} || true
+	[[ "${SS}" == "/dev/null" ]] || echo "meerkathi -c ${configfilename}.yml ${caracalswitches}" >> ${SS}
+	####==
+	meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; echo "CARACal run returned an error."; failedrun=1; }
     fi
-
     echo "Checking output of ${configfilename} ${contarch} test"
-    if testingoutput ${WORKSPACE_ROOT} test_${configfilename}_${contarch} $FN yes
+    failedoutput=0
+    testingoutput ${WORKSPACE_ROOT} test_${configfilename}_${contarch} $FN yes || { true; failedoutput=1; }
+#    failedoutput=$?
+    if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
         echo
         echo "######################"
@@ -865,10 +917,10 @@ then
             echo "Use -f to override and unset -or or --omit-stimela-reinstall flags."
         fi
     else
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${singularity_loc}" >> ${SS}
 ####==
         rm -rf ${singularity_loc}
-####==
-        ######rm -rf $CARATE_WORKSPACE/.singularity
+######rm -rf $CARATE_WORKSPACE/.singularity
     fi
     if [[ ! -e "${singularity_loc}" ]]
     then
@@ -877,10 +929,13 @@ then
         echo "# Installing Stimela images (Singularity) #"
         echo "###########################################"
         echo
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -f $HOME/.stimela/*" >> ${SS}
 	####==
         rm -f $HOME/.stimela/*
-	mkdir ${singularity_loc}
+	[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p ${singularity_loc}"
+	mkdir -p ${singularity_loc}
 	echo stimela pull --singularity -f --pull-folder ${singularity_loc}
+	[[ "${SS}" == "/dev/null" ]] || echo "stimela pull --singularity -f --pull-folder ${singularity_loc}" >> ${SS}
 ####==
         stimela pull --singularity -f --pull-folder ${singularity_loc}
     fi
@@ -889,7 +944,7 @@ fi
 if [[ -n $SM ]]
 then
     greetings_line="Singularity: minimalConfig_singularity"
-    confilename="minimalConfig_singularity"
+    confilename="minimalConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
@@ -898,7 +953,7 @@ fi
 if [[ -n $SE ]]
 then
     greetings_line="Singularity: extendedConfig_singularity"
-    confilename="extendedConfig_singularity"
+    confilename="extendedConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"

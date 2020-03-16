@@ -232,7 +232,7 @@ then
     echo "                                      allow)"             
     echo ""
     echo "  --use-requirements -ur              Use"
-    echo "                                      pip install -U -I -r (...)requirements.txt"
+    echo "                                      pip install -U --force-reinstall -r (...)requirements.txt"
     echo "                                      when installing MeerKATHI"
     echo ""
     echo "  --omit-stimela-reinstall -os        Do not re-install stimela images"
@@ -680,15 +680,15 @@ echo
 
 #PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 #LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
-[[ "${SS}" == "/dev/null" ]] || echo "pip install -U -I ${WORKSPACE_ROOT}/meerkathi[beta]" >> ${SS}
+[[ "${SS}" == "/dev/null" ]] || echo "pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi[beta]" >> ${SS}
 ####==
-pip install -U -I ${WORKSPACE_ROOT}/meerkathi\[beta\]
+pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi\[beta\]
 if [[ -n $UR ]]
 then
     echo "Intstalling requirements.txt"
-    [[ "${SS}" == "/dev/null" ]] || echo "pip install -U -I -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt" >> ${SS}
+    [[ "${SS}" == "/dev/null" ]] || echo "pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt" >> ${SS}
     ####==
-    pip install -U -I -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt
+    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt
 fi
 
 if [[ -z $DM ]] && [[ -z $DE ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SE ]] && [[ -z $SI ]]

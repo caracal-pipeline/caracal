@@ -20,7 +20,7 @@ mapping:
         example: 'DD'
      use_pb:
         type: bool
-        desc: Enable primary beam usage (only MeerKAT for the moment)
+        desc: Enable primary beam usage (only MeerKAT for the moment). DO NOT USE.
         required: False
         example: 'False' 
 
@@ -99,9 +99,8 @@ mapping:
            required: false
            example: 'auto'
          de_sources_manual:
-           seq:
-              - type: str
-           desc: List of sources to tag for DD calibration. In "RA(deg), DEC(deg), FLux Density(Jy)" format.
+           type: str
+           desc: List of sources to tag for DD calibration. In "RA(hms), DEC(dms), Size(arcsec)" format, e.g. "14h00m00.0s, -35d00m00s, 80.0".
            required: false
            example: ""
          sol_min_bl:

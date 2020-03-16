@@ -6,6 +6,10 @@ import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
+from astropy.coordinates import Angle, SkyCoord
+from astropy import units as u 
+import astropy.wcs as wcs
+from regions import PixCoord, write_ds9, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
 NAME = 'Direction-dependent Calibration'
@@ -134,26 +138,46 @@ def worker(pipeline, recipe, config):
            meerkathi.log.info('Carrying out automatic dE tagging')
 
            catdagger_opts = {
-           "noise-map" : prefix+"-DD-precal.app.residual.fits",
-           "psf-image" : prefix+"-DD-precal.psf.fits",
-           "input-lsm" : "DDF_lsm.lsm.html",
+            "ds9-reg-file": "de.reg:output",
+            "ds9-tag-reg-file" : "de-clusterleads.reg:output",
+            "noise-map" : prefix+"-DD-precal.app.residual.fits",
+        #   "psf-image" : prefix+"-DD-precal.psf.fits",
+        #   "input-lsm" : "DDF_lsm.lsm.html",
            #"remove-tagged-dE-components-from-model-images": model_cube,
-           "only-dEs-in-lsm" : True,
+        #   "only-dEs-in-lsm" : True,
            "sigma" : config[key].get('sigma'),
-           "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre', 1300),
+           "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
            }
 
            recipe.add('cab/catdagger', 'tag_sources_auto_mode', catdagger_opts,input=INPUT,
               output=OUTPUT,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
-
-
-
+        if de_sources_mode == 'manual':
+           img = prefix+"-DD-precal.app.restored.fits"
+           imagefile = os.path.join(pipeline.output,img)
+           w = WCS(imagefile)
+           coords =  config[key].get('de_sources_manual')
+           size = coords.split(",")[2]
+           coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
+           centre = SkyCoord(coords, unit='deg') 
+           separation = size * u.arcsec 
+           xlist = []
+           ylist = []
+           for i in range(5):
+              ang_sep = (306/5)*i*u.deg
+              p = centre.directional_offset_by(ang_sep,separation) 
+              pix = PixCoord.from_sky(p,w)
+              xlist.append(pix.x)
+              ylist.append(pix.y)
+           vertices = PixCoord(x=xlist, y=ylist)
+           reg = PolygonPixelRegion(vertices=vertices)
+           ds9_file = os.join(pipeline.output,'de.reg')
+           write_ds9([reg],ds9_file,coordsys='physical') 
 
     def dd_calibrate():
         key = 'calibrate_dd'
         dicomod = prefix+"-DD-precal.DicoModel"
         #dereg = "dE.reg"
-        dereg = "test2.reg"
+        dereg = "test_polygon.reg"
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'dd_calibrate_{0:s}'.format(mspref)
@@ -222,7 +246,7 @@ def worker(pipeline, recipe, config):
     #    make_primary_beam()
     #dd_precal_image()
     #sfind_intrinsic()
-    #dagga()
-    dd_calibrate()
-    dd_postcal_image()
+    dagga()
+#    dd_calibrate()
+#    dd_postcal_image()
 

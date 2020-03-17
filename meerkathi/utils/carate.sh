@@ -84,6 +84,14 @@ do
     then
         OR=1
     fi
+    if [[ "$arg" == "--keep-stimeladir" ]] || [[ "$arg" == "-ks" ]]
+    then
+        KS=1
+    fi
+    if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
+    then
+        PD=1
+    fi
     if [[ "$arg" == "--workspace" ]] || [[ "$arg" == "-ws" ]]
     then
         (( nextcount=argcount+1 ))
@@ -221,6 +229,12 @@ then
     echo "  --singularity_extended -se          Test Singularity installation and test run"
     echo "                                      with extended configuration"
     echo ""
+    echo "  --keep_stimeladir -ks               Keep the content of .stimela if it exists,"
+    echo "                                      delete when switch not set"
+    echo ""
+    echo "  --pull_docker -pd                   run stimela pull -d before stimela build"
+    echo "                                      omit the step when switch is not set"
+    echo ""
     echo "  --singularity_installation -si      Test Singularity installation"              
     echo ""
     echo "  --singularity_root -sr              Install Singularity images in global"
@@ -301,6 +315,13 @@ then
     echo "    --docker_installation, -di are set, home/.stimela is removed, docker"
     echo "    system prune is invoked, and docker stimela is installed (stimela"
     echo "    build)"
+    echo ""
+    echo "  - when switches --keep_stimeladir, -ks are set, the .stimela directory"
+    echo "    is not emptied if it exists."
+    echo ""
+    echo "  - when switches --pull_docker, -pd are set, stimela pull -d is invoked"
+    echo "    before running stimela build for Docker installation, omit step"
+    echo "    otherwise"
     echo ""
     echo "  - when switches --singularity_minimal, -sm, --singularity_extended,"
     echo "    -se, --singularity_installation, -si are set, home/.stimela is"
@@ -503,7 +524,7 @@ echo
 [[ -e $CARATE_WORKSPACE ]] || echo "The workspace directory $CARATE_WORKSPACE does not yet exist."
 
 # Create workspace
-[[ "${SS}" == "/dev/null" ]] || echo "workspace_root=\${workspace}\${caracal_test_id}" >> ${SS}
+[[ "${SS}" == "/dev/null" ]] || echo "workspace_root=\${workspace}/\${caracal_test_id}" >> ${SS}
 WORKSPACE_ROOT="$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
 
 # Variable defininition ends here in script
@@ -737,16 +758,22 @@ then
         echo "Installing Stimela (Docker)"
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+       if [[ -z $KS ]]
+       then
+           [[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
 ####==
-        rm -f ${HOME}/.stimela/*
+           rm -f ${HOME}/.stimela/*
+       fi
        echo "Running $docker system prune"
        [[ "${SS}" == "/dev/null" ]] || echo "docker system prune" >> ${SS}
 ####==
        docker system prune
-       [[ "${SS}" == "/dev/null" ]] || echo "stimela pull -d" >> ${SS}
+       if [[ -n $PD ]]
+       then
+	   [[ "${SS}" == "/dev/null" ]] || echo "stimela pull -d" >> ${SS}
 ####==
-       stimela pull -d
+           stimela pull -d
+       fi
        [[ "${SS}" == "/dev/null" ]] || echo "stimela build" >> ${SS}
 ####==
        stimela build

@@ -33,6 +33,11 @@ mapping:
             type: bool
             required: false
             example: 'True'
+          field:
+            desc: Select field(s) to be splitted
+            type: str
+            required: false
+            example: 'target'
           time_average:
             desc: Time averaging
             type: str

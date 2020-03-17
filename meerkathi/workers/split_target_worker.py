@@ -6,6 +6,7 @@ import getpass
 import stimela.recipe as stimela
 import re
 import json
+import numpy as np
 from meerkathi.dispatch_crew import utils
 from meerkathi.workers.utils import manage_flagsets
 from meerkathi.workers.utils import manage_fields as manfields
@@ -74,9 +75,15 @@ def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
 
-        target_ls = pipeline.target[i]
-        prefix = pipeline.prefixes[i]
-        msname = pipeline.msnames[i][:-3]
+        if config['split_target']['field'] == 'target':
+            target_ls = pipeline.target[i]
+            prefix = pipeline.prefixes[i]
+            msname = pipeline.msnames[i][:-3]
+        else:
+           calfields = []
+           for fd in ['fcal','bpcal','gcal']:
+              calfields.append(getattr(pipeline, fd)[i][0])
+           target_ls = [','.join(np.unique(np.array(calfields))),]
 
         # write calibration library file for OTF cal in split_target_worker.py
         if pipeline.enable_task(config['split_target'], 'otfcal'):
@@ -115,8 +122,10 @@ def worker(pipeline, recipe, config):
             field = utils.filter_name(target)
             fms = [pipeline.hires_msnames[i] if label_in ==
                    '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label_in)]
-            tms = '{0:s}-{1:s}_{2:s}.ms'.format(
-                pipeline.msnames[i][:-3], field, label_out)
+            if config['split_target']['field'] == 'target':
+                tms = '{0:s}-{1:s}_{2:s}.ms'.format(
+                       pipeline.msnames[i][:-3], field, label_out)
+            else: tms = '{0:s}_cal.ms'.format(pipeline.msnames[i][:-3])
 
             flagv = tms+'.flagversions'
 
@@ -173,8 +182,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs')):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.txt'.format(
-                            pipeline.dataid[i], field, label_out)
+                        listfile = '{0:s}-obsinfo.txt'.format(tms[:-3])
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
 
@@ -191,8 +199,7 @@ def worker(pipeline, recipe, config):
 
                 if (config['obsinfo'].get('summary_json')):
                     if pipeline.enable_task(config, 'split_target'):
-                        listfile = '{0:s}-{1:s}_{2:s}-obsinfo.json'.format(
-                            pipeline.dataid[i], field, label_out)
+                        listfile = '{0:s}-obsinfo.json'.format(tms[:-3])
                     else:
                         listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
 

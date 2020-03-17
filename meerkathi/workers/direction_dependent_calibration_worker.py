@@ -1,4 +1,4 @@
-import os, shutil, glob
+import os, shutil, glob, copy
 import sys
 import yaml
 import json
@@ -8,7 +8,7 @@ from meerkathi.dispatch_crew import utils
 from astropy.io import fits as fits
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u 
-import astropy.wcs as wcs
+from astropy.wcs import WCS 
 from regions import PixCoord, write_ds9, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
@@ -32,9 +32,14 @@ def worker(pipeline, recipe, config):
     hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
     INPUT=pipeline.input
-    OUTPUT=pipeline.output
+    DD_DIR = "3GC"
+    OUTPUT=pipeline.output+"/"+DD_DIR
     DDF_LSM = "DDF_lsm.lsm.html"
-    
+    all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
+        pipeline.target, pipeline.msnames, label)
+    print("All_targes", all_targets)
+    print("All_msfiles", all_msfile)
+    print("ms_dict",ms_dict)
     dd_image_opts = {
         "Data-MS"        : mslist,
         "Data-ColName"   : "DATA",
@@ -42,7 +47,7 @@ def worker(pipeline, recipe, config):
         "Output-Mode"           : "Clean",
         #"Output-Cubes"          : 'all',
         "Output-Name"    : prefix+"-DD-precal",
-        "Output-Images"  : 'all',
+        "Output-Images"  : 'dmcri',
         "Image-NPix"     : npix,
         "Image-Cell"     : cell,
         "Facets-NFacets" : 17,
@@ -79,54 +84,65 @@ def worker(pipeline, recipe, config):
         output=OUTPUT,
         label="make_primary_beam:: Generate beams from Eidos",)
 
-    def dd_precal_image():
-        recipe.add("cab/ddfacet", "ddf_image_1", dd_image_opts,
+    def dd_precal_image(field,ms_list):
+        dd_image_opts_precal = copy.deepcopy(dd_image_opts)
+        image_prefix_precal = prefix+"_"+field
+        dd_ms_list = {"Data-MS" : ms_list}
+        dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
+        dd_image_opts_precal.update(dd_imagename)
+        dd_image_opts_precal.update(dd_ms_list)
+        recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
         input=INPUT,
         output=OUTPUT,
-        shared_memory="500g",
-        label="ddf:: Primary beam corrected image")
-
-    def dd_postcal_image():
-        dd_imagename = {"Output-Name": prefix+"-DD-postcal"}
+        shared_memory="500gb",
+        label="ddf_image_{0:s}:: Primary beam corrected image".format(field))
+        recipe.run()
+        recipe.jobs = []
+    def dd_postcal_image(field,mslist):
+        dd_image_opts_postcal = copy.deepcopy(dd_image_opts)
+        image_prefix_postcal = prefix+"_"+field
+        dd_ms_list = {"Data-MS" : ms_list}
+        dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
-        dd_image_opts.update(dd_imagename)
-        dd_image_opts.update(dd_imagecol)
+        dd_image_opts_postcal.update(dd_ms_list)
+        dd_image_opts_postcal.update(dd_imagename)
+        dd_image_opts_postcal.update(dd_imagecol)
 
-        recipe.add("cab/ddfacet", "ddf_image_1", dd_image_opts,
+        recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_postcal,
         input=INPUT,
         output=OUTPUT,
-        label="ddf:: Primary beam corrected image",
-        shared_memory="400gb")
+        label="ddf_image_{0:s}:: Primary beam corrected image".format(field),
+        shared_memory="500gb")
 
-    def sfind_intrinsic():
-        DDF_INT_IMAGE = prefix+"-DD-precal.int.restored.fits:output"
-        DDF_APP_IMAGE = prefix+"-DD-precal.app.restored.fits:output"
-        if usepb:
-           main_image = DDF_INT_IMAGE
-        else:
-           main_image = DDF_APP_IMAGE
+#    def sfind_intrinsic():
+#        DDF_INT_IMAGE = prefix+"-DD-precal.int.restored.fits:output"
+#        DDF_APP_IMAGE = prefix+"-DD-precal.app.restored.fits:output"
+#        if usepb:
+#           main_image = DDF_INT_IMAGE
+#        else:
+#           main_image = DDF_APP_IMAGE
+#
+#        recipe.add("cab/pybdsm", "intrinsic_sky_model",{
+#          "filename" : main_image,
+#          "outfile"  : "DDF_lsm",
+#          "detection_image" : DDF_APP_IMAGE,
+#          "thresh_pix"        : 100,
+#          "clobber"           : True,
+#          "thresh_isl"        : 30,
+#          "port2tigger"       : True,
+#          "clobber"           : True,
+#          "adaptive_rms_box"  : True,
+#          "spectralindex_do"  : False,
+#          },
+#          input=INPUT,
+#          output=OUTPUT,
+#          label="intrinsic_sky_model:: Find sources in the beam-corrected image")
 
-        recipe.add("cab/pybdsm", "intrinsic_sky_model",{
-          "filename" : main_image,
-          "outfile"  : "DDF_lsm",
-          "detection_image" : DDF_APP_IMAGE,
-          "thresh_pix"        : 100,
-          "clobber"           : True,
-          "thresh_isl"        : 30,
-          "port2tigger"       : True,
-          "clobber"           : True,
-          "adaptive_rms_box"  : True,
-          "spectralindex_do"  : False,
-          },
-          input=INPUT,
-          output=OUTPUT,
-          label="intrinsic_sky_model:: Find sources in the beam-corrected image")
-
-    def dagga():
+    def dagga(field):
         "function to tag sources for dd calibration, very smoky"
         key = 'calibrate_dd'
         #make a skymodel with only dE taggable sources.
-        de_only_model = 'de-only-model.txt'
+        #de_only_model = 'de-only-model.txt'
         de_sources_mode = config[key].get('de_sources_mode', 'auto')
         print("de_sources_mode:", de_sources_mode)
        # if usepb:
@@ -138,28 +154,28 @@ def worker(pipeline, recipe, config):
            meerkathi.log.info('Carrying out automatic dE tagging')
 
            catdagger_opts = {
-            "ds9-reg-file": "de.reg:output",
-            "ds9-tag-reg-file" : "de-clusterleads.reg:output",
-            "noise-map" : prefix+"-DD-precal.app.residual.fits",
-        #   "psf-image" : prefix+"-DD-precal.psf.fits",
-        #   "input-lsm" : "DDF_lsm.lsm.html",
-           #"remove-tagged-dE-components-from-model-images": model_cube,
-        #   "only-dEs-in-lsm" : True,
-           "sigma" : config[key].get('sigma'),
-           "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
+            "ds9-reg-file": "de-{0:s}.reg:output".format(field),
+            "ds9-tag-reg-file" : "de-clusterleads-{0:s}.reg:output".format(field),
+            "noise-map" : prefix+"_"+field+"-DD-precal.app.residual.fits",
+            "sigma" : config[key].get('sigma'),
+            "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
            }
 
            recipe.add('cab/catdagger', 'tag_sources_auto_mode', catdagger_opts,input=INPUT,
               output=OUTPUT,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
         if de_sources_mode == 'manual':
-           img = prefix+"-DD-precal.app.restored.fits"
-           imagefile = os.path.join(pipeline.output,img)
+           img = prefix+"_"+field+"-DD-precal.app.restored.fits"
+           imagefile = os.path.join(pipeline.output,DD_DIR,img)
+           print("Imagefile",imagefile)
+           print("Pipeline output", pipeline.output)
            w = WCS(imagefile)
            coords =  config[key].get('de_sources_manual')
            size = coords.split(",")[2]
            coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
-           centre = SkyCoord(coords, unit='deg') 
-           separation = size * u.arcsec 
+           print("Coordinate String", coords_str)
+           centre = SkyCoord(coords_str, unit='deg') 
+           separation = int(size) * u.arcsec 
+           print("Size",separation)
            xlist = []
            ylist = []
            for i in range(5):
@@ -170,17 +186,17 @@ def worker(pipeline, recipe, config):
               ylist.append(pix.y)
            vertices = PixCoord(x=xlist, y=ylist)
            reg = PolygonPixelRegion(vertices=vertices)
-           ds9_file = os.join(pipeline.output,'de.reg')
+           regfile = "de-{0:s}.reg".format(field)
+           ds9_file = os.path.join(OUTPUT,DD_DIR,regfile)
            write_ds9([reg],ds9_file,coordsys='physical') 
 
-    def dd_calibrate():
+    def dd_calibrate(field,mslist):
         key = 'calibrate_dd'
-        dicomod = prefix+"-DD-precal.DicoModel"
-        #dereg = "dE.reg"
-        dereg = "test_polygon.reg"
+        dicomod = prefix+"_"+field+"-DD-precal.DicoModel"
+        dereg = "de-{0:s}.reg".format(field)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'dd_calibrate_{0:s}'.format(mspref)
+           step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
               "data-column"       : "DATA",
@@ -240,13 +256,17 @@ def worker(pipeline, recipe, config):
                input=INPUT,
                output=OUTPUT,
                shared_memory="400gb",
-               label='dd_calibrate_{0:s}:: Carry out DD calibration'.format(mspref))
-     
+               label='dd_calibrate_{0:s}_{1:s}:: Carry out DD calibration'.format(mspref,field))
+    
+    for target in all_targets:
+       mslist = ms_dict[target]
+       field = utils.filter_name(target)
+ 
     #if usepb:
     #    make_primary_beam()
-    #dd_precal_image()
+       dd_precal_image(field,mslist)
     #sfind_intrinsic()
-    dagga()
-#    dd_calibrate()
-#    dd_postcal_image()
+       dagga(field)
+       dd_calibrate(field,mslist)
+       dd_postcal_image(field,mslist)
 

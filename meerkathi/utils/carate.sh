@@ -737,9 +737,9 @@ then
         echo "Installing Stimela (Docker)"
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-#	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
 ####==
-#        rm -f ${HOME}/.stimela/*
+        rm -f ${HOME}/.stimela/*
        echo "Running $docker system prune"
        [[ "${SS}" == "/dev/null" ]] || echo "docker system prune" >> ${SS}
 ####==
@@ -954,9 +954,9 @@ then
         echo "# Installing Stimela images (Singularity) #"
         echo "###########################################"
         echo
-#	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
 	####==
-#        rm -f ${HOME}/.stimela/*
+        rm -f ${HOME}/.stimela/*
 	[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p ${singularity_locstring}"
 	mkdir -p ${singularity_loc}
 	echo stimela pull --singularity -f --pull-folder ${singularity_loc}

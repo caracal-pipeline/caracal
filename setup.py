@@ -8,31 +8,25 @@ except ImportError as e:
     from distutils.core import setup
 
 requirements = [
-    'ruamel.yaml>=0.16.6',
-    'decorator>=4.4.1',
-    'numpy>=1.18.1',
-    'stimela @ git+https://github.com/SpheMakh/Stimela',
-    'scipy>=1.4.1',
-    'pysolr>=3.8.1',
-    'progressbar2>=3.47.0',
-    'pykwalify>=1.7.0',
-    'yamlordereddictloader>=0.4.0',
-    'astroquery>=0.4',
-    'npyscreen>=4.10.5',
-    'ipdb>=0.12.3',
+    'ruamel.yaml',
+    'decorator',
+    'numpy',
+    'stimela @ git+https://github.com/ratt-ru/Stimela',
+    'scipy',
+    'astropy',
+    'matplotlib',
+    'pykwalify',
+    'yamlordereddictloader',
+    'astroquery',
+    'npyscreen',
+    'ipdb',
+    'aplpy',
+    'pandas',
+    'nbconvert',
 ]
 
-# these are only there for diagnostics, make them optional
-beta = [
-    'python-casacore>=3.2.0',
-    'astropy>=3.2.3',
-    'matplotlib>=3.0.3',
-    'tornado>=4.0.0',
-    'jupyter>=1.0.0',
-    'aplpy>=2.0.3',
-    'pandas>=0.24.2',
-    'nbconvert>=5.6.1',
-]
+# these are only there for development, make them optional
+devel = []
 
 PACKAGE_NAME = 'meerkathi'
 __version__ = '0.2.0'
@@ -46,7 +40,7 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       install_requires=requirements,
       extras_require={
-          'beta': beta,
+          'devel': devel,
           'testing': 'pytest'
       },
       include_package_data=True,

@@ -65,7 +65,9 @@ self_cal:
   calibrate:
     enable: true
     Gsols_time: [120]
-
+  transfer_model:
+    enable: true
+    num_workers: 12
 
 image_line:
   enable: true

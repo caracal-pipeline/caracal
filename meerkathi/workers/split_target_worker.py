@@ -83,7 +83,8 @@ def worker(pipeline, recipe, config):
         else:
            calfields = []
            for fd in ['fcal','bpcal','gcal']:
-              calfields.append(getattr(pipeline, fd)[i][0])
+               for elem in getattr(pipeline, fd)[i]:
+                   calfields.append(elem)
            target_ls = [','.join(np.unique(np.array(calfields))),]
 
         # write calibration library file for OTF cal in split_target_worker.py

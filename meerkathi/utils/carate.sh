@@ -4,9 +4,9 @@ set -e
 
 # Preamble
 printf "\n"
-printf "###########################\n"
-printf "# Testing CARACal at home #\n"
-printf "###########################\n"
+printf "#########################\n"
+printf " Testing CARACal at home \n"
+printf "#########################\n"
 
 echo "carate.sh $*"
 echo
@@ -38,9 +38,9 @@ do
     then
         DM=1
     fi
-    if [[ "$arg" == "--docker_extended" ]] || [[ "$arg" == "-de" ]]
+    if [[ "$arg" == "--docker_alternative" ]] || [[ "$arg" == "-da" ]]
     then
-        DE=1
+        DA=1
     fi
     if [[ "$arg" == "--docker_installation" ]] || [[ "$arg" == "-di" ]]
     then
@@ -50,9 +50,9 @@ do
     then
         SM=1
     fi
-    if [[ "$arg" == "--singularity_extended" ]] || [[ "$arg" == "-se" ]]
+    if [[ "$arg" == "--singularity_alternative" ]] || [[ "$arg" == "-sa" ]]
     then
-        SE=1
+        SA=1
     fi
     if [[ "$arg" == "--singularity_installation" ]] || [[ "$arg" == "-si" ]]
     then
@@ -79,6 +79,10 @@ do
     if [[ "$arg" == "--force" ]] || [[ "$arg" == "-f" ]]
     then
         FORCE=1
+    fi
+    if [[ "$arg" == "--fastsim" ]] || [[ "$arg" == "-fs" ]]
+    then
+        FS=1
     fi
     if [[ "$arg" == "--override" ]] || [[ "$arg" == "-or" ]]
     then
@@ -190,7 +194,7 @@ then
     echo ""
     echo "  CARATE_CONFIG_SOURCE:        Local configuration file copy to use for an" 
     echo "                               additional test"
-    echo
+    echo ""
     echo "Switches:"
     echo ""
     echo "  --help -h                           Show help"
@@ -218,16 +222,16 @@ then
     echo "  --docker_minimal -dm                Test Docker installation and test run with"
     echo "                                      minimal configuration"
     echo ""
-    echo "  --docker_extended -de               Test Docker installation and test run with"
-    echo "                                      extended configuration"
+    echo "  --docker_alternative -da            Test Docker installation and test run with"
+    echo "                                      alternative configuration carateConfig.yml"
     echo ""
     echo "  --docker_installation -di           Test Docker installation"                                         
     echo ""
     echo "  --singularity_minimal -sm           Test Singularity installation and test run"
     echo "                                      with minimal configuration"
     echo ""
-    echo "  --singularity_extended -se          Test Singularity installation and test run"
-    echo "                                      with extended configuration"
+    echo "  --singularity_alternative -sa       Test Singularity installation and test run"
+    echo "                                      alternative configuration carateConfig.yml"
     echo ""
     echo "  --keep_stimeladir -ks               Keep the content of .stimela if it exists,"
     echo "                                      delete when switch not set"
@@ -254,6 +258,9 @@ then
     echo "  --force -f                          Force replacement and re-installation of" 
     echo "                                      all components (you will probably want" 
     echo "                                      that)"
+    echo ""
+    echo "  --fastsim -fs                       Omit all time-consuming steps" 
+    echo ""
     echo "  --override -or                      Override security question (showing root"
     echo "                                      directory and asking whether to proceed.)"
     echo "  --small-script -ss                  Generate a small script"
@@ -454,9 +461,9 @@ then
     kill "$PPID"; exit 0;
 fi
 
-printf "############\n"
-printf "# Starting #\n"
-printf "############\n"
+printf "##########\n"
+printf " Starting \n"
+printf "##########\n"
 printf "\n"
 
 # Environment variables
@@ -510,14 +517,14 @@ if [[ -n "$CARATE_CONFIG_SOURCE" ]]
 then
     [[ "${SS}" == "/dev/null" ]] || echo "config_source=${CARATE_CONFIG_SOURCE}" >> ${SS}
 else
-    printf "The variable CARATE_CONFIG_SOURCE is not set, meaning that no CARACal\n"
+    printf "The variable CARATE_CONFIG_SOURCE is not set and switches"
+    printf "config-source and -cs are not used meaning that no CARACal\n"
     printf "test will be made on own supplied configuration.\n\n"
 fi
 
 # Start test
-echo
 echo "##########################################"
-echo "CARACal test $CARATE_CARACAL_TEST_ID"
+echo " CARACal test $CARATE_CARACAL_TEST_ID"
 echo "##########################################"
 echo
 
@@ -526,6 +533,30 @@ echo
 # Create workspace
 [[ "${SS}" == "/dev/null" ]] || echo "workspace_root=\${workspace}/\${caracal_test_id}" >> ${SS}
 WORKSPACE_ROOT="$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
+
+# Save home for later 
+if [[ -n $HOME ]]
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "HOME_OLD=\${HOME}" >> ${SS}
+    HOME_OLD=${HOME}
+fi
+if [[ -n ${PYTHONPATH} ]]
+then
+    [[ "${SS}" == "/dev/null" ]] || echo "PYTHONPATH_OLD=\${PYTHONPATH}" >> ${SS}
+    PYTHONPATH_OLD=${PYTHONPATH}
+fi
+
+# This ensures that when stopping, the $HOME environment variable is restored
+function cleanup {
+  [[ "${SS}" == "/dev/null" ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
+  export HOME=${OLD_HOME}
+  if [[ -n ${PYTHONPATH_OLD} ]]
+  then
+       [[ "${SS}" == "/dev/null" ]] || echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
+       export PYTHONPATH=${PYTHONPATH_OLD}
+  fi
+}
+trap cleanup EXIT
 
 # Variable defininition ends here in script
 [[ "${SS}" == "/dev/null" ]] || echo "" >> ${SS}
@@ -550,32 +581,19 @@ if (( $FORCE==0 ))
 then
     if [[ -d $WORKSPACE_ROOT ]]
     then
- echo "Be aware that no existing file will be replaced, use -f to override"
- echo
+        echo "Be aware that no existing file will be replaced, use -f to override"
+        echo
     fi
 fi
 
 echo "##########################################"
-echo "Setting up build in $WORKSPACE_ROOT"
+echo " Setting up build in $WORKSPACE_ROOT"
 echo "##########################################"
 echo
 
 #(( $FORCE==0 )) || { rm -rf $WORKSPACE_ROOT; }
 [[ "${SS}" == "/dev/null" ]] || echo "mkdir -p \${workspace_root}" >> ${SS}
 mkdir -p $WORKSPACE_ROOT
-
-# Save home for later 
-if [[ -n $HOME ]]
-then
-    OLD_HOME=$HOME
-fi
-
-# This ensures that when stopping, the $HOME environment variable is restored
-function cleanup {
-  [[ "${SS}" == "/dev/null" ]] || echo "export HOME=$OLD_HOME" >> ${SS}
-  export HOME=$OLD_HOME
-}
-trap cleanup EXIT
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
 then
@@ -590,7 +608,7 @@ then
 fi
 
 # Search for test data and set variable accordingly
-if [[ -n $DM ]] || [[ -n $DE ]] || [[ -n $SM ]] || [[ -n $SE ]] 
+if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $SM ]] || [[ -n $SA ]] 
 then
     if [[ -e $CARATE_TEST_DATA_DIR ]]
     then
@@ -614,8 +632,7 @@ export HOME=$WORKSPACE_ROOT/home
 if (( $FORCE != 0 ))
 then
     [[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${HOME}" >> ${SS}
-    ####==
-    rm -rf ${HOME}
+    [[ -n ${FS} ]] || rm -rf ${HOME}
 fi
 
 [[ "${SS}" == "/dev/null" ]] || echo "mkdir -p \${HOME}" >> ${SS}
@@ -626,53 +643,50 @@ mkdir -p $HOME
 cd $HOME
 
 # Create virtualenv and start
-echo
 echo "##########################################"
-echo "Building virtualenv in $WORKSPACE_ROOT"
+echo " Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
 echo
 if (( $FORCE != 0 ))
 then
     [[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${workspace_root}/caracal_venv" >> ${SS}
-####==
-    rm -rf ${WORKSPACE_ROOT}/caracal_venv
+    [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/caracal_venv
 fi
 if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
 then
     [[ "${SS}" == "/dev/null" ]] || echo "virtualenv -p python3 \${workspace_root}/caracal_venv" >> ${SS}
-    virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv
+    [[ -n ${FS} ]] || virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv
 fi
 
 echo "Entering virtualenv in $WORKSPACE_ROOT"
-[[ "${SS}" == "/dev/null" ]] || echo ". \${workspace_root}/caracal_venv/bin/activate"  >> ${SS}
-. ${WORKSPACE_ROOT}/caracal_venv/bin/activate
+[[ "${SS}" == "/dev/null" ]] || echo ". \${workspace_root}/caracal_venv/bin/activate" >> ${SS}
+[[ -n ${FS} ]] || . ${WORKSPACE_ROOT}/caracal_venv/bin/activate
+[[ "${SS}" == "/dev/null" ]] || echo "export PYTHONPATH=''" >> ${SS}
+export PYTHONPATH=''
 [[ "${SS}" == "/dev/null" ]] || echo "pip install pip setuptools wheel -U"  >> ${SS}
-####==
-pip install pip setuptools wheel -U
+[[ -n ${FS} ]] || pip install pip setuptools wheel -U
 
 # Install software
 echo
-echo "##########################################"
-echo "Fetching CARACal"
-echo "##########################################"
+echo "##################"
+echo " Fetching CARACal "
+echo "##################"
 echo
 if (( $FORCE==1 ))
 then
     [[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
-####==
-    rm -rf ${WORKSPACE_ROOT}/meerkathi
+    [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/meerkathi
 fi
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
- echo "Not re-fetching MeerKATHI, use -f if you want that."
+        echo "Not re-fetching MeerKATHI, use -f if you want that."
     else
-[[ "${SS}" == "/dev/null" ]] || echo "cp -r \${local_source} \${workspace_root}/"  >> ${SS}
-	####==
-        cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
- true
+	echo "Fetching CARACal from local source ${local_source}"
+        [[ "${SS}" == "/dev/null" ]] || echo "cp -r \${local_source} \${workspace_root}/"  >> ${SS}
+	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
     fi
 else
     [[ "${SS}" == "/dev/null" ]] || echo "cd \${workspace_root}"  >> ${SS}
@@ -680,21 +694,20 @@ else
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
         if (( $FORCE==0 ))
-            then
-                echo "Not re-fetching MeerKATHI, use -f if you want that."
-            else
-		[[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
-		####==
-                rm -rf ${WORKSPACE_ROOT}/meerkathi
+        then	    
+            echo "Not re-fetching MeerKATHI, use -f if you want that."
+        else
+	    echo "Fetching MeerKATHI from https://github.com/ska-sa/meerkathi.git"
+	    [[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
+	    [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/meerkathi
 
-[[ "${SS}" == "/dev/null" ]] || echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
-####==
-                git clone https://github.com/ska-sa/meerkathi.git
-            fi
+            [[ "${SS}" == "/dev/null" ]] || echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
+            [[ -n ${FS} ]] || git clone https://github.com/ska-sa/meerkathi.git
+        fi
     else
+	echo "Fetching MeerKATHI from https://github.com/ska-sa/meerkathi.git"
 	[[ "${SS}" == "/dev/null" ]] || echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
-	####==
-        git clone https://github.com/ska-sa/meerkathi.git
+	[[ -n ${FS} ]] || git clone https://github.com/ska-sa/meerkathi.git
     fi
 fi
 
@@ -712,26 +725,24 @@ then
     git checkout ${CARATE_CARACAL_BUILD_NUMBER}
 fi
           
-echo
-echo "##########################################"
-echo "Installing CARACal"
-echo "##########################################"
+echo "####################"
+echo " Installing CARACal "
+echo "####################"
 echo
 
 #PATH=${WORKSPACE}/projects/pyenv/bin:$PATH
 #LD_LIBRARY_PATH=${WORKSPACE}/projects/pyenv/lib:$LD_LIBRARY_PATH
+echo "Installing CARACal using pip install"
 [[ "${SS}" == "/dev/null" ]] || echo "pip install -U --force-reinstall \${workspace_root}/meerkathi[devel]" >> ${SS}
-####==
-pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi\[devel\]
+[[ -n ${FS} ]] || pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi\[devel\]
 if [[ -n $UR ]]
 then
     echo "Intstalling requirements.txt"
     [[ "${SS}" == "/dev/null" ]] || echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/requirements.txt" >> ${SS}
-    ####==
-    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt
+    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/requirements.txt
 fi
 
-if [[ -z $DM ]] && [[ -z $DE ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SE ]] && [[ -z $SI ]]
+if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]]
 then
     echo "You have not defined a test:"
     echo "--docker_minimal or -dm"
@@ -744,40 +755,40 @@ then
     kill "$PPID"; exit 0
 fi
 
-if [[ -n $DM ]] || [[ -n $DE ]] || [[ -n $DI ]]
+if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]]
 then
     if [[ -n $ORSR ]]
     then
         echo "Omitting re-installation of Stimela Docker images"
     else
         echo
-        echo "#####################################"
-        echo "# Installing Stimela Docker images" #
-        echo "#####################################"
+        echo "##################################"
+        echo " Installing Stimela Docker images "
+        echo "##################################"
         echo
         echo "Installing Stimela (Docker)"
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
        if [[ -z $KS ]]
        then
+	   echo "Removing \${HOME}/.stimela/*"
            [[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-####==
-           rm -f ${HOME}/.stimela/*
+           [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
        fi
-       echo "Running $docker system prune"
+       echo "Running docker system prune"
        [[ "${SS}" == "/dev/null" ]] || echo "docker system prune" >> ${SS}
-####==
-       docker system prune
+       [[ -n ${FS} ]] || docker system prune
        if [[ -n $PD ]]
        then
+	   echo "Running stimela pull -d"
 	   [[ "${SS}" == "/dev/null" ]] || echo "stimela pull -d" >> ${SS}
-####==
-           stimela pull -d
+           [[ -n ${FS} ]] || stimela pull -d
        fi
+       echo "Running stimela build"
        [[ "${SS}" == "/dev/null" ]] || echo "stimela build" >> ${SS}
-####==
-       stimela build
+       [[ -n ${FS} ]] || stimela build
     fi
+    echo ""
 fi
 testingoutput () {
     
@@ -788,17 +799,16 @@ testingoutput () {
     # Argument 4: If set, check for success in the file changed before log-meerkathi.txt was last changed
 
     echo
-    echo "#####################"
-    echo "# Checking logfiles #"
-    echo "#####################"
+    echo "###################"
+    echo " Checking logfiles "
+    echo "###################"
     echo 
     echo "Checking logfiles in directory ${1}/${2}"
     echo "Will return error if $3 files do not report success in the last two lines"
 #    [[ -z $4 ]] || echo "Will also return error if no success is reported in the file"
     #    [[ -z $4 ]] || echo "changed before log-meerkathi.txt was last changed"
     allogs=""
-####==
-    allogs=`ls -t ${1}/${2}/output/logs/`
+    [[ -n ${FS} ]] || allogs=`ls -t ${1}/${2}/output/logs/`
     total=0
     failed=0
 
@@ -859,10 +869,9 @@ runtest () {
     local configlocationstring=$8
     local caracalswitches=$9
 
-    echo
-    echo "##########################"
-    echo "$greetings_line "
-    echo "##########################"
+    echo "##########################################"
+    echo " $greetings_line "
+    echo "##########################################"
     echo
 
     # echo 1 greetings_line  $1
@@ -882,28 +891,23 @@ runtest () {
         echo "and use old results. Use -f to override."
     else
 	[[ "${SS}" == "/dev/null" ]] || echo "rm -rf \${workspace_root}/test_${configfilename}_${contarch}" >> ${SS}
-####==
-        rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
+        [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
 	[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p \${workspace_root}/test_${configfilename}_${contarch}/msdir" >> ${SS}
         mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir
         [[ "${SS}" == "/dev/null" ]] || echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}
-	####==
-	
-        sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
+	[[ -n ${FS} ]] || sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
 	[[ "${SS}" == "/dev/null" ]] || echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/test_${configfilename}_${contarch}/msdir/" >> ${SS}
-	####==
-        cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/
-        echo "Running extended ${contarch} test (using ${configfilename}.yml)"
+	[[ -n ${FS} ]] || cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/
+        echo "Running ${contarch} test (using ${configfilename}.yml)"
 	[[ "${SS}" == "/dev/null" ]] || echo "cd \${workspace_root}/test_${configfilename}_${contarch}" >> ${SS}
         cd ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
         # Notice that currently all output will be false, such that || true is required to ignore this
 	failed=0
 	echo 	meerkathi -c ${configfilename}.yml ${caracalswitches} || true
 	[[ "${SS}" == "/dev/null" ]] || echo "meerkathi -c ${configfilename}.yml ${caracalswitches}" >> ${SS}
-	####==
-	meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; echo "CARACal run returned an error."; failedrun=1; }
+	[[ -n ${FS} ]] || meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; echo "CARACal run returned an error."; failedrun=1; }
     fi
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
@@ -912,13 +916,14 @@ runtest () {
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
         echo
-        echo "######################"
-        echo "# carate test failed #"
-        echo "######################"
+        echo "####################"
+        echo " carate test failed "
+        echo "####################"
         echo 
         kill "$PPID"
         exit 1
     fi
+    echo ""
 }
 
 if [[ -n $DM ]]
@@ -930,10 +935,10 @@ then
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\{workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
 fi
 
-if [[ -n $DE ]]
+if [[ -n $DA ]]
 then
-    greetings_line="Docker: extendedConfig"
-    confilename="extendedConfig"
+    greetings_line="Docker: (alternative) carateConfig"
+    confilename="carateConfig"
     contarch="docker"
     caracalswitches=" "
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
@@ -948,7 +953,7 @@ then
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
 
-if [[ -n $SM ]] || [[ -n $SE ]] || [[ -n $SI ]]
+if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]]
 then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
@@ -970,26 +975,28 @@ then
         fi
     else
 	[[ "${SS}" == "/dev/null" ]] || echo "rm -rf ${singularity_locstring}" >> ${SS}
-####==
-        rm -rf ${singularity_loc}
-######rm -rf $CARATE_WORKSPACE/.singularity
+        [[ -n ${FS} ]] || rm -rf ${singularity_loc}
+        ######rm -rf $CARATE_WORKSPACE/.singularity
     fi
     if [[ ! -e "${singularity_loc}" ]]
     then
         echo
-        echo "###########################################"
-        echo "# Installing Stimela images (Singularity) #"
-        echo "###########################################"
+        echo "#########################################"
+        echo " Installing Stimela images (Singularity) "
+        echo "#########################################"
         echo
-	[[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-	####==
-        rm -f ${HOME}/.stimela/*
+        if [[ -z $KS ]]
+        then
+	    echo "Removing \${HOME}/.stimela/*"
+            [[ "${SS}" == "/dev/null" ]] || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+            [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
+        fi
+	echo "Installing Stimela images in ${singularity_locstring}"
 	[[ "${SS}" == "/dev/null" ]] || echo "mkdir -p ${singularity_locstring}"
 	mkdir -p ${singularity_loc}
 	echo stimela pull --singularity -f --pull-folder ${singularity_loc}
 	[[ "${SS}" == "/dev/null" ]] || echo "stimela pull --singularity -f --pull-folder ${singularity_locstring}" >> ${SS}
-####==
-        stimela pull --singularity -f --pull-folder ${singularity_loc}
+        [[ -n ${FS} ]] || stimela pull --singularity -f --pull-folder ${singularity_loc}
     fi
 fi
 
@@ -1002,10 +1009,10 @@ then
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
 fi
 
-if [[ -n $SE ]]
+if [[ -n $SA ]]
 then
-    greetings_line="Singularity: extendedConfig_singularity"
-    confilename="extendedConfig"
+    greetings_line="Singularity: (alternative) carateConfig"
+    confilename="carateConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
@@ -1020,5 +1027,9 @@ then
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${FN}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
 
-echo "Wow, everything seems to be ok"
+echo
+echo "###########################################################"
+echo " Wow yo, good fightin', everything ok bro, you're my hero! "
+echo "###########################################################"
+echo
 exit 0

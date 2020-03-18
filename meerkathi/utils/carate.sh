@@ -571,8 +571,22 @@ echo ""
 if [[ -z $OR ]]
 then
     echo "Is that ok (Yes/No)?"
-    read proceed
-    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+    no_response=true
+    while [ "$no_response" == true ]; do
+	read proceed
+	case "$proceed" in
+	    [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+	      no_response=false
+              ;;
+	    [Nn][Oo]|[Nn])  # No or N.
+	      { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+              ;;
+	    *) # Anything else (including a blank) is invalid.
+	      { echo "That is not a valid response."; }
+              ;;
+	esac
+    done
+#    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
 fi
 
 

@@ -570,7 +570,7 @@ echo "and its content will be created/changed."
 echo "The directory $CARATE_WORKSPACE/.singularity might be created/changed"
 echo ""
 
-if [[ -z $OR ]]
+if [[ -z ${OR} ]]
 then
     echo "Is that ok (Yes/No)?"
     no_response=true

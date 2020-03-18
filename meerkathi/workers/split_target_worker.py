@@ -75,10 +75,11 @@ def worker(pipeline, recipe, config):
 
     for i in range(pipeline.nobs):
 
+        prefix = pipeline.prefixes[i]
+        msname = pipeline.msnames[i][:-3]
+
         if config['split_target']['field'] == 'target':
             target_ls = pipeline.target[i]
-            prefix = pipeline.prefixes[i]
-            msname = pipeline.msnames[i][:-3]
         else:
            calfields = []
            for fd in ['fcal','bpcal','gcal']:
@@ -121,11 +122,11 @@ def worker(pipeline, recipe, config):
         for target in target_ls:
             field = utils.filter_name(target)
             fms = [pipeline.hires_msnames[i] if label_in ==
-                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label_in)]
+                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(msname, field, label_in)]
             if config['split_target']['field'] == 'target':
                 tms = '{0:s}-{1:s}_{2:s}.ms'.format(
-                       pipeline.msnames[i][:-3], field, label_out)
-            else: tms = '{0:s}_cal.ms'.format(pipeline.msnames[i][:-3])
+                       msname, field, label_out)
+            else: tms = '{0:s}_cal.ms'.format(msname)
 
             flagv = tms+'.flagversions'
 

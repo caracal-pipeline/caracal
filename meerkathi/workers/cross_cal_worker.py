@@ -339,7 +339,7 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
 
     for i in range(nobs):
-        msname = msnames[i]
+        msname = '{0:s}_cal.ms'.format(msnames[i][:-3])
         refant = pipeline.reference_antenna[i] or '0'
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])

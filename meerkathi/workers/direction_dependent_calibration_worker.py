@@ -37,9 +37,9 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, label)
-    print("All_targes", all_targets)
-    print("All_msfiles", all_msfile)
-    print("ms_dict",ms_dict)
+    #print("All_targes", all_targets)
+    #print("All_msfiles", all_msfile)
+    #print("ms_dict",ms_dict)
     dd_image_opts = {
         "Data-MS"        : mslist,
         "Data-ColName"   : "DATA",
@@ -98,7 +98,7 @@ def worker(pipeline, recipe, config):
         label="ddf_image_{0:s}:: Primary beam corrected image".format(field))
         recipe.run()
         recipe.jobs = []
-    def dd_postcal_image(field,mslist):
+    def dd_postcal_image(field,ms_list):
         dd_image_opts_postcal = copy.deepcopy(dd_image_opts)
         image_prefix_postcal = prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
@@ -166,16 +166,16 @@ def worker(pipeline, recipe, config):
         if de_sources_mode == 'manual':
            img = prefix+"_"+field+"-DD-precal.app.restored.fits"
            imagefile = os.path.join(pipeline.output,DD_DIR,img)
-           print("Imagefile",imagefile)
-           print("Pipeline output", pipeline.output)
+           #print("Imagefile",imagefile)
+           #print("Pipeline output", pipeline.output)
            w = WCS(imagefile)
            coords =  config[key].get('de_sources_manual')
            size = coords.split(",")[2]
            coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
-           print("Coordinate String", coords_str)
+           #print("Coordinate String", coords_str)
            centre = SkyCoord(coords_str, unit='deg') 
            separation = int(size) * u.arcsec 
-           print("Size",separation)
+           #print("Size",separation)
            xlist = []
            ylist = []
            for i in range(5):
@@ -187,7 +187,7 @@ def worker(pipeline, recipe, config):
            vertices = PixCoord(x=xlist, y=ylist)
            reg = PolygonPixelRegion(vertices=vertices)
            regfile = "de-{0:s}.reg".format(field)
-           ds9_file = os.path.join(OUTPUT,DD_DIR,regfile)
+           ds9_file = os.path.join(OUTPUT,regfile)
            write_ds9([reg],ds9_file,coordsys='physical') 
 
     def dd_calibrate(field,mslist):

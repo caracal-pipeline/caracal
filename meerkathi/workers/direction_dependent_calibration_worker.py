@@ -43,7 +43,7 @@ def worker(pipeline, recipe, config):
     dd_image_opts = {
         "Data-MS"        : mslist,
         "Data-ColName"   : "DATA",
-        "Data-ChunkHours"       : 0.5,
+        "Data-ChunkHours"       : 0.05,
         "Output-Mode"           : "Clean",
         #"Output-Cubes"          : 'all',
         "Output-Name"    : prefix+"-DD-precal",
@@ -64,7 +64,7 @@ def worker(pipeline, recipe, config):
         "Deconv-FluxThreshold" : 1.0e-6,
         "Deconv-AllowNegative": True,
         "Hogbom-PolyFitOrder": 6,
-        "Parallel-NCPU" : 2,
+        "Parallel-NCPU" : 0,
         "Predict-ColName"       : "MODEL_DATA",
         "Log-Memory"            : True,
         "Cache-Reset"           : True,
@@ -264,9 +264,9 @@ def worker(pipeline, recipe, config):
  
     #if usepb:
     #    make_primary_beam()
-       dd_precal_image(field,mslist)
+#       dd_precal_image(field,mslist)
     #sfind_intrinsic()
-       dagga(field)
-       dd_calibrate(field,mslist)
+#       dagga(field)
+#       dd_calibrate(field,mslist)
        dd_postcal_image(field,mslist)
 

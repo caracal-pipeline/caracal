@@ -654,8 +654,8 @@ then
 fi
 if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
 then
-    [[ "${SS}" == "/dev/null" ]] || echo "virtualenv -p python3 \${workspace_root}/caracal_venv" >> ${SS}
-    [[ -n ${FS} ]] || virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv
+    [[ "${SS}" == "/dev/null" ]] || echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}
+    [[ -n ${FS} ]] || python3 -m venv ${WORKSPACE_ROOT}/caracal_venv
 fi
 
 echo "Entering virtualenv in $WORKSPACE_ROOT"

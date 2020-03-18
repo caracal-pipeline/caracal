@@ -34,27 +34,27 @@ do
     then
         VE=1
     fi
-    if [[ "$arg" == "--docker_minimal" ]] || [[ "$arg" == "-dm" ]]
+    if [[ "$arg" == "--docker-minimal" ]] || [[ "$arg" == "-dm" ]]
     then
         DM=1
     fi
-    if [[ "$arg" == "--docker_alternative" ]] || [[ "$arg" == "-da" ]]
+    if [[ "$arg" == "--docker-alternative" ]] || [[ "$arg" == "-da" ]]
     then
         DA=1
     fi
-    if [[ "$arg" == "--docker_installation" ]] || [[ "$arg" == "-di" ]]
+    if [[ "$arg" == "--docker-installation" ]] || [[ "$arg" == "-di" ]]
     then
         DI=1
     fi
-    if [[ "$arg" == "--singularity_minimal" ]] || [[ "$arg" == "-sm" ]]
+    if [[ "$arg" == "--singularity-minimal" ]] || [[ "$arg" == "-sm" ]]
     then
         SM=1
     fi
-    if [[ "$arg" == "--singularity_alternative" ]] || [[ "$arg" == "-sa" ]]
+    if [[ "$arg" == "--singularity-alternative" ]] || [[ "$arg" == "-sa" ]]
     then
         SA=1
     fi
-    if [[ "$arg" == "--singularity_installation" ]] || [[ "$arg" == "-si" ]]
+    if [[ "$arg" == "--singularity-installation" ]] || [[ "$arg" == "-si" ]]
     then
         SI=1
     fi
@@ -180,7 +180,7 @@ then
     echo "                               will be tested"
     echo ""
     
-    echo "  CARATE_CARACAL_TEST_ID:  Only specify if CARATE_CARACAL_BUILD_NUMBER"
+    echo "  CARATE_CARACAL_TEST_ID:      Only specify if CARATE_CARACAL_BUILD_NUMBER"
     echo "                               is undefined. All data and installations for"
     echo "                               a specific test will be saved in the directory"
     echo "                               \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID." 
@@ -219,29 +219,29 @@ then
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
     echo ""
-    echo "  --docker_minimal -dm                Test Docker installation and test run with"
-    echo "                                      minimal configuration"
-    echo ""
-    echo "  --docker_alternative -da            Test Docker installation and test run with"
-    echo "                                      alternative configuration carateConfig.yml"
-    echo ""
-    echo "  --docker_installation -di           Test Docker installation"                                         
-    echo ""
-    echo "  --singularity_minimal -sm           Test Singularity installation and test run"
-    echo "                                      with minimal configuration"
-    echo ""
-    echo "  --singularity_alternative -sa       Test Singularity installation and test run"
-    echo "                                      alternative configuration carateConfig.yml"
-    echo ""
-    echo "  --keep_stimeladir -ks               Keep the content of .stimela if it exists,"
+    echo "  --keep-stimeladir -ks               Keep the content of .stimela if it exists,"
     echo "                                      delete when switch not set"
     echo ""
-    echo "  --pull_docker -pd                   run stimela pull -d before stimela build"
+    echo "  --docker-minimal -dm                Test Docker installation and test run with"
+    echo "                                      minimal configuration"
+    echo ""
+    echo "  --docker-alternative -da            Test Docker installation and test run with"
+    echo "                                      alternative configuration carateConfig.yml"
+    echo ""
+    echo "  --docker-installation -di           Test Docker installation"                                         
+    echo ""
+    echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
     echo "                                      omit the step when switch is not set"
     echo ""
-    echo "  --singularity_installation -si      Test Singularity installation"              
+    echo "  --singularity-minimal -sm           Test Singularity installation and test run"
+    echo "                                      with minimal configuration"
     echo ""
-    echo "  --singularity_root -sr              Install Singularity images in global"
+    echo "  --singularity-alternative -sa       Test Singularity installation and test run"
+    echo "                                      alternative configuration carateConfig.yml"
+    echo ""
+    echo "  --singularity-installation -si      Test Singularity installation"              
+    echo ""
+    echo "  --singularity-root -sr              Install Singularity images in global"
     echo "                                      \$CARATE_WORKSPACE and not in the specific"
     echo "                                      root directory (can then be re-used)"
     echo ""
@@ -263,7 +263,8 @@ then
     echo ""
     echo "  --override -or                      Override security question (showing root"
     echo "                                      directory and asking whether to proceed.)"
-    echo "  --small-script -ss                  Generate a small script"
+    echo "  --small-script ARG -ss ARG          Generate a small script ARG showing all"
+    echo "                                      steps taken by carate"
     echo ""
 fi
 
@@ -271,21 +272,22 @@ if [[ -n "$VE" ]]
 then
     echo ""
     echo " The script creates a root directory"
-    echo " (Notice that all environment variables can also be supplied via the command line)"
-    echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, where"
+    echo " (Notice that all environment variables can also be supplied via the command"
+    echo "  line) \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, where"
     echo " CARATE_WORKSPACE is an environment variable containing the path of a"
     echo " parent directory to all tests done with this script. The variable"
     echo " CARATE_CARACAL_TEST_ID is identical to the environment variable"
     echo " CARATE_CARACAL_BUILD_NUMBER if that is set by the user, and has to"
     echo " be supplied independently (i.e. to be defined prior to the script"
-    echo " call) as an environment variable if CARATE_CARACAL_BUILD_NUMBER is"
+    echo " call or supplied using switches --caracal-test-number or -ct) as an environment"
+    echo " variable if CARATE_CARACAL_BUILD_NUMBER is"
     echo " not defined. The rationale behind that is that the test directory is"
     echo " always linked to a git(hub) build number if that exists. Otherwise, if"
     echo " CARATE_CARACAL_BUILD_NUMBER is not defined, the user can supply an"
     echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root"
     echo " directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home"
     echo " directory called home, a virtual environment called"
-    echo " caracal_virtualenv, a CARACal copy meerkathi, and up to four test"
+    echo " caracal_virtualenv, a CARACal copy meerkathi, and up to six test"
     echo " directories are created, within which the tests are conducted. If the"
     echo " --force or -f switch is set, all existing directories and"
     echo " installations, apart from a potentially existing singularity cache directory"
@@ -318,20 +320,20 @@ then
     echo "  - if --use-requirements or -ur switch is set, the"
     echo "    meerkathi/requirements.txt is installed via pip"
     echo ""
-    echo "  - when switches --docker_minimal, -dm, --docker_extended, -de,"
-    echo "    --docker_installation, -di are set, home/.stimela is removed, docker"
+    echo "  - when switches --docker-minimal, -dm, --docker-alternative, -da,"
+    echo "    --docker-installation, -di are set, home/.stimela is removed, docker"
     echo "    system prune is invoked, and docker stimela is installed (stimela"
     echo "    build)"
     echo ""
-    echo "  - when switches --keep_stimeladir, -ks are set, the .stimela directory"
+    echo "  - when switches --keep-stimeladir, -ks are set, the .stimela directory"
     echo "    is not emptied if it exists."
     echo ""
-    echo "  - when switches --pull_docker, -pd are set, stimela pull -d is invoked"
+    echo "  - when switches --pull-docker, -pd are set, stimela pull -d is invoked"
     echo "    before running stimela build for Docker installation, omit step"
     echo "    otherwise"
     echo ""
-    echo "  - when switches --singularity_minimal, -sm, --singularity_extended,"
-    echo "    -se, --singularity_installation, -si are set, home/.stimela is"
+    echo "  - when switches --singularity-minimal, -sm, --singularity-alternative,"
+    echo "    -se, --singularity-installation, -si are set, home/.stimela is"
     echo "    removed, and singularity stimela is by default installed in the"
     echo "    directory (if not existing or if -f is set)"
     echo "    \$CARATE_WORKSPACE/stimela_singularity. If --stimela-root or"
@@ -339,7 +341,7 @@ then
     echo "    The first variant allows to re-use the same stimela installation"
     echo "    In multiple tests"
     echo ""
-    echo "  - when switch --singularity_minimal or -sm is set, a directory"
+    echo "  - when switch --singularity-minimal or -sm is set, a directory"
     echo "    test_minimal_singularity is created (if not existing or if -f is"
     echo "    set), the configuration file"
     echo "    meerkathi/meerkathi/sample_configurations/minimalConfig.yml is"
@@ -361,7 +363,7 @@ then
     echo "    extendedConfig.yml and declared successful if certain expected files"
     echo "    are created."
     echo ""
-    echo "  - when switch --docker_minimal or -dm is set, a directory"
+    echo "  - when switch --docker-minimal or -dm is set, a directory"
     echo "    \- test_minimal_docker is created (if not existing or if -f is set),"
     echo "    the configuration file"
     echo "    meerkathi/meerkathi/sample_configurations/minimalConfig.yml is"
@@ -384,14 +386,14 @@ then
     echo "    are created."
     echo ""
     echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
-    echo "    switches --singularity_installation or -si set, then that yaml configuration"
+    echo "    switches --singularity-installation or -si set, then that yaml configuration"
     echo "    source is used for a further singularity test in the directory"
     echo "    test_prefix_singularity, where prefix is the prefix of the yaml file. The line"
     echo "    dataid: [''] in that file is replaced by the appropriate line to process the "    
     echo "    test data sets in \$CARATE_TEST_DATA_DIR"
     echo ""
     echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
-    echo "    switches --docker_installation or -di set, then that yaml configuration"
+    echo "    switches --docker-installation or -di set, then that yaml configuration"
     echo "    source is used for a further singularity test in the directory"
     echo "    test_prefix_singularity, where prefix is the prefix of the yaml file. The line"
     echo "    dataid: [''] in that file is replaced by the appropriate line to process the "    
@@ -400,18 +402,18 @@ then
     echo " For each test run, all logfiles created by CARACal are parsed. If the last two" 
     echo " lines contain the word \"successfully\", the single logged process is counted as"
     echo " success, as a failure otherwise. The number of allowed fails can be set using the"
-    echo " argument --fail-number or -fn followed by the number of allowed fails. carate will"
-    echo " abort and return 1 if the number of detected fails is larger than the number of"
-    echo " allowed fails. "
-#carate will also abort and return 1 if the logfile created/changed"
-    #    echo " just before log-meerkathi.txt (which is always the last) is deemed invalid.
-    echo " This sort of test can only succeed if the word \"successfully\" (or any other key"
-    echo " indicating success turns up in the logfiles consistently, independent of the con-"
-    echo " tainerization technology. This is not the case, Singularity-Stimela does not re-"
-    echo " port success, which is why the test is only useful for a Docker installation and"
-    echo " -fn is 42000 by default (effectively it always runs through). Instead,"
-    echo " log-meerkathi.txt is searched for keywords indicating the start and the end of a"
-    echo " worker and if the numbers are not equal the test is declared a failure."
+    echo " argument --fail-number or -fn followed by the number of allowed fails. -fn is 42000"
+    echo " by default (effectively the test is ignored). In addition, log-meerkathi.txt is searched"
+    echo " for keywords indicating the start and the end of a worker and those numbers are"
+    echo " reported."
+    echo " The test is declared failed and carate.sh returns 1 if:"
+    echo "   - No logfiles are produced before CARACal finishes"
+    echo "   - log-meerkathi.txt does not contain any keyword indicating that a worker has started"
+    echo "   - The number of log files indicating a failure is larger than the allowed number of"
+    echo "     failures"
+    echo "   - The number of keywords in log-meerkathi.txt indicating the start of a worker differs"
+    echo "     from the number of keywords in log-meerkathi.txt indicating the end of a worker."
+    echo "   - If the exit status of CARACal is not 0 (success)"
     echo ""
     echo " Note that in particular Stimela has components that are external to"
     echo " the root directory and will be touched by this test.  "
@@ -431,7 +433,7 @@ then
     echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/meerkathi_tests/rawdata\""
     echo "   set path = ( \$path /home/user/software/meerkathi/meerkathi/utils/carate.sh)"
     echo " Then start carate"
-    echo "   \$carate.sh -dm -de -sm -se -ur -f -cb 6d562c 2>&1 | tee carate_run.log"
+    echo "   \$carate.sh -dm -da -sm -sa -ur -f -cb 6d562c 2>&1 | tee carate_run.log"
     echo ""
     echo
     echo " Example 2:"
@@ -448,7 +450,7 @@ then
     echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/meerkathi_tests/rawdata\""
     echo "   set path = ( \$path /home/user/software/meerkathi/meerkathi/utils/carate.sh)"
     echo " Then start carate"
-    echo "   $carate.sh -di -ur -f -cs $wherever/bla.yml -ct mynewthing 2>&1 | tee carate_run.log"
+    echo "   \$carate.sh -di -ur -f -cs $wherever/bla.yml -ct mynewthing -ss small_script.sh 2>&1 | tee carate_run.log"
     echo " Notice that bla.yml should contain the line dataid: [''], which will be"
     echo " replaced by a line containing the appropriate data sets from ../rawdata"
     echo ""
@@ -568,11 +570,25 @@ echo "and its content will be created/changed."
 echo "The directory $CARATE_WORKSPACE/.singularity might be created/changed"
 echo ""
 
-if [[ -z $OR ]]
+if [[ -z ${OR} ]]
 then
     echo "Is that ok (Yes/No)?"
-    read proceed
-    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+    no_response=true
+    while [ "$no_response" == true ]; do
+	read proceed
+	case "$proceed" in
+	    [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+	      no_response=false
+              ;;
+	    [Nn][Oo]|[Nn])  # No or N.
+	      { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+              ;;
+	    *) # Anything else (including a blank) is invalid.
+	      { echo "That is not a valid response."; }
+              ;;
+	esac
+    done
+#    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
 fi
 
 
@@ -654,8 +670,8 @@ then
 fi
 if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
 then
-    [[ "${SS}" == "/dev/null" ]] || echo "virtualenv -p python3 \${workspace_root}/caracal_venv" >> ${SS}
-    [[ -n ${FS} ]] || virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv
+    [[ "${SS}" == "/dev/null" ]] || echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}
+    [[ -n ${FS} ]] || python3 -m venv ${WORKSPACE_ROOT}/caracal_venv
 fi
 
 echo "Entering virtualenv in $WORKSPACE_ROOT"
@@ -745,12 +761,12 @@ fi
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]]
 then
     echo "You have not defined a test:"
-    echo "--docker_minimal or -dm"
-    echo "--docker_extended or -de"
-    echo "--docker_installation or -di"
-    echo "--singularity_minimal or -sm"
-    echo "--singularity_extended or -se"
-    echo "--singularity_installation or -si"
+    echo "--docker-minimal or -dm"
+    echo "--docker-alternative or -da"
+    echo "--docker-installation or -di"
+    echo "--singularity-minimal or -sm"
+    echo "--singularity-alternative or -sa"
+    echo "--singularity-installation or -si"
     echo "Use -h flag for more information"
     kill "$PPID"; exit 0
 fi

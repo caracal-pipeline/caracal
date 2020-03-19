@@ -624,23 +624,19 @@ then
 fi
 
 # Search for test data and set variable accordingly
-if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $SM ]] || [[ -n $SA ]] 
+if [[ -e $CARATE_TEST_DATA_DIR ]]
 then
-    if [[ -e $CARATE_TEST_DATA_DIR ]]
-    then
-        # Check if there are any ms files
- mss=`find $CARATE_TEST_DATA_DIR -name *.ms`
- [[ ! -z "$mss" ]] || { printf "Test data required in $CARATE_TEST_DATA_DIR \n"; kill "$PPID"; exit 1; }
+    # Check if there are any ms files
+    mss=`find $CARATE_TEST_DATA_DIR -name *.ms`
+    [[ ! -z "$mss" ]] || { printf "Test data required in $CARATE_TEST_DATA_DIR \n"; kill "$PPID"; exit 1; }
  
- # This generates the dataid string
- dataidstr=`ls -d $CARATE_TEST_DATA_DIR/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
+    # This generates the dataid string
+    dataidstr=`ls -d $CARATE_TEST_DATA_DIR/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
     else
- printf "Create directory $CARATE_TEST_DATA_DIR and put test rawdata\n";\
- printf "therein: a.ms b.ms c.ms ...\n"
- kill "$PPID"; exit 1;
-    fi
+    printf "Create directory $CARATE_TEST_DATA_DIR and put test rawdata\n";\
+    printf "therein: a.ms b.ms c.ms ...\n"
+    kill "$PPID"; exit 1;
 fi
-
 
 # The following would only work in an encapsulated environment
 [[ "${SS}" == "/dev/null" ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}

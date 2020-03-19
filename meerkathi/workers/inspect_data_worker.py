@@ -51,7 +51,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
 
     recipe.add("cab/shadems", step, {
                 "ms": msname,
-                "field": field,
+                "field": str(fid),
 #                "corr": opts['corr'],
                 "xaxis": opts['xaxis'],
                 "yaxis": opts['yaxis'],

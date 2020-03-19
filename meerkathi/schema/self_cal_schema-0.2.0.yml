@@ -63,7 +63,7 @@ mapping:
         type: float
         desc: Image CLEANing gain
         required: false
-        example: '0.99'
+        example: '0.90'
       img_cell:
         type: float
         desc: Image pixel size (arcsec)

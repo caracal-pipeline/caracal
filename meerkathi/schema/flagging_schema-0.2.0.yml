@@ -227,7 +227,7 @@ mapping:
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger or tricolour (not active yet)
+            desc: Enable RFI flagging with AOFlagger or tricolour
             type: bool
             required: False
             example: 'True'
@@ -268,6 +268,16 @@ mapping:
             enum: ["numpy", "zarr-disk"]
             required: false
             example: "numpy"
+          tricolour_mode:
+            desc: If set to 'auto', decides the tricolour flagging strategy based on the bandwidth of the dataset. Else uses tricolour_calibrator_strat. 
+            type: str
+            required: false
+            enum: ['auto', 'manual']
+            example: 'auto'
+          tricolour_calibrator_strat_narrowband:
+            type: str
+            required: False
+            example: 'calibrator_mild_flagging.yaml'
           tricolour_calibrator_strat:
             type: str
             required: False

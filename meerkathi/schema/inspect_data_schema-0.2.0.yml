@@ -22,7 +22,7 @@ mapping:
         type: str
         desc: Application to use for making plots
         enum: [plotms, shadems]
-        example: plotms
+        example: shadems
         required: false
       correlation: 
         type: str

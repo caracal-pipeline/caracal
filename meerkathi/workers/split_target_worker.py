@@ -127,7 +127,8 @@ def worker(pipeline, recipe, config):
             if config['split_target']['field'] == 'target':
                 tms = '{0:s}-{1:s}_{2:s}.ms'.format(
                        msname, field, label_out)
-            else: tms = '{0:s}_cal.ms'.format(msname)
+            else: tms = '{0:s}_{1:s}.ms'.format(
+                       msname, label_out)
 
             flagv = tms+'.flagversions'
 

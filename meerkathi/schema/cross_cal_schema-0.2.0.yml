@@ -13,6 +13,11 @@ mapping:
         required: true
         desc: Execute this segment.
         example: 'True'
+      label_in:
+        type: str
+        required: true
+        desc: Label of measurement set to work on.
+        example: 'cal'
       otfdelay:  
         type: bool
         required: false

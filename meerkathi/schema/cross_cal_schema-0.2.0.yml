@@ -28,7 +28,7 @@ mapping:
         required: false
         desc: Set the U-V range for data selection, e.g. '>50'.
         example: '>50' 
-      label: 
+      label_cal: 
         type: str
         required: false
         desc: Label for output files.

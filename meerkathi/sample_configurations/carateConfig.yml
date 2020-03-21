@@ -157,6 +157,8 @@ image_line:
     fitspw: '*:1300~1417.2MHz,*:1421.0~1600MHz'
   pb_cube:
     enable: true
+  flag_mst_errors:
+     enable: true
   freq_to_vel:
     enable: true
   remove_stokes_axis:

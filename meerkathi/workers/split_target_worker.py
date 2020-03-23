@@ -78,14 +78,13 @@ def worker(pipeline, recipe, config):
         prefix = pipeline.prefixes[i]
         msname = pipeline.msnames[i][:-3]
 
-        if config['split_target']['field'] == 'target':
-            target_ls = pipeline.target[i]
-        else:
+        if config['split_cal']:
            calfields = []
            for fd in ['fcal','bpcal','gcal']:
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
            target_ls = [','.join(np.unique(np.array(calfields))),]
+        else: target_ls = pipeline.target[i]
 
         # write calibration library file for OTF cal in split_target_worker.py
         if pipeline.enable_task(config['split_target'], 'otfcal'):

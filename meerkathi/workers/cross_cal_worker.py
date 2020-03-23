@@ -84,7 +84,7 @@ def get_last_gain(gaintables, my_term="dummy"):
     else:
         return []
 
-def solve(msname, recipe, config, pipeline, iobs, prefix, label, ftype, 
+def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype, 
         append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
@@ -102,7 +102,9 @@ def solve(msname, recipe, config, pipeline, iobs, prefix, label, ftype,
 
     field = getattr(pipeline, CALS[ftype])[iobs]
     order = config[ftype]["order"]
-    field_id = getattr(pipeline, CALS[ftype]+"_id")[iobs]
+#    field_id = getattr(pipeline, CALS[ftype]+"_id")[iobs]
+    field_id = utils.get_field_id(msinfo, field)
+
     for i,term in enumerate(order):
         name = RULES[term]["name"]
         if term in iters:
@@ -374,7 +376,7 @@ def worker(pipeline, recipe, config):
                                "Will use the one observed the logest (%s)." % fluxscale_field)
         else:
             fluxscale_field = pipeline.fcal[i][0]
-            fluxscale_field_id = pipeline.fcal_id[i][0]
+            fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
        
         if pipeline.enable_task(config, 'set_model'):
             if config['set_model'].get('no_verify'):
@@ -436,7 +438,7 @@ def worker(pipeline, recipe, config):
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
         if gcal_set == set() or len(gcal_set - fcal_set) == 0:
-            primary = solve(msname, recipe, config, pipeline, i, 
+            primary = solve(msname, msinfo, recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
             meerkathi.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
@@ -464,11 +466,11 @@ def worker(pipeline, recipe, config):
                 applycal(msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
         else:
-            primary = solve(msname, recipe, config, pipeline, i, 
+            primary = solve(msname, msinfo, recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
 
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
-            secondary = solve(msname, recipe, config, pipeline, i,
+            secondary = solve(msname, msinfo, recipe, config, pipeline, i,
                     prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable, 
                     prev=primary, prev_name="primary_cal", smodel=True)
 

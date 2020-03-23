@@ -35,7 +35,10 @@ def worker(pipeline, recipe, config):
         '''GET LIST OF INPUT MS'''
         mslist = []
 
-        if label:
+        if config['split_cal']:
+           mslist.append(
+               '{0:s}_{1:s}.ms'.format(pipeline.msnames[i][:-3], label))
+        elif label:
             target_ls = pipeline.target[i]
             for target in target_ls:
                 field = utils.filter_name(target)
@@ -351,9 +354,10 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}'.format(wname, i)
+
                 # Clear autoflags if need be
 
-                if label:
+                if not config['split_cal']:
                     fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
@@ -447,7 +451,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
-                if label:
+                if not config['split_cal']:
                     fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                     outlabel = '_{0:s}_{1:d}'.format(fieldName, i)

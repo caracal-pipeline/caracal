@@ -33,11 +33,11 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          field:
-            desc: Select field(s) to be splitted
-            type: str
+          split_cal:
+            desc: Split calibrator fields.
+            type: bool
             required: false
-            example: 'target'
+            example: 'False'
           time_average:
             desc: Time averaging
             type: str

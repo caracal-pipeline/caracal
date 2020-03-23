@@ -765,6 +765,7 @@ then
         echo "Not re-fetching MeerKATHI, use -f if you want that."
     else
 	echo "Fetching CARACal from local source ${local_source}"
+	echo
         echo "cp -r \${local_source} \${workspace_root}/"  >> ${SS}
 	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
     fi

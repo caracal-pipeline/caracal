@@ -21,15 +21,13 @@
 ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi/utils/carate.sh \
     -ws "${WORKSPACE}/projects" \
     -td "${WORKSPACE}/../../../test-data" \
-    -ct "CARAcal_test" \
+    -ct "CARACal_test" \
     -ls "${WORKSPACE_ROOT}/projects/meerkathi" \
     -dm \
     -da \
     -ur \
     -f \
-    -ss ${WORKSPACE}/projects/CARACal_test/carate_run_2.sh \
     -or \
-    "2>&1" | tee ${WORKSPACE}/projects/CARACal_test/carate_run_2.log
 
 # Notice that this only tests docker, as the singularity installation currently
 # does not work. Future switches should be

@@ -33,11 +33,11 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          split_cal:
-            desc: Split calibrator fields.
-            type: bool
+          field:
+            desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+            type: str
             required: false
-            example: 'False'
+            example: 'target'
           time_average:
             desc: Time averaging
             type: str
@@ -78,7 +78,7 @@ mapping:
                 type: bool
                 required: false
                 example: 'False'
-              callabel:
+              label_cal:
                 desc: Label of calibration tables to be used
                 type: str
                 required: false

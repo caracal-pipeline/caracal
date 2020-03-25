@@ -77,10 +77,19 @@ def worker(pipeline, recipe, config):
 
         prefix = pipeline.prefixes[i]
         msname = pipeline.msnames[i][:-3]
+        split_field = config['split_target']['field'].split(',')
 
-        if config['split_cal']:
+        if 'calibrators' in split_field:
+            split_field = ['fcal','bpcal','gcal']
+
+        for fd in split_field:
+            if fd not in ['target','fcal','bpcal','gcal']:
+                raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
+                                 "User selected: {}".format(split_field))
+
+        if any(x in split_field for x in ['fcal','bpcal','gcal']):
            calfields = []
-           for fd in ['fcal','bpcal','gcal']:
+           for fd in split_field:
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
            target_ls = [','.join(np.unique(np.array(calfields))),]
@@ -92,7 +101,7 @@ def worker(pipeline, recipe, config):
             gaintablelist, gainfieldlist, interplist = [], [], []
 
             calprefix = '{0:s}-{1:s}'.format(prefix,
-                                             config['split_target']['otfcal'].get('callabel'))
+                                             config['split_target']['otfcal'].get('label_cal'))
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
@@ -116,8 +125,14 @@ def worker(pipeline, recipe, config):
                     stdw.write(' fldmap=\'' + str(gainfieldlist[j])+'\'\n')
 
             docallib = True
+            if config['split_target'].get('column') != 'corrected':
+                meerkathi.log.info("Datacolumn was set to '{}'. by the user." \
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_target'].get('column')))
+            dcol = 'corrected'
+
         else:
             docallib = False
+            dcol = config['split_target'].get('column')
 
         for target in target_ls:
             field = utils.filter_name(target)
@@ -147,7 +162,7 @@ def worker(pipeline, recipe, config):
                                "chanaverage": True if config['split_target'].get('freq_average') > 1 else False,
                                "chanbin": config['split_target'].get('freq_average'),
                                "spw": config['split_target'].get('spw'),
-                               "datacolumn": config['split_target'].get('column'),
+                               "datacolumn": dcol,
                                "correlation": config['split_target'].get('correlation'),
                                "usewtspectrum": config['split_target'].get('usewtspectrum'),
                                "field": target,

@@ -14,7 +14,7 @@ FLAG_NAMES = "static automatic autocorr_spectrum".split()
 
 
 def worker(pipeline, recipe, config):
-    label = config['label']
+    label = config['label_in']
     wname = pipeline.CURRENT_WORKER
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
@@ -482,7 +482,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flagging_summary'):
 
-                __label = config.get('label', False)
+                __label = config.get('label_in', False)
                 step = 'flagging_summary_{0:s}_{1:d}{2:s}'.format(
                     wname, i, "_"+__label or "")
                 recipe.add('cab/casa_flagdata', step,
@@ -493,4 +493,4 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label'), msname))
+                           label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label_in'), msname))

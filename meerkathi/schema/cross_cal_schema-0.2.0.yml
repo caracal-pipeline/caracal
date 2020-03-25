@@ -18,6 +18,11 @@ mapping:
         required: true
         desc: Label of measurement set to work on.
         example: 'cal'
+      label_cal:
+        type: str
+        required: false
+        desc: Label for output files.
+        example: '1gc1'
       otfdelay:  
         type: bool
         required: false
@@ -28,11 +33,6 @@ mapping:
         required: false
         desc: Set the U-V range for data selection, e.g. '>50'.
         example: '>50' 
-      label_cal: 
-        type: str
-        required: false
-        desc: Label for output files.
-        example: '1gc1'
       casa_version: 
         type: str
         required: false

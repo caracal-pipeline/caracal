@@ -13,7 +13,7 @@ mapping:
         type: bool
         required: True
         example: 'False'
-      label:
+      label_in:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
         required: false

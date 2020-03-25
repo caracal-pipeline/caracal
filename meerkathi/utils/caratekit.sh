@@ -315,7 +315,7 @@ then
     echo ""
     echo "  - a directory called home is created (if not existing or if -f is set)"
     echo "    and the HOME environment variable set to that home directory unless"
-    echo "    the --keep-home or -kh switches are set
+    echo "    the --keep-home or -kh switches are set"
     echo ""
     echo "  - a python 3 virtual environment name caracal_venv is created (if not"
     echo "    existing or if -f is set) and activated"

@@ -28,29 +28,25 @@ mapping:
         required: false
         example: 'False'            
       manage_flags:
-        desc: Manage MS flags
+        desc: Manage flags
         type: map
         mapping:
           enable: 
-            desc: enable this section
+            desc: Enable this segment
             type: bool
             required: false
-            example: 'true'
-          add_bitflag_column:
-            desc: Add BITFLAG and BITFLAG_ROW columns
-            type: bool
+            example: 'True'
+          mode: 
+            desc: Manage flag mode. 'reset' unflag all data and delete all flagsets, 'restore' Restore flags from user specified flagset, 'initialize'. 
+            type: str
             required: false
-            example: 'true'
-          init_legacy_flagset:
-            desc: Save all current flags in a legacy flagset if it does not exist
-            type: bool
+            example: 'initialize'
+            enum: [initialize, reset, restore]
+          version_name:
+            desc: flagversion to restore
+            type: str
             required: false
-            example: 'true'
-          remove_flagsets:
-            desc: Remove all existing flagsets, except legacy flags
-            type: bool
-            required: false
-            example: 'true'
+            example: 'before_flagging'
       spectral_weights: 
         desc: How to initialize spectral weights
         type: map

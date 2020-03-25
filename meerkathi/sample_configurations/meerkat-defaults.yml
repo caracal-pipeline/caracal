@@ -14,7 +14,6 @@ get_data:
 observation_config: 
   obsinfo: 
     enable: true
-    plot_elevation_tracks: true
   target:
     - 'all'
   gcal: 
@@ -26,23 +25,22 @@ observation_config:
   xcal:
     - 'longest'
   reference_antenna: '0'
-  
+
 prepare_data: 
   enable: true
   fixvis: 
     enable: false
   manage_flags: 
-    enable: true
+    mode: "initialize"
   clear_cal: true
   spectral_weights:
-    enable: true
     mode: uniform
 
 flagging:
   enable: true
   label: ''
-  quack_flagging:
-    enable: false
+  flag_autocorr:
+    enable: true
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
@@ -71,6 +69,9 @@ cross_cal:
   otfdelay: true
   uvrange: '>150'
   label: 1gc1
+  load_flags:
+    flag_version: after_flagging_automatic
+    merge: False
   set_model:
     enable: true
   primary_cal:

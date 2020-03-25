@@ -83,6 +83,10 @@ do
     then
         ORSR=1
     fi
+    if [[ "$arg" == "--omit-docker-prune" ]] || [[ "$arg" == "-op" ]]
+    then
+        OP=1
+    fi
     if [[ "$arg" == "--force" ]] || [[ "$arg" == "-f" ]]
     then
         FORCE=1
@@ -246,6 +250,8 @@ then
     echo ""
     echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
     echo "                                      omit the step when switch is not set"
+    echo ""
+    echo "  --omit-docker-prune -op             Do not prune system during docker install"
     echo ""
     echo "  --singularity-minimal -sm           Test Singularity installation and test run"
     echo "                                      with minimal configuration"
@@ -920,9 +926,9 @@ then
            echo "rm -f \${HOME}/.stimela/*" >> ${SS}
            [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
        fi
-       echo "Running docker system prune"
-       echo "docker system prune" >> ${SS}
-       [[ -n ${FS} ]] || docker system prune
+       [[ -n ${OP} ]] || echo "Running docker system prune"
+       [[ -n ${OP} ]] || echo "docker system prune" >> ${SS}
+       [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
        if [[ -n $PD ]]
        then
 	   echo "Running stimela pull -d"

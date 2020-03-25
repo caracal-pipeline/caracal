@@ -19,7 +19,7 @@ mapping:
         required: false
         desc: Coordinates of the centre of the field of view read from reference_dir by default
         example: 'HH:MM:SS , DD:MM:SS'
-      label:
+      label_in:
         type: str
         desc: Label of the .MS file where to find information about the target
         required: false

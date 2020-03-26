@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela @ git+https://github.com/ratt-ru/Stimela',
+    'stimela>=1.2.5',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -35,7 +35,7 @@ __version__ = '0.2.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
-      description="MeerKAT end-to-end data reduction pipeline",
+      description="End-to-end data reduction pipeline for radio interferometry data",
       author="MeerKATHI peeps",
       author_email="sphemakh@gmail.com",
       url="https://github.com/ska-sa/meerkathi",

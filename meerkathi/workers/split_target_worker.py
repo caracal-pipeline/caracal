@@ -113,8 +113,7 @@ def worker(pipeline, recipe, config):
 
         for target in target_ls:
             field = utils.filter_name(target)
-            fms = [pipeline.hires_msnames[i] if label_in ==
-                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label_in)]
+            fms = pipeline.hires_msnames[i] if label_in == '' else '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label_in)
             tms = '{0:s}-{1:s}_{2:s}.ms'.format(
                 pipeline.msnames[i][:-3], field, label_out)
 
@@ -168,7 +167,7 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{0:s}:: Change phase centre ms={1:s}'.format(step, msname))
+                           label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs')):

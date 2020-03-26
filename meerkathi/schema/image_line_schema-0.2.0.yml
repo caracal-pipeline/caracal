@@ -104,6 +104,20 @@ mapping:
             type: bool
             required: false
             example: 'True'
+      flag_mst_errors:
+        desc: Run AOFlagger to flag any faulty visibilities produced by CASA mstranform.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment flag_mst_errors
+            type: bool
+            required: false
+            example: 'False'
+          strategy:
+            desc: AOFlagger strategy file
+            type: str
+            required: false
+            example: 'postmst.rfis'
       sunblocker:
         desc: Use sunblocker to remove solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map

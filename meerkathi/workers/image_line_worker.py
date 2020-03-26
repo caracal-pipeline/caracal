@@ -411,6 +411,18 @@ def worker(pipeline, recipe, config):
                         step,
                         msname_mst))
 
+        if pipeline.enable_task(config, 'flag_mst_errors'):
+            step = 'flag_mst_errors'
+            recipe.add('cab/autoflagger',
+                       step,
+                       {"msname": msname_mst,
+                        "column": 'DATA',
+                        "strategy": config['flag_mst_errors'].get('strategy'),
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker'].get('use_mstransform', True):
                 msnamesb = msname_mst

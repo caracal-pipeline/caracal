@@ -65,6 +65,7 @@ flagging__2:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
+    strategy: ps_aoflagger_Q.rfis
     fields: target
 
 split_target__2:

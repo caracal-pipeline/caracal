@@ -7,8 +7,9 @@ printf "\n"
 printf "#########################\n"
 printf " Testing CARACal at home \n"
 printf "#########################\n"
-
+echo ""
 echo "carate.sh $*"
+echo ""
  sya="###########################" ; sya+=$'\n\n'
 sya+=" Carate system information"  ; sya+=$'\n\n'
 sya+="###########################" ; sya+=$'\n\n'
@@ -521,17 +522,31 @@ printf "\n"
 # Create header to script
 ss="workspace=${CARATE_WORKSPACE}"
 ss+=$'\n'
-
-[[ -n "$CARATE_TEST_DATA_DIR" ]] || { \
+tdfault=0
+if [[ ! -n "$CARATE_TEST_DATA_DIR" ]]
+then
+    if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]]
+    then
+	tdfault=1
+    else
+	[[ ! -n ${CARATE_CONFIG_SOURCE} ]] || tdfault=1
+    fi
+else
+    [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=1
+fi
+(( $tdfault == 0 )) || { \
     printf "You have to define a CARATE_TEST_DATA_DIR variable, like (if\n";\
     printf "you're using bash):\n";\
     printf "$ export CARATE_TEST_DATA_DIR=\"/home/username/meerkathi_tests/rawdata\"\n";\
-    printf "And put test rawdata therein: a.ms  b.ms c.ms ...\n";\
-    printf "Or use the -td switch. These test data will be copied across for the test.\n\n";\
+    printf "Or use the -td switch.\n";\
+    printf "You also have to create that directory $CARATE_TEST_DATA_DIR\n";\
+    printf "and put test rawdata therein: a.ms  b.ms c.ms ...\n";\
+    printf "These test data will be copied across for the test.\n\n";\
     kill "$PPID"; exit 1;
 }
-ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
-ss+=$'\n'
+    
+[[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
+[[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+=$'\n'
 
 # Force test number to be identical with build number, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
@@ -547,6 +562,11 @@ ss+=$'\n'
 }
 ss+="caracal_test_id=${CARATE_CARACAL_TEST_ID}"
 ss+=$'\n'
+
+[[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || {\
+    printf "Please use one of the switches -dm, -da, -di, -sm, -sa, or -si\n\n";\
+    kill "$PPID"; exit 1;
+}
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
@@ -680,7 +700,7 @@ then
     # Check if there are any ms files
     mss=`find $CARATE_TEST_DATA_DIR -name *.ms`
     [[ ! -z "$mss" ]] || { printf "Test data required in $CARATE_TEST_DATA_DIR \n"; kill "$PPID"; exit 1; }
- 
+    
     # This generates the dataid string
     dataidstr=`ls -d $CARATE_TEST_DATA_DIR/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
     echo "##########################################" >> ${SYA}
@@ -688,10 +708,6 @@ then
     sya=`ls -d $CARATE_TEST_DATA_DIR/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
     echo "Test data: ${sya}" >> ${SYA}
     echo "" >> ${SYA}
-    else
-    printf "Create directory $CARATE_TEST_DATA_DIR and put test rawdata\n";\
-    printf "therein: a.ms b.ms c.ms ...\n"
-    kill "$PPID"; exit 1;
 fi
 
 function cleanup {
@@ -710,7 +726,7 @@ function cleanup {
   echo "##########################################" >> ${SYA}
 }
 trap cleanup EXIT
-
+exit
 # The following would only work in an encapsulated environment
 [[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
 [[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
@@ -741,8 +757,8 @@ then
 fi
 if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
 then
-    echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}
-    [[ -n ${FS} ]] || python3 -m venv ${WORKSPACE_ROOT}/caracal_venv
+    [[ -n ${FS} ]] && echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}
+    [[ -n ${FS} ]] || { python3 -m venv ${WORKSPACE_ROOT}/caracal_venv && echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv && echo "virtualenv -p python3 \${workspace_root}/caracal_venv" >> ${SS}; } 
 fi
 
 # Report on virtualenv

@@ -25,6 +25,7 @@ sya+="Host info: ";sya+=$'\n'; sya+=`hostnamectl | grep -Ev "Machine ID"'|'"Boot
 FN=42000
 FORCE=0
 SS="/dev/null"
+IA=5
 
 # current working directory
 cwd=`pwd`
@@ -78,6 +79,12 @@ do
         (( nextcount=argcount+1 ))
         (( $nextcount <= $# )) || { echo "Argument expected for --fail-number or -fn switch, stopping."; kill "$PPID"; exit 0; }
         FN=${!nextcount}
+    fi
+    if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --install-attempt or -ia switch, stopping."; kill "$PPID"; exit 0; }
+        IA=${!nextcount}
     fi
     if [[ "$arg" == "--omit-stimela-reinstall" ]] || [[ "$arg" == "-os" ]]
     then
@@ -266,7 +273,10 @@ then
     echo "                                      specific root directory (can then not be"
     echo "                                      re-used)"
     echo ""
-    echo "  --fail-number -fn                   Allowed Number of logfiles without"
+    echo "  --install-attempts -ia              Allowed number of attempts to pull images"
+    echo "                                      or to run stimela build"
+    echo ""
+    echo "  --fail-number -fn                   Allowed number of logfiles without"
     echo "                                      reported success. Default: 42000 (always"
     echo "                                      allow)"             
     echo ""
@@ -921,24 +931,48 @@ then
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-       if [[ -z $KS ]]
-       then
-	   echo "Removing \${HOME}/.stimela/*"
-           echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-           [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
-       fi
-       [[ -n ${OP} ]] || echo "Running docker system prune"
-       [[ -n ${OP} ]] || echo "docker system prune" >> ${SS}
-       [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
-       if [[ -n $PD ]]
-       then
-	   echo "Running stimela pull -d"
-	   echo "stimela pull -d" >> ${SS}
-           [[ -n ${FS} ]] || stimela pull -d
-       fi
-       echo "Running stimela build"
-       echo "stimela build" >> ${SS}
-       [[ -n ${FS} ]] || stimela build
+        if [[ -z $KS ]]
+        then
+	    echo "Removing \${HOME}/.stimela/*"
+            echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+            [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
+        fi
+        [[ -n ${OP} ]] || echo "Running docker system prune"
+        [[ -n ${OP} ]] || echo "docker system prune" >> ${SS}
+        [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
+        if [[ -n $PD ]]
+        then
+	    ii = 1
+	    until (( ${ii} > ${IA} ))
+	    do
+	        echo "Running stimela pull -d"
+	        echo "stimela pull -d" >> ${SS}
+                if [[ -z ${FS} ]]
+	        then
+		    stimela pull -d && break || {
+			echo "stimela pull -d failed"
+			(( ii++ ))
+			}
+		else
+		    break
+	        fi
+	    done
+        fi
+	ii=1
+        until (( ${ii} > ${IA} ))
+        do
+            echo "Running stimela build"
+            echo "stimela build" >> ${SS}
+            if [[ -z ${FS} ]]
+	    then
+	        stimela build && break || {
+			echo "stimela build failed"
+			(( ii++ ))
+		    }
+	    else
+		break
+	    fi
+        done
     fi
     echo ""
 fi
@@ -1159,9 +1193,21 @@ then
 	echo "Installing Stimela images in ${singularity_locstring}"
 	echo "mkdir -p ${singularity_locstring}"
 	mkdir -p ${singularity_loc}
-	echo stimela pull --singularity -f --pull-folder ${singularity_loc}
-	echo "stimela pull --singularity -f --pull-folder ${singularity_locstring}" >> ${SS}
-        [[ -n ${FS} ]] || stimela pull --singularity -f --pull-folder ${singularity_loc}
+	ii=1
+	until (( ${ii} > ${IA} ))
+	do
+	    echo stimela pull --singularity -f --pull-folder ${singularity_loc}
+	    echo "stimela pull --singularity -f --pull-folder ${singularity_locstring}" >> ${SS}
+	    if [[ -z ${FS} ]]
+	    then
+		stimela pull --singularity -f --pull-folder ${singularity_loc} && break || {
+			echo "stimela pull --singularity -f --pull-folder ${singularity_loc} failed"
+			(( ii++ ))
+			}
+	    else
+		break
+	    fi		    
+	done
     fi
 fi
 

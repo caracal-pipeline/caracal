@@ -726,7 +726,7 @@ function cleanup {
   echo "##########################################" >> ${SYA}
 }
 trap cleanup EXIT
-exit
+
 # The following would only work in an encapsulated environment
 [[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
 [[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home

@@ -65,12 +65,12 @@ def worker(pipeline, recipe, config):
 
             substep = 'save_flags_before_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
             fversion = "before_%s" % wname
-            _version = config['load_flags']["flag_version"]
+            _version = config['load_flags']["version"]
             manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, fversion]), msname, cab_name=substep)
 
             if config['load_flags']["enable"] and fversion!=_version:
-                version = config['load_flags']["flag_version"]
+                version = config['load_flags']["version"]
                 merge = config['load_flags']["merge"]
                 step = 'loading_flags_{0:s}_{1:s}'.format(wname, version)
                 manflags.restore_cflags(pipeline, recipe, "_".join(

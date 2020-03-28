@@ -348,7 +348,7 @@ def worker(pipeline, recipe, config):
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save_flags_before_{0:s}_{1:d}'.format(wname, i)
             fversion = "before_%s" % wname
-            _version = config['load_flags']["flag_version"]
+            _version = config['load_flags']["version"]
             manflags.add_cflags(pipeline, recipe, "_".join(
                         [wname, fversion]), msname, cab_name=substep)
 
@@ -516,7 +516,7 @@ def worker(pipeline, recipe, config):
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save_flags_after_{0:s}_{1:d}'.format(wname, i)
             fversion = "after_%s" % wname
-            _version = config['load_flags']["flag_version"]
+            _version = config['load_flags']["version"]
             manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, fversion]), msname, cab_name=substep)
 

@@ -37,16 +37,16 @@ mapping:
             required: false
             example: 'True'
           mode: 
-            desc: Manage flag mode. 'reset' unflag all data and delete all flagsets, 'restore' Restore flags from user specified flagset, 'initialize'. 
+            desc: "Manage flag mode. reset: unflag all data and delete all flagsets. restore: Restore flags from user specified flagset. initialize: Save current FLAG column as 'caracal_legacy'"
             type: str
             required: false
-            example: 'initialize'
+            example: 'restore'
             enum: [initialize, reset, restore]
-          version_name:
+          version:
             desc: flagversion to restore
             type: str
             required: false
-            example: 'before_flagging'
+            example: 'caracal_legacy'
       spectral_weights: 
         desc: How to initialize spectral weights
         type: map
@@ -57,7 +57,7 @@ mapping:
             required: false
             example: 'False'
           mode:
-            desc: "uniform: Set all weights to unity, estimate: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, delete: Delete WEIGHT_SPECTRUM column if it exists. if 'estimate', then further settings are available in the 'estimate' segement of this section"
+            desc: "uniform: Set all weights to unity. estimate: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, Also see 'estimate' segment of this section. delete: Delete WEIGHT_SPECTRUM column if it exists."
             type: str
             enum: [uniform, estimate, delete]
             required: false
@@ -67,7 +67,7 @@ mapping:
             type: map
             mapping:
               stats_data: 
-                desc: File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
+                desc: "File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data."
                 type: str
                 example: 'use_package_meerkat_spec'
                 required: false

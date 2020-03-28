@@ -31,7 +31,8 @@ prepare_data:
   fixvis: 
     enable: false
   manage_flags: 
-    mode: "initialize"
+    mode: restore
+    version: caracal_legacy
   clear_cal: true
   spectral_weights:
     mode: uniform

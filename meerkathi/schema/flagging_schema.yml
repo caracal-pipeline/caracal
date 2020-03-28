@@ -27,7 +27,7 @@ mapping:
             desc: enable this segement
             example: 'True'
             required: false
-          flag_version: 
+          version: 
             type: str
             desc: Flag version name
             example: 'before_flagging_automatic'

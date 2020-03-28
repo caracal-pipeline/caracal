@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela>=1.2.5',
+    'stimela @ git+https://github.com/ratt-ru/Stimela',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -31,7 +31,7 @@ requirements = [
 devel = []
 
 PACKAGE_NAME = 'meerkathi'
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,

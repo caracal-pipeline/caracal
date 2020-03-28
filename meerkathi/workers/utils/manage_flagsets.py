@@ -1,6 +1,7 @@
 # Manage flagsets
 import os
 import sys
+from meerkathi import log
 
 def get_flags(pipeline, ms):
     flaglist_file = "{folder:s}/{ms:s}.flagversions/FLAG_VERSION_LIST".format(folder=pipeline.msdir, ms=ms)
@@ -34,6 +35,20 @@ def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""
             output=pipeline.output,
             label="{0:s}:: Delete flags".format(label or cab_name))
 
+def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", merge=False):
+    if flagname in get_flags(pipeline, ms):
+        recipe.add("cab/casa_flagmanager", cab_name, {
+                "vis": ms,
+                "mode": "restore",
+                "versionname": flagname,
+                "merge" : "or" if merge else "replace",
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="{0:s}:: Restoring flags to flag version [{1:s}]".format(label or cab_name, flagname))
+    else:
+        log.warn("Flag version [{0:s}] could not be found".format(flagname))
+
 def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
     if flagname in get_flags(pipeline, ms):
         return
@@ -44,7 +59,7 @@ def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
         },
         input=pipeline.input,
         output=pipeline.output,
-        label="{0:s}:: Delete flags".format(label or cab_name))
+        label="{0:s}:: Save flag version".format(label or cab_name))
 
 
 def delete_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

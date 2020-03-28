@@ -31,11 +31,11 @@ requirements = [
 devel = []
 
 PACKAGE_NAME = 'meerkathi'
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
-      description="MeerKAT end-to-end data reduction pipeline",
+      description="End-to-end data reduction pipeline for radio interferometry data",
       author="MeerKATHI peeps",
       author_email="sphemakh@gmail.com",
       url="https://github.com/ska-sa/meerkathi",

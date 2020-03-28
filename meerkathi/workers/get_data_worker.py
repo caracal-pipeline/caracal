@@ -61,7 +61,9 @@ def worker(pipeline, recipe, config):
                        {
                            "ms": msname,
                        },
-                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname))
+                       label='{0:s}:: Get MS from tarbal ms={1:s}'.format(step, msname), 
+                       output=pipeline.output,
+                       input=pipeline.input)
 
     if pipeline.enable_task(config, 'combine'):
         pipeline.virtconcat = True

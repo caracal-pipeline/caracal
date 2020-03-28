@@ -99,6 +99,10 @@ do
     then
         KS=1
     fi
+    if [[ "$arg" == "--keep-home" ]] || [[ "$arg" == "-kh" ]]
+    then
+        KH=1
+    fi
     if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
     then
         PD=1
@@ -229,6 +233,9 @@ then
     echo "  --keep-stimeladir -ks               Keep the content of .stimela if it exists,"
     echo "                                      delete when switch not set"
     echo ""
+    echo "  --keep-home -kh                     Do not change the HOME environment"
+    echo "                                      variable during installation test"
+    echo ""
     echo "  --docker-minimal -dm                Test Docker installation and test run with"
     echo "                                      minimal configuration"
     echo ""
@@ -307,7 +314,8 @@ then
     echo "  \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID):"
     echo ""
     echo "  - a directory called home is created (if not existing or if -f is set)"
-    echo "    and the HOME environment variable set to that home directory"
+    echo "    and the HOME environment variable set to that home directory unless"
+    echo "    the --keep-home or -kh switches are set"
     echo ""
     echo "  - a python 3 virtual environment name caracal_venv is created (if not"
     echo "    existing or if -f is set) and activated"
@@ -557,9 +565,9 @@ WORKSPACE_ROOT="$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
 # Save home for later 
 if [[ -n $HOME ]]
 then
-    ss+="HOME_OLD=\${HOME}"
-    ss+=$'\n'
-    HOME_OLD=${HOME}
+    [[ -n ${KH} ]] || ss+="HOME_OLD=\${HOME}"
+    [[ -n ${KH} ]] || ss+=$'\n'
+    [[ -n ${KH} ]] || HOME_OLD=${HOME}
 fi
 if [[ -n ${PYTHONPATH} ]]
 then
@@ -670,8 +678,8 @@ then
 fi
 
 function cleanup {
-  echo "export HOME=\${OLD_HOME}" >> ${SS}
-  export HOME=${OLD_HOME}
+  [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
+  [[ -n ${KH} ]] || export HOME=${OLD_HOME}
   if [[ -n ${PYTHONPATH_OLD} ]]
   then
        echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
@@ -687,16 +695,18 @@ function cleanup {
 trap cleanup EXIT
 
 # The following would only work in an encapsulated environment
-echo "export HOME=\${workspace_root}/home" >> ${SS}
-export HOME=$WORKSPACE_ROOT/home
+[[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
+[[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
 if (( $FORCE != 0 ))
 then
-    echo "rm -rf \${HOME}" >> ${SS}
-    [[ -n ${FS} ]] || rm -rf ${HOME}
+    [[ -n ${KH} ]] || echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}
+    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake...
+    [[ -n ${KH} ]] || [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/home
 fi
 
-echo "mkdir -p \${HOME}" >> ${SS}
-mkdir -p $HOME
+[[ -n ${KH} ]] || echo "mkdir -p ${WORKSPACE_ROOT}/home" >> ${SS}
+# Same here, don't do crazy stuff
+[[ -n ${KH} ]] || mkdir -p ${WORKSPACE_ROOT}/home
 
 # For some reason we have to be somewhere
 echo "cd \${HOME}" >> ${SS}

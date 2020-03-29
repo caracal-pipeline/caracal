@@ -42,7 +42,7 @@ def logging_decorator(msg):
     return _function_decorator
 
 
-def requires(*args, skip=False):
+def requires(skip=False, *args):
     """
     Decorator returning either the original function, or a
     dummy function returning a :class:`OptionalImportError` when called,

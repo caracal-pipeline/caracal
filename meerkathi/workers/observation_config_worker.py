@@ -55,20 +55,6 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-            if config['obsinfo']["plot_elevation_tracks"]:
-                step = "elevation_plots_{:d}".format(i)
-                recipe.add("cab/casa_plotms", step, {
-                        "vis" : msname,
-                        "xaxis" : "hourangle",
-                        "yaxis" : "elevation",
-                        "coloraxis" : "field",
-                        "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
-                        "overwrite" : True,
-                    },
-                        input=pipeline.input,
-                        output=pipeline.diagnostic_plots,
-                        label="{:s}:: Plotting elevation tracks".format(step))
-
             if config['obsinfo'].get('vampirisms'):
                 step = 'vampirisms_{0:d}'.format(i)
                 recipe.add('cab/sunblocker', step,
@@ -83,9 +69,10 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
-            if config['obsinfo'].get('plot_elevation_tracks'):
+            if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
+                _config = config['obsinfo']['plot_elevation_tracks']
                 step = "elevation_plots_{:d}".format(i)
-                if config['obsinfo'].get("plotter") in ["plotms"]:
+                if _config["plotter"] in ["plotms"]:
                     recipe.add("cab/casa_plotms", step, {
                                "vis" : msname,
                                "xaxis" : "hourangle",
@@ -97,7 +84,7 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.diagnostic_plots,
                                label="{:s}:: Plotting elevation tracks".format(step))
-                elif config['obsinfo'].get("plotter") in ["owlcat"]:
+                elif _config["plotter"] in ["owlcat"]:
                     recipe.add("cab/owlcat_plotelev", step, {
                                "msname" : msname,
                                "output-name" : "{:s}_elevation-tracks_{:d}.png".format(prefix, i)

@@ -6,6 +6,7 @@ import yaml
 import stimela.dismissable as sdm
 from meerkathi.workers.utils import manage_flagsets as manflags
 from meerkathi.workers.utils import manage_fields as manfields
+from meerkathi.workers.utils import manage_caltabs as manGtabs
 import copy
 import re
 
@@ -135,63 +136,30 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                     input=pipeline.input, output=pipeline.output,
                     label="%s::" % step)
         elif term == "I":
-            step = "%s_%s_%d_%d_%s" % (name, label, itern, iobs, ftype)
-            applycal(recipe, gaintables_gcal, 
-                interps_gcal, fields_gcal, CALS[ftype], pipeline, iobs, calmode="calflag")
-            mask_prefix = "mask_%s_%s" %(prefix, ftype)
-            maskim = "mask_%s_%s-image.fits:output" %(prefix, ftype)
-            mask = "mask_%s_%s-mask.fits:output" %(prefix, ftype)
-            recipe.add(RULES[term]["cab"], step, {
-                    "msname" : ms,
-                    "name" : mask_prefix,
-                    "size" : 2048,
-                    "scale" : "1.5asec",
-                    "channels-out" : 1,
-                    "auto-mask" : 6,
-                    "auto-threshold" : 3,
-                    "local-rms-window" : 50,
-                    "local-rms" : True,
-                    "padding" : 1.4,
-                    "niter" : 1000000000,
-                    "weight" : "briggs 0.0",
-                    "mgain" : 1.0,
-                    "field" : field_id,
-                },
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s:: Image %s field" % (step, ftype))
+            for fid in field_id:
+                step = "%s_%s_%d_%d_%s_field%d" % (name, label, itern, iobs, ftype, fid)
+                applycal(recipe, gaintables, 
+                    interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
+                oneGCimage = "%s_%s_%d_field%d:output" %(prefix, ftype, iobs, fid)
+                recipe.add(RULES[term]["cab"], step, {
+                        "msname" : ms,
+                        "name" : oneGCimage,
+                        "size" : config[ftype]["image"]['npix'],
+                        "scale" : config[ftype]["image"]['cell'],
+                        "channels-out" : config[ftype]["image"]['nchans'],
+                        "auto-mask" : config[ftype]["image"]['auto_mask'],
+                        "auto-threshold" : config[ftype]["image"]['auto_threshold'],
+                        "local-rms-window" : config[ftype]["image"]['rms_window'],
+                        "local-rms" : config[ftype]["image"]['local_rms'],
+                        "padding" : config[ftype]["image"]['padding'],
+                        "niter" : config[ftype]["image"]['niter'],
+                        "weight" : config[ftype]["image"]["weight"],
+                        "mgain" : config[ftype]["image"]['mgain'],
+                        "field" : fid,
+                    },
+                        input=pipeline.input, output=pipeline.output,
+                        label="%s:: Image %s field" % (step, ftype))
 
-            step = "make_mask_%s_%d__%d_%s_2" % (label, itern, obs, ftype)
-            recipe.add("cab/cleanmask", step, {
-                "image" : maskim,
-                "output" : maskim,
-                "boxes" : 13,
-                "sigma" : 10,
-                "no-negative" : True,
-            },
-                input=pipeline.input,
-                output=pipeline.output,
-                label="make mask")
-            
-            step = "%s_%s_%d_%d_%s_2" % (name, label, itern, obs, ftype)
-            recipe.add(RULES[term]["cab"], step, {
-                    "msname" : ms,
-                    "name" : "%s_%s" % (prefix, ftype),
-                    "size" : 2048,
-                    "scale" : "1.5asec",
-                    "column" : "CORRECTED_DATA",
-                    "auto-mask" : 4,
-                    "auto-threshold" : 3,
-                    "local-rms-window" : 50,
-                    "local-rms" : True,
-                    "padding" : 1.4,
-                    "fits-mask" : mask,
-                    "niter" : 1000000000,
-                    "weight" : "briggs 0.0",
-                    "mgain" : 0.8,
-                    "field" : field_id,
-                },
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s:: Image %s field" % (step, ftype))
         else:
             interp = RULES[term]["interp"]
             caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
@@ -223,8 +191,15 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
             if "I" not in order and smodel:
                 params["smodel"] = ["1", "0", "0", "0"]
 
+
+            can_reuse = False
             if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
                     caltable):
+                # check if field is in gain table
+                fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, "check_field_in_tab")
+                if set(fields).issubset(fields_in_tab["field_id"]):
+                    can_reuse = True
+            if can_reuse:
                 meerkathi.log.info("Reusing existing gain table '%s' as requested" % caltable)
             else:
                 recipe.add(RULES[term]["cab"], step, 
@@ -345,13 +320,6 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
         prefix = '{0:s}-{1:s}'.format(prefix, label)
 
-        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save_flags_before_{0:s}_{1:d}'.format(wname, i)
-            fversion = "before_%s" % wname
-            _version = config['load_flags']["version"]
-            manflags.add_cflags(pipeline, recipe, "_".join(
-                        [wname, fversion]), msname, cab_name=substep)
-
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
             if 'enable' in opts:
@@ -364,6 +332,11 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Flagging gains'.format(step))
+
+        # Clear flags from this worker if they already exist
+        substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
+        manflags.delete_cflags(pipeline, recipe, wname,
+                               msname, cab_name=substep)
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
@@ -513,12 +486,8 @@ def worker(pipeline, recipe, config):
                 applycal(recipe, copy.deepcopy(gaintables), interps,
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
-        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save_flags_after_{0:s}_{1:d}'.format(wname, i)
-            fversion = "after_%s" % wname
-            _version = config['load_flags']["version"]
-            manflags.add_cflags(pipeline, recipe, "_".join(
-                    [wname, fversion]), msname, cab_name=substep)
+        substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
+        manflags.add_cflags(pipeline, recipe, wname, msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)

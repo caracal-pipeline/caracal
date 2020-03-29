@@ -269,6 +269,76 @@ mapping:
                 desc: Correlation
                 example: ""
                 required: false
+          image:
+            desc: Image settings for imaging secondary calibrator
+            type: map
+            mapping:
+              npix:
+                type: int
+                desc: Number of pixels in output image
+                required: false
+                example: '2048'
+              padding:
+                type: float
+                desc: Padding in WSclean
+                required: false
+                example: '1.5'
+              mgain:
+                type: float
+                desc: Image CLEANing gain
+                required: false
+                example: '0.80'
+              cell:
+                type: float
+                desc: Image pixel size (arcsec)
+                required: false
+                example: '1.0'
+              weight:
+                type: str
+                enum: ["briggs", "uniform", "natural"]
+                desc: Image weighting type. If Briggs, set the img robust parameter
+                required: false
+                example: 'briggs -1.0'
+              auto_mask:
+                type: float 
+                desc: Auto masking threshold
+                required: false
+                example: '5'
+              auto_threshold:
+                type: float
+                desc: Auto clean threshold
+                required: false
+                example: '1.5'
+              column:
+                type: str
+                desc: Column to image
+                required: false
+                example: 'CORRECTED_DATA'
+              local_rms:
+                type: bool
+                desc: switch on local rms measurement for cleaning
+                required: false
+                example: 'True'
+              rms_window:
+                type: int
+                desc: switch on local rms measurement for cleaning
+                required: false
+                example: '150'
+              niter:
+                type: int
+                desc: Number of cleaning iterations
+                required: false
+                example: '200000'
+              nchans:
+                type: int
+                desc: Number of channesls in output image
+                required: false
+                example: '9'
+              fit_spectral_pol:
+                type: int
+                desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
+                required: false
+                example: '2'
       apply_cal:
         type: map
         desc: Apply calibration

@@ -58,6 +58,12 @@ mapping:
            desc: Number of channels for the output image cube.
            required: False
            example: '10'
+         column:
+           type: str
+           desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
+           required: False
+           example: 'CORRETE_DATA'
+
      calibrate_dd:
        type: map
        desc: Direction dependent calibration parameters

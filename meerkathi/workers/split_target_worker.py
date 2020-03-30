@@ -137,18 +137,15 @@ def worker(pipeline, recipe, config):
         for target in target_ls:
             field = utils.filter_name(target)
             if config['split_target']['field'] == 'target':
-                fms = [pipeline.hires_msnames[i] if label_in ==
-                       '' else '{0:s}-{1:s}_{2:s}.ms'.format(msname, field, label_in)]
+                fms = pipeline.hires_msnames[i] if label_in == \
+                       '' else '{0:s}-{1:s}_{2:s}.ms'.format(msname, field, label_in)
                 tms = '{0:s}-{1:s}_{2:s}.ms'.format(
                        msname, field, label_out)
             else:
-                fms = [pipeline.hires_msnames[i] if label_in ==
-                   '' else '{0:s}_{1:s}.ms'.format(msname, label_in)]
+                fms = pipeline.hires_msnames[i] if label_in == \
+                       '' else '{0:s}_{1:s}.ms'.format(msname, label_in)
                 tms = '{0:s}_{1:s}.ms'.format(
                        msname, label_out)
-
-            print('Splitting from: {}'.format(fms))
-            print('Splitting to:{}'.format(tms))
 
             flagv = tms+'.flagversions'
 

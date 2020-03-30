@@ -18,11 +18,11 @@ mapping:
         type: str
         required: false
         example: ''
-      split_cal:
-        desc: Flag splitted calibrator fields.
-        type: bool
+      field:
+        desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+        type: str
         required: false
-        example: 'False'
+        example: 'calibrators'
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map

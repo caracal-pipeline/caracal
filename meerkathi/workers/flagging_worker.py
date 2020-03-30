@@ -34,18 +34,20 @@ def worker(pipeline, recipe, config):
 
         '''GET LIST OF INPUT MS'''
         mslist = []
+        msn = pipeline.msnames[i][:-3]
 
-        if config['split_cal']:
-           mslist.append(
-               '{0:s}_{1:s}.ms'.format(pipeline.msnames[i][:-3], label))
-        elif label:
-            target_ls = pipeline.target[i]
-            for target in target_ls:
+        if config['field'] == 'target':
+           for target in pipeline.target[i]:
                 field = utils.filter_name(target)
-                mslist.append(
-                    '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label))
+                mslist.append(pipeline.msnames[i] if label == \
+                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
+
+        elif config['field'] == 'calibrators':
+            mslist.append(pipeline.msnames[i] if label == \
+                  '' else '{0:s}_{1:s}.ms'.format(msn, label))
         else:
-            mslist.append(msnames[i])
+            raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
+                                 "User selected: '{}'".format(config['field']))
 
         for m in mslist:  # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):

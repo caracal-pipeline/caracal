@@ -266,7 +266,11 @@ def worker(pipeline, recipe, config):
     #if usepb:
     #    make_primary_beam()
        dd_precal_image(field,mslist)
+<<<<<<< HEAD
     #sfind_intrinsic()
+=======
+       #sfind_intrinsic()
+>>>>>>> 6b5cd6981bcca82baecb9859286ac64701676a6a
        dagga(field)
        dd_calibrate(field,mslist)
        dd_postcal_image(field,mslist)

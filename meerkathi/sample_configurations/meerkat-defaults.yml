@@ -75,6 +75,7 @@ cross_cal:
     merge: False
   set_model:
     enable: true
+    meerkathi_model: true
   primary_cal:
     enable: true
     reuse_existing_gains: true

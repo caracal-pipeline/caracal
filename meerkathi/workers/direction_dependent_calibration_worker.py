@@ -42,7 +42,7 @@ def worker(pipeline, recipe, config):
     #print("ms_dict",ms_dict)
     dd_image_opts = {
         "Data-MS"        : mslist,
-        "Data-ColName"   : "DATA",
+        "Data-ColName"   : "CORRECTED_DATA",
         "Data-ChunkHours"       : 0.05,
         "Output-Mode"           : "Clean",
         #"Output-Cubes"          : 'all',

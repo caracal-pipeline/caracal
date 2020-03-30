@@ -359,7 +359,7 @@ def worker(pipeline, recipe, config):
 
                 # Clear autoflags if need be
 
-                if not config['split_cal']:
+                if config['field'] == 'target':
                     fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
@@ -453,7 +453,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}'.format(wname, i)
-                if not config['split_cal']:
+                if config['field'] == 'target':
                     fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                     outlabel = '_{0:s}_{1:d}'.format(fieldName, i)

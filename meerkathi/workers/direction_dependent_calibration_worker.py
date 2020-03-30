@@ -264,9 +264,9 @@ def worker(pipeline, recipe, config):
  
     #if usepb:
     #    make_primary_beam()
-#       dd_precal_image(field,mslist)
-    #sfind_intrinsic()
-#       dagga(field)
-#       dd_calibrate(field,mslist)
+       dd_precal_image(field,mslist)
+       #sfind_intrinsic()
+       dagga(field)
+       dd_calibrate(field,mslist)
        dd_postcal_image(field,mslist)
 

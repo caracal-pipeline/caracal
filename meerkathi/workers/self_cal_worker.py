@@ -159,7 +159,7 @@ def worker(pipeline, recipe, config):
             "npix": config[key].get('npix', npix),
             "padding": config[key].get('padding', padding),
             "scale": config[key].get('cell', cell),
-            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
+            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, 0),
             "niter": config[key].get('niter', niter),
             "mgain": config[key].get('mgain', mgain),
             "pol": config[key].get('pol', pol),
@@ -169,7 +169,7 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
-            "savesourcelist": True if config[key].get('niter', niter)>0 else False,
+            "savesourcelist": False,
         }
 
         recipe.add('cab/wsclean', step,
@@ -295,8 +295,8 @@ def worker(pipeline, recipe, config):
         if mask_key == 'auto_mask':
 
             image_opts.update({"auto-mask": True})
-            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1],True})
-            image_opts.update({"auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],7})            
+            image_opts.update({"local-rms": config[key].get('local_rms',True)[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]})
+            image_opts.update({"auto-threshold": config[key].get('auto_threshold',7)[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
             fake_image(num, img_dir, mslist, field)
             sofia_mask = 'stocazzo'

@@ -174,9 +174,11 @@ self_cal:
   calibrate:
     enable: true
     Gsols_time: [120]
+  transfer_model:
+    enable: false
 
 image_line:
-  enable: true
+  enable: false
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

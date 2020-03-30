@@ -146,10 +146,42 @@ def worker(pipeline, recipe, config):
     #       print 'memory_in_kb:', memtotal_kb
     #    return memtotal_kb
 
+    def fake_image(num, img_dir, mslist, field):
+        key = 'image'
+        key_mt = 'calibrate'
+
+        step = 'image_{}'.format(num)
+        fake_image_opts = {
+            "msname": mslist,
+            "column": imcolumn,
+            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+            "nmiter": sdm.dismissable(config['img_nmiter']),
+            "npix": config[key].get('npix', npix),
+            "padding": config[key].get('padding', padding),
+            "scale": config[key].get('cell', cell),
+            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
+            "niter": config[key].get('niter', niter),
+            "mgain": config[key].get('mgain', mgain),
+            "pol": config[key].get('pol', pol),
+            "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
+            "channelsout": nchans,
+            "joinchannels": config[key].get('joinchannels', joinchannels),
+            "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
+            "multiscale": config[key].get('multi_scale'),
+            "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
+            "savesourcelist": True if config[key].get('niter', niter)>0 else False,
+        }
+
+        recipe.add('cab/wsclean', step,
+                   fake_image_opts,
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{:s}:: Make image after first round of calibration'.format(step))
+
     def image(num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-        mask = False
+
         if num > 1:
             matrix_type = config[key_mt].get('gain_matrix_type')[
                 num - 2 if len(config[key_mt].get('gain_matrix_type')) >= num else -1]
@@ -170,61 +202,64 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        if config[key].get('peak_based_mask_on_dirty'):
-            mask = True
-            step = 'image_{}_dirty'.format(num)
-            recipe.add('cab/wsclean', step,
-                       {
-                           "msname": mslist,
-                           "column": imcolumn,
-                           "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
-                           "nmiter": sdm.dismissable(config['img_nmiter']),
-                           "npix": config[key].get('npix', npix),
-                           "padding": config[key].get('padding', padding),
-                           "scale": config[key].get('cell', cell),
-                           "pol": config[key].get('pol', pol),
-                           "channelsout": nchans,
-                           "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
-                           "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{:s}:: Make dirty image to create clean mask'.format(step))
+#### I believe this Section is OUTDATED: these keywords are not in schema anymore ####
+        # if config[key].get('peak_based_mask_on_dirty'):
+        #     mask = True
+        #     step = 'image_{}_dirty'.format(num)
+        #     recipe.add('cab/wsclean', step,
+        #                {
+        #                    "msname": mslist,
+        #                    "column": imcolumn,
+        #                    "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+        #                    "nmiter": sdm.dismissable(config['img_nmiter']),
+        #                    "npix": config[key].get('npix', npix),
+        #                    "padding": config[key].get('padding', padding),
+        #                    "scale": config[key].get('cell', cell),
+        #                    "pol": config[key].get('pol', pol),
+        #                    "channelsout": nchans,
+        #                    "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
+        #                    "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='{:s}:: Make dirty image to create clean mask'.format(step))
 
-            step = 'mask_dirty_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{s:}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  0.5,
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
+        #     step = 'mask_dirty_{}'.format(num)
+        #     recipe.add('cab/cleanmask', step,
+        #                {
+        #                    "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix),
+        #                    "output":  '{0:s}/{1:s}_{s:}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
+        #                    "dilate":  False,
+        #                    "peak-fraction":  0.5,
+        #                    "no-negative":  True,
+        #                    "boxes":  1,
+        #                    "log-level":  'DEBUG',
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
 
-        elif config[key].get('mask'):
-            mask = True
-            sigma = config[key].get('mask_sigma')
-            pf = config[key].get('mask_peak_fraction')
-            step = 'mask_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num-1, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{2:s}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  sdm.dismissable(pf),
-                           "sigma":  sdm.dismissable(sigma),
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
+        # elif config[key].get('mask'):
+        #     mask = True
+        #     sigma = config[key].get('mask_sigma')
+        #     pf = config[key].get('mask_peak_fraction')
+        #     step = 'mask_{}'.format(num)
+        #     recipe.add('cab/cleanmask', step,
+        #                {
+        #                    "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num-1, mfsprefix),
+        #                    "output":  '{0:s}/{1:s}_{2:s}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
+        #                    "dilate":  False,
+        #                    "peak-fraction":  sdm.dismissable(pf),
+        #                    "sigma":  sdm.dismissable(sigma),
+        #                    "no-negative":  True,
+        #                    "boxes":  1,
+        #                    "log-level":  'DEBUG',
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
+
+#### END of OUTDATED SECTION ####
 
         step = 'image_{}'.format(num)
         image_opts = {
@@ -242,9 +277,7 @@ def worker(pipeline, recipe, config):
             "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
-            "local-rms": config[key].get('local_rms'),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-            "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
@@ -252,17 +285,36 @@ def worker(pipeline, recipe, config):
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 
-        if config[key].get('mask_from_sky'):
-            fitmask = config[key].get('fits_mask')[
-                num-1 if len(config[key].get('fits_mask')) >= num else -1]
-            fitmask_address = 'masking/'+str(fitmask)
+        # if config[key].get('mask_from_sky'):
+        #     fitmask = config[key].get('fits_mask')[
+        #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
+        #     fitmask_address = 'masking/'+str(fitmask)
+        #     image_opts.update({"fitsmask": fitmask_address+':output'})
+
+        mask_key = config[key].get('clean_mask')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]
+        if mask_key == 'auto_mask':
+
+            image_opts.update({"auto-mask": True})
+            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1],True})
+            image_opts.update({"auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],7})            
+        elif mask_key == 'sofia':
+            fake_image(num, img_dir, mslist, field)
+            sofia_mask = 'stocazzo'
+            fitmask_address = 'masking/'+str(sofia_mask)
             image_opts.update({"fitsmask": fitmask_address+':output'})
-        elif mask:
-            image_opts.update(
-                {"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(img_dir, prefix, num)})
-        else:
-            image_opts.update({"auto-mask": config[key].get('auto_mask', [])[
-                              num-1 if len(config[key].get('auto_mask', [])) >= num else -1]})
+        elif '.' in  mask_key:
+            fitmask_address = 'masking/'+str(mask_key)
+            image_opts.update({"fitsmask": fitmask_address+':output'})
+        #     image_opts.update({"fitsmask": fitmask_address+':output'})
+        #     fitmask = config[key].get('fits_mask')[
+        #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
+        #     fitmask_address = 'masking/'+str(fitmask)
+        #     image_opts.update({"fitsmask": fitmask_address+':output'})
+
+#        elif mask:
+#            image_opts.update(
+#                {"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(img_dir, prefix, num)})
+            
 
         recipe.add('cab/wsclean', step,
                    image_opts,

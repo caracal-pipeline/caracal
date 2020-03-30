@@ -28,22 +28,29 @@ import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
-try:
-    import meerkathi.scripts as scripts
-    from meerkathi.scripts import reporter as mrr
-    REPORTS = True
-except ImportError:
-    log.warning(
-        "Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]\" if you want these reports")
-    REPORTS = False
-
+# GIGJ commenting lines initiating a report
+# try:
+#    import meerkathi.scripts as scripts
+#    from meerkathi.scripts import reporter as mrr
+#    REPORTS = True
+# except ImportError:
+#    log.warning(
+#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"meerkathi[extra_diagnostics]#\" if you want these reports")
+#    REPORTS = False
+REPORTS = False
 
 class worker_administrator(object):
+# GIGJ commenting lines initiating a report
+#    def __init__(self, config, workers_directory,
+#                 stimela_build=None, prefix=None, configFileName=None,
+#                 add_all_first=False, singularity_image_dir=None,
+#                 start_worker=None, end_worker=None,
+#                 container_tech='docker', generate_reports=True):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
-                 container_tech='docker', generate_reports=True):
+                 container_tech='docker', generate_reports=False):
 
         self.config = config
         self.add_all_first = add_all_first
@@ -294,6 +301,7 @@ class worker_administrator(object):
             else:
                 log.info("Running worker {0:s}".format(_worker))
                 recipe.run()
+                log.info("Finished worker {0:s}".format(_worker))
                 casa_last = glob.glob(self.output + '/*.last')
                 for file_ in casa_last:
                     os.remove(file_)
@@ -303,7 +311,9 @@ class worker_administrator(object):
             if self.add_all_first:
                 for worker in self.workers:
                     if worker not in self.skip:
-                        self.recipes[worker[1]].run()
+                       log.info("Running worker next in queue")
+                       self.recipes[worker[1]].run()
+                       log.info("Finished worker next in queue")
         finally:  # write reports even if the pipeline only runs partially
             if REPORTS and self.generate_reports:
                 reporter = mrr(self)

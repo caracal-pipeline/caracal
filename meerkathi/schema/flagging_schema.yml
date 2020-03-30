@@ -18,6 +18,25 @@ mapping:
         type: str
         required: false
         example: ''
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          version: 
+            type: str
+            desc: Flag version name
+            example: 'before_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
@@ -65,7 +84,7 @@ mapping:
             desc: Enables flagging of autocorrelations.
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
@@ -201,7 +220,6 @@ mapping:
             type: str
             required: False
             example: '0'
-
       static_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
@@ -227,10 +245,10 @@ mapping:
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger or tricolour (not active yet)
+            desc: Enable RFI flagging with AOFlagger or tricolour
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
           flagger:
             desc: Choose flagger for automatic flagging
             type: str
@@ -268,6 +286,16 @@ mapping:
             enum: ["numpy", "zarr-disk"]
             required: false
             example: "numpy"
+          tricolour_mode:
+            desc: If set to 'auto', decides the tricolour flagging strategy based on the bandwidth of the dataset. Else uses tricolour_calibrator_strat. 
+            type: str
+            required: false
+            enum: ['auto', 'manual']
+            example: 'auto'
+          tricolour_calibrator_strat_narrowband:
+            type: str
+            required: False
+            example: 'calibrator_mild_flagging.yaml'
           tricolour_calibrator_strat:
             type: str
             required: False
@@ -354,7 +382,6 @@ mapping:
             type: bool
             required: False
             example: 'True'
-
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map

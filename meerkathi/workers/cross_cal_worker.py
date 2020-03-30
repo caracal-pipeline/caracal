@@ -220,7 +220,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
             else:
                 params["caltable"] = caltable
 
-            if "I" not in order and smodel:
+            if "I" not in order and smodel and term != 'B':
                 params["smodel"] = ["1", "0", "0", "0"]
 
             if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 

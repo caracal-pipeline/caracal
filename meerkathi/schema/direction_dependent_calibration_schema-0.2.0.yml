@@ -15,7 +15,7 @@ mapping:
        example: 'False'
      label:
         type: str
-        desc: Label to tag the output files
+        desc: Label of the .MS files to process.
         required: False
         example: 'DD'
      use_pb:

@@ -337,7 +337,6 @@ def worker(pipeline, recipe, config):
         nchan_dopp, comfreq0, comchanw = None, None, None
 
     for i, msname in enumerate(all_msfiles):
-        msname_mst = msname.replace('.ms', '_mst.ms')
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -352,6 +351,22 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Subtract model column'.format(step))
+
+        if pipeline.enable_task(config, 'addmodelcol'):
+            step = 'modeladd_{:d}'.format(i)
+            recipe.add('cab/msutils', step,
+                       {
+                           "command": 'sumcols',
+                           "msname": msname,
+                           "col1": 'CORRECTED_DATA',
+                           "col2": 'MODEL_DATA',
+                           "column": 'CORRECTED_DATA'
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Add model column'.format(step))
+
+        msname_mst = msname.replace('.ms', '_mst.ms')
 
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists(

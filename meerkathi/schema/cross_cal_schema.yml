@@ -277,7 +277,7 @@ mapping:
                 type: int
                 desc: Number of pixels in output image
                 required: false
-                example: '2048'
+                example: '4096'
               padding:
                 type: float
                 desc: Padding in WSclean
@@ -292,7 +292,7 @@ mapping:
                 type: float
                 desc: Image pixel size (arcsec)
                 required: false
-                example: '1.0'
+                example: '0.5'
               weight:
                 type: str
                 enum: ["briggs", "uniform", "natural"]
@@ -303,7 +303,7 @@ mapping:
                 type: float 
                 desc: Auto masking threshold
                 required: false
-                example: '5'
+                example: '10'
               auto_threshold:
                 type: float
                 desc: Auto clean threshold

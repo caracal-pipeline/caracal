@@ -157,7 +157,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                         "mgain" : config[ftype]["image"]['mgain'],
                         "field" : fid,
                     },
-                        input=pipeline.input, output=pipeline.output,
+                        input=pipeline.input, output=pipeline.cross_cal_continuum,
                         label="%s:: Image %s field" % (step, ftype))
 
         else:
@@ -197,7 +197,7 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                     caltable):
                 # check if field is in gain table
                 fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, "check_field_in_tab")
-                if set(fields).issubset(fields_in_tab["field_id"]):
+                if set(fields_in_tab["field_id"]).issubset(field_id):
                     can_reuse = True
             if can_reuse:
                 meerkathi.log.info("Reusing existing gain table '%s' as requested" % caltable)
@@ -406,6 +406,8 @@ def worker(pipeline, recipe, config):
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
+        # If no secondary calibrator solutions or
+        # secondary == primary
         if gcal_set == set() or len(gcal_set - fcal_set) == 0:
             primary = solve(recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
@@ -446,7 +448,10 @@ def worker(pipeline, recipe, config):
             interps = primary["interps"]
             gainfields = primary["gainfield"]
             gaintables = primary["gaintables"]
-            # Transfer fluxscale
+            # Transfer fluxscale to other
+            # bandpass calibrators 
+            #TODO(Sphe)
+            # check if this makes sense
             if len(pipeline.bpcal[i]) > 1:
                 ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
                 if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
@@ -464,16 +469,20 @@ def worker(pipeline, recipe, config):
                 applycal(recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
-            # Transfer fluxscale
-            ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
-            if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
-                    ftable):
-                meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
+            # Transfer fluxscale not required if
+            # doing secondary-selfcal
+            if 'I' not in config["order"]:
+                ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
+                if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                        ftable):
+                    meerkathi.log.info("Reusing existing gain table '%s' as requested" % ftable)
+                else:
+                    transfer_fluxscale(recipe, gtable+":output", ftable, 
+                            pipeline, i, reference=fluxscale_field, label=label)
+                    plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
+                        ftable+":output", i, term='F')
             else:
-                transfer_fluxscale(recipe, gtable+":output", ftable, 
-                        pipeline, i, reference=fluxscale_field, label=label)
-                plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
-                    ftable+":output", i, term='F')
+                ftable = None
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]

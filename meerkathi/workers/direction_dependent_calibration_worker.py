@@ -21,6 +21,7 @@ def worker(pipeline, recipe, config):
     niter = config['image_dd'].get('niter')
     robust = config['image_dd'].get('robust')
     nchans = config['image_dd'].get('nchans')
+    colname = config['image_dd'].get('column')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
     ddsols_t = config['calibrate_dd'].get('ddsols_time')
     ddsols_f = config['calibrate_dd'].get('ddsols_freq')
@@ -42,7 +43,7 @@ def worker(pipeline, recipe, config):
     #print("ms_dict",ms_dict)
     dd_image_opts = {
         "Data-MS"        : mslist,
-        "Data-ColName"   : "DATA",
+        "Data-ColName"   : "CORRECTED_DATA",
         "Data-ChunkHours"       : 0.05,
         "Output-Mode"           : "Clean",
         #"Output-Cubes"          : 'all',
@@ -264,9 +265,9 @@ def worker(pipeline, recipe, config):
  
     #if usepb:
     #    make_primary_beam()
-#       dd_precal_image(field,mslist)
+       dd_precal_image(field,mslist)
     #sfind_intrinsic()
-#       dagga(field)
-#       dd_calibrate(field,mslist)
+       dagga(field)
+       dd_calibrate(field,mslist)
        dd_postcal_image(field,mslist)
 

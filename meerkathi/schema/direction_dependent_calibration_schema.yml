@@ -23,7 +23,6 @@ mapping:
         desc: Enable primary beam usage (only MeerKAT for the moment). DO NOT USE.
         required: False
         example: 'False' 
-
      image_dd:
        type: map
        desc: Imaging parameters for DD cal loop
@@ -62,8 +61,7 @@ mapping:
            type: str
            desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
            required: False
-           example: 'CORRETED_DATA'
-
+           example: 'CORRECTED_DATA'
      calibrate_dd:
        type: map
        desc: Direction dependent calibration parameters

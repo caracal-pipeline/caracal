@@ -21,6 +21,7 @@ def worker(pipeline, recipe, config):
     niter = config['image_dd'].get('niter')
     robust = config['image_dd'].get('robust')
     nchans = config['image_dd'].get('nchans')
+    colname = config['image_dd'].get('column')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
     ddsols_t = config['calibrate_dd'].get('ddsols_time')
     ddsols_f = config['calibrate_dd'].get('ddsols_freq')

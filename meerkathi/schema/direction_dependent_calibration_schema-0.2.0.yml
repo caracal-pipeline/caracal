@@ -62,7 +62,7 @@ mapping:
            type: str
            desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
            required: False
-           example: 'CORRETE_DATA'
+           example: 'CORRETED_DATA'
 
      calibrate_dd:
        type: map

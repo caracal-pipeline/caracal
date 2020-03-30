@@ -8,25 +8,21 @@ mapping:
     desc: Process visibilities for spectral line work and create line cubes and images.
     type: map
     mapping:
-
       enable:
         desc: Execute the image_line worker.
         type: bool
         required: true
         example: 'False'
-
       label:
         desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the get_data worker, followed by the target ID (one file per target), followed by this label. This is the format used by Caracal whenever it writes an .MS file to disk (e.g., in the split_target worker).
         type: str
         required: false
         example: 'corr'
-
       line_name:
         desc: Suffix to be used for the name of the output files (data cubes etc).
         type: str
         required: false
         example: 'HI'
-
       restfreq:
         desc: Spectral line rest frequency.
         type: str

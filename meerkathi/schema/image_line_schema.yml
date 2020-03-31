@@ -50,7 +50,7 @@ mapping:
             example: 'False'
 
       mstransform:
-        desc: Perform Doppler-tracking corrections and/or UVLIN continuum subtraction with CASA Mstransform. For each input .MS file, this produces an output .MS file whose name is the same as that of the input .MS file plus the suffix "_mst". 
+        desc: Perform Doppler-tracking corrections and/or UVLIN continuum subtraction with CASA mstransform. For each input .MS file, this produces an output .MS file whose name is the same as that of the input .MS file plus the suffix "_mst". 
         type: map
         mapping:
           enable:
@@ -64,7 +64,7 @@ mapping:
             required: false
             example: 'corrected'
           doppler:
-            desc: Include the Doppler-tracking correction in the run of CASA Mstransform.
+            desc: Include the Doppler-tracking correction in the run of CASA mstransform.
             type: map
             mapping:
               enable:
@@ -102,7 +102,7 @@ mapping:
                 required: false
                 example: 'auto'
           uvlin:
-            desc: Include UVLIN-like continuum subtraction in the run of CASA Mstransform.
+            desc: Include UVLIN-like continuum subtraction in the run of CASA mstransform.
             type: map
             mapping:
               enable:
@@ -121,13 +121,13 @@ mapping:
                 required: false
                 example: '1'
           obsinfo:
-            desc: Create obsinfo.txt and obsinfo.json of the .MS file(s) created by CASA Mstransform.
+            desc: Create obsinfo.txt and obsinfo.json of the .MS file(s) created by CASA mstransform.
             type: bool
             required: false
             example: 'True'
 
       flag_mst_errors:
-        desc: Run AOFlagger to flag any faulty visibilities produced by CASA Mstransform.
+        desc: Run AOFlagger to flag any faulty visibilities produced by CASA mstransform.
         type: map
         mapping:
           enable:

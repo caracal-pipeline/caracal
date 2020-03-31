@@ -32,7 +32,8 @@ def categorize_fields(msinfo):
         info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
+    ids = info['FIELD']['FIELD_ID']
+    nfields = len(ids)
     intents = info['FIELD']['INTENTS']
     intent_ids = info['FIELD']['STATE_ID']
 
@@ -44,12 +45,12 @@ def categorize_fields(msinfo):
         'xcal': (['CALIBRATE_POLARIZATION'], [])
     }
     if intents:
-        for i, field in enumerate(names):
+        for i in range(nfields):
             ints = intents[intent_ids[i]].split(',')
             for intent in ints:
                 for ftype in mapping:
                     if intent in mapping[ftype][0]:
-                        mapping[ftype][-1].append(field)
+                        mapping[ftype][-1].append(names[i])
 
     return mapping
 
@@ -62,7 +63,7 @@ def get_field_id(msinfo, field_name):
     with open(msinfo, 'r') as f:
         info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
+    ids = info['FIELD']['FIELD_ID']
     results = []
     for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
         if fn not in names:
@@ -80,7 +81,7 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
         info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
+    ids = info['FIELD']['FIELD_ID']
     dirs = info['FIELD']['REFERENCE_DIR']
 
     def index(field):
@@ -133,7 +134,7 @@ def observed_longest(msinfo, bpcals):
         info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
+    ids = info['FIELD']['FIELD_ID']
     dirs = info['FIELD']['REFERENCE_DIR']
 
     def index(field):
@@ -161,7 +162,7 @@ def field_observation_length(msinfo, field):
         info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
+    ids = info['FIELD']['FIELD_ID']
 
     def index(field):
         if isinstance(field, str):

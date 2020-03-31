@@ -23,6 +23,25 @@ mapping:
         required: false
         desc: Label for output files.
         example: '1gc1'
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          version: 
+            type: str
+            desc: Flag version name
+            example: 'after_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       otfdelay:  
         type: bool
         required: false

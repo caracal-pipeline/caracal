@@ -351,6 +351,13 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
         prefix = '{0:s}-{1:s}'.format(prefix, label)
 
+        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
+            substep = 'save_flags_before_{0:s}_{1:d}'.format(wname, i)
+            fversion = "before_%s" % wname
+            _version = config['load_flags']["version"]
+            manflags.add_cflags(pipeline, recipe, "_".join(
+                        [wname, fversion]), msname, cab_name=substep)
+
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
             if 'enable' in opts:
@@ -363,11 +370,6 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Flagging gains'.format(step))
-
-        # Clear flags from this worker if they already exist
-        substep = 'flagset_clear_{0:s}_{1:d}'.format(wname, i)
-        manflags.delete_cflags(pipeline, recipe, wname,
-                               msname, cab_name=substep)
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
@@ -517,8 +519,12 @@ def worker(pipeline, recipe, config):
                 applycal(msname, recipe, copy.deepcopy(gaintables), interps,
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
-        substep = 'flagset_update_{0:s}_{1:d}'.format(wname, i)
-        manflags.add_cflags(pipeline, recipe, wname, msname, cab_name=substep)
+        if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
+            substep = 'save_flags_after_{0:s}_{1:d}'.format(wname, i)
+            fversion = "after_%s" % wname
+            _version = config['load_flags']["version"]
+            manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, fversion]), msname, cab_name=substep)
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)

@@ -147,19 +147,20 @@ def worker(pipeline, recipe, config):
     #    return memtotal_kb
 
     def fake_image(num, img_dir, mslist, field):
+        
         key = 'image'
         key_mt = 'calibrate'
 
         step = 'image_{}'.format(num)
         fake_image_opts = {
             "msname": mslist,
-            "column": imcolumn,
+            "column": 'DATA',
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
             "nmiter": sdm.dismissable(config['img_nmiter']),
             "npix": config[key].get('npix', npix),
             "padding": config[key].get('padding', padding),
             "scale": config[key].get('cell', cell),
-            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, 0),
+            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
             "niter": config[key].get('niter', niter),
             "mgain": config[key].get('mgain', mgain),
             "pol": config[key].get('pol', pol),
@@ -167,9 +168,13 @@ def worker(pipeline, recipe, config):
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
+            "local-rms": True,
+            "auto-mask": 7,
+            "auto-threshold": 0.5,
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": False,
+            "fitbeam": False,
         }
 
         recipe.add('cab/wsclean', step,
@@ -293,15 +298,15 @@ def worker(pipeline, recipe, config):
 
         mask_key = config[key].get('clean_mask')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]
         if mask_key == 'auto_mask':
-
-            image_opts.update({"auto-mask": True})
+            image_opts.update({"auto-mask": config[key].get('mask_threshold',7)[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
             image_opts.update({"local-rms": config[key].get('local_rms',True)[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]})
             image_opts.update({"auto-threshold": config[key].get('auto_threshold',7)[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
-            fake_image(num, img_dir, mslist, field)
-            sofia_mask = 'stocazzo'
-            fitmask_address = 'masking/'+str(sofia_mask)
-            image_opts.update({"fitsmask": fitmask_address+':output'})
+            #fake_image(0, img_dir, mslist, field)
+            #sofia_mask(num, img_dir, field)
+            sofia_mask = 'makeUpAName'
+            fitmask_address = 'masking/'
+            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(fitmask_address, prefix, num)})
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})

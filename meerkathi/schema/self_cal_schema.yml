@@ -215,11 +215,12 @@ mapping:
             desc: Column to image
             required: false
             example: 'DATA, CORRECTED_DATA'
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
+          clean_mask:
+            seq:
+              - type: str
+            desc: indicate masking method and name of mask
             required: false
-            example: 'False'
+            example: 'auto-mask, sofia, sofia'
           fits_mask:
             seq:
               - type: str

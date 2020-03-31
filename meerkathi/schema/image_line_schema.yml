@@ -166,12 +166,12 @@ mapping:
             required: false
             example: '2.'
           threshold:
-            desc: Deviation of a UV cell's visibility from the average value of all UV cells' visibilities beyond which a UV cell is flagged (in units of the rms dispersion of the visibility values).
+            desc: Flag UV cells whose visibility deviates by more than this threshold from the average visibility on the UV plane. The threshold is in units of the rms dispersion of all visibilities.
             type: float
             required: false
             example: '4.'
           vampirisms:
-            desc: Apply the flags only to data taken during day time.
+            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells where to flag.
             type: bool
             required: false
             example: 'False'

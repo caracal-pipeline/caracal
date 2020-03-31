@@ -937,6 +937,7 @@ then
             echo "Stimela build: ${stimelaline}" >> ${SYA}
         fi
     elif [[ -n $UM ]]
+    then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt`
         [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`

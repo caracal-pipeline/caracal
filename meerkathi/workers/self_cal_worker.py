@@ -298,13 +298,12 @@ def worker(pipeline, recipe, config):
 
         mask_key = config[key].get('clean_mask')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]
         if mask_key == 'auto_mask':
-            image_opts.update({"auto-mask": config[key].get('mask_threshold',7)[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
-            image_opts.update({"local-rms": config[key].get('local_rms',True)[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]})
-            image_opts.update({"auto-threshold": config[key].get('auto_threshold',7)[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
+            image_opts.update({"auto-mask": config[key].get('mask_threshold')[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
+            image_opts.update({"local-rms": config[key].get('local_rms')})
+            image_opts.update({"auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
             #fake_image(0, img_dir, mslist, field)
             #sofia_mask(num, img_dir, field)
-            sofia_mask = 'makeUpAName'
             fitmask_address = 'masking/'
             image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(fitmask_address, prefix, num)})
         elif '.' in  mask_key:
@@ -328,7 +327,7 @@ def worker(pipeline, recipe, config):
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def sofia_mask(num, img_dir, field):
-        step = 'make_sofia_mask'
+        step = 'make_sofia_mask_'+str(num)
         key = 'sofia_mask'
 
         if config['img_joinchannels'] == True:
@@ -1585,11 +1584,20 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
+        mask_key = config['image'].get('clean_mask')[0]
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
-            image(self_cal_iter_counter, get_dir_path(
+            if mask_key == 'auto_mask' or '.' in  mask_key:
+                image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
+            elif mask_key == 'sofia':
+                fake_image(0, get_dir_path(
+                image_path, pipeline), mslist, field)
+                sofia_mask(0, get_dir_path(
+                image_path, pipeline), field)
+                image(self_cal_iter_counter, get_dir_path(
+                image_path, pipeline), mslist, field)                
         if pipeline.enable_task(config, 'sofia_mask'):
             sofia_mask(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
@@ -1610,22 +1618,25 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 self_cal_iter_counter += 1
-                image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)
-                if not os.path.exists(image_path):
-                    os.mkdir(image_path)
-                if pipeline.enable_task(config, 'image'):
-                    image(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), mslist, field)
-                if pipeline.enable_task(config, 'sofia_mask'):
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
-                if pipeline.enable_task(config, 'extract_sources'):
-                    extract_sources(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
-                if pipeline.enable_task(config, 'aimfast'):
-                    image_quality_assessment(
-                        self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
+                print('#############################################')
+                print(self_cal_iter_counter)
+                print('#############################################')                
+                # image_path = "{0:s}/image_{1:d}".format(
+                #     pipeline.continuum, self_cal_iter_counter)
+                # if not os.path.exists(image_path):
+                #     os.mkdir(image_path)
+                # if pipeline.enable_task(config, 'image'):
+                #     image(self_cal_iter_counter, get_dir_path(
+                #         image_path, pipeline), mslist, field)
+                # if pipeline.enable_task(config, 'sofia_mask'):
+                #     sofia_mask(self_cal_iter_counter, get_dir_path(
+                #         image_path, pipeline), field)
+                # if pipeline.enable_task(config, 'extract_sources'):
+                #     extract_sources(self_cal_iter_counter, get_dir_path(
+                #         image_path, pipeline), field)
+                # if pipeline.enable_task(config, 'aimfast'):
+                #     image_quality_assessment(
+                #         self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
         if pipeline.enable_task(config, 'calibrate') or pipeline.enable_task(config, 'transfer_apply_gains'):

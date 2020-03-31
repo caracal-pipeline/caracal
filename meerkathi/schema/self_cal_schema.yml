@@ -197,12 +197,18 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'True'
-          auto_mask:
+          # auto_mask:
+          #   seq:
+          #     - type: float 
+          #   desc: Auto masking threshold
+          #   required: false
+          #   example: '30, 10, 7'
+          mask_threshold:
             seq:
-              - type: float 
-            desc: Auto masking threshold
+              - type: float
+            desc: Masking threshold
             required: false
-            example: '30, 10, 7'
+            example: '7.0, 7.0'
           auto_threshold:
             seq:
               - type: float

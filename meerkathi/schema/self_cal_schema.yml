@@ -18,11 +18,6 @@ mapping:
         desc: Label of the .MS files to process
         required: false
         example: 'corr'
-      primary_beam:
-        type: bool
-        desc: Use primary beam
-        required: false
-        example: 'False'
       calibrate_with:
         type: str
         enum: ["meqtrees", "cubical"]

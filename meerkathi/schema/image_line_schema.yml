@@ -74,8 +74,8 @@ mapping:
                 example: 'True'
               telescope:
                 desc: Name of the telescope used to take the data. This is used to set the telescope's geographical coordinates when calculating the Doppler correction. Default is 'meerkat'. Current options are askap, atca, gmrt, meerkat, vla, wsrt.
-                enum: ['askap', 'atca', 'gmrt', 'meerkat','vla', 'wsrt']
                 type: str
+                enum: ['askap', 'atca', 'gmrt', 'meerkat','vla', 'wsrt']
                 required: true
                 example: 'meerkat'
               mode:

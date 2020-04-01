@@ -299,7 +299,7 @@ def worker(pipeline, recipe, config):
         mask_key = config[key].get('clean_mask')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]
         if mask_key == 'auto_mask':
             image_opts.update({"auto-mask": config[key].get('mask_threshold')[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
-            image_opts.update({"local-rms": config[key].get('local_rms')})
+            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
             image_opts.update({"auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
             #fake_image(0, img_dir, mslist, field)
@@ -309,6 +309,10 @@ def worker(pipeline, recipe, config):
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
+        elif mask_key == 'catalog'
+            fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
+            image_opts.update({"fitsmask": fitmask_address+':output'})
+
         #     image_opts.update({"fitsmask": fitmask_address+':output'})
         #     fitmask = config[key].get('fits_mask')[
         #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
@@ -408,7 +412,7 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": def_kernels,
-            "SCfind.threshold": config[key].get('threshold'),
+            "SCfind.threshold": config['image'].get('mask_threshold')[num-1 if len(config['image'].get('mask_threshold', [])) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
@@ -1621,7 +1625,7 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'image'):
                     image(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if config['image'].get('clean_mask')[self_cal_iter_counter-1]=='sofia':
+                if config['image'].get('clean_mask')[self_cal_iter_counter]=='sofia':
                     sofia_mask(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):

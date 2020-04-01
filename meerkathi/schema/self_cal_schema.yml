@@ -197,16 +197,10 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'True'
-          # auto_mask:
-          #   seq:
-          #     - type: float 
-          #   desc: Auto masking threshold
-          #   required: false
-          #   example: '30, 10, 7'
           mask_threshold:
             seq:
               - type: float
-            desc: Masking threshold
+            desc: Masking threshold (either for automasking or SoFiA)
             required: false
             example: '7.0, 7.0'
           auto_threshold:
@@ -226,13 +220,7 @@ mapping:
               - type: str
             desc: indicate masking method and name of mask
             required: false
-            example: 'auto-mask, sofia, sofia'
-          fits_mask:
-            seq:
-              - type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-            example: 'catalog_mask.fits'
+            example: 'catalog, auto-mask, sofia'
           multi_scale:
             type: bool
             desc: switch on multiscale cleaning
@@ -245,20 +233,17 @@ mapping:
             required: false
             example: '10, 20, 30'
           local_rms:
+            seq:
+              - type: bool
             type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-            example: 'False'
+            example: 'False, False '
 
       sofia_mask: 
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
         mapping:
-          threshold:
-            desc: SoFiA source finding threshold.
-            type: float
-            required: false
-            example: '4.0'
           flag:
             desc: Use flag regions (yes/no)?
             type: bool

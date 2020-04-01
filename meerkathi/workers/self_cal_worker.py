@@ -389,7 +389,7 @@ def worker(pipeline, recipe, config):
 
         outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
         outmaskName = outmask+'_mask.fits'
-        config['image']['fits_mask'].append(outmaskName)
+        #config['image']['fits_mask'].append(outmaskName)
 
         image_opts = {
             "import.inFile": imagename,

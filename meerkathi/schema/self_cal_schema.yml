@@ -18,16 +18,6 @@ mapping:
         desc: Label of the .MS files to process
         required: false
         example: 'corr'
-      undo_subtractmodelcol:
-        desc: replace the corrected column with the sum of corrected and model columns to undo continuum subtraction that may have been done by the image HI worker.
-        type: bool
-        required: false
-        example: 'False'
-      primary_beam:
-        type: bool
-        desc: Use primary beam
-        required: false
-        example: 'False'
       calibrate_with:
         type: str
         enum: ["meqtrees", "cubical"]

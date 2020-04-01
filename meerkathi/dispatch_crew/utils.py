@@ -172,7 +172,7 @@ def field_observation_length(msinfo, field):
             raise ValueError("Field cannot be a {0:s}".format(type(field)))
         return idx
 
-    field = index(field)
+    field = str(index(field))
 
     return numpy.sum(list(info['SCAN'][field].values()))
 

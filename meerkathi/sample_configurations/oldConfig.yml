@@ -387,14 +387,16 @@ image_line:
     enable: true
   mstransform:
     enable: true
-    doppler: true
-    telescope: meerkat
-    mode: 'frequency'
-    outframe: 'bary' 
-    uvlin: true
-    fitspw: null 
-    fitorder: 1
     column: corrected
+    doppler:
+      enable: true
+      telescope: meerkat
+      mode: 'frequency'
+      outframe: 'bary' 
+    uvlin:
+      enable: true
+      fitspw: null 
+      fitorder: 1
   sunblocker:
     enable: false
     use_mstransform: true

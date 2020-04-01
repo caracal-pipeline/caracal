@@ -216,12 +216,22 @@ def hetfield(info, field, db, tol=2.9E-3):
             return key
     return False
 
-def find_in_native_calibrators(msinfo, field):
+def find_in_native_calibrators(msinfo, field, mode = 'both'):
     """Check if field is in the South Calibrators database. 
        Return model if it is. Return lsm if an lsm is available. 
        Otherwise, return False. 
     """
 
+    returnsky = False
+    returnmod = False
+    if mode == 'both':
+        returnsky = True
+        returnmod = True
+    if mode == 'sky':
+        returnsky = True
+    if mode == 'mod':
+        returnmod = True
+    
     db = mkct.calibrator_database()
 
     with open(msinfo, 'r') as stdr:
@@ -241,15 +251,17 @@ def find_in_native_calibrators(msinfo, field):
     bghz = src["b_casa"]
     cghz = src["c_casa"]
     dghz = src["d_casa"]
-    if "lsm" in src:
+    if "lsm" in src and returnsky:
         return src["lsm"]
-    else:
+    elif returnmod:
         return dict(I=src['S_v0'],
                     a=src['a_casa'],
                     b=src['b_casa'],
                     c=src['c_casa'],
                     d=src['d_casa'],
                     ref=src['v0'])
+    else:
+        return False
 
 def find_in_casa_calibrators(msinfo, field):
     """Check if field is in the CASA NRAO Calibrators database. 

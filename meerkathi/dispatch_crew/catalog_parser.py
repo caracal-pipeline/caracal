@@ -13,6 +13,12 @@ class catalog_parser:
         cls = self.__class__
         self._cat = cls.read_caltable(filename)
 
+    # Comment by Josh: @property is a means to protect private
+    # Variables
+    # if a is an instance of catalog_parser, then the expression
+    # a.db is transformed into a.db(). So it looks like a class
+    # variable but it isn't. Something nasty like
+    # a.db = XXX is then impossible.
     @property
     def db(self):
         """ Returns a copy of divine sky knowledge """
@@ -198,11 +204,14 @@ class catalog_parser:
 
         I = pbspi(v0, a, b, c, d)
 
-        v = np.linspace(vlower, vupper, 10000)
-        popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
+        if a == 0 and b == 0 and c == 0 and d==0:
+            popt = [0., 0., 0., 0.]
+        else:
+            v = np.linspace(vlower, vupper, 10000)
+            popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
             v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
-        perr = np.sqrt(np.diag(pcov))
-        assert np.all(perr < 1.0e-6)
+            perr = np.sqrt(np.diag(pcov))
+            assert np.all(perr < 1.0e-6)
 
         # returns (S(v0), a', b', c', d')
         return I, popt[0], popt[1], popt[2], popt[3]

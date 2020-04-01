@@ -12,23 +12,28 @@
 #                                                  under the build number, it
 #                                                  seems to be writeable
 # TEST_DATA_DIR="$WORKSPACE/../../../test-data"    The directory with the test
-#                                                  data
+#                                                  data, recommended data set
+#                                                  in that directory:
+#                                                  
 # ${WORKSPACE_ROOT}/projects/meerkathi             Local CARACal copy, available
 #                                                  before start of
 #                                                  Jenkinsfile.sh
 
-# It follows that the following should work as a Jenkins test:
+# It follows that the following should work as a Jenkins test, testing Singularity
+# and Docker installation:
 ${WORKSPACE_ROOT}/projects/meerkathi/meerkathi/utils/carate.sh \
     -ws "${WORKSPACE}/projects" \
     -td "${WORKSPACE}/../../../test-data" \
     -ct "CARACal_test" \
     -ls "${WORKSPACE_ROOT}/projects/meerkathi" \
     -dm \
-    -da \
-    -ur \
+    -sm \
     -f \
-    -or \
-
+    -us \
+    -or
+# This will produce a test in ${WORKSPACE}/projects/CARACal_test, using stimela_last_stable.txt
+# as a requirement.
+# It will produce the directory ${WORKSPACE}/projects/CARACal_test/report with quicklook information
 # Notice that this only tests docker, as the singularity installation currently
 # does not work. Future switches should be
 # -sm \

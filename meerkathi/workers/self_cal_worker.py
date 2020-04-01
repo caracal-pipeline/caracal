@@ -1597,6 +1597,7 @@ def worker(pipeline, recipe, config):
                 image_path, pipeline), mslist, field)
                 sofia_mask(0, get_dir_path(
                 image_path, pipeline), field)
+                config['image']['clean_mask'].insert(1,config['image']['clean_mask'][1])
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)                
                 sofia_mask(self_cal_iter_counter, get_dir_path(
@@ -1618,6 +1619,7 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 mask_key=config['image'].get('clean_mask')[self_cal_iter_counter]
+                print(self_cal_iter_counter)
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

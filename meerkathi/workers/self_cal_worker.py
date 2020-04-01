@@ -169,8 +169,8 @@ def worker(pipeline, recipe, config):
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "local-rms": True,
-            "auto-mask": 7,
-            "auto-threshold": 0.5,
+            "auto-mask": 6,
+            "auto-threshold": config[key].get('auto_threshold')[0],
             "multiscale": config[key].get('multi_scale'),
             "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": False,
@@ -309,7 +309,7 @@ def worker(pipeline, recipe, config):
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
-        elif mask_key == 'catalog'
+        elif mask_key == 'catalog':
             fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
             image_opts.update({"fitsmask": fitmask_address+':output'})
 

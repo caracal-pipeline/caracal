@@ -305,7 +305,7 @@ def worker(pipeline, recipe, config):
             #fake_image(0, img_dir, mslist, field)
             #sofia_mask(num, img_dir, field)
             fitmask_address = 'masking/'
-            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(fitmask_address, prefix, num)})
+            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num-1)})
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
@@ -704,9 +704,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Convert extracted sources to tigger model'.format(step))
 
-        # elif sourcefinder == 'sofia':
-        #    print('----not active----')
-        #    sys.exit(1)
 
     def predict_from_fits(num, model, index, img_dir, mslist, field):
         if isinstance(model, str) and len(model.split('+')) == 2:
@@ -1617,10 +1614,7 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
-                self_cal_iter_counter += 1
-                print('#############################################')
-                print(self_cal_iter_counter)
-                print('#############################################')                
+                self_cal_iter_counter += 1               
                 # image_path = "{0:s}/image_{1:d}".format(
                 #     pipeline.continuum, self_cal_iter_counter)
                 # if not os.path.exists(image_path):
@@ -1806,11 +1800,12 @@ def worker(pipeline, recipe, config):
 
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
-
             if crystalball_model == 'auto':
                 crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
-                                                                                              pipeline), prefix, field, self_cal_iter_counter)
+                                                                            pipeline), prefix, field, self_cal_iter_counter)
+            
             for i, msname in enumerate(mslist_out):
+                
                 step = 'transfer_model_{0:d}'.format(i)
                 recipe.add('cab/crystalball', step,
                            {
@@ -1829,4 +1824,3 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
-

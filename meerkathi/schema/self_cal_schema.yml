@@ -254,11 +254,6 @@ mapping:
         desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
         type: map
         mapping:
-          enable:
-            desc: Execute segment sofia (yes/no)?
-            type: bool
-            required: false
-            example: "False"
           threshold:
             desc: SoFiA source finding threshold.
             type: float

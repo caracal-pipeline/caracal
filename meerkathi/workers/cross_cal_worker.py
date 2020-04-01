@@ -8,6 +8,7 @@ from meerkathi.workers.utils import manage_flagsets as manflags
 from meerkathi.workers.utils import manage_fields as manfields
 import copy
 import re
+import json
 
 NAME = "Cross calibration"
 # E.g. to split out continuum/<dir> from output/continuum/dir
@@ -172,7 +173,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 input=pipeline.input,
                 output=pipeline.output,
                 label="make mask")
-            
+
             step = "%s_%s_%d_%d_%s_2" % (name, label, itern, obs, ftype)
             recipe.add(RULES[term]["cab"], step, {
                     "msname" : msname,
@@ -278,17 +279,7 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
         input=pipeline.input, output=pipeline.caltables,
         label="Transfer fluxscale")
 
-def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i, 
-        calmode="calflag", label="", fluxtable=None):
-    """
-    Apply gains
-    -----------------
-
-    Parameters:
-      order: order in which to apply gains
-    """ 
-
-
+def get_caltab_final(gaintable, interp, gainfield, field, ftable=None):
     lidx = get_last_gain(gaintable)
     gaintables = []
     interps = []
@@ -301,16 +292,30 @@ def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
         else:
             fields.append(gainfield[idx])
 
-    if fluxtable:
+    if ftable:
         replaced = False
         for gtab in gaintables:
             gtab_re = re.search(r"(^\S+)(.G\d)", gtab)
             if gtab_re:
                 idx = gaintables.index(gtab)
-                gaintables[idx] = fluxtable
+                gaintables[idx] = ftable
                 replaced = True
         if replaced is False:
             raise RuntimeError("There is no gaintable to replace with the fluxtable")
+
+    return gaintables, interps, fields
+
+def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i, 
+        calmode="calflag", label="", fluxtable=None):
+    """
+    Apply gains
+    -----------------
+
+    Parameters:
+      order: order in which to apply gains
+    """ 
+
+    gaintables, interps, fields = get_caltab_final(gaintable, interp, gainfield, field, ftable=fluxtable)
 
     step = "apply_gains_%s_%s_%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
@@ -379,7 +384,7 @@ def worker(pipeline, recipe, config):
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
-       
+
         if pipeline.enable_task(config, 'set_model'):
             if config['set_model'].get('no_verify'):
                 opts = {
@@ -525,6 +530,28 @@ def worker(pipeline, recipe, config):
             _version = config['load_flags']["version"]
             manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, fversion]), msname, cab_name=substep)
+
+        gt_final, itp_final, fd_final = get_caltab_final(
+                       copy.deepcopy(gaintables), interps, "nearest", "target", fluxtable=ftable)
+
+        applycal_recipes = []
+        calmodes = []
+        for ix,gt in enumerate(gt_final):
+            applycal_recipes.append(dict(zip(
+                ['caltable', 'fldmap', 'interp'], [gt, fd_final[ix], itp_final[ix]])))
+            if '.K' in gt:
+                calmodes.append('delay_cal')
+            elif '.B' in gt:
+                calmodes.append('bp_cal')
+            elif '.F' in gt:
+                calmodes.append('transfer_fluxscale')
+            elif '.G' in gt:
+                calmodes.append('gain_cal')
+
+        callib_dict = dict(zip(calmodes, applycal_recipes))
+
+        with open(os.path.join(pipeline.output, 'callib_recipes.json'), 'w') as json_file:
+            json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'flagging_summary'):
             step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)

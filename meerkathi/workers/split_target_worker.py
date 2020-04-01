@@ -96,33 +96,40 @@ def worker(pipeline, recipe, config):
         else: target_ls = pipeline.target[i]
 
         # write calibration library file for OTF cal in split_target_worker.py
-        if pipeline.enable_task(config['split_target'], 'otfcal'):
-            uname = getpass.getuser()
-            gaintablelist, gainfieldlist, interplist = [], [], []
+        if pipeline.enable_task(config['split_target'], 'otfcal') and config['split_target']['otfcal']['callib']:
+            callib = os.path.join(pipeline.output, config['split_target']['otfcal']['callib'])
+            docallib = True
+            if config['split_target'].get('column') != 'corrected':
+                meerkathi.log.info("Datacolumn was set to '{}'. by the user." \
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_target'].get('column')))
+            dcol = 'corrected'
+
+        elif pipeline.enable_task(config['split_target'], 'otfcal'):
+            caltablelist, gainfieldlist, interplist = [], [], []
 
             calprefix = '{0:s}-{1:s}'.format(prefix,
                                              config['split_target']['otfcal'].get('label_cal'))
+            callib = 'callib_{0:s}.txt'.format(calprefix)
+
+            with open(os.path.join(pipeline.output, 'callib_recipes.json')) as f:
+                callib_dict = json.load(f)
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
                 if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
                     continue
-                suffix = table_suffix[applyme]
-                interp = applycal_interp_rules['target'][applyme]
-                gainfield = get_gain_field(applyme, 'target')
-                gaintablelist.append(
-                    '{0:s}/{1:s}.{2:s}'.format(get_dir_path(pipeline.caltables, pipeline), calprefix, suffix))
-                gainfieldlist.append(gainfield)
-                interplist.append(interp)
+                caltablelist.append(callib_dict[applyme]['caltable'])
+                gainfieldlist.append(callib_dict[applyme]['fldmap'])
+                interplist.append(callib_dict[applyme]['interp'])
 
-            callib = 'callib_{0:s}.txt'.format(calprefix)
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
-                for j in range(len(gaintablelist)):
-                    stdw.write('caltable="{0:s}/{1:s}"'.format(
-                        stimela.CONT_IO[recipe.JOB_TYPE]["output"], gaintablelist[j]))
+                for j in range(len(caltablelist)):
+                    stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
+                        stimela.CONT_IO[recipe.JOB_TYPE]["output"], 'caltables',  caltablelist[j]))
                     stdw.write(' calwt=False')
                     stdw.write(' tinterp=\''+str(interplist[j])+'\'')
                     stdw.write(' finterp=\'linear\'')
-                    stdw.write(' fldmap=\'' + str(gainfieldlist[j])+'\'\n')
+                    stdw.write(' fldmap=\'' + str(gainfieldlist[j])+'\'')
+                    stdw.write(' spwmap=0\n')
 
             docallib = True
             if config['split_target'].get('column') != 'corrected':
@@ -173,7 +180,6 @@ def worker(pipeline, recipe, config):
                                "keepflags": True,
                                "docallib": docallib,
                                "callib": sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target'], 'otfcal') else None),
-                               "callib": sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target']	, 'otfcal') else None),
                            },
                            input=pipeline.input,
                            output=pipeline.output,

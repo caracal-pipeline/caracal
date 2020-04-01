@@ -78,6 +78,11 @@ mapping:
                 type: bool
                 required: false
                 example: 'False'
+              callib:
+                desc: Name of callib file to be used, if user has their own
+                type: str
+                required: false
+                example: ''
               label_cal:
                 desc: Label of calibration tables to be used
                 type: str

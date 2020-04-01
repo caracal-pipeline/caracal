@@ -37,7 +37,8 @@ def worker(pipeline, recipe, config):
         msn = pipeline.msnames[i][:-3]
 
         if config['field'] == 'target':
-           for target in pipeline.target[i]:
+           target_ls = pipeline.target[i]
+           for target in target_ls:
                 field = utils.filter_name(target)
                 mslist.append(pipeline.msnames[i] if label == \
                    '' else '{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))

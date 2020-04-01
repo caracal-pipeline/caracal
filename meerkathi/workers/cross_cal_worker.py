@@ -532,7 +532,7 @@ def worker(pipeline, recipe, config):
                     [wname, fversion]), msname, cab_name=substep)
 
         gt_final, itp_final, fd_final = get_caltab_final(
-                       copy.deepcopy(gaintables), interps, "nearest", "target", fluxtable=ftable)
+                       copy.deepcopy(gaintables), interps, "nearest", "target", ftable=ftable)
 
         applycal_recipes = []
         calmodes = []

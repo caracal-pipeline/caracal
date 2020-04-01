@@ -208,7 +208,7 @@ mapping:
               - type: float
             desc: Auto clean threshold
             required: false
-            example: '0.5'
+            example: '0.5, 0.5'
           column:
             seq:
               - type: str
@@ -235,7 +235,6 @@ mapping:
           local_rms:
             seq:
               - type: bool
-            type: bool
             desc: switch on local rms measurement for cleaning
             required: false
             example: 'False, False '

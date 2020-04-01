@@ -2,6 +2,7 @@ import stimela
 import json
 import tempfile
 import os
+import codecs
 
 def get_fields(pipeline, recipe, indir, caltable, 
         cab_name="get_field_info", label=""):
@@ -30,7 +31,7 @@ tab = table(tabname)
 uf = numpy.unique(tab.getcol("FIELD_ID"))
 fields = dict(field_id=list(map(int, uf)))
 
-with codecs.open('{fname:s}', 'w') as stdw:
+with codecs.open(OUTPUT+'/{fname:s}', 'w', 'utf8') as stdw:
         a = json.dumps(fields, ensure_ascii=False)
         stdw.write(a)
 
@@ -42,7 +43,7 @@ tab.close()
 
     _recipe.run()
 
-    with open(tfile.name) as stdr:
+    with codecs.open(tfile.name, "r", "utf8") as stdr:
         fields = json.load(stdr)
     tfile.close()
 

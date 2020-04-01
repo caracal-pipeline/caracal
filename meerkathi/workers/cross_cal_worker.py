@@ -471,7 +471,7 @@ def worker(pipeline, recipe, config):
 
             # Transfer fluxscale not required if
             # doing secondary-selfcal
-            if 'I' not in config["order"]:
+            if 'I' not in config["secondary_cal"]["order"]:
                 ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
                 if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
                         ftable):

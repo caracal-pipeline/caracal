@@ -175,6 +175,46 @@ def field_observation_length(msinfo, field):
 
     return numpy.sum(list(info['SCAN'][field].values()))
 
+def closeby(radec_1, radec_2, tol=2.9E-3):
+    """
+    Rough estimate whether two points on celestial sphere are closeby
+
+    Parameters:
+    radec_1 (pair of float): Right ascension and Declination of point 1 in rad
+    radec_2 (pair of float): Right ascension and Declination of point 2 in rad
+    tol: Tolerance in rad (default: 10 arcmin)
+    """
+    if  numpy.power((radec_1[0]-radec_2[0])*numpy.cos(
+            (radec_1[0]-radec_2[0])/2),2)+numpy.power(radec_1[1]-radec_2[1],2
+            ) < numpy.power(tol,2):
+        return True
+    return False
+    
+
+def hetfield(info, field, db, tol=2.9E-3):
+    """
+    Find match of fields in info
+    
+    Parameters:
+    info (dict): dictionary of obsinfo as read by yaml
+    field (str): field name
+    db (dict):   calibrator data base as returned by 
+                 calibrator_database()
+
+    Go through all calibrators in db and return the first that matches
+    the coordinates of field in msinfo. Return empty string if not
+    found.
+    """
+
+    # Get position of field in msinfo
+    ind = info['FIELD']['NAME'].index(field)
+    firade = info['FIELD']['DELAY_DIR'][ind][0]
+    dbcp = db.db
+    for key in dbcp.keys():
+        carade = [dbcp[key]['ra'],dbcp[key]['decl']]
+        if closeby(carade, firade, tol=tol):
+            return key
+    return False
 
 def find_in_native_calibrators(msinfo, field):
     """Check if field is in the South Calibrators database. 
@@ -183,17 +223,20 @@ def find_in_native_calibrators(msinfo, field):
     """
 
     db = mkct.calibrator_database()
-    if field not in list(db.db.keys()):
-        return False
 
     with open(msinfo, 'r') as stdr:
-        info = yaml.load(stdr)
+        info = yaml.safe_load(stdr)
+        
+    fielddb = hetfield(info, field, db)
+    
+    if fielddb == False:
+        return False
 
     ref = info['SPW']['REF_FREQUENCY'][0]  # Centre frequency of first channel
     bw = info['SPW']['TOTAL_BANDWIDTH'][0]
     nchan = info['SPW']['NUM_CHAN'][0]
 
-    src = db.db[field]
+    src = db.db[fielddb]
     aghz = src["a_casa"]
     bghz = src["b_casa"]
     cghz = src["c_casa"]
@@ -208,6 +251,31 @@ def find_in_native_calibrators(msinfo, field):
                     d=src['d_casa'],
                     ref=src['v0'])
 
+def find_in_casa_calibrators(msinfo, field):
+    """Check if field is in the CASA NRAO Calibrators database. 
+       Return model if it is. Else, return False. 
+    """
+
+    with open(msinfo, 'r') as stdra:
+        info = yaml.safe_load(stdra)
+
+    with open(meerkathi.pckgdir + '/data/casa_calibrators.yml') as stdrb:
+        db = yaml.safe_load(stdrb)
+
+    dbc = mkct.casa_calibrator_database()
+
+    # Identify field with a standard name
+    field_dbc = hetfield(info, field, dbc)
+    if field_dbc == False:
+        return False
+
+    for src in list(db['models'].values()):
+        if field_dbc == src['3C']:
+            standards = src['standards']
+            break
+    standard = standards.split(',')[0]
+    return db['standards'][int(standard)]
+
 
 def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through meerkathi"""
@@ -215,36 +283,6 @@ def meerkat_refant(obsinfo):
     with open(obsinfo) as stdr:
         info = yaml.load(stdr)
     return info['RefAntenna']
-
-
-def find_in_casa_calibrators(msinfo, field):
-    """Check if field is in the CASA NRAO Calibrators database. 
-       Return model if it is. Else, return False. 
-    """
-
-    with open(meerkathi.pckgdir + '/data/casa_calibrators.yml') as stdr:
-        db = yaml.safe_load(stdr)
-
-    found = False
-    for src in list(db['models'].values()):
-        if field == src['3C']:
-            found = True
-            standards = src['standards']
-            break
-        else:
-            _field = re.findall(r'\d+', field)
-            if len(_field) == 2:
-                for name in [src[d] for d in ['B1950', 'J2000', 'ALT']]:
-                    _name = re.findall(r'\d+', name)
-                    if ''.join(_field) == ''.join(_name) or ''.join(_field[:-1]) == ''.join(_name[:-1]):
-                        found = True
-                        standards = src['standards']
-                        break
-    if found:
-        standard = standards.split(',')[0]
-        return db['standards'][int(standard)]
-    else:
-        return False
 
 
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):

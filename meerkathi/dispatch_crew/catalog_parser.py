@@ -115,9 +115,13 @@ class catalog_parser:
                                            r"(?P<m>[0-9]+)m"
                                            r"(?P<s>[0-9]+(?:.[0-9]+)?)s$",
                                            decl)
+
+                    signum = 1.
+                    if decl[0] == '-':
+                        signum=-1.
                     decl = np.deg2rad(float(valset_decl.group("d")) +
-                                      float(valset_decl.group("m")) +
-                                      float(valset_decl.group("s")))
+                                      signum*float(valset_decl.group("m"))/60. +
+                                      signum*float(valset_decl.group("s"))/3600.)
 
                     a = float(valset.group("a"))
                     b = float(valset.group("b"))

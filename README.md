@@ -2,7 +2,7 @@
 
 ## Documentation
 
-https://meerkathi.readthedocs.io
+https://caracal.readthedocs.io
 
 ## Download & Install
 ### Usage and publication policy

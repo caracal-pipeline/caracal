@@ -71,7 +71,7 @@ cross_cal:
   uvrange: '>150'
   label: 1gc1
   load_flags:
-    flag_version: after_flagging_automatic
+    version: after_flagging_automatic
     merge: False
   set_model:
     enable: true
@@ -184,4 +184,6 @@ image_line:
     cell: 2
   mstransform:
     enable: true
-    telescope: meerkat
+    doppler:
+      enable: true
+      telescope: meerkat

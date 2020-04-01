@@ -38,9 +38,24 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, label)
-    #print("All_targes", all_targets)
+    print("All_targets", all_targets)
     #print("All_msfiles", all_msfile)
     #print("ms_dict",ms_dict)
+    if not os.path.exists(OUTPUT):
+       os.mkdir(OUTPUT)
+    de_sources_mode = config['calibrate_dd'].get('de_sources_mode')
+    if de_sources_mode == 'manual' :
+        de_targets =  config['calibrate_dd'].get('de_target_manual')
+        de_sources =  config['calibrate_dd'].get('de_sources_manual')
+        if len(de_targets)!=len(de_sources):
+            meerkathi.log.error("The number of targets for de calibration does not match sources, please recheck, and Also, Kshitij can't haz the Snowleopard.")
+            sys.exit(1)
+        de_dict = dict(zip(de_targets, de_sources))
+    else: 
+        de_targets = all_targets
+    
+    print(de_targets)
+    
     dd_image_opts = {
         "Data-MS"        : mslist,
         "Data-ColName"   : "CORRECTED_DATA",
@@ -88,13 +103,14 @@ def worker(pipeline, recipe, config):
     def dd_precal_image(field,ms_list):
         dd_image_opts_precal = copy.deepcopy(dd_image_opts)
         image_prefix_precal = prefix+"_"+field
+        outdir = field+"_ddcal"
         dd_ms_list = {"Data-MS" : ms_list}
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
         dd_image_opts_precal.update(dd_imagename)
         dd_image_opts_precal.update(dd_ms_list)
         recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
         input=INPUT,
-        output=OUTPUT,
+        output=OUTPUT+"/"+outdir,
         shared_memory="500gb",
         label="ddf_image_{0:s}:: Primary beam corrected image".format(field))
         recipe.run()
@@ -102,6 +118,7 @@ def worker(pipeline, recipe, config):
     def dd_postcal_image(field,ms_list):
         dd_image_opts_postcal = copy.deepcopy(dd_image_opts)
         image_prefix_postcal = prefix+"_"+field
+        outdir = field+"_ddcal"
         dd_ms_list = {"Data-MS" : ms_list}
         dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
@@ -111,7 +128,7 @@ def worker(pipeline, recipe, config):
 
         recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_postcal,
         input=INPUT,
-        output=OUTPUT,
+        output=OUTPUT+"/"+outdir,
         label="ddf_image_{0:s}:: Primary beam corrected image".format(field),
         shared_memory="500gb")
 
@@ -144,12 +161,13 @@ def worker(pipeline, recipe, config):
         key = 'calibrate_dd'
         #make a skymodel with only dE taggable sources.
         #de_only_model = 'de-only-model.txt'
-        de_sources_mode = config[key].get('de_sources_mode', 'auto')
+        de_sources_mode = config[key].get('de_sources_mode')
         print("de_sources_mode:", de_sources_mode)
        # if usepb:
        #    model_cube = prefix+"-DD-precal.cube.int.model.fits"
        # else: 
        #    model_cube = prefix+"-DD-precal.cube.app.model.fits"
+        outdir = field+"_ddcal"
         if de_sources_mode == 'auto':
            print("Carrying out automatic source taggig for direction dependent calibration")
            meerkathi.log.info('Carrying out automatic dE tagging')
@@ -163,36 +181,44 @@ def worker(pipeline, recipe, config):
            }
 
            recipe.add('cab/catdagger', 'tag_sources_auto_mode', catdagger_opts,input=INPUT,
-              output=OUTPUT,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
+              output=OUTPUT+"/"+outdir,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
+
         if de_sources_mode == 'manual':
            img = prefix+"_"+field+"-DD-precal.app.restored.fits"
-           imagefile = os.path.join(pipeline.output,DD_DIR,img)
+           imagefile = os.path.join(pipeline.output,DD_DIR,outdir,img)
            #print("Imagefile",imagefile)
            #print("Pipeline output", pipeline.output)
            w = WCS(imagefile)
-           coords =  config[key].get('de_sources_manual')
-           size = coords.split(",")[2]
-           coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
-           #print("Coordinate String", coords_str)
-           centre = SkyCoord(coords_str, unit='deg') 
-           separation = int(size) * u.arcsec 
-           #print("Size",separation)
-           xlist = []
-           ylist = []
-           for i in range(5):
-              ang_sep = (306/5)*i*u.deg
-              p = centre.directional_offset_by(ang_sep,separation) 
-              pix = PixCoord.from_sky(p,w)
-              xlist.append(pix.x)
-              ylist.append(pix.y)
-           vertices = PixCoord(x=xlist, y=ylist)
-           reg = PolygonPixelRegion(vertices=vertices)
+           #coords =  config[key].get('de_sources_manual')
+           print(de_dict)
+           sources_to_tag = de_dict[field.replace("_","-")]
+           reg = []
+           for j in range(len(sources_to_tag.split(";"))):
+               coords = sources_to_tag.split(";")[j]
+               size = coords.split(",")[2]
+               coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
+               #print("Coordinate String", coords_str)
+               centre = SkyCoord(coords_str, unit='deg') 
+               separation = int(size) * u.arcsec 
+               #print("Size",separation)
+               xlist = []
+               ylist = []
+               for i in range(5):
+                 ang_sep = (306/5)*i*u.deg
+                 p = centre.directional_offset_by(ang_sep,separation) 
+                 pix = PixCoord.from_sky(p,w)
+                 xlist.append(pix.x)
+                 ylist.append(pix.y)
+               vertices = PixCoord(x=xlist, y=ylist)
+               region_dd = PolygonPixelRegion(vertices=vertices)
+               reg.append(region_dd)
            regfile = "de-{0:s}.reg".format(field)
-           ds9_file = os.path.join(OUTPUT,regfile)
-           write_ds9([reg],ds9_file,coordsys='physical') 
+           ds9_file = os.path.join(OUTPUT,outdir,regfile)
+           write_ds9(reg,ds9_file,coordsys='physical') 
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'
+        outdir = field+"_ddcal"
         dicomod = prefix+"_"+field+"-DD-precal.DicoModel"
         dereg = "de-{0:s}.reg".format(field)
         for ms in mslist:
@@ -241,37 +267,116 @@ def worker(pipeline, recipe, config):
               "out-name"          : prefix + "dE_sub",
               "out-mode"          : 'sr',
               "out-model-column"  : "MODEL_OUT",
-              "data-freq-chunk"   : 4*ddsols_f,
-              "data-time-chunk"   : 4*ddsols_t,
+              "data-freq-chunk"   : 1*ddsols_f,
+              "data-time-chunk"   : 1*ddsols_t,
               "sol-term-iters"    : "[50,90,50,90]",
               "madmax-plot"       : False,
               "out-plots"          : True,
-              "madmax-enable"     : config[key].get('madmax_enable'),
-              "madmax-threshold"  : config[key].get('madmax_threshold'),
-              "madmax-global-threshold": config[key].get('madmax_global_threshold'),
-              "madmax-estimate"   : "corr",
-              "out-casa-gaintables" : True,
+              #"madmax-enable"     : config[key].get('madmax_enable'),
+              #"madmax-threshold"  : config[key].get('madmax_threshold'),
+              #"madmax-global-threshold": config[key].get('madmax_global_threshold'),
+              #"madmax-estimate"   : "corr",
+              #"out-casa-gaintables" : True,
               "degridding-NDegridBand": int(nchans/2.0),
               'degridding-MaxFacetSize': 0.15,
                },
                input=INPUT,
-               output=OUTPUT,
+               output=OUTPUT+"/"+outdir,
                shared_memory="400gb",
                label='dd_calibrate_{0:s}_{1:s}:: Carry out DD calibration'.format(mspref,field))
-    
-    for target in all_targets:
+
+    def cp_data_column(field,mslist):
+        outdir = field+"_ddcal"
+        for ms in mslist:
+           mspref = ms.split('.ms')[0].replace('-','_')
+           step = 'cp_datacol_{0:s}_{1:s}'.format(mspref,field)
+           recipe.add('cab/msutils', step, {
+               "command" : 'copycol',
+               "msname"  : ms,
+               "fromcol" : 'SUBDD_DATA',
+               "tocol"   : 'CORRECTED_DATA',
+                              },
+               input=INPUT,
+               output=OUTPUT+"/"+outdir,
+               label='cp_datacol_{0:s}_{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field))
+      
+    def img_wsclean(mslist,field):
+        key='image_wsclean'
+        outdir = field+"_ddcal"
+        imweight = config[key].get('img_ws_weight')
+        pref = "DD_wsclean"
+        for ms in mslist:
+           mspref = ms.split('.ms')[0].replace('-','_')
+           step = 'img_wsclean_{0:s}_{1:s}'.format(mspref,field)
+           recipe.add('cab/wsclean', step, {
+               "msname": mslist,
+               "column": config[key].get('img_ws_column'),
+               "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key].get('img_ws_robust')),
+               "nmiter": sdm.dismissable(config[key].get['img_ws_nmiter']),
+               "npix": config[key].get('img_ws_npix'),
+               "padding": config[key].get('img_ws_padding'),
+               "scale": config[key].get('img_ws_cell', cell),
+               "prefix": '{0:s}_{1:s}'.format(pref, field),
+               "niter": config[key].get('img_ws_niter'),
+               "mgain": config[key].get('img_ws_mgain'),
+               "pol": config[key].get('img_ws_pol'),
+               "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper', taper)),
+               "channelsout": config[key].get('img_ws_nchans'),
+               "joinchannels": config[key].get('img_ws_joinchannels'),
+               "local-rms": config[key].get('img_ws_local_rms'),
+               "fit-spectral-pol": config[key].get('img_ws_fit_spectral_pol'),
+               "auto-threshold": config[key].get('img_ws_auto_threshold'),
+               "auto-mask": config[key].get('img_ws_auto_mask'),
+               "multiscale": config[key].get('img_ws_multi_scale'),
+               "multiscale-scales": sdm.dismissable(config[key].get('img_ws_multi_scale_scales')),
+               "savesourcelist": True if config[key].get('img_ws_niter')>0 else False,
+             },
+               input=INPUT,
+               output=OUTPUT+"/"+outdir,
+               label='img_wsclean_{0:s}_{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
+
+    def run_crystalball(mslist,field):
+        key='transfer_model_dd'
+        outdir = field+"_ddcal"
+        pref = "DD_wsclean"
+        crystalball_model = '{0:s}_{1:s}-sources.txt'.format(pref, field)
+        for ms in mslist:
+           mspref = ms.split('.ms')[0].replace('-','_')
+           step = 'run_crystalball_{0:s}_{1:s}'.format(mspref,field)
+           recipe.add('cab/crystalball', step, {
+               "ms": msname,
+               "sky-model": crystalball_model+':output',
+               "spectra": config[key].get('dd_spectra'),
+               "row-chunks": config[key].get('dd_row_chunks'),
+               "model-chunks": config[key].get('dd_model_chunks'),
+               "exp-sign-convention": config[key].get('dd_exp_sign_convention'),
+               "within": sdm.dismissable(config[key].get('dd_within') or None),
+               "points-only": config[key].get('dd_points_only'),
+               "num-sources": sdm.dismissable(config[key].get('dd_num_sources')),
+               "num-workers": sdm.dismissable(config[key].get('dd_num_workers')),
+               "memory-fraction": config[key].get('dd_memory_fraction'),
+             },
+               input=INPUT,
+               output=OUTPUT+"/"+outdir,
+               label='run_crystalball_{0:s}_{1:s}:: Run Crystalball'.format(mspref,field))
+
+    for target in de_targets:
        mslist = ms_dict[target]
        field = utils.filter_name(target)
- 
+       print("Processing field",field,"for de calibration:")
+#       print(mslist)
+#       print(field)
     #if usepb:
     #    make_primary_beam()
        dd_precal_image(field,mslist)
-<<<<<<< HEAD
     #sfind_intrinsic()
-=======
-       #sfind_intrinsic()
->>>>>>> 6b5cd6981bcca82baecb9859286ac64701676a6a
        dagga(field)
        dd_calibrate(field,mslist)
        dd_postcal_image(field,mslist)
+       if config['copy_data'].get('enable'):
+          cp_data_column(field,mslist)
+       if config['image_wsclean'].get('enable'):
+          img_wsclean(mslist,field)
+       if config['transfer_model_dd'].get(enable):
+          run_crystalball(mslist,field)
 

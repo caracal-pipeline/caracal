@@ -1,0 +1,302 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  direction_dependent_calibration:
+    type: map
+    desc: Perform direction dependent calibration on the data
+    mapping:
+     enable:
+       type: bool
+       desc: Carry out DD-calibration
+       required: True
+       example: 'False'
+     label:
+        type: str
+        desc: Label of the .MS files to process.
+        required: False
+        example: 'DD'
+     use_pb:
+        type: bool
+        desc: Enable primary beam usage (only MeerKAT for the moment). DO NOT USE.
+        required: False
+        example: 'False' 
+
+     image_dd:
+       type: map
+       desc: Imaging parameters for DD cal loop
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this section.
+           required: False
+           example: 'True'
+         npix:
+           type: int
+           desc: Number of pixels in the image
+           required: False
+           example: "5100"
+         cell:
+           type: float
+           desc: Pixel size in arcsec
+           required: False
+           example: "1.3"
+         niter:
+           type: int
+           desc: Number of clean iterations
+           required: False
+           example: '100000'
+         robust:
+           type: float
+           desc: Robust parameter for imaging
+           required: False
+           example: '-0.4'
+         nchans:
+           type: int
+           desc: Number of channels for the output image cube.
+           required: False
+           example: '10'
+         column:
+           type: str
+           desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
+           required: False
+           example: 'CORRECTED_DATA'
+     calibrate_dd:
+       type: map
+       desc: Direction dependent calibration parameters
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this section.
+           required: False
+           example: 'True'
+         sigma:
+           type: float
+           desc: Threshold to use in detecting outlier regions in images by using CatDagger. 4.5 is a good value (also default), but may need a lower value for some images.
+           required: false
+           example: '4.5'
+         min_dist_from_phcentre:
+           type: int
+           desc: Number of pixels (radius) around the centre of the image in which sources will not be tagged. Default kept at 1300 (roughly 30').
+           required: false
+           example: '1300'
+         dist_ncpu:
+           type: int
+           desc: Number of cpus
+           required: false
+           example: '1'
+         ddsols_time:
+           type: int
+           desc: Solution intervals for ddjones in time
+           required: false 
+           example: '100'
+         ddsols_freq:
+           type: int
+           desc: Solution intervals for ddjones in frequency
+           required: false 
+           example: '100'
+
+         de_sources_mode:
+           type: str
+           desc: Mode in which dE sources are tagged. 'auto' uses catdagger, while in 'manual' mode, one needs to give a list of sources. Use 'auto' with caution and at your own risk.
+           required: false
+           example: 'manual'
+         de_target_manual: 
+           seq:
+             - type: str 
+           desc: List of targets fieldnames for carrying out de calibration, the rest of the fields will not undergo direction-dependent calibration
+           required: false
+           example: ""
+         de_sources_manual:
+           seq:
+             - type: str
+           desc: List of sources per target to tag for DD calibration, in the same order as the de_target_manual list. Separate different sources per target by using ";".           
+           required: false
+           example: " "
+         sol_min_bl:
+           type: float
+           desc: Min baseline length to solve for.
+           required: false
+           example: '100'
+         madmax_enable:
+           type: bool
+           desc: Enable madmax flagging in Cubical.
+           required: false
+           example: 'true'
+         madmax_threshold:
+           seq:
+              - type: float
+           desc: Threshold for MAD flagging per baseline (specified in sigmas). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iteratins later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually decreasing values may be sensible.
+           required: false
+           example: '0'
+         madmax_global_threshold:
+           seq:
+              - type: float
+           desc: Threshold for global median MAD (MMAD) flagging. MMAD is computed as the median of the per-baseline MADs. Residuals exceeding S*MMAD/1.428 will be flagged.
+           required: false
+           example: '10.0'
+         madmax_estimate:
+           type: str
+           desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
+           required: false
+           example: 'corr'
+
+     copy_data:
+       type: map
+       desc: Copy DD-calibrated data to CORRECTED_DATA column
+       mapping:
+         enable:  
+           type: bool
+           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column
+           required: false
+           example: 'True'
+
+     image_wsclean:
+       type: map
+       desc: Wsclean imaging paramaters for DD worker
+       mapping:
+         enable:
+           type: bool
+           desc: Enable wsclean imaging of the DD-calibrated data.
+           required: false
+           example: 'True'
+         img_ws_npix:
+           type: int
+           desc: Number of pixels in output image
+           required: false
+           example: '1800'
+         img_ws_padding:
+           type: float
+           desc: Padding in WSclean
+           required: false
+           example: '1.3'
+         img_ws_mgain:
+           type: float
+           desc: Image CLEANing gain
+           required: false
+           example: '0.90'
+         img_ws_cell:
+           type: float
+           desc: Image pixel size (arcsec)
+           required: false
+           example: '2.'
+         img_ws_weight:
+           type: str
+           enum: ["briggs", "uniform", "natural"]
+           desc: Image weighting type. If Briggs, set the img robust parameter
+           required: false
+           example: 'briggs'
+         img_ws_robust:
+           type: float
+           desc: Briggs robust value
+           required: false
+           example: '0.'
+         img_ws_uvtaper:
+           type: str
+           desc: Taper for imaging (arcsec)
+           required: false
+           example: '0'
+         img_ws_niter:
+           type: int
+           desc: Number of cleaning iterations
+           required: false
+           example: '1000000'
+         img_ws_nmiter:
+           type: int
+           desc: Number of major cycles
+           required: False
+           example: '0'
+         img_ws_cleanborder:
+           type: float
+           desc: Clean border
+           required: false
+           example: '1.3'
+         img_ws_nchans:
+           type: int
+           desc: Number of channesls in output image
+           required: false
+           example: '3'
+         img_ws_joinchannels:
+           type: bool
+           desc: Join channels to create MFS image
+           required: false
+           example: 'True'
+         img_ws_fit_spectral_pol:
+           type: int
+           desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
+           required: false
+           example: '2'
+         img_ws_pol:
+           type: str
+           desc: Stokes image to create
+           required: false
+           example: 'I'
+         img_ws_auto_mask:
+           type: float
+           desc: Auto masking threshold
+           required: false
+           example: '7'
+         img_ws_auto_threshold:
+           type: float
+           desc: Auto clean threshold
+           required: false
+           example: '0.5'
+         img_ws_column:
+           type: str
+           desc: Column to image
+           required: false
+           example: 'CORRECTED_DATA'
+         img_ws_fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: false
+            example: 'catalog_mask.fits'
+         img_ws_multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false
+            example: 'False'
+         img_ws_multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc] in pixels
+            required: false
+            example: '10, 20, 30'
+         img_ws_local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false
+            example: 'False'
+
+     transfer_model_dd:
+       type: map
+       desc: Repredict wsclean model to the highest channel resolution
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this segment (default False)
+           required: false
+           example: 'False'
+         dd_model:
+           type: str
+           desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+           required: false
+           example: 'auto'
+         dd_spectra:
+           type: bool
+           desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
+           required: false
+           example: 'True'
+         dd_row_chunks:
+           type: int
+           desc: Number of rows of input .MS that are processed in a single chunk.
+           required: false
+           example: '0'
+         dd_model_chunks:
+           type: int
+           desc: Number of sky model components that are processed in a single chunk.
+           required: false
+           example: '0'
+

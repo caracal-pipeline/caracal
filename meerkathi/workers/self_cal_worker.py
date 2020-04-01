@@ -1595,8 +1595,7 @@ def worker(pipeline, recipe, config):
                 image_path, pipeline), field)
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)                
-        if pipeline.enable_task(config, 'sofia_mask'):
-            sofia_mask(self_cal_iter_counter, get_dir_path(
+                sofia_mask(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(self_cal_iter_counter, get_dir_path(
@@ -1615,22 +1614,22 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 self_cal_iter_counter += 1               
-                # image_path = "{0:s}/image_{1:d}".format(
-                #     pipeline.continuum, self_cal_iter_counter)
-                # if not os.path.exists(image_path):
-                #     os.mkdir(image_path)
-                # if pipeline.enable_task(config, 'image'):
-                #     image(self_cal_iter_counter, get_dir_path(
-                #         image_path, pipeline), mslist, field)
-                # if pipeline.enable_task(config, 'sofia_mask'):
-                #     sofia_mask(self_cal_iter_counter, get_dir_path(
-                #         image_path, pipeline), field)
-                # if pipeline.enable_task(config, 'extract_sources'):
-                #     extract_sources(self_cal_iter_counter, get_dir_path(
-                #         image_path, pipeline), field)
-                # if pipeline.enable_task(config, 'aimfast'):
-                #     image_quality_assessment(
-                #         self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
+                image_path = "{0:s}/image_{1:d}".format(
+                     pipeline.continuum, self_cal_iter_counter)
+                if not os.path.exists(image_path):
+                    os.mkdir(image_path)
+                if pipeline.enable_task(config, 'image'):
+                    image(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), mslist, field)
+                if config['image'].get('clean_mask')[self_cal_iter_counter-1]=='sofia':
+                    sofia_mask(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
+                if pipeline.enable_task(config, 'extract_sources'):
+                    extract_sources(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
+                if pipeline.enable_task(config, 'aimfast'):
+                    image_quality_assessment(
+                        self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
         if pipeline.enable_task(config, 'calibrate') or pipeline.enable_task(config, 'transfer_apply_gains'):

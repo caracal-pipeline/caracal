@@ -88,7 +88,7 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
         if isinstance(field, str):
             idx = names.index(field)
         elif isinstance(field, int):
-            idx = ids.index(field)
+            idx = field
         return idx
 
     if mode == 'most_scans':
@@ -96,7 +96,7 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
         gcal = None
         for fid in calibrators:
             idx = index(fid)
-            field = str(ids(idx))
+            field = str(idx)
             if most_scans < len(info['SCAN'][field]):
                 most_scans = len(info['SCAN'][field])
                 gcal = names[idx]
@@ -134,21 +134,20 @@ def observed_longest(msinfo, bpcals):
         info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['FIELD_ID']
     dirs = info['FIELD']['REFERENCE_DIR']
 
     def index(field):
         if isinstance(field, str):
             idx = names.index(field)
         elif isinstance(field, int):
-            idx = ids.index(field)
+            idx = field
         return idx
 
     most_time = 0
     field = None
     for bpcal in bpcals:
         idx = index(bpcal)
-        bpcal = str(ids[idx])
+        bpcal = str(idx)
         total_time = numpy.sum(list(info['SCAN'][bpcal].values()))
         if total_time > most_time:
             most_time = total_time
@@ -168,11 +167,12 @@ def field_observation_length(msinfo, field):
         if isinstance(field, str):
             idx = names.index(field)
         elif isinstance(field, int):
-            idx = ids.index(field)
+            idx = field
         else:
             raise ValueError("Field cannot be a {0:s}".format(type(field)))
         return idx
-    field = str(ids[index(field)])
+
+    field = index(field)
 
     return numpy.sum(list(info['SCAN'][field].values()))
 

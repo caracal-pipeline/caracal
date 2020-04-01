@@ -1617,6 +1617,7 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
+                mask_key=config['image'].get('clean_mask')[self_cal_iter_counter]
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)
@@ -1625,7 +1626,7 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'image'):
                     image(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if config['image'].get('clean_mask')[self_cal_iter_counter]=='sofia':
+                if mask_key=='sofia':
                     sofia_mask(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):

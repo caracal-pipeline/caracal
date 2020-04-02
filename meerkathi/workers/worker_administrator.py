@@ -223,7 +223,6 @@ class worker_administrator(object):
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
-#        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
         meerkathi.MEERKATHI_LOG = os.path.join(self.logs, 'log-{0:s}-{1:s}.txt'.format(self.timeNow, 'meerkathi'))
         meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
@@ -309,9 +308,6 @@ class worker_administrator(object):
                 casa_last = glob.glob(self.output + '/*.last')
                 for file_ in casa_last:
                     os.remove(file_)
-
-#                pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
-#                shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
 
         # Execute all workers if they saved for later execution
         try:

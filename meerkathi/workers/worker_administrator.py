@@ -70,6 +70,7 @@ class worker_administrator(object):
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
+        self.timeNow = '{:%Y%m%d-%H%M}'.format(datetime.now()) 
 
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
@@ -145,8 +146,8 @@ class worker_administrator(object):
         # save configuration file
         timeNow = datetime.now()
         configFileName = os.path.splitext(configFileName)[0]
-        outConfigName = '{:s}_{:%Y%m%d-%H%M}.yml'.format(
-            configFileName, timeNow)
+        outConfigName = '{0:s}_{1:s}.yml'.format(
+            configFileName, self.timeNow)
 
         with open(self.configFolder+'/'+outConfigName, 'w') as outfile:
             ruamel.yaml.dump(self.config, outfile,
@@ -222,7 +223,8 @@ class worker_administrator(object):
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
-        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
+#        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, meerkathi.BASE_MEERKATHI_LOG)
+        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, 'log-{0:s}-{1:s}.txt'.format(self.timeNow, 'meerkathi'))
         meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
         # Copy input data files into pipeline input folder
@@ -278,11 +280,13 @@ class worker_administrator(object):
                 continue
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
-            recipe = stimela.Recipe(worker.NAME, ms_dir=self.msdir,
+            recipe = stimela.Recipe('{0:s}_{1:s}'.format(self.timeNow, worker.NAME), 
+                                    ms_dir=self.msdir,
                                     loggername='STIMELA-{:d}'.format(i),
                                     build_label=self.stimela_build,
                                     singularity_image_dir=self.singularity_image_dir,
-                                    log_dir=self.logs)
+                                    log_dir=self.logs,
+                                    logfile_label='{0:s}'.format(self.timeNow))
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name
@@ -306,6 +310,9 @@ class worker_administrator(object):
                 for file_ in casa_last:
                     os.remove(file_)
 
+#                pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
+#                shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
+
         # Execute all workers if they saved for later execution
         try:
             if self.add_all_first:
@@ -314,7 +321,10 @@ class worker_administrator(object):
                        log.info("Running worker next in queue")
                        self.recipes[worker[1]].run()
                        log.info("Finished worker next in queue")
-        finally:  # write reports even if the pipeline only runs partially
+        finally:  # write reports and copy current log even if the pipeline only runs partially
+            os.remove(meerkathi.BASE_MEERKATHI_LOG)
+            pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
+            shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
             if REPORTS and self.generate_reports:
                 reporter = mrr(self)
                 reporter.generate_reports()

@@ -58,7 +58,10 @@ def worker(pipeline, recipe, config):
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper')
     multiscale = config.get('img_multi_scale')
-    multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
+    if multiscale == True:
+        multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
+    else:
+         multiscale_scales = None
     if taper == '':
         taper = None
     label = config['label']

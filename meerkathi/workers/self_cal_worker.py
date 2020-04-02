@@ -308,8 +308,6 @@ def worker(pipeline, recipe, config):
             image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1]})
             image_opts.update({"auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
-            #fake_image(0, img_dir, mslist, field)
-            #sofia_mask(num, img_dir, field)
             fitmask_address = 'masking'
             image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num-1)})
         elif '.' in  mask_key:
@@ -338,7 +336,7 @@ def worker(pipeline, recipe, config):
 
     def sofia_mask(num, img_dir, field):
         step = 'make_sofia_mask_'+str(num)
-        key = 'sofia_mask'
+        key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
@@ -347,10 +345,10 @@ def worker(pipeline, recipe, config):
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
             forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config[key].get('fornax_thresh')[
-                num-1 if len(config[key].get('fornax_thresh')) >= num else -1]
+            forn_thresh = config['image'][key].get('fornax_thresh')[
+                num-1 if len(config['image'][key].get('fornax_thresh')) >= num else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -401,7 +399,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config[key].get('local_noise')[num-1 if len(config[key].get('local_noise', [])) >= num else -1],
+            "steps.doScaleNoise": config['image'][key].get('local_noise')[num-1 if len(config['image'][key].get('local_noise', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -418,7 +416,7 @@ def worker(pipeline, recipe, config):
             "parameters.fitBusyFunction": False,
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
-            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key].get('kernels')],
+            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key].get('kernels')],
             "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold', [])) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
@@ -426,7 +424,7 @@ def worker(pipeline, recipe, config):
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
+            "scaleNoise.windowSpatial": config['image'][key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
@@ -438,15 +436,15 @@ def worker(pipeline, recipe, config):
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
-            "merge.positivity": config[key].get('merge_positivity')[num-1 if len(config[key].get('merge_positivity', [])) >= num else -1],
+            "merge.positivity": config['image'][key].get('merge_positivity')[num-1 if len(config['image'][key].get('merge_positivity', [])) >= num else -1],
         }
-        if config[key].get('flag'):
-            flags_sof = config[key].get('flagregion')
+        if config['image'][key].get('flag'):
+            flags_sof = config['image'][key].get('flagregion')
             image_opts.update({"flag.regions": flags_sof})
 
-        if config[key].get('inputmask'):
+        if config['image'][key].get('inputmask'):
             # change header of inputmask so it is the same as image
-            mask_name = 'masking/'+config[key].get('inputmask')
+            mask_name = 'masking/'+config['image'][key].get('inputmask')
 
             mask_name_casa = mask_name.split('.fits')[0]
             mask_name_casa = mask_name_casa+'.image'
@@ -513,7 +511,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"import.maskFile": mask_name})
             image_opts.update({"import.inFile": imagename})
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
 
             recipe.add('cab/sofia', step,
                        image_opts_forn,
@@ -524,7 +522,7 @@ def worker(pipeline, recipe, config):
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
             image_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config[key].get('fornax_special') == True and config[key].get('use_sofia') == False:
+        elif config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == False:
 
             # this mask should be regridded to correct f.o.v.
 

@@ -379,8 +379,9 @@ def worker(pipeline, recipe, config):
                 "merge.minSizeZ": 1,
             }
 
-        def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [10, 10, 0, 'b']]
-
+        #def_kernels=[]
+        #for kk in config[key].get('kernels'):
+        #x    def_kernels.append([kk, kk, 0, 'b'])
         # user_kern = config[key].get('kernels', None)
         # if user_kern:
         #   for i in xrange(0,len(user_kern))
@@ -394,7 +395,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": True,
+            "steps.doScaleNoise": config[key].get('local_noise')[num-1 if len(config[key].get('local_noise', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -411,7 +412,7 @@ def worker(pipeline, recipe, config):
             "parameters.fitBusyFunction": False,
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
-            "SCfind.kernels": def_kernels,
+            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key].get('kernels')],
             "SCfind.threshold": config['image'].get('mask_threshold')[num-1 if len(config['image'].get('mask_threshold', [])) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
@@ -424,12 +425,14 @@ def worker(pipeline, recipe, config):
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
+            "scaleNoise.perSCkernel": True, 
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
+            "merge.positivity": config[key].get('merge_positivity')[num-1 if len(config[key].get('merge_positivity', [])) >= num else -1],
         }
         if config[key].get('flag'):
             flags_sof = config[key].get('flagregion')

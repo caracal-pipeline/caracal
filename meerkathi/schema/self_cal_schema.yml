@@ -248,6 +248,25 @@ mapping:
             type: bool
             required: false
             example: 'False'
+          kernels:
+            seq:
+              - type: float
+            desc: FWHM of spatial kernels
+            required: false
+            example: '3., 6., 9.' 
+          local_noise:
+            seq:
+              - type: bool
+            desc: If set to true, normalise noise levels across the data cube prior to source finding.
+            required: false
+            example: 'True, true'
+          merge_positivity:
+            seq:
+              - type: bool
+            desc: If set to true, only positive signals will be merged into detections, and all negative signals will be discarded. This is useful for data sets with
+               significant negative artefacts, such as sidelobes.
+            required: false
+            example: 'True, true'
           flagregion:
             desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
             seq:

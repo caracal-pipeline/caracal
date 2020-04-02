@@ -100,12 +100,20 @@ do
     fi
     if [[ "$arg" == "--use-stimela-master" ]] || [[ "$arg" == "-um" ]]
     then
+
 	[[ -z ${US} ]] ||  { echo "You can use only one of -us (--use-stimela-stable) or -um (--use-stimela-master), stopping."; kill "$PPID"; exit 1; }
         UM=1
     fi
     if [[ "$arg" == "--singularity-root" ]] || [[ "$arg" == "-sr" ]]
     then
         SR=1
+    fi
+    if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --install-attempt or -ia switch, stopping."; kill "$PPID"; exit 1; }
+        IA=${!nextcount}
+
     fi
     if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
     then
@@ -300,6 +308,7 @@ then
     echo "                                      pip install -U --force-reinstall -r (...)stimela_master.txt"
     echo "                                      when installing MeerKATHI"
     echo ""
+
     echo "  --use-stimela-stable -us            Use"
     echo "                                      pip install -U --force-reinstall -r (...)stimela_last_stable.txt"
     echo "                                      when installing MeerKATHI"
@@ -901,6 +910,7 @@ then
     if [[ -n $US ]]
     then
 	# continue here
+
         stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'`
         if [[ -z ${stimelaline} ]]
         then

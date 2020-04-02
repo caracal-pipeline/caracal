@@ -49,7 +49,7 @@ def worker(pipeline, recipe, config):
 
 # TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
     def fix_target_obsinfo(fname):
-        if pipeline.enable_task(config, 'split_target'):
+        if pipeline.enable_task(config, 'split_field'):
             with open(os.path.join(pipeline.output, fname), 'r') as stdr:
                 d = json.load(stdr)
             d["FIELD"]["INTENTS"] = ['TARGET']
@@ -58,9 +58,9 @@ def worker(pipeline, recipe, config):
 
     def get_gain_field(applyme, applyto=None):
         if applyme == 'delay_cal':
-            return manfields.get_field(pipeline, i, config['split_target']['otfcal']['apply_delay_cal'].get('field'))
+            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_delay_cal'].get('field'))
         if applyme == 'bp_cal':
-            return manfields.get_field(pipeline, i, config['split_target']['otfcal']['apply_bp_cal'].get('field'))
+            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_bp_cal'].get('field'))
         if applyme == 'gain_cal_flux':
             return manfields.get_field(pipeline, i, 'fcal')
         if applyme == 'gain_cal_gain':
@@ -77,50 +77,52 @@ def worker(pipeline, recipe, config):
 
         prefix = pipeline.prefixes[i]
         msname = pipeline.msnames[i][:-3]
-        split_field = config['split_target']['field'].split(',')
+        field_to_split = config['split_field']['field'].split(',')
 
-        if 'calibrators' in split_field:
-            split_field = ['fcal','bpcal','gcal']
+        if 'calibrators' in field_to_split:
+            field_to_split = ['fcal','bpcal','gcal']
 
-        for fd in split_field:
+        for fd in field_to_split:
             if fd not in ['target','fcal','bpcal','gcal']:
                 raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
-                                 "User selected: {}".format(split_field))
+                                 "User selected: {}".format(field_to_split))
 
-        if any(x in split_field for x in ['fcal','bpcal','gcal']):
+        if any(x in field_to_split for x in ['fcal','bpcal','gcal']):
            calfields = []
-           for fd in split_field:
+           for fd in field_to_split:
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
            target_ls = [','.join(np.unique(np.array(calfields))),]
         else: target_ls = pipeline.target[i]
 
-        # write calibration library file for OTF cal in split_target_worker.py
-        if pipeline.enable_task(config['split_target'], 'otfcal') and config['split_target']['otfcal']['callib']:
-            callib = os.path.join(pipeline.output, config['split_target']['otfcal']['callib'])
+        #use existing calibration library if user gives one
+        if pipeline.enable_task(config['split_field'], 'otfcal') and config['split_field']['otfcal']['callib']:
+            callib = 'caltables/callibs/{}'.format(config['split_field']['otfcal']['callib'])
 
-            if not os.path.exists(os.path.join(pipeline.output, config['split_target']['otfcal']['callib'])):
+            if not os.path.exists(os.path.join(pipeline.output,callib)):
                 raise IOError(
                     "Callib file {0:s} does not exist. Please check that it is where it should be.".format(callib))
 
             docallib = True
-            if config['split_target'].get('column') != 'corrected':
+
+            if config['split_field'].get('column') != 'corrected':
                 meerkathi.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_target'].get('column')))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field'].get('column')))
             dcol = 'corrected'
 
-        elif pipeline.enable_task(config['split_target'], 'otfcal'):
+        # write calibration library file for OTF cal
+        elif pipeline.enable_task(config['split_field'], 'otfcal'):
             caltablelist, gainfieldlist, interplist = [], [], []
-
             calprefix = '{0:s}-{1:s}'.format(prefix,
-                                             config['split_target']['otfcal'].get('label_cal'))
-            callib = 'callib_{0:s}.txt'.format(calprefix)
+                                             config['split_field']['otfcal'].get('label_cal'))
+            callib = 'caltables/callibs/callib_{}.txt'.format(calprefix)
 
-            with open(os.path.join(pipeline.output, 'callib_{}.json'.format(config['split_target']['otfcal'].get('label_cal')))) as f:
+            with open(os.path.join('{}/callibs'.format(pipeline.caltables),
+                                  'callib_{}.json'.format(config['split_field']['otfcal'].get('label_cal')))) as f:
                 callib_dict = json.load(f)
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-                if not pipeline.enable_task(config['split_target']['otfcal'], 'apply_'+applyme):
+                if not pipeline.enable_task(config['split_field']['otfcal'], 'apply_'+applyme):
                     continue
                 caltablelist.append(callib_dict[applyme]['caltable'])
                 gainfieldlist.append(callib_dict[applyme]['fldmap'])
@@ -137,19 +139,19 @@ def worker(pipeline, recipe, config):
                     stdw.write(' spwmap=0\n')
 
             docallib = True
-            if config['split_target'].get('column') != 'corrected':
+            if config['split_field'].get('column') != 'corrected':
                 meerkathi.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_target'].get('column')))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field'].get('column')))
             dcol = 'corrected'
 
         else:
             docallib = False
-            dcol = config['split_target'].get('column')
+            dcol = config['split_field'].get('column')
 
         for target in target_ls:
             field = utils.filter_name(target)
 
-            if config['split_target']['field'] == 'target':
+            if config['split_field']['field'] == 'target':
                 fms = pipeline.hires_msnames[i] if label_in == \
                        '' else '{0:s}-{1:s}_{2:s}.ms'.format(msname, field, label_in)
                 tms = '{0:s}-{1:s}_{2:s}.ms'.format(
@@ -162,8 +164,8 @@ def worker(pipeline, recipe, config):
 
             flagv = tms+'.flagversions'
 
-            if pipeline.enable_task(config, 'split_target'):
-                step = 'split_target_{:d}'.format(i)
+            if pipeline.enable_task(config, 'split_field'):
+                step = 'split_field_{:d}'.format(i)
                 if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
 
@@ -173,25 +175,25 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": fms,
                                "outputvis": tms,
-                               "timeaverage": True if (config['split_target'].get('time_average') != '' and config['split_target'].get('time_average') != '0s') else False,
-                               "timebin": config['split_target'].get('time_average'),
-                               "chanaverage": True if config['split_target'].get('freq_average') > 1 else False,
-                               "chanbin": config['split_target'].get('freq_average'),
-                               "spw": config['split_target'].get('spw'),
+                               "timeaverage": True if (config['split_field'].get('time_average') != '' and config['split_field'].get('time_average') != '0s') else False,
+                               "timebin": config['split_field'].get('time_average'),
+                               "chanaverage": True if config['split_field'].get('freq_average') > 1 else False,
+                               "chanbin": config['split_field'].get('freq_average'),
+                               "spw": config['split_field'].get('spw'),
                                "datacolumn": dcol,
-                               "correlation": config['split_target'].get('correlation'),
-                               "usewtspectrum": config['split_target'].get('usewtspectrum'),
+                               "correlation": config['split_field'].get('correlation'),
+                               "usewtspectrum": config['split_field'].get('usewtspectrum'),
                                "field": target,
                                "keepflags": True,
                                "docallib": docallib,
-                               "callib": sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_target'], 'otfcal') else None),
+                               "callib": sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_field'], 'otfcal') else None),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, " ".join(fms)))
 
             msname = tms if pipeline.enable_task(
-                config, 'split_target') else fms
+                config, 'split_field') else fms
 
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
@@ -213,7 +215,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo'].get('listobs')):
-                    if pipeline.enable_task(config, 'split_target'):
+                    if pipeline.enable_task(config, 'split_field'):
                         listfile = '{0:s}-obsinfo.txt'.format(tms[:-3])
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
@@ -230,7 +232,7 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
                 if (config['obsinfo'].get('summary_json')):
-                    if pipeline.enable_task(config, 'split_target'):
+                    if pipeline.enable_task(config, 'split_field'):
                         listfile = '{0:s}-obsinfo.json'.format(tms[:-3])
                     else:
                         listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])

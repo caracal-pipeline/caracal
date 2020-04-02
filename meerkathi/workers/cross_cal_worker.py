@@ -548,9 +548,14 @@ def worker(pipeline, recipe, config):
             elif '.G' in gt:
                 calmodes.append('gain_cal')
 
+        callib_dir = "{}/callibs".format(
+            pipeline.caltables)
+        if not os.path.exists(callib_dir):
+            os.mkdir(callib_dir)
+
         callib_dict = dict(zip(calmodes, applycal_recipes))
 
-        with open(os.path.join(pipeline.output, 'callib_{}.json'.format(label)), 'w') as json_file:
+        with open(os.path.join(callib_dir, 'callib_{}.json'.format(label)), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'flagging_summary'):

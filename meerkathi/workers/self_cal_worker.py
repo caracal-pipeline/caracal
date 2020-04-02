@@ -304,7 +304,7 @@ def worker(pipeline, recipe, config):
         elif mask_key == 'sofia':
             #fake_image(0, img_dir, mslist, field)
             #sofia_mask(num, img_dir, field)
-            fitmask_address = 'masking/'
+            fitmask_address = 'masking'
             image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num-1)})
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
@@ -1584,7 +1584,8 @@ def worker(pipeline, recipe, config):
             pipeline.continuum, self_cal_iter_counter)
         if not os.path.exists(image_path):
             os.mkdir(image_path)
-
+        print(mslist)
+        print('??????????????????????????????????????')
         mask_key = config['image'].get('clean_mask')[0]
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
@@ -1619,8 +1620,6 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 mask_key=config['image'].get('clean_mask')[self_cal_iter_counter]
-                print(self_cal_iter_counter,cal_niter)
-                print('???????????????????///???????????????????????????')
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

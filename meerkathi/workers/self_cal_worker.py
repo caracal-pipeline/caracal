@@ -1589,7 +1589,7 @@ def worker(pipeline, recipe, config):
             pipeline.continuum, self_cal_iter_counter)
         if not os.path.exists(image_path):
             os.mkdir(image_path)
-        mask_key = config['image'].get('clean_mask')[0]
+        mask_key = config['image'].get('clean_mask_method')[0]
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
@@ -1601,7 +1601,7 @@ def worker(pipeline, recipe, config):
                 image_path, pipeline), mslist, field)
                 sofia_mask(0, get_dir_path(
                 image_path, pipeline), field)
-                config['image']['clean_mask'].insert(1,config['image']['clean_mask'][1])
+                config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)                
                 sofia_mask(self_cal_iter_counter, get_dir_path(

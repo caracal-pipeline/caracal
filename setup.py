@@ -25,6 +25,7 @@ requirements = [
     'aplpy',
     'pandas',
     'nbconvert',
+    'regions',
 ]
 
 PACKAGE_NAME = 'meerkathi'

@@ -120,6 +120,17 @@ mapping:
         desc: Stokes image to create
         required: false
         example: 'I'
+      img_multi_scale:
+          type: bool
+          desc: switch on multiscale cleaning
+          required: false
+          example: 'False'
+      img_multi_scale_scales:
+          seq:
+            - type: int
+          desc: scales of multiscale [0,10,20,etc, etc] in pixels
+          required: false
+          example: '10, 20, 30'
       cal_gain_amplitude_clip_low:
         type: float
         desc: Lower gain amplitude clipping
@@ -197,41 +208,30 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'True'
-          mask_threshold:
-            seq:
-              - type: float
-            desc: Masking threshold (either for automasking or SoFiA)
-            required: false
-            example: '7.0, 7.0'
-          auto_threshold:
-            seq:
-              - type: float
-            desc: Auto clean threshold
-            required: false
-            example: '0.5, 0.5'
           column:
             seq:
               - type: str
             desc: Column to image
             required: false
             example: 'DATA, CORRECTED_DATA'
-          clean_mask:
+          clean_mask_method:
             seq:
               - type: str
             desc: indicate masking method and name of mask
             required: false
             example: 'catalog, auto-mask, sofia'
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false
-            example: 'False'
-          multi_scale_scales:
+          clean_mask_threshold:
             seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc] in pixels
+              - type: float
+            desc: Masking threshold (either for automasking or SoFiA)
             required: false
-            example: '10, 20, 30'
+            example: '7.0, 7.0'
+          clean_threshold:
+            seq:
+              - type: float
+            desc: Auto clean threshold
+            required: false
+            example: '0.5, 0.5'
           local_rms:
             seq:
               - type: bool

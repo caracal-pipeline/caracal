@@ -57,6 +57,8 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper')
+    multiscale = config.get('multi_scale')
+    multiscale_scales = sdm.dismissable(config.get('multi_scale_scales'))
     if taper == '':
         taper = None
     label = config['label']
@@ -170,9 +172,9 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "local-rms": True,
             "auto-mask": 6,
-            "auto-threshold": config[key].get('auto_threshold')[0],
-            "multiscale": config[key].get('multi_scale'),
-            "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
+            "auto-threshold": config[key].get('clean_threshold')[0],
+            "multiscale": multiscale,
+            "multiscale-scales": multiscale_scales,
             "savesourcelist": False,
             "fitbeam": False,
         }
@@ -283,8 +285,8 @@ def worker(pipeline, recipe, config):
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-            "multiscale": config[key].get('multi_scale'),
-            "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
+            "multiscale": multiscale,
+            "multiscale-scales": multiscale_scales,
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
         if min_uvw > 0:
@@ -296,11 +298,11 @@ def worker(pipeline, recipe, config):
         #     fitmask_address = 'masking/'+str(fitmask)
         #     image_opts.update({"fitsmask": fitmask_address+':output'})
 
-        mask_key = config[key].get('clean_mask')[num-1 if len(config[key].get('clean_mask', [])) >= num else -1]
+        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
         if mask_key == 'auto_mask':
-            image_opts.update({"auto-mask": config[key].get('mask_threshold')[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
-            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('mask_threshold', [])) >= num else -1]})
-            image_opts.update({"auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1]})            
+            image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
+            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1]})
+            image_opts.update({"auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
             #fake_image(0, img_dir, mslist, field)
             #sofia_mask(num, img_dir, field)

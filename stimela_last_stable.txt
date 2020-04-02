@@ -1,0 +1,1 @@
+-e git+https://github.com/ratt-ru/Stimela@a346b985fb875aac10e7933725abac5e21e62f4e#egg=stimela

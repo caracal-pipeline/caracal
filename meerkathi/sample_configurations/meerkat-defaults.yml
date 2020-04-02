@@ -184,4 +184,6 @@ image_line:
     cell: 2
   mstransform:
     enable: true
-    telescope: meerkat
+    doppler:
+      enable: true
+      telescope: meerkat

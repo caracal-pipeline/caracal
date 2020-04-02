@@ -152,9 +152,13 @@ image_line:
     robust: 0
   mstransform: 
     enable: true
-    telescope: meerkat
-    fitorder: 3
-    fitspw: '*:1300~1417.2MHz,*:1421.0~1600MHz'
+    doppler:
+      enable: true
+      telescope: meerkat
+    uvlin:
+      enable: true
+      fitorder: 3
+      fitspw: '*:1300~1417.2MHz,*:1421.0~1600MHz'
   pb_cube:
     enable: true
   flag_mst_errors:

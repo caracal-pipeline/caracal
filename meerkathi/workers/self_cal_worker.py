@@ -173,7 +173,7 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol":  fit_spectral_pol,
             "local-rms": True,
             "auto-mask": 7,
-            "auto-threshold": config[key].get('clean_threshold',2)[0],
+            "auto-threshold": config[key].get('clean_threshold')[0],
             "savesourcelist": False,
             "fitbeam": False,
         }

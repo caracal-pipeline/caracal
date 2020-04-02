@@ -98,6 +98,11 @@ def worker(pipeline, recipe, config):
         # write calibration library file for OTF cal in split_target_worker.py
         if pipeline.enable_task(config['split_target'], 'otfcal') and config['split_target']['otfcal']['callib']:
             callib = os.path.join(pipeline.output, config['split_target']['otfcal']['callib'])
+
+            if not os.path.exists(os.path.join(pipeline.output, config['split_target']['otfcal']['callib'])):
+                raise IOError(
+                    "Callib file {0:s} does not exist. Please check that it is where it should be.".format(callib))
+
             docallib = True
             if config['split_target'].get('column') != 'corrected':
                 meerkathi.log.info("Datacolumn was set to '{}'. by the user." \
@@ -111,7 +116,7 @@ def worker(pipeline, recipe, config):
                                              config['split_target']['otfcal'].get('label_cal'))
             callib = 'callib_{0:s}.txt'.format(calprefix)
 
-            with open(os.path.join(pipeline.output, 'callib_recipes.json')) as f:
+            with open(os.path.join(pipeline.output, 'callib_{}.json'.format(config['split_target']['otfcal'].get('label_cal')))) as f:
                 callib_dict = json.load(f)
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():

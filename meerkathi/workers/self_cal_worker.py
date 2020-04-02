@@ -1619,7 +1619,8 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 mask_key=config['image'].get('clean_mask')[self_cal_iter_counter]
-                print(self_cal_iter_counter)
+                print(self_cal_iter_counter,cal_niter)
+                print('???????????????????///???????????????????????????')
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

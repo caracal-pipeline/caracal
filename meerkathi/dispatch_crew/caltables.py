@@ -4,9 +4,11 @@ import os
 
 __DB_FILENAME = os.path.join(
     meerkathi.pckgdir, "data/southern_calibrators.txt")
+__DB_CASA_FILENAME = os.path.join(
+    meerkathi.pckgdir, "data/casa_calibrators.txt")
 
 __CALIBRATOR_DB = None
-
+__CASA_CALIBRATOR_DB = None
 
 def calibrator_database():
     """ Return the Southern standard calibrator database """
@@ -26,3 +28,14 @@ def calibrator_database():
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
     #meerkathi.log.info("\n" + str(__CALIBRATOR_DB))
     return __CALIBRATOR_DB
+
+def casa_calibrator_database():
+    """ Return the CASA standard calibrator database """
+
+    # same as in calibrator_database
+    global __CASA_CALIBRATOR_DB
+    if __CASA_CALIBRATOR_DB is not None:
+        return __CASA_CALIBRATOR_DB
+    meerkathi.log.info("Obtaining divine knowledge from: %s" % __DB_CASA_FILENAME)
+    __CASA_CALIBRATOR_DB = cp.catalog_parser(__DB_CASA_FILENAME)
+    return __CASA_CALIBRATOR_DB

@@ -13,6 +13,12 @@ class catalog_parser:
         cls = self.__class__
         self._cat = cls.read_caltable(filename)
 
+    # Comment by Josh: @property is a means to protect private
+    # Variables
+    # if a is an instance of catalog_parser, then the expression
+    # a.db is transformed into a.db(). So it looks like a class
+    # variable but it isn't. Something nasty like
+    # a.db = XXX is then impossible.
     @property
     def db(self):
         """ Returns a copy of divine sky knowledge """
@@ -115,9 +121,13 @@ class catalog_parser:
                                            r"(?P<m>[0-9]+)m"
                                            r"(?P<s>[0-9]+(?:.[0-9]+)?)s$",
                                            decl)
+
+                    signum = 1.
+                    if decl[0] == '-':
+                        signum=-1.
                     decl = np.deg2rad(float(valset_decl.group("d")) +
-                                      float(valset_decl.group("m")) +
-                                      float(valset_decl.group("s")))
+                                      signum*float(valset_decl.group("m"))/60. +
+                                      signum*float(valset_decl.group("s"))/3600.)
 
                     a = float(valset.group("a"))
                     b = float(valset.group("b"))
@@ -194,11 +204,14 @@ class catalog_parser:
 
         I = pbspi(v0, a, b, c, d)
 
-        v = np.linspace(vlower, vupper, 10000)
-        popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
+        if a == 0 and b == 0 and c == 0 and d==0:
+            popt = [0., 0., 0., 0.]
+        else:
+            v = np.linspace(vlower, vupper, 10000)
+            popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
             v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
-        perr = np.sqrt(np.diag(pcov))
-        assert np.all(perr < 1.0e-6)
+            perr = np.sqrt(np.diag(pcov))
+            assert np.all(perr < 1.0e-6)
 
         # returns (S(v0), a', b', c', d')
         return I, popt[0], popt[1], popt[2], popt[3]

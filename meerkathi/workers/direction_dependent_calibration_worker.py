@@ -27,7 +27,7 @@ def worker(pipeline, recipe, config):
     ddsols_f = config['calibrate_dd'].get('ddsols_freq')
     dist_ncpu = config['calibrate_dd'].get('dist_ncpu')
     label = config.get('label')
-    usepb = config.get('use_pb')
+    USEPB = config.get('use_pb')
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
     hires_mslist = pipeline.hires_msnames
@@ -117,19 +117,22 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
     def dd_postcal_image(field,ms_list):
         dd_image_opts_postcal = copy.deepcopy(dd_image_opts)
-        image_prefix_postcal = prefix+"_"+field
         outdir = field+"_ddcal"
+        image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
         dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
+        dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRI'}
         dd_image_opts_postcal.update(dd_ms_list)
         dd_image_opts_postcal.update(dd_imagename)
         dd_image_opts_postcal.update(dd_imagecol)
+        if USEPB:
+            dd_image_opts_postcal.update(dd_beamopts)
 
-        recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_postcal,
+        recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,
         input=INPUT,
-        output=OUTPUT+"/"+outdir,
-        label="ddf_image_{0:s}:: Primary beam corrected image".format(field),
+        output=OUTPUT,
+        label="ddf_image_postcal_{0:s}:: Primary beam corrected image".format(field),
         shared_memory="500gb")
 
 #    def sfind_intrinsic():
@@ -226,7 +229,7 @@ def worker(pipeline, recipe, config):
            step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
-              "data-column"       : "DATA",
+              "data-column"       : "CORRECTED_DATA",
               "out-column"        : "SUBDD_DATA",
               "weight-column"     : "WEIGHT_SPECTRUM",
               "sol-jones"         : "G,DD",  # Jones terms to solve
@@ -312,7 +315,7 @@ def worker(pipeline, recipe, config):
                "msname": mslist,
                "column": config[key].get('img_ws_column'),
                "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key].get('img_ws_robust')),
-               "nmiter": sdm.dismissable(config[key].get['img_ws_nmiter']),
+               "nmiter": sdm.dismissable(config[key].get('img_ws_nmiter')),
                "npix": config[key].get('img_ws_npix'),
                "padding": config[key].get('img_ws_padding'),
                "scale": config[key].get('img_ws_cell', cell),
@@ -320,7 +323,7 @@ def worker(pipeline, recipe, config):
                "niter": config[key].get('img_ws_niter'),
                "mgain": config[key].get('img_ws_mgain'),
                "pol": config[key].get('img_ws_pol'),
-               "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper', taper)),
+               "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper')),
                "channelsout": config[key].get('img_ws_nchans'),
                "joinchannels": config[key].get('img_ws_joinchannels'),
                "local-rms": config[key].get('img_ws_local_rms'),
@@ -344,7 +347,7 @@ def worker(pipeline, recipe, config):
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'run_crystalball_{0:s}_{1:s}'.format(mspref,field)
            recipe.add('cab/crystalball', step, {
-               "ms": msname,
+               "ms": ms,
                "sky-model": crystalball_model+':output',
                "spectra": config[key].get('dd_spectra'),
                "row-chunks": config[key].get('dd_row_chunks'),
@@ -366,17 +369,20 @@ def worker(pipeline, recipe, config):
        print("Processing field",field,"for de calibration:")
 #       print(mslist)
 #       print(field)
-    #if usepb:
-    #    make_primary_beam()
-       dd_precal_image(field,mslist)
+       if USEPB:
+          make_primary_beam()
+       if pipeline.enable_task(config,'image_dd'):
+          dd_precal_image(field,mslist)
     #sfind_intrinsic()
        dagga(field)
-       dd_calibrate(field,mslist)
-       dd_postcal_image(field,mslist)
-       if config['copy_data'].get('enable'):
+       if pipeline.enable_task(config,'calibrate_dd'):
+          dd_calibrate(field,mslist)
+       if pipeline.enable_task(config,'image_dd'):
+          dd_postcal_image(field,mslist)
+       if pipeline.enable_task(config, 'copy_data'):
           cp_data_column(field,mslist)
-       if config['image_wsclean'].get('enable'):
+       if pipeline.enable_task(config, 'image_wsclean'):
           img_wsclean(mslist,field)
-       if config['transfer_model_dd'].get(enable):
+       if pipeline.enable_task(config,'transfer_model_dd'):
           run_crystalball(mslist,field)
 

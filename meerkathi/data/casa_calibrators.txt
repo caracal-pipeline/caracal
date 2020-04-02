@@ -1,0 +1,10 @@
+// Used to identify Northern calibrators with a name by coordinates
+// ignore epoch, a, b, c, d
+
+name=3C48  epoch=0000 ra=01h37m41.3s dec=+33d09m35s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C123 epoch=0000 ra=04h37m04.4s dec=+29d40m14s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C138 epoch=0000 ra=05h21m09.9s dec=+16d38m22s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C147 epoch=0000 ra=05h42m36.1s dec=+49d51m07s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C196 epoch=0000 ra=08h15m27.8s dec=-03d08m27s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C286 epoch=0000 ra=13h31m08.3s dec=+30d30m33s a=0.0 b=0.0 c=0.0 d=0.0
+name=3C380 epoch=0000 ra=18h29m31.8s dec=+48d44m46s a=0.0 b=0.0 c=0.0 d=0.0

@@ -1628,7 +1628,7 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'image'):
                     image(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if mask_key=='sofia':
+                if mask_key=='sofia' and self_cal_iter_counter != cal_niter:
                     sofia_mask(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):

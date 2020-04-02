@@ -64,8 +64,8 @@ mapping:
           meerkathi_model:
             type: bool
             required: false
-            desc: Force disable built-in models in MeerKATHI (NOT RECOMMENDED!)
-            example: 'False'
+            desc: Use built-in sky models in MeerKATHI
+            example: 'True'
           no_verify:
             type: bool
             desc: Enables setting standard manually.

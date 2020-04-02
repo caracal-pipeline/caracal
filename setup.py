@@ -25,6 +25,7 @@ requirements = [
     'aplpy',
     'pandas',
     'nbconvert',
+    'regions'
 ]
 
 # these are only there for development, make them optional

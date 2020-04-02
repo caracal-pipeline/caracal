@@ -287,8 +287,8 @@ def worker(pipeline, recipe, config):
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],            
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})

@@ -1589,8 +1589,6 @@ def worker(pipeline, recipe, config):
             pipeline.continuum, self_cal_iter_counter)
         if not os.path.exists(image_path):
             os.mkdir(image_path)
-        print(mslist)
-        print('??????????????????????????????????????')
         mask_key = config['image'].get('clean_mask')[0]
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
@@ -1624,7 +1622,7 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
-                mask_key=config['image'].get('clean_mask')[self_cal_iter_counter]
+                mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter]
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

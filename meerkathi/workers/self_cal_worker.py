@@ -57,8 +57,8 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper')
-    multiscale = config.get('multi_scale')
-    multiscale_scales = sdm.dismissable(config.get('multi_scale_scales'))
+    multiscale = config.get('img_multi_scale')
+    multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
     if taper == '':
         taper = None
     label = config['label']

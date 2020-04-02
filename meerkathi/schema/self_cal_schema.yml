@@ -131,15 +131,15 @@ mapping:
         required: false
         example: '1'
       cal_time_chunk:
-        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries.
+        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
         type: int
         required: false
-        example: '1'
+        example: '-1'
       cal_freq_chunk:
-        desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries.
+        desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries. -1 Uses largest solution interval
         type: int
         required: false
-        example: '0'
+        example: '-1'
 
       aimfast:
         type: map
@@ -534,14 +534,14 @@ mapping:
                  example: '0'     
               time_chunk:
                  type: int
-                 desc: Time chunk in units of timeslots for transferring gains with Cubical.
+                 desc: Time chunk in units of timeslots for transferring gains with Cubical. -1 uses the solution interval from the calibration that is applied.
                  required: false
-                 example: '128'
+                 example: '-1'
               freq_chunk:
                  type: int
-                 desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw.
+                 desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw. -1 uses the solution interval from the calibration that is applied.
                  required: false
-                 example: '0'
+                 example: '-1'
 
       transfer_model:
         type: map

@@ -60,8 +60,6 @@ def worker(pipeline, recipe, config):
     multiscale = config.get('img_multi_scale')
     if multiscale == True:
         multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
-    else:
-         multiscale_scales = None
     if taper == '':
         taper = None
     label = config['label']
@@ -176,11 +174,12 @@ def worker(pipeline, recipe, config):
             "local-rms": True,
             "auto-mask": 6,
             "auto-threshold": config[key].get('clean_threshold')[0],
-            "multiscale": multiscale,
-            "multiscale-scales": multiscale_scales,
             "savesourcelist": False,
             "fitbeam": False,
         }
+        if multiscale==True:
+            fake_image_opts.update({"multiscale": multiscale})
+            fake_image_opts.update({"multiscale": multiscale_scales})
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,
@@ -288,8 +287,7 @@ def worker(pipeline, recipe, config):
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-            "multiscale": multiscale,
-            "multiscale-scales": multiscale_scales,
+
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
         }
         if min_uvw > 0:
@@ -300,6 +298,9 @@ def worker(pipeline, recipe, config):
         #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
         #     fitmask_address = 'masking/'+str(fitmask)
         #     image_opts.update({"fitsmask": fitmask_address+':output'})
+        if multiscale ==True:
+            image_opts.update({"multiscale": multiscale})
+            image_opts.update({"multiscale-scales": multiscale_scales})
 
         mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
         if mask_key == 'auto_mask':

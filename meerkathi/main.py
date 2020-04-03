@@ -178,8 +178,8 @@ def execute_pipeline(args, arg_groups, block):
         except Exception:
             log.error(
                 "An unhandled exeption occured. If you think this is a bug please report it.")
-            log.error("Your logfile is here: {0:s}.".format(meerkathi.MEERKATHI_LOG))
-            log.error("You are running version: {0:s}".format(
+            log.error("Your logfile is {0:s}".format(meerkathi.MEERKATHI_LOG))
+            log.error("You are running version {0:s}".format(
                 str(__version__)))
             for line in traceback.format_exc().splitlines():
                 log.error(line)

@@ -209,19 +209,19 @@ mapping:
               - type: str
             desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user mask located in output/masking/)
             required: false
-            example: 'auto_mask, sofia, sofia'
+            example: 'auto_mask, sofia'
           clean_mask_threshold:
             seq:
               - type: float
             desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
-            example: '7.0, 4.0, 4.0'
+            example: '7.0, 4.0'
           clean_threshold:
             seq:
               - type: float
             desc: Auto clean threshold
             required: false
-            example: '0.5, 0.5, 0.5'
+            example: '0.5, 0.5'
           local_rms:
             seq:
               - type: bool
@@ -243,7 +243,7 @@ mapping:
                   - type: float
                 desc: FWHM of spatial kernels
                 required: false
-                example: '3., 6., 9.' 
+                example: '0., 3., 6., 9.' 
               local_noise:
                 seq:
                   - type: bool

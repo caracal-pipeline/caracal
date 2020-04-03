@@ -1524,7 +1524,8 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
-                mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter]
+                print(self_cal_iter_counter,len(config['image'].get('clean_mask_method')))
+                mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

@@ -1492,7 +1492,8 @@ def worker(pipeline, recipe, config):
             if mask_key == 'auto_mask' or '.' in  mask_key:
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
-                if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]:
+                if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
+                    config['image'].get('clean_mask_threshold').insert(1,config['image'].get('clean_mask_threshold')[1])
                     sofia_mask(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
             elif mask_key == 'sofia':
@@ -1527,7 +1528,6 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
-                print(self_cal_iter_counter,len(config['image'].get('clean_mask_method')))
                 mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(

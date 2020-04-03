@@ -211,65 +211,6 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-#### I believe this Section is OUTDATED: these keywords are not in schema anymore ####
-        # if config[key].get('peak_based_mask_on_dirty'):
-        #     mask = True
-        #     step = 'image_{}_dirty'.format(num)
-        #     recipe.add('cab/wsclean', step,
-        #                {
-        #                    "msname": mslist,
-        #                    "column": imcolumn,
-        #                    "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
-        #                    "nmiter": sdm.dismissable(config['img_nmiter']),
-        #                    "npix": config[key].get('npix', npix),
-        #                    "padding": config[key].get('padding', padding),
-        #                    "scale": config[key].get('cell', cell),
-        #                    "pol": config[key].get('pol', pol),
-        #                    "channelsout": nchans,
-        #                    "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
-        #                    "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='{:s}:: Make dirty image to create clean mask'.format(step))
-
-        #     step = 'mask_dirty_{}'.format(num)
-        #     recipe.add('cab/cleanmask', step,
-        #                {
-        #                    "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix),
-        #                    "output":  '{0:s}/{1:s}_{s:}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-        #                    "dilate":  False,
-        #                    "peak-fraction":  0.5,
-        #                    "no-negative":  True,
-        #                    "boxes":  1,
-        #                    "log-level":  'DEBUG',
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
-        # elif config[key].get('mask'):
-        #     mask = True
-        #     sigma = config[key].get('mask_sigma')
-        #     pf = config[key].get('mask_peak_fraction')
-        #     step = 'mask_{}'.format(num)
-        #     recipe.add('cab/cleanmask', step,
-        #                {
-        #                    "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num-1, mfsprefix),
-        #                    "output":  '{0:s}/{1:s}_{2:s}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-        #                    "dilate":  False,
-        #                    "peak-fraction":  sdm.dismissable(pf),
-        #                    "sigma":  sdm.dismissable(sigma),
-        #                    "no-negative":  True,
-        #                    "boxes":  1,
-        #                    "log-level":  'DEBUG',
-        #                },
-        #                input=pipeline.input,
-        #                output=pipeline.output,
-        #                label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
-#### END of OUTDATED SECTION ####
-
         step = 'image_{}'.format(num)
         image_opts = {
             "msname": mslist,
@@ -294,11 +235,6 @@ def worker(pipeline, recipe, config):
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 
-        # if config[key].get('mask_from_sky'):
-        #     fitmask = config[key].get('fits_mask')[
-        #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
-        #     fitmask_address = 'masking/'+str(fitmask)
-        #     image_opts.update({"fitsmask": fitmask_address+':output'})
         if multiscale ==True:
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
@@ -315,16 +251,6 @@ def worker(pipeline, recipe, config):
         elif mask_key == 'catalog':
             fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
             image_opts.update({"fitsmask": fitmask_address+':output'})
-
-        #     image_opts.update({"fitsmask": fitmask_address+':output'})
-        #     fitmask = config[key].get('fits_mask')[
-        #         num-1 if len(config[key].get('fits_mask')) >= num else -1]
-        #     fitmask_address = 'masking/'+str(fitmask)
-        #     image_opts.update({"fitsmask": fitmask_address+':output'})
-
-#        elif mask:
-#            image_opts.update(
-#                {"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(img_dir, prefix, num)})
             
 
         recipe.add('cab/wsclean', step,
@@ -382,18 +308,8 @@ def worker(pipeline, recipe, config):
                 "merge.minSizeZ": 1,
             }
 
-        #def_kernels=[]
-        #for kk in config[key].get('kernels'):
-        #x    def_kernels.append([kk, kk, 0, 'b'])
-        # user_kern = config[key].get('kernels', None)
-        # if user_kern:
-        #   for i in xrange(0,len(user_kern))
-        #     kern.
-        #     def_kernels.concatenate(config[key].get('kernels'))
-
         outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
         outmaskName = outmask+'_mask.fits'
-        #config['image']['fits_mask'].append(outmaskName)
 
         image_opts = {
             "import.inFile": imagename,
@@ -596,18 +512,6 @@ def worker(pipeline, recipe, config):
                    input=pipeline.output,
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))
-
-#        step = '7'
-#        name_sof_out = imagename.split('.fits')[0]
-#        name_sof_out = name_sof_out+'_mask.fits'
-
-#        recipe.add(cleanup_files, step,
-#          {
-#           'mask_name' : name_sof_out,
-#          },
-#          input=pipeline.input,
-#          output=pipeline.output,
-#          label='{0:s}:: Cleanup SoFiA masks'.format(step))
 
     def make_cube(num, img_dir, field, imtype='model'):
         im = '{0:s}/{1:s}_{2:s}_{3}-cube.fits:output'.format(
@@ -1581,8 +1485,6 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
         mask_key = config['image'].get('clean_mask_method')[0]
-        print(mask_key)
-        sys.exit(0)
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")

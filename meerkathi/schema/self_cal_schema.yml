@@ -209,25 +209,25 @@ mapping:
               - type: str
             desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user mask located in output/masking/)
             required: false
-            example: 'auto_mask, sofia'
+            example: 'auto_mask, sofia, sofia'
           clean_mask_threshold:
             seq:
               - type: float
             desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
-            example: '7.0, 4.0'
+            example: '7.0, 4.0, 4.0'
           clean_threshold:
             seq:
               - type: float
             desc: Auto clean threshold
             required: false
-            example: '0.5, 0.5'
+            example: '0.5, 0.5, 0.5'
           local_rms:
             seq:
               - type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-            example: 'False, False'
+            example: 'False, False, False'
         
           sofia_settings: 
             desc: SoFiA source finder settings to produce a clean mask

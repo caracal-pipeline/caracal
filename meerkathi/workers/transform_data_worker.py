@@ -93,7 +93,11 @@ def worker(pipeline, recipe, config):
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
            target_ls = [','.join(np.unique(np.array(calfields))),]
-        else: target_ls = pipeline.target[i]
+        else:
+           target_ls = pipeline.target[i]
+           msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
+           intent, targets_in_ms = utils.categorize_fields(msinfo)['target']
+           target_ls = set(target_ls).intersection(targets_in_ms)
 
         #use existing calibration library if user gives one
         if pipeline.enable_task(config['split_field'], 'otfcal') and config['split_field']['otfcal']['callib']:

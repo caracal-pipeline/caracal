@@ -718,9 +718,8 @@ def worker(pipeline, recipe, config):
                                 'cab/fitstool',
                                 step,
                                 {
-                                    "image": ['{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-{5:04d}-{6:s}.fits:output'.format(
-                                            cube_dir, pipeline.prefix, field, line_name,
-                                            j, d, mm) for d in range(nchans)],
+                                    "pattern": '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output'.format(
+                                            cube_dir, pipeline.prefix, field, line_name, j, mm),
                                     "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,

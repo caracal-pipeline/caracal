@@ -24,7 +24,6 @@ from meerkathi.dispatch_crew.interruptable_process import interruptable_process
 
 __version__ = meerkathi.__version__
 pckgdir = meerkathi.pckgdir
-MEERKATHI_LOG = meerkathi.MEERKATHI_LOG
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
         "minimal" : "minimalConfig.yml",
@@ -138,7 +137,7 @@ def log_logo():
     # parse config file and set up command line argument override parser
     log.info("Module installed at: {0:s} (version {1:s})".format(
         pckgdir, str(__version__)))
-    log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
+    # log.info("A logfile will be dumped here: {0:s}".format(meerkathi.MEERKATHI_LOG))
     log.info("")
 
 
@@ -166,10 +165,9 @@ def execute_pipeline(args, arg_groups, block):
             pipeline.run_workers()
         except SystemExit as e:
             if e.code != 0:
-                log.error(
-                    "One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
+                log.error("A pipeline worker exited with code {0:} shutdown. This is likely a bug, please report.".format(e.code))
                 log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
-                    MEERKATHI_LOG, str(__version__)))
+                    meerkathi.MEERKATHI_LOG, str(__version__)))
                 sys.exit(1)  # indicate failure
             else:
                 log.info(
@@ -177,13 +175,14 @@ def execute_pipeline(args, arg_groups, block):
         except KeyboardInterrupt:
             log.info(
                 "Interrupt request received from user - gracefully shutting down. Goodbye!")
-        except Exception as e:
+        except Exception:
             log.error(
                 "An unhandled exeption occured. If you think this is a bug please report it.")
-            log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
+            log.error("Your logfile is here: {0:s}.".format(meerkathi.MEERKATHI_LOG))
             log.error("You are running version: {0:s}".format(
                 str(__version__)))
-            log.error(traceback.format_exc())
+            for line in traceback.format_exc().splitlines():
+                log.error(traceback.format_exc())
             sys.exit(1)  # indicate failure
 
     # now fork and block or continue depending on whether interaction is wanted
@@ -206,7 +205,7 @@ def main(argv):
 
     # start a new logfile by default
     if args.log_append is False:
-        with open(MEERKATHI_LOG, "w") as stdw:
+        with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
             pass
     if args.schema:
         schema = {}
@@ -252,7 +251,7 @@ def main(argv):
        not args.get_default and \
        not args.report_viewer:
        # Run interactively
-        remove_log_handler(log_console_handler)
+        meerkathi.remove_log_handler(log_console_handler)
         try:
             event_loop().run()
         except KeyboardInterrupt:

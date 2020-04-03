@@ -19,7 +19,7 @@ import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
 from meerkathi.view_controllers import event_loop
 from meerkathi.dispatch_crew.interruptable_process import interruptable_process
-from meerkathi.dispatch_crew.stream_director import stream_director
+# from meerkathi.dispatch_crew.stream_director import stream_director
 
 
 __version__ = meerkathi.__version__
@@ -147,44 +147,45 @@ def execute_pipeline(args, arg_groups, block):
     # setup piping infractructure to send messages to the parent
     def __run():
         """ Executes pipeline """
-        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well
-            try:
-                log_logo()
-                # Very good idea to print user options into the log before running:
-                cp().log_options()
+#        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
-                # Obtain some divine knowledge
-                cdb = mkct.calibrator_database()
+        try:
+            log_logo()
+            # Very good idea to print user options into the log before running:
+            cp().log_options()
 
-                pipeline = mwa(arg_groups,
-                               args.workers_directory, stimela_build=args.stimela_build,
-                               add_all_first=args.add_all_first, prefix=args.general_prefix,
-                               configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                               container_tech=args.container_tech, start_worker=args.start_worker, 
-                               end_worker=args.end_worker, generate_reports=not args.no_reports)
+            # Obtain some divine knowledge
+            cdb = mkct.calibrator_database()
 
-                pipeline.run_workers()
-            except SystemExit as e:
-                if e.code != 0:
-                    log.error(
-                        "One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
-                    log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
-                        MEERKATHI_LOG, str(__version__)))
-                    sys.exit(1)  # indicate failure
-                else:
-                    log.info(
-                        "One or more pipeline workers requested graceful shutdown. Goodbye!")
-            except KeyboardInterrupt:
-                log.info(
-                    "Interrupt request received from user - gracefully shutting down. Goodbye!")
-            except Exception as e:
+            pipeline = mwa(arg_groups,
+                           args.workers_directory, stimela_build=args.stimela_build,
+                           add_all_first=args.add_all_first, prefix=args.general_prefix,
+                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
+                           container_tech=args.container_tech, start_worker=args.start_worker,
+                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+
+            pipeline.run_workers()
+        except SystemExit as e:
+            if e.code != 0:
                 log.error(
-                    "An unhandled exeption occured. If you think this is a bug please report it.")
-                log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
-                log.error("You are running version: {0:s}".format(
-                    str(__version__)))
-                log.error(traceback.format_exc())
+                    "One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
+                log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
+                    MEERKATHI_LOG, str(__version__)))
                 sys.exit(1)  # indicate failure
+            else:
+                log.info(
+                    "One or more pipeline workers requested graceful shutdown. Goodbye!")
+        except KeyboardInterrupt:
+            log.info(
+                "Interrupt request received from user - gracefully shutting down. Goodbye!")
+        except Exception as e:
+            log.error(
+                "An unhandled exeption occured. If you think this is a bug please report it.")
+            log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
+            log.error("You are running version: {0:s}".format(
+                str(__version__)))
+            log.error(traceback.format_exc())
+            sys.exit(1)  # indicate failure
 
     # now fork and block or continue depending on whether interaction is wanted
     try:

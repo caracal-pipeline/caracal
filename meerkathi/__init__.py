@@ -5,6 +5,7 @@ import os
 import subprocess
 import logging
 from time import gmtime, strftime
+import stimela
 
 ##############################################################################
 # Globals
@@ -79,10 +80,13 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
 def create_logger():
     """ Create a console logger """
-    log = logging.getLogger(__name__)
-    cfmt = logging.Formatter(
-        ('%(name)s - %(asctime)s %(levelname)s - %(message)s'))
+    log = logging.getLogger("CARACAL")
+    cfmt = logging.Formatter(fmt="{asctime} {name} {levelname}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
     log.setLevel(logging.DEBUG)
+    log.propagate = False
+
+    # init stimela logger as a sublogger
+    stimela.logger("CARACAL.STIMELA")
 
     filehandler = DelayedFileHandler(MEERKATHI_LOG)
     filehandler.setFormatter(cfmt)

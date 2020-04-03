@@ -243,6 +243,10 @@ class config_parser:
             help='Disable interactivity',
             action='store_true')
 
+        add('--pdb',
+            help='Enable the python debugger',
+            action='store_true')
+
         add('-nr','--no-reports',
             help='Disable generation of report about the pipeline run.',
             action='store_true')

@@ -57,6 +57,9 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper')
+    multiscale = config.get('img_multi_scale')
+    if multiscale == True:
+        multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
     if taper == '':
         taper = None
     label = config['label']
@@ -146,10 +149,48 @@ def worker(pipeline, recipe, config):
     #       print 'memory_in_kb:', memtotal_kb
     #    return memtotal_kb
 
+    def fake_image(num, img_dir, mslist, field):
+        
+        key = 'image'
+        key_mt = 'calibrate'
+
+        step = 'image_{}'.format(num)
+        fake_image_opts = {
+            "msname": mslist,
+            "column": 'DATA',
+            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+            "nmiter": sdm.dismissable(config['img_nmiter']),
+            "npix": config[key].get('npix', npix),
+            "padding": config[key].get('padding', padding),
+            "scale": config[key].get('cell', cell),
+            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
+            "niter": niter,
+            "mgain": mgain,
+            "pol":  pol,
+            "taper-gaussian":  taper,
+            "channelsout": nchans,
+            "joinchannels": joinchannels,
+            "fit-spectral-pol":  fit_spectral_pol,
+            "local-rms": True,
+            "auto-mask": 7,
+            "auto-threshold": config[key].get('clean_threshold')[0],
+            "savesourcelist": False,
+            "fitbeam": False,
+        }
+        if multiscale==True:
+            fake_image_opts.update({"multiscale": multiscale})
+            fake_image_opts.update({"multiscale": multiscale_scales})
+
+        recipe.add('cab/wsclean', step,
+                   fake_image_opts,
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{:s}:: Make image after first round of calibration'.format(step))
+
     def image(num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-        mask = False
+
         if num > 1:
             matrix_type = config[key_mt].get('gain_matrix_type')[
                 num - 2 if len(config[key_mt].get('gain_matrix_type')) >= num else -1]
@@ -170,62 +211,6 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        if config[key].get('peak_based_mask_on_dirty'):
-            mask = True
-            step = 'image_{}_dirty'.format(num)
-            recipe.add('cab/wsclean', step,
-                       {
-                           "msname": mslist,
-                           "column": imcolumn,
-                           "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
-                           "nmiter": sdm.dismissable(config['img_nmiter']),
-                           "npix": config[key].get('npix', npix),
-                           "padding": config[key].get('padding', padding),
-                           "scale": config[key].get('cell', cell),
-                           "pol": config[key].get('pol', pol),
-                           "channelsout": nchans,
-                           "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
-                           "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{:s}:: Make dirty image to create clean mask'.format(step))
-
-            step = 'mask_dirty_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{s:}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  0.5,
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
-        elif config[key].get('mask'):
-            mask = True
-            sigma = config[key].get('mask_sigma')
-            pf = config[key].get('mask_peak_fraction')
-            step = 'mask_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num-1, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{2:s}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  sdm.dismissable(pf),
-                           "sigma":  sdm.dismissable(sigma),
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
         step = 'image_{}'.format(num)
         image_opts = {
             "msname": mslist,
@@ -242,27 +227,31 @@ def worker(pipeline, recipe, config):
             "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
-            "local-rms": config[key].get('local_rms'),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-            "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
-            "multiscale": config[key].get('multi_scale'),
-            "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],            
+            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],   
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 
-        if config[key].get('mask_from_sky'):
-            fitmask = config[key].get('fits_mask')[
-                num-1 if len(config[key].get('fits_mask')) >= num else -1]
-            fitmask_address = 'masking/'+str(fitmask)
+        if multiscale ==True:
+            image_opts.update({"multiscale": multiscale})
+            image_opts.update({"multiscale-scales": multiscale_scales})
+
+        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
+        if mask_key == 'auto_mask':
+            image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
+        elif mask_key == 'sofia':
+            fitmask_address = 'masking'
+            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
+        elif '.' in  mask_key:
+            fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
-        elif mask:
-            image_opts.update(
-                {"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(img_dir, prefix, num)})
-        else:
-            image_opts.update({"auto-mask": config[key].get('auto_mask', [])[
-                              num-1 if len(config[key].get('auto_mask', [])) >= num else -1]})
+        elif mask_key == 'catalog':
+            fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
+            image_opts.update({"fitsmask": fitmask_address+':output'})
+            
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -271,8 +260,8 @@ def worker(pipeline, recipe, config):
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def sofia_mask(num, img_dir, field):
-        step = 'make_sofia_mask'
-        key = 'sofia_mask'
+        step = 'make_sofia_mask_'+str(num)
+        key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
@@ -281,10 +270,10 @@ def worker(pipeline, recipe, config):
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
             forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config[key].get('fornax_thresh')[
-                num-1 if len(config[key].get('fornax_thresh')) >= num else -1]
+            forn_thresh = config['image'][key].get('fornax_thresh')[
+                num-1 if len(config['image'][key].get('fornax_thresh')) >= num else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -319,22 +308,13 @@ def worker(pipeline, recipe, config):
                 "merge.minSizeZ": 1,
             }
 
-        def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [10, 10, 0, 'b']]
-
-        # user_kern = config[key].get('kernels', None)
-        # if user_kern:
-        #   for i in xrange(0,len(user_kern))
-        #     kern.
-        #     def_kernels.concatenate(config[key].get('kernels'))
-
-        outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
+        outmask = pipeline.prefix+'_'+field+'_'+str(num+1)+'_clean'
         outmaskName = outmask+'_mask.fits'
-        config['image']['fits_mask'].append(outmaskName)
 
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": True,
+            "steps.doScaleNoise": config['image'].get('local_rms')[num-1 if len(config['image'].get('local_rms', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -351,33 +331,35 @@ def worker(pipeline, recipe, config):
             "parameters.fitBusyFunction": False,
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
-            "SCfind.kernels": def_kernels,
-            "SCfind.threshold": config[key].get('threshold'),
+            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key].get('kernels')],
+            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold', [])) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
+            "scaleNoise.windowSpatial": config['image'][key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
+            "scaleNoise.perSCkernel": True, 
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
+            "merge.positivity": config['image'][key].get('merge_positivity')[num-1 if len(config['image'][key].get('merge_positivity', [])) >= num else -1],
         }
-        if config[key].get('flag'):
-            flags_sof = config[key].get('flagregion')
+        if config['image'][key].get('flag'):
+            flags_sof = config['image'][key].get('flagregion')
             image_opts.update({"flag.regions": flags_sof})
 
-        if config[key].get('inputmask'):
+        if config['image'][key].get('inputmask'):
             # change header of inputmask so it is the same as image
-            mask_name = 'masking/'+config[key].get('inputmask')
+            mask_name = 'masking/'+config['image'][key].get('inputmask')
 
             mask_name_casa = mask_name.split('.fits')[0]
             mask_name_casa = mask_name_casa+'.image'
@@ -444,7 +426,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"import.maskFile": mask_name})
             image_opts.update({"import.inFile": imagename})
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
 
             recipe.add('cab/sofia', step,
                        image_opts_forn,
@@ -455,7 +437,7 @@ def worker(pipeline, recipe, config):
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
             image_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config[key].get('fornax_special') == True and config[key].get('use_sofia') == False:
+        elif config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == False:
 
             # this mask should be regridded to correct f.o.v.
 
@@ -530,18 +512,6 @@ def worker(pipeline, recipe, config):
                    input=pipeline.output,
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))
-
-#        step = '7'
-#        name_sof_out = imagename.split('.fits')[0]
-#        name_sof_out = name_sof_out+'_mask.fits'
-
-#        recipe.add(cleanup_files, step,
-#          {
-#           'mask_name' : name_sof_out,
-#          },
-#          input=pipeline.input,
-#          output=pipeline.output,
-#          label='{0:s}:: Cleanup SoFiA masks'.format(step))
 
     def make_cube(num, img_dir, field, imtype='model'):
         im = '{0:s}/{1:s}_{2:s}_{3}-cube.fits:output'.format(
@@ -648,9 +618,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Convert extracted sources to tigger model'.format(step))
 
-        # elif sourcefinder == 'sofia':
-        #    print('----not active----')
-        #    sys.exit(1)
 
     def predict_from_fits(num, model, index, img_dir, mslist, field):
         if isinstance(model, str) and len(model.split('+')) == 2:
@@ -1518,14 +1485,39 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
+        mask_key = config['image'].get('clean_mask_method')[0]
+        print(mask_key)
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
-            image(self_cal_iter_counter, get_dir_path(
+            if mask_key == 'auto_mask' or '.' in  mask_key:
+                image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
-        if pipeline.enable_task(config, 'sofia_mask'):
-            sofia_mask(self_cal_iter_counter, get_dir_path(
+                #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
+                #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
+                #    sofia_mask(self_cal_iter_counter, get_dir_path(
+                #        image_path, pipeline), field)
+            elif mask_key == 'sofia':
+                image_path = "{0:s}/image_0".format(
+                    pipeline.continuum, self_cal_iter_counter)
+                if not os.path.exists(image_path):
+                    os.mkdir(image_path)
+                fake_image(0, get_dir_path(
+                image_path, pipeline), mslist, field)
+                sofia_mask(0, get_dir_path(
                 image_path, pipeline), field)
+                config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1])
+                image_path = "{0:s}/image_{1:d}".format(
+                    pipeline.continuum, self_cal_iter_counter)  
+                image(self_cal_iter_counter, get_dir_path(
+                image_path, pipeline), mslist, field)                
+                #sofia_mask(self_cal_iter_counter, get_dir_path(
+                #image_path, pipeline), field)
+        ### to enable eventually if one wants only to run caracal to produce sofia mask
+        #if pipeline.enable_task(config, 'image') == False and mask_key =='sofia':
+        #    sofia_mask(0, get_dir_path(
+        #        image_path, pipeline), field)
+        #        config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
@@ -1542,17 +1534,18 @@ def worker(pipeline, recipe, config):
                 calibrate(self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
-                self_cal_iter_counter += 1
+                mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
+                if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+                    sofia_mask(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
+                self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)
+                     pipeline.continuum, self_cal_iter_counter)
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 if pipeline.enable_task(config, 'image'):
                     image(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if pipeline.enable_task(config, 'sofia_mask'):
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):
                     extract_sources(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
@@ -1728,11 +1721,12 @@ def worker(pipeline, recipe, config):
 
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
-
             if crystalball_model == 'auto':
                 crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
-                                                                                              pipeline), prefix, field, self_cal_iter_counter)
+                                                                            pipeline), prefix, field, self_cal_iter_counter)
+            
             for i, msname in enumerate(mslist_out):
+                
                 step = 'transfer_model_{0:d}'.format(i)
                 recipe.add('cab/crystalball', step,
                            {
@@ -1751,4 +1745,3 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
-

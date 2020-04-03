@@ -110,6 +110,17 @@ mapping:
         desc: Stokes image to create
         required: false
         example: 'I'
+      img_multi_scale:
+          type: bool
+          desc: switch on multiscale cleaning
+          required: false
+          example: 'False'
+      img_multi_scale_scales:
+          seq:
+            - type: int
+          desc: scales of multiscale [0,10,20,etc, etc] in pixels
+          required: false
+          example: '10, 20, 30'
       cal_gain_amplitude_clip_low:
         type: float
         desc: Lower gain amplitude clipping
@@ -187,108 +198,96 @@ mapping:
             desc: Execute this segment
             required: false
             example: 'True'
-          auto_mask:
-            seq:
-              - type: float 
-            desc: Auto masking threshold
-            required: false
-            example: '30, 10, 7'
-          auto_threshold:
-            seq:
-              - type: float
-            desc: Auto clean threshold
-            required: false
-            example: '0.5'
           column:
             seq:
               - type: str
             desc: Column to image
             required: false
             example: 'DATA, CORRECTED_DATA'
-          mask_from_sky:
-            type: bool
-            desc: switch on cleaning within mask from fits file
-            required: false
-            example: 'False'
-          fits_mask:
+          clean_mask_method:
             seq:
               - type: str
-            desc: filename of fits mask (in output/masking folder)
+            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user-mask located in output/masking/, enabled only if 1 target is provided)
             required: false
-            example: 'catalog_mask.fits'
-          multi_scale:
-            type: bool
-            desc: switch on multiscale cleaning
-            required: false
-            example: 'False'
-          multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc] in pixels
-            required: false
-            example: '10, 20, 30'
-          local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-            example: 'False'
-
-      sofia_mask: 
-        desc: Run SoFiA source finder to produce a source mask and a Moment-0 map
-        type: map
-        mapping:
-          enable:
-            desc: Execute segment sofia (yes/no)?
-            type: bool
-            required: false
-            example: "False"
-          threshold:
-            desc: SoFiA source finding threshold.
-            type: float
-            required: false
-            example: '4.0'
-          flag:
-            desc: Use flag regions (yes/no)?
-            type: bool
-            required: false
-            example: 'False'
-          flagregion:
-            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
-            seq:
-              - type: str
-            required: false
-            example: ''
-          inputmask:
-            type: str
-            desc: input mask over which add Sofia's
-            required: false
-            example: ''
-          fornax_special:
-            desc: Activates masking of Fornax A using Sofia
-            type: bool
-            required: false
-            example: 'False'
-          fornax_thresh:
-            desc: SoFiA source finding threshold. Default is 4.0.
+            example: 'auto_mask, auto_mask'
+          clean_mask_threshold:
             seq:
               - type: float
+            desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
-            example: '4.0'
-          use_sofia:
-            type: bool
-            desc: use sofia for mask of Fornax A instead of Fomalont mask  
+            example: '10.0, 6.0'
+          clean_threshold:
+            seq:
+              - type: float
+            desc: Auto clean threshold
             required: false
-            example: 'False'
-          scale_noise_window:
-            type: int
-            desc: window size where to measure local rms in pixels
+            example: '0.5, 0.5'
+          local_rms:
+            seq:
+              - type: bool
+            desc: switch on local rms measurement for cleaning
             required: false
-            example: '31'
-          positivity:
-            type: bool
-            desc: merges only positive pixesl of sources in mask  
-            required: false
-            example: 'False'
+            example: 'False, False'
+        
+          sofia_settings: 
+            desc: SoFiA source finder settings to produce a clean mask
+            type: map
+            mapping:
+              flag:
+                desc: Use flag regions (yes/no)?
+                type: bool
+                required: false
+                example: 'False'
+              kernels:
+                seq:
+                  - type: float
+                desc: FWHM of spatial kernels
+                required: false
+                example: '0., 3., 6., 9.'
+              merge_positivity:
+                seq:
+                  - type: bool
+                desc: If set to true, only positive signals will be merged into detections, and all negative signals will be discarded. This is useful for data sets with
+                   significant negative artefacts, such as sidelobes.
+                required: false
+                example: 'True, true'
+              flagregion:
+                desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
+                seq:
+                  - type: str
+                required: false
+                example: ''
+              inputmask:
+                type: str
+                desc: input mask over which add Sofia's
+                required: false
+                example: ''
+              fornax_special:
+                desc: Activates masking of Fornax A using Sofia
+                type: bool
+                required: false
+                example: 'False'
+              fornax_thresh:
+                desc: SoFiA source finding threshold. Default is 4.0.
+                seq:
+                  - type: float
+                required: false
+                example: '4.0'
+              fornax_use_sofia:
+                type: bool
+                desc: use sofia for mask of Fornax A instead of Fomalont mask  
+                required: false
+                example: 'False'
+              scale_noise_window:
+                type: int
+                desc: window size where to measure local rms in pixels
+                required: false
+                example: '31'
+              positivity:
+                type: bool
+                desc: merges only positive pixesl of sources in mask  
+                required: false
+                example: 'False'
 
       extract_sources:
         type: map

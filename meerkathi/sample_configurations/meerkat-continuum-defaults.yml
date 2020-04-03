@@ -169,11 +169,12 @@ self_cal:
   enable: true
   img_npix: 4096
   img_cell: 1.3
+  cal_time_chunk: 240
   image:
     enable: true
   calibrate:
     enable: true
-    Gsols_time: [120]
+    Gsols_timeslots: [120]
   transfer_model:
     enable: false
 

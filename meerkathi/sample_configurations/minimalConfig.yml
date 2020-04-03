@@ -60,11 +60,12 @@ self_cal:
   enable: true
   img_npix: 1800
   img_cell: 2
+  cal_time_chunk: 240
   image:
     enable: true
   calibrate:
     enable: true
-    Gsols_time: [120]
+    Gsols_timeslots: [120]
 
 image_line:
   enable: true

@@ -207,7 +207,7 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia)
+            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user mask located in output/masking/)
             required: false
             example: 'auto_mask, sofia'
           clean_mask_threshold:

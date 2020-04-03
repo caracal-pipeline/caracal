@@ -11,6 +11,8 @@ from meerkathi.workers.utils import manage_flagsets
 from meerkathi.workers.utils import manage_fields as manfields
 
 NAME = 'Split and average target data'
+LABEL = 'split_target'
+
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
     'target':  {

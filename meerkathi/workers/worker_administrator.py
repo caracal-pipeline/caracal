@@ -279,14 +279,19 @@ class worker_administrator(object):
                 continue
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
-            recipe = stimela.Recipe('{0:s}_{1:s}'.format(self.timeNow, worker.NAME), 
+            label = getattr(worker, 'LABEL', None)
+            if label is None:
+                # if label is not set, take filename, and split off _worker.py
+                label =  os.path.basename(worker.__file__).rsplit("_", 1)[0]
+
+            recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,
                                     build_label=self.stimela_build,
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
                                     logfile=False, # no logfiles for recipes
                                     logfile_task='{0}/log-{1}-{{task}}-{2}.txt'.format(
-                                        self.logs, worker.NAME, self.timeNow))
+                                        self.logs, label, self.timeNow))
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name

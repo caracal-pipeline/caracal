@@ -8,7 +8,7 @@ from meerkathi.workers.utils import manage_flagsets as manflields
 import stimela
 
 NAME = "Crosshand calibration"
-
+LABEL = 'polcal'
 
 def worker(pipeline, recipe, config):
     if pipeline.virtconcat:

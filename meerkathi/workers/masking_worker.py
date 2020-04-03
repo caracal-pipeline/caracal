@@ -25,6 +25,7 @@ else:
 
 
 NAME = 'Make masks'
+LABEL = 'masking'
 
 @requires(require_msg, opt_import_error)
 def worker(pipeline, recipe, config):

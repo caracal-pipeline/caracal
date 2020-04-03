@@ -116,8 +116,8 @@ self_cal:
   transfer_apply_gains:
     enable: true
     interpolate:
-      time_int: 20
-      time_chunk: 360
+      timeslots_int: 20
+      timeslots_chunk: 360
       channel_int: 0
       channel_chunk: 0
     transfer_to_label: corr

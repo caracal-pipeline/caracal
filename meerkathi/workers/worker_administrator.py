@@ -223,7 +223,7 @@ class worker_administrator(object):
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
-        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, 'log-{0:s}-{1:s}.txt'.format(self.timeNow, 'meerkathi'))
+        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, 'log-{1:s}-{0:s}.txt'.format(self.timeNow, 'meerkathi'))
         meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
 
         # Copy input data files into pipeline input folder

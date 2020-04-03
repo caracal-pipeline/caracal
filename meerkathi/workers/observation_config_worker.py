@@ -249,5 +249,3 @@ def worker(pipeline, recipe, config):
             getattr(pipeline, term+"_ra")[i] = _ra
             getattr(pipeline, term+"_dec")[i] = _dec
             getattr(pipeline, term+"_id")[i] = _fid
-
-

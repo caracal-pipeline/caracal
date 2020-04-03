@@ -23,7 +23,7 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-   
+
 
     for i in range(nobs):
         # loop over all input .MS files
@@ -46,6 +46,7 @@ def worker(pipeline, recipe, config):
         elif config['field'] == 'calibrators':
             mslist.append(pipeline.msnames[i] if label == \
                   '' else '{0:s}_{1:s}.ms'.format(msn, label))
+
         else:
             raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
                                  "User selected: '{}'".format(config['field']))
@@ -466,31 +467,31 @@ def worker(pipeline, recipe, config):
                 if config['field'] == 'target':
                     fieldName = utils.filter_name(target_ls[j])
                     field = '0'
-                    outlabel = '_{0:s}_{1:d}'.format(fieldName, i)
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
                         pipeline, i, config['rfinder'].get('field')).split(","))))
-                    outlabel = '_{0:d}'.format(i)
-                recipe.add('cab/rfinder', step,
-                           {
-                               "msname": msname,
-                               "field": int(field),
-                               "plot_noise": "noise",
-                               "RFInder_mode": "use_flags",
-                               "outlabel": outlabel,  # The output will be rfi_<pol>_<outlabel>
-                               "polarization": config['rfinder'].get('polarization'),
-                               "spw_width": config['rfinder'].get('spw_width'),
-                               "time_step": config['rfinder'].get('time_step'),
-                               "time_enable": config['rfinder'].get('time_enable'),
-                               "spw_enable": config['rfinder'].get('spw_enable'),
-                               "1d_gif": config['rfinder'].get('time_enable'),
-                               "2d_gif": config['rfinder'].get('time_enable'),
-                               "altaz_gif": config['rfinder'].get('spw_enable'),
-                               "movies_in_report": config['rfinder'].get('time_enable') or config.get('spw_enable')
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
+                for f in field.split(','):
+                    outlabel = '_{0:d}'.format(i) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(i,f)
+                    recipe.add('cab/rfinder', step,
+                               {
+                                   "msname": msname,
+                                   "field": int(f),
+                                   "plot_noise": "noise",
+                                   "RFInder_mode": "use_flags",
+                                   "outlabel": outlabel,  # The output will be rfi_<pol>_<outlabel>
+                                   "polarization": config['rfinder'].get('polarization'),
+                                   "spw_width": config['rfinder'].get('spw_width'),
+                                   "time_step": config['rfinder'].get('time_step'),
+                                   "time_enable": config['rfinder'].get('time_enable'),
+                                   "spw_enable": config['rfinder'].get('spw_enable'),
+                                   "1d_gif": config['rfinder'].get('time_enable'),
+                                   "2d_gif": config['rfinder'].get('time_enable'),
+                                   "altaz_gif": config['rfinder'].get('spw_enable'),
+                                   "movies_in_report": config['rfinder'].get('time_enable') or config.get('spw_enable')
+                               },
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flagging_summary'):
                 __label = config.get('label_in', False)

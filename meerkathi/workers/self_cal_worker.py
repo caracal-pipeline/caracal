@@ -289,6 +289,7 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
             "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],            
+            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],   
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
@@ -305,8 +306,6 @@ def worker(pipeline, recipe, config):
         mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
         if mask_key == 'auto_mask':
             image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
-            image_opts.update({"local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1]})
-            image_opts.update({"auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1]})            
         elif mask_key == 'sofia':
             fitmask_address = 'masking'
             image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num-1)})

@@ -217,13 +217,13 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask
+            desc: indicate masking method and name of mask, (possible values catalog, auto-mask, sofia)
             required: false
-            example: 'catalog, auto-mask, sofia'
+            example: 'auto-mask, sofia, sofia'
           clean_mask_threshold:
             seq:
               - type: float
-            desc: Masking threshold (either for automasking or SoFiA)
+            desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
             example: '7.0, 7.0'
           clean_threshold:
@@ -237,7 +237,7 @@ mapping:
               - type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-            example: 'False, False '
+            example: 'False, False'
         
           sofia_settings: 
             desc: SoFiA source finder settings to produce a clean mask
@@ -289,7 +289,7 @@ mapping:
                   - type: float
                 required: false
                 example: '4.0'
-              fornax_use_sofia_:
+              fornax_use_sofia:
                 type: bool
                 desc: use sofia for mask of Fornax A instead of Fomalont mask  
                 required: false

@@ -1512,6 +1512,11 @@ def worker(pipeline, recipe, config):
                 image_path, pipeline), mslist, field)                
                 #sofia_mask(self_cal_iter_counter, get_dir_path(
                 #image_path, pipeline), field)
+        ### to enable eventually if one wants only to run caracal to produce sofia mask
+        #if pipeline.enable_task(config, 'image') == False and mask_key =='sofia':
+        #    sofia_mask(0, get_dir_path(
+        #        image_path, pipeline), field)
+        #        config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)

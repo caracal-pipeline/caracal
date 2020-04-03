@@ -207,7 +207,7 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user mask located in output/masking/)
+            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user-mask located in output/masking/, enabled only if 1 target is provided)
             required: false
             example: 'auto_mask, sofia'
           clean_mask_threshold:
@@ -243,7 +243,7 @@ mapping:
                   - type: float
                 desc: FWHM of spatial kernels
                 required: false
-                example: '0., 3., 6., 9.' 
+                example: '0., 3., 6., 9.'
               merge_positivity:
                 seq:
                   - type: bool

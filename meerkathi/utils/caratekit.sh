@@ -970,6 +970,17 @@ then
     kill "$PPID"; exit 0
 fi
 
+if [[ -z $ORSR ]]
+then
+    echo "#############################"
+    echo " Removing Stimela directory "
+    echo "#############################"
+    echo
+    echo "Removing \${HOME}/.stimela/*"
+    echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+    [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
+fi
+
 if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]]
 then
     if [[ -n $ORSR ]]
@@ -994,9 +1005,6 @@ then
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-	echo "Removing \${HOME}/.stimela/*"
-        echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-        [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || echo "docker system prune" >> ${SS}
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
@@ -1051,35 +1059,53 @@ testingoutput () {
     echo "Counting logfiles in directory ${1}/${2}"
     allogs=""
     allogs=`ls -t ${1}/${2}/output/logs/` || true
+    meerkathilog=`ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1` || true
+    reporting=""
+    [[ -n ${meerkathilog} ]] || { reporting+="This CARACal run is missing a logfile"; reporting+=$'\n'; }
+    [[ -z ${meerkathilog} ]] || { reporting+="This CARACal run is logged in ${meerkathilog}"; reporting+=$'\n'; }
+    [[ -z ${meerkathilog} ]] || { meerkathilogsh=`echo ${meerkathilog} | sed '{s=.*/==;}'`; }
     total=0
 
     for log in ${allogs}
     do
         (( total+=1 ))
-	[[ -z $hadmeerkathi ]] || { echo "$log is the last log before log-meerkathi.txt"; }
-	[[ -z $hadmeerkathi ]] || { echo "$log is the last log before log-meerkathi.txt" >> ${SYA}; }
-        unset hadmeerkathi
-        if [[ $log == "log-meerkathi.txt" ]]
-        then
-            hadmeerkathi=1 
-        fi
+	[[ -z $hadmeerkathi2 ]] || { reporting+="$log is the second last log before ${meerkathilogsh}"; \
+				     reporting+=$'\n'; unset hadmeerkathi2; }	
+	[[ -z $hadmeerkathi ]] || { reporting+="$log is the last log before ${meerkathilogsh}"; reporting+=$'\n'; \
+				    hadmeerkathi2=1; unset hadmeerkathi; }
+        [[ ${log} != ${meerkathilogsh} ]] || hadmeerkathi=1         
     done
-    echo "Total number of logfiles: $total"
-    echo "Total number of logfiles: $total" >> ${SYA}
+    reporting+="Total number of logfiles: $total"; reporting+=$'\n'
+    echo "$reporting"
+    echo "$reporting" >> ${SYA}
 
     # Count number of runs of workers and the number of finishes
-    worker_runs=`grep "Running worker" ${1}/${2}/output/logs/log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
-    worker_fins=`grep "Finished worker" ${1}/${2}/output/logs/log-meerkathi.txt | wc | sed 's/^ *//; s/ .*//'`
+    worker_runs=0
+    worker_fins=0
+    [[ -z $meerkathilog ]] || worker_runs=`grep "Running worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
+    [[ -z $meerkathilog ]] || worker_fins=`grep "Finished worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
 
-    (( $worker_runs == $worker_fins )) || { echo "Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt" >> ${SYA}; }
-    (( $worker_runs == $worker_fins )) || { echo "Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; echo "Returning error"; return 1; }
-
-    (( $worker_runs > 0 )) || { echo "No workers have started according to log-meerkathi.txt" >> ${SYA}; echo "Returning error"; }
-    (( $worker_runs > 0 )) || { echo "No workers have started according to log-meerkathi.txt"; echo "Returning error"; return 1; }
+    (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; \
+					    reporting+=$'\n'; \
+					    echo {reporting}; echo ${reporting} >> ${SYA}; \
+					    return 1; }
+    [[ -z $meerkathilog ]] || (( $worker_runs > 0 )) || { reporting="No workers have started according to log-meerkathi.txt"; \
+				reporting+=$'\n'; \
+				reporting+="Returning error";\
+				reporting+=$'\n'; \
+				echo ${reporting}; \
+				echo ${reporting} >> ${SYA}; \
+				return 1; }
 
     # Notice that 0 is true in bash
-    (( $total > 0 )) || { echo "No logfiles produced. Returning error." >> ${SYA}; }
-    (( $total > 0 )) || { echo "No logfiles produced. Returning error."; return 1; }
+    (( $total > 0 )) || { reporting="No logfiles produced. Returning error."; reporting+=$'\n'; \
+                          echo ${reporting} \
+			  echo ${reporting} >> ${SYA}; \
+                          return 1; }
+    [[ -n $meerkathilog ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
+                          echo ${reporting} \
+			  echo ${reporting} >> ${SYA}; \
+                          return 1; }
     return 0
 }
 
@@ -1166,7 +1192,6 @@ runtest () {
     
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
-        echo
         echo "###############"
         echo " caratekit failed "
         echo "###############"
@@ -1257,12 +1282,6 @@ then
 	echo "Singularity version: ${singvers}" >> ${SYA}
         echo "" >> ${SYA}
 
-        if [[ -z $KRSR ]]
-        then
-	    echo "Removing \${HOME}/.stimela/*"
-            echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-            [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
-        fi
 	echo "Installing Stimela images in ${singularity_locstring}"
 	echo "mkdir -p ${singularity_locstring}"
 	mkdir -p ${singularity_loc}
@@ -1322,7 +1341,6 @@ echo " caratekit succeeded." >> ${SYA}
 echo >> ${SYA} 
 echo "###############" >> ${SYA} 
 
-echo
 echo "###########################################################"
 echo ""
 echo ${kksuccessquotes[$(( $RANDOM % 2 ))]}

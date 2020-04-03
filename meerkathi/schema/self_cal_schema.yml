@@ -130,12 +130,12 @@ mapping:
         desc: Start self-cal iteration loop at this start value, 1-based.
         required: false
         example: '1'
-      cal_time_chunk:
+      cal_timeslots_chunk:
         desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
         type: int
         required: false
         example: '-1'
-      cal_freq_chunk:
+      cal_channel_chunk:
         desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries. -1 Uses largest solution interval
         type: int
         required: false
@@ -374,7 +374,7 @@ mapping:
             desc: Add/Use clean components from latest imaging step to/as sky model for calibation
             required: false
             example: 'True'
-          Gsols_time:
+          Gsols_timeslots:
             seq:
               - type: float
             desc: G-Jones time solution interval. The parameter cal_time_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time chunk.
@@ -391,7 +391,7 @@ mapping:
            desc: Enable Bjones
            required: false
            example: 'False'
-          Bsols_time:
+          Bsols_timeslots:
             seq:
               - type: int
             desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
@@ -408,7 +408,7 @@ mapping:
             desc: Enable direction dependent calibration, currently experimental.
             required: false
             example: 'False'
-          DDsols_time:
+          DDsols_timeslots:
             desc: Calibration solution intervals
             seq:
               - type: float
@@ -522,22 +522,22 @@ mapping:
                  desc: Enable gain interpolation. 
                  required: false
                  example: 'True'
-              time_int:   
+              timeslots_int:
                  type: int
-                 desc: Solution interval in time (units of timeslots/intergration time) to transfer gains.
+                 desc: Solution interval in time (units of timeslots/intergration time) to transfer gains. -1 uses the solution interval from the calibration that is applied.
                  required: false
-                 example: '1'
-              freq_int:
+                 example: '-1'
+              channel_int:
                  type: int
-                 desc: Solution interval in frequency (units of channels) to transfer gains.
+                 desc: Solution interval in frequency (units of channels) to transfer gains. -1 uses the solution interval from the calibration that is applied.
                  required: false
-                 example: '0'     
-              time_chunk:
+                 example: '-1'
+              timeslots_chunk:
                  type: int
                  desc: Time chunk in units of timeslots for transferring gains with Cubical. -1 uses the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
-              freq_chunk:
+              channel_chunk:
                  type: int
                  desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw. -1 uses the solution interval from the calibration that is applied.
                  required: false

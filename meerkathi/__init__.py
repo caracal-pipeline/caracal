@@ -80,13 +80,13 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
 def create_logger():
     """ Create a console logger """
-    log = logging.getLogger("CARACAL")
+    log = logging.getLogger("CARACal")
     cfmt = logging.Formatter(fmt="{asctime} {name} {levelname}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
     log.setLevel(logging.DEBUG)
     log.propagate = False
 
     # init stimela logger as a sublogger
-    stimela.logger("CARACAL.STIMELA", propagate=True, console=False)
+    stimela.logger("CARACal.Stimela", propagate=True, console=False)
 
     filehandler = DelayedFileHandler(MEERKATHI_LOG)
     filehandler.setFormatter(cfmt)

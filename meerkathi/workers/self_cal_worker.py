@@ -1581,6 +1581,8 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
         mask_key = config['image'].get('clean_mask_method')[0]
+        print(mask_key)
+        sys.exit(0)
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")

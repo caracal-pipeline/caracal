@@ -207,15 +207,15 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask, (possible values catalog, auto-mask, sofia)
+            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia)
             required: false
-            example: 'auto-mask, sofia'
+            example: 'auto_mask, sofia'
           clean_mask_threshold:
             seq:
               - type: float
             desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
-            example: '7.0, 7.0'
+            example: '7.0, 4.0'
           clean_threshold:
             seq:
               - type: float

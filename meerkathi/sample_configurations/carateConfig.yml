@@ -101,7 +101,7 @@ self_cal:
   img_robust: -1.0
   cal_niter: 3
   cal_channel_chunk: 0
-  cal_time_chunk: 360
+  cal_timeslots_chunk: 360
   image:
     enable: true
     auto_mask: [20,10,5,5]

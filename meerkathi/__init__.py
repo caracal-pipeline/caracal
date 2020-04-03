@@ -86,7 +86,7 @@ def create_logger():
     log.propagate = False
 
     # init stimela logger as a sublogger
-    stimela.logger("CARACAL.STIMELA")
+    stimela.logger("CARACAL.STIMELA", propagate=True, console=False)
 
     filehandler = DelayedFileHandler(MEERKATHI_LOG)
     filehandler.setFormatter(cfmt)

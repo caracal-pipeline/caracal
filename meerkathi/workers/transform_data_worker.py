@@ -115,10 +115,10 @@ def worker(pipeline, recipe, config):
             caltablelist, gainfieldlist, interplist = [], [], []
             calprefix = '{0:s}-{1:s}'.format(prefix,
                                              config['split_field']['otfcal'].get('label_cal'))
-            callib = 'caltables/callibs/{0:s}_callib_{1:s}.txt'.format(prefix,calprefix)
+            callib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix,calprefix)
 
             with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                  '{0:s}_callib_{1:s}.json'.format(prefix,
+                                  'callib_{0:s}_{1:s}.json'.format(prefix,
                                   config['split_field']['otfcal'].get('label_cal')))) as f:
                 callib_dict = json.load(f)
 

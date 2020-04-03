@@ -948,10 +948,15 @@ def worker(pipeline, recipe, config):
         ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA. 
         if config[key].get('model_mode') == 'pybdsm_vis':
             if (num == cal_niter):
-                modellist = [calmodel, 'MODEL_DATA']
+                cmodel = calmodel.split(":output")[0]
+                modellist = spf("MODEL_DATA+"+'{}/'+cmodel,"output")
+
+                #modellist = [calmodel, 'MODEL_DATA']
         # otherwise, just calmodel (pybdsf)
             else:
-                modellist = [calmodel]
+                #modellist = [calmodel]
+                cmodel = calmodel.split(":output")[0]
+                modellist = spf("{}/"+cmodel,"output")
             # This is incorrect and will result in the lsm being used in the first direction
             # and the model_data in the others. They need to be added as + however
             # that messes up the output identifier structure    

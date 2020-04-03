@@ -6,6 +6,7 @@ import subprocess
 import logging
 from time import gmtime, strftime
 import stimela
+import stimela.utils
 
 ##############################################################################
 # Globals
@@ -78,10 +79,14 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
             self.flush()
 
 
+log = log_filehandler = log_console_handler = log_formatter = None
+
+
 def create_logger():
     """ Create a console logger """
+    global log, log_filehandler, log_console_handler, log_formatter
+
     log = logging.getLogger("CARACal")
-    cfmt = logging.Formatter(fmt="{asctime} {name} {levelname}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
     log.setLevel(logging.DEBUG)
     log.propagate = False
 
@@ -89,18 +94,19 @@ def create_logger():
     stimela.logger("CARACal.Stimela", propagate=True, console=False)
 
     filehandler = DelayedFileHandler(MEERKATHI_LOG)
-    filehandler.setFormatter(cfmt)
+
+    filehandler.setFormatter(stimela.log_boring_formatter)
+    filehandler.setLevel(logging.DEBUG)
 
     log.addHandler(filehandler)
-    log.setLevel(logging.INFO)
+
+    log_formatter = stimela.log_colourful_formatter
 
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    console.setFormatter(cfmt)
+    console.setFormatter(log_formatter)
 
     log.addHandler(console)
-
-    return log, filehandler, console, cfmt
 
 
 def remove_log_handler(hndl):
@@ -111,4 +117,4 @@ def add_log_handler(hndl):
     log.addHandler(hndl)
 
 
-log, log_filehandler, log_console_handler, log_formatter = create_logger()
+create_logger()

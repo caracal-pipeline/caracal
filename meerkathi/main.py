@@ -33,8 +33,7 @@ SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
 SCHEMA = meerkathi.SCHEMA
 
 # Create the log object
-log, log_filehandler, log_console_handler, log_formatter = [getattr(meerkathi,
-                                                                    item) for item in "log log_filehandler log_console_handler log_formatter".split()]
+from meerkathi import log, log_filehandler, log_console_handler, log_formatter
 
 ####################################################################
 # MeerKATHI imports

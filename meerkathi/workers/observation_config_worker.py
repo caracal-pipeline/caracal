@@ -14,7 +14,58 @@ def repeat_val(val, n):
     return l
 
 def worker(pipeline, recipe, config):
+    # Before doing anything let's check there are no conflicting instruction in the yml file
 
+
+    #if  we are running self cal we want to check the following
+    if pipeline.config['self_cal']['enable']:
+        # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
+        if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
+            print(pipeline.config['self_cal']['transfer_apply_gains']['enable'])
+            if pipeline.config['self_cal']['transfer_apply_gains']['enable']:
+                meerkathi.log.info(
+                    'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
+                sys.exit(1)
+            if int(pipeline.config['self_cal']['start_at_iter']) != 1:
+                meerkathi.log.info(
+                    "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+                sys.exit(1)
+        # First check we are actually running a calibrate
+        if pipeline.config['self_cal']['calibrate']['enable']:
+            #Then let's check that the solutions are reasonable and fit in our time chunks
+            #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
+            # first we collect all time solutions
+            solutions = pipeline.config['self_cal']['calibrate']['Gsols_time'][:int(pipeline.config['self_cal']['cal_niter'])]
+            # if we do Bjones we add those
+            if pipeline.config['self_cal']['calibrate']['Bjones']:
+                solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_time'][:])
+            # Same for GA solutions
+            if pipeline.config['self_cal']['calibrate']['two_step']:
+                for val in pipeline.config['self_cal']['calibrate']['DDsols_time']:
+                    if val >= 0:
+                        solutions.append(val)
+            # then we assign the timechunk
+            if pipeline.config['self_cal']['cal_time_chunk'] == -1:
+                if np.min(solutions) != 0.:
+                    time_chunk = max(solutions)
+                else:
+                    time_chunk = 0
+            else:
+                time_chunk = pipeline.config['self_cal']['cal_time_chunk']
+            # if time_chunk is not 0 all solutions should fit in there.
+            # if it is 0 then it does not matter
+            if time_chunk != 0:
+                sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
+                for val in sol_int_array:
+                    print(val)
+                    if val != int(val):
+                        meerkathi.log.info("Not all time solutions fit in the timeslot_chunk. " )
+                        meerkathi.log.info("Your timeslot chunk = {}".format(time_chunk))
+                        meerkathi.log.info("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                        sys.exit(1)
+
+
+    exit()
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]

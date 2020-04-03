@@ -244,12 +244,6 @@ mapping:
                 desc: FWHM of spatial kernels
                 required: false
                 example: '0., 3., 6., 9.' 
-              local_noise:
-                seq:
-                  - type: bool
-                desc: If set to true, normalise noise levels across the data cube prior to source finding.
-                required: false
-                example: 'True, true'
               merge_positivity:
                 seq:
                   - type: bool

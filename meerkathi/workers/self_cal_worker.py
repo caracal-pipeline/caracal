@@ -314,7 +314,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image'][key].get('local_noise')[num-1 if len(config['image'][key].get('local_noise', [])) >= num else -1],
+            "steps.doScaleNoise": config['image'].get('local_rms')[num-1 if len(config['image'].get('local_rms', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -1493,7 +1493,7 @@ def worker(pipeline, recipe, config):
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
                 if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
-                    config['image'].get('clean_mask_threshold').insert(1,config['image'].get('clean_mask_threshold')[1])
+                    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
                     sofia_mask(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
             elif mask_key == 'sofia':

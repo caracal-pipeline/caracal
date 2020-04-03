@@ -182,7 +182,7 @@ def execute_pipeline(args, arg_groups, block):
             log.error("You are running version: {0:s}".format(
                 str(__version__)))
             for line in traceback.format_exc().splitlines():
-                log.error(traceback.format_exc())
+                log.error(line)
             sys.exit(1)  # indicate failure
 
     # now fork and block or continue depending on whether interaction is wanted

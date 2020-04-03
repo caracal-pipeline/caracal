@@ -1492,10 +1492,10 @@ def worker(pipeline, recipe, config):
             if mask_key == 'auto_mask' or '.' in  mask_key:
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
-                if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
-                    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
+                #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
+                #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
+                #    sofia_mask(self_cal_iter_counter, get_dir_path(
+                #        image_path, pipeline), field)
             elif mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(
                     pipeline.continuum, self_cal_iter_counter)
@@ -1510,8 +1510,8 @@ def worker(pipeline, recipe, config):
                     pipeline.continuum, self_cal_iter_counter)  
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)                
-                sofia_mask(self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), field)
+                #sofia_mask(self_cal_iter_counter, get_dir_path(
+                #image_path, pipeline), field)
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
@@ -1529,6 +1529,9 @@ def worker(pipeline, recipe, config):
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
+                if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+                    sofia_mask(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
                 self_cal_iter_counter += 1               
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)
@@ -1537,9 +1540,6 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'image'):
                     image(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):
                     extract_sources(self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)

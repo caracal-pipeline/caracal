@@ -427,7 +427,7 @@ class config_parser:
                 if subVars['seq'][0]['type'] == 'bool':
                     default_value=[]
                     for i in range(0,len(subVars['example'])):
-                        default_value.append(typecast(dtype, subVars['example'][i], string=True))
+                        default_value.append(typecast(dtype, subVars['example'][i],string=False))
                 else:
                     default_value = list(map(dtype, subVars["example"]))
             else:

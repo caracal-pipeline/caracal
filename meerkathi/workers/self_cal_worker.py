@@ -244,7 +244,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
         elif mask_key == 'sofia':
             fitmask_address = 'masking'
-            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num-1)})
+            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
         elif '.' in  mask_key:
             fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
@@ -308,7 +308,7 @@ def worker(pipeline, recipe, config):
                 "merge.minSizeZ": 1,
             }
 
-        outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
+        outmask = pipeline.prefix+'_'+field+'_'+str(num+1)+'_clean'
         outmaskName = outmask+'_mask.fits'
 
         image_opts = {
@@ -1484,6 +1484,7 @@ def worker(pipeline, recipe, config):
             pipeline.continuum, self_cal_iter_counter)
         if not os.path.exists(image_path):
             os.mkdir(image_path)
+
         mask_key = config['image'].get('clean_mask_method')[0]
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
@@ -1492,11 +1493,17 @@ def worker(pipeline, recipe, config):
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
             elif mask_key == 'sofia':
+                image_path = "{0:s}/image_0".format(
+                    pipeline.continuum, self_cal_iter_counter)
+                if not os.path.exists(image_path):
+                    os.mkdir(image_path)
                 fake_image(0, get_dir_path(
                 image_path, pipeline), mslist, field)
                 sofia_mask(0, get_dir_path(
                 image_path, pipeline), field)
                 config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
+                image_path = "{0:s}/image_{1:d}".format(
+                    pipeline.continuum, self_cal_iter_counter)  
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)                
                 sofia_mask(self_cal_iter_counter, get_dir_path(

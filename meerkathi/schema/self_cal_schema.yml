@@ -209,13 +209,13 @@ mapping:
               - type: str
             desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user-mask located in output/masking/, enabled only if 1 target is provided)
             required: false
-            example: 'auto_mask, sofia'
+            example: 'auto_mask, auto_mask'
           clean_mask_threshold:
             seq:
               - type: float
             desc: Masking threshold (either for auto-masking or SoFiA)
             required: false
-            example: '7.0, 4.0'
+            example: '10.0, 6.0'
           clean_threshold:
             seq:
               - type: float

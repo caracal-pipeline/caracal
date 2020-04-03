@@ -383,14 +383,14 @@ def worker(pipeline, recipe, config):
                     "usescratch": True,
                 }
             else:
-                model = utils.find_in_native_calibrators(msinfo, fluxscale_field)
+                modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
+                modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
                 standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
-                # Prefer our standard over the NRAO standard
-                meerkathi_model = isinstance(model, str)
-                if config['set_model'].get('meerkathi_model') and meerkathi_model:
+                if config['set_model'].get('meerkathi_model') and modelsky:
+
                     # use local sky model of calibrator field if exists
                     opts = {
-                        "skymodel": model,
+                        "skymodel": modelsky,
                         "msname": msname,
                         "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
                         "threads": config["set_model"].get('threads'),
@@ -398,14 +398,14 @@ def worker(pipeline, recipe, config):
                         "tile-size": 128,
                         "column": "MODEL_DATA",
                     }
-                elif isinstance(model, dict):  # spectral model if specified in our standard
+                elif modelpoint:  # spectral model if specified in our standard
                     opts = {
                         "vis": msname,
                         "field": fluxscale_field,
                         "standard": "manual",
-                        "fluxdensity": model['I'],
-                        "reffreq": '{0:f}GHz'.format(model['ref']/1e9),
-                        "spix": [model[a] for a in 'abcd'],
+                        "fluxdensity": modelpoint['I'],
+                        "reffreq": '{0:f}GHz'.format(modelpoint['ref']/1e9),
+                        "spix": [modelpoint[a] for a in 'abcd'],
                         "scalebychan": True,
                         "usescratch": True,
                     }

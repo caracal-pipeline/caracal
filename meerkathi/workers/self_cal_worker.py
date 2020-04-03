@@ -1492,6 +1492,9 @@ def worker(pipeline, recipe, config):
             if mask_key == 'auto_mask' or '.' in  mask_key:
                 image(self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
+                if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]:
+                    sofia_mask(self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
             elif mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(
                     pipeline.continuum, self_cal_iter_counter)

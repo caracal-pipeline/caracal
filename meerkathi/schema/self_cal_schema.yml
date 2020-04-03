@@ -227,7 +227,7 @@ mapping:
               - type: bool
             desc: switch on local rms measurement for cleaning
             required: false
-            example: 'False, False, False'
+            example: 'False, False'
         
           sofia_settings: 
             desc: SoFiA source finder settings to produce a clean mask

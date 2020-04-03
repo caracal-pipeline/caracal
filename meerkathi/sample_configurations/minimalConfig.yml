@@ -64,7 +64,7 @@ self_cal:
     enable: true
   calibrate:
     enable: true
-    Gsols_time: [120]
+    Gsols_timeslots: [120]
 
 image_line:
   enable: true

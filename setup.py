@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela @ git+https://github.com/ratt-ru/Stimela',
+    'stimela==1.2.5',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -25,10 +25,8 @@ requirements = [
     'aplpy',
     'pandas',
     'nbconvert',
+    'regions',
 ]
-
-# these are only there for development, make them optional
-devel = []
 
 PACKAGE_NAME = 'meerkathi'
 __version__ = '0.3.0'
@@ -41,10 +39,6 @@ setup(name=PACKAGE_NAME,
       url="https://github.com/ska-sa/meerkathi",
       packages=[PACKAGE_NAME],
       install_requires=requirements,
-      extras_require={
-          'devel': devel,
-          'testing': 'pytest'
-      },
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in
       scripts=["bin/" + j for j in os.listdir("bin")],

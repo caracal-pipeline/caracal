@@ -975,10 +975,15 @@ def worker(pipeline, recipe, config):
         ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA. 
         if config[key].get('model_mode') == 'pybdsm_vis':
             if (num == cal_niter):
-                modellist = [calmodel, 'MODEL_DATA']
+                cmodel = calmodel.split(":output")[0]
+                modellist = spf("MODEL_DATA+"+'{}/'+cmodel,"output")
+
+                #modellist = [calmodel, 'MODEL_DATA']
         # otherwise, just calmodel (pybdsf)
             else:
-                modellist = [calmodel]
+                #modellist = [calmodel]
+                cmodel = calmodel.split(":output")[0]
+                modellist = spf("{}/"+cmodel,"output")
             # This is incorrect and will result in the lsm being used in the first direction
             # and the model_data in the others. They need to be added as + however
             # that messes up the output identifier structure    
@@ -1561,21 +1566,6 @@ def worker(pipeline, recipe, config):
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        # Optionally undo the subtraction of the MODEL_DATA column that may have been done by the image_line worker
-        if config.get('undo_subtractmodelcol'):
-            for i, msname in enumerate(mslist):
-                step = 'undo_modelsub_{:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                           {
-                               "command": 'sumcols',
-                               "msname": msname,
-                               "col1": 'CORRECTED_DATA',
-                               "col2": 'MODEL_DATA',
-                               "column": 'CORRECTED_DATA'
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Add model column to corrected column'.format(step))
 
         global self_cal_iter_counter
         self_cal_iter_counter = config.get('start_at_iter')

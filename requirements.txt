@@ -1,1 +1,0 @@
--e git+https://github.com/ratt-ru/Stimela

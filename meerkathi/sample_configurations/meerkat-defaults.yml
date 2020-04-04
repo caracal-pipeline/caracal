@@ -187,3 +187,4 @@ image_line:
     enable: true
     doppler:
       enable: true
+      telescope: meerkat

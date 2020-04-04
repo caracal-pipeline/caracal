@@ -70,7 +70,7 @@ mapping:
             type: bool
             required: false
             desc: Use built-in sky models in MeerKATHI
-            example: 'True'
+            example: 'False'
           no_verify:
             type: bool
             desc: Enables setting standard manually.

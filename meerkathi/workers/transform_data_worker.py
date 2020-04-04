@@ -195,7 +195,7 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{0:s}:: Split and average data ms={1:s}'.format(step, " ".join(fms)))
+                           label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
 
             msname = tms if pipeline.enable_task(
                 config, 'split_field') else fms

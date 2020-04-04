@@ -22,8 +22,18 @@ observation_config:
 prepare_data:
   enable: true
 
+transform_data:
+  enable: true
+  label_out: 'cal'
+  split_field:
+    enable: true
+    field: 'calibrators'
+    column: data'
+
 flagging:
   enable: true
+  label_in: 'cal'
+  field: 'calibrators'
   autoflag_rfi:
     enable: true
     flagger: aoflagger
@@ -35,6 +45,11 @@ flagging:
     
 cross_cal:
   enable: true
+  apply_cal:
+    enable: true
+    applyto:
+      - gcal
+      - bpcal
 
 polcal:
   enable: false
@@ -42,8 +57,13 @@ polcal:
 inspect_data:
   enable: true
 
-split_target:
+transform_data__2:
   enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
   
 flagging__2:
   enable: true

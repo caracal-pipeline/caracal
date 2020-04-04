@@ -135,10 +135,10 @@ def log_logo():
     log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
     log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: {0:s} (version {1:s})".format(
+    log.info("Version {1:s} installed at {0:s}".format(
         pckgdir, str(__version__)))
     # log.info("A logfile will be dumped here: {0:s}".format(meerkathi.MEERKATHI_LOG))
-    log.info("")
+    # log.info("")
 
 
 def execute_pipeline(args, arg_groups, block):
@@ -150,7 +150,7 @@ def execute_pipeline(args, arg_groups, block):
         try:
             log_logo()
             # Very good idea to print user options into the log before running:
-            cp().log_options()
+            cp().log_options(args.config)
 
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()

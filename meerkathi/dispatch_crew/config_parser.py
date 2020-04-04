@@ -522,12 +522,16 @@ class config_parser:
             f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))
 
     @classmethod
-    def log_options(cls):
+    def log_options(cls, config_file):
         """ Prints argument tree to the logger for prosterity to behold """
-        meerkathi.log.info(
-            "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))
 
-        def _tree_print(branch, indent="\t"):
+        meerkathi.log.info("Loaded pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+
+        #meerkathi.log.info(
+        #   "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))
+        indent0 = "  "
+
+        def _tree_print(branch, indent=indent0):
             dicts = OrderedDict(
                 [(k, v) for k, v in branch.items() if isinstance(v, dict)])
             other = OrderedDict(
@@ -537,18 +541,21 @@ class config_parser:
                 if isinstance(v, dict):
                     if not v.get("enable", True):
                         return
-                    (indent == "\t") and meerkathi.log.info(
-                        indent.ljust(60, "#"))
-                    meerkathi.log.info(indent + "Subsection %s:" % k)
-                    (indent == "\t") and meerkathi.log.info(
-                        indent.ljust(60, "#"))
-                    (indent != "\t") and meerkathi.log.info(
-                        indent.ljust(60, "-"))
-                    _tree_print(v, indent=indent+"\t")
+                    if indent == indent0:
+                        meerkathi.log.info("")
+                        extra = dict(color="GREEN")
+                    else:
+                        extra = {}
+                    # (indent == "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "#"))
+                    meerkathi.log.info("{}{}:".format(indent, k), extra=extra)
+                    # (indent == "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "#"))
+                    # (indent != "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "-"))
+                    _tree_print(v, indent=indent+indent0)
                 else:
-                    meerkathi.log.info("%s%s= %s" % (indent,
-                                                     k.ljust(30),
-                                                     v))
+                    meerkathi.log.info("{}{:30}{}".format(indent, k+":", v))
 
             for k, v in other.items():
                 _printval(k, v)
@@ -557,5 +564,5 @@ class config_parser:
         ordered_groups = OrderedDict(sorted(list(cls.__GROUPS.items()),
                                             key=lambda p: p[1].get("order", 0)))
         _tree_print(ordered_groups)
-        meerkathi.log.info(
-            "".join(["".ljust(25, "#"), " END OF CONFIGURATION ", "".ljust(25, "#")]))
+        # meerkathi.log.info(
+        #     "".join(["".ljust(25, "#"), " END OF CONFIGURATION ", "".ljust(25, "#")]))

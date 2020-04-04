@@ -153,6 +153,7 @@ def worker(pipeline, recipe, config):
             docallib = False
             dcol = config['split_field'].get('column')
 
+        target_iter=0
         for target in target_ls:
             field = utils.filter_name(target)
 
@@ -170,7 +171,7 @@ def worker(pipeline, recipe, config):
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field_{0:d}_{1:d}'.format(i,target_ls.index(target))
+                step = 'split_field_{0:d}_{1:d}'.format(i,target_iter)
                 if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
 
@@ -207,7 +208,7 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
                         config['changecentre'].get('ra'), config['changecentre'].get('dec')))
                     sys.exit(1)
-                step = 'changecentre_{0:d}_{1:d}'.format(i,target_ls.index(target))
+                step = 'changecentre_{0:d}_{1:d}'.format(i,target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "msname": tms,
@@ -225,7 +226,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
 
-                    step = 'listobs_{0:d}_{1:d}'.format(i,target_ls.index(target))
+                    step = 'listobs_{0:d}_{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
@@ -242,7 +243,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
 
-                    step = 'summary_json_{0:d}_{1:d}'.format(i,target_ls.index(target))
+                    step = 'summary_json_{0:d}_{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
@@ -262,3 +263,5 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))
+
+            target_iter+=1

@@ -93,20 +93,20 @@ def create_logger():
     # init stimela logger as a sublogger
     stimela.logger("CARACal.Stimela", propagate=True, console=False)
 
-    filehandler = DelayedFileHandler(MEERKATHI_LOG)
+    log_filehandler = DelayedFileHandler(MEERKATHI_LOG)
 
-    filehandler.setFormatter(stimela.log_boring_formatter)
-    filehandler.setLevel(logging.DEBUG)
+    log_filehandler.setFormatter(stimela.log_boring_formatter)
+    log_filehandler.setLevel(logging.DEBUG)
 
-    log.addHandler(filehandler)
+    log.addHandler(log_filehandler)
 
     log_formatter = stimela.log_colourful_formatter
 
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(log_formatter)
+    log_console_handler = logging.StreamHandler()
+    log_console_handler.setLevel(logging.INFO)
+    log_console_handler.setFormatter(log_formatter)
 
-    log.addHandler(console)
+    log.addHandler(log_console_handler)
 
 
 def remove_log_handler(hndl):

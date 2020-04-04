@@ -32,7 +32,7 @@ SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
 SCHEMA = meerkathi.SCHEMA
 
 # Create the log object
-from meerkathi import log, log_filehandler, log_console_handler, log_formatter
+from meerkathi import log
 
 ####################################################################
 # MeerKATHI imports
@@ -185,6 +185,9 @@ def execute_pipeline(args, arg_groups, block):
                 log.error(line)
             sys.exit(1)  # indicate failure
 
+    if args.debug:
+        return __run()
+
     # now fork and block or continue depending on whether interaction is wanted
     try:
         wt = interruptable_process(target=__run)
@@ -202,6 +205,8 @@ def execute_pipeline(args, arg_groups, block):
 def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
+
+    meerkathi.init_console_logging(boring=False, debug=args.debug)
 
     # start a new logfile by default
     if args.log_append is False:
@@ -251,7 +256,7 @@ def main(argv):
        not args.get_default and \
        not args.report_viewer:
        # Run interactively
-        meerkathi.remove_log_handler(log_console_handler)
+        meerkathi.remove_log_handler(meerkathi.log_console_handler)
         try:
             event_loop().run()
         except KeyboardInterrupt:

@@ -243,8 +243,8 @@ class config_parser:
             help='Disable interactivity',
             action='store_true')
 
-        add('--pdb',
-            help='Enable the python debugger',
+        add('-debug',
+            help='Enable debugging mode',
             action='store_true')
 
         add('-nr','--no-reports',

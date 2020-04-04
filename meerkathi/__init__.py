@@ -79,16 +79,18 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
             self.flush()
 
 
-log = log_filehandler = log_console_handler = log_formatter = None
-
 LOGGER_NAME = "CARACal"
 STIMELA_LOGGER_NAME = "CARACal.Stimela"
 
-def create_logger():
-    """ Create a console logger """
-    global log, log_filehandler, log_console_handler, log_formatter
+log = logging.getLogger(LOGGER_NAME)
 
-    log = logging.getLogger(LOGGER_NAME)
+# these will be set up by init_logger
+log_filehandler = log_console_handler = log_console_formatter = None
+
+def create_logger():
+    """ Creates logger and associated objects. Called upon import"""
+    global log, log_filehandler
+
     log.setLevel(logging.DEBUG)
     log.propagate = False
 
@@ -102,20 +104,25 @@ def create_logger():
 
     log.addHandler(log_filehandler)
 
-    log_formatter = stimela.log_colourful_formatter
+
+def init_console_logging(boring=False, debug=False):
+    """Sets up console logging"""
+    global log_console_handler, log_console_formatter
+
+    log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 
     log_console_handler = logging.StreamHandler()
-
-    # add filter to console handler: block Stimela messages at level <=INFO, unless they're from the container process itself
-    # (the logfile still gets all the messages)
-    def _console_filter(rec):
-        if rec.name.startswith(STIMELA_LOGGER_NAME):
-            return rec.level > logging.INFO or hasattr(rec, 'subprocess')
-        return True
-
     log_console_handler.setLevel(logging.INFO)
-    log_console_handler.setFormatter(log_formatter)
-    log_console_handler.addFilter(_console_filter)
+    log_console_handler.setFormatter(log_console_formatter)
+
+    # add filter to console handler: block Stimela messages at level <=INFO, unless they're intrinsically interesting
+    # (the logfile still gets all the messages)
+    if not debug:
+        def _console_filter(rec):
+            if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:
+                return hasattr(rec, 'stimela_subprocess_output') or hasattr(rec, 'stimela_job_state')
+            return True
+        log_console_handler.addFilter(_console_filter)
 
     log.addHandler(log_console_handler)
 
@@ -123,9 +130,9 @@ def create_logger():
 def remove_log_handler(hndl):
     log.removeHandler(hndl)
 
-
 def add_log_handler(hndl):
     log.addHandler(hndl)
 
-
 create_logger()
+
+

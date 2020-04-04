@@ -300,17 +300,18 @@ class worker_administrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
+            log.info("{0:s}: creating worker recipe".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
             # Save worker recipes for later execution
             # execute each worker after adding its steps
 
             if self.add_all_first:
-                log.info("Adding worker {0:s} before running".format(_worker))
+                log.info("{0:s}: adding before running".format(_worker))
                 self.recipes[_worker] = recipe
             else:
-                log.info("Running worker {0:s}".format(_worker))
+                log.info("{0:s}: running".format(label))
                 recipe.run()
-                log.info("Finished worker {0:s}".format(_worker))
+                log.info("{0:s}: finished".format(label))
                 casa_last = glob.glob(self.output + '/*.last')
                 for file_ in casa_last:
                     os.remove(file_)

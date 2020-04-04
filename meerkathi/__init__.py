@@ -81,17 +81,19 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
 log = log_filehandler = log_console_handler = log_formatter = None
 
+LOGGER_NAME = "CARACal"
+STIMELA_LOGGER_NAME = "CARACal.Stimela"
 
 def create_logger():
     """ Create a console logger """
     global log, log_filehandler, log_console_handler, log_formatter
 
-    log = logging.getLogger("CARACal")
+    log = logging.getLogger(LOGGER_NAME)
     log.setLevel(logging.DEBUG)
     log.propagate = False
 
     # init stimela logger as a sublogger
-    stimela.logger("CARACal.Stimela", propagate=True, console=False)
+    stimela.logger(STIMELA_LOGGER_NAME, propagate=True, console=False)
 
     log_filehandler = DelayedFileHandler(MEERKATHI_LOG)
 
@@ -103,8 +105,17 @@ def create_logger():
     log_formatter = stimela.log_colourful_formatter
 
     log_console_handler = logging.StreamHandler()
+
+    # add filter to console handler: block Stimela messages at level <=INFO, unless they're from the container process itself
+    # (the logfile still gets all the messages)
+    def _console_filter(rec):
+        if rec.name.startswith(STIMELA_LOGGER_NAME):
+            return rec.level > logging.INFO or hasattr(rec, 'subprocess')
+        return True
+
     log_console_handler.setLevel(logging.INFO)
     log_console_handler.setFormatter(log_formatter)
+    log_console_handler.addFilter(_console_filter)
 
     log.addHandler(log_console_handler)
 

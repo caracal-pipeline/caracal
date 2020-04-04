@@ -1,6 +1,6 @@
 import npyscreen
 from logging import StreamHandler
-from meerkathi import add_log_handler, remove_log_handler
+from meerkathi import add_log_handler, remove_log_handler, log_formatter
 
 KEEP_NLINES = 1000
 

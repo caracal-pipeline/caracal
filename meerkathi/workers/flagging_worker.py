@@ -7,7 +7,7 @@ import yaml
 import re
 import meerkathi
 import sys
-NAME = 'Pre-calibration flagging'
+NAME = 'Flagging'
 
 FLAG_NAMES = "static automatic autocorr_spectrum".split()
 

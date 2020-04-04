@@ -300,7 +300,7 @@ class worker_administrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
-            log.info("{0:s}: creating worker recipe".format(label), extra=dict(color="GREEN"))
+            log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
             # Save worker recipes for later execution
             # execute each worker after adding its steps

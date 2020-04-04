@@ -66,7 +66,7 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
     entries until told to stop delaying, then dumps everything into the target file
     and from then on logs continuously. This allows the log file to be switched at startup."""
     def __init__(self, filename, delay=True):
-        logging.handlers.MemoryHandler.__init__(self, 100000, target=logging.FileHandler(filename))
+        logging.handlers.MemoryHandler.__init__(self, 100000, target=logging.FileHandler(filename, delay=True))
         self._delay = delay
 
     def shouldFlush(self, record):
@@ -74,7 +74,12 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
     def setFilename(self, filename, delay=False):
         self._delay = delay
-        self.setTarget(logging.FileHandler(filename))
+        target = logging.FileHandler(filename)
+        target.setFormatter(self.formatter)
+        for filt in self.filters:
+            target.addFilter(filt)
+        target.setLevel(self.level)
+        self.setTarget(target)
         if not delay:
             self.flush()
 

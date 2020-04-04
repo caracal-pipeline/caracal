@@ -208,10 +208,11 @@ def main(argv):
 
     meerkathi.init_console_logging(boring=False, debug=args.debug)
 
-    # start a new logfile by default
-    if args.log_append is False:
-        with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
-            pass
+    # # start a new logfile by default
+    # if args.log_append is False:
+    #     with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
+    #         pass
+    
     if args.schema:
         schema = {}
         for item in args.schema:

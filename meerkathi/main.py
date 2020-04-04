@@ -212,7 +212,7 @@ def main(argv):
     # if args.log_append is False:
     #     with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
     #         pass
-    
+
     if args.schema:
         schema = {}
         for item in args.schema:

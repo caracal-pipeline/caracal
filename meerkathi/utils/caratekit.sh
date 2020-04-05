@@ -176,6 +176,15 @@ do
  	firstletter=`echo ${CARATE_VIRTUALENV} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_VIRTUALENV="${cwd}/${CARATE_VIRTUALENV}" 
     fi
+    if [[ "$arg" == "--local_stimela" ]] || [[ "$arg" == "-lst" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --local-stimela or -lst switch, stopping."; kill "$PPID"; exit 1; }
+    
+	CARATE_LOCAL_STIMELA=${!nextcount}
+ 	firstletter=`echo ${CARATE_LOCAL_STIMELA} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_LOCAL_STIMELA="${cwd}/${CARATE_LOCAL_STIMELA}" 
+    fi
     if [[ "$arg" == "--caracal-build-number" ]] || [[ "$arg" == "-cb" ]]
     then
  (( nextcount=argcount+1 ))
@@ -244,6 +253,10 @@ then
     echo ""
 
     echo "  CARATE_VIRTUALENV:           Location of the virtualenv directory"
+    echo "                               (optional)"
+    echo ""
+
+    echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
     echo "                               (optional)"
     echo ""
 
@@ -496,6 +509,9 @@ then
     echo "  - when environment variable CARATE_VIRTUALENV is set the that"
     echo "    direcory is used as the location of the virtual environment"
     echo ""
+    echo "  - when environment variable CARATE_LOCAL_STIMELA is set the that"
+    echo "    direcory is used as the Stimela location."
+    echo ""
     echo " For each test run, log-meerkathi.txt is searched for keywords indicating the start"
     echo " and the end of a worker and those numbers are reported."
     echo " The test is declared failed and carate.sh returns 1 if:"
@@ -644,6 +660,17 @@ else
     printf "test will be made on own supplied configuration.\n\n"
 fi
 
+# Determine number of stimelas and allow only one
+counts=0
+[[ -z ${US} ]] || (( counts+=1 ))
+[[ -z ${UM} ]] || (( counts+=1 ))
+[[ -z ${CARATE_LOCAL_STIMELA} ]] || (( counts+=1 ))
+(( ${counts}<2 )) || { \
+    echo "Use maximally one of switches and variables defined with -us -um -lst."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+
 # Start test
 echo "##########################################"
 echo " CARACal test $CARATE_CARACAL_TEST_ID"
@@ -666,6 +693,16 @@ else
     printf "The variable CARATE_VIRTUALENV is not set and switches"
     printf "--virtualenv and -ve are not used meaning that the virtualenv\n"
     printf "will be created or re-used inside the test installation.\n\n"
+fi
+
+if [[ -n "$CARATE_LOCAL_STIMELA" ]]
+then
+    ss+="local_stimela=${CARATE_LOCAL_STIMELA}"
+    ss+=$'\n'
+else
+    printf "The variable CARATE_LOCAL_STIMELA is not set and switches"
+    printf "--local-stimela and -lst are not used meaning that the virtualenv\n"
+    printf "will be created or re-used as specified in the CARACal installation.\n\n"
 fi
 
 # Save home for later 
@@ -749,7 +786,7 @@ checkex () {
 
     if [[ -d ${tocheck} ]]
     then
-	files=(${CARATE_VIRTUALENV} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
+	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
 	
 	for file in ${files[@]}
 	do
@@ -1045,7 +1082,7 @@ then
 #    echo ""  >> ${SYA}
 
     # Get Stimela tag. This can be simplified...
-    if [[ -n $US ]]
+    if [[ -n ${US} ]]
     then
         stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || true
         if [[ -z ${stimelaline} ]]
@@ -1060,13 +1097,15 @@ then
         else
             echo "Stimela build: ${stimelaline}" >> ${SYA}
         fi
-    elif [[ -n $UM ]]
+    elif [[ -n ${UM} ]]
     then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt` || true
-        [[ -z ${stimelaline} ]] || echo next attempt
 	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
         [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+    elif [[ -n ${CARATE_LOCAL_STIMELA} ]]
+    then
+	echo "Stimela build: ${CARATE_LOCAL_STIMELA} (local)" >> ${SYA}
     else
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
@@ -1103,6 +1142,12 @@ then
     echo "Intstalling stimela_last_stable.txt"
     echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_last_stable.txt" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_last_stable.txt
+fi
+if [[ -n ${CARACAL_LOCAL_STIMELA} ]]
+then
+    echo "Intstalling local stimela ${CARACAL_LOCAL_STIMELA}"
+    echo "pip install -U --force-reinstall \${local_stimela}" >> ${SS}
+    [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARACAL_LOCAL_STIMELA}
 fi
 
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]]

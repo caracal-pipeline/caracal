@@ -1952,7 +1952,7 @@ def worker(pipeline, recipe, config):
                                                                             pipeline), prefix, field, self_cal_iter_counter)
 
             for i, msname in enumerate(mslist_out):
-                step = 'transfer_model_field{0:d}_ms{0:d}'.format(target_iter,i)
+                step = 'transfer_model_field{0:d}_ms{1:d}'.format(target_iter,i)
                 recipe.add('cab/crystalball', step,
                            {
                                "ms": msname,

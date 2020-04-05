@@ -176,9 +176,9 @@ def execute_pipeline(args, arg_groups, block):
             log.info(
                 "Interrupt request received from user - gracefully shutting down. Goodbye!")
         except Exception as exc:
-            log.error("{} [{}]".format(exc, type(exc).__name__))
+            log.error("{} [{}]".format(exc, type(exc).__name__), extra=dict(boldface=True))
             log.info("  More information can be found in the logfile at {0:s}".format(meerkathi.MEERKATHI_LOG))
-            log.info("  You are running version {0:s}".format(str(__version__)))
+            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
             for line in traceback.format_exc().splitlines():
                 log.error(line, extra=dict(traceback_report=True))
             log.info("exiting with error code 1")

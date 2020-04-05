@@ -125,7 +125,7 @@ def init_console_logging(boring=False, debug=False):
     if not debug:
         def _console_filter(rec):
             # traceback dumps don't go to cosnole
-            if hasattr(rec, 'traceback_report'):
+            if getattr(rec, 'traceback_report', None) or getattr(rec, 'logfile_only', None):
                 return False
             # for Stimela messages at level <=INFO, only allow through subprocess  output and job state
             if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:

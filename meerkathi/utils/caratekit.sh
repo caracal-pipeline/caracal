@@ -167,6 +167,15 @@ do
  	firstletter=`echo ${CARATE_INPUT_DIR} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_INPUT_DIR="${cwd}/${CARATE_INPUT_DIR}" 
     fi
+    if [[ "$arg" == "--virtualenv" ]] || [[ "$arg" == "-ve" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --virtualenv or -ve switch, stopping."; kill "$PPID"; exit 1; }
+    
+	CARATE_VIRTUALENV=${!nextcount}
+ 	firstletter=`echo ${CARATE_VIRTUALENV} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_VIRTUALENV="${cwd}/${CARATE_VIRTUALENV}" 
+    fi
     if [[ "$arg" == "--caracal-build-number" ]] || [[ "$arg" == "-cb" ]]
     then
  (( nextcount=argcount+1 ))
@@ -230,7 +239,12 @@ then
     echo "                               format)"
     echo ""
 
-    echo "  CARATE_INPUT_DIR:        Directory containing input data"
+    echo "  CARATE_INPUT_DIR:            Directory containing input data"
+    echo "                               (optional)"
+    echo ""
+
+    echo "  CARATE_VIRTUALENV:           Location of the virtualenv directory"
+    echo "                               (optional)"
     echo ""
 
     echo "  CARATE_CARACAL_BUILD_NUMBER: Build number to test. If not set, master"
@@ -264,8 +278,11 @@ then
     echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_TEST_DATA_DIR"
     echo ""
-    echo "  --input-dir ARG -id ARG         Use ARG instead of environment variable"
+    echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_INPUT_DIR"
+    echo ""
+    echo "  --virtualenv ARG -ve ARG            Use ARG instead of internal virtualenv"
+    echo "                                      variable CARATE_VIRTUALENV"
     echo ""
     echo "  --caracal-build-number ARG -cb ARG  Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_BUILD_NUMBER"
@@ -472,6 +489,13 @@ then
     echo "    dataid: [''] in that file is replaced by the appropriate line to process the "    
     echo "    test data sets in \$CARATE_TEST_DATA_DIR"
     echo ""
+    echo "  - when environment variable CARATE_INPUT_DIR is set the contents of that"
+    echo "    direcory will be copied into the input directory of CARACal prior to"
+    echo "    starting the test"
+    echo ""
+    echo "  - when environment variable CARATE_VIRTUALENV is set the that"
+    echo "    direcory is used as the location of the virtual environment"
+    echo ""
     echo " For each test run, log-meerkathi.txt is searched for keywords indicating the start"
     echo " and the end of a worker and those numbers are reported."
     echo " The test is declared failed and carate.sh returns 1 if:"
@@ -632,6 +656,18 @@ ss+="workspace_root=\${workspace}/\${caracal_test_id}"
 ss+=$'\n'
 WORKSPACE_ROOT="$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
 
+if [[ -n "$CARATE_VIRTUALENV" ]]
+then
+    ss+="cvirtualenv=${CARATE_VIRTUALENV}"
+    ss+=$'\n'
+else
+    ss+="cvirtualenv=\${workspace_root}/caracal_venv"
+    ss+=$'\n'
+    printf "The variable CARATE_VIRTUALENV is not set and switches"
+    printf "--virtualenv and -ve are not used meaning that the virtualenv\n"
+    printf "will be created or re-used inside the test installation.\n\n"
+fi
+
 # Save home for later 
 if [[ -n $HOME ]]
 then
@@ -713,7 +749,7 @@ checkex () {
 
     if [[ -d ${tocheck} ]]
     then
-	files=(${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
+	files=(${CARATE_VIRTUALENV} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
 	
 	for file in ${files[@]}
 	do
@@ -738,7 +774,6 @@ checkex () {
     fi
     return 1
 }
-
 
 echo "##########################################"
 echo " Setting up build in $WORKSPACE_ROOT"
@@ -871,35 +906,39 @@ echo "##########################################"
 echo " Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
 echo
+
+[[ ! -z ${CARATE_VIRTUALENV} ]] || CARATE_VIRTUALENV=${WORKSPACE_ROOT}/caracal_venv
+
+# Set the virtual environment
 if (( $FORCE != 0 ))
 then
     [[ -n ${ORSR} ]] || \
-	checkex ${WORKSPACE_ROOT}/caracal_venv || \
-	echo "rm -rf \${workspace_root}/caracal_venv" >> ${SS}
+	checkex ${CARATE_VIRTUALENV} || \
+	echo "rm -rf \${cvirtualenv}" >> ${SS}
     [[ -n ${ORSR} ]] || \
 	[[ -n ${FS} ]] || \
-	checkex ${WORKSPACE_ROOT}/caracal_venv || \
-	rm -rf ${WORKSPACE_ROOT}/caracal_venv
+	checkex ${CARATE_VIRTUALENV} || \
+	rm -rf ${CARATE_VIRTUALENV}
 fi
-if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
+if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then
-    [[ -n ${FS} ]] && echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}
-    [[ -n ${FS} ]] || { python3 -m venv ${WORKSPACE_ROOT}/caracal_venv && echo "python3 -m venv \${workspace_root}/caracal_venv" >> ${SS}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; virtualenv -p python3 ${WORKSPACE_ROOT}/caracal_venv && echo "virtualenv -p python3 \${workspace_root}/caracal_venv" >> ${SS}; } 
+    [[ -n ${FS} ]] && echo "python3 -m venv \${cvirtualenv}" >> ${SS}
+    [[ -n ${FS} ]] || { python3 -m venv ${CARATE_VIRTUALENV} && echo "python3 -m venv \${cvirtualenv}" >> ${SS}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; virtualenv -p python3 ${CARATE_VIRTUALENV} && echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS}; } 
 fi
 
 # Report on virtualenv
-if [[ -f ${WORKSPACE_ROOT}/caracal_venv/pyvenv.cfg ]]
+if [[ -f ${CARATE_VIRTUALENV}/pyvenv.cfg ]]
 then
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     echo "Virtualenv info (from pyvenv.cfg):" >> ${SYA}
-    cat ${WORKSPACE_ROOT}/caracal_venv/pyvenv.cfg >> ${SYA}
+    cat ${CARATE_VIRTUALENV}/pyvenv.cfg >> ${SYA}
     echo "" >> ${SYA}
 fi
 
 echo "Entering virtualenv in $WORKSPACE_ROOT"
-echo ". \${workspace_root}/caracal_venv/bin/activate" >> ${SS}
-[[ -n ${FS} ]] || . ${WORKSPACE_ROOT}/caracal_venv/bin/activate
+echo ". \${cvirtualenv}/bin/activate" >> ${SS}
+[[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
 
 echo "export PYTHONPATH=''" >> ${SS}
 export PYTHONPATH=''
@@ -1306,6 +1345,12 @@ runtest () {
 	echo "mkdir -p \${workspace_root}/test_${configfilename}_${contarch}/msdir" >> ${SS}
         mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir
 
+	if [[ -d ${CARATE_INPUT_DIR} ]]
+	then
+	    mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/input
+	    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/input || cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/input/
+	fi
+	
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself

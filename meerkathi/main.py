@@ -205,7 +205,7 @@ def main(argv):
     args = cp(argv).args
     arg_groups = cp(argv).arg_groups
 
-    meerkathi.init_console_logging(boring=False, debug=args.debug)
+    meerkathi.init_console_logging(boring=args.boring, debug=args.debug)
 
     # # start a new logfile by default
     # if args.log_append is False:

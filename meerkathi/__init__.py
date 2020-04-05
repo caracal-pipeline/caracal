@@ -129,7 +129,11 @@ def init_console_logging(boring=False, debug=False):
                 return False
             # for Stimela messages at level <=INFO, only allow through subprocess  output and job state
             if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:
-                return hasattr(rec, 'stimela_subprocess_output') or hasattr(rec, 'stimela_job_state')
+                if hasattr(rec, 'stimela_subprocess_output'):
+                    return True
+                elif hasattr(rec, 'stimela_job_state'):
+                    return True
+                return False
             return True
         log_console_handler.addFilter(_console_filter)
 

@@ -203,6 +203,10 @@ class config_parser:
             default=DEFAULT_CONFIG,
             help='Pipeline configuration file (YAML/JSON format)')
 
+        add('-b', '--boring',
+            help='Enable boring mode -- suppress colorization of console output',
+            action='store_true')
+
         add('-sid', '--singularity-image-dir',
             help='Directory where stimela singularity images are stored')
 
@@ -260,8 +264,8 @@ class config_parser:
         add('--interactive-port', type=int, default=8888,
             help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 
-        add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
-            action='store_true')
+        # add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
+        #     action='store_true')
         return parser
 
     __HAS_BEEN_INIT = False

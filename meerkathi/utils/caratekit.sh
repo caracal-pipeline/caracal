@@ -32,18 +32,18 @@ success=0
 
 # Preamble
 printf "\n"
-printf "#########################\n"
-printf " Testing CARACal at home \n"
-printf "#########################\n"
+printf "#######################\n"
+printf "Testing CARACal at home \n"
+printf "#######################\n"
 echo ""
 echo "caratekit.sh $*"
 echo ""
- sya="###########################" ; sya+=$'\n\n'
-sya+=" Caratekit system information"  ; sya+=$'\n\n'
-sya+="###########################" ; sya+=$'\n\n'
+ sya="############################" ; sya+=$'\n\n'
+sya+="Caratekit system information"  ; sya+=$'\n\n'
+sya+="############################" ; sya+=$'\n\n'
 sya+="Start time: "; sya+=`date -u`; sya+=$'\n'
 sya+="Call executing: caratekit.sh $*"; sya+=$'\n\n'
-sya+="###########################" ; sya+=$'\n\n'
+sya+="############################" ; sya+=$'\n\n'
 sya+="Host info: ";sya+=$'\n'; sya+=`hostnamectl | grep -Ev "Machine ID"'|'"Boot ID"`;sya+=$'\n'
 #sya+=$'\n\n'
 
@@ -151,12 +151,21 @@ do
     fi
     if [[ "$arg" == "--test-data-dir" ]] || [[ "$arg" == "-td" ]]
     then
- (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --test-data-dir or -td switch, stopping."; kill "$PPID"; exit 1; }
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --test-data-dir or -td switch, stopping."; kill "$PPID"; exit 1; }
     
- CARATE_TEST_DATA_DIR=${!nextcount}
+	CARATE_TEST_DATA_DIR=${!nextcount}
  	firstletter=`echo ${CARATE_TEST_DATA_DIR} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_TEST_DATA_DIR="${cwd}/${CARATE_TEST_DATA_DIR}" 
+    fi
+    if [[ "$arg" == "--input-dir" ]] || [[ "$arg" == "-id" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --input-dir or -id switch, stopping."; kill "$PPID"; exit 1; }
+    
+	CARATE_INPUT_DIR=${!nextcount}
+ 	firstletter=`echo ${CARATE_INPUT_DIR} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_INPUT_DIR="${cwd}/${CARATE_INPUT_DIR}" 
     fi
     if [[ "$arg" == "--caracal-build-number" ]] || [[ "$arg" == "-cb" ]]
     then
@@ -221,6 +230,9 @@ then
     echo "                               format)"
     echo ""
 
+    echo "  CARATE_INPUT_DIR:        Directory containing input data"
+    echo ""
+
     echo "  CARATE_CARACAL_BUILD_NUMBER: Build number to test. If not set, master"
     echo "                               will be tested"
     echo ""
@@ -251,6 +263,9 @@ then
     echo ""
     echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_TEST_DATA_DIR"
+    echo ""
+    echo "  --input-dir ARG -id ARG         Use ARG instead of environment variable"
+    echo "                                      CARATE_INPUT_DIR"
     echo ""
     echo "  --caracal-build-number ARG -cb ARG  Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_BUILD_NUMBER"
@@ -307,8 +322,8 @@ then
     echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
     echo ""
     echo "  --force -f                          Force replacement and re-installation of" 
-    echo "                                      all components (you will probably want" 
-    echo "                                      that)"
+    echo "                                      all components if possible (see below)" 
+    echo "                                      "
     echo ""
     echo "  --fastsim -fs                       Omit all time-consuming steps" 
     echo ""
@@ -340,14 +355,18 @@ then
     echo " directory called home, a virtual environment called"
     echo " caracal_virtualenv, a CARACal copy meerkathi, and up to six test"
     echo " directories are created, within which the tests are conducted. If the"
-    echo " --force or -f switch is set, all existing directories and"
-    echo " installations, apart from a potentially existing singularity cache directory"
+    echo " --force or -f switch is set, existing directories and installations"
     echo " are deleted and replaced, if not, only those directories"
     echo " and files are created, which do not exist yet. Exceptions from that rule"
-    echo " are set with the --omit-stimela-reinstall or -os switch, which would"
-    echo " prevent a re-installation of stimela even if -f is set. This includes the"
+    echo " exist. If the --omit-stimela-reinstall or -os switch is set, "
+    echo " a re-installation of stimela is preventedeven if -f is set. This includes the"
     echo " Re-installation of the virtual environment, the home directory, and"
-    ehco " the file .stimela in the home directory."
+    echo " the file .stimela in the home directory. If the option --keep-home or -kh is"
+    echo " set, the directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre-"
+    echo " served. If option --fast-simulation (-fs) is set, only the directory "
+    echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is deleted if option -f is"
+    echo " set. No directories or files supplied to caratekit.sh (including their"
+    echo " parent directories) are deleted."
     echo ""
     echo "  In detail (all installations in the root directory"
     echo "  \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID):"
@@ -670,6 +689,57 @@ then
     fi
 fi
 
+# Protect existing directories and files
+checkex () {
+    # Check if the input $1 is a file and if yes if it is one of the user-
+    # supplied files ${CARATE_CONFIG_SOURCE}, return 0 (true) if yes
+    # Check the input is a directory and if yes if it is a parent or one of
+    # the user-supplied files and directories ${CARATE_INPUT_DIR}
+    # ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR},
+    # return 0 (true) if yes
+
+    # Input:
+    # $1: input file to check
+    
+    local tocheck=$1
+    local a=""
+    local b=""
+    local c=""
+    local d=""
+    local e=""
+    local file=""
+    local files=""
+    local subfile=""
+
+    if [[ -d ${tocheck} ]]
+    then
+	files=(${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
+	
+	for file in ${files[@]}
+	do
+	    e=`stat -c %i $file`
+	    a=`basename $file`
+	    b=`find $tocheck -name $a` || true
+	    c=($b)
+	    for subfile in ${c[@]}
+	    do
+		d=`stat -c %i $subfile`	    
+		[[ ${e} != ${d} ]] || { return 0; }
+	    done
+	done
+    else
+	[[ -f ${tocheck} ]] && e=`stat -c %i ${tocheck}`
+	files=(${CARATE_CONFIG_SOURCE})
+	for file in ${files[@]}
+	do
+	    d=`stat -c %i $file`
+	    [[ ${e} != ${d} ]] || { return 0; }
+	done
+    fi
+    return 1
+}
+
+
 echo "##########################################"
 echo " Setting up build in $WORKSPACE_ROOT"
 echo "##########################################"
@@ -679,21 +749,23 @@ echo
 ss+="mkdir -p \${workspace_root}"
 mkdir -p ${WORKSPACE_ROOT}
 
-[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE}==0 )) || rm -rf ${WORKSPACE_ROOT}/report
+[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE}==0 )) || \
+    checkex ${WORKSPACE_ROOT}/report || \
+    rm -rf ${WORKSPACE_ROOT}/report
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
 SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 
 # Empty ss into the small script
-[[ ! -d ${SS} ]] || (( $FORCE==0 )) || rm -rf ${SS}
+[[ ! -e ${SS} ]] || (( $FORCE==0 )) || checkex ${SS} || rm -rf ${SS}
 echo "$ss" >> ${SS}
 
 # Sysinfo
 SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}_sysinfo.txt
 
 # Empty into the sysinfo
-[[ ! -d ${SYA} ]] || (( $FORCE==0 )) || rm -rf ${SYA}
+[[ ! -e ${SYA} ]] || (( $FORCE==0 )) || checkex ${SYA} || rm -rf ${SYA}
 echo "$sya" >> ${SYA}
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -737,6 +809,22 @@ function cleanup {
 	echo ""
 	echo "##########################################"
 	echo ""
+	echo "###########" >> ${SYA} 
+	echo >> ${SYA} 
+	echo "Test failed." >> ${SYA} 
+	echo >> ${SYA} 
+    else
+	echo "###########################################################"
+	echo ""
+	echo ${kksuccessquotes[$(( $RANDOM % 2 ))]}
+	echo "Caratekit succeeded."
+	echo ""
+	echo "###########################################################"
+	echo
+	echo "###############" >> ${SYA} 
+	echo >> ${SYA} 
+	echo "Test succeeded." >> ${SYA} 
+	echo >> ${SYA} 
     fi
     
     [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
@@ -755,14 +843,19 @@ function cleanup {
 }
 trap cleanup EXIT
 
-# The following would only work in an encapsulated environment
 [[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
 [[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
 if (( $FORCE != 0 ))
 then
-    [[ -n ${KH} ]] || [[ -n ${ORSR} ]] || echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}
+    [[ -n ${KH} ]] || [[ -n ${ORSR} ]] || \
+	checkex ${WORKSPACE_ROOT}/home || \
+	echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}
     # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake...
-    [[ -n ${KH} ]] || [[ -n ${ORSR} ]] || [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/home
+    [[ -n ${KH} ]] || \
+	[[ -n ${ORSR} ]] || \
+	[[ -n ${FS} ]] || \
+	checkex ${WORKSPACE_ROOT}/home || \
+	rm -rf ${WORKSPACE_ROOT}/home
 fi
 
 [[ -n ${KH} ]] || echo "mkdir -p ${WORKSPACE_ROOT}/home" >> ${SS}
@@ -780,8 +873,13 @@ echo "##########################################"
 echo
 if (( $FORCE != 0 ))
 then
-    [[ -n ${ORSR} ]] || echo "rm -rf \${workspace_root}/caracal_venv" >> ${SS}
-    [[ -n ${ORSR} ]] || [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/caracal_venv
+    [[ -n ${ORSR} ]] || \
+	checkex ${WORKSPACE_ROOT}/caracal_venv || \
+	echo "rm -rf \${workspace_root}/caracal_venv" >> ${SS}
+    [[ -n ${ORSR} ]] || \
+	[[ -n ${FS} ]] || \
+	checkex ${WORKSPACE_ROOT}/caracal_venv || \
+	rm -rf ${WORKSPACE_ROOT}/caracal_venv
 fi
 if [[ ! -d ${WORKSPACE_ROOT}/caracal_venv ]]
 then
@@ -816,22 +914,24 @@ python --version >> ${SYA}
 # Report on pip version
 pip --version | awk '{print $1, $2}' >> ${SYA}
 echo "" >> ${SYA}
+echo ""
 
 # Install software
-echo
 echo "##################"
 echo " Fetching CARACal "
 echo "##################"
 echo
 if (( $FORCE==1 ))
 then
-    echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
-    [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/meerkathi
+    checkex ${WORKSPACE_ROOT}/meerkathi || \
+	echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
+    [[ -n ${FS} ]] || \
+	checkex ${WORKSPACE_ROOT}/meerkathi || \
+	rm -rf ${WORKSPACE_ROOT}/meerkathi
 fi
 
 echo "cd \${workspace_root}" >> ${SS}
 cd ${WORKSPACE_ROOT}
-
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
@@ -853,11 +953,17 @@ else
             echo "Not re-fetching MeerKATHI, use -f if you want that."
         else
 	    echo "Fetching MeerKATHI from https://github.com/ska-sa/meerkathi.git"
-	    echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
-	    [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/meerkathi
+	    checkex ${WORKSPACE_ROOT}/meerkathi || \
+		echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
+	    [[ -n ${FS} ]] || \
+		checkex ${WORKSPACE_ROOT}/meerkathi || \
+		rm -rf ${WORKSPACE_ROOT}/meerkathi
 
-            echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
-            [[ -n ${FS} ]] || git clone https://github.com/ska-sa/meerkathi.git
+            checkex ${WORKSPACE_ROOT}/meerkathi || \
+		echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
+            [[ -n ${FS} ]] || \
+		checkex ${WORKSPACE_ROOT}/meerkathi || \
+		git clone https://github.com/ska-sa/meerkathi.git
         fi
     else
 	echo "Fetching MeerKATHI from https://github.com/ska-sa/meerkathi.git"
@@ -875,6 +981,8 @@ then
 	echo "of CARACal does not contain the build number. You may want to use the";\
 	echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_NUMBER:";\
 	echo "In bash: $ unset CARATE_CARACAL_BUILD_NUMBER";\
+	echo "Also, you might have used switches --caracal-build-number or -cb, which";\
+	echo "you should not";\
     }
     echo "git checkout ${CARATE_CARACAL_BUILD_NUMBER}" >> ${SS}
     git checkout ${CARATE_CARACAL_BUILD_NUMBER}
@@ -900,15 +1008,15 @@ then
     # Get Stimela tag. This can be simplified...
     if [[ -n $US ]]
     then
-	# continue here
-        stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'`
+        stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || true
         if [[ -z ${stimelaline} ]]
         then
+	    echo got here
 	    # Stimela tag depends on whether the repository is in or not
-            stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'`
+            stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
             [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
-            stimelaline=`grep https://github.com/ratt-ru/Stimela setup.py`
-            [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
+            stimelaline=`grep https://github.com/ratt-ru/Stimela setup.py` || true
+            [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
             [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
         else
             echo "Stimela build: ${stimelaline}" >> ${SYA}
@@ -916,16 +1024,17 @@ then
     elif [[ -n $UM ]]
     then
         # Stimela tag depends on whether the repository is in or not
-        stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt`
-        [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
+        stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt` || true
+        [[ -z ${stimelaline} ]] || echo next attempt
+	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
         [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     else
         # Stimela tag depends on whether the repository is in or not
-        stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'`
+        stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
         [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
 	
-        [[ -n ${stimelaline} ]] || stimelaline=`grep 'https://github.com/ratt-ru/Stimela' setup.py`
-        [[ -z ${stimelaline} ]] || [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
+        [[ -n ${stimelaline} ]] || stimelaline=`grep 'https://github.com/ratt-ru/Stimela' setup.py` || true
+        [[ -z ${stimelaline} ]] || [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
         [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     fi
 
@@ -946,7 +1055,7 @@ echo "pip install -U --force-reinstall \${workspace_root}/meerkathi" >> ${SS}
 [[ -n ${FS} ]] || pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi
 if [[ -n ${UM} ]]
 then
-    echo "Intstalling stimela_master.txt"
+    echo "Installing stimela_master.txt"
     echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_master.txt" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_master.txt
 fi
@@ -972,13 +1081,13 @@ fi
 
 if [[ -z $ORSR ]]
 then
-    echo "#############################"
-    echo " Removing Stimela directory "
-    echo "#############################"
-    echo
-    echo "Removing \${HOME}/.stimela/*"
-    echo "rm -f \${HOME}/.stimela/*" >> ${SS}
-    [[ -n ${FS} ]] || rm -f ${HOME}/.stimela/*
+    checkex ${HOME}/.stimela || echo "#############################"
+    checkex ${HOME}/.stimela || echo " Removing Stimela directory "
+    checkex ${HOME}/.stimela || echo "#############################"
+    checkex ${HOME}/.stimela || echo
+    checkex ${HOME}/.stimela || echo "Removing \${HOME}/.stimela/*"
+    checkex ${HOME}/.stimela || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+    [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
 fi
 
 if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]]
@@ -1025,6 +1134,12 @@ then
 		    break
 	        fi
 	    done
+	    if (( ${ii} > ${IA} ))
+	    then
+		echo "Maximum number of pull attempts for Stimela reached."
+		echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
+		exit 1
+	    fi
         fi
 	ii=1
         until (( ${ii} > ${IA} ))
@@ -1041,6 +1156,11 @@ then
 		break
 	    fi
         done
+	if (( ${ii} > ${IA} ))
+	then
+	    echo "Maximum number of build attempts for Stimela reached."
+	    exit 1
+	fi
     fi
     echo ""
 fi
@@ -1075,7 +1195,7 @@ testingoutput () {
 				    hadmeerkathi2=1; unset hadmeerkathi; }
         [[ ${log} != ${meerkathilogsh} ]] || hadmeerkathi=1         
     done
-    reporting+="Total number of logfiles: $total"; reporting+=$'\n'
+    reporting+="Total number of logfiles: $total"
     echo "$reporting"
     echo "$reporting" >> ${SYA}
 
@@ -1084,6 +1204,11 @@ testingoutput () {
     worker_fins=0
     [[ -z $meerkathilog ]] || worker_runs=`grep "Running worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
     [[ -z $meerkathilog ]] || worker_fins=`grep "Finished worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
+    reporting="MeerKATHI logfile indicates ${worker_runs} workers starting"
+    reporting+=$'\n'
+    reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'
+    echo ${reporting};
+    echo ${reporting} >> ${SYA};
 
     (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; \
 					    reporting+=$'\n'; \
@@ -1147,46 +1272,111 @@ runtest () {
 
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
-    sya=" Test ${greetings_line} preparation start time:";sya+=$'\n'; sya+=`date -u`;
+    sya="test_${configfilename}_${contarch} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA} 
-    
+
     if [[ -e ${WORKSPACE_ROOT}/test_${configfilename}_${contarch} ]] && (( $FORCE==0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
         echo "and use old results. Use -f to override."
     else
-	echo "rm -rf \${workspace_root}/test_${configfilename}_${contarch}" >> ${SS}
-        [[ -n ${FS} ]] || rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
+	
+	#Check if the test directory is a parent of any of the supplied directories 
+	if checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
+	then
+	    # Go through the files and remove individually
+	    # continue here
+	    dirs=(input  msdir  output  stimela_parameter_files)
+	    for dire in ${dirs[@]}
+	    do
+		checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${dire} || \
+		    echo "rm -rf \${workspace_root}/test_${configfilename}_${contarch}/${dire}" >> ${SS}
+		[[ -n ${FS} ]] || \
+		    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${dire} || \
+		    rm -rf \${workspace_root}/test_${configfilename}_${contarch}/${dire}
+	    done
+	else	    
+		echo "rm -rf \${workspace_root}/test_${configfilename}_${contarch}" >> ${SS}
+            [[ -n ${FS} ]] || \
+		rm -rf ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
+	fi	
+
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
 	echo "mkdir -p \${workspace_root}/test_${configfilename}_${contarch}/msdir" >> ${SS}
         mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir
-        echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}
-	[[ -n ${FS} ]] || sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
-	[[ ! -f ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ]] || cp ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${configfilename}_${contarch}.yml.txt
-	echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/test_${configfilename}_${contarch}/msdir/" >> ${SS}
-	[[ -n ${FS} ]] || cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/
+
+	# Check if user-supplied file is already the one that we are working with before working with it
+	# This should in principle only affect the time stamps as if the dataid is not empty, the following
+	# Would do nothing in the config file itself
+	checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || \
+	    echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}
+	[[ -n ${FS} ]] || \
+	    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || \
+	    sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
+
+	# This prevents the script to stop if there -fs is switched on
+	[[ ! -f ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ]] || \
+	    cp ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${configfilename}_${contarch}.yml.txt
+
+	# Check if source msdir is identical to the target msdir. If yes, don't copy
+	d=`stat -c %i $CARATE_TEST_DATA_DIR`
+	e=`stat -c %i ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir`
+	[[ $d == $e ]] || \
+	    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/test_${configfilename}_${contarch}/msdir/" >> ${SS}
+	[[ $d == $e ]] || \
+	    [[ -n ${FS} ]] || \
+	    cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir/
+
+	# Now run the test
         echo "Running ${contarch} test (using ${configfilename}.yml)"
 	echo "cd \${workspace_root}/test_${configfilename}_${contarch}" >> ${SS}
         cd ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}
 	
         # Notice that currently all output will be false, such that || true is required to ignore this
 	failed=0
-	echo 	meerkathi -c ${configfilename}.yml ${caracalswitches} || true
+	echo meerkathi -c ${configfilename}.yml ${caracalswitches} || true
 
 	# Report CARACal start time
-        sya=" Test ${greetings_line} CARACal start time:"; sya+=$'\n'; sya+=`date -u`;
+        sya="test_${configfilename}_${contarch} start time:"; sya+=$'\n'; sya+=`date -u`;
         echo "${sya}" >> ${SYA} 
 
 	echo "meerkathi -c ${configfilename}.yml ${caracalswitches}" >> ${SS}
-	[[ -n ${FS} ]] || meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; echo "CARACal run returned an error."; failedrun=1; }
+	[[ -n ${FS} ]] || meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
     fi
-    [[ ! -f ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-meerkathi.txt ]] || cp ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-meerkathi.txt ${WORKSPACE_ROOT}/report/log-meerkathi_test_${configfilename}_${contarch}.txt
+
+    if [[ ${failedrun} == 0 ]]
+    then
+	mes="CARACal run test_${configfilename}_${contarch} did not return an error."
+	echo ${mes}
+	echo ${mes} >> ${SYA}
+    else	
+	mes="CARACal run test_${configfilename}_${contarch} returned an error."
+	echo ${mes}
+	echo ${mes} >> ${SYA}
+    fi
+    
+    # Make a copy of the logfile
+    meerkathilog=`ls -t ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-*-meerkathi.txt | head -1` || true
+    [[ ! -f ${meerkathilog} ]] || cp ${meerkathilog} ${WORKSPACE_ROOT}/report/log-meerkathi_test_${configfilename}_${contarch}.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
     testingoutput ${WORKSPACE_ROOT} test_${configfilename}_${contarch} || { true; failedoutput=1; }
+
     #    failedoutput=$?
-    sya=" Test ${greetings_line} end time:"; sya+=$'\n'; sya+=`date -u`; sya+=$'\n';
+    if [[ ${failedrun} == 0 ]]
+    then
+	mes="CARACal run test_${configfilename}_${contarch} did not return a faulty output."
+	echo ${mes}
+	echo ${mes} >> ${SYA}
+    else	
+	mes="This CARACal test_${configfilename}_${contarch} returned a faulty output."
+	echo ${mes}
+	echo ${mes} >> ${SYA}
+    fi
+    echo ""
+    
+    sya="test_${configfilename}_${contarch} end time:"; sya+=$'\n'; sya+=`date -u`
     echo "${sya}" >> ${SYA} 
 
     
@@ -1265,8 +1455,11 @@ then
             echo "" >> ${SYA}	    
         fi
     else
-	echo "rm -rf ${singularity_locstring}" >> ${SS}
-        [[ -n ${FS} ]] || rm -rf ${singularity_loc}
+	checkex ${singularity_loc} || \
+	    echo "rm -rf ${singularity_locstring}" >> ${SS}
+        [[ -n ${FS} ]] || checkex ${singularity_loc} || \
+	    checkex ${singularity_loc} || \
+	    rm -rf ${singularity_loc}
         ######rm -rf $CARATE_WORKSPACE/.singularity
     fi
     if [[ ! -e "${singularity_loc}" ]]
@@ -1300,6 +1493,12 @@ then
 		break
 	    fi		    
 	done
+	if (( ${ii} > ${IA} ))
+	then
+	    echo "Maximum number of pull attempts for Stimela reached."
+	    echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
+	    exit 1
+	fi
     fi
 
     # Size of images
@@ -1334,20 +1533,6 @@ then
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
-
-echo "###############" >> ${SYA} 
-echo >> ${SYA} 
-echo " caratekit succeeded." >> ${SYA} 
-echo >> ${SYA} 
-echo "###############" >> ${SYA} 
-
-echo "###########################################################"
-echo ""
-echo ${kksuccessquotes[$(( $RANDOM % 2 ))]}
-echo "Caratekit succeeded."
-echo ""
-echo "###########################################################"
-echo
 
 success=1
 

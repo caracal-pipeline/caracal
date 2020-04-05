@@ -175,14 +175,13 @@ def execute_pipeline(args, arg_groups, block):
         except KeyboardInterrupt:
             log.info(
                 "Interrupt request received from user - gracefully shutting down. Goodbye!")
-        except Exception:
-            log.error(
-                "An unhandled exeption occured. If you think this is a bug please report it.")
-            log.error("Your logfile is {0:s}".format(meerkathi.MEERKATHI_LOG))
-            log.error("You are running version {0:s}".format(
-                str(__version__)))
+        except Exception as exc:
+            log.error("{} [{}]".format(exc, type(exc).__name__))
+            log.info("  More information can be found in the logfile at {0:s}".format(meerkathi.MEERKATHI_LOG))
+            log.info("  You are running version {0:s}".format(str(__version__)))
             for line in traceback.format_exc().splitlines():
-                log.error(line)
+                log.error(line, extra=dict(traceback_report=True))
+            log.info("exiting with error code 1")
             sys.exit(1)  # indicate failure
 
     if args.debug:

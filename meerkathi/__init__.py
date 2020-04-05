@@ -120,10 +120,14 @@ def init_console_logging(boring=False, debug=False):
     log_console_handler.setLevel(logging.INFO)
     log_console_handler.setFormatter(log_console_formatter)
 
-    # add filter to console handler: block Stimela messages at level <=INFO, unless they're intrinsically interesting
+    # add filter to console handler:
     # (the logfile still gets all the messages)
     if not debug:
         def _console_filter(rec):
+            # traceback dumps don't go to cosnole
+            if hasattr(rec, 'traceback_report'):
+                return False
+            # for Stimela messages at level <=INFO, only allow through subprocess  output and job state
             if rec.name.startswith(STIMELA_LOGGER_NAME) and rec.levelno <= logging.INFO:
                 return hasattr(rec, 'stimela_subprocess_output') or hasattr(rec, 'stimela_job_state')
             return True

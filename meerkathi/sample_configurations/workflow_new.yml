@@ -191,7 +191,7 @@ self_cal:
     enable: true
   calibrate:
     enable: true
-    Gsols_time: [120]
+    Gsols_timeslots: [120]
 
 image_line:
   enable: false
@@ -202,4 +202,6 @@ image_line:
     cell: 2
   mstransform:
     enable: true
-    telescope: meerkat
+    doppler: true
+      enable: true
+      telescope: meerkat

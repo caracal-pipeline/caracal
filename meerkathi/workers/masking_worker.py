@@ -428,7 +428,7 @@ def worker(pipeline, recipe, config):
 
     centre = config.get('centre_coord')
 
-    flabel = config['label']
+    flabel = config['label_in']
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, flabel)
     msfileName = str.split(all_msfiles[0], '.ms')[0]

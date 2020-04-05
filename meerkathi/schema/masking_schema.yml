@@ -13,7 +13,7 @@ mapping:
         desc: Execute this segment
         required: true
         example: 'False'
-      label:
+      label_in:
         type: str
         desc: Label of the .MS file where to find information about the target
         required: false

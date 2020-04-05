@@ -174,7 +174,7 @@ def worker(pipeline, recipe, config):
                 del head['CUNIT2']
 
         fits.writeto(filename,dat,head,overwrite=True)
-    
+
     #def get_mem():
     #    with open('/proc/meminfo') as p:
     #         memory_available = p.read()
@@ -185,12 +185,11 @@ def worker(pipeline, recipe, config):
     #       print 'memory_in_kb:', memtotal_kb
     #    return memtotal_kb
 
-    def fake_image(num, img_dir, mslist, field):
-        
+    def fake_image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
 
-        step = 'image_{}'.format(num)
+        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
             "column": 'DATA',
@@ -223,7 +222,7 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
-    def image(num, img_dir, mslist, field):
+    def image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
 
@@ -247,7 +246,7 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        step = 'image_{}'.format(num)
+        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
@@ -265,8 +264,8 @@ def worker(pipeline, recipe, config):
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
-            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],            
-            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],   
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],
+            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
@@ -287,7 +286,6 @@ def worker(pipeline, recipe, config):
         elif mask_key == 'catalog':
             fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
             image_opts.update({"fitsmask": fitmask_address+':output'})
-            
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -295,8 +293,8 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
-    def sofia_mask(num, img_dir, field):
-        step = 'make_sofia_mask_'+str(num)
+    def sofia_mask(trg, num, img_dir, field):
+        step = 'make_sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
         key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
@@ -380,7 +378,7 @@ def worker(pipeline, recipe, config):
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": True, 
+            "scaleNoise.perSCkernel": True,
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
@@ -568,10 +566,10 @@ def worker(pipeline, recipe, config):
 
         return im
 
-    def extract_sources(num, img_dir, field):
+    def extract_sources(trg, num, img_dir, field):
         key = 'extract_sources'
         if config[key].get('detection_image'):
-            step = 'detection_image_{0:d}'.format(num)
+            step = 'detection_image_field{0:d}_iter{1:d}'.format(trg, num)
             detection_image = '{0:s}/{1:s}-detection_image_{0:s}_{1:d}.fits:output'.format(
                 img_dir, prefix, field, num)
             recipe.add('cab/fitstool', step,
@@ -598,7 +596,7 @@ def worker(pipeline, recipe, config):
                 im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
                     prefix, field, num, mfsprefix)
 
-            step = 'extract_{0:d}'.format(num)
+            step = 'extract_field{0:d}_iter{1:d}'.format(trg, num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
 
             if detection_image:
@@ -642,7 +640,7 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.error(
                     "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 sys.exit(1)
-            step = 'convert_extract_{0:d}'.format(num)
+            step = 'convert_extract_field{0:d}_iter{1:d}'.format(trg, num)
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel": '{0:s}/{1:s}.gaul:output'.format(img_dir, calmodel),
@@ -718,7 +716,7 @@ def worker(pipeline, recipe, config):
 
         return calmodel, model_names_fits
 
-    def calibrate_meqtrees(num, prod_path, img_dir, mslist, field):
+    def calibrate_meqtrees(trg, num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
         global reset_cal, trace_SN, trace_matrix
         if num == cal_niter:
@@ -858,7 +856,7 @@ def worker(pipeline, recipe, config):
 
             bsols_ = [config[key].get('Bsols_timeslots')[num-1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                       config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
-            step = 'calibrate_{0:d}_{1:d}'.format(num, i)
+            step = 'calibrate_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": calmodel,
@@ -894,7 +892,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def calibrate_cubical(num, prod_path, img_dir, mslist, field):
+    def calibrate_cubical(trg, num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
 
         modellist = []
@@ -905,14 +903,14 @@ def worker(pipeline, recipe, config):
             mm = model.split('+')
             print(mm,num, img_dir, field)
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
-        # If it doesn't then don't combine. 
+        # If it doesn't then don't combine.
         else:
             model = int(model)
             calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
                 img_dir, prefix, field, model)
             fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
                 img_dir, prefix, field, model)
-        ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA. 
+        ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA.
         if config[key].get('model_mode') == 'pybdsm_vis':
             if (num == cal_niter):
                 cmodel = calmodel.split(":output")[0]
@@ -926,7 +924,7 @@ def worker(pipeline, recipe, config):
                 modellist = spf("{}/"+cmodel,"output")
             # This is incorrect and will result in the lsm being used in the first direction
             # and the model_data in the others. They need to be added as + however
-            # that messes up the output identifier structure    
+            # that messes up the output identifier structure
         if config[key].get('model_mode') == 'pybdsm_only':
             cmodel = calmodel.split(":output")[0]
             modellist = spf('{}/'+cmodel,"output")
@@ -965,14 +963,14 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        
+
         sol_term_iters = config[key].get('sol_term_iters')
         if sol_term_iters == 'auto':
            sol_terms_add = []
            for term in jones_chain.split(","):
                sol_terms_add.append(SOL_TERMS[term])
            sol_terms = ','.join(sol_terms_add)
-        else: 
+        else:
            sol_terms = sol_term_iters
         #Determine the memory requirements of cubical automatically
 
@@ -988,7 +986,7 @@ def worker(pipeline, recipe, config):
         #    n_baseline = n_ant*(n_ant-1)/2
         #    print observation_data.keys()
         #    n_chan = observation_data['SPW']['NUM_CHAN'][0]
-        #    print n_chan 
+        #    print n_chan
         #    sol_t = observation_data['FIELD']['PERIOD'][0]/observation_data['EXPOSURE']
         #    print sol_t, n_baseline, n_correlations
         #    membyte = get_mem()
@@ -998,9 +996,9 @@ def worker(pipeline, recipe, config):
         #    tilesize = max(sol_t, min(nworker*sol_t, membyte*0.5/(16.0*n_correlations*n_chan*n_baseline)))
         #    print tilesize
             # Determine the number of tiles
-           
-            step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
-            
+
+            step = 'calibrate_cubical_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
+
             matrix_type = config['calibrate'].get('gain_matrix_type')[
             num-1 if len(config['calibrate'].get('gain_matrix_type')) >= num else -1]
 
@@ -1697,6 +1695,7 @@ def worker(pipeline, recipe, config):
         if config['aimfast'].get('plot'):
             config['extract_sources']['enable'] = True
 
+    target_iter=0
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
@@ -1716,12 +1715,12 @@ def worker(pipeline, recipe, config):
             os.mkdir(image_path)
 
         mask_key = config['image'].get('clean_mask_method')[0]
-        print(mask_key)
+        #print(mask_key)
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
             if mask_key == 'auto_mask' or '.' in  mask_key:
-                image(self_cal_iter_counter, get_dir_path(
+                image(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
                 #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
                 #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
@@ -1732,15 +1731,15 @@ def worker(pipeline, recipe, config):
                     pipeline.continuum, self_cal_iter_counter)
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
-                fake_image(0, get_dir_path(
+                fake_image(target_iter, 0, get_dir_path(
                 image_path, pipeline), mslist, field)
-                sofia_mask(0, get_dir_path(
+                sofia_mask(target_iter, 0, get_dir_path(
                 image_path, pipeline), field)
                 config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)  
-                image(self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)                
+                    pipeline.continuum, self_cal_iter_counter)
+                image(target_iter, self_cal_iter_counter, get_dir_path(
+                image_path, pipeline), mslist, field)
                 #sofia_mask(self_cal_iter_counter, get_dir_path(
                 #image_path, pipeline), field)
         ### to enable eventually if one wants only to run caracal to produce sofia mask
@@ -1749,7 +1748,7 @@ def worker(pipeline, recipe, config):
         #        image_path, pipeline), field)
         #        config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
-            extract_sources(self_cal_iter_counter, get_dir_path(
+            extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(
@@ -1761,23 +1760,23 @@ def worker(pipeline, recipe, config):
                     pipeline.continuum, 'selfcal_products')
                 if not os.path.exists(selfcal_products):
                     os.mkdir(selfcal_products)
-                calibrate(self_cal_iter_counter, selfcal_products,
+                calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
                 mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
                 if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
+                    sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
-                self_cal_iter_counter += 1               
+                self_cal_iter_counter += 1
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 if pipeline.enable_task(config, 'image'):
-                    image(self_cal_iter_counter, get_dir_path(
+                    image(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
                 if pipeline.enable_task(config, 'extract_sources'):
-                    extract_sources(self_cal_iter_counter, get_dir_path(
+                    extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
                 if pipeline.enable_task(config, 'aimfast'):
                     image_quality_assessment(
@@ -1943,19 +1942,17 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'transfer_model'):
-            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
-    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
-                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
-
+#            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
+#    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
+#                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
             if crystalball_model == 'auto':
                 crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
                                                                             pipeline), prefix, field, self_cal_iter_counter)
-            
+
             for i, msname in enumerate(mslist_out):
-                
-                step = 'transfer_model_{0:d}'.format(i)
+                step = 'transfer_model_field{0:d}_ms{1:d}'.format(target_iter,i)
                 recipe.add('cab/crystalball', step,
                            {
                                "ms": msname,
@@ -1973,3 +1970,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+
+        target_iter+=1
+

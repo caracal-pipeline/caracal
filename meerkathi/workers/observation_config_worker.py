@@ -213,6 +213,8 @@ def worker(pipeline, recipe, config):
             # check if user set fields manually
             if set(all_fields).intersection(conf_fields):
                 label = term
+                if term == 'target':
+                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in fields]
             elif fields in [None, []]:
                 getattr(pipeline, term)[i] = []
                 continue

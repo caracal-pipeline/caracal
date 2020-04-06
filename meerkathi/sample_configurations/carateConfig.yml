@@ -9,13 +9,23 @@ observation_config:
   reference_antenna: 'm010'   
 
 prepare_data:
-  enable: true
+  enable: false
   spectral_weights:
     enable: true
     mode: uniform
 
+transform_data:
+  enable: true
+  label_out: 'cal'
+  split_field:
+    enable: true
+    field: 'calibrators'
+    column: data'
+
 flagging:
   enable: true
+  label_in: 'cal'
+  field: 'calibrators'
   autoflag_rfi:
     enable: true
     flagger: tricolour
@@ -47,6 +57,11 @@ cross_cal:
     combine: ["", null, ""] 
     solint: [inf, null, inf]
     calmode: [ap, null, ap] 
+  apply_cal:
+    enable: true
+    applyto:
+      - gcal
+      - bpcal
 
 polcal:
   enable: false
@@ -54,24 +69,29 @@ polcal:
 inspect_data:
   enable: true
 
-split_target:
+transform_data__2:
   enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
   
 flagging__2:
   enable: true
   label: corr
   flag_autocorr:
-    enable: false
+    enable: true
   autoflag_rfi:
     enable: true
     flagger: aoflagger
     fields: target
 
-split_target__2:
+transform_data__3:
   enable: true
   label_in: corr
   label_out: cont
-  split_target:
+  split_field:
     enable: true
     freq_average: 4
     column: data
@@ -100,26 +120,26 @@ self_cal:
   img_nchans: 12
   img_robust: -1.0
   cal_niter: 3
-  cal_freq_chunk: 0
-  cal_time_chunk: 360
+  cal_channel_chunk: 0
+  cal_timeslots_chunk: 360
   image:
     enable: true
-    auto_mask: [20,10,5,5]
-    auto_threshold: [0.5,0.5,0.5,0.5]
+    clean_mask_threshold: [20,10,5,5]
+    clean_threshold: [0.5,0.5,0.5,0.5]
   calibrate:
     enable: true
     model: ['1','2','3']
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
     Gsols_channel: ['0', '0', '0']
-    Gsols_time: ['120', '60', '20']
+    Gsols_timeslots: ['120', '60', '20']
     shared_memory: 250GB
   transfer_apply_gains:
     enable: true
     interpolate:
-      time_int: 20
-      time_chunk: 360
-      freq_int: 0
-      freq_chunk: 0
+      timeslots_int: 20
+      timeslots_chunk: 360
+      channel_int: 0
+      channel_chunk: 0
     transfer_to_label: corr
   transfer_model:
     enable: true

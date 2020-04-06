@@ -6,6 +6,7 @@ import yaml
 import json
 import os
 import re
+import copy
 import meerkathi
 import stimela.dismissable as sdm
 from meerkathi.dispatch_crew import utils
@@ -57,11 +58,49 @@ def worker(pipeline, recipe, config):
     joinchannels = config['img_joinchannels']
     fit_spectral_pol = config['img_fit_spectral_pol']
     taper = config.get('img_uvtaper')
+    multiscale = config.get('img_multi_scale')
+    if multiscale == True:
+        multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
     if taper == '':
         taper = None
     label = config['label']
-    time_chunk = config.get('cal_time_chunk')
-    freq_chunk = config.get('cal_freq_chunk')
+    time_chunk = config.get('cal_timeslots_chunk')
+    #If user sets value that is not -1 use leave that
+    if int(time_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
+        # We're always doing gains
+        all_time_solution = config['calibrate'].get('Gsols_timeslots')
+        # add the various sections
+        if config['calibrate'].get('Bjones', False):
+            all_time_solution.append(config[key].get('Bsols_timeslots')[:])
+        if config['calibrate'].get('DDjones', False):
+            all_time_solution.append(config[key].get('DDsols_timeslots')[:])
+        if  config['calibrate'].get('two_step',False):
+            for val in config['calibrate'].get('DDsols_timeslots'):
+                if int(val) >= 0:
+                    all_time_solution.append(val)
+        if min(all_time_solution) == 0:
+            time_chunk = 0
+        else:
+            time_chunk = max(all_time_solution)
+    freq_chunk = config.get('cal_channel_chunk')
+    #If user sets value that is not -1 then use that
+    if int(freq_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
+        # We're always doing gains
+        all_freq_solution = config['calibrate'].get('Gsols_channel')
+        # add the various sections
+        if config['calibrate'].get('Bjones', False):
+            all_freq_solution.append(config[key].get('Bsols_channel')[:])
+        if config['calibrate'].get('DDjones', False):
+            all_freq_solution.append(config[key].get('DDsols_channel')[:])
+        if  config['calibrate'].get('two_step',False):
+            for val in config['calibrate'].get('DDsols_channel'):
+                if int(val) >= 0:
+                    all_freq_solution.append(val)
+        if min(all_freq_solution) == 0:
+            freq_chunk = 0
+        else:
+            freq_chunk = max(all_freq_solution)
+
     min_uvw = config.get('minuvw_m')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
@@ -135,7 +174,7 @@ def worker(pipeline, recipe, config):
                 del head['CUNIT2']
 
         fits.writeto(filename,dat,head,overwrite=True)
-    
+
     #def get_mem():
     #    with open('/proc/meminfo') as p:
     #         memory_available = p.read()
@@ -146,10 +185,47 @@ def worker(pipeline, recipe, config):
     #       print 'memory_in_kb:', memtotal_kb
     #    return memtotal_kb
 
-    def image(num, img_dir, mslist, field):
+    def fake_image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-        mask = False
+
+        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
+        fake_image_opts = {
+            "msname": mslist,
+            "column": 'DATA',
+            "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
+            "nmiter": sdm.dismissable(config['img_nmiter']),
+            "npix": config[key].get('npix', npix),
+            "padding": config[key].get('padding', padding),
+            "scale": config[key].get('cell', cell),
+            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
+            "niter": niter,
+            "mgain": mgain,
+            "pol":  pol,
+            "taper-gaussian":  taper,
+            "channelsout": nchans,
+            "joinchannels": joinchannels,
+            "fit-spectral-pol":  fit_spectral_pol,
+            "local-rms": True,
+            "auto-mask": 7,
+            "auto-threshold": config[key].get('clean_threshold')[0],
+            "savesourcelist": False,
+            "fitbeam": False,
+        }
+        if multiscale==True:
+            fake_image_opts.update({"multiscale": multiscale})
+            fake_image_opts.update({"multiscale": multiscale_scales})
+
+        recipe.add('cab/wsclean', step,
+                   fake_image_opts,
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{:s}:: Make image after first round of calibration'.format(step))
+
+    def image(trg, num, img_dir, mslist, field):
+        key = 'image'
+        key_mt = 'calibrate'
+
         if num > 1:
             matrix_type = config[key_mt].get('gain_matrix_type')[
                 num - 2 if len(config[key_mt].get('gain_matrix_type')) >= num else -1]
@@ -170,63 +246,7 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        if config[key].get('peak_based_mask_on_dirty'):
-            mask = True
-            step = 'image_{}_dirty'.format(num)
-            recipe.add('cab/wsclean', step,
-                       {
-                           "msname": mslist,
-                           "column": imcolumn,
-                           "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(config.get('robust', robust)),
-                           "nmiter": sdm.dismissable(config['img_nmiter']),
-                           "npix": config[key].get('npix', npix),
-                           "padding": config[key].get('padding', padding),
-                           "scale": config[key].get('cell', cell),
-                           "pol": config[key].get('pol', pol),
-                           "channelsout": nchans,
-                           "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
-                           "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{:s}:: Make dirty image to create clean mask'.format(step))
-
-            step = 'mask_dirty_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{s:}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  0.5,
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
-        elif config[key].get('mask'):
-            mask = True
-            sigma = config[key].get('mask_sigma')
-            pf = config[key].get('mask_peak_fraction')
-            step = 'mask_{}'.format(num)
-            recipe.add('cab/cleanmask', step,
-                       {
-                           "image":  '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num-1, mfsprefix),
-                           "output":  '{0:s}/{1:s}_{2:s}_{3:d}-mask.fits'.format(img_dir, prefix, field, num),
-                           "dilate":  False,
-                           "peak-fraction":  sdm.dismissable(pf),
-                           "sigma":  sdm.dismissable(sigma),
-                           "no-negative":  True,
-                           "boxes":  1,
-                           "log-level":  'DEBUG',
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Make mask based on peak of dirty image'.format(step))
-
-        step = 'image_{}'.format(num)
+        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
@@ -242,27 +262,30 @@ def worker(pipeline, recipe, config):
             "taper-gaussian": sdm.dismissable(config[key].get('uvtaper', taper)),
             "channelsout": nchans,
             "joinchannels": config[key].get('joinchannels', joinchannels),
-            "local-rms": config[key].get('local_rms'),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
-            "auto-threshold": config[key].get('auto_threshold')[num-1 if len(config[key].get('auto_threshold', [])) >= num else -1],
-            "multiscale": config[key].get('multi_scale'),
-            "multiscale-scales": sdm.dismissable(config[key].get('multi_scale_scales')),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],
+            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
 
-        if config[key].get('mask_from_sky'):
-            fitmask = config[key].get('fits_mask')[
-                num-1 if len(config[key].get('fits_mask')) >= num else -1]
-            fitmask_address = 'masking/'+str(fitmask)
+        if multiscale ==True:
+            image_opts.update({"multiscale": multiscale})
+            image_opts.update({"multiscale-scales": multiscale_scales})
+
+        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
+        if mask_key == 'auto_mask':
+            image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
+        elif mask_key == 'sofia':
+            fitmask_address = 'masking'
+            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
+        elif '.' in  mask_key:
+            fitmask_address = 'masking/'+str(mask_key)
             image_opts.update({"fitsmask": fitmask_address+':output'})
-        elif mask:
-            image_opts.update(
-                {"fitsmask": '{0:s}/{1:s}_{2:d}-mask.fits:output'.format(img_dir, prefix, num)})
-        else:
-            image_opts.update({"auto-mask": config[key].get('auto_mask', [])[
-                              num-1 if len(config[key].get('auto_mask', [])) >= num else -1]})
+        elif mask_key == 'catalog':
+            fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
+            image_opts.update({"fitsmask": fitmask_address+':output'})
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -270,9 +293,9 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
-    def sofia_mask(num, img_dir, field):
-        step = 'make_sofia_mask'
-        key = 'sofia_mask'
+    def sofia_mask(trg, num, img_dir, field):
+        step = 'make_sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
+        key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
@@ -281,10 +304,10 @@ def worker(pipeline, recipe, config):
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
             forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config[key].get('fornax_thresh')[
-                num-1 if len(config[key].get('fornax_thresh')) >= num else -1]
+            forn_thresh = config['image'][key].get('fornax_thresh')[
+                num-1 if len(config['image'][key].get('fornax_thresh')) >= num else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -319,22 +342,13 @@ def worker(pipeline, recipe, config):
                 "merge.minSizeZ": 1,
             }
 
-        def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [10, 10, 0, 'b']]
-
-        # user_kern = config[key].get('kernels', None)
-        # if user_kern:
-        #   for i in xrange(0,len(user_kern))
-        #     kern.
-        #     def_kernels.concatenate(config[key].get('kernels'))
-
-        outmask = pipeline.prefix+'_'+field+'_'+str(num)+'_clean'
+        outmask = pipeline.prefix+'_'+field+'_'+str(num+1)+'_clean'
         outmaskName = outmask+'_mask.fits'
-        config['image']['fits_mask'].append(outmaskName)
 
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": True,
+            "steps.doScaleNoise": config['image'].get('local_rms')[num-1 if len(config['image'].get('local_rms', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -351,33 +365,35 @@ def worker(pipeline, recipe, config):
             "parameters.fitBusyFunction": False,
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
-            "SCfind.kernels": def_kernels,
-            "SCfind.threshold": config[key].get('threshold'),
+            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key].get('kernels')],
+            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold', [])) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config[key].get('scale_noise_window'),
+            "scaleNoise.windowSpatial": config['image'][key].get('scale_noise_window'),
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
+            "scaleNoise.perSCkernel": True,
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
+            "merge.positivity": config['image'][key].get('merge_positivity')[num-1 if len(config['image'][key].get('merge_positivity', [])) >= num else -1],
         }
-        if config[key].get('flag'):
-            flags_sof = config[key].get('flagregion')
+        if config['image'][key].get('flag'):
+            flags_sof = config['image'][key].get('flagregion')
             image_opts.update({"flag.regions": flags_sof})
 
-        if config[key].get('inputmask'):
+        if config['image'][key].get('inputmask'):
             # change header of inputmask so it is the same as image
-            mask_name = 'masking/'+config[key].get('inputmask')
+            mask_name = 'masking/'+config['image'][key].get('inputmask')
 
             mask_name_casa = mask_name.split('.fits')[0]
             mask_name_casa = mask_name_casa+'.image'
@@ -444,7 +460,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"import.maskFile": mask_name})
             image_opts.update({"import.inFile": imagename})
 
-        if config[key].get('fornax_special') == True and config[key].get('use_sofia') == True:
+        if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
 
             recipe.add('cab/sofia', step,
                        image_opts_forn,
@@ -455,7 +471,7 @@ def worker(pipeline, recipe, config):
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
             image_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config[key].get('fornax_special') == True and config[key].get('use_sofia') == False:
+        elif config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == False:
 
             # this mask should be regridded to correct f.o.v.
 
@@ -531,18 +547,6 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))
 
-#        step = '7'
-#        name_sof_out = imagename.split('.fits')[0]
-#        name_sof_out = name_sof_out+'_mask.fits'
-
-#        recipe.add(cleanup_files, step,
-#          {
-#           'mask_name' : name_sof_out,
-#          },
-#          input=pipeline.input,
-#          output=pipeline.output,
-#          label='{0:s}:: Cleanup SoFiA masks'.format(step))
-
     def make_cube(num, img_dir, field, imtype='model'):
         im = '{0:s}/{1:s}_{2:s}_{3}-cube.fits:output'.format(
             img_dir, prefix, field, num)
@@ -562,10 +566,10 @@ def worker(pipeline, recipe, config):
 
         return im
 
-    def extract_sources(num, img_dir, field):
+    def extract_sources(trg, num, img_dir, field):
         key = 'extract_sources'
         if config[key].get('detection_image'):
-            step = 'detection_image_{0:d}'.format(num)
+            step = 'detection_image_field{0:d}_iter{1:d}'.format(trg, num)
             detection_image = '{0:s}/{1:s}-detection_image_{0:s}_{1:d}.fits:output'.format(
                 img_dir, prefix, field, num)
             recipe.add('cab/fitstool', step,
@@ -592,7 +596,7 @@ def worker(pipeline, recipe, config):
                 im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
                     prefix, field, num, mfsprefix)
 
-            step = 'extract_{0:d}'.format(num)
+            step = 'extract_field{0:d}_iter{1:d}'.format(trg, num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
 
             if detection_image:
@@ -636,7 +640,7 @@ def worker(pipeline, recipe, config):
                 meerkathi.log.error(
                     "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 sys.exit(1)
-            step = 'convert_extract_{0:d}'.format(num)
+            step = 'convert_extract_field{0:d}_iter{1:d}'.format(trg, num)
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel": '{0:s}/{1:s}.gaul:output'.format(img_dir, calmodel),
@@ -648,9 +652,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Convert extracted sources to tigger model'.format(step))
 
-        # elif sourcefinder == 'sofia':
-        #    print('----not active----')
-        #    sys.exit(1)
 
     def predict_from_fits(num, model, index, img_dir, mslist, field):
         if isinstance(model, str) and len(model.split('+')) == 2:
@@ -715,7 +716,7 @@ def worker(pipeline, recipe, config):
 
         return calmodel, model_names_fits
 
-    def calibrate_meqtrees(num, prod_path, img_dir, mslist, field):
+    def calibrate_meqtrees(trg, num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
         global reset_cal, trace_SN, trace_matrix
         if num == cal_niter:
@@ -781,7 +782,7 @@ def worker(pipeline, recipe, config):
         for i, msname in enumerate(mslist):
              # Let's see the matrix type we are dealing with
 
-            gsols_ = [config[key].get('Gsols_time')[num-1 if num <= len(config[key].get('Gsols_time')) else -1],
+            gsols_ = [config[key].get('Gsols_timeslots')[num-1 if num <= len(config[key].get('Gsols_timeslots')) else -1],
                       config[key].get('Gsols_channel')[num-1 if num <= len(config[key].get('Gsols_channel')) else -1]]
             # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key].get('gain_matrix_type')[
@@ -853,9 +854,9 @@ def worker(pipeline, recipe, config):
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
 
-            bsols_ = [config[key].get('Bsols_time')[num-1 if num <= len(config[key].get('Bsols_time')) else -1],
+            bsols_ = [config[key].get('Bsols_timeslots')[num-1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                       config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
-            step = 'calibrate_{0:d}_{1:d}'.format(num, i)
+            step = 'calibrate_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": calmodel,
@@ -891,7 +892,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def calibrate_cubical(num, prod_path, img_dir, mslist, field):
+    def calibrate_cubical(trg, num, prod_path, img_dir, mslist, field):
         key = 'calibrate'
 
         modellist = []
@@ -902,14 +903,14 @@ def worker(pipeline, recipe, config):
             mm = model.split('+')
             print(mm,num, img_dir, field)
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
-        # If it doesn't then don't combine. 
+        # If it doesn't then don't combine.
         else:
             model = int(model)
             calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
                 img_dir, prefix, field, model)
             fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
                 img_dir, prefix, field, model)
-        ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA. 
+        ## In pybdsm_vis mode, add the calmodel (pybdsf) and the MODEL_DATA.
         if config[key].get('model_mode') == 'pybdsm_vis':
             if (num == cal_niter):
                 cmodel = calmodel.split(":output")[0]
@@ -923,7 +924,7 @@ def worker(pipeline, recipe, config):
                 modellist = spf("{}/"+cmodel,"output")
             # This is incorrect and will result in the lsm being used in the first direction
             # and the model_data in the others. They need to be added as + however
-            # that messes up the output identifier structure    
+            # that messes up the output identifier structure
         if config[key].get('model_mode') == 'pybdsm_only':
             cmodel = calmodel.split(":output")[0]
             modellist = spf('{}/'+cmodel,"output")
@@ -941,15 +942,15 @@ def worker(pipeline, recipe, config):
             dupdate = 'full'
 
         jones_chain = 'G'
-        gsols_ = [config[key].get('Gsols_time')[num - 1 if num <= len(config[key].get('Gsols_time')) else -1],
+        gsols_ = [config[key].get('Gsols_timeslots')[num - 1 if num <= len(config[key].get('Gsols_timeslots')) else -1],
                   config[key].get('Gsols_channel')[
                       num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
-        bsols_ = [config[key].get('Bsols_time')[num - 1 if num <= len(config[key].get('Bsols_time')) else -1],
+        bsols_ = [config[key].get('Bsols_timeslots')[num - 1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                   config[key].get('Bsols_channel')[
                       num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         ddsols_ = [
-            config[key].get('DDsols_time')[num - 1 if num <=
-                                           len(config[key].get('DDsols_time')) else -1],
+            config[key].get('DDsols_timeslots')[num - 1 if num <=
+                                           len(config[key].get('DDsols_timeslots')) else -1],
             config[key].get('DDsols_channel')[
                 num - 1 if num <= len(config[key].get('DDsols_channel')) else -1]]
 
@@ -962,16 +963,17 @@ def worker(pipeline, recipe, config):
         if config[key].get('Bjones'):
             jones_chain += ',B'
             matrix_type = 'Gain2x2'
-        
+
         sol_term_iters = config[key].get('sol_term_iters')
         if sol_term_iters == 'auto':
            sol_terms_add = []
            for term in jones_chain.split(","):
                sol_terms_add.append(SOL_TERMS[term])
            sol_terms = ','.join(sol_terms_add)
-        else: 
+        else:
            sol_terms = sol_term_iters
         #Determine the memory requirements of cubical automatically
+
         for i,msname in enumerate(mslist):
         #    print "sol-term-iters:", config[key].get('sol_term_iters')
         #    print "prefix, field, label=",prefix, field, label
@@ -984,7 +986,7 @@ def worker(pipeline, recipe, config):
         #    n_baseline = n_ant*(n_ant-1)/2
         #    print observation_data.keys()
         #    n_chan = observation_data['SPW']['NUM_CHAN'][0]
-        #    print n_chan 
+        #    print n_chan
         #    sol_t = observation_data['FIELD']['PERIOD'][0]/observation_data['EXPOSURE']
         #    print sol_t, n_baseline, n_correlations
         #    membyte = get_mem()
@@ -994,9 +996,9 @@ def worker(pipeline, recipe, config):
         #    tilesize = max(sol_t, min(nworker*sol_t, membyte*0.5/(16.0*n_correlations*n_chan*n_baseline)))
         #    print tilesize
             # Determine the number of tiles
-           
-            step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
-            
+
+            step = 'calibrate_cubical_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
+
             matrix_type = config['calibrate'].get('gain_matrix_type')[
             num-1 if len(config['calibrate'].get('gain_matrix_type')) >= num else -1]
 
@@ -1004,8 +1006,8 @@ def worker(pipeline, recipe, config):
                 "data-ms": msname,
                 "data-column": 'DATA',
                 "model-list": modellist,
-                "data-time-chunk": max(int(gsols_[0]),time_chunk) if not(int(gsols_[0]) == 0 or time_chunk == 0) else 0,
-                "data-freq-chunk": max(int(gsols_[1]),freq_chunk) if not(int(gsols_[1]) == 0 or time_chunk == 0) else 0,
+                "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,
                 "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "dist-ncpu": ncpu,
                 "sol-jones": jones_chain,
@@ -1034,6 +1036,8 @@ def worker(pipeline, recipe, config):
                 "madmax-threshold": config[key].get('madmax_flag_thresh'),
                 "madmax-estimate": 'corr',
                 "log-boring": True,
+                "dd-dd-term": False,
+                "model-ddes": 'never',
             }
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
@@ -1075,117 +1079,308 @@ def worker(pipeline, recipe, config):
                                      "dd-dd-term": True,
                                      "dd-save-to": "{0:s}/dE-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                                   pipeline), num, msname.split('.ms')[0]), })
+
             recipe.add('cab/cubical', step, cubical_opts,
                        input=pipeline.input,
                        output=pipeline.output,
                        shared_memory=config[key].get('shared_memory'),
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
-    def apply_gains_to_fullres(apply_iter, prod_path, mslist_out, enable=True):
-        #key = 'calibrate'
+    def restore(num, prod_path, mslist_out, enable_inter=True):
+        key = 'calibrate'
         calwith = config.get('calibrate_with').lower()
-        if(calwith == 'meqtrees'):
-            enable = False
-            meerkathi.log.info(
-                'Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
-            sys.exit(1)
-        #if (config['calibrate'].get('gain_matrix_type')[-1]=='GainDiagPhase'):
-        #    enable = False
-        #    meerkathi.log.info(
-        #        'Gains cannot be interpolated with GainDiagPhase currently, sorry. Please pester Oleg Smirnov and Jonathan Kenyon')
-        #    meerkathi.log.info(
-        #        'Or get Sphe a nice bottle of gin and he shall do it for you')
-        #    meerkathi.log.info('If you do not know any of these people, write to kthorat@ska.ac.za')
-        #    sys.exit(1)
-
-
-        if config['calibrate'].get('Bjones'):
-            jones_chain = 'G,B'
+        # First check we are using Cubical
+        if (calwith == 'meqtrees'):
+            if enable_inter:
+                meerkathi.log.info(
+                    'Gains cannot be interpolated with MeqTrees, please switch to CubiCal')
+                raise ValueError("Gains cannot be interpolated with MeqTrees, please switch to CubiCal")
+            else:
+                meerkathi.log.info(
+                    "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+                raise ValueError(
+                    "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+        # to achieve accurate restauration we need to reset all parameters properly
+        matrix_type = config[key].get('gain_matrix_type')[
+            num - 1 if len(config[key].get('gain_matrix_type')) >= num else -1]
+        # Decide if take diagonal terms into account
+        if matrix_type == 'Gain2x2':
+            take_diag_terms = False
         else:
-            jones_chain = 'G'
-        if config['calibrate'].get('DDjones'):
-            jones_chain += ',DD'
-        sol_term_iters = config['calibrate'].get('sol_term_iters')
-        if sol_term_iters == 'auto':
-           sol_terms_add = []
-           for term in jones_chain.split(","):
-               sol_terms_add.append(SOL_TERMS[term])
-           sol_terms = ','.join(sol_terms_add)
-        else: 
-           sol_terms = sol_term_iters
-        print("Apply_iter", apply_iter)
-        print("gain_matrix_type", config['calibrate'].get('gain_matrix_type'))
-        #if len(config['calibrate'].get('gain_matrix_type')) < apply_iter:
-        #    matrix_type = config['calibrate'].get('gain_matrix_type')[-1]
-       # else: 
-        #    matrix_type = config['calibrate'].get('gain_matrix_type')[apply_iter]
-       # if matrix_type == 'GainDiagPhase' or config[key].get('two_step'):
-       #     gupdate = 'phase-diag'
-       #     bupdate = 'phase-diag'
-       #     dupdate = 'phase-diag'
-       # else:
-       #     gupdate = 'full'
-       #     bupdate = 'full'
-       #     dupdate = 'full'
+            take_diag_terms = True
 
-        time_chunk_interp = config['transfer_apply_gains']['interpolate'].get('time_chunk')
-        freq_chunk_interp = config['transfer_apply_gains']['interpolate'].get('freq_chunk')
+        # set the update type correctly
+        if matrix_type == 'GainDiagPhase':
+            gupdate = 'phase-diag'
+        elif matrix_type == 'GainDiagAmp':
+            gupdate = 'amp-diag'
+        elif matrix_type == 'GainDiag':
+            gupdate = 'diag'
+        elif matrix_type == 'Gain2x2':
+            gupdate = 'full'
+        else:
+            raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
+
+        jones_chain = 'G'
+        gsols_ = [config[key].get('Gsols_timeslots')[num - 1 if num <= len(config[key].get('Gsols_timeslots')) else -1],
+                  config[key].get('Gsols_channel')[
+                      num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
+        bsols_ = [config[key].get('Bsols_timeslots')[num - 1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
+                  config[key].get('Bsols_channel')[
+                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+        gasols_ = [
+            config[key].get('DDsols_timeslots')[num - 1 if num <=
+                                                      len(config[key].get('DDsols_timeslots')) else -1],
+            config[key].get('DDsols_channel')[num - 1 if num <=
+                                                         len(config[key].get('DDsols_channel')) else -1]]
+
+        # If we want to interpolate our we get the interpolation interval
+        if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+            if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
+                gsols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
+            if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
+                gsols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
+            time_chunk_in = gsols_[0] if (
+                        gsols_[0] > config['transfer_apply_gains']['interpolate'].get('timeslots_chunk') != 0.) else \
+                config['transfer_apply_gains']['interpolate'].get('timeslots_chunk')
+            freq_chunk_in = gsols_[1] if (
+                        gsols_[1] > config['transfer_apply_gains']['interpolate'].get('channel_chunk') != 0) else \
+                config['transfer_apply_gains']['interpolate'].get('channel_chunk')
+        else:
+            time_chunk_in = gsols_[0] if (gsols_[0] > time_chunk != 0.) else \
+                time_chunk
+            freq_chunk_in = gsols_[1] if (gsols_[1] > freq_chunk != 0.) else \
+                freq_chunk
+        if config[key].get('Bjones'):
+            jones_chain += ',B'
+            matrix_type = 'Gain2x2'
+            bupdate = gupdate
+            if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
+                    bsols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
+                if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
+                    bsols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
+            if bsols_[0] > time_chunk_in:
+                time_chunk_in = bsols_[0]
+            if bsols_[1] > freq_chunk_in:
+                freq_chunk_in = bsols_[1]
+        # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
+        # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
+        if config[key].get('two_step'):
+            gupdate = 'phase-diag'
+            if gasols_[0] != -1:
+                jones_chain += ',DD'
+                matrix_type = 'Gain2x2'
+                if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                    if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
+                        gasols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
+                    if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
+                        gasols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
+                if gasols_[0] > time_chunk_in:
+                    time_chunk_in = gasols_[0]
+                if gasols_[1] > freq_chunk_in:
+                    freq_chunk_in = gasols_[1]
+        # if we are interpolating to 1 without setting the chunks th
+        if freq_chunk_in == 1:
+            freq_chunk_in = freq_chunk
+        if time_chunk_in == 1:
+            time_chunk_in = time_chunk
+
+        # select the right datasets
+        if enable_inter:
+            apmode = 'ac'
+        else:
+            if CUBICAL_OUT[
+                config[key].get('output_data')[num - 1 if len(config[key].get('output_data')) >= num else -1]] == 'sr':
+                apmode = 'ar'
+            else:
+                apmode = 'ac'
+        # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
+        # Hence the following fix. This should be removed once the fix makes it into stimela.
+        matrix_type = 'Gain2x2'
+        # Does sol_term_iters  matter for applying?????
+        sol_term_iters = config[key].get('sol_term_iters')
+        if sol_term_iters == 'auto':
+            sol_terms_add = []
+            for term in jones_chain.split(","):
+                sol_terms_add.append(SOL_TERMS[term])
+            sol_terms = ','.join(sol_terms_add)
+        else:
+            sol_terms = sol_term_iters
+        # loop through measurement sets
         for i, msname_out in enumerate(mslist_out):
-            ##Read the time and frequency channels of the  'fullres' 
+            print(gsols_, gasols_)
+            print("It was here")
+            # Python is really the dumbest language ever so need deep copies else the none apply variables change along with apply
+            gsols_apply = copy.deepcopy(gsols_)
+            bsols_apply = copy.deepcopy(bsols_)
+            gasols_apply = copy.deepcopy(gasols_)
+            time_chunk_apply = copy.deepcopy(time_chunk_in)
+            freq_chunk_apply = copy.deepcopy(freq_chunk_in)
+            ##Read the time and frequency channels of the  'fullres'
             fullres_data = get_obs_data(msname_out)
             print(fullres_data.keys())
             int_time_fullres = fullres_data['EXPOSURE']
-            channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0]/fullres_data['SPW']['NUM_CHAN'][0]
+            channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0] / fullres_data['SPW']['NUM_CHAN'][0]
             print("Integration time of full-resolution data is:", int_time_fullres)
             print("Channel size of full-resolution data is:", channelsize_fullres)
-            #Corresponding numbers for the self-cal -ed MS:
+            # Corresponding numbers for the self-cal -ed MS:
             avg_data = get_obs_data(mslist[i])
             int_time_avg = avg_data['EXPOSURE']
-            channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0]/avg_data['SPW']['NUM_CHAN'][0]
+            channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0] / avg_data['SPW']['NUM_CHAN'][0]
             print("Integration time of averaged data is:", int_time_avg)
             print("Channel size of averaged data is:", channelsize_avg)
-            #Compare the channel and timeslot ratios:
+            # Compare the channel and timeslot ratios:
             ratio_timeslot = int_time_avg / int_time_fullres
             ratio_channelsize = channelsize_avg / channelsize_fullres
+            # If we are restoring a step we need to restore the flags of the 2gc process
+            if not enable_inter:
+                fromname = msname_out
+                # First remove the later flags
+                counter = num + 1
+                remainder_flags = "step_{0:d}_2gc_flags".format(counter)
 
+                while counter < cal_niter:
+                    counter += 1
+                    remainder_flags += ",step_{0:d}_2gc_flags".format(counter)
+                mspref = msname_out.split(".ms")[0].replace("-", "_")
+                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                           {
+                               "msname": msname_out,
+                               "remove": remainder_flags,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+            else:
+                fromname = msname_out.replace(label_tgain, label)
+                if not config['transfer_apply_gains']['interpolate'].get('enable'):
+                    gsols_apply[0] = int(ratio_timeslot * gsols_[0])
+                    gsols_apply[1] = int(ratio_channelsize * gsols_[1])
+                    time_chunk_apply = int(max(gsols_[0], time_chunk_in)) if not (
+                                int(gsols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(gsols_[1], freq_chunk_in)) if not (
+                                int(gsols_[1]) == 0 or freq_chunk_in == 0) else 0
+
+            # build cubical commands
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
-                "log-boring": True,
-                "g-solvable" : False,
+                "sel-ddid": sdm.dismissable(config[key].get('spwid')),
                 "sol-jones": jones_chain,
-                "sel-ddid": sdm.dismissable(config['calibrate'].get('spwid')),
-                "dist-ncpu": ncpu,
-                "dist-max-chunks": config['calibrate'].get('dist_max_chunks'),
                 "sol-term-iters": ",".join(sol_terms),
-                "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,
-                                                                                  pipeline), pipeline.dataid[i], msname_out, apply_iter),
-                "out-mode": 'ac',
-                "weight-column": config['calibrate'].get('weight_column'),
-                "montblanc-dtype": 'float',}
+                "sel-diag": take_diag_terms,
+                "dist-ncpu": ncpu,
+                "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
+                                                                                           pipeline), prefix,
+                                                                              msname_out[:-3], num),
+                "out-mode": apmode,
+                #"out-overwrite": config[key].get('overwrite'),
+                "out-overwrite": True,
+                "weight-column": config[key].get('weight_column'),
+                "montblanc-dtype": 'float',
+                "g-solvable": True,
+                "g-update-type": gupdate,
+                "g-type": CUBICAL_MT[matrix_type],
+                "g-time-int": int(gsols_apply[0]),
+                "g-freq-int": int(gsols_apply[1]),
+                "madmax-enable": config[key].get('madmax_flagging'),
+                "madmax-plot": False,
+                "madmax-threshold": config[key].get('madmax_flag_thresh'),
+                "madmax-estimate": 'corr',
+                "madmax-offdiag": False,
+                "dd-dd-term": False,
+                "model-ddes": 'never',
+            }
             if config['transfer_apply_gains']['interpolate'].get('enable'):
-                cubical_gain_interp_opts.update({"g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": config['transfer_apply_gains']['interpolate'].get('time_int'), "g-freq-int": config['transfer_apply_gains']['interpolate'].get('freq_int'), "data-time-chunk": time_chunk_interp, "data-freq-chunk": freq_chunk_interp})
+                cubical_gain_interp_opts.update({
+                    "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                 pipeline), num,
+                                                                                    fromname.split('.ms')[0])
+                })
             else:
-                cubical_gain_interp_opts.update({"g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                             pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label)), "g-time-int": int(ratio_timeslot*config['calibrate'].get('Gsols_time')[-1]), "g-freq-int": int(ratio_channelsize*config['calibrate'].get('Gsols_channel')[-1])})
-                #Make sure the chunk size is atleast the same as solution interval and not smaller
-                cubical_gain_interp_opts.update({"data-time-chunk": int(ratio_timeslot*config['calibrate'].get('Gsols_time')[-1]), "data-freq-chunk": int(ratio_channelsize*config['calibrate'].get('Gsols_channel')[-1])})
-                             
+                cubical_gain_interp_opts.update({
+                    "g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                 pipeline), num,
+                                                                                    fromname.split('.ms')[0])
+                })
 
-
-            if config['calibrate'].get('DDjones'):
-                cubical_gain_interp_opts.update({"dd-load-from": "{0:s}/dE-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                                                pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label))})
-            if config['calibrate'].get('Bjones'):
-                cubical_gain_interp_opts.update({"bb-xfer-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                                               pipeline), apply_iter, (msname_out.split('.ms')[0]).replace(label_tgain, label))})
-            step = 'apply_cubical_gains_{0:d}_{1:d}'.format(apply_iter, i)
+            # expand
+            if config[key].get('Bjones'):
+                if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
+                    bsols_apply[0] = int(ratio_timeslot * bsols_[0])
+                    bsols_apply[1] = int(ratio_channelsize * bsols_[1])
+                    time_chunk_apply = int(max(bsols_[0], time_chunk_in)) if not (
+                                int(bsols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(bsols_[1], freq_chunk_in)) if not (
+                                int(bsols_[1]) == 0 or freq_chunk_in == 0) else 0
+                cubical_gain_interp_opts.update({
+                    "b-update-type": bupdate,
+                    "b-type": CUBICAL_MT[matrix_type],
+                    "b-time-int": int(bsols_apply[0]),
+                    "b-freq-int": int(bsols_apply[1]),
+                    "b-solvable": False
+                })
+                if config['transfer_apply_gains']['interpolate'].get('enable'):
+                    cubical_gain_interp_opts.update({
+                        "b-xfer-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                     pipeline), num,
+                                                                                        fromname.split('.ms')[0])
+                    })
+                else:
+                    cubical_gain_interp_opts.update({
+                        "b-load-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                     pipeline), num,
+                                                                                        fromname.split('.ms')[0])
+                    })
+            if config[key].get('two_step') and gasols_[0] != -1:
+                if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
+                    gasols_apply[0] = int(ratio_timeslot * gasols_[0])
+                    gasols_apply[1] = int(ratio_channelsize * gasols_[1])
+                    time_chunk_apply = int(max(gasols_[0], time_chunk_in)) if not (
+                                int(gasols_[0]) == 0 or time_chunk_in == 0) else 0
+                    freq_chunk_apply = int(max(gasols_[1], freq_chunk_in)) if not (
+                                int(gasols_[1]) == 0 or freq_chunk_in == 0) else 0
+                cubical_gain_interp_opts.update({
+                    "dd-update-type": 'amp-diag',
+                    "dd-type": CUBICAL_MT[matrix_type],
+                    "dd-time-int": int(gasols_apply[0]),
+                    "dd-freq-int": int(gasols_apply[1]),
+                    "dd-solvable": False
+                })
+                if config['transfer_apply_gains']['interpolate'].get('enable'):
+                    cubical_gain_interp_opts.update({
+                        "dd-xfer-from": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                          pipeline),
+                                                                                             num,
+                                                                                             fromname.split('.ms')[0])
+                    })
+                else:
+                    cubical_gain_interp_opts.update({
+                        "dd-load-from": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                          pipeline),
+                                                                                             num,
+                                                                                             fromname.split('.ms')[0])
+                    })
+            cubical_gain_interp_opts.update({
+                "data-time-chunk": time_chunk_apply,
+                "data-freq-chunk": freq_chunk_apply
+            })
+            # ensure proper logging for restore or interpolation
+            if not enable_inter:
+                step = 'restore_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname_out)
+            else:
+                step = 'apply_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                        input=pipeline.input,
                        output=pipeline.output,
-                       shared_memory='100Gb',
-                       label="{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out))
+                       shared_memory=config[key].get('shared_memory'),
+                       label=stim_label)
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
 
     def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
         "Extracts data from the json data file"
@@ -1500,6 +1695,7 @@ def worker(pipeline, recipe, config):
         if config['aimfast'].get('plot'):
             config['extract_sources']['enable'] = True
 
+    target_iter=0
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
@@ -1518,16 +1714,41 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
+        mask_key = config['image'].get('clean_mask_method')[0]
+        #print(mask_key)
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
-            image(self_cal_iter_counter, get_dir_path(
+            if mask_key == 'auto_mask' or '.' in  mask_key:
+                image(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
-        if pipeline.enable_task(config, 'sofia_mask'):
-            sofia_mask(self_cal_iter_counter, get_dir_path(
+                #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
+                #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
+                #    sofia_mask(self_cal_iter_counter, get_dir_path(
+                #        image_path, pipeline), field)
+            elif mask_key == 'sofia':
+                image_path = "{0:s}/image_0".format(
+                    pipeline.continuum, self_cal_iter_counter)
+                if not os.path.exists(image_path):
+                    os.mkdir(image_path)
+                fake_image(target_iter, 0, get_dir_path(
+                image_path, pipeline), mslist, field)
+                sofia_mask(target_iter, 0, get_dir_path(
                 image_path, pipeline), field)
+                config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1])
+                image_path = "{0:s}/image_{1:d}".format(
+                    pipeline.continuum, self_cal_iter_counter)
+                image(target_iter, self_cal_iter_counter, get_dir_path(
+                image_path, pipeline), mslist, field)
+                #sofia_mask(self_cal_iter_counter, get_dir_path(
+                #image_path, pipeline), field)
+        ### to enable eventually if one wants only to run caracal to produce sofia mask
+        #if pipeline.enable_task(config, 'image') == False and mask_key =='sofia':
+        #    sofia_mask(0, get_dir_path(
+        #        image_path, pipeline), field)
+        #        config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
-            extract_sources(self_cal_iter_counter, get_dir_path(
+            extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
         if pipeline.enable_task(config, 'aimfast'):
             image_quality_assessment(
@@ -1539,22 +1760,23 @@ def worker(pipeline, recipe, config):
                     pipeline.continuum, 'selfcal_products')
                 if not os.path.exists(selfcal_products):
                     os.mkdir(selfcal_products)
-                calibrate(self_cal_iter_counter, selfcal_products,
+                calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             if reset_cal < 2:
+                mask_key=config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]
+                if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+                    sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), field)
                 self_cal_iter_counter += 1
                 image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)
+                     pipeline.continuum, self_cal_iter_counter)
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 if pipeline.enable_task(config, 'image'):
-                    image(self_cal_iter_counter, get_dir_path(
+                    image(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), mslist, field)
-                if pipeline.enable_task(config, 'sofia_mask'):
-                    sofia_mask(self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
                 if pipeline.enable_task(config, 'extract_sources'):
-                    extract_sources(self_cal_iter_counter, get_dir_path(
+                    extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
                 if pipeline.enable_task(config, 'aimfast'):
                     image_quality_assessment(
@@ -1576,14 +1798,12 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'transfer_apply_gains'):
             mslist_out = ms_dict_tgain[target]
-            print('self_cal_iter', self_cal_iter_counter)
-            print('cal_iter', cal_niter)
             if (self_cal_iter_counter > cal_niter):
-                apply_gains_to_fullres(
-                    self_cal_iter_counter-1, selfcal_products, mslist_out, enable=True)
+                restore(
+                    self_cal_iter_counter-1, selfcal_products, mslist_out, enable_inter=True)
             else:
-                apply_gains_to_fullres(
-                    self_cal_iter_counter, selfcal_products, mslist_out, enable=True)
+                restore(
+                    self_cal_iter_counter, selfcal_products, mslist_out, enable_inter=True)
 
         if pipeline.enable_task(config, 'aimfast'):
             if config['aimfast']['plot']:
@@ -1722,18 +1942,17 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'transfer_model'):
-            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
-    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
-                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
-
+#            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
+#    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
+#                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
-
             if crystalball_model == 'auto':
                 crystalball_model = '{0:s}/{1:s}_{2:s}_{3:d}-sources.txt'.format(get_dir_path(image_path,
-                                                                                              pipeline), prefix, field, self_cal_iter_counter)
+                                                                            pipeline), prefix, field, self_cal_iter_counter)
+
             for i, msname in enumerate(mslist_out):
-                step = 'transfer_model_{0:d}'.format(i)
+                step = 'transfer_model_field{0:d}_ms{1:d}'.format(target_iter,i)
                 recipe.add('cab/crystalball', step,
                            {
                                "ms": msname,
@@ -1751,4 +1970,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
+
+        target_iter+=1
 

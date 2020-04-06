@@ -39,7 +39,7 @@ mapping:
               enable:
                 desc: Enable this segment
                 type: bool
-                example: "True"
+                example: "False"
                 required: false
               plotter:
                 desc: Application to use for making plots

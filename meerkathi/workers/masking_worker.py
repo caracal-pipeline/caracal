@@ -426,9 +426,6 @@ def worker(pipeline, recipe, config):
 
     mask_dir = pipeline.masking + '/'
 
-
-
-
     centre = config.get('centre_coord')
 
     flabel = config['label_in']
@@ -437,13 +434,10 @@ def worker(pipeline, recipe, config):
     msfileName = str.split(all_msfiles[0], '.ms')[0]
 
 
-    print(all_targets)
     for target in all_targets:
         
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        print('LOOOOOOP1',target)
-
     
         if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(

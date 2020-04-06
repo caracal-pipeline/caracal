@@ -6,7 +6,7 @@ mapping:
 
   masking:
     type: map
-    desc: Create mask from catalog and/or merge with mask of extended source
+    desc: Create mask from catalog and/or merge with mask of extended source. Works only with one target at a time. SUMSS fields (whose names can be found in output/masking/SUMSS_catalog.txt after running the worker) must be put in input/fields.
     mapping:
       enable:
         type: bool

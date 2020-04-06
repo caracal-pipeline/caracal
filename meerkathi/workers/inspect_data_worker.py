@@ -9,35 +9,37 @@ NAME = 'Inspect data'
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 
-def get_dir_path(string, pipeline): 
+
+def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
+
 
 def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
     step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
     colouraxis = opts.get("colouraxis", None)
     recipe.add("cab/casa_plotms", step, {
-                "vis": msname,
-                "field": field,
-                "correlation": opts['corr'],
-                "timerange": '',
-                "antenna": '',
-                "xaxis": opts['xaxis'],
-                "xdatacolumn": config[plotname].get('column'),
-                "yaxis": opts['yaxis'],
-                "ydatacolumn": config[plotname].get('column'),
-                "avgtime": config[plotname].get('avgtime'),
-                "avgchannel": config[plotname].get('avgchannel'),
-                "coloraxis": sdm(colouraxis),
-                "iteraxis": sdm(opts.get('iteraxis', None)),
-                "plotfile": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
-                "expformat": 'png',
-                "exprange": 'all',
-                "overwrite": True,
-                "showgui": False,
-                "uvrange": config["uvrange"],
-        }, 
+        "vis": msname,
+        "field": field,
+        "correlation": opts['corr'],
+        "timerange": '',
+        "antenna": '',
+        "xaxis": opts['xaxis'],
+        "xdatacolumn": config[plotname].get('column'),
+        "yaxis": opts['yaxis'],
+        "ydatacolumn": config[plotname].get('column'),
+        "avgtime": config[plotname].get('avgtime'),
+        "avgchannel": config[plotname].get('avgchannel'),
+        "coloraxis": sdm(colouraxis),
+        "iteraxis": sdm(opts.get('iteraxis', None)),
+        "plotfile": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
+        "expformat": 'png',
+        "exprange": 'all',
+        "overwrite": True,
+        "showgui": False,
+        "uvrange": config["uvrange"],
+    },
         input=pipeline.input,
-        output=os.path.join(pipeline.diagnostic_plots, "crosscal") ,
+        output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
         label="{0:s}:: Plotting corrected {1:s}".format(step, plotname))
 
 
@@ -50,17 +52,52 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
         column = "DATA"
 
     recipe.add("cab/shadems", step, {
-                "ms": msname,
-                "field": str(fid),
-#                "corr": opts['corr'],
-                "xaxis": opts['xaxis'],
-                "yaxis": opts['yaxis'],
-                "col": column,
-                "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
-        }, 
+        "ms": msname,
+        "field": str(fid),
+        #                "corr": opts['corr'],
+        "xaxis": opts['xaxis'],
+        "yaxis": opts['yaxis'],
+        "col": column,
+        "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
+    },
         input=pipeline.input,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
         label="{0:s}:: Plotting corrected ".format(step, plotname))
+
+
+def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
+    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
+    colouraxis = opts.get("colour-axis", None)
+    recipe.add("cab/ragavi_vis", step, {
+        "ms": msname,
+        "xaxis": opts['xaxis'],
+        "yaxis": opts['yaxis'],
+        "canvas-height": 300,
+        "canvas-width": 300,
+        "cbin": config[plotname].get('cbin'),
+        # "chan":
+        # "chunks":
+        # "cmap":
+        # "colour-axis": sdm(colouraxis),
+        # "corr": opts['corr'],
+        # "data-column": config[plotname].get('column'),
+        # "didd": ,
+        "field": str(fid),
+        "htmlname": "{0:s}_{1:s}_{2:s}_{3:s}_{4:s}".format(prefix, label, field, plotname, ftype),
+        "iter-axis": sdm(opts.get('iter-axis', None))
+        # "mem-limit": ,
+        # "no-flag": ,
+        # "num-cores": ,
+        # "scan": ,
+        # "tbin": config[plotname].get('avgtime'),
+        # "xmin": ,
+        # "xmax": ,
+        # "ymin": ,
+        # "ymax": ,
+    },
+        input=pipeline.input,
+        output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
+        label="{0:s}:: Plotting corrected {1:s}".format(step, plotname))
 
 
 def worker(pipeline, recipe, config):
@@ -84,11 +121,13 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
 
     for i in range(nobs):
-        msname = msnames[i] if not config['label_in'] else '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config['label_in'])
+        msname = msnames[i] if not config['label_in'] else '{0:s}_{1:s}.ms'.format(
+            msnames[i][:-3], config['label_in'])
         prefix = prefixes[i]
         label = config.get('label_out')
 
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
+            pipeline.output, msname[:-3])
 
         corr = config.get('correlation')
         if corr == 'auto':
@@ -99,32 +138,61 @@ def worker(pipeline, recipe, config):
 
         # define plot attributes
         diagnostic_plots = {}
-        diagnostic_plots["real_imag"] = dict(plotms={"xaxis": "imag", "yaxis" : "real", 
-                    "colouraxis" : "baseline", "iteraxis": "corr"}, 
-                    shadems={"xaxis": "r", "yaxis": "i"})
-        diagnostic_plots["amp_phase"] = dict(plotms={"xaxis": "amp", "yaxis" : "phase",
+        diagnostic_plots["real_imag"] = dict(
+            plotms={"xaxis": "imag", "yaxis": "real",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-                    shadems={"xaxis": "a", "yaxis": "p"})
-        diagnostic_plots["amp_ant"] = dict(plotms={"xaxis": "antenna", "yaxis" :"amp",
-                    "colouraxis": "baseline", "iteraxis" : "corr"}, shadems=None)
-        diagnostic_plots["amp_uvwave"] = dict(plotms={"xaxis": "uvwave", "yaxis": "amp",
-                    "colouraxis" : "baseline", "iteraxis" : "corr"}, shadems={"xaxis": "uv", "yaxis": "a"})
-        diagnostic_plots["phase_uvwave"] = dict(plotms={"xaxis" : "uvwave", "yaxis": "phase", 
-                    "colouraxis" : "baseline", "iteraxis" : "corr"}, shadems={"xaxis": "uv", "yaxis": "p"})
-        diagnostic_plots["amp_scan"] = dict(plotms={"xaxis": "scan", "yaxis": "amp"}, shadems=None)
-        diagnostic_plots["amp_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "amp"}, shadems={"xaxis": "c", "yaxis" :"a"})
-        diagnostic_plots["phase_chan"] = dict(plotms={"xaxis": "chan", "yaxis": "phase"}, shadems={"xaxis": "c", "yaxis" :"p"})
+            shadems={"xaxis": "r", "yaxis": "i"},
+            ragavi_vis={"xaxis": "imaginary", "yaxis": "real",
+                        "iter-axis": "corr"})
+        diagnostic_plots["amp_phase"] = dict(
+            plotms={"xaxis": "amp", "yaxis": "phase",
+                    "colouraxis": "baseline", "iteraxis": "corr"},
+            shadems={"xaxis": "a", "yaxis": "p"},
+            ragavi_vis={"xaxis": "amplitude", "yaxis": "phase",
+                        "iter-axis": "corr"})
+        diagnostic_plots["amp_ant"] = dict(
+            plotms={"xaxis": "antenna", "yaxis": "amp",
+                    "colouraxis": "baseline", "iteraxis": "corr"},
+            shadems=None,
+            ragavi_vis=None)
+        diagnostic_plots["amp_uvwave"] = dict(
+            plotms={"xaxis": "uvwave", "yaxis": "amp",
+                    "colouraxis": "baseline", "iteraxis": "corr"},
+            shadems={"xaxis": "uv", "yaxis": "a"},
+            ragavi_vis={"xaxis": "uvwave", "yaxis": "amplitude",
+                        "iter-axis": "corr"})
+        diagnostic_plots["phase_uvwave"] = dict(
+            plotms={"xaxis": "uvwave", "yaxis": "phase",
+                    "colouraxis": "baseline", "iteraxis": "corr"},
+            shadems={"xaxis": "uv", "yaxis": "p"},
+            ragavi_vis={"xaxis": "uvwave", "yaxis": "phase",
+                        "iter-axis": "corr"})
+        diagnostic_plots["amp_scan"] = dict(
+            plotms={"xaxis": "scan", "yaxis": "amp"},
+            shadems=None,
+            ragavi_vis={"xaxis": "scan", "yaxis": "amplitude"})
+        diagnostic_plots["amp_chan"] = dict(
+            plotms={"xaxis": "chan", "yaxis": "amp"},
+            shadems={"xaxis": "c", "yaxis": "a"},
+            ragavi_vis={"xaxis": "channel", "yaxis": "amplitude"})
+        diagnostic_plots["phase_chan"] = dict(
+            plotms={"xaxis": "chan", "yaxis": "phase"},
+            shadems={"xaxis": "c", "yaxis": "p"},
+            ragavi_vis={"xaxis": "channel", "yaxis": "phase"})
 
         for plotname in diagnostic_plots:
             if not pipeline.enable_task(config, plotname):
                 continue
             opts = diagnostic_plots[plotname][plotter]
             if opts is None:
-                log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(plotter, plotname)) 
+                log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(
+                    plotter, plotname))
                 continue
             opts["corr"] = corr
             for fields_ in isempty(plotname) or fields:
                 for field in getattr(pipeline, fields_)[i]:
                     fid = utils.get_field_id(msinfo, field)[0]
-                    globals()[plotter](pipeline, recipe, config, 
-                        plotname, msname, field, i, label, prefix, opts, ftype=fields_, fid=fid)
+                    globals()[plotter](pipeline, recipe, config,
+                                       plotname, msname, field, i, label,
+                                       prefix, opts, ftype=fields_,
+                                       fid=fid)

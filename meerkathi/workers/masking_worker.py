@@ -428,7 +428,7 @@ def worker(pipeline, recipe, config):
 
     centre = config.get('centre_coord')
 
-    flabel = config['label']
+    flabel = config['label_in']
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, flabel)
     msfileName = str.split(all_msfiles[0], '.ms')[0]
@@ -551,7 +551,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
         if pipeline.enable_task(config, 'pb_correction'):
 
-            recipe.add(build_beam, 'build gaussian primary beam',
+            recipe.add(build_beam, 'build_gaussian_primary_beam',
                        {
                            'obs_freq': config['pb_correction'].get('frequency'),
                            'centre': centre,
@@ -617,7 +617,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Extracted regridded mosaic')
 
-            recipe.add(pbcorr, 'Correcting mosaic for primary beam',
+            recipe.add(pbcorr, 'Correcting_mosaic_for_primary_beam',
                        {
                            "mosaic_regrid": pipeline.output+'/'+mosaic_regrid,
                            "mosaic_pbcorr": pipeline.output+'/'+mosaic_pbcorr,
@@ -639,7 +639,7 @@ def worker(pipeline, recipe, config):
             else:
                 cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
 
-            recipe.add(make_mask, 'Build mask from mosaic',
+            recipe.add(make_mask, 'Build_mask_from_mosaic',
                        {
                            "mosaic_pbcorr": pipeline.output+'/'+in_image,
                            "mask": cat_mask,

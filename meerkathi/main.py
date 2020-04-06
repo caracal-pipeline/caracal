@@ -45,12 +45,12 @@ log, log_filehandler, log_console_handler, log_formatter = [getattr(meerkathi,
 ####################################################################
 
 
-def print_worker_help(args, schema_version):
+def print_worker_help(args, schema_version=None):
     """
     worker help
     """
     schema = os.path.join(pckgdir, "schema",
-                          "{0:s}_schema-{1:s}.yml".format(args.worker_help, schema_version))
+                          "{0:s}_schema.yml".format(args.worker_help))
     with open(schema, "r") as f:
         worker_dict = cfg_txt = ruamel.yaml.load(
             f, ruamel.yaml.RoundTripLoader, version=(1, 1))
@@ -222,7 +222,7 @@ def main(argv):
         arg_groups["schema_version"] = schema_version = tmp["schema_version"]
 
     if args.worker_help:
-        print_worker_help(args, schema_version)
+        print_worker_help(args)
         return
 
     if not args.no_interactive and args.report_viewer:

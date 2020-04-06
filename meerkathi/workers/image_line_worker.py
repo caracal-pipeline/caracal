@@ -235,8 +235,9 @@ def worker(pipeline, recipe, config):
 
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
-    if pipeline.enable_task(config, 'mstransform') and config['mstransform'].get(
-            'doppler') and config['mstransform'].get('outchangrid') == 'auto':
+
+    if pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'],
+            'doppler') and config['mstransform']['doppler'].get('outchangrid') == 'auto':
         firstchanfreq = list(itertools.chain.from_iterable(firstchanfreq_all))
         chanw = list(itertools.chain.from_iterable(chanw_all))
         lastchanfreq = list(itertools.chain.from_iterable(lastchanfreq_all))
@@ -248,7 +249,7 @@ def worker(pipeline, recipe, config):
             'atca': [-30.307665436, 149.550164466],
             'askap': [116.5333, -16.9833],
         }
-        tellocation = teldict[config["mstransform"].get('telescope')]
+        tellocation = teldict[config['mstransform']['doppler'].get('telescope')]
         telloc = EarthLocation.from_geodetic(tellocation[0], tellocation[1])
         firstchanfreq_dopp, chanw_dopp, lastchanfreq_dopp = firstchanfreq, chanw, lastchanfreq
         corr_order = False
@@ -316,17 +317,17 @@ def worker(pipeline, recipe, config):
                 'wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image')
             sys.exit(1)
 
-    elif pipeline.enable_task(config, 'mstransform') and config['mstransform'].get('doppler') and config['mstransform'].get('outchangrid') != 'auto':
-        if len(config['mstransform']['outchangrid'].split(',')) != 3:
+    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler'].get('outchangrid') != 'auto':
+        if len(config['mstransform']['doppler']['outchangrid'].split(',')) != 3:
             meerkathi.log.error(
                 'Wrong format for mstransform:outchangrid in the .yml config file.')
             meerkathi.log.error(
                 'Current setting is mstransform:outchangrid:"{0:s}"'.format(
-                    config['mstransform']['outchangrid']))
+                    config['mstransform']['doppler']['outchangrid']))
             meerkathi.log.error(
                 'It must be "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
             sys.exit(1)
-        nchan_dopp, comfreq0, comchanw = config['mstransform']['outchangrid'].split(
+        nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['outchangrid'].split(
             ',')
         nchan_dopp = int(nchan_dopp)
         meerkathi.log.info(
@@ -337,7 +338,6 @@ def worker(pipeline, recipe, config):
         nchan_dopp, comfreq0, comchanw = None, None, None
 
     for i, msname in enumerate(all_msfiles):
-        msname_mst = msname.replace('.ms', '_mst.ms')
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub_{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -353,6 +353,22 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Subtract model column'.format(step))
 
+        if pipeline.enable_task(config, 'addmodelcol'):
+            step = 'modeladd_{:d}'.format(i)
+            recipe.add('cab/msutils', step,
+                       {
+                           "command": 'sumcols',
+                           "msname": msname,
+                           "col1": 'CORRECTED_DATA',
+                           "col2": 'MODEL_DATA',
+                           "column": 'CORRECTED_DATA'
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Add model column'.format(step))
+
+        msname_mst = msname.replace('.ms', '_mst.ms')
+
         if pipeline.enable_task(config, 'mstransform'):
             if os.path.exists(
                     '{1:s}/{0:s}'.format(msname_mst, pipeline.msdir)):
@@ -364,19 +380,19 @@ def worker(pipeline, recipe, config):
                        step,
                        {"msname": msname,
                         "outputvis": msname_mst,
-                        "regridms": config['mstransform'].get('doppler'),
-                        "mode": config['mstransform'].get('mode'),
+                        "regridms": pipeline.enable_task(config['mstransform'], 'doppler'),
+                        "mode": config['mstransform']['doppler'].get('mode'),
                         "nchan": sdm.dismissable(nchan_dopp),
                         "start": sdm.dismissable(comfreq0),
                         "width": sdm.dismissable(comchanw),
                         "interpolation": 'nearest',
                         "datacolumn": col,
                         "restfreq": restfreq,
-                        "outframe": config['mstransform'].get('outframe'),
-                        "veltype": config['mstransform'].get('veltype'),
-                        "douvcontsub": config['mstransform'].get('uvlin'),
-                        "fitspw": sdm.dismissable(config['mstransform'].get('fitspw')),
-                        "fitorder": config['mstransform'].get('fitorder'),
+                        "outframe": config['mstransform']['doppler'].get('outframe'),
+                        "veltype": config['mstransform']['doppler'].get('veltype'),
+                        "douvcontsub": pipeline.enable_task(config['mstransform'], 'uvlin'),
+                        "fitspw": sdm.dismissable(config['mstransform']['uvlin'].get('fitspw')),
+                        "fitorder": config['mstransform']['uvlin'].get('fitorder'),
                         },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -410,6 +426,18 @@ def worker(pipeline, recipe, config):
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(
                         step,
                         msname_mst))
+
+        if pipeline.enable_task(config, 'flag_mst_errors'):
+            step = 'flag_mst_errors'
+            recipe.add('cab/autoflagger',
+                       step,
+                       {"msname": msname_mst,
+                        "column": 'DATA',
+                        "strategy": config['flag_mst_errors'].get('strategy'),
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker'].get('use_mstransform', True):
@@ -467,10 +495,12 @@ def worker(pipeline, recipe, config):
                 # If channelisation changed during a previous pipeline run
                 # as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
-                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
+                    msinfo = '{0:s}/{1:s}_mst-obsinfo.json'.format(
                         pipeline.output, msfile[:-3])
                     meerkathi.log.info(
                         'Updating info from {0:s}'.format(msinfo))
+
+                    # Get nr of channels
                     with open(msinfo, 'r') as stdr:
                         spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                         nchans = spw
@@ -487,16 +517,20 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
+                    # Get spectral reference frame
                     with open(msinfo, 'r') as stdr:
                         specframe = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
                         specframe_all.append(specframe)
                     meerkathi.log.info(
                         'The spectral reference frame is {0:}'.format(specframe))
 
-                elif config['mstransform'].get('doppler'):
+                # Or get it from the mstransform segment executed in this
+                # same pipeline run
+                elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all.append([nchan_dopp for kk in chanw_all[i]])
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform'].get('outframe')] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler'].get('outframe')] for kk in chanw_all[i]])
+
         else:
             #all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -824,10 +858,10 @@ def worker(pipeline, recipe, config):
                     meerkathi.log.info(
                         'The spectral reference frame is {0:}'.format(specframe))
 
-                elif config['mstransform'].get('doppler'):
+                elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform'].get('outframe', 'bary')] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler'].get('outframe', 'bary')] for kk in chanw_all[i]])
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.output, msfile[:-3])

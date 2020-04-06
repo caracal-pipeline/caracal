@@ -315,8 +315,7 @@ class config_parser:
             _worker = worker.split("__")[0]
 
             schema_fn = os.path.join(meerkathi.pckgdir,
-                                     "schema", "{0:s}_schema-{1:s}.yml".format(_worker,
-                                                                               schema_version))
+                                     "schema", "{0:s}_schema.yml".format(_worker))
 
             # SCHEMA VALIDATION automatically check if variables of cfg file are given with appropriate syntax
             source_data = {
@@ -425,7 +424,12 @@ class config_parser:
                 dtype = __builtins__[subVars['seq'][0]['type']]
                 subVars["example"] = str.split(
                     subVars['example'].replace(' ', ''), ',')
-                default_value = list(map(dtype, subVars["example"]))
+                if subVars['seq'][0]['type'] == 'bool':
+                    default_value=[]
+                    for i in range(0,len(subVars['example'])):
+                        default_value.append(typecast(dtype, subVars['example'][i],string=False))
+                else:
+                    default_value = list(map(dtype, subVars["example"]))
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]
@@ -483,8 +487,7 @@ class config_parser:
 
             _key = key.split("__")[0]
             schema_fn = os.path.join(meerkathi.pckgdir,
-                                     "schema", "{0:s}_schema-{1:s}.yml".format(_key,
-                                                                               schema_version))
+                                     "schema", "{0:s}_schema.yml".format(_key))
             if update_mode == "defaults and args":  # new parset, re-validate
                 source_data = {
                     _key: worker,

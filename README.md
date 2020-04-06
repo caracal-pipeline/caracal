@@ -2,7 +2,7 @@
 
 ## Documentation
 
-https://meerkathi.readthedocs.io
+https://caracal.readthedocs.io
 
 ## Download & Install
 ### Usage and publication policy
@@ -19,9 +19,8 @@ $ cd meerkathi
 1. Start and activate virtual environment outside the meerkathi directory
 ```
 $ cd ..
-$ virtualenv meerkathi-venv
+$ virtualenv -p python3 meerkathi-venv 
 $ source meerkathi-venv/bin/activate
-$ pip install pip wheel setuptools -U
 ```
 2. If working from master branch it may be necessary to install bleeding edge fixes from upstream dependencies. Please install the requirements.txt requirements:
 ```
@@ -30,7 +29,6 @@ $ pip install -U -r <absolute path to meerkathi folder>/requirements.txt
 3. Install meerKATHI
 ```
 $ pip install <absolute path to meerkathi folder>"[extra_diagnostics]"
-$ export PYTHONPATH='' # Ensure that you use venv Python
 ```
 If the requirements cannot be installed on your system you may omit [extra_diagnostics]. This will disable report rendering.
 
@@ -42,6 +40,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
     ```
     
   - **Singularity**[Recommended]
+    Requires versions >= 2.6.0-dist
     ```
     $ stimela pull --singularity --pull-folder <folder to store stimela singularity images>
     ```
@@ -54,7 +53,7 @@ If the requirements cannot be installed on your system you may omit [extra_diagn
   - **Docker**
     ```
     $ stimela pull -d
-    $ stimela build
+    $ stimela build -nc
     ```
 
 5. run meerkathi

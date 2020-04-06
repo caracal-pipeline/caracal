@@ -13,7 +13,12 @@ mapping:
         desc: Executes dignostic plotting of the first-pass cross-calibrated data.
         required: true
         example: 'False'
-      label: 
+      label_in:
+        desc: Label of the input dataset
+        type: str
+        required: false
+        example: ''
+      label_out: 
         type: str
         desc: Label for output products (plots etc.) for this step.
         required: false

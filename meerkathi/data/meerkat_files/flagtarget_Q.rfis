@@ -19,8 +19,8 @@ Created by AOFlagger 2.9.0 (2016-12-20)
         <on-yy>0</on-yy>
         <on-stokes-i>0</on-stokes-i>
         <on-stokes-q>1</on-stokes-q>
-        <on-stokes-u>1</on-stokes-u>
-        <on-stokes-v>1</on-stokes-v>
+        <on-stokes-u>0</on-stokes-u>
+        <on-stokes-v>0</on-stokes-v>
         <children>
           <action type="ForEachComplexComponentAction">
             <on-amplitude>1</on-amplitude>
@@ -30,21 +30,21 @@ Created by AOFlagger 2.9.0 (2016-12-20)
             <restore-from-amplitude>0</restore-from-amplitude>
             <children>
               <action type="IterationBlock">
-                <iteration-count>9</iteration-count>
-                <sensitivity-start>9.1</sensitivity-start>
+                <iteration-count>6</iteration-count>
+                <sensitivity-start>8.0</sensitivity-start>
                 <children>
                   <action type="SumThresholdAction">
-                    <base-sensitivity>1.5</base-sensitivity>
+                    <base-sensitivity>2.5</base-sensitivity>
                     <time-direction-flagging>1</time-direction-flagging>
                     <frequency-direction-flagging>1</frequency-direction-flagging>
                   </action>
                   <action type="CombineFlagResults">
                     <children>
                       <action type="FrequencySelectionAction">
-                        <threshold>1.7</threshold>
+                        <threshold>2.5</threshold>
                       </action>
                       <action type="TimeSelectionAction">
-                        <threshold>2.1</threshold>
+                        <threshold>3.0</threshold>
                       </action>
                     </children>
                   </action>
@@ -58,10 +58,10 @@ Created by AOFlagger 2.9.0 (2016-12-20)
                     <restore-masks>0</restore-masks>
                     <children>
                       <action type="HighPassFilterAction">
-                        <horizontal-kernel-sigma-sq>2.5</horizontal-kernel-sigma-sq>
-                        <vertical-kernel-sigma-sq>5</vertical-kernel-sigma-sq>
-                        <window-width>6</window-width>
-                        <window-height>9</window-height>
+                        <horizontal-kernel-sigma-sq>3.24</horizontal-kernel-sigma-sq>
+                        <vertical-kernel-sigma-sq>44.89</vertical-kernel-sigma-sq>
+                        <window-width>29</window-width>
+                        <window-height>22</window-height>
                         <mode>1</mode>
                       </action>
                     </children>
@@ -77,15 +77,9 @@ Created by AOFlagger 2.9.0 (2016-12-20)
           </action>
         </children>
       </action>
-      <action type="SetFlaggingAction">
-        <new-flagging>6</new-flagging>
-      </action>
       <action type="PlotAction">
         <plot-kind>5</plot-kind>
         <logarithmic-y-axis>0</logarithmic-y-axis>
-      </action>
-      <action type="SetFlaggingAction">
-        <new-flagging>4</new-flagging>
       </action>
       <action type="StatisticalFlagAction">
         <enlarge-frequency-size>1</enlarge-frequency-size>
@@ -97,6 +91,12 @@ Created by AOFlagger 2.9.0 (2016-12-20)
       </action>
       <action type="TimeSelectionAction">
         <threshold>4</threshold>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>4</new-flagging>
+      </action>
+      <action type="SetFlaggingAction">
+        <new-flagging>6</new-flagging>
       </action>
     </children>
   </action>

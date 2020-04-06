@@ -13,6 +13,35 @@ mapping:
         required: true
         desc: Execute this segment.
         example: 'True'
+      label_in:
+        type: str
+        required: true
+        desc: Label of measurement set to work on.
+        example: 'cal'
+      label_cal:
+        type: str
+        required: false
+        desc: Label for output files.
+        example: '1gc1'
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          version: 
+            type: str
+            desc: Flag version name
+            example: 'after_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       otfdelay:  
         type: bool
         required: false
@@ -23,11 +52,6 @@ mapping:
         required: false
         desc: Set the U-V range for data selection, e.g. '>50'.
         example: '>50' 
-      label: 
-        type: str
-        required: false
-        desc: Label for output files.
-        example: '1gc1'
       casa_version: 
         type: str
         required: false
@@ -45,7 +69,7 @@ mapping:
           meerkathi_model:
             type: bool
             required: false
-            desc: Force disable built-in models in MeerKATHI (NOT RECOMMENDED!)
+            desc: Use built-in sky models in MeerKATHI
             example: 'False'
           no_verify:
             type: bool

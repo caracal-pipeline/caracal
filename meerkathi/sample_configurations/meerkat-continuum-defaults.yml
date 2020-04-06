@@ -71,7 +71,7 @@ cross_cal:
   uvrange: '>150'
   label: 1gc1
   load_flags:
-    version: after_flagging_automatic
+    flag_version: after_flagging_automatic
     merge: False
   set_model:
     enable: true
@@ -175,9 +175,11 @@ self_cal:
   calibrate:
     enable: true
     Gsols_timeslots: [120]
+  transfer_model:
+    enable: false
 
 image_line:
-  enable: true
+  enable: false
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

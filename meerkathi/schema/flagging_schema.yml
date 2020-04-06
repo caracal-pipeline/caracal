@@ -13,11 +13,35 @@ mapping:
         type: bool
         required: True
         example: 'False'
-      label:
+      label_in:
         desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
         type: str
         required: false
         example: ''
+      field:
+        desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+        type: str
+        required: false
+        example: 'calibrators'
+      load_flags:
+        desc: Restore flags to specified state
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'True'
+            required: false
+          version: 
+            type: str
+            desc: Flag version name
+            example: 'before_flagging_automatic'
+            required: false
+          merge:
+            desc: Merge flags to restored with current flags. (uses 'or')
+            type: bool
+            example: 'False'
+            required: false
       autoflag_autocorr_powerspectra:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
@@ -65,7 +89,7 @@ mapping:
             desc: Enables flagging of autocorrelations.
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
       quack_flagging:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
@@ -201,7 +225,6 @@ mapping:
             type: str
             required: False
             example: '0'
-
       static_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
@@ -230,7 +253,7 @@ mapping:
             desc: Enable RFI flagging with AOFlagger or tricolour
             type: bool
             required: False
-            example: 'True'
+            example: 'False'
           flagger:
             desc: Choose flagger for automatic flagging
             type: str
@@ -364,7 +387,6 @@ mapping:
             type: bool
             required: False
             example: 'True'
-
       flagging_summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map

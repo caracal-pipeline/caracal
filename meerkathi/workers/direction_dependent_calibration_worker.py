@@ -18,7 +18,6 @@ NAME = 'Direction-dependent Calibration'
 def worker(pipeline, recipe, config):
     npix = config['image_dd'].get('npix')
     cell = config['image_dd'].get('cell')
-    niter = config['image_dd'].get('deconv-maxminoriter')
     colname = config['image_dd'].get('column')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
     ddsols_t = config['calibrate_dd'].get('ddsols_time')
@@ -72,7 +71,7 @@ def worker(pipeline, recipe, config):
         "Deconv-RMSFactor"      : config['image_dd'].get('deconv_rmsfactor'),
         "Deconv-PeakFactor"     : config['image_dd'].get('deconv_peakfactor'),
         "Deconv-Mode"       : config['image_dd'].get('deconv_mode'),
-        "Deconv-MaxMinorIter"   : niter,
+        "Deconv-MaxMinorIter"   :  config['image_dd'].get('deconv_maxminoriter'),
         "Deconv-Gain"          : config['image_dd'].get('deconv_gain'),
         "Deconv-FluxThreshold" : config['image_dd'].get('deconv_fluxthreshold'),
         "Deconv-AllowNegative": config['image_dd'].get('deconv_allownegative'),
@@ -277,7 +276,7 @@ def worker(pipeline, recipe, config):
               #"madmax-global-threshold": config[key].get('madmax_global_threshold'),
               #"madmax-estimate"   : "corr",
               #"out-casa-gaintables" : True,
-              "degridding-NDegridBand": int(nchans/2.0),
+              "degridding-NDegridBand": config['image_dd'].get('freq_ndegridband'),
               'degridding-MaxFacetSize': 0.15,
                },
                input=INPUT,

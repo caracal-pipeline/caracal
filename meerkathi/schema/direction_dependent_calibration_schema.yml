@@ -60,12 +60,12 @@ mapping:
           enum: ["Natural", "Uniform", "Robust", "Briggs"]
           required: false
           example: "Briggs"
-         weight-robust:
+         weight_robust:
           type: float
           desc: "Briggs robustness parameter, from -2 (more uniform) to 2 (more natural)"
           required: false
           example: "-0.4"
-         deconv-maxminoriter:
+         deconv_maxminoriter:
            type: int
            desc: Number of clean iterations
            required: False
@@ -110,7 +110,7 @@ mapping:
            type: bool
            desc: "Allow negative components (HMP, Hogbom)."
            required: false
-           example: true
+           example: "True"
          hogbom_polyfitorder:
            type: int
            desc: "HOGBOM_POLYFITORDER polynomial order for frequency fitting"

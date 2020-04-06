@@ -165,12 +165,20 @@ def execute_pipeline(args, arg_groups, block):
 
                 pipeline.run_workers()
             except SystemExit as e:
-                if e.code != 0:
+                if e.code != 0 and e.code != 2:
                     log.error(
                         "One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
                     log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
                         MEERKATHI_LOG, str(__version__)))
                     sys.exit(1)  # indicate failure
+                if e.code == 2:
+                    log.error(
+                        "The during the inspection of the observation configuration an error in your setup has been identified. ")
+                    log.error(
+                        "Please check your log carefully to see what is wrong. ")
+                    log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
+                        MEERKATHI_LOG, str(__version__)))
+                    sys.exit(2)  # indicate failure
                 else:
                     log.info(
                         "One or more pipeline workers requested graceful shutdown. Goodbye!")

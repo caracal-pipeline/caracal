@@ -25,47 +25,97 @@ def worker(pipeline, recipe, config):
             if pipeline.config['self_cal']['transfer_apply_gains']['enable']:
                 meerkathi.log.info(
                     'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
-                sys.exit(1)
+                sys.exit(2)
             if int(pipeline.config['self_cal']['start_at_iter']) != 1:
                 meerkathi.log.info(
                     "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-                sys.exit(1)
+                sys.exit(2)
         # First check we are actually running a calibrate
         if pipeline.config['self_cal']['calibrate']['enable']:
             #Then let's check that the solutions are reasonable and fit in our time chunks
             #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
-            # first we collect all time solutions
-            solutions = pipeline.config['self_cal']['calibrate']['Gsols_time'][:int(pipeline.config['self_cal']['cal_niter'])]
+            #  we check there are enough solution
+            if len(pipeline.config['self_cal']['calibrate']['Gsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
+                amount_sols = len(pipeline.config['self_cal']['calibrate']['Gsols_timeslots'])
+            else:
+                amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+            #  we collect all time solutions
+            solutions = pipeline.config['self_cal']['calibrate']['Gsols_timeslots'][:amount_sols]
             # if we do Bjones we add those
             if pipeline.config['self_cal']['calibrate']['Bjones']:
-                solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_time'][:])
+                if len(pipeline.config['self_cal']['calibrate']['Bsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['Bsols_timeslots'])
+                else:
+                    amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_timeslots'][:amount_sols])
             # Same for GA solutions
             if pipeline.config['self_cal']['calibrate']['two_step']:
-                for val in pipeline.config['self_cal']['calibrate']['DDsols_time']:
+                if len(pipeline.config['self_cal']['calibrate']['DDsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['DDsols_timeslots'])
+                else:
+                    amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['DDsols_timeslots'][:amount_sols]):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
-            if pipeline.config['self_cal']['cal_time_chunk'] == -1:
+            if pipeline.config['self_cal']['cal_timeslots_chunk'] == -1:
                 if np.min(solutions) != 0.:
                     time_chunk = max(solutions)
                 else:
                     time_chunk = 0
             else:
-                time_chunk = pipeline.config['self_cal']['cal_time_chunk']
+                time_chunk = pipeline.config['self_cal']['cal_timeslots_chunk']
             # if time_chunk is not 0 all solutions should fit in there.
-            # if it is 0 then it does not matter
+            # if it is 0 then it does not matter as we are not checking remainder intervals
             if time_chunk != 0:
                 sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
-                    print(val)
                     if val != int(val):
-                        meerkathi.log.info("Not all time solutions fit in the timeslot_chunk. " )
+                        meerkathi.log.info("Not all applied time solutions fit in the timeslot_chunk. " )
                         meerkathi.log.info("Your timeslot chunk = {}".format(time_chunk))
                         meerkathi.log.info("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        sys.exit(1)
-
-
-    exit()
+                        sys.exit(2)
+            # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
+            if len(pipeline.config['self_cal']['calibrate']['Gsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                amount_sols = len(pipeline.config['self_cal']['calibrate']['Gsols_channel'])
+            else:
+                amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+            #  we collect all time solutions
+            solutions = pipeline.config['self_cal']['calibrate']['Gsols_channel'][:amount_sols]
+            # if we do Bjones we add those
+            if pipeline.config['self_cal']['calibrate']['Bjones']:
+                if len(pipeline.config['self_cal']['calibrate']['Bsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['Bsols_channel'])
+                else:
+                    amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_channel'][:amount_sols])
+            # Same for GA solutions
+            if pipeline.config['self_cal']['calibrate']['two_step']:
+                if len(pipeline.config['self_cal']['calibrate']['DDsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['DDsols_channel'])
+                else:
+                    amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['DDsols_channel'][:amount_sols]):
+                    if val >= 0:
+                        solutions.append(val)
+            # then we assign the timechunk
+            if pipeline.config['self_cal']['cal_channel_chunk'] == -1:
+                if np.min(solutions) != 0.:
+                    channel_chunk = max(solutions)
+                else:
+                    channel_chunk = 0
+            else:
+                channel_chunk = pipeline.config['self_cal']['cal_channel_chunk']
+            # if channel_chunk is not 0 all solutions should fit in there.
+            # if it is 0 then it does not matter as we are not checking remainder intervals
+            if channel_chunk != 0:
+                sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
+                for val in sol_int_array:
+                    if val != int(val):
+                        meerkathi.log.info("Not all applied channel solutions fit in the channel_chunk. " )
+                        meerkathi.log.info("Your channel chunk = {}".format(channel_chunk))
+                        meerkathi.log.info("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                        sys.exit(2)
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -221,7 +271,7 @@ def worker(pipeline, recipe, config):
                     'Note that this metadata file is generally available only for MeerKAT-16/ROACH2 data.')
                 meerkathi.log.error(
                     'Please set the reference antenna manually in the config file and try again.')
-                sys.exit(1)
+                sys.exit(2)
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:
@@ -244,7 +294,7 @@ def worker(pipeline, recipe, config):
         if i == len(prefixes)-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             meerkathi.log.info(
                 'Some datasets have positive channel increment, some others negative. This will lead to errors. Exiting')
-            sys.exit(1)
+            sys.exit(2)
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
             pipeline.specframe[i] = yaml.safe_load(

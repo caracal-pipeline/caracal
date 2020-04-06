@@ -443,7 +443,12 @@ then edit the file to suit your needs.
                 dtype = __builtins__[subVars['seq'][0]['type']]
                 subVars["example"] = str.split(
                     subVars['example'].replace(' ', ''), ',')
-                default_value = list(map(dtype, subVars["example"]))
+                if subVars['seq'][0]['type'] == 'bool':
+                    default_value=[]
+                    for i in range(0,len(subVars['example'])):
+                        default_value.append(typecast(dtype, subVars['example'][i],string=False))
+                else:
+                    default_value = list(map(dtype, subVars["example"]))
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]

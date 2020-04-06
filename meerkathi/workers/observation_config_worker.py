@@ -84,7 +84,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
-            if config['obsinfo'].get('plot_elevation_tracks'):
+            if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
                 step = "elevation_plots_{:d}".format(i)
                 if config['obsinfo']["plot_elevation_tracks"].get("plotter") in ["plotms"]:
                     recipe.add("cab/casa_plotms", step, {
@@ -214,6 +214,8 @@ def worker(pipeline, recipe, config):
             # check if user set fields manually
             if set(all_fields).intersection(conf_fields):
                 label = term
+                if term == 'target':
+                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in all_fields]
             elif fields in [None, []]:
                 getattr(pipeline, term)[i] = []
                 continue
@@ -250,5 +252,3 @@ def worker(pipeline, recipe, config):
             getattr(pipeline, term+"_ra")[i] = _ra
             getattr(pipeline, term+"_dec")[i] = _dec
             getattr(pipeline, term+"_id")[i] = _fid
-
-

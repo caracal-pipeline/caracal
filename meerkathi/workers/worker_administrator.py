@@ -147,7 +147,6 @@ class worker_administrator(object):
             self.init_pipeline()
 
         # save configuration file
-        timeNow = datetime.now()
         configFileName = os.path.splitext(configFileName)[0]
         outConfigName = '{0:s}_{1:s}.yml'.format(
             configFileName, self.timeNow)

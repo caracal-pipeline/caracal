@@ -82,7 +82,7 @@ transform_data__2:
   
 flagging__2:
   enable: true
-  label: corr
+  label_in: corr
   field: 'target'
   flag_autocorr:
     enable: true
@@ -105,7 +105,7 @@ masking:
 
 flagging__3:
   enable: false
-  label: cont
+  label_in: cont
   field: 'target'
   flag_autocorr:
     enable: false
@@ -152,14 +152,13 @@ self_cal:
     memory_fraction: 0.45
     transfer_to_label: corr
 
-split_target__3:
+transform_data__4:
   enable: true
   label_in: 'corr'
   label_out: 'l'
-  split_target:
+  split_field:
     enable: true
     column: 'all'
-#    spw: '*:1370~1390MHz'
     otfcal:
       enable: false
 

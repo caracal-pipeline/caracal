@@ -28,7 +28,7 @@ transform_data:
   split_field:
     enable: true
     field: 'calibrators'
-    column: data'
+    column: 'data'
 
 flagging:
   enable: true
@@ -45,6 +45,7 @@ flagging:
     
 cross_cal:
   enable: true
+  label_in: 'cal'
   apply_cal:
     enable: true
     applyto:
@@ -55,6 +56,8 @@ polcal:
   enable: false
 
 inspect_data:
+  label_in: 'cal'
+  label_out: '1gc'
   enable: true
 
 transform_data__2:
@@ -67,7 +70,8 @@ transform_data__2:
   
 flagging__2:
   enable: true
-  label: corr
+  label_in: corr
+  field: 'target'
   autoflag_rfi:
     enable: true
     flagger: aoflagger

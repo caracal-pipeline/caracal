@@ -451,7 +451,7 @@ def worker(pipeline, recipe, config):
     mask_cell = config.get('cell_size')
     mask_imsize = config.get('mask_size')
 
-    final_mask = mask_dir+str(config.get('name_mask'))
+    final_mask = mask_dir+str(config.get('label_out'))
     catalog_name = config['query_catalog'].get('catalog')
 
     catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
@@ -533,7 +533,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'merge_with_extended') == False:
                 cat_mask = final_mask
             else:
-                cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
+                cat_mask = mask_dir+'/'+config.get('label_out')+'.fits'
             catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
             recipe.add(make_mask_nvss, 'Build mask from NVSS catalog',
@@ -679,7 +679,7 @@ def worker(pipeline, recipe, config):
                 "scaleNoise.scaleX": True,
                 "scaleNoise.scaleY": True,
                 "scaleNoise.scaleZ": False,
-                "writeCat.basename": str(config.get('name_mask').split('_mask.fits')[0]),
+                "writeCat.basename": str(config.get('label_out').split('_mask.fits')[0]),
             }
 
             recipe.add('cab/sofia', step,
@@ -797,7 +797,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Mask done')
 
-        cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
+        cat_mask = config['mask_prefix'].get('mask_with')
         recipe.add(merge_masks, 'Merging VLA Fornax into catalog mask',
                    {
                        "extended_mask": pipeline.output+extended_mask,

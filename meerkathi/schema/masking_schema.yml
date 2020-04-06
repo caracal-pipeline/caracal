@@ -18,6 +18,11 @@ mapping:
         desc: Label of the .MS file where to find information about the target
         required: false
         example: 'corr'
+      label_out:
+        type: str
+        required: false
+        desc: Prefix of name of the output_mask.fits from catalog. To use this mask in self cal, clean_mask_method[0]==label_out.
+        example: 'catalog_mask'
       centre_coord:
         seq:
           - type: str
@@ -28,27 +33,18 @@ mapping:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
         required: false
-        example: '900'
+        example: '1800'
       cell_size:
         type: float
         desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
         required: false
         example: '2.'
-      name_mask:
-        type: str
-        required: false
-        desc: Name of the output mask generated from catalog
-        example: 'catalog_mask.fits'
       extended_source_input:
         type: str
         required: false
         desc: Name of the input mask for particularly extended sources in the field
         example: 'Fornaxa_vla.FITS'
-      final_mask:
-        type: str
-        required: false
-        desc: Name of the output final mask
-        example: 'final_mask.fits'
+
 
       query_catalog:
         type: map

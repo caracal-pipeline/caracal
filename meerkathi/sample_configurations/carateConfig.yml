@@ -131,7 +131,7 @@ self_cal:
     model: ['1','2','3']
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
     Gsols_channel: ['0', '0', '0']
-    Gsols_timeslots: ['120', '60', '20']
+    Gsols_timeslots: [120, 60, 20]
     shared_memory: 250GB
   transfer_apply_gains:
     enable: true

@@ -238,7 +238,6 @@ def worker(pipeline, recipe, config):
             _dec = []
             _fid = []
             for f in getattr(pipeline, term)[i]:
-#            for f in set(fields).intersection(getattr(pipeline, term)[i]):
                 fid = utils.get_field_id(msinfo, f)[0]
                 targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                 ra = targetpos[0]/np.pi*180

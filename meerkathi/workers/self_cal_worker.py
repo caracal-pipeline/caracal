@@ -83,6 +83,7 @@ def worker(pipeline, recipe, config):
         else:
             time_chunk = max(all_time_solution)
     freq_chunk = config.get('cal_channel_chunk')
+
     #If user sets value that is not -1 then use that
     if int(freq_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
@@ -99,7 +100,7 @@ def worker(pipeline, recipe, config):
         if min(all_freq_solution) == 0:
             freq_chunk = 0
         else:
-            freq_chunk = max(all_freq_solution)
+            freq_chunk = int(max(all_freq_solution))
 
     min_uvw = config.get('minuvw_m')
     ncpu = config.get('ncpu')
@@ -269,7 +270,6 @@ def worker(pipeline, recipe, config):
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
-
         if multiscale ==True:
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
@@ -280,12 +280,18 @@ def worker(pipeline, recipe, config):
         elif mask_key == 'sofia':
             fitmask_address = 'masking'
             image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
-        elif '.' in  mask_key:
-            fitmask_address = 'masking/'+str(mask_key)
-            image_opts.update({"fitsmask": fitmask_address+':output'})
-        elif mask_key == 'catalog':
-            fitmask_address = 'masking/'+str(config['query_catalog'].get('catalog')+'_mask.fits')
-            image_opts.update({"fitsmask": fitmask_address+':output'})
+        #elif '.' in  mask_key:
+        #    fitmask_address = 'masking/'+str(mask_key)
+        #    image_opts.update({"fitsmask": fitmask_address+':output'})
+        else:
+            fits_mask = '{0:s}/{1:s}_{2:s}.fits'.format(
+                'masking', mask_key, field)
+            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
+                meerkathi.log.error(
+                    "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")
+                sys.exit(1)
+
+            image_opts.update({"fitsmask": fits_mask+':output'})
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -1719,14 +1725,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'image'):
             if config['calibrate'].get('hires_interpol') == True:
                 meerkathi.log.info("Interpolating gains")
-            if mask_key == 'auto_mask' or '.' in  mask_key:
-                image(target_iter, self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)
-                #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
-                #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
-                #    sofia_mask(self_cal_iter_counter, get_dir_path(
-                #        image_path, pipeline), field)
-            elif mask_key == 'sofia':
+            if mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(
                     pipeline.continuum, self_cal_iter_counter)
                 if not os.path.exists(image_path):
@@ -1740,6 +1739,13 @@ def worker(pipeline, recipe, config):
                     pipeline.continuum, self_cal_iter_counter)
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), mslist, field)
+            else:
+                image(target_iter, self_cal_iter_counter, get_dir_path(
+                image_path, pipeline), mslist, field)
+                #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
+                #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
+                #    sofia_mask(self_cal_iter_counter, get_dir_path(
+                #        image_path, pipeline), field)
                 #sofia_mask(self_cal_iter_counter, get_dir_path(
                 #image_path, pipeline), field)
         ### to enable eventually if one wants only to run caracal to produce sofia mask

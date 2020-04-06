@@ -6,7 +6,7 @@ mapping:
 
   masking:
     type: map
-    desc: Create mask from catalog and/or merge with mask of extended source
+    desc: Create .FITS mask from catalog and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
     mapping:
       enable:
         type: bool
@@ -15,9 +15,14 @@ mapping:
         example: 'False'
       label_in:
         type: str
-        desc: Label of the .MS file where to find information about the target
+        desc: Label of the .MS file where to find information about the target.
         required: false
         example: 'corr'
+      label_out:
+        type: str
+        required: false
+        desc: Prefix used for the name of the .FITS mask created by this worker. The full name consists of this prefix followed by the target name extracted by the observation_config worker. To use this output .FITS mask as a clean mask in the self_cal worker users should set relevant entry of clean_mask_method to label_out.
+        example: 'catalog_mask'
       centre_coord:
         seq:
           - type: str
@@ -28,27 +33,18 @@ mapping:
         type: int
         desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
         required: false
-        example: '900'
+        example: '1800'
       cell_size:
         type: float
         desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
         required: false
         example: '2.'
-      name_mask:
-        type: str
-        required: false
-        desc: Name of the output mask generated from catalog
-        example: 'catalog_mask.fits'
       extended_source_input:
         type: str
         required: false
         desc: Name of the input mask for particularly extended sources in the field
         example: 'Fornaxa_vla.FITS'
-      final_mask:
-        type: str
-        required: false
-        desc: Name of the output final mask
-        example: 'final_mask.fits'
+
 
       query_catalog:
         type: map

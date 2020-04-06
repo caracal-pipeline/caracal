@@ -173,7 +173,7 @@ def execute_pipeline(args, arg_groups, block):
                     sys.exit(1)  # indicate failure
                 if e.code == 2:
                     log.error(
-                        "The during the inspection of the observation configuration an error in your setup has been identified. ")
+                        "During the inspection of the observation configuration an error in your setup has been identified. ")
                     log.error(
                         "Please check your log carefully to see what is wrong. ")
                     log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(

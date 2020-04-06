@@ -50,11 +50,11 @@ def worker(pipeline, recipe, config):
                 solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_timeslots'][:amount_sols])
             # Same for GA solutions
             if pipeline.config['self_cal']['calibrate']['two_step']:
-                if len(pipeline.config['self_cal']['calibrate']['DDsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
-                    amount_sols = len(pipeline.config['self_cal']['calibrate']['DDsols_timeslots'])
+                if len(pipeline.config['self_cal']['calibrate']['GAsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_timeslots'])
                 else:
                     amount_sols = int(pipeline.config['self_cal']['cal_niter'])
-                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['DDsols_timeslots'][:amount_sols]):
+                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['GAsols_timeslots'][:amount_sols]):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
@@ -91,11 +91,11 @@ def worker(pipeline, recipe, config):
                 solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_channel'][:amount_sols])
             # Same for GA solutions
             if pipeline.config['self_cal']['calibrate']['two_step']:
-                if len(pipeline.config['self_cal']['calibrate']['DDsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
-                    amount_sols = len(pipeline.config['self_cal']['calibrate']['DDsols_channel'])
+                if len(pipeline.config['self_cal']['calibrate']['GAsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_channel'])
                 else:
                     amount_sols = int(pipeline.config['self_cal']['cal_niter'])
-                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['DDsols_channel'][:amount_sols]):
+                for i,val in enumerate(pipeline.config['self_cal']['calibrate']['GAsols_channel'][:amount_sols]):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk

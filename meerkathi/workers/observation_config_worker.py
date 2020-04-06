@@ -315,7 +315,7 @@ def worker(pipeline, recipe, config):
             if set(all_fields).intersection(conf_fields):
                 label = term
                 if term == 'target':
-                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in fields]
+                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in all_fields]
             elif fields in [None, []]:
                 getattr(pipeline, term)[i] = []
                 continue
@@ -338,8 +338,7 @@ def worker(pipeline, recipe, config):
             _ra = []
             _dec = []
             _fid = []
-#            for f in getattr(pipeline, term)[i]:
-            for f in set(fields).intersection(getattr(pipeline, term)[i]):
+            for f in getattr(pipeline, term)[i]:
                 fid = utils.get_field_id(msinfo, f)[0]
                 targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                 ra = targetpos[0]/np.pi*180

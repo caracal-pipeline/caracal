@@ -232,30 +232,29 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask, (possible values catalog, auto_mask, sofia. Or name of user-mask located in output/masking/, enabled only if 1 target is provided)
+            desc: Method used to create a clean mask for cleaning with WSclean. The possible values are 1) "auto_mask" to use WSclean auto-masking method with threshold set by clean_mask_threshold; 2) "sofia" to create a clean mask using SoFiA with threshold set by clean_mask_threshold and additional settings in sofia_settings; 3) an prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
             required: false
             example: 'auto_mask, auto_mask'
           clean_mask_threshold:
             seq:
               - type: float
-            desc: Masking threshold (either for auto-masking or SoFiA)
+            desc: Masking threshold in units of the (local) noise (for either WSclean auto-masking or SoFiA).
             required: false
             example: '10.0, 6.0'
           clean_threshold:
             seq:
               - type: float
-            desc: Auto clean threshold
+            desc: WSclean clean threshold in units of the (local) noise.
             required: false
             example: '0.5, 0.5'
           local_rms:
             seq:
               - type: bool
-            desc: switch on local rms measurement for cleaning
+            desc: Use a local rms measurement both when cleaning and creating a clean mask (both WSClean and SoFiA).
             required: false
             example: 'False, False'
-        
           sofia_settings: 
-            desc: SoFiA source finder settings to produce a clean mask
+            desc: SoFiA source finder settings to produce a .FITS clean mask. The mask is located in output/masking.
             type: map
             mapping:
               flag:

@@ -169,7 +169,7 @@ self_cal:
   enable: true
   img_npix: 4096
   img_cell: 1.3
-  cal_time_chunk: 240
+  cal_timeslots_chunk: 240
   image:
     enable: true
   calibrate:

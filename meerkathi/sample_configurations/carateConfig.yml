@@ -20,7 +20,7 @@ transform_data:
   split_field:
     enable: true
     field: 'calibrators'
-    column: data'
+    column: 'data'
 
 flagging:
   enable: true
@@ -41,6 +41,7 @@ flagging:
 cross_cal:
   enable: true
   uvrange: '>150'
+  label_in: 'cal'
   set_model:
     enable: true
   primary_cal:
@@ -67,6 +68,8 @@ polcal:
   enable: false
 
 inspect_data:
+  label_in: 'cal'
+  label_out: '1gc'
   enable: true
 
 transform_data__2:
@@ -79,7 +82,8 @@ transform_data__2:
   
 flagging__2:
   enable: true
-  label: corr
+  label_in: corr
+  field: 'target'
   flag_autocorr:
     enable: true
   autoflag_rfi:
@@ -101,7 +105,8 @@ masking:
 
 flagging__3:
   enable: false
-  label: cont
+  label_in: cont
+  field: 'target'
   flag_autocorr:
     enable: false
   autoflag_rfi:
@@ -131,7 +136,7 @@ self_cal:
     model: ['1','2','3']
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
     Gsols_channel: ['0', '0', '0']
-    Gsols_timeslots: ['120', '60', '20']
+    Gsols_timeslots: [120, 60, 20]
     shared_memory: 250GB
   transfer_apply_gains:
     enable: true
@@ -147,14 +152,13 @@ self_cal:
     memory_fraction: 0.45
     transfer_to_label: corr
 
-split_target__3:
+transform_data__4:
   enable: true
   label_in: 'corr'
   label_out: 'l'
-  split_target:
+  split_field:
     enable: true
     column: 'all'
-#    spw: '*:1370~1390MHz'
     otfcal:
       enable: false
 

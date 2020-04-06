@@ -26,7 +26,7 @@ mapping:
 
      image_dd:
        type: map
-       desc: Imaging parameters for DD cal loop
+       desc: Imaging parameters for DD calibration loop with DDFacet
        mapping:
          enable:
            type: bool
@@ -35,34 +35,128 @@ mapping:
            example: 'True'
          npix:
            type: int
-           desc: Number of pixels in the image
+           desc: Number of pixels in the image. 
            required: False
            example: "5100"
          cell:
            type: float
-           desc: Pixel size in arcsec
+           desc: Pixel size in arcsec.
            required: False
            example: "1.3"
-         niter:
+         facets_nfacets: 
+           type: int
+           desc: Number of facets to use, same as Facets-NFacets.
+           required: false
+           example: '17'
+         weight_column: 
+          type: str
+          enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
+          desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
+          required: false
+          example: "WEIGHT"
+         weight_mode:
+          type: str
+          desc: "UV weighting mode"
+          enum: ["Natural", "Uniform", "Robust", "Briggs"]
+          required: false
+          example: "Briggs"
+         weight-robust:
+          type: float
+          desc: "Briggs robustness parameter, from -2 (more uniform) to 2 (more natural)"
+          required: false
+          example: "-0.4"
+         deconv-maxminoriter:
            type: int
            desc: Number of clean iterations
            required: False
            example: '100000'
-         robust:
-           type: float
-           desc: Robust parameter for imaging
-           required: False
-           example: '-0.4'
-         nchans:
+         freq_nband:
            type: int
-           desc: Number of channels for the output image cube.
-           required: False
+           desc: "N Number of image bands for gridding."
+           required: false
            example: '10'
-         column:
+         freq_ndegridband:
+           type: int
+           desc: "N Number of image bands for degridding. 0 means degrid each channel."
+           required: false
+           example: '0'
+         deconv_rmsfactor:
+           type: float
+           desc: "X Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom)."
+           required: false
+           example: '0.0'
+         deconv_peakfactor:
+           type: float
+           desc: "X Set minor cycle stopping threshold to X*{peak residual} (HMP, Hogbom)."
+           required: false
+           example: '0.25'
+         deconv_mode:
+           type: str
+           enum: ["HMP","Hogbom","SSD", "GAClean"]
+           desc: "Deconvolution algorithm."
+           required: false
+           example: "Hogbom"
+         deconv_gain:
+           type: float
+           desc: "GAIN Loop gain (HMP, Hogbom)."
+           required: false
+           example: "0.1"
+         deconv_fluxthreshold:  
+           type: float
+           desc: "Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom)."
+           required: false
+           example: '1.0e-6'
+         deconv_allownegative:
+           type: bool
+           desc: "Allow negative components (HMP, Hogbom)."
+           required: false
+           example: true
+         hogbom_polyfitorder:
+           type: int
+           desc: "HOGBOM_POLYFITORDER polynomial order for frequency fitting"
+           required: false
+           example: "6"
+         parallel_ncpu:
+           type: int
+           desc: "Number of processes / threads to use in parallel mode. 0 - all available. 1 - disable parallelism"
+           required: false
+           example: "0" 
+         predict_colname:
+           type: str
+           desc: "MS column to write predict to. Can be left empty to disable"
+           required: false
+           example: "MODEL_DATA"
+         log_memory:
+           type: bool
+           desc: "log memory use"
+           required: false
+           example: "True"
+         cache_reset:
+           type: bool
+           desc: "Reset all caches (including PSF and dirty image). Change from default at your own risk."
+           required: false
+           example: "True"
+         log_boring: 
+           type: bool
+           desc: "Enable progress bars and other pretty console output. Doesn't seem to work."
+           required: false
+           example: "True"
+         data_colname:
            type: str
            desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
            required: False
            example: 'CORRECTED_DATA'
+         data_chunkhours: 
+           type: float
+           desc: "Chunk data into time bins of x hours to conserve memory"
+           required: false
+           example: '0.05'
+         output_mode:
+           type: str 
+           enum: ["Dirty","Clean", "Predict","PSF"]
+           desc: "Output mode"
+           required: false
+           example: "Clean"
      calibrate_dd:
        type: map
        desc: Direction dependent calibration parameters

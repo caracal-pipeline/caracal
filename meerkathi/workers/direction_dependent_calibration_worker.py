@@ -18,9 +18,7 @@ NAME = 'Direction-dependent Calibration'
 def worker(pipeline, recipe, config):
     npix = config['image_dd'].get('npix')
     cell = config['image_dd'].get('cell')
-    niter = config['image_dd'].get('niter')
-    robust = config['image_dd'].get('robust')
-    nchans = config['image_dd'].get('nchans')
+    niter = config['image_dd'].get('deconv-maxminoriter')
     colname = config['image_dd'].get('column')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
     ddsols_t = config['calibrate_dd'].get('ddsols_time')
@@ -58,33 +56,32 @@ def worker(pipeline, recipe, config):
     
     dd_image_opts = {
         "Data-MS"        : mslist,
-        "Data-ColName"   : "CORRECTED_DATA",
-        "Data-ChunkHours"       : 0.05,
-        "Output-Mode"           : "Clean",
-        #"Output-Cubes"          : 'all',
+        "Data-ColName"   : config['image_dd'].get('data_colname'),
+        "Data-ChunkHours"       : config['image_dd'].get('data_chunkhours'),
+        "Output-Mode"           : config['image_dd'].get('output_mode'),
         "Output-Name"    : prefix+"-DD-precal",
         "Output-Images"  : 'dmcri',
         "Image-NPix"     : npix,
         "Image-Cell"     : cell,
-        "Facets-NFacets" : 17,
-        "Weight-ColName" : "WEIGHT",
-        "Weight-Mode"    : "Briggs",
-        "Weight-Robust"  : robust,
-        "Freq-NBand"     : nchans,
-        "Freq-NDegridBand" : int(nchans/2.0),
-        "Deconv-RMSFactor"      : 0,
-        "Deconv-PeakFactor"     : 0.25,
-        "Deconv-Mode"       : "Hogbom",
+        "Facets-NFacets" : config['image_dd'].get('facets_nfacets'),
+        "Weight-ColName" : config['image_dd'].get('weight_column'),
+        "Weight-Mode"    : config['image_dd'].get('weight_mode'),
+        "Weight-Robust"  : config['image_dd'].get('weight_robust'),
+        "Freq-NBand"     : config['image_dd'].get('freq_nband'),
+        "Freq-NDegridBand" : config['image_dd'].get('freq_ndegridband'),
+        "Deconv-RMSFactor"      : config['image_dd'].get('deconv_rmsfactor'),
+        "Deconv-PeakFactor"     : config['image_dd'].get('deconv_peakfactor'),
+        "Deconv-Mode"       : config['image_dd'].get('deconv_mode'),
         "Deconv-MaxMinorIter"   : niter,
-        "Deconv-Gain"          : 0.1,
-        "Deconv-FluxThreshold" : 1.0e-6,
-        "Deconv-AllowNegative": True,
-        "Hogbom-PolyFitOrder": 6,
-        "Parallel-NCPU" : 0,
-        "Predict-ColName"       : "MODEL_DATA",
-        "Log-Memory"            : True,
-        "Cache-Reset"           : True,
-        "Log-Boring"            : True,}
+        "Deconv-Gain"          : config['image_dd'].get('deconv_gain'),
+        "Deconv-FluxThreshold" : config['image_dd'].get('deconv_fluxthreshold'),
+        "Deconv-AllowNegative": config['image_dd'].get('deconv_allownegative'),
+        "Hogbom-PolyFitOrder": config['image_dd'].get('hogbom_polyfitorder'),
+        "Parallel-NCPU" : config['image_dd'].get('parallel_ncpu'),
+        "Predict-ColName"       : config['image_dd'].get("predict_colname"), 
+        "Log-Memory"            : config['image_dd'].get("log_memory"),
+        "Cache-Reset"           : config['image_dd'].get("cache_reset"),
+        "Log-Boring"            : config["image_dd"].get("log_boring"),}
 
     def make_primary_beam():
         eidos_opts = {

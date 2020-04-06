@@ -20,7 +20,7 @@ transform_data:
   split_field:
     enable: true
     field: 'calibrators'
-    column: data'
+    column: 'data'
 
 flagging:
   enable: true
@@ -41,6 +41,7 @@ flagging:
 cross_cal:
   enable: true
   uvrange: '>150'
+  label_in: 'cal'
   set_model:
     enable: true
   primary_cal:
@@ -67,6 +68,8 @@ polcal:
   enable: false
 
 inspect_data:
+  label_in: 'cal'
+  label_out: '1gc'
   enable: true
 
 transform_data__2:
@@ -80,6 +83,7 @@ transform_data__2:
 flagging__2:
   enable: true
   label: corr
+  field: 'target'
   flag_autocorr:
     enable: true
   autoflag_rfi:
@@ -102,6 +106,7 @@ masking:
 flagging__3:
   enable: false
   label: cont
+  field: 'target'
   flag_autocorr:
     enable: false
   autoflag_rfi:

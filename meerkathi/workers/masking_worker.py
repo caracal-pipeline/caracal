@@ -441,6 +441,7 @@ def worker(pipeline, recipe, config):
         
         mslist = ms_dict[target]
         field = utils.filter_name(target)
+        print('LOOOOOOP1',target)
 
     
         if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':

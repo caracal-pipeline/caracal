@@ -67,33 +67,26 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
 
 def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
     step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
+    column = config[plotname]['column']
+    if column == "corrected":
+        column = "CORRECTED_DATA"
+    elif column == "data":
+        column = "DATA"
     colouraxis = opts.get("colour-axis", None)
     recipe.add("cab/ragavi_vis", step, {
         "ms": msname,
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
-        "canvas-height": 300,
-        "canvas-width": 300,
-        "cbin": config[plotname].get('cbin'),
-        # "chan":
-        # "chunks":
-        # "cmap":
-        # "colour-axis": sdm(colouraxis),
-        # "corr": opts['corr'],
-        # "data-column": config[plotname].get('column'),
-        # "didd": ,
+        "canvas-height": 720,
+        "canvas-width": 1080,
+        # "cbin": int(config[plotname].get('avgchannel')),
+        # "colour-axis":,
+        "data-column": column,
         "field": str(fid),
         "htmlname": "{0:s}_{1:s}_{2:s}_{3:s}_{4:s}".format(prefix, label, field, plotname, ftype),
         "iter-axis": sdm(opts.get('iter-axis', None))
-        # "mem-limit": ,
-        # "no-flag": ,
-        # "num-cores": ,
-        # "scan": ,
-        # "tbin": config[plotname].get('avgtime'),
-        # "xmin": ,
-        # "xmax": ,
-        # "ymin": ,
-        # "ymax": ,
+        # "tbin": int(config[plotname].get('avgtime')),
+
     },
         input=pipeline.input,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
@@ -142,13 +135,13 @@ def worker(pipeline, recipe, config):
             plotms={"xaxis": "imag", "yaxis": "real",
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "r", "yaxis": "i"},
-            ragavi_vis={"xaxis": "imaginary", "yaxis": "real",
+            ragavi_vis={"xaxis": "real", "yaxis": "imaginary",
                         "iter-axis": "corr"})
         diagnostic_plots["amp_phase"] = dict(
             plotms={"xaxis": "amp", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "a", "yaxis": "p"},
-            ragavi_vis={"xaxis": "amplitude", "yaxis": "phase",
+            ragavi_vis={"xaxis": "phase", "yaxis": "amplitude",
                         "iter-axis": "corr"})
         diagnostic_plots["amp_ant"] = dict(
             plotms={"xaxis": "antenna", "yaxis": "amp",

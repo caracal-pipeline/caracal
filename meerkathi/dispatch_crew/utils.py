@@ -44,13 +44,13 @@ def categorize_fields(msinfo):
         'target': (['TARGET'], []),
         'xcal': (['CALIBRATE_POLARIZATION'], [])
     }
-    if intents:
-        for i in range(nfields):
-            ints = intents[intent_ids[i]].split(',')
-            for intent in ints:
-                for ftype in mapping:
-                    if intent in mapping[ftype][0]:
-                        mapping[ftype][-1].append(names[i])
+
+    for i in range(nfields):
+        ints = intents[intent_ids[i]].split(",")
+        for intent in ints:
+            for ftype in mapping:
+                if intent in mapping[ftype][0]:
+                    mapping[ftype][-1].append(names[ids[i]])
 
     return mapping
 
@@ -161,7 +161,6 @@ def field_observation_length(msinfo, field):
         info = yaml.safe_load(f)
 
     names = info['FIELD']['NAME']
-    ids = info['FIELD']['FIELD_ID']
 
     def index(field):
         if isinstance(field, str):

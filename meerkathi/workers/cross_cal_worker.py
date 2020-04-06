@@ -86,7 +86,7 @@ def get_last_gain(gaintables, my_term="dummy"):
         return []
 
 def solve(recipe, config, pipeline, iobs, prefix, label, ftype, 
-        append_last_secondary=None, prev=None, prev_name=None, smodel=False):
+        append_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
     gaintables = []
@@ -96,10 +96,12 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
 
     if prev and prev_name:
         for item in config[ftype].get("apply", ""):
-            gaintables.append("%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item]))
+            gtable_ = "%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item])
+            gaintables.append(gtable_)
+            idx = prev["gaintables"].index(gtable_)
             ft = RULES[item]["field"]
-            fields.append(",".join(getattr(pipeline, ft)[iobs]))
-            interps.append(RULES[item]["interp"])
+            fields.append(prev['gainfield'][idx])
+            interps.append(prev["interps"][idx])
 
     field = getattr(pipeline, CALS[ftype])[iobs]
     order = config[ftype]["order"]
@@ -116,49 +118,60 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
         step = "%s_%s_%d_%d_%s" % (name, label, itern, iobs, ftype)
         params = {}
         params["vis"] = ms
-        if term == "A":
-            params["mode"] = RULES[term]["mode"]
-            params["field"] = ",".join(field)
-            params["datacolumn"] = config[ftype]["flag"]["column"]
-            params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
-            params["combinescans"] = config[ftype]["flag"]["combinescans"]
-            params["flagdimension"] = config[ftype]["flag"]["flagdimension"]
-            params["flagbackup"] = False
-            params["timecutoff"] = config[ftype]["flag"]["timecutoff"]
-            params["freqcutoff"] = config[ftype]["flag"]["freqcutoff"]
-            params["correlation"] = config[ftype]["flag"]["correlation"]
+        
+        if term in "AI":
             # apply existing gaintables before flagging
             if gaintables:
-                applycal(recipe, gaintables,
-                    interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
-            recipe.add(RULES[term]["cab"], step, 
-                    copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s::" % step)
-        elif term == "I":
-            for fid in field_id:
-                step = "%s_%s_%d_%d_%s_field%d" % (name, label, itern, iobs, ftype, fid)
-                applycal(recipe, gaintables, 
-                    interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
-                oneGCimage = "%s_%s_%d_field%d:output" %(prefix, ftype, iobs, fid)
-                recipe.add(RULES[term]["cab"], step, {
-                        "msname" : ms,
-                        "name" : oneGCimage,
-                        "size" : config[ftype]["image"]['npix'],
-                        "scale" : config[ftype]["image"]['cell'],
-                        "channels-out" : config[ftype]["image"]['nchans'],
-                        "auto-mask" : config[ftype]["image"]['auto_mask'],
-                        "auto-threshold" : config[ftype]["image"]['auto_threshold'],
-                        "local-rms-window" : config[ftype]["image"]['rms_window'],
-                        "local-rms" : config[ftype]["image"]['local_rms'],
-                        "padding" : config[ftype]["image"]['padding'],
-                        "niter" : config[ftype]["image"]['niter'],
-                        "weight" : config[ftype]["image"]["weight"],
-                        "mgain" : config[ftype]["image"]['mgain'],
-                        "field" : fid,
-                    },
-                        input=pipeline.input, output=pipeline.cross_cal_continuum,
-                        label="%s:: Image %s field" % (step, ftype))
+                if i > 0 and order[i-1] in "AI":
+                    pass
+                else:
+                    ftable_ = None
+                    if ftype == "secondary_cal" and "I" in order[i:]:
+                        gtable_ = "%s_%s.G%d" % (prefix, prev_name, prev["iters"]["G"])
+                        ftable_ = "%s_%s.F%d" % (prefix, prev_name, prev["iters"]["G"])
+                        transfer_fluxscale(recipe, gtable_+":output", ftable_+":output", pipeline, 
+                        iobs, pipeline.fluxscale_reference, label=label)
+                    applycal(recipe, gaintables,
+                        interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag", fluxtable=ftable_)
+
+            if term == "A":
+                params["mode"] = RULES[term]["mode"]
+                params["field"] = ",".join(field)
+                params["datacolumn"] = config[ftype]["flag"]["column"]
+                params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
+                params["combinescans"] = config[ftype]["flag"]["combinescans"]
+                params["flagdimension"] = config[ftype]["flag"]["flagdimension"]
+                params["flagbackup"] = False
+                params["timecutoff"] = config[ftype]["flag"]["timecutoff"]
+                params["freqcutoff"] = config[ftype]["flag"]["freqcutoff"]
+                params["correlation"] = config[ftype]["flag"]["correlation"]
+                recipe.add(RULES[term]["cab"], step, 
+                        copy.deepcopy(params),
+                        input=pipeline.input, output=pipeline.output,
+                        label="%s::" % step)
+
+            elif term == "I":
+                for fid in field_id:
+                    step = "%s_%s_%d_%d_%s_field%d" % (name, label, itern, iobs, ftype, fid)
+                    oneGCimage = "%s_%s_%d_field%d:output" %(prefix, ftype, iobs, fid)
+                    recipe.add(RULES[term]["cab"], step, {
+                            "msname" : ms,
+                            "name" : oneGCimage,
+                            "size" : config[ftype]["image"]['npix'],
+                            "scale" : config[ftype]["image"]['cell'],
+                            "channels-out" : config[ftype]["image"]['nchans'],
+                            "auto-mask" : config[ftype]["image"]['auto_mask'],
+                            "auto-threshold" : config[ftype]["image"]['auto_threshold'],
+                            "local-rms-window" : config[ftype]["image"]['rms_window'],
+                            "local-rms" : config[ftype]["image"]['local_rms'],
+                            "padding" : config[ftype]["image"]['padding'],
+                            "niter" : config[ftype]["image"]['niter'],
+                            "weight" : config[ftype]["image"]["weight"],
+                            "mgain" : config[ftype]["image"]['mgain'],
+                            "field" : fid,
+                        },
+                            input=pipeline.input, output=pipeline.cross_cal_continuum,
+                            label="%s:: Image %s field" % (step, ftype))
 
         else:
             interp = RULES[term]["interp"]
@@ -181,10 +194,15 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
             if term != "K":
                 params["uvrange"] = config["uvrange"]
 
-            if append_last_secondary and term == "G" and order.count("G") == itern+1:
-                params["caltable"] = append_last_secondary + ":output"
+            # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
+            # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
+            case_1 = append_secondary and term == "G" and order.count("G") == itern+1
+            case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal"
+                
+            if case_1 or case_2:
+                params["caltable"] = append_secondary + ":output"
                 params["append"] = True
-                caltable = append_last_secondary
+                caltable = append_secondary
             else:
                 params["caltable"] = caltable
 
@@ -207,8 +225,8 @@ def solve(recipe, config, pipeline, iobs, prefix, label, ftype,
                         input=pipeline.input, output=pipeline.caltables,
                         label="%s:: %s calibration" % (step, term))
 
-            if config[ftype]["plotgains"]:
-                plotgains(recipe, pipeline, field_id, caltable+":output", iobs, term=term)
+            #if config[ftype]["plotgains"]:
+                #plotgains(recipe, pipeline, field_id, caltable+":output", iobs, term=term)
 
             fields.append(",".join(field))
             interps.append(interp)
@@ -346,7 +364,8 @@ def worker(pipeline, recipe, config):
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = pipeline.fcal_id[i][0]
-       
+      
+        pipeline.fluxscale_reference = fluxscale_field
         if pipeline.enable_task(config, 'set_model'):
             if config['set_model'].get('no_verify'):
                 opts = {
@@ -440,9 +459,11 @@ def worker(pipeline, recipe, config):
             primary = solve(recipe, config, pipeline, i, 
                     prefix, label=label, ftype="primary_cal")
 
+            oneGC_selfcal = 'I' in config["secondary_cal"]["order"]
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
             secondary = solve(recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable, 
+                    prefix, label=label, ftype="secondary_cal", 
+                    append_secondary=gtable, 
                     prev=primary, prev_name="primary_cal", smodel=True)
 
             interps = primary["interps"]
@@ -471,7 +492,7 @@ def worker(pipeline, recipe, config):
 
             # Transfer fluxscale not required if
             # doing secondary-selfcal
-            if 'I' not in config["secondary_cal"]["order"]:
+            if not oneGC_selfcal:
                 ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
                 if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
                         ftable):

@@ -190,10 +190,11 @@ def worker(pipeline, recipe, config):
             targetinfo = yaml.safe_load(stdr)['FIELD']
 
         intents = utils.categorize_fields(msinfo)
-        # Save all fields in a list
-        all_fields = msdict["FIELD"]["NAME"]
+        # If an MS has been through the CASA split task, the FIELD table does not change
+        # Even field names of fields that are not in the main table are 
+        all_fields = [msdict["FIELD"]["NAME"][fld] for fld in msdict["FIELD"]["FIELD_ID"]]
         # The order of fields here is important
-        for term in "target gcal fcal bpcal xcal".split():
+        for k,term in enumerate("target gcal fcal bpcal xcal".split()):
             conf_fields = getattr(pipeline, term)[i]
             label, fields = intents[term]
             label = ",".join(label)

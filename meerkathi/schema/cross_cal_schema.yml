@@ -47,11 +47,6 @@ mapping:
         required: false
         desc: Label for output files.
         example: '1gc1'
-      casa_version: 
-        type: str
-        required: false
-        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
-        example: '47'
       set_model:
         type: map
         desc: Essentially setjy task from CASA.

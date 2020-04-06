@@ -284,8 +284,8 @@ def worker(pipeline, recipe, config):
         #    fitmask_address = 'masking/'+str(mask_key)
         #    image_opts.update({"fitsmask": fitmask_address+':output'})
         else:
-            fits_mask = '{0:s}/{1:s}.fits'.format(
-                'masking', mask_key)
+            fits_mask = '{0:s}/{1:s}_{2:s}.fits'.format(
+                'masking', mask_key, field)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
                 meerkathi.log.error(
                     "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")

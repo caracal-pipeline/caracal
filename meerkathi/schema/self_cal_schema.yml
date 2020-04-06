@@ -207,7 +207,7 @@ mapping:
           clean_mask_method:
             seq:
               - type: str
-            desc: indicate masking method and name of mask. Possible values, auto_mask, sofia, prefix of mask provided from user (located in output/masking). The prefix is either the same as label_out in masking worker, either a prefix of a mask called prefix_targetName.fits'
+            desc: indicate masking method and name of mask. Possible values, auto_mask, sofia, prefix of mask provided from user (located in output/masking). The prefix is either the same as label_out in masking worker, either points to a mask called prefix_targetName.fits'
             required: false
             example: 'auto_mask, auto_mask'
           clean_mask_threshold:

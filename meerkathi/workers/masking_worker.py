@@ -426,13 +426,17 @@ def worker(pipeline, recipe, config):
 
     mask_dir = pipeline.masking + '/'
 
+
+
+
     centre = config.get('centre_coord')
 
     flabel = config['label_in']
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, flabel)
     msfileName = str.split(all_msfiles[0], '.ms')[0]
-
+    print(all_targets)
+    sys.exit(0)
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
         maskName = str.split(pipeline.msnames[0], '.ms')[0]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -451,7 +455,7 @@ def worker(pipeline, recipe, config):
     mask_cell = config.get('cell_size')
     mask_imsize = config.get('mask_size')
 
-    final_mask = mask_dir+str(config.get('label_out'))
+    final_mask = mask_dir+str(config.get('label_out'))+'.fits'
     catalog_name = config['query_catalog'].get('catalog')
 
     catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
@@ -679,7 +683,7 @@ def worker(pipeline, recipe, config):
                 "scaleNoise.scaleX": True,
                 "scaleNoise.scaleY": True,
                 "scaleNoise.scaleZ": False,
-                "writeCat.basename": str(config.get('label_out').split('_mask.fits')[0]),
+                "writeCat.basename": str(config.get('label_out')),
             }
 
             recipe.add('cab/sofia', step,

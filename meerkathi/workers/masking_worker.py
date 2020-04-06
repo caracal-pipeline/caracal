@@ -437,6 +437,7 @@ def worker(pipeline, recipe, config):
     msfileName = str.split(all_msfiles[0], '.ms')[0]
 
 
+    print(all_targets)
     for target in all_targets:
         
         mslist = ms_dict[target]

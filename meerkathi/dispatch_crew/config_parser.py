@@ -190,82 +190,93 @@ class config_parser:
         return copy.deepcopy(cls.__GLOBAL_SCHEMA)
 
     @classmethod
-    def __primary_parser(cls, add_help=False):
-        parser = argparse.ArgumentParser("MeerKATHI HI and Continuum Imaging Pipeline.\n"
-                                         "(C) RARG, SKA-SA 2016-2017.\n"
-                                         "All rights reserved.",
-                                         add_help=add_help)
+    def __primary_parser(cls, add_help=True):
+        parser = argparse.ArgumentParser(description="""
+Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
+interferometry.""",
+            usage="%(prog)s [-options] config",
+            epilog="""
+You can also specify "--worker_name-option_name option_value" to override settings in the configuration file.
+
+To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself  an initial configuration file, 
+then edit the file to suit your needs.
+    """,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            add_help=add_help)
         add = parser.add_argument
         add("-v", "--version", action='version',
             version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__))
-        add('-c', '--config',
+        add('config',
             type=lambda a: is_valid_file(parser, a),
             default=DEFAULT_CONFIG,
-            help='Pipeline configuration file (YAML/JSON format)')
+            help='pipeline configuration file)')
 
         add('-b', '--boring',
-            help='Enable boring mode -- suppress colorization of console output',
+            help='enable boring mode, i.e. suppress colours in console output',
             action='store_true')
 
-        add('-sid', '--singularity-image-dir',
-            help='Directory where stimela singularity images are stored')
+        add('-sid', '--singularity-image-dir', metavar="DIR",
+            help='directory where stimela singularity images are stored')
 
-        add('-gd', '--get-default',
-            help='Name file where the configuration should be saved')
-
-        add('-gdt', '--get-default-template', choices=["minimal", "meerkat"],
+        add('-gdt', '--get-default-template', # metavar="TEMPLATE",
+                choices=["minimal", "meerkat"],
                 default="minimal",
-                help='Default template to get. Choices are minimal and config')
+                help='init a configuration file from a default template')
 
-        add('-sw', '--start-worker',
-            help='Start processing with this worker')
+        add('-gd', '--get-default', metavar="FILE",
+            help='name of file where the template should be saved (use in conjunction with -gdt)')
 
-        add('-ew', '--end-worker',
-            help='Stop processing with this worker')
+        add('-sw', '--start-worker', metavar="WORKER",
+            help='start pipeline at this worker')
+
+        add('-ew', '--end-worker', metavar="WORKER",
+            help='stop pipeline after this worker')
 
         add('-aaf', '--add-all-first', action='store_true',
-            help='Add steps from all workers to pipeline before execucting. Default is execute each workers as they are encountered.')
+            help='add steps from all workers to pipeline before executing (default is execute in turn)')
 
         add('-bl', '--stimela-build',
-            help='Label of stimela build to use',
+            help='label of custom stimela build to use',
             default=None)
 
         add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
-            help='Path to custom schema for worker(s). Can be specified multiple times')
+            help='path to custom schema for worker(s), can be specified multiple times')
 
-        add('-wh', '--worker-help', metavar="WORKER_NAME",
-            help='Get help for a worker')
-
-        add('-pcs', '--print-calibrator-standard',
-            help='Prints auxilary calibrator standard into the log',
-            action='store_true')
-
-        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"], default="docker",
+        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
+            default="docker",
             help='Container technology to use')
 
-        add('--no-interactive',
-            help='Disable interactivity',
+        add('-wh', '--worker-help', metavar="WORKER",
+            help='prints help for a particular worker, then exits')
+
+        add('-pcs', '--print-calibrator-standard',
+            help='prints list of auxiliary calibrator standards, then exits',
             action='store_true')
 
+        # add('--no-interactive',
+        #     help='Disable interactivity',
+        #     action='store_true')
+
         add('-debug',
-            help='Enable debugging mode',
+            help='enable debugging mode',
             action='store_true')
 
         add('-nr','--no-reports',
-            help='Disable generation of report about the pipeline run.',
+            help='disable generation of report about the pipeline run',
             action='store_true')
 
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
-            help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
+            help='directory where custom pipeline workers can be found')
 
-        add('-rv', '--report-viewer', action='store_true',
-            help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
-
-        add('--interactive-port', type=int, default=8888,
-            help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
+        # add('-rv', '--report-viewer', action='store_true',
+        #     help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
+        #
+        # add('--interactive-port', type=int, default=8888,
+        #     help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 
         # add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
         #     action='store_true')
+
         return parser
 
     __HAS_BEEN_INIT = False

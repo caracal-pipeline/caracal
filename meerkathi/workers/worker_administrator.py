@@ -59,7 +59,6 @@ class worker_administrator(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
-        self.logs = self.config['general']['output'] + '/logs'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + \
             '/diagnostic_plots'
@@ -70,7 +69,11 @@ class worker_administrator(object):
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
-        self.timeNow = '{:%Y%m%d-%H%M}'.format(datetime.now()) 
+        self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
+
+        self.logs_symlink = self.config['general']['output'] + '/logs'
+        self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
+
 
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
@@ -208,6 +211,14 @@ class worker_administrator(object):
             os.mkdir(self.data_path)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
+            log.info("output directory for logs is {}".format(self.logs))
+            if os.path.lexists(self.logs_symlink) and os.path.islink(self.logs_symlink):
+                os.unlink(self.logs_symlink) # old symlink can go
+            else:
+                log.warning("{} already exists and is not a symlink, can't link to output logs".format(self.logs_symlink))
+            if not os.path.lexists(self.logs_symlink):
+                os.symlink(os.path.basename(self.logs), self.logs_symlink)
+                log.info("{} will link to this directory".format(self.logs_symlink))
         if not os.path.exists(self.reports):
             os.mkdir(self.reports)
         if not os.path.exists(self.diagnostic_plots):

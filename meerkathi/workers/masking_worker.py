@@ -435,10 +435,16 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, flabel)
     msfileName = str.split(all_msfiles[0], '.ms')[0]
-    print(all_targets)
+
+
+    for target in all_targets:
+        mslist = ms_dict[target]
+        field = utils.filter_name(target)
+    print(mslist,target,field)
     sys.exit(0)
+    
     if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
-        maskName = str.split(pipeline.msnames[0], '.ms')[0]
+        maskName = str.split(mlist, '.ms')[0]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
             pipeline.output, msfileName)
         with open(msinfo, 'r') as stdr:

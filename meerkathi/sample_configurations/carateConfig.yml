@@ -124,8 +124,8 @@ self_cal:
   cal_timeslots_chunk: 360
   image:
     enable: true
-    auto_mask: [20,10,5,5]
-    auto_threshold: [0.5,0.5,0.5,0.5]
+    clean_mask_threshold: [20,10,5,5]
+    clean_threshold: [0.5,0.5,0.5,0.5]
   calibrate:
     enable: true
     model: ['1','2','3']

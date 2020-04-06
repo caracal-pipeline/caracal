@@ -31,10 +31,10 @@ kksuccessquotes=( \
 success=0
 
 # Preamble
-printf "\n"
-printf "#######################\n"
-printf "Testing CARACal at home \n"
-printf "#######################\n"
+echo ""
+echo "#######################"
+echo "Testing CARACal at home "
+echo "#######################"
 echo ""
 echo "caratekit.sh $*"
 echo ""
@@ -349,6 +349,10 @@ then
     echo "                                      pip install -U --force-reinstall -r (...)stimela_last_stable.txt"
     echo "                                      when installing MeerKATHI"
     echo ""
+    echo "  --local-stimela ARG -lst ARG        Use pip install -U --force-reinstall ARG"
+    echo "                                      to install a local stimela (or whatever is in ARG)"
+    echo "                                      when installing MeerKATHI"
+    echo ""
     echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
     echo ""
     echo "  --force -f                          Force replacement and re-installation of" 
@@ -577,18 +581,17 @@ then
     kill "$PPID"; exit 1;
 fi
 
-printf "##########\n"
-printf " Starting \n"
-printf "##########\n"
-printf "\n"
+echo "##########"
+echo " Starting "
+echo "##########"
+echo ""
 
 # Environment variables
-#[ -n "$CARATE_JOB_NAME" ] || { printf "You have to define a global CARATE_JOB_NAME variable
-# like (if you're\nusing bash):\n$ export CARATE_JOB_NAME="CARCal test"\nOr use the -\n"; kill "$PPID"; exit 1; }
 [[ -n "$CARATE_WORKSPACE" ]] || { \
-    printf "You have to define a global CARATE_WORKSPACE variable, like (if you're\nusing bash):\n";\
-    printf "$ export CARATE_WORKSPACE=\"/home/username/meerkathi_tests\"\n";\
-    printf "Or use the -ws switch. It is the top level directory of all tests.\n\n";\
+    echo "You have to define a global CARATE_WORKSPACE variable, like (if you're\nusing bash):";\
+    echo "$ export CARATE_WORKSPACE=\"/home/username/meerkathi_tests\"";\
+    echo "Or use the -ws switch. It is the top level directory of all tests.";\
+    echo "";\
     kill "$PPID"; exit 1;
 }
 
@@ -608,13 +611,14 @@ else
     [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=1
 fi
 (( $tdfault == 0 )) || { \
-    printf "You have to define a CARATE_TEST_DATA_DIR variable, like (if\n";\
-    printf "you're using bash):\n";\
-    printf "$ export CARATE_TEST_DATA_DIR=\"/home/username/meerkathi_tests/rawdata\"\n";\
-    printf "Or use the -td switch.\n";\
-    printf "You also have to create that directory $CARATE_TEST_DATA_DIR\n";\
-    printf "and put test rawdata therein: a.ms  b.ms c.ms ...\n";\
-    printf "These test data will be copied across for the test.\n\n";\
+    echo "You have to define a CARATE_TEST_DATA_DIR variable, like (if";\
+    echo "you're using bash):";\
+    echo "$ export CARATE_TEST_DATA_DIR=\"/home/username/meerkathi_tests/rawdata\"";\
+    echo "Or use the -td switch.";\
+    echo "You also have to create that directory $CARATE_TEST_DATA_DIR";\
+    echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
+    echo "These test data will be copied across for the test.";\
+    echo "";\
     kill "$PPID"; exit 1;
 }
     
@@ -627,17 +631,19 @@ fi
 }
 
 [[ -n "$CARATE_CARACAL_TEST_ID" ]] || { \
-    printf "Without build number you have to define a global CARATE_CARACAL_TEST_ID\n";\
-    printf "variable, giving your test directory a name, like (if you're using bash):\n";\
-    printf "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\"\n";\
-    printf "Otherwise choose any unique identifyer. You can also use the -ct switch.\n\n";\
+    echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID";\
+    echo "variable, giving your test directory a name, like (if you're using bash):";\
+    echo "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\"";\
+    echo "Otherwise choose any unique identifyer. You can also use the -ct switch.";\
+    echo "";\
     kill "$PPID"; exit 1;
 }
 ss+="caracal_test_id=${CARATE_CARACAL_TEST_ID}"
 ss+=$'\n'
 
 [[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || {\
-    printf "Please use one of the switches -dm, -da, -di, -sm, -sa, or -si\n\n";\
+    echo "Please use one of the switches -dm, -da, -di, -sm, -sa, or -si";\
+    echo "";\
     kill "$PPID"; exit 1;
 }
 
@@ -646,8 +652,9 @@ then
     ss+="local_source=${CARATE_LOCAL_SOURCE}"
     ss+=$'\n'
 else
-    printf "The variable CARATE_LOCAL_SOURCE is not set, meaning that MeerKATHI\n"
-    printf "will be downloaded from https://github.com/ska-sa/meerkathi\n\n"
+    echo "The variable CARATE_LOCAL_SOURCE is not set, meaning that MeerKATHI"
+    echo "will be downloaded from https://github.com/ska-sa/meerkathi"
+    echo ""
 fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -655,15 +662,16 @@ then
     ss+="config_source=${CARATE_CONFIG_SOURCE}"
     ss+=$'\n'
 else
-    printf "The variable CARATE_CONFIG_SOURCE is not set and switches"
-    printf "config-source and -cs are not used meaning that no CARACal\n"
-    printf "test will be made on own supplied configuration.\n\n"
+    echo "The variable CARATE_CONFIG_SOURCE is not set and switches"
+    echo "config-source and -cs are not used meaning that no CARACal"
+    echo "test will be made on own supplied configuration."
+    echo ""
 fi
 
 # Determine number of stimelas and allow only one
 counts=0
 [[ -z ${US} ]] || (( counts+=1 ))
-[[ -z ${UM} ]] || (( counts+=1 ))
+[[ -z ${UM} ]] || { (( counts+=1 )); }
 [[ -z ${CARATE_LOCAL_STIMELA} ]] || (( counts+=1 ))
 (( ${counts}<2 )) || { \
     echo "Use maximally one of switches and variables defined with -us -um -lst."; \
@@ -690,9 +698,10 @@ then
 else
     ss+="cvirtualenv=\${workspace_root}/caracal_venv"
     ss+=$'\n'
-    printf "The variable CARATE_VIRTUALENV is not set and switches"
-    printf "--virtualenv and -ve are not used meaning that the virtualenv\n"
-    printf "will be created or re-used inside the test installation.\n\n"
+    echo "The variable CARATE_VIRTUALENV is not set and switches"
+    echo "--virtualenv and -ve are not used meaning that the virtualenv"
+    echo "will be created or re-used inside the test installation."
+    echo ""
 fi
 
 if [[ -n "$CARATE_LOCAL_STIMELA" ]]
@@ -700,9 +709,10 @@ then
     ss+="local_stimela=${CARATE_LOCAL_STIMELA}"
     ss+=$'\n'
 else
-    printf "The variable CARATE_LOCAL_STIMELA is not set and switches"
-    printf "--local-stimela and -lst are not used meaning that the virtualenv\n"
-    printf "will be created or re-used as specified in the CARACal installation.\n\n"
+    echo "The variable CARATE_LOCAL_STIMELA is not set and switches"
+    echo "--local-stimela and -lst are not used meaning that the virtualenv"
+    echo "will be created or re-used as specified in the CARACal installation."
+    echo ""
 fi
 
 # Save home for later 
@@ -857,7 +867,7 @@ if [[ -e ${CARATE_TEST_DATA_DIR} ]]
 then
     # Check if there are any ms files
     mss=`find ${CARATE_TEST_DATA_DIR} -name *.ms`
-    [[ ! -z "$mss" ]] || { printf "Test data required in ${CARATE_TEST_DATA_DIR} \n"; kill "$PPID"; exit 1; }
+    [[ ! -z "$mss" ]] || { echo "Test data required in ${CARATE_TEST_DATA_DIR}"; echo ""; kill "$PPID"; exit 1; }
     
     # This generates the dataid string
     dataidstr=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
@@ -1261,11 +1271,12 @@ testingoutput () {
     echo "###################"
     echo 
     echo "Counting logfiles in directory ${1}/${2}"
-    allogs=""
-    allogs=`ls -t ${1}/${2}/output/logs/` || true
-    meerkathilog=`ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1` || true
-    reporting=""
-    [[ -n ${meerkathilog} ]] || { reporting+="This CARACal run is missing a logfile"; reporting+=$'\n'; }
+    # Check here
+    allogs=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/ || echo ""`
+#    allogs=`ls -t ${1}/${2}/output/logs/` || true
+    meerkathilog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1 || echo ""`
+    [[ ${meerkathilog} == "" ]] && unset meerkathilog
+#    meerkathilog=`ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1 || true`
     [[ -z ${meerkathilog} ]] || { reporting+="This CARACal run is logged in ${meerkathilog}"; reporting+=$'\n'; }
     [[ -z ${meerkathilog} ]] || { meerkathilogsh=`echo ${meerkathilog} | sed '{s=.*/==;}'`; }
     total=0
@@ -1279,41 +1290,52 @@ testingoutput () {
 				    hadmeerkathi2=1; unset hadmeerkathi; }
         [[ ${log} != ${meerkathilogsh} ]] || hadmeerkathi=1         
     done
-    reporting+="Total number of logfiles: $total"
+    reporting+="Total number of logfiles: $total";
     echo "$reporting"
     echo "$reporting" >> ${SYA}
 
     # Count number of runs of workers and the number of finishes
     worker_runs=0
     worker_fins=0
-    [[ -z $meerkathilog ]] || worker_runs=`grep "Running worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
-    [[ -z $meerkathilog ]] || worker_fins=`grep "Finished worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`
-    reporting="MeerKATHI logfile indicates ${worker_runs} workers starting"
-    reporting+=$'\n'
-    reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'
-    echo ${reporting};
-    echo ${reporting} >> ${SYA};
+    [[ -z ${meerkathilog} ]] && { \
+        reporting="This CARACal run is missing a summary logfile"; reporting+=$'\n'; \
+	reporting+="Returning error";\
+	reporting+=$'\n'; \
+	echo "${reporting}"; \
+	echo "${reporting}" >> ${SYA}; \
+	return 1; \
+    } || { \
+	worker_runs=`grep "Running worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`; \
+	worker_fins=`grep "Finished worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`; \
+	reporting="MeerKATHI logfile indicates ${worker_runs} workers starting"; \
+	reporting+=$'\n'; \
+	reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'; \
+	echo "${reporting}"; \
+	echo "${reporting}" >> ${SYA}; \
+    }
 
+    
     (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; \
 					    reporting+=$'\n'; \
-					    echo {reporting}; echo ${reporting} >> ${SYA}; \
+					    echo "${reporting}"; \
+					    echo "${reporting}" >> ${SYA}; \
 					    return 1; }
     [[ -z $meerkathilog ]] || (( $worker_runs > 0 )) || { reporting="No workers have started according to log-meerkathi.txt"; \
 				reporting+=$'\n'; \
 				reporting+="Returning error";\
 				reporting+=$'\n'; \
-				echo ${reporting}; \
-				echo ${reporting} >> ${SYA}; \
+				echo "${reporting}"; \
+				echo "${reporting}" >> ${SYA}; \
 				return 1; }
 
     # Notice that 0 is true in bash
     (( $total > 0 )) || { reporting="No logfiles produced. Returning error."; reporting+=$'\n'; \
-                          echo ${reporting} \
-			  echo ${reporting} >> ${SYA}; \
+                          "echo ${reporting}" \
+			  "echo ${reporting}" >> ${SYA}; \
                           return 1; }
-    [[ -n $meerkathilog ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
-                          echo ${reporting} \
-			  echo ${reporting} >> ${SYA}; \
+    [[ -n ${meerkathilog} ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
+                          "echo ${reporting}" \
+			  "echo ${reporting}" >> ${SYA}; \
                           return 1; }
     return 0
 }
@@ -1454,7 +1476,7 @@ runtest () {
     testingoutput ${WORKSPACE_ROOT} test_${configfilename}_${contarch} || { true; failedoutput=1; }
 
     #    failedoutput=$?
-    if [[ ${failedrun} == 0 ]]
+    if [[ ${failedoutput} == 0 ]]
     then
 	mes="CARACal run test_${configfilename}_${contarch} did not return a faulty output."
 	echo ${mes}
@@ -1472,16 +1494,16 @@ runtest () {
     
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
-        echo "###############"
-        echo " caratekit failed "
-        echo "###############"
-        echo 
-        echo "###############" >> ${SYA} 
-        echo >> ${SYA} 
-        echo " caratekit failed " >> ${SYA} 
-        echo >> ${SYA} 
-        echo "###############" >> ${SYA} 
-        echo  >> ${SYA} 
+#        echo "##################"
+#        echo " caratekit failed "
+#        echo "##################"
+#        echo 
+#        echo "################" >> ${SYA} 
+#        echo >> ${SYA} 
+#        echo "caratekit failed " >> ${SYA} 
+#        echo >> ${SYA} 
+#        echo "################" >> ${SYA} 
+#        echo  >> ${SYA} 
         kill "$PPID"
         exit 1
     fi

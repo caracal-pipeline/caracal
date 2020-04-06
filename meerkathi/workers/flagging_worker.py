@@ -7,13 +7,13 @@ import yaml
 import re
 import meerkathi
 import sys
-NAME = 'Pre-calibration flagging'
+NAME = 'Flagging'
 
 FLAG_NAMES = "static automatic autocorr_spectrum".split()
 
 
 def worker(pipeline, recipe, config):
-    label = config['label']
+    label = config['label_in']
     wname = pipeline.CURRENT_WORKER
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
@@ -23,7 +23,7 @@ def worker(pipeline, recipe, config):
         msnames = pipeline.msnames
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
-   
+
 
     for i in range(nobs):
         # loop over all input .MS files
@@ -34,15 +34,22 @@ def worker(pipeline, recipe, config):
 
         '''GET LIST OF INPUT MS'''
         mslist = []
+        msn = pipeline.msnames[i][:-3]
 
-        if label:
-            target_ls = pipeline.target[i]
-            for target in target_ls:
+        if config['field'] == 'target':
+           target_ls = pipeline.target[i]
+           for target in target_ls:
                 field = utils.filter_name(target)
-                mslist.append(
-                    '{0:s}-{1:s}_{2:s}.ms'.format(pipeline.msnames[i][:-3], field, label))
+                mslist.append(pipeline.msnames[i] if label == \
+                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
+
+        elif config['field'] == 'calibrators':
+            mslist.append(pipeline.msnames[i] if label == \
+                  '' else '{0:s}_{1:s}.ms'.format(msn, label))
+
         else:
-            mslist.append(msnames[i])
+            raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
+                                 "User selected: '{}'".format(config['field']))
 
         for m in mslist:  # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
@@ -365,7 +372,7 @@ def worker(pipeline, recipe, config):
                 substep = 'save_flags_before_automatic_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
-                if label:
+                if config['field'] == 'target':
                     fields = [target_ls[j]]
                     tricolour_mode = 'polarisation'
                     tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
@@ -457,37 +464,37 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'rfinder'):
                 step = 'rfinder_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
-                if label:
+                if config['field'] == 'target':
                     fieldName = utils.filter_name(target_ls[j])
                     field = '0'
-                    outlabel = '_{0:s}_{1:d}'.format(fieldName, i)
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
                         pipeline, i, config['rfinder'].get('field')).split(","))))
-                    outlabel = '_{0:d}'.format(i)
-                recipe.add('cab/rfinder', step,
-                           {
-                               "msname": msname,
-                               "field": int(field),
-                               "plot_noise": "noise",
-                               "RFInder_mode": "use_flags",
-                               "outlabel": outlabel,  # The output will be rfi_<pol>_<outlabel>
-                               "polarization": config['rfinder'].get('polarization'),
-                               "spw_width": config['rfinder'].get('spw_width'),
-                               "time_step": config['rfinder'].get('time_step'),
-                               "time_enable": config['rfinder'].get('time_enable'),
-                               "spw_enable": config['rfinder'].get('spw_enable'),
-                               "1d_gif": config['rfinder'].get('time_enable'),
-                               "2d_gif": config['rfinder'].get('time_enable'),
-                               "altaz_gif": config['rfinder'].get('spw_enable'),
-                               "movies_in_report": config['rfinder'].get('time_enable') or config.get('spw_enable')
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
+                for f in field.split(','):
+                    outlabel = '_{0:d}'.format(i) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(i,f)
+                    recipe.add('cab/rfinder', step,
+                               {
+                                   "msname": msname,
+                                   "field": int(f),
+                                   "plot_noise": "noise",
+                                   "RFInder_mode": "use_flags",
+                                   "outlabel": outlabel,  # The output will be rfi_<pol>_<outlabel>
+                                   "polarization": config['rfinder'].get('polarization'),
+                                   "spw_width": config['rfinder'].get('spw_width'),
+                                   "time_step": config['rfinder'].get('time_step'),
+                                   "time_enable": config['rfinder'].get('time_enable'),
+                                   "spw_enable": config['rfinder'].get('spw_enable'),
+                                   "1d_gif": config['rfinder'].get('time_enable'),
+                                   "2d_gif": config['rfinder'].get('time_enable'),
+                                   "altaz_gif": config['rfinder'].get('spw_enable'),
+                                   "movies_in_report": config['rfinder'].get('time_enable') or config.get('spw_enable')
+                               },
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flagging_summary'):
-                __label = config.get('label', False)
+                __label = config.get('label_in', False)
                 step = 'flagging_summary_{0:s}_{1:d}{2:s}_{3:d}'.format(
                     wname, i, "_"+__label or "", j)
                 recipe.add('cab/casa_flagdata', step,
@@ -498,10 +505,9 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label'), msname))
+                           label='{0:s}-{1:s}:: Flagging summary  ms={2:s}'.format(step, config.get('label_in'), msname))
 
             substep = 'save_flags_after_{0:s}_{1:d}_{2:d}'.format(
                 wname, i, j)
             manflags.add_cflags(pipeline, recipe, "_".join(
                 [wname, "after_%s" % wname]), msname, cab_name=substep)
-

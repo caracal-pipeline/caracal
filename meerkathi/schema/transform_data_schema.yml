@@ -4,8 +4,8 @@ mapping:
     type: str
     required: true
 
-  split_target:
-    desc: Split and average target data
+  transform_data:
+    desc: Split, avg and/or calibrate data
     type: map
     mapping:
       enable:
@@ -24,8 +24,8 @@ mapping:
         required: false
         example: corr 
 
-      split_target:
-        desc: Split data
+      split_field:
+        desc: Make new ms of targets or calibrators
         type: map
         mapping:
           enable:
@@ -33,6 +33,11 @@ mapping:
             type: bool
             required: false
             example: 'True'
+          field:
+            desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+            type: str
+            required: false
+            example: 'target'
           time_average:
             desc: Time averaging
             type: str
@@ -73,7 +78,12 @@ mapping:
                 type: bool
                 required: false
                 example: 'False'
-              callabel:
+              callib:
+                desc: Name of callib file to be used, if user has their own
+                type: str
+                required: false
+                example: ''
+              label_cal:
                 desc: Label of calibration tables to be used
                 type: str
                 required: false

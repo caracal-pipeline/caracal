@@ -1,12 +1,42 @@
-[![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/)
-
-## Documentation
+<!-- [![Jenkins build Status](https://jenkins.meqtrees.net/job/meerkathi-cron/badge/icon)](https://jenkins.meqtrees.net/job/meerkathi-cron/) -->
+# Documentation
 
 https://caracal.readthedocs.io
 
-## Download & Install
-### Usage and publication policy
-When using MeerKATHI/CARACal please be aware of and adhere to the [MeerKATHI publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
+# Download & Install
+## Usage and publication policy
+When using CARACal please be aware of and adhere to the [MeerKATHI publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
+
+## Installation using caratekit.sh
+
+To newly install MeerKATHI usig caratekit, download [caratekit.sh](https://github.com/ska-sa/meerkathi/raw/master/meerkathi/utils/caratekit.sh) and make it executable:
+```
+$ chmod u+x caratekit.sh 
+```
+Then select a parent directory ``$parent`` (e.g. ``/home/pete``) to the installation and a name $installation_name (e.g. ``caracal``) for the installation. Then do:
+```
+caratekit.sh -ws $parent -ct  $installation_name -kh -di -op -ur
+```
+for a docker installation and:
+```
+caratekit.sh -ws $parent -ct  $installation_name -kh -si -op -ur -sr
+```
+for a singularity installation.
+
+Each time you want to run meerkathi using the docker installation do:
+
+``$ source $parent/$installation_name/caracal_venv/bin/activate`` (bash)
+or
+``> source $parent/$installation_name/caracal_venv/bin/activate.csh`` (csh or tcsh)
+then create a data reduction directory $datared and put the configuration file $config.yml into that directory. Also create a directory msdir in $datared and put your raw measurement set data sets therein. Then
+
+``$ cd $datared``
+
+``$ meerkathi -c $config.yml`` (Docker)
+
+``$ meerkathi -c $config.yml --container-tech singularity -sid $parent/$installation_name/stimela_singularity`` (Singularity)
+
+For details on caratekit.sh type ``$ caratekit.sh -h`` or ``$ caratekit.sh -v``.
 
 ### On Linux
 

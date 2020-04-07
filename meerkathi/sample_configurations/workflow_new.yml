@@ -1,4 +1,4 @@
-schema_version: 0.2.0
+schema_version: 0.3.0
 
 general:
   msdir: msdir
@@ -9,7 +9,7 @@ general:
 
 
 get_data:
-  dataid: ['']
+  dataid: []
 
 observation_config:
   target:
@@ -202,6 +202,6 @@ image_line:
     cell: 2
   mstransform:
     enable: true
-    doppler: true
+    doppler:
       enable: true
       telescope: meerkat

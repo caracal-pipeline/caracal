@@ -233,7 +233,7 @@ def worker(pipeline, recipe, config):
               "sol-stall-quorum"  : config[key].get('dd_sol_stall_quorum'),
               "g-type"            : config[key].get('dd_g_type'),
               "g-clip-high"       : config[key].get('dd_g_clip_high'),
-              "g-clip-low"        : config[key].get('dd_g_clip_false'),
+              "g-clip-low"        : config[key].get('dd_g_clip_low'),
               "g-solvable"        : True,
               "g-update-type"     : config[key].get('dd_g_update_type'),
               "g-max-prior-error" : config[key].get('dd_g_max_prior_error'),

@@ -212,6 +212,14 @@ do
  	firstletter=`echo ${CARATE_CONFIG_SOURCE} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_CONFIG_SOURCE="${cwd}/${CARATE_CONFIG_SOURCE}" 
     fi
+    if [[ "$arg" == "--docker-sample-configs" ]] || [[ "$arg" == "-dsc" ]]
+    then
+      DSC=1
+    fi
+    if [[ "$arg" == "--singularity-sample-configs" ]] || [[ "$arg" == "-ssc" ]]
+    then
+      SSC=1
+    fi
 #    if [[ "$arg" == "--small-script" ]] || [[ "$arg" == "-ss" ]]
 #    then
 #        (( nextcount=argcount+1 ))
@@ -362,6 +370,12 @@ then
     echo ""
     echo "  --override -or                      Override security question (showing root"
     echo "                                      directory and asking whether to proceed.)"
+    echo ""
+    echo "  --docker-sample-configs -dsc         Check all sample configurations to pass"
+    echo "                                       observation config with docker."
+    echo ""
+    echo "  --singularity-sample-configs -ssc    Check all sample configurations to pass"
+    echo "                                       observation config with singiularity."
 #    echo "  --small-script ARG -ss ARG          Generate a small script ARG showing all"
 #    echo "                                      steps taken by carate"
     echo ""
@@ -600,7 +614,7 @@ ss+=$'\n'
 tdfault=0
 if [[ ! -n "$CARATE_TEST_DATA_DIR" ]]
 then
-    if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]]
+    if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${DSC} ]] || [[ -n ${SSC} ]]
     then
 	tdfault=1
     else
@@ -640,8 +654,8 @@ fi
 ss+="caracal_test_id=${CARATE_CARACAL_TEST_ID}"
 ss+=$'\n'
 
-[[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || {\
-    echo "Please use one of the switches -dm, -da, -di, -sm, -sa, or -si";\
+[[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || [[ -n "${DSC}" ]] || [[ -n "${SSC}" ]] ||{\
+    echo "Please use one of the switches -dm, -da, -di, -sm, -sa, -si, -dsc, -ssc";\
     echo "";\
     kill "$PPID"; exit 1;
 }
@@ -1161,7 +1175,7 @@ then
     [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA}
 fi
 
-if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]]
+if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]] && [[ -z $DSC ]] && [[ -z $SSC ]]
 then
     echo "You have not defined a test:"
     echo "--docker-minimal or -dm"
@@ -1170,6 +1184,8 @@ then
     echo "--singularity-minimal or -sm"
     echo "--singularity-alternative or -sa"
     echo "--singularity-installation or -si"
+    echo "--docker-sample-configs or -dsc"
+    echo "--singularity-sample-configs or -ssc"
     echo "Use -h flag for more information"
     kill "$PPID"; exit 0
 fi
@@ -1185,7 +1201,7 @@ then
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
 fi
 
-if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]]
+if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]] || [[ -n $DSC ]]
 then
     # Prevent special characters to destroy installation
     stimela_ns=`whoami`
@@ -1538,7 +1554,112 @@ runtest () {
     echo "Final test folder size (test_${configfilename}_${contarch}): ${outsize} MB" >> ${SYA}
     echo "" >> ${SYA}    
 }
+runtestsample () {
+    # Running a specific caracal test using a specific combination of configuration file, architecture, and containerization
+    # Argument 1: Line appearing at the start of function
+    # Argument 2: $WORKSPACE_ROOT
+    # Argument 3: configuration file name without "yml"
+    # Argument 4: containerisation architecture "docker" or "singularity"
+    # Argument 5: delete existing files or not
+    # Argument 6: Location of where the modified configfile is written
+    # Argument 7: Location of the configfile to be checked, string to pass to the output
+    # Argument 8: Switches to pass to meerkathi
 
+    local greetings_line=$1
+    local WORKSPACE_ROOT=$2
+    local configfilename=$3
+    local contarch=$4
+    local FORCE=$5
+    local configlocation=$6
+    local inputconfiglocation=$7
+    local caracalswitches=$8
+
+    echo "##########################################"
+    echo " $greetings_line "
+    echo "##########################################"
+    echo
+
+    failedrun=0
+
+    echo "##########################################" >> ${SYA}
+    echo "" >> ${SYA}
+    sya="test_config_sample_${contarch} preparation start time:";sya+=$'\n'; sya+=`date -u`;
+    echo "${sya}" >> ${SYA}
+
+    if [[ -e ${WORKSPACE_ROOT}/test_config_sample_${contarch} ]] && (( $FORCE==0 ))
+    then
+        echo "Will not re-create existing directory ${WORKSPACE_ROOT}/test_config_sample_${contarch}"
+    else
+	    #Check if the test directory is a parent of any of the supplied directories
+	    if checkex ${WORKSPACE_ROOT}/test_config_sample_${contarch}
+	    then
+	      # Go through the files and remove individually
+	      # continue here
+	      dirs=(input  msdir  output  stimela_parameter_files)
+	      for dire in ${dirs[@]}
+	      do
+		      checkex ${WORKSPACE_ROOT}/test_config_sample_${contarch}/${dire} || \
+		        echo "rm -rf \${workspace_root}/test_config_sample_${contarch}/${dire}" >> ${SS}
+		      [[ -n ${FS} ]] || \
+		        checkex ${WORKSPACE_ROOT}/test_config_sample_${contarch}/${dire} || \
+		        rm -rf \${workspace_root}/test_config_sample_${contarch}/${dire}
+	      done
+	    else
+		    echo "rm -rf \${workspace_root}/test_config_sample_${contarch}" >> ${SS}
+            [[ -n ${FS} ]] || \
+		    rm -rf ${WORKSPACE_ROOT}/test_config_sample_${contarch}
+	    fi
+
+      echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
+      echo "${WORKSPACE_ROOT}/test_config_sample_${contarch}"
+	    echo "mkdir -p \${workspace_root}/test_config_sample_${contarch}/msdir" >> ${SS}
+      mkdir -p ${WORKSPACE_ROOT}/test_config_sample_${contarch}/msdir
+
+	    if [[ -d ${CARATE_INPUT_DIR} ]]
+	    then
+	      mkdir -p ${WORKSPACE_ROOT}/test_config_sample_${contarch}/input
+	      checkex ${WORKSPACE_ROOT}/test_config_sample_${contarch}/input || cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/test_config_sample_${contarch}/input/
+	    fi
+    fi
+    # Check if source msdir is identical to the target msdir. If yes, don't copy
+	  d=`stat -c %i $CARATE_TEST_DATA_DIR`
+	  e=`stat -c %i ${WORKSPACE_ROOT}/test_config_sample_${contarch}/msdir`
+	  [[ $d == $e ]] || \
+	    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/test_config_sample_${contarch}/msdir/" >> ${SS}
+	  [[ $d == $e ]] || \
+	    [[ -n ${FS} ]] || \
+	    cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/test_config_sample_${contarch}/msdir/
+    #We need to take the config file from the meerkat input to our test directoru, always
+    cp ${inputconfiglocation} ${configlocation}
+    # then we need to setup for the test
+    # first put in the data ID
+    # sed "s/dataid: \[\x27\x27\]/$dataidstr/"
+    sed -i "s/dataid: \[.*\]/${dataidstr}/" ${configlocation}
+    # then replace all enable true with false
+    sed -i "s/enable: true/enable: false/gI" ${configlocation}
+    # And then run meerkathi
+    echo "Running ${contarch} test (using ${configfilename}.yml)"
+    cd ${WORKSPACE_ROOT}/test_config_sample_${contarch}
+    # Notice that currently all output will be false, such that || true is required to ignore this
+	  failed=0
+	  echo meerkathi -c ${configfilename}.yml ${caracalswitches} || true
+	  # Report CARACal start time
+    sya="test_${configfilename}_${contarch} start time:"; sya+=$'\n'; sya+=`date -u`;
+    echo "${sya}" >> ${SYA}
+	  [[ -n ${FS} ]] || meerkathi -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
+    echo "${failedrun}"
+    if [[ ${failedrun} == 0 ]]
+    then
+    	mes="CARACal test for ${configfilename}.yml did not return an error."
+	    echo ${mes}
+	  else
+	    mes="CARACal test for ${configfilename}.yml was unsuccesful."
+	    echo ${mes}
+	    kill "$PPID"
+      exit 1
+	  fi
+    echo "" >> ${SYA}
+}
 if [[ -n $DM ]]
 then
     greetings_line="Docker: minimalConfig"
@@ -1565,8 +1686,44 @@ then
     caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
+if [[ -n $DSC ]]
+then
+    echo "####################################"
+    echo " Testing all sample configurations "
+    echo "####################################"
+    greetings_line="Docker: Testing Sample configurations"
+    contarch="docker"
+    caracalswitches="${stimela_ns}"
+    # First we need to know all the sample configurations present that are not old
+    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    then
+      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations/"
+      sample_location="${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations"
+    else
+      echo "You are checking the configurations in the remote master"
+      echo "That seems silly but ok."
+      echo ""
+      sample_location="${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations"
+    fi
+    for entry in "${sample_location}"/*
+    do
+      filename=${entry##*/}
+      # check that it is not old
+      if [[ $filename != *"old"* ]]
+      then
+        #Check it is a yml file
+        if [[ $filename == *".yml"* ]]
+        then
+          confilename=${filename%.yml}
+          runtestsample "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/test_config_sample_${contarch}/${confilename}.yml" "${sample_location}/${confilename}.yml" "${caracalswitches}"
+          #make sure that only in the first instance a new directory is created
+          FORCE=0
+        fi
+      fi
+    done
+fi
 
-if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]]
+if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
 then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
@@ -1670,6 +1827,44 @@ then
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
+
+if [[ -n $SSC ]]
+then
+    echo "####################################"
+    echo " Testing all sample configurations "
+    echo "####################################"
+    greetings_line="Singularity: Testing Sample configurations"
+    contarch="singularity"
+    caracalswitches="--container-tech singularity -sid ${singularity_loc}"
+    # First we need to know all the sample configurations present that are not old
+    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    then
+      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations/"
+      sample_location="${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations"
+    else
+      echo "You are checking the configurations in the remote master"
+      echo "That seems silly but ok."
+      echo ""
+      sample_location="${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations"
+    fi
+    for entry in "${sample_location}"/*
+    do
+      filename=${entry##*/}
+      # check that it is not old
+      if [[ $filename != *"old"* ]]
+      then
+        #Check it is a yml file
+        if [[ $filename == *".yml"* ]]
+        then
+          confilename=${filename%.yml}
+          runtestsample "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/test_config_sample_${contarch}/${confilename}.yml" "${sample_location}/${confilename}.yml" "${caracalswitches}"
+          #make sure that only in the first instance a new directory is created
+          FORCE=0
+        fi
+      fi
+    done
+fi
+
 
 success=1
 

@@ -430,6 +430,8 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
                 # Clear autoflags if need be                substep = 'save_flags_before_automatic_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                substep = 'save_flags_before_automatic_{0:s}_{1:d}_{2:d}'.format(
+                    wname, i, j)
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
                 if config['field'] == 'target':
@@ -468,7 +470,7 @@ def worker(pipeline, recipe, config):
                                },
                                input=pipeline.input,
                                output=pipeline.output,
-                               label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                               label='{0:s}:: Auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['autoflag_rfi']["flagger"] == "tricolour":
                     if config['autoflag_rfi']['tricolour_mode'] == 'auto':

@@ -177,7 +177,8 @@ def calc_rms(filename, linemaskname):
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
 
-NAME = 'Make Line Cube'
+NAME = 'Make spectral line cube'
+LABEL = 'image_line'
 
 
 def worker(pipeline, recipe, config):

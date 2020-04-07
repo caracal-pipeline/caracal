@@ -19,12 +19,11 @@ import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
 from meerkathi.view_controllers import event_loop
 from meerkathi.dispatch_crew.interruptable_process import interruptable_process
-from meerkathi.dispatch_crew.stream_director import stream_director
+# from meerkathi.dispatch_crew.stream_director import stream_director
 
 
 __version__ = meerkathi.__version__
 pckgdir = meerkathi.pckgdir
-MEERKATHI_LOG = meerkathi.MEERKATHI_LOG
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
         "minimal" : "minimalConfig.yml",
@@ -33,8 +32,7 @@ SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
 SCHEMA = meerkathi.SCHEMA
 
 # Create the log object
-log, log_filehandler, log_console_handler, log_formatter = [getattr(meerkathi,
-                                                                    item) for item in "log log_filehandler log_console_handler log_formatter".split()]
+from meerkathi import log
 
 ####################################################################
 # MeerKATHI imports
@@ -126,65 +124,159 @@ def start_viewer(args, timeout=None, open_webbrowser=True):
 
 
 def log_logo():
-    """ Some nicities """
-    log.info("")
+    # print("WWWWWWWWMMWMMWWMMWWWWWMWWWWMMMMWWWWWWWWWWWWWWWWWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWMMMWWWWWMWWWWWWWWWWWWWNNNNWWMMWWMWWWWWWW")
+    # print("WWWWWWWMMWWWWWWMMWWWWWWWWWWMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMMMMMMMWWWWWWWWWWWWWWWWWWWWWWWWMWWWWXkO0KWWWWWWWWWWWWW")
+    # print("WWMWWWWWWWWWWWKOxdollcok00KKXWWWWMMMMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNXKKXXXXXNWWWWWWWN0d::ckWMWWMMWWWWWWW")
+    # print("WMWWMWWWWWN0dc;'....',cxOOkkkO0XWMWWMMWWWWWX0xolllccc::::cllooddxxxxdddoooooooollcc;,,,;;;;;:cldxO0Ol,'.'lKWWWWMWWWWWWWW")
+    # print("MWWWWWWWXkc'.''...,ckKNWWWNXKOkk0XWWWWWWKxc,.....................................................',''''.,xNWWWWWWWWWWWWW")
+    # print("MWWWWWNk:'',;,'.,l0NWWWWWWMWWNKOkkKWWKxc'........................................................'''''''',dXWWMMWWWWWWWW")
+    # print("WWWWW0c'',;:;'.:kNWWWMWWWWWMWWWN0kdoc'....,ll'.....................................................''''''',kWWWMMWWWWWWW")
+    # print("MWWWO;.';cc,''cKWWWWWMMMMWWWWWWXx:.....:dkkx:...................................................';::;'.''''oNWWWWWWWWWWW")
+    # print("WWWO;.';cc;'.cKWWWWMMWWWWWWWWW0;...'..':l;.....................................................,oKNNKOd:,,:xXWWWWWWWWWWW")
+    # print("WWKc.';cc:'.;0WWWWWMMMWMMWWWWW0odOOc..........................',,'...................'.........cKWWWWWWN0KNWWWWWWWWWWWWW")
+    # print("MWx'.,:cc,.'dWMWWWWWWWMWMMMWMMWWWWk'....................;cdkO0KXXOxdoc,''''',;;:lokOOkc........,cxXWWWWWWWMWWWMMWWWWWWWW")
+    # print("MNl.';cc:'.;OWWWWWMWWWWWMWWMWWWWWO;...''.............:dOXWWMMWWWWMMWWNX0KK00KXXNWWWWWWXkl:,'.....':x0NWWWWMMWWMMMWWWWWWW")
+    # print("WKc.';cc:'.:KWWWWWWWMWWMWWMWWWWWO;...,x0kdoloolc:cox0NMWWWWMMWMMWWWMWWMWWWWMMWWWWWWWWWWWWNKOxoc:,'..,lONWWWWWMMMWWWWWWWW")
+    # print("WKc.';cc:'.:KWWMWWWWMMMWMMWWWMXo'....l0NWWWWWMWWWWMWWWMWMMWMMMMWWWWWMMWWMWWWWWWMWWWWWWMWWWWWWWWNk;.''.,xNWWWMMWWWWWWWWWW")
+    # print("WXl.';cc:'.;0MWWWWWWWWWWWMMWWWx.....:x0NWWWMMMWWWWMWWMWWWWMWWWMMMWWWMWWMMMWWMWWWWMWWMMMWWWWMWMWWNk:'''.;OWWWWWWMMWWWWWWW")
+    # print("WWd'.,ccc,.'xWMWWWWWWWWMWWMWWNo..;loxkKWWWMMWWMMMWWWMWWMWWWWWWWMMWWWWWMMMWWWWMWWMMWWMMWWMWWMWMMWMWX00OdxXWWWWMWWWWWWWWWW")
+    # print("WW0:.';cc;'.cKMWWWWWWWWWWWWWWWNOdxxdxOXWWMXOkkkkkkOKNWWMMWWMMN0kkOXWMWMMMWWN0kxxxk0XWMWWMWN0kkONWWWWMNOkkKWWWWWWWWWWWWWW")
+    # print("WWWk,.':cc,''oXWWWWWWWWWWWWWWWXo'..'cOWMWWO;..''''',:dKWWWWNNx,..'lXMWMMWKd:'.''''';dXMWMNd'..'oNMWWW0;..lNWWMMWWWWWWWWW")
+    # print("MWWNx,.';c:,.'oXWWMWWWMWWMMWWNd'.,,.'dNWWWO;..cO0Od,.'oNMWWkc,.,;''oXMMW0:..;dO00kooONWWNx,.,;.'dNMWW0;..lNWWWWMWWMWWWWW")
+    # print("WWWWNk;.',::,.'lKWWWWMWWWWWWNx,.,ol,.,xWWWO;..lXNXk;..cXWWO;..,xO:.'dNMNo..,kWWWWWWWWWWWk,.;kk;.,xWWW0;..lNWWWWWWMMMWWMW")
+    # print("WWWWWWKo,.';;,'.;xXWWWWMMWWWk,.';ll;'.;kWMO;..,:::,.'c0WW0:...:dkc'.,dNNl..;OWWWWWWWWWWk;.':xxc'.,kWW0;..lNWWWWWMWWWWMMM")
+    # print("WMWWMWWNOl,.',''.':d0NWWWWWO;.'',,,,,'.;OWO;..;ol;..:0WWKc.'',,,,,,'.,xNO:.';d0K0kod0NO;.',,,,,,'.;OW0;..cO0000KNMWWWWWW")
+    # print("WMWWMWWWWWKxc,'.....,cdOK0x;.'cOKKKKOc..:0O;..oNW0c'':OKl..:dOKKKK0o'.,kNKd:'.',''';dk:..l0KKKK0c'.;O0;..'''''':0MWWWWWW")
+    # print("WWWWWWWMWWWWNKkdlc:;;,:dOOxdxOXWWWWWWKkkkKXOkkKWWWXOkk0KOkkKWWWWWWWXOkk0NMWX0kxxxk0XWKkkOXWWWWWWXOkkKXOkkkkkkkkONMWWWMMW")
+    # print("WWWWWWWMMWWWWWWWWWNXKKXNNWWWMWWWWMWWWWWMWWWWMMWWWWWWWWMMMWMMWWWWWWWWMMWWWWWWMMWWWWWWMMMWWMWWMWWWWMMMMWMMMMWWMWWMMWWWWWWW")
+    # print("WWWWWWWMMWWMWWWWMMWWWWWWWWWWWWWWMWWWWWWWWMWWWWMWWWMWWWWMWWWMMWWWMWWWWMMWWWWWWWMMMMWWMMMWMWWMWWMWMMWWMWWMMWMWWMWWWWMMMWWW")
 
-    log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
-    log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
-    log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
-    log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
-    log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
-    log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
-    log.info("")
+    print("""
+........................................................................................................................
+..........................................................................................................Z.~...........
+...........................................................................................................Z.O..........
+..................,8OOOOOZ==++,...........................................................................ZZOZ..........
+...............?OZOOOOOOOO+======..................~=$ZOOO8OOZ~ ............~~....~7ZZOZOZZZOZZOO$.....,ZZZZZ=..........
+.............OOOOOOOOOO$.....~=====...........$88888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZZZZZZ7...........
+...........OOOOO$OOOO7..........====,.......88888888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZZZZZZZ...........
+.........~ZOOO77OOOO.............:===~...Z8888888888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZZZZZZZZ..........
+........$OOOZIIOOOO................====88888887Z8888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZZZZZZZZZ.........
+.......OOOOIIIOOOO..................?888888O++.OO888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZZZZZZZZZ.........
+......+OOO7IIOOOO.................:O8888O8,..Z888888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZ?.,ZZZZZZZZ=........
+....,.OOOII7ZOOO.................8888D78888888888888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZO:......+OZ$Z.........
+.....OOOO77IOOO,..................8,.:I8888888888888OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZO.....................
+.....OOOI7I7OOO.......................88888888888888OOOOOOOOOOO~....II8OOOOOOOOOOOOOOO$$,ZZZZZZZZZZZ....................
+....$OOO77IOOOZ......................888888888888888OOOOOOO?............?IZI$Z$=?I........ZZZZZZZZZZOZ..................
+....OOO$II7OOO,.....................?8888O888888888888888...................................ZZZZZZZZZZZ?................
+....OOO7I7IOOO.....................,88887+.,,Z8ID88888..........................................IOZZZZZZZ=..............
+....OOO7IIIOOO....................OO8888==..........................................................ZZZZZZI.............
+....OOO7IIIOOO...................+888888==..........................................................OZZZZZZ.............
+....OOO$II7OOO+..................88888O+==............................................................ZZZZZZ............
+....?OOOII7$OOZ..................D888:+=+:................................................................O.............
+.....OOO7777OOZ.......................==+...............................................................................
+.....7OOOI77OOOZ..................$OOOO=+.....OOOOOOZOO?........$OOOO.........IOOOOOOO?.......OOOO=......OOOO...........
+......OOOZI77OOZ..................OOOOOO......OOOOOOOOOOO~......OOOOOO......IOOOOOOOOOOO.....ZOOOOO......OOOO...........
+.......OOO$7IZOOO................OOOZZOO......OOOO....ZOOO.....OOO8OOO.....?OOOO.....OZ.....=OOOOOOZ.....OOOO...........
+........OOOOI7OOOO..............IOOO+ZOOO.....OOOO....OOOO....7OOO.8OOO....OOOO.............OOZ=.OOO~....OOOO...........
+.........OOOOI7OOOO.............OOOI==OOOO....OOOO++IOZOOO...:OOO~..OOOO...OOOO............OOOZ..$OOO....OOOO...........
+..........8OOOOIOOOO$..........OOOOOOOOOOO+...OOOOOOOOOOZ....OOOOOOOOOOO,..OOOO...........ZOOOOOOOOOOO...OOOO...........
+...........,8OOOO$OOOZ........OOOOOOOOOOOOO...OOOO::OOOO....OOOOOOOOOOOOO..:OOOO=....OO...OOOOOOOOOOOO$..OOOO...........
+..............OOOOOOOOOOO===++OOO7,.....OOOO..OOOO...OOOO..~OOO=......OOOO...ZOOOOOOOOOO.OOOO......ZOOO..OOOOOOOOOOO....
+................~OOOOOOOOO+=+OOOO.......?OOO$.OOOO....ZOOZ.ZOOO.......$ZOO?....ZOOOOO7..ZOOO,.......OOOO.OOOOOOOOOOO....
+......................+I7~=~............................................................................................
+........................................................................................................................
+........................................................................................................................
+""")
+
+#     print("""
+# ................................................................................
+# ........................................................................?.......
+# ..............:~~:,....................................................Z$.......
+# ..........ZOOOOOO+==+=...........+7O88OOOI,......,+7~+?OOZZOZZZZZ=...ZZZZ.......
+# ........OOOOOOO.....,==+.....:88888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZ........
+# ......OOOIOOO.........+=+..88888888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZ,......
+# .....ZOOIOOO...........==88888+I888OOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZZZZZZZZZ......
+# ....OOZI$OO............8888I.$DO888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZZZ..ZZZZZ .....
+# ...$OO7IOO............88.+888888888OOOOOOOOOOOOOOOOOOOOOOZZZZZZZZO..............
+# ...OO7I$OO...............8888888888OOOOO8....I,OOOOOOOOO?=.OZZZZZZO.............
+# ...OOIIOO=..............D888888888OOOO......................,ZZZZZZZ:...........
+# ...OOIIOO..............I888+..:...Z..............................OZZZZ:.........
+# ...OOIIOO.............8888==.......................................ZZZZ.........
+# ...OOIIOO7............8888==........................................ZZZZ........
+# ...OOII7OO...............+=.....................................................
+# ....OOIIOO.............OOO=...$OOOOOO+.....OOO.....~OOOOOO....8OOZ....OOO.......
+# ....ZOZIIOO...........OOOOO...$OO...OOI...OOOOO...ZOO,..=O...,OOOO....OOO.......
+# .....OOOI$OO.........OOO=OO:..$OO...OOZ..OOO.OO,..OO~........OO.:OO...OOO.......
+# ......=OOO7OO?......:OOOOOOO..$OOOOOOO..=OOOOZOO..OOZ.......OOOOOOOO..OOO.......
+# ........ZOOOOOO+....OOZ$$$OOO.$OZ.,OO7..OO$$$$OOO.,OOOZOOO~$OO$$$$OO=.OOZOOOO...
+# ...........OOOOOO+=OOO.....OO$$OO...OOOZOO.....ZO?..:OOOO..OO,....~OO.OOOOOOO...
+# ................................................................................
+# ................................................................................
+#     """)
+
+    log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
+
+      # """ Some nicities """
+    # log.info("")
+    #
+    # log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
+    # log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
+    # log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
+    # log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
+    # log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
+    # log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
+    # log.info("")
     # parse config file and set up command line argument override parser
-    log.info("Module installed at: {0:s} (version {1:s})".format(
-        pckgdir, str(__version__)))
-    log.info("A logfile will be dumped here: {0:s}".format(MEERKATHI_LOG))
-    log.info("")
+    # log.info("A logfile will be dumped here: {0:s}".format(meerkathi.MEERKATHI_LOG))
+    # log.info("")
 
 
 def execute_pipeline(args, arg_groups, block):
     # setup piping infractructure to send messages to the parent
     def __run():
         """ Executes pipeline """
-        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well
-            try:
-                log_logo()
-                # Very good idea to print user options into the log before running:
-                cp().log_options()
+#        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
-                # Obtain some divine knowledge
-                cdb = mkct.calibrator_database()
+        try:
+            log_logo()
+            # Very good idea to print user options into the log before running:
+            cp().log_options(args.config)
 
-                pipeline = mwa(arg_groups,
-                               args.workers_directory, stimela_build=args.stimela_build,
-                               add_all_first=args.add_all_first, prefix=args.general_prefix,
-                               configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                               container_tech=args.container_tech, start_worker=args.start_worker, 
-                               end_worker=args.end_worker, generate_reports=not args.no_reports)
+            # Obtain some divine knowledge
+            cdb = mkct.calibrator_database()
 
-                pipeline.run_workers()
-            except SystemExit as e:
-                if e.code != 0:
-                    log.error(
-                        "One or more pipeline workers enacted E.M.E.R.G.E.N.C.Y protocol {0:} shutdown. This is likely a bug, please report.".format(e.code))
-                    log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
-                        MEERKATHI_LOG, str(__version__)))
-                    sys.exit(1)  # indicate failure
-                else:
-                    log.info(
-                        "One or more pipeline workers requested graceful shutdown. Goodbye!")
-            except KeyboardInterrupt:
-                log.info(
-                    "Interrupt request received from user - gracefully shutting down. Goodbye!")
-            except Exception as e:
-                log.error(
-                    "An unhandled exeption occured. If you think this is a bug please report it.")
-                log.error("Your logfile is here: {0:s}.".format(MEERKATHI_LOG))
-                log.error("You are running version: {0:s}".format(
-                    str(__version__)))
-                log.error(traceback.format_exc())
+            pipeline = mwa(arg_groups,
+                           args.workers_directory, stimela_build=args.stimela_build,
+#                           add_all_first=args.add_all_first, prefix=args.general_prefix,
+                           add_all_first=False,  prefix=args.general_prefix,
+                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
+                           container_tech=args.container_tech, start_worker=args.start_worker,
+                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+
+            pipeline.run_workers()
+        except SystemExit as e:
+            if e.code != 0:
+                log.error("A pipeline worker exited with code {0:} shutdown. This is likely a bug, please report.".format(e.code))
+                log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
+                    meerkathi.MEERKATHI_LOG, str(__version__)))
                 sys.exit(1)  # indicate failure
+            else:
+                log.info(
+                    "One or more pipeline workers requested graceful shutdown. Goodbye!")
+        except KeyboardInterrupt:
+            log.info(
+                "Interrupt request received from user - gracefully shutting down. Goodbye!")
+        except Exception as exc:
+            log.error("{} [{}]".format(exc, type(exc).__name__), extra=dict(boldface=True))
+            log.info("  More information can be found in the logfile at {0:s}".format(meerkathi.MEERKATHI_LOG))
+            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
+            for line in traceback.format_exc().splitlines():
+                log.error(line, extra=dict(traceback_report=True))
+            log.info("exiting with error code 1")
+            sys.exit(1)  # indicate failure
+
+    if args.debug:
+        return __run()
 
     # now fork and block or continue depending on whether interaction is wanted
     try:
@@ -201,13 +293,17 @@ def execute_pipeline(args, arg_groups, block):
 
 
 def main(argv):
-    args = cp(argv).args
-    arg_groups = cp(argv).arg_groups
+    parser = cp(argv)
+    args = parser.args
+    arg_groups = parser.arg_groups
 
-    # start a new logfile by default
-    if args.log_append is False:
-        with open(MEERKATHI_LOG, "w") as stdw:
-            pass
+    meerkathi.init_console_logging(boring=args.boring, debug=args.debug)
+
+    # # start a new logfile by default
+    # if args.log_append is False:
+    #     with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
+    #         pass
+
     if args.schema:
         schema = {}
         for item in args.schema:
@@ -225,9 +321,9 @@ def main(argv):
         print_worker_help(args)
         return
 
-    if not args.no_interactive and args.report_viewer:
-        raise ValueError(
-            "Incompatible options: --no-interactive and --report-viewer")
+    # if not args.no_interactive and args.report_viewer:
+    #     raise ValueError(
+    #         "Incompatible options: --no-interactive and --report-viewer")
 
     # User requests default config => dump and exit
     if args.get_default:
@@ -235,11 +331,11 @@ def main(argv):
         get_default(args.get_default_template, args.get_default)
         return
 
-    # standalone report hosting
-    if args.report_viewer:
-        log_logo()
-        start_viewer(args)
-        return
+    # # standalone report hosting
+    # if args.report_viewer:
+    #     log_logo()
+    #     start_viewer(args)
+    #     return
 
     if args.print_calibrator_standard:
         cdb = mkct.calibrator_database()
@@ -247,18 +343,25 @@ def main(argv):
         log.info(cdb)
         return
 
-    if not args.no_interactive and \
-       args.config == DEFAULT_CONFIG and \
-       not args.get_default and \
-       not args.report_viewer:
-       # Run interactively
-        remove_log_handler(log_console_handler)
-        try:
-            event_loop().run()
-        except KeyboardInterrupt:
-            return
-    else:
+    if args.config is meerkathi.DEFAULT_CONFIG:
+        parser._config_parser__primary_parser().print_help()
+        sys.exit(1)
+        # log.error("The pipeline configuration file needs to be specified via the -c/--config option.")
+        # log.info("Use --help for more info.")
+        # sys.exit(1)
+
+    # if not args.no_interactive and \
+    #    args.config == DEFAULT_CONFIG and \
+    #    not args.get_default and \
+    #    not args.report_viewer:
+    #    # Run interactively
+    #     meerkathi.remove_log_handler(meerkathi.log_console_handler)
+    #     try:
+    #         event_loop().run()
+    #     except KeyboardInterrupt:
+    #         return
+    # else:
        # Run non-interactively
-        p = execute_pipeline(args, arg_groups, block=True)
-        log.info("PIPELINER EXITS WITH RETURN CODE {}".format(p.exitcode))
-        sys.exit(p.exitcode)  # must return exit code when non-interactive
+    p = execute_pipeline(args, arg_groups, block=True)
+    # log.info("PIPELINER EXITS WITH RETURN CODE {}".format(p.exitcode))
+    sys.exit(p.exitcode)  # must return exit code when non-interactive

@@ -1,6 +1,6 @@
 import npyscreen
 from logging import StreamHandler
-from meerkathi import add_log_handler, remove_log_handler, log_formatter
+import meerkathi
 
 KEEP_NLINES = 1000
 
@@ -10,7 +10,7 @@ class log_view(npyscreen.Pager):
         class logging_handler(StreamHandler):
             def __init__(self, parent_view, *args, **kwargs):
                 self.__parent_view = parent_view
-                self.setFormatter(log_formatter)
+                self.setFormatter(meerkathi.log_console_formatter)
                 StreamHandler.__init__(self, *args, **kwargs)
 
             @property
@@ -24,11 +24,11 @@ class log_view(npyscreen.Pager):
                 self.parent_view.parent.display()
 
         self.__log_handler = logging_handler(self)
-        add_log_handler(self.__log_handler)
+        meerkathi.add_log_handler(self.__log_handler)
         npyscreen.Pager.__init__(self, *args, **kwargs)
 
     def destroy(self):
-        remove_log_handler(self.__log_handler)
+        meerkathi.remove_log_handler(self.__log_handler)
         npyscreen.MultiLineEdit.destroy(self)
 
     @property

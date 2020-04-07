@@ -1286,14 +1286,14 @@ testingoutput () {
     # Function to test output after running a pipeline
     # Argument 1: $WORKSPACE_ROOT
     # Argument 2: Test directory, e.g. test_extendedConfig_docker
-    local meerkathilog
+    local caracallog
     local allogs
     local total
     local log
-    local hadmeerkathi
-    local hadmeerkathi2
+    local hadcaracal
+    local hadcaracal2
     local reporting
-    local meerkathilogsh
+    local caracallogsh
     local worker_runs
     local worker_fins
     
@@ -1306,21 +1306,21 @@ testingoutput () {
     # Check here
     allogs=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/ || echo ""`
 #    allogs=`ls -t ${1}/${2}/output/logs/` || true
-    meerkathilog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-meerkathi*.txt | head -1 || echo ""`
-    [[ ${meerkathilog} == "" ]] && unset meerkathilog
-#    meerkathilog=`ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1 || true`
-    [[ -z ${meerkathilog} ]] || { reporting+="This CARACal run is logged in ${meerkathilog}"; reporting+=$'\n'; }
-    [[ -z ${meerkathilog} ]] || { meerkathilogsh=`echo ${meerkathilog} | sed '{s=.*/==;}'`; }
+    caracallog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-caracal-*.txt | head -1 || echo ""`
+    [[ ${caracallog} == "" ]] && unset caracallog
+#    caracallog=`ls -t ${1}/${2}/output/logs/log-caracal-*.txt.txt | head -1 || true`
+    [[ -z ${caracallog} ]] || { reporting+="This CARACal run is logged in ${caracallog}"; reporting+=$'\n'; }
+    [[ -z ${caracallog} ]] || { caracallogsh=`echo ${caracallog} | sed '{s=.*/==;}'`; }
     total=0
 
     for log in ${allogs}
     do
         (( total+=1 ))
-	[[ -z $hadmeerkathi2 ]] || { reporting+="$log is the second last log before ${meerkathilogsh}"; \
-				     reporting+=$'\n'; unset hadmeerkathi2; }	
-	[[ -z $hadmeerkathi ]] || { reporting+="$log is the last log before ${meerkathilogsh}"; reporting+=$'\n'; \
-				    hadmeerkathi2=1; unset hadmeerkathi; }
-        [[ ${log} != ${meerkathilogsh} ]] || hadmeerkathi=1         
+	[[ -z $hadcaracal2 ]] || { reporting+="$log is the second last log before ${caracallogsh}"; \
+				     reporting+=$'\n'; unset hadcaracal2; }	
+	[[ -z $hadcaracal ]] || { reporting+="$log is the last log before ${caracallogsh}"; reporting+=$'\n'; \
+				    hadcaracal2=1; unset hadcaracal; }
+        [[ ${log} != ${caracallogsh} ]] || hadcaracal=1         
     done
     reporting+="Total number of logfiles: $total";
     echo "$reporting"
@@ -1329,7 +1329,7 @@ testingoutput () {
     # Count number of runs of workers and the number of finishes
     worker_runs=0
     worker_fins=0
-    [[ -z ${meerkathilog} ]] && { \
+    [[ -z ${caracallog} ]] && { \
         reporting="This CARACal run is missing a summary logfile"; reporting+=$'\n'; \
 	reporting+="Returning error";\
 	reporting+=$'\n'; \
@@ -1337,9 +1337,9 @@ testingoutput () {
 	echo "${reporting}" >> ${SYA}; \
 	return 1; \
     } || { \
-	worker_runs=`grep "Running worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`; \
-	worker_fins=`grep "Finished worker" ${meerkathilog} | wc | sed 's/^ *//; s/ .*//'`; \
-	reporting="MeerKATHI logfile indicates ${worker_runs} workers starting"; \
+	worker_runs=`grep ": initializing" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
+	worker_fins=`grep ": finished" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
+	reporting="CARACal logfile indicates ${worker_runs} workers starting"; \
 	reporting+=$'\n'; \
 	reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'; \
 	echo "${reporting}"; \
@@ -1347,12 +1347,12 @@ testingoutput () {
     }
 
     
-    (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-meerkathi.txt"; \
+    (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-caracal.txt"; \
 					    reporting+=$'\n'; \
 					    echo "${reporting}"; \
 					    echo "${reporting}" >> ${SYA}; \
 					    return 1; }
-    [[ -z $meerkathilog ]] || (( $worker_runs > 0 )) || { reporting="No workers have started according to log-meerkathi.txt"; \
+    [[ -z $caracallog ]] || (( $worker_runs > 0 )) || { reporting="No workers have started according to log-caracal.txt"; \
 				reporting+=$'\n'; \
 				reporting+="Returning error";\
 				reporting+=$'\n'; \
@@ -1365,7 +1365,7 @@ testingoutput () {
                           "echo ${reporting}" \
 			  "echo ${reporting}" >> ${SYA}; \
                           return 1; }
-    [[ -n ${meerkathilog} ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
+    [[ -n ${caracallog} ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
                           "echo ${reporting}" \
 			  "echo ${reporting}" >> ${SYA}; \
                           return 1; }
@@ -1452,21 +1452,14 @@ runtest () {
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
-	checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ||  { \
-	    [[ `grep "dataid: \[\x27\x27\]" ${configlocation}` == "" ]] || { \
-		echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}; \
-	    }; \
-	    [[ `grep "dataid: \[\]" ${configlocation}` == "" ]] || { \
-		echo "sed \"s/dataid: \[\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}; \
-		} \
+	checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || { \
+	    echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}; \
 	}
+
 	[[ -n ${FS} ]] || \
 	    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || { \
-		[[ `grep "dataid: \[\x27\x27\]" ${configlocation}` == "" ]] || { sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml; \
-		}; \
-		[[ `grep "dataid: \[\]" ${configlocation}` == "" ]] || { sed "s/dataid: \[\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml; \
-		}; \
-	    }
+		sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml; \
+		}
 
 	# This prevents the script to stop if there -fs is switched on
 	[[ ! -f ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ]] || \
@@ -1510,7 +1503,7 @@ runtest () {
     fi
     
     # Make a copy of the logfile
-    meerkathilog=`[[ -e ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-*-meerkathi.txt | head -1 || echo ""`
+    meerkathilog=`[[ -e ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-caracal-*.txt | head -1 || echo ""`
     [[ ! -f ${meerkathilog} ]] || cp ${meerkathilog} ${WORKSPACE_ROOT}/report/log-meerkathi_test_${configfilename}_${contarch}.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0

@@ -6,7 +6,7 @@ mapping:
 
   inspect_data:
     type: map
-    desc: Dignostic plots of the first-pass cross-calibrated data.
+    desc: Diagnostic plots of the first-pass cross-calibrated data.
     mapping:
       enable:
         type: bool
@@ -26,7 +26,7 @@ mapping:
       plotter:
         type: str
         desc: Application to use for making plots
-        enum: [plotms, shadems]
+        enum: [plotms, shadems, ragavi_vis]
         example: shadems
         required: false
       correlation: 

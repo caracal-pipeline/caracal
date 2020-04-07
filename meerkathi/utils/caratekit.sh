@@ -1608,7 +1608,8 @@ runtestsample () {
     cp ${inputconfiglocation} ${configlocation}
     # then we need to setup for the test
     # first put in the data ID
-    sed -i "s/dataid: \[\x27\x27\]/${dataidstr}/" ${configlocation}
+    # sed "s/dataid: \[\x27\x27\]/$dataidstr/"
+    sed -i "s/dataid: [.*]/${dataidstr}/" ${configlocation}
     # then replace all enable true with false
     sed -i "s/enable: true/enable: false/g" ${configlocation}
     sed -i "s/enable: True/enable: false/g" ${configlocation}

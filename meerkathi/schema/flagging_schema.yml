@@ -14,13 +14,14 @@ mapping:
         required: True
         example: 'False'
       label_in:
-        desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
+        desc: The label is added to the input .MS file(s) name to define the name of the .MS file(s) that should be flagged -- <input>_<label>.ms if 'field' below is set to 'calibrators', or <input>-<target>_<label>.ms if 'field' below is set to 'target' (one .MS file per target in the input .MS). If empty, the original .MS is flagged.
         type: str
         required: false
         example: ''
       field:
-        desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+        desc: Used to compose the name of the .MS file(s) that should be flagged (see 'label_in' above) and to select the fields that should be flagged. It can either be 'target' or 'calibrators'.
         type: str
+        enum: ['target', 'calibrators']
         required: false
         example: 'calibrators'
       load_flags:

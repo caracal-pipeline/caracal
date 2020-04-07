@@ -494,7 +494,7 @@ def worker(pipeline, recipe, config):
                                },
                                input=pipeline.input,
                                output=pipeline.output,
-                               label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                               label='{0:s}:: Auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['autoflag_rfi']["flagger"] == "tfcrop":
                     column = config['autoflag_rfi'].get('column').split("_DATA")[0].lower()

@@ -276,12 +276,12 @@ mapping:
            required: false
            desc: Flag solution intervals where the posterior variance estimate is above this value for G-jones.
            example: "0.35"
-         dd_d_max_prior_error: 
+         dd_dd_max_prior_error: 
            type: float
            required: false
            desc: Flag solution intervals where the prior error estimate is above this value for DE term.
            example: "0.35"
-         dd_d_max_post_error: 
+         dd_dd_max_post_error: 
            type: float
            required: false
            desc: Flag solution intervals where the posterior variance estimate is above this value for DE term.

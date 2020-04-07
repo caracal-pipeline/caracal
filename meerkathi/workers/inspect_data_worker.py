@@ -84,9 +84,9 @@ def worker(pipeline, recipe, config):
         nobs = pipeline.nobs
 
     for i in range(nobs):
-        msname = msnames[i]
+        msname = msnames[i] if not config['label_in'] else '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config['label_in'])
         prefix = prefixes[i]
-        label = config.get('label')
+        label = config.get('label_out')
 
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
 

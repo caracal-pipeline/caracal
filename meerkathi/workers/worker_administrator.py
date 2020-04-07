@@ -201,6 +201,17 @@ class worker_administrator(object):
                 msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
     def init_pipeline(self):
+        def make_symlink(link, target):
+            if os.path.lexists(link):
+                if os.path.islink(link):
+                    os.unlink(link)  # old symlink can go
+                else:
+                    log.warning("{} already exists and is not a symlink, can't relink".format(link))
+                    return False
+            if not os.path.lexists(link):
+                os.symlink(target, link)
+                log.info("{} links to {}".format(link, target))
+
         # First create input folders if they don't exist
         if not os.path.exists(self.input):
             os.mkdir(self.input)
@@ -210,14 +221,8 @@ class worker_administrator(object):
             os.mkdir(self.data_path)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
-            log.info("output directory for logs is {}".format(self.logs))
-            if os.path.lexists(self.logs_symlink) and os.path.islink(self.logs_symlink):
-                os.unlink(self.logs_symlink) # old symlink can go
-            else:
-                log.warning("{} already exists and is not a symlink, can't link to output logs".format(self.logs_symlink))
-            if not os.path.lexists(self.logs_symlink):
-                os.symlink(os.path.basename(self.logs), self.logs_symlink)
-                log.info("{} will link to this directory".format(self.logs_symlink))
+        log.info("output directory for logs is {}".format(self.logs))
+        make_symlink(self.logs_symlink, os.path.basename(self.logs))
         if not os.path.exists(self.reports):
             os.mkdir(self.reports)
         if not os.path.exists(self.diagnostic_plots):
@@ -234,8 +239,13 @@ class worker_administrator(object):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
         # NB (Oleg): placing this into output rather than output/logs to make the reporting notebooks easier
-        meerkathi.MEERKATHI_LOG = os.path.join(self.output, 'log-{1:s}-{0:s}.txt'.format(self.timeNow, 'meerkathi'))
+        baselog = 'log-caracal-{0:s}.txt'.format(self.timeNow)
+        meerkathi.MEERKATHI_LOG = os.path.join(self.output, baselog)
         meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
+
+        # placing a symlink into logs to appease Josh
+        make_symlink(os.path.join(self.logs, baselog), os.path.join("..", baselog))
+        make_symlink(os.path.join(self.output, "log-caracal.txt"), baselog)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -335,10 +345,11 @@ class worker_administrator(object):
                        log.info("Running worker next in queue")
                        self.recipes[worker[1]].run()
                        log.info("Finished worker next in queue")
-        finally:  # write reports and copy current log even if the pipeline only runs partially
-            os.remove(meerkathi.BASE_MEERKATHI_LOG)
-            pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
-            shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
+        finally:  # write reports even if the pipeline only runs partially
+            ## this is no longer needed -- the log is opened directly in the correct location
+            # os.remove(meerkathi.BASE_MEERKATHI_LOG)
+            # pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
+            # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
             if REPORTS and self.generate_reports:
                 reporter = mrr(self)
                 reporter.generate_reports()

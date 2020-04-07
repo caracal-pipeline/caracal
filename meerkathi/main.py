@@ -247,7 +247,8 @@ def execute_pipeline(args, arg_groups, block):
 
             pipeline = mwa(arg_groups,
                            args.workers_directory, stimela_build=args.stimela_build,
-                           add_all_first=args.add_all_first, prefix=args.general_prefix,
+#                           add_all_first=args.add_all_first, prefix=args.general_prefix,
+                           add_all_first=False,  prefix=args.general_prefix,
                            configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
                            container_tech=args.container_tech, start_worker=args.start_worker,
                            end_worker=args.end_worker, generate_reports=not args.no_reports)
@@ -292,8 +293,9 @@ def execute_pipeline(args, arg_groups, block):
 
 
 def main(argv):
-    args = cp(argv).args
-    arg_groups = cp(argv).arg_groups
+    parser = cp(argv)
+    args = parser.args
+    arg_groups = parser.arg_groups
 
     meerkathi.init_console_logging(boring=args.boring, debug=args.debug)
 
@@ -340,6 +342,13 @@ def main(argv):
         log.info("Found the following reference calibrators (in CASA format):")
         log.info(cdb)
         return
+
+    if args.config is meerkathi.DEFAULT_CONFIG:
+        parser._config_parser__primary_parser().print_help()
+        sys.exit(1)
+        # log.error("The pipeline configuration file needs to be specified via the -c/--config option.")
+        # log.info("Use --help for more info.")
+        # sys.exit(1)
 
     # if not args.no_interactive and \
     #    args.config == DEFAULT_CONFIG and \

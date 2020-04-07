@@ -194,7 +194,7 @@ class config_parser:
         parser = argparse.ArgumentParser(description="""
 Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
 interferometry.""",
-            usage="%(prog)s [-options] config",
+            usage="%(prog)s [-options] -c config_file",
             epilog="""
 You can also specify "--worker_name-option_name option_value" to override settings in the configuration file.
 
@@ -206,10 +206,11 @@ then edit the file to suit your needs.
         add = parser.add_argument
         add("-v", "--version", action='version',
             version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__))
-        add('config',
+
+        add('-c', '--config',
             type=lambda a: is_valid_file(parser, a),
             default=DEFAULT_CONFIG,
-            help='pipeline configuration file)')
+            help='pipeline configuration file. This is a mandatory argument.')
 
         add('-b', '--boring',
             help='enable boring mode, i.e. suppress colours in console output',
@@ -232,8 +233,8 @@ then edit the file to suit your needs.
         add('-ew', '--end-worker', metavar="WORKER",
             help='stop pipeline after this worker')
 
-        add('-aaf', '--add-all-first', action='store_true',
-            help='add steps from all workers to pipeline before executing (default is execute in turn)')
+        # add('-aaf', '--add-all-first', action='store_true',
+        #     help='add steps from all workers to pipeline before executing (default is execute in turn)')
 
         add('-bl', '--stimela-build',
             help='label of custom stimela build to use',
@@ -300,7 +301,7 @@ then edit the file to suit your needs.
         # default configuration file
         # =========================================================
         # Create parser object
-        parser = cls.__primary_parser()
+        self._parser = parser = cls.__primary_parser()
 
         # Lambda for transforming sections and options
 
@@ -325,7 +326,7 @@ then edit the file to suit your needs.
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
 
-        parser = cls.__primary_parser(add_help=True)
+        self._parser = parser = cls.__primary_parser(add_help=True)
         groups = OrderedDict()
 
         for worker, variables in tmp.items():

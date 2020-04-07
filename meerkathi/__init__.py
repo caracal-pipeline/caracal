@@ -48,8 +48,9 @@ __version__ = report_version()
 
 # global settings
 pckgdir = os.path.dirname(os.path.abspath(__file__))
-BASE_MEERKATHI_LOG = "log-meerkathi.txt"
-MEERKATHI_LOG = os.path.join(os.getcwd(), BASE_MEERKATHI_LOG)
+# this gets renamed once the config is read in
+MEERKATHI_LOG = "log-meerkathi.txt"
+
 DEFAULT_CONFIG = os.path.join(
     pckgdir, "sample_configurations", "minimalConfig.yml")
 SCHEMA = os.path.join(

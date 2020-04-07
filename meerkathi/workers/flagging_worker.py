@@ -436,11 +436,10 @@ def worker(pipeline, recipe, config):
                     [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
                 if config['field'] == 'target':
                     fields = [target_ls[j]]
-                    tricolour_mode = 'polarisation'
-                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
+                    tricolour_strat = config['autoflag_rfi']['tricolour']['strategy']
                 else:
                     fields = []
-                    fld_string = config['autoflag_rfi']["fields"]
+                    fld_string = config['autoflag_rfi']["calibrator_fields"]
                     if fld_string == "auto":
                         iter_fields = "gcal bpcal xcal fcal".split()
                     else:
@@ -453,8 +452,7 @@ def worker(pipeline, recipe, config):
                         if tfld:
                             fields += tfld
                     fields = list(set(fields))
-                    tricolour_mode = 'polarisation'
-                    tricolour_strat = 'mk_rfi_flagging_target_fields_firstpass.yaml'
+                    tricolour_strat = config['autoflag_rfi']['tricolour']['strategy']
 
                 field_ids = utils.get_field_id(msinfo, fields)
                 fields = ",".join(fields)
@@ -466,35 +464,35 @@ def worker(pipeline, recipe, config):
                                    # flag the calibrators for RFI and apply to target
                                    "fields": ",".join(map(str, field_ids)),
                                    # "bands"       : config['autoflag_rfi'].get('bands', "0"),
-                                   "strategy": config['autoflag_rfi']['strategy'],
+                                   "strategy": config['autoflag_rfi']['aoflagger']['strategy'],
                                },
                                input=pipeline.input,
                                output=pipeline.output,
-                               label='{0:s}:: Auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+                               label='{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['autoflag_rfi']["flagger"] == "tricolour":
-                    if config['autoflag_rfi']['tricolour_mode'] == 'auto':
+                    if config['autoflag_rfi']['tricolour']['mode'] == 'auto':
                         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
                         with open(msinfo, 'r') as stdr:
                                   bandwidth = yaml.load(stdr)['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
                                   print("Total Bandwidth =", bandwidth, "MHz")
                                   if bandwidth <= 20.0:
                                       print("Narrowband data detected, selecting appropriate flagging strategy")
-                                      tricolour_strat = config['autoflag_rfi']['tricolour_calibrator_strat_narrowband']
-                              
+                                      tricolour_strat = config['autoflag_rfi']['tricolour']['strategy_narrowband']
+
                     print("Flagging strategy in use:", tricolour_strat)
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,
                                    "data-column": config['autoflag_rfi'].get('column'),
-                                   "window-backend": config['autoflag_rfi'].get('window_backend'),
+                                   "window-backend": config['autoflag_rfi']['tricolour'].get('window_backend'),
                                    "field-names": fields,
-                                   "flagging-strategy": tricolour_mode,
+                                   "flagging-strategy": 'polarisation',
                                    "config" : tricolour_strat,
                                },
                                input=pipeline.input,
                                output=pipeline.output,
-                               label='{0:s}:: Auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
+                               label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['autoflag_rfi']["flagger"] == "tfcrop":
                     column = config['autoflag_rfi'].get('column').split("_DATA")[0].lower()
@@ -504,20 +502,20 @@ def worker(pipeline, recipe, config):
                                    "datacolumn" : column,
                                    "mode" : "tfcrop",
                                    "field" : fields,
-                                   "usewindowstats" : config["autoflag_rfi"]["usewindowstats"],
-                                   "combinescans" : config["autoflag_rfi"]["combinescans"],
-                                   "flagdimension" : config["autoflag_rfi"]["flagdimension"],
+                                   "usewindowstats" : config["autoflag_rfi"]["tfcrop"]["usewindowstats"],
+                                   "combinescans" : config["autoflag_rfi"]["tfcrop"]["combinescans"],
+                                   "flagdimension" : config["autoflag_rfi"]["tfcrop"]["flagdimension"],
                                    "flagbackup" : False,
-                                   "timecutoff" : config["autoflag_rfi"]["timecutoff"],
-                                   "freqcutoff" : config["autoflag_rfi"]["freqcutoff"],
-                                   "correlation" : config["autoflag_rfi"]["correlation"],
+                                   "timecutoff" : config["autoflag_rfi"]["tfcrop"]["timecutoff"],
+                                   "freqcutoff" : config["autoflag_rfi"]["tfcrop"]["freqcutoff"],
+                                   "correlation" : config["autoflag_rfi"]["tfcrop"]["correlation"],
                                },
                                input=pipeline.input,
                                output=pipeline.output,
-                               label='{0:s}:: Auto-flagging flagging pass ms={1:s}'.format(step, msname))
+                               label='{0:s}:: Tfcrop auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
                 else:
                     raise RuntimeError(
-                        "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour'.")
+                        "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour, tfcrop'.")
 
                 substep = 'save_flags_after_automatic_{0:s}_{1:d}_{2:d}'.format(
                     wname, i, j)

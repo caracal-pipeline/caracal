@@ -29,7 +29,8 @@ flagging:
   autoflag_rfi:
     enable: true
     flagger: tricolour
-    tricolour_calibrator_strat: calibrator_mild_flagging.yaml
+    tricolour:
+      strategy: calibrator_mild_flagging.yaml
   flag_autocorr:
     enable: true
   flag_shadow:
@@ -89,7 +90,6 @@ flagging__2:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    fields: target
 
 transform_data__3:
   enable: true

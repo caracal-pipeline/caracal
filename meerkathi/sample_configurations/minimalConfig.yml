@@ -37,7 +37,6 @@ flagging:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    fields: 'auto'
   flag_autocorr:
     enable: true
   flag_shadow:
@@ -75,7 +74,6 @@ flagging__2:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    fields: target
     
 masking:
   enable: false

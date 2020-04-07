@@ -76,7 +76,8 @@ flagging:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
+    aoflagger:
+      strategy: firstpass_QUV.rfis
   rfinder:
     enable: true
     telescope: MeerKAT
@@ -169,9 +170,10 @@ flagging__2:
   field: 'target'
   autoflag_rfi: 
     enable: true
-    flagger: aoflagger
-    strategy: firstpass_QUV.rfis
     column: DATA
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
   rfinder: 
     enable: true
     field: target

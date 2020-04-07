@@ -247,97 +247,96 @@ mapping:
             example: ''
 
       autoflag_rfi:
-        desc: Flag RFI using AOFlagger software. 
+        desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop. 
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger or tricolour
+            desc: Enable RFI flagging with AOFlagger, Tricolour or CASA flagdata with tfcrop.
             type: bool
             required: False
             example: 'False'
           flagger:
-            desc: Choose flagger for automatic flagging
+            desc: Choose flagger for automatic flagging. Possible choices are 'aoflagger', 'tricolour' and 'tfcrop'.
             type: str
             enum: ["aoflagger", "tricolour", "tfcrop"]
             required: false
             example: "aoflagger"
-          strategy: 
-            desc: The AOFlagger strategy file to use.
-            type: str
-            required: False
-            example: 'firstpass_QUV.rfis'
-          column: 
+          column:
             desc: Specify column to flag
             type: str
             required: False
             example: 'DATA'
-          fields: 
-            desc: comma separated list of (zero-indexed) field ids to process
-            type: str
-            required: false
-            example: 'auto'
           calibrator_fields:
-            desc: comma separated list of (zero-indexed) field ids to process
+            desc: If 'field' above is set to 'calibrators', users can specify here a subset of calibrators to process. This should be a comma-separated list of (zero-indexed) field ids to process. Alternatively, 'auto' selects all calibrators.
             type: str
             required: false
             example: 'auto'
-          bands: 
-            desc: comma separated list of (zero-indexed) band ids to process
-            type: str
-            required: false
-            example: 'auto'
-          window_backend:
-            desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
-            type: str
-            enum: ["numpy", "zarr-disk"]
-            required: false
-            example: "numpy"
-          tricolour_mode:
-            desc: If set to 'auto', decides the tricolour flagging strategy based on the bandwidth of the dataset. Else uses tricolour_calibrator_strat. 
-            type: str
-            required: false
-            enum: ['auto', 'manual']
-            example: 'auto'
-          tricolour_calibrator_strat_narrowband:
-            type: str
-            required: False
-            example: 'calibrator_mild_flagging.yaml'
-          tricolour_calibrator_strat:
-            type: str
-            required: False
-            example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
-          usewindowstats:
-            type: str 
-            desc: Calculate additional flags using sliding window statistics
-            enum: ["none", "sum", "std", "both"]
-            example: "std"
-            required: false
-          combinescans:
-            type: bool
-            desc: Accumulate data across scans depending on the value of ntime
-            example: "False"
-            required: false
-          flagdimension:
-            type: str 
-            desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
-            enum: [freq, time, freqtime, timefreq]
-            example: freqtime
-            required: false
-          timecutoff:
-            type: float
-            desc: Flagging thresholds in units of deviation from the fit 
-            example: "4.0"
-            required: false
-          freqcutoff:
-            type: float
-            desc: Flagging thresholds in units of deviation from the fit 
-            example: "3.0"
-            required: false
-          correlation:
-            type: str 
-            desc: Correlation
-            example: ""
-            required: false
+          aoflagger:
+            type: map
+            mapping:
+              strategy: 
+                desc: The AOFlagger strategy file to use.
+                type: str
+                required: False
+                example: 'firstpass_Q.rfis'
+          tricolour:
+            type: map
+            mapping:
+              window_backend:
+                desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
+                type: str
+                enum: ["numpy", "zarr-disk"]
+                required: false
+                example: "numpy"
+              mode:
+                desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
+                type: str
+                required: false
+                enum: ['auto', 'manual']
+                example: 'auto'
+              strategy:
+                type: str
+                required: False
+                example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
+              strategy_narrowband:
+                type: str
+                required: False
+                example: 'calibrator_mild_flagging.yaml'
+          tfcrop:
+            type: map
+            mapping:
+              usewindowstats:
+                type: str 
+                desc: Calculate additional flags using sliding window statistics
+                enum: ["none", "sum", "std", "both"]
+                example: "std"
+                required: false
+              combinescans:
+                type: bool
+                desc: Accumulate data across scans depending on the value of ntime
+                example: "False"
+                required: false
+              flagdimension:
+                type: str 
+                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
+                enum: [freq, time, freqtime, timefreq]
+                example: freqtime
+                required: false
+              timecutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit 
+                example: "4.0"
+                required: false
+              freqcutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit 
+                example: "3.0"
+                required: false
+              correlation:
+                type: str 
+                desc: Correlation
+                example: ""
+                required: false
       rfinder:
         desc: A tool to investigate the presence of RFI
         type: map

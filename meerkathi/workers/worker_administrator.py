@@ -59,7 +59,6 @@ class worker_administrator(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
-        self.logs = self.config['general']['output'] + '/logs'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + \
             '/diagnostic_plots'
@@ -70,7 +69,11 @@ class worker_administrator(object):
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
-        self.timeNow = '{:%Y%m%d-%H%M}'.format(datetime.now()) 
+        self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
+
+        self.logs_symlink = self.config['general']['output'] + '/logs'
+        self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
+
 
         if not self.config['general']['data_path']:
             self.config['general']['data_path'] = os.getcwd()
@@ -198,6 +201,17 @@ class worker_administrator(object):
                 msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
     def init_pipeline(self):
+        def make_symlink(link, target):
+            if os.path.lexists(link):
+                if os.path.islink(link):
+                    os.unlink(link)  # old symlink can go
+                else:
+                    log.warning("{} already exists and is not a symlink, can't relink".format(link))
+                    return False
+            if not os.path.lexists(link):
+                os.symlink(target, link)
+                log.info("{} links to {}".format(link, target))
+
         # First create input folders if they don't exist
         if not os.path.exists(self.input):
             os.mkdir(self.input)
@@ -207,6 +221,8 @@ class worker_administrator(object):
             os.mkdir(self.data_path)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
+        log.info("output directory for logs is {}".format(self.logs))
+        make_symlink(self.logs_symlink, os.path.basename(self.logs))
         if not os.path.exists(self.reports):
             os.mkdir(self.reports)
         if not os.path.exists(self.diagnostic_plots):
@@ -222,8 +238,14 @@ class worker_administrator(object):
         if not os.path.exists(self.cubes):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
-        meerkathi.MEERKATHI_LOG = os.path.join(self.logs, 'log-{0:s}-{1:s}.txt'.format(self.timeNow, 'meerkathi'))
+        # NB (Oleg): placing this into output rather than output/logs to make the reporting notebooks easier
+        baselog = 'log-caracal-{0:s}.txt'.format(self.timeNow)
+        meerkathi.MEERKATHI_LOG = os.path.join(self.output, baselog)
         meerkathi.log_filehandler.setFilename(meerkathi.MEERKATHI_LOG, delay=False)
+
+        # placing a symlink into logs to appease Josh
+        make_symlink(os.path.join(self.logs, baselog), os.path.join("..", baselog))
+        make_symlink(os.path.join(self.output, "log-caracal.txt"), baselog)
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -278,13 +300,19 @@ class worker_administrator(object):
                 continue
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
-            recipe = stimela.Recipe('{0:s}_{1:s}'.format(self.timeNow, worker.NAME), 
+            label = getattr(worker, 'LABEL', None)
+            if label is None:
+                # if label is not set, take filename, and split off _worker.py
+                label =  os.path.basename(worker.__file__).rsplit("_", 1)[0]
+
+            recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,
-                                    loggername='STIMELA-{:d}'.format(i),
                                     build_label=self.stimela_build,
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
-                                    logfile_label='{0:s}'.format(self.timeNow))
+                                    logfile=False, # no logfiles for recipes
+                                    logfile_task='{0}/log-{1}-{{task}}-{2}.txt'.format(
+                                        self.logs, label, self.timeNow))
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name
@@ -293,17 +321,18 @@ class worker_administrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
+            log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
             # Save worker recipes for later execution
             # execute each worker after adding its steps
 
             if self.add_all_first:
-                log.info("Adding worker {0:s} before running".format(_worker))
+                log.info("{0:s}: adding before running".format(_worker))
                 self.recipes[_worker] = recipe
             else:
-                log.info("Running worker {0:s}".format(_worker))
+                log.info("{0:s}: running".format(label))
                 recipe.run()
-                log.info("Finished worker {0:s}".format(_worker))
+                log.info("{0:s}: finished".format(label))
                 casa_last = glob.glob(self.output + '/*.last')
                 for file_ in casa_last:
                     os.remove(file_)
@@ -316,10 +345,11 @@ class worker_administrator(object):
                        log.info("Running worker next in queue")
                        self.recipes[worker[1]].run()
                        log.info("Finished worker next in queue")
-        finally:  # write reports and copy current log even if the pipeline only runs partially
-            os.remove(meerkathi.BASE_MEERKATHI_LOG)
-            pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
-            shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
+        finally:  # write reports even if the pipeline only runs partially
+            ## this is no longer needed -- the log is opened directly in the correct location
+            # os.remove(meerkathi.BASE_MEERKATHI_LOG)
+            # pipeline_logs = sorted(glob.glob(self.logs + '/*meerkathi.txt'))
+            # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-meerkathi.txt'.format(self.output))
             if REPORTS and self.generate_reports:
                 reporter = mrr(self)
                 reporter.generate_reports()

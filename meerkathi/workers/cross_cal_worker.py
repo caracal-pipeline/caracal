@@ -11,6 +11,8 @@ import re
 import json
 
 NAME = "Cross calibration"
+LABEL = 'cross_cal'
+
 # E.g. to split out continuum/<dir> from output/continuum/dir
 def get_dir_path(string, pipeline): 
     return string.split(pipeline.output)[1][1:]

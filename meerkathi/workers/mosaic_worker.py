@@ -10,6 +10,7 @@ from astropy import wcs
 from meerkathi.dispatch_crew import utils
 
 NAME = "Mosaic images"
+LABEL = 'mosaic'
 
 
 def worker(pipeline, recipe, config):

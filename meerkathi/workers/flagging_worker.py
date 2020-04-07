@@ -7,7 +7,9 @@ import yaml
 import re
 import meerkathi
 import sys
+
 NAME = 'Flagging'
+LABEL = 'flagging'
 
 FLAG_NAMES = "static automatic autocorr_spectrum".split()
 

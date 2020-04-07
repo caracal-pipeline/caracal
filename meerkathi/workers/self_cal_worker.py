@@ -68,17 +68,15 @@ def worker(pipeline, recipe, config):
         taper = None
     label = config['label']
     time_chunk = config.get('cal_timeslots_chunk')
-    #If user sets value that is not -1 use leave that
+    #If user sets value that is not -1 use  that
     if int(time_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
         all_time_solution = config['calibrate'].get('Gsols_timeslots')
         # add the various sections
         if config['calibrate'].get('Bjones', False):
             all_time_solution.append(config[key].get('Bsols_timeslots')[:])
-        if config['calibrate'].get('DDjones', False):
-            all_time_solution.append(config[key].get('DDsols_timeslots')[:])
         if  config['calibrate'].get('two_step',False):
-            for val in config['calibrate'].get('DDsols_timeslots'):
+            for val in config['calibrate'].get('GAsols_timeslots'):
                 if int(val) >= 0:
                     all_time_solution.append(val)
         if min(all_time_solution) == 0:
@@ -94,10 +92,8 @@ def worker(pipeline, recipe, config):
         # add the various sections
         if config['calibrate'].get('Bjones', False):
             all_freq_solution.append(config[key].get('Bsols_channel')[:])
-        if config['calibrate'].get('DDjones', False):
-            all_freq_solution.append(config[key].get('DDsols_channel')[:])
         if  config['calibrate'].get('two_step',False):
-            for val in config['calibrate'].get('DDsols_channel'):
+            for val in config['calibrate'].get('GAsols_channel'):
                 if int(val) >= 0:
                     all_freq_solution.append(val)
         if min(all_freq_solution) == 0:
@@ -196,7 +192,6 @@ def worker(pipeline, recipe, config):
             "niter": niter,
             "mgain": mgain,
             "pol":  pol,
-            "taper-gaussian":  taper,
             "channelsout": nchans,
             "joinchannels": joinchannels,
             "fit-spectral-pol":  fit_spectral_pol,
@@ -206,6 +201,17 @@ def worker(pipeline, recipe, config):
             "savesourcelist": False,
             "fitbeam": False,
         }
+        if maxuvl > 0.:
+            image_opts.update({
+                "maxuv-l": maxuvl,
+                "taper-tukey": transuvl,
+            })
+        if float(taper) > 0.:
+            image_opts.update({
+                "taper-gaussian": taper,
+            })
+        if min_uvw > 0:
+            image_opts.update({"minuvw-m": min_uvw})
         if multiscale==True:
             fake_image_opts.update({"multiscale": multiscale})
             fake_image_opts.update({"multiscale": multiscale_scales})
@@ -261,19 +267,11 @@ def worker(pipeline, recipe, config):
             "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],
         }
         if maxuvl > 0.:
-            if taper > 0.:
-                meerkathi.log.error(
-                    "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
-                sys.exit(2)
             image_opts.update({
                 "maxuv-l": maxuvl,
                 "taper-tukey": transuvl,
             })
         if float(taper) > 0.:
-            if maxuvl  > 0.:
-                meerkathi.log.error(
-                    "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
-                sys.exit(1)
             image_opts.update({
                 "taper-gaussian": taper,
             })
@@ -976,7 +974,7 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
         gasols_ = [
             config[key].get('GAsols_timeslots')[num - 1 if num <= 
-                                           len(config[key].get('GAsols_time')) else -1],
+                                           len(config[key].get('GAsols_timeslots')) else -1],
             config[key].get('GAsols_channel')[num - 1 if num <= 
                                               len(config[key].get('GAsols_channel')) else -1]]
         if config[key].get('Bjones'):

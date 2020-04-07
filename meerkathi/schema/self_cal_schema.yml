@@ -72,7 +72,7 @@ mapping:
         example: '0.'
       img_taper:
         type: str
-        desc: Taper for imaging (arcsec)
+        desc: Gaussian taper for imaging (arcsec)
         required: false
         example: '0.'
       img_maxuv_l:
@@ -431,7 +431,7 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '-1'
+            example: '0'
           GAsols_channel:
             desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
             seq:

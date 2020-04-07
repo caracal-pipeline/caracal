@@ -19,6 +19,8 @@ def worker(pipeline, recipe, config):
 
     #if  we are running self cal we want to check the following
     if pipeline.config['self_cal']['enable']:
+        meerkathi.log.info(
+                    "Checking the consistency of the Self_Cal input")
         # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
         if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
             print(pipeline.config['self_cal']['transfer_apply_gains']['enable'])
@@ -116,6 +118,13 @@ def worker(pipeline, recipe, config):
                         meerkathi.log.info("Your channel chunk = {}".format(channel_chunk))
                         meerkathi.log.info("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                         sys.exit(2)
+        # Check some imaging stuff
+        if pipeline.config['self_cal']['image']['enable']:
+            if pipeline.config['self_cal']['img_maxuv_l'] > 0. and  pipeline.config['self_cal']['taper'] > 0.:
+                meerkathi.log.info(
+                    "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+                sys.exit(2)
+
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]

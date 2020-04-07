@@ -1,4 +1,4 @@
-schema_version: 0.2.0
+schema_version: 0.3.0
 
 general:
   msdir: msdir
@@ -39,7 +39,7 @@ prepare_data:
 
 flagging:
   enable: true
-  label: ''
+  label_in: ''
   flag_autocorr:
     enable: true
   flag_spw:
@@ -69,9 +69,9 @@ cross_cal:
   enable: true
   otfdelay: true
   uvrange: '>150'
-  label: 1gc1
+  label_in: 1gc1
   load_flags:
-    flag_version: after_flagging_automatic
+    version: after_flagging_automatic
     merge: False
   set_model:
     enable: true
@@ -106,7 +106,8 @@ polcal:
 
 inspect_data: 
   enable: true
-  label: '1gc'
+  label_in: ''
+  label_out: '1gc'
   fields:
     - bpcal
     - gcal
@@ -129,11 +130,11 @@ inspect_data:
     enable: true
     avgtime: '60'
 
-split_target: 
+transform_data: 
   enable: true
   label_in: ''
   label_out: corr
-  split_target: 
+  split_field: 
     enable: true
     time_average: ''
     freq_average: 1
@@ -148,7 +149,8 @@ split_target:
 
 flagging__2: 
   enable: true
-  label: corr
+  label_in: corr
+  field: target
   autoflag_rfi: 
     enable: true
     flagger: aoflagger
@@ -163,19 +165,41 @@ masking:
   centre_coord:
     - HH:MM:SS
     - DD:MM:SS
-  label: corr
+  label_in: corr
 
 self_cal:
   enable: true
   img_npix: 4096
   img_cell: 1.3
+  cal_timeslots_chunk: 240
   image:
     enable: true
   calibrate:
     enable: true
-    Gsols_time: [120]
+    Gsols_timeslots: [120]
   transfer_model:
     enable: false
+
+direction_dependent_calibration:
+  enable: false
+  label: 'corr'
+  use_pb: true
+  calibrate_dd:
+    enable: True
+    sigma: 0.4
+    de_sources_mode: manual
+    de_sources_manual: ['14h15m26.0s,-65d57m16.5s,80']
+    de_target_manual: ['circinus-p3']
+  image_dd:
+    deconv_maxminoriter: 10000
+    freq_nband: 10
+  copy_data:
+    enable: true
+  image_wsclean:
+    enable: true
+    img_ws_npix: 5000
+  transfer_model_dd:
+    enable: true
 
 image_line:
   enable: false

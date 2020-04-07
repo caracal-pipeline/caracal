@@ -45,7 +45,7 @@ def worker(pipeline, recipe, config):
         de_targets =  config['calibrate_dd'].get('de_target_manual')
         de_sources =  config['calibrate_dd'].get('de_sources_manual')
         if len(de_targets)!=len(de_sources):
-            meerkathi.log.error("The number of targets for de calibration does not match sources, please recheck, and Also, Kshitij can't haz the Snowleopard.")
+            meerkathi.log.error("The number of targets for de calibration does not match sources, please recheck.")
             sys.exit(1)
         de_dict = dict(zip(de_targets, de_sources))
     else: 

@@ -4,44 +4,61 @@ general:
   msdir: msdir
   input: input
   output: output
-  prefix: mypipelinerun
+  prefix: workflow2
   init_pipeline: true
 
 
 get_data:
   dataid: []
 
-observation_config: 
-  obsinfo: 
-    enable: true
+observation_config:
   target:
     - 'all'
-  gcal: 
-    - 'all'
-  bpcal:
-    - 'longest'
   fcal:
     - 'longest'
+  bpcal:
+    - 'longest'
+  gcal:
+    - 'all'
   xcal:
     - 'longest'
   reference_antenna: '0'
-
+  
 prepare_data: 
-  enable: true
+  enable: false
   fixvis: 
     enable: false
   manage_flags: 
-    mode: restore
-    version: caracal_legacy
+    enable: true
   clear_cal: true
   spectral_weights:
+    enable: true
     mode: uniform
+
+transform_data:
+  enable: true
+  label_in: ''
+  label_out: 'cal'
+  split_field:
+    enable: true
+    field: 'calibrators'
+    time_average: ''
+    freq_average: 1
+    column: data
+    correlation: ''
+    spw: ''
+    otfcal:
+      enable: false
+  obsinfo:
+    enable: true
+    listobs: true
 
 flagging:
   enable: true
-  label_in: ''
-  flag_autocorr:
-    enable: true
+  label_in: 'cal'
+  field: 'calibrators'
+  quack_flagging:
+    enable: false
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
@@ -61,22 +78,18 @@ flagging:
     flagger: aoflagger
     strategy: firstpass_QUV.rfis
   rfinder:
-    enable: false
+    enable: true
     telescope: MeerKAT
-    field: target
+    field: 'bpcal,gcal'
 
 cross_cal:
   enable: true
   otfdelay: true
   uvrange: '>150'
-  label_in: ''
   label_cal: 1gc1
-  load_flags:
-    version: after_flagging_automatic
-    merge: False
+  label_in: 'cal'
   set_model:
     enable: true
-    meerkathi_model: true
   primary_cal:
     enable: true
     reuse_existing_gains: true
@@ -100,13 +113,13 @@ cross_cal:
     applyto: 
       - gcal
       - bpcal
-      - target
 
 polcal: 
   enable: false
 
 inspect_data: 
-  enable: true
+  enable: false
+  label_in: 'cal'
   label_out: '1gc'
   fields:
     - bpcal
@@ -130,34 +143,37 @@ inspect_data:
     enable: true
     avgtime: '60'
 
-transform_data: 
+transform_data__2:
   enable: true
   label_in: ''
   label_out: corr
   split_field: 
     enable: true
+    field: 'target'
     time_average: ''
     freq_average: 1
     column: corrected
     correlation: ''
     spw: ''
     otfcal: 
-      enable: false
+      enable: true
+#      callib: 'your_callib.txt'
+      label_cal: '1gc1'
   obsinfo: 
     enable: true
-    listobs: false
+    listobs: true
 
 flagging__2: 
   enable: true
   label_in: corr
-  field: target
+  field: 'target'
   autoflag_rfi: 
     enable: true
     flagger: aoflagger
     strategy: firstpass_QUV.rfis
     column: DATA
   rfinder: 
-    enable: false
+    enable: true
     field: target
 
 masking: 
@@ -168,39 +184,17 @@ masking:
   label_in: corr
 
 self_cal:
-  enable: true
+  enable: false
   img_npix: 4096
   img_cell: 1.3
-  cal_timeslots_chunk: 240
   image:
     enable: true
   calibrate:
     enable: true
     Gsols_timeslots: [120]
 
-direction_dependent_calibration:
-  enable: false
-  label: 'corr'
-  use_pb: true
-  calibrate_dd:
-    enable: True
-    sigma: 0.4
-    de_sources_mode: manual
-    de_sources_manual: ['14h15m26.0s,-65d57m16.5s,80']
-    de_target_manual: ['circinus-p3']
-  image_dd:
-    deconv_maxminoriter: 10000
-    freq_nband: 10
-  copy_data:
-    enable: true
-  image_wsclean:
-    enable: true
-    img_ws_npix: 5000
-  transfer_model_dd:
-    enable: true
-
 image_line:
-  enable: true
+  enable: false
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

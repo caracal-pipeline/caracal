@@ -44,9 +44,8 @@ sya+="############################" ; sya+=$'\n\n'
 sya+="Start time: "; sya+=`date -u`; sya+=$'\n'
 sya+="Call executing: caratekit.sh $*"; sya+=$'\n\n'
 sya+="############################" ; sya+=$'\n\n'
-sya+="Host info: ";sya+=$'\n'; sya+=`hostnamectl | grep -Ev "Machine ID"'|'"Boot ID"`;sya+=$'\n'
-#sya+=$'\n\n'
-
+hostnamectl &>/dev/null && hostinfo=`hostnamectl | grep -Ev "Machine ID"'|'"Boot ID"` || hostinfo="Not accessible"
+sya+="Host info: ";sya+=$'\n'; sya+=${hostinfo};sya+=$'\n'
 # Control if help should be switched on
 #(( $# > 0 )) || NOINPUT=1
 
@@ -800,10 +799,13 @@ checkex () {
 	
 	for file in ${files[@]}
 	do
-	    e=`stat -c %i $file`
-	    a=`basename $file`
-	    b=`find $tocheck -name $a` || true
-	    c=($b)
+	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
+	    [[ ${e}=="" ]] && unset e
+	    [[ -z ${e} ]] && { \
+		a=`basename $file`; \
+		b=`find $tocheck -name $a` || true; \
+		c=($b); \
+		}
 	    for subfile in ${c[@]}
 	    do
 		d=`stat -c %i $subfile`	    
@@ -816,7 +818,7 @@ checkex () {
 	for file in ${files[@]}
 	do
 	    d=`stat -c %i $file`
-	    [[ ${e} != ${d} ]] || { return 0; }
+	    [[ ${e} != ${d} ]] || { echo why; }
 	done
     fi
     return 1
@@ -1097,7 +1099,6 @@ then
         stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || true
         if [[ -z ${stimelaline} ]]
         then
-	    echo got here
 	    # Stimela tag depends on whether the repository is in or not
             stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
             [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
@@ -1153,11 +1154,11 @@ then
     echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_last_stable.txt" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_last_stable.txt
 fi
-if [[ -n ${CARACAL_LOCAL_STIMELA} ]]
+if [[ -n ${CARATE_LOCAL_STIMELA} ]]
 then
-    echo "Intstalling local stimela ${CARACAL_LOCAL_STIMELA}"
+    echo "Intstalling local stimela ${CARATE_LOCAL_STIMELA}"
     echo "pip install -U --force-reinstall \${local_stimela}" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARACAL_LOCAL_STIMELA}
+    [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA}
 fi
 
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]]
@@ -1186,6 +1187,11 @@ fi
 
 if [[ -n $DM ]] || [[ -n $DA ]] || [[ -n $DI ]]
 then
+    # Prevent special characters to destroy installation
+    stimela_ns=`whoami`
+    stimela_bs=`whoami | sed 's/@/_/g'`
+    [[ ${stimela_ns} == ${stimela_bs} ]] && stimela_ns="" || stimela_ns=" -bl ${stimela_bs}"
+
     if [[ -n $ORSR ]]
     then
         echo "Omitting re-installation of Stimela Docker images"
@@ -1239,10 +1245,10 @@ then
         until (( ${ii} > ${IA} ))
         do
             echo "Running stimela build"
-            echo "stimela build" >> ${SS}
+            echo "stimela build${stimela_ns}" >> ${SS}
             if [[ -z ${FS} ]]
 	    then
-	        stimela build && break || {
+	        stimela build${stimela_ns} && break || {
 			echo "stimela build failed"
 			(( ii++ ))
 		    }
@@ -1264,7 +1270,17 @@ testingoutput () {
     # Function to test output after running a pipeline
     # Argument 1: $WORKSPACE_ROOT
     # Argument 2: Test directory, e.g. test_extendedConfig_docker
-
+    local meerkathilog
+    local allogs
+    local total
+    local log
+    local hadmeerkathi
+    local hadmeerkathi2
+    local reporting
+    local meerkathilogsh
+    local worker_runs
+    local worker_fins
+    
     echo
     echo "###################"
     echo " Counting logfiles "
@@ -1274,7 +1290,7 @@ testingoutput () {
     # Check here
     allogs=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/ || echo ""`
 #    allogs=`ls -t ${1}/${2}/output/logs/` || true
-    meerkathilog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1 || echo ""`
+    meerkathilog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-meerkathi*.txt | head -1 || echo ""`
     [[ ${meerkathilog} == "" ]] && unset meerkathilog
 #    meerkathilog=`ls -t ${1}/${2}/output/logs/log-*-meerkathi.txt | head -1 || true`
     [[ -z ${meerkathilog} ]] || { reporting+="This CARACal run is logged in ${meerkathilog}"; reporting+=$'\n'; }
@@ -1411,7 +1427,6 @@ runtest () {
         echo "${WORKSPACE_ROOT}/test_${configfilename}_${contarch}"
 	echo "mkdir -p \${workspace_root}/test_${configfilename}_${contarch}/msdir" >> ${SS}
         mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/msdir
-
 	if [[ -d ${CARATE_INPUT_DIR} ]]
 	then
 	    mkdir -p ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/input
@@ -1421,11 +1436,21 @@ runtest () {
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
-	checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || \
-	    echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}
+	checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ||  { \
+	    [[ `grep "dataid: \[\x27\x27\]" ${configlocation}` == "" ]] || { \
+		echo "sed \"s/dataid: \[\x27\x27\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}; \
+	    }; \
+	    [[ `grep "dataid: \[\]" ${configlocation}` == "" ]] || { \
+		echo "sed \"s/dataid: \[\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/test_${configfilename}_${contarch}/${configfilename}.yml" >> ${SS}; \
+		} \
+	}
 	[[ -n ${FS} ]] || \
-	    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || \
-	    sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml
+	    checkex ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml || { \
+		[[ `grep "dataid: \[\x27\x27\]" ${configlocation}` == "" ]] || { sed "s/dataid: \[\x27\x27\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml; \
+		}; \
+		[[ `grep "dataid: \[\]" ${configlocation}` == "" ]] || { sed "s/dataid: \[\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml; \
+		}; \
+	    }
 
 	# This prevents the script to stop if there -fs is switched on
 	[[ ! -f ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/${configfilename}.yml ]] || \
@@ -1469,7 +1494,7 @@ runtest () {
     fi
     
     # Make a copy of the logfile
-    meerkathilog=`ls -t ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-*-meerkathi.txt | head -1` || true
+    meerkathilog=`[[ -e ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/test_${configfilename}_${contarch}/output/logs/log-*-meerkathi.txt | head -1 || echo ""`
     [[ ! -f ${meerkathilog} ]] || cp ${meerkathilog} ${WORKSPACE_ROOT}/report/log-meerkathi_test_${configfilename}_${contarch}.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
@@ -1519,7 +1544,7 @@ then
     greetings_line="Docker: minimalConfig"
     confilename="minimalConfig"
     contarch="docker"
-    caracalswitches=" "
+    caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\{workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
 fi
 
@@ -1528,7 +1553,7 @@ then
     greetings_line="Docker: (alternative) carateConfig"
     confilename="carateConfig"
     contarch="docker"
-    caracalswitches=" "
+    caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/meerkathi/sample_configurations/${confilename}.yml" "${caracalswitches}"
 fi
 
@@ -1537,7 +1562,7 @@ then
     greetings_line="Docker: $configfilename"
     confilename=$configfilename
     contarch="docker"
-    caracalswitches=" "
+    caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
 

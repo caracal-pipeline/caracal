@@ -1686,6 +1686,42 @@ then
     caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
 fi
+if [[ -n $DSC ]]
+then
+    echo "####################################"
+    echo " Testing all sample configurations "
+    echo "####################################"
+    greetings_line="Docker: Testing Sample configurations"
+    contarch="docker"
+    caracalswitches="${stimela_ns}"
+    # First we need to know all the sample configurations present that are not old
+    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    then
+      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations/"
+      sample_location="${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations"
+    else
+      echo "You are checking the configurations in the remote master"
+      echo "That seems silly but ok."
+      echo ""
+      sample_location="${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations"
+    fi
+    for entry in "${sample_location}"/*
+    do
+      filename=${entry##*/}
+      # check that it is not old
+      if [[ $filename != *"old"* ]]
+      then
+        #Check it is a yml file
+        if [[ $filename == *".yml"* ]]
+        then
+          confilename=${filename%.yml}
+          runtestsample "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/test_config_sample_${contarch}/${confilename}.yml" "${sample_location}/${confilename}.yml" "${caracalswitches}"
+          #make sure that only in the first instance a new directory is created
+          FORCE=0
+        fi
+      fi
+    done
+fi
 
 if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
 then
@@ -1790,43 +1826,6 @@ then
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${caracalswitches}"
-fi
-
-if [[ -n $DSC ]]
-then
-    echo "####################################"
-    echo " Testing all sample configurations "
-    echo "####################################"
-    greetings_line="Docker: Testing Sample configurations"
-    contarch="docker"
-    caracalswitches=" "
-    # First we need to know all the sample configurations present that are not old
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
-    then
-      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations/"
-      sample_location="${CARATE_LOCAL_SOURCE}/meerkathi/sample_configurations"
-    else
-      echo "You are checking the configurations in the remote master"
-      echo "That seems silly but ok."
-      echo ""
-      sample_location="${WORKSPACE_ROOT}/meerkathi/meerkathi/sample_configurations"
-    fi
-    for entry in "${sample_location}"/*
-    do
-      filename=${entry##*/}
-      # check that it is not old
-      if [[ $filename != *"old"* ]]
-      then
-        #Check it is a yml file
-        if [[ $filename == *".yml"* ]]
-        then
-          confilename=${filename%.yml}
-          runtestsample "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/test_config_sample_${contarch}/${confilename}.yml" "${sample_location}/${confilename}.yml" "${caracalswitches}"
-          #make sure that only in the first instance a new directory is created
-          FORCE=0
-        fi
-      fi
-    done
 fi
 
 if [[ -n $SSC ]]

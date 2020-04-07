@@ -1634,10 +1634,9 @@ runtestsample () {
     # then we need to setup for the test
     # first put in the data ID
     # sed "s/dataid: \[\x27\x27\]/$dataidstr/"
-    sed -i "s/dataid: [.*]/${dataidstr}/" ${configlocation}
+    sed -i "s/dataid: \[.*\]/${dataidstr}/" ${configlocation}
     # then replace all enable true with false
-    sed -i "s/enable: true/enable: false/g" ${configlocation}
-    sed -i "s/enable: True/enable: false/g" ${configlocation}
+    sed -i "s/enable: true/enable: false/gI" ${configlocation}
     # And then run meerkathi
     echo "Running ${contarch} test (using ${configfilename}.yml)"
     cd ${WORKSPACE_ROOT}/test_config_sample_${contarch}

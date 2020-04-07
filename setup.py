@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela==1.2.5',
+    'stimela>=1.2.5',
     'scipy',
     'pysolr',
     'progressbar2',

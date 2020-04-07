@@ -5,7 +5,8 @@
     dataid: ['']
 
 - observation_config:
-    target: auto
+    target:
+      - all
     reference_antenna: '0'
 
 - general:

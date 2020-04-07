@@ -68,7 +68,8 @@ class misc_opts_form(npyscreen.Form):
                                                  name="Pipeline build order",
                                                  values=["Execute workers as encountered",
                                                          "Add all workers first, then execute"],
-                                                 value=1 if cp().args.add_all_first else 0,
+                                                 # value=1 if cp().args.add_all_first else 0,
+                                                 value=0,
                                                  scroll_exit=True)
         setattr(self.red_pipeline_build_order,
                 "value_changed_callback",

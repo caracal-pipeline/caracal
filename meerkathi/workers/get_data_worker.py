@@ -7,7 +7,8 @@ import meerkathi.dispatch_crew.meerkat_archive_interface as mai
 import stimela.dismissable as sdm
 import warnings
 
-NAME = "Get convert and extract data"
+NAME = "Get data"
+LABEL = 'get_data'
 
 
 def worker(pipeline, recipe, config):

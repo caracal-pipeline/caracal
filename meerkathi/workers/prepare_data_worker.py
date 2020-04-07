@@ -3,7 +3,7 @@ import sys
 from meerkathi.workers.utils import manage_flagsets as manflags
 
 NAME = "Prepare data for calibration"
-
+LABEL = 'prepare_data'
 
 def worker(pipeline, recipe, config):
 

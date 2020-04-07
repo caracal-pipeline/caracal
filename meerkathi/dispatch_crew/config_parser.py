@@ -190,74 +190,94 @@ class config_parser:
         return copy.deepcopy(cls.__GLOBAL_SCHEMA)
 
     @classmethod
-    def __primary_parser(cls, add_help=False):
-        parser = argparse.ArgumentParser("MeerKATHI HI and Continuum Imaging Pipeline.\n"
-                                         "(C) RARG, SKA-SA 2016-2017.\n"
-                                         "All rights reserved.",
-                                         add_help=add_help)
+    def __primary_parser(cls, add_help=True):
+        parser = argparse.ArgumentParser(description="""
+Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
+interferometry.""",
+            usage="%(prog)s [-options] -c config_file",
+            epilog="""
+You can also specify "--worker_name-option_name option_value" to override settings in the configuration file.
+
+To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself  an initial configuration file, 
+then edit the file to suit your needs.
+    """,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            add_help=add_help)
         add = parser.add_argument
         add("-v", "--version", action='version',
             version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__))
+
         add('-c', '--config',
             type=lambda a: is_valid_file(parser, a),
             default=DEFAULT_CONFIG,
-            help='Pipeline configuration file (YAML/JSON format)')
+            help='pipeline configuration file. This is a mandatory argument.')
 
-        add('-sid', '--singularity-image-dir',
-            help='Directory where stimela singularity images are stored')
+        add('-b', '--boring',
+            help='enable boring mode, i.e. suppress colours in console output',
+            action='store_true')
 
-        add('-gd', '--get-default',
-            help='Name file where the configuration should be saved')
+        add('-sid', '--singularity-image-dir', metavar="DIR",
+            help='directory where stimela singularity images are stored')
 
-        add('-gdt', '--get-default-template', choices=["minimal", "meerkat"],
+        add('-gdt', '--get-default-template', # metavar="TEMPLATE",
+                choices=["minimal", "meerkat"],
                 default="minimal",
-                help='Default template to get. Choices are minimal and config')
+                help='init a configuration file from a default template')
 
-        add('-sw', '--start-worker',
-            help='Start processing with this worker')
+        add('-gd', '--get-default', metavar="FILE",
+            help='name of file where the template should be saved (use in conjunction with -gdt)')
 
-        add('-ew', '--end-worker',
-            help='Stop processing with this worker')
+        add('-sw', '--start-worker', metavar="WORKER",
+            help='start pipeline at this worker')
 
-        add('-aaf', '--add-all-first', action='store_true',
-            help='Add steps from all workers to pipeline before execucting. Default is execute each workers as they are encountered.')
+        add('-ew', '--end-worker', metavar="WORKER",
+            help='stop pipeline after this worker')
+
+        # add('-aaf', '--add-all-first', action='store_true',
+        #     help='add steps from all workers to pipeline before executing (default is execute in turn)')
 
         add('-bl', '--stimela-build',
-            help='Label of stimela build to use',
+            help='label of custom stimela build to use',
             default=None)
 
         add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
-            help='Path to custom schema for worker(s). Can be specified multiple times')
+            help='path to custom schema for worker(s), can be specified multiple times')
 
-        add('-wh', '--worker-help', metavar="WORKER_NAME",
-            help='Get help for a worker')
-
-        add('-pcs', '--print-calibrator-standard',
-            help='Prints auxilary calibrator standard into the log',
-            action='store_true')
-
-        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"], default="docker",
+        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
+            default="docker",
             help='Container technology to use')
 
-        add('--no-interactive',
-            help='Disable interactivity',
+        add('-wh', '--worker-help', metavar="WORKER",
+            help='prints help for a particular worker, then exits')
+
+        add('-pcs', '--print-calibrator-standard',
+            help='prints list of auxiliary calibrator standards, then exits',
+            action='store_true')
+
+        # add('--no-interactive',
+        #     help='Disable interactivity',
+        #     action='store_true')
+
+        add('-debug',
+            help='enable debugging mode',
             action='store_true')
 
         add('-nr','--no-reports',
-            help='Disable generation of report about the pipeline run.',
+            help='disable generation of report about the pipeline run',
             action='store_true')
 
         add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
-            help='Directory where pipeline workers can be found. These are stimela recipes describing the pipeline')
+            help='directory where custom pipeline workers can be found')
 
-        add('-rv', '--report-viewer', action='store_true',
-            help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
+        # add('-rv', '--report-viewer', action='store_true',
+        #     help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
+        #
+        # add('--interactive-port', type=int, default=8888,
+        #     help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
 
-        add('--interactive-port', type=int, default=8888,
-            help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
+        # add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
+        #     action='store_true')
 
-        add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
-            action='store_true')
         return parser
 
     __HAS_BEEN_INIT = False
@@ -281,7 +301,7 @@ class config_parser:
         # default configuration file
         # =========================================================
         # Create parser object
-        parser = cls.__primary_parser()
+        self._parser = parser = cls.__primary_parser()
 
         # Lambda for transforming sections and options
 
@@ -306,7 +326,7 @@ class config_parser:
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
 
-        parser = cls.__primary_parser(add_help=True)
+        self._parser = parser = cls.__primary_parser(add_help=True)
         groups = OrderedDict()
 
         for worker, variables in tmp.items():
@@ -523,12 +543,16 @@ class config_parser:
             f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))
 
     @classmethod
-    def log_options(cls):
+    def log_options(cls, config_file):
         """ Prints argument tree to the logger for prosterity to behold """
-        meerkathi.log.info(
-            "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))
 
-        def _tree_print(branch, indent="\t"):
+        meerkathi.log.info("Loaded pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+
+        #meerkathi.log.info(
+        #   "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))
+        indent0 = "  "
+
+        def _tree_print(branch, indent=indent0):
             dicts = OrderedDict(
                 [(k, v) for k, v in branch.items() if isinstance(v, dict)])
             other = OrderedDict(
@@ -538,18 +562,21 @@ class config_parser:
                 if isinstance(v, dict):
                     if not v.get("enable", True):
                         return
-                    (indent == "\t") and meerkathi.log.info(
-                        indent.ljust(60, "#"))
-                    meerkathi.log.info(indent + "Subsection %s:" % k)
-                    (indent == "\t") and meerkathi.log.info(
-                        indent.ljust(60, "#"))
-                    (indent != "\t") and meerkathi.log.info(
-                        indent.ljust(60, "-"))
-                    _tree_print(v, indent=indent+"\t")
+                    if indent == indent0:
+                        meerkathi.log.info("")
+                        extra = dict(color="GREEN")
+                    else:
+                        extra = {}
+                    # (indent == "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "#"))
+                    meerkathi.log.info("{}{}:".format(indent, k), extra=extra)
+                    # (indent == "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "#"))
+                    # (indent != "\t") and meerkathi.log.info(
+                    #     indent.ljust(60, "-"))
+                    _tree_print(v, indent=indent+indent0)
                 else:
-                    meerkathi.log.info("%s%s= %s" % (indent,
-                                                     k.ljust(30),
-                                                     v))
+                    meerkathi.log.info("{}{:30}{}".format(indent, k+":", v))
 
             for k, v in other.items():
                 _printval(k, v)
@@ -558,5 +585,5 @@ class config_parser:
         ordered_groups = OrderedDict(sorted(list(cls.__GROUPS.items()),
                                             key=lambda p: p[1].get("order", 0)))
         _tree_print(ordered_groups)
-        meerkathi.log.info(
-            "".join(["".ljust(25, "#"), " END OF CONFIGURATION ", "".ljust(25, "#")]))
+        # meerkathi.log.info(
+        #     "".join(["".ljust(25, "#"), " END OF CONFIGURATION ", "".ljust(25, "#")]))

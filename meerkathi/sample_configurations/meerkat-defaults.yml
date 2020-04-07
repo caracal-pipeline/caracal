@@ -1,4 +1,4 @@
-schema_version: 0.2.0
+schema_version: 0.3.0
 
 general:
   msdir: msdir
@@ -39,7 +39,7 @@ prepare_data:
 
 flagging:
   enable: true
-  label: ''
+  label_in: ''
   flag_autocorr:
     enable: true
   flag_spw:
@@ -69,7 +69,8 @@ cross_cal:
   enable: true
   otfdelay: true
   uvrange: '>150'
-  label: 1gc1
+  label_in: ''
+  label_cal: 1gc1
   load_flags:
     version: after_flagging_automatic
     merge: False
@@ -106,7 +107,7 @@ polcal:
 
 inspect_data: 
   enable: true
-  label: '1gc'
+  label_out: '1gc'
   fields:
     - bpcal
     - gcal
@@ -129,11 +130,11 @@ inspect_data:
     enable: true
     avgtime: '60'
 
-split_target: 
+transform_data: 
   enable: true
   label_in: ''
   label_out: corr
-  split_target: 
+  split_field: 
     enable: true
     time_average: ''
     freq_average: 1
@@ -148,7 +149,8 @@ split_target:
 
 flagging__2: 
   enable: true
-  label: corr
+  label_in: corr
+  field: target
   autoflag_rfi: 
     enable: true
     flagger: aoflagger
@@ -163,7 +165,7 @@ masking:
   centre_coord:
     - HH:MM:SS
     - DD:MM:SS
-  label: corr
+  label_in: corr
 
 self_cal:
   enable: true

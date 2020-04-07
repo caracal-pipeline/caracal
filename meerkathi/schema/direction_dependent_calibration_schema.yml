@@ -287,22 +287,22 @@ mapping:
            desc: Flag solution intervals where the posterior variance estimate is above this value for DE term.
            example: "0.35"
          dd_g_timeslots_int: 
-           type: float
+           type: int
            desc: Time solution interval in timeslot units for G-Jones.
            required: false
            example: "10"
          dd_g_channel_int:
-           type: float
+           type: int
            desc: Frequency solution interval in channel units for G-Jones.
            example: "0"
            required: false
          dd_dd_timeslots_int: 
-           type: float
+           type: int
            desc: Time solution interval in timeslot units for DE-Jones.
            required: false
            example: "100"
          dd_dd_channel_int:
-           type: float
+           type: int
            desc: Frequency solution interval in channel units for DE-Jones.
            example: "100"
            required: false

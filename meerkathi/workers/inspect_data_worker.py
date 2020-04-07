@@ -43,49 +43,58 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         label="{0:s}:: Plotting corrected {1:s}".format(step, plotname))
 
 
-def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
+def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, corr_label=None):
     step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
     column = config[plotname]['column']
     if column == "corrected":
         column = "CORRECTED_DATA"
     elif column == "data":
         column = "DATA"
+    if corr_label:
+        corr_label = "_Corr_" + corr_label
+    else:
+        corr_label = ""
 
     recipe.add("cab/shadems", step, {
         "ms": msname,
         "field": str(fid),
-        #                "corr": opts['corr'],
+        "corr": opts['corr'],
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
         "col": column,
-        "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
+        "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}{5:s}.png'.format(prefix, label, field, plotname, ftype, corr_label),
     },
         input=pipeline.input,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
         label="{0:s}:: Plotting corrected ".format(step, plotname))
 
 
-def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
+def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, corr_label=None):
     step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
     column = config[plotname]['column']
     if column == "corrected":
         column = "CORRECTED_DATA"
     elif column == "data":
         column = "DATA"
-    colouraxis = opts.get("colour-axis", None)
+    if corr_label:
+        corr_label = "_Corr_" + corr_label
+    else:
+        opts['corr'] = "0:"
+        corr_label = ""
     recipe.add("cab/ragavi_vis", step, {
         "ms": msname,
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
-        "canvas-height": 720,
-        "canvas-width": 1080,
-        # "cbin": int(config[plotname].get('avgchannel')),
-        # "colour-axis":,
+        "canvas-height": opts['canvas-height'],
+        "canvas-width": opts['canvas-width'],
+        "corr": opts["corr"],
+        # "cbin": int(config[plotname].get('avgchannel', None)),
+        # "colour-axis": opts.get("colour-axis", None),
         "data-column": column,
         "field": str(fid),
-        "htmlname": "{0:s}_{1:s}_{2:s}_{3:s}_{4:s}".format(prefix, label, field, plotname, ftype),
-        "iter-axis": sdm(opts.get('iter-axis', None))
-        # "tbin": int(config[plotname].get('avgtime')),
+        "htmlname": "{0:s}_{1:s}_{2:s}_{3:s}_{4:s}{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
+        "iter-axis": sdm(opts.get('iter-axis', None)),
+        # "tbin": float(config[plotname].get('avgtime', None)),
 
     },
         input=pipeline.input,
@@ -136,13 +145,15 @@ def worker(pipeline, recipe, config):
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "r", "yaxis": "i"},
             ragavi_vis={"xaxis": "real", "yaxis": "imaginary",
-                        "iter-axis": "corr"})
+                        "iter-axis": "scan", "canvas-width": 300,
+                        "canvas-height": 300})
         diagnostic_plots["amp_phase"] = dict(
             plotms={"xaxis": "amp", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "a", "yaxis": "p"},
             ragavi_vis={"xaxis": "phase", "yaxis": "amplitude",
-                        "iter-axis": "corr"})
+                        "iter-axis": "corr", "canvas-width": 1080,
+                        "canvas-height": 720})
         diagnostic_plots["amp_ant"] = dict(
             plotms={"xaxis": "antenna", "yaxis": "amp",
                     "colouraxis": "baseline", "iteraxis": "corr"},
@@ -153,25 +164,33 @@ def worker(pipeline, recipe, config):
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "uv", "yaxis": "a"},
             ragavi_vis={"xaxis": "uvwave", "yaxis": "amplitude",
-                        "iter-axis": "corr"})
+                        "iter-axis": "scan", "canvas-width": 300,
+                        "canvas-height": 300})
         diagnostic_plots["phase_uvwave"] = dict(
             plotms={"xaxis": "uvwave", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
             shadems={"xaxis": "uv", "yaxis": "p"},
             ragavi_vis={"xaxis": "uvwave", "yaxis": "phase",
-                        "iter-axis": "corr"})
+                        "iter-axis": "corr", "canvas-width": 1080,
+                        "canvas-height": 720})
         diagnostic_plots["amp_scan"] = dict(
             plotms={"xaxis": "scan", "yaxis": "amp"},
             shadems=None,
-            ragavi_vis={"xaxis": "scan", "yaxis": "amplitude"})
+            ragavi_vis={"xaxis": "scan", "yaxis": "amplitude",
+                        "iter-axis": None,
+                        "canvas-width": 1080, "canvas-height": 720})
         diagnostic_plots["amp_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "amp"},
             shadems={"xaxis": "c", "yaxis": "a"},
-            ragavi_vis={"xaxis": "channel", "yaxis": "amplitude"})
+            ragavi_vis={"xaxis": "channel", "yaxis": "amplitude",
+                        "iter-axis": None,
+                        "canvas-width": 1080, "canvas-height": 720})
         diagnostic_plots["phase_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "phase"},
             shadems={"xaxis": "c", "yaxis": "p"},
-            ragavi_vis={"xaxis": "channel", "yaxis": "phase"})
+            ragavi_vis={"xaxis": "channel", "yaxis": "phase",
+                        "iter-axis": "scan", "canvas-width": 300,
+                        "canvas-height": 300})
 
         for plotname in diagnostic_plots:
             if not pipeline.enable_task(config, plotname):
@@ -181,11 +200,57 @@ def worker(pipeline, recipe, config):
                 log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(
                     plotter, plotname))
                 continue
-            opts["corr"] = corr
-            for fields_ in isempty(plotname) or fields:
-                for field in getattr(pipeline, fields_)[i]:
-                    fid = utils.get_field_id(msinfo, field)[0]
-                    globals()[plotter](pipeline, recipe, config,
-                                       plotname, msname, field, i, label,
-                                       prefix, opts, ftype=fields_,
-                                       fid=fid)
+
+            if plotter == "shadems":
+                # change the labels to indices
+                with open(msinfo, 'r') as stdr:
+                    corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+
+                corr = corr.replace(" ", "").split(",")
+                for it, co in enumerate(corr):
+                    if co in corrs:
+                        corr[it] = str(corrs.index(co))
+                corr = ",".join(corr)
+                # for each corr
+                for co in corr.split(","):
+                    opts["corr"] = int(co)
+                    for fields_ in isempty(plotname) or fields:
+                        for field in getattr(pipeline, fields_)[i]:
+                            fid = utils.get_field_id(msinfo, field)[0]
+                            globals()[plotter](pipeline, recipe, config,
+                                               plotname, msname, field,
+                                               i, label, prefix, opts,
+                                               ftype=fields_, fid=fid,
+                                               corr_label=corrs[int(co)])
+
+            elif plotter == "ragavi_vis" and not opts["iter-axis"] == "corr":
+                # change the labels to indices
+                with open(msinfo, 'r') as stdr:
+                    corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+
+                corr = corr.replace(" ", "").split(",")
+                for it, co in enumerate(corr):
+                    if co in corrs:
+                        corr[it] = str(corrs.index(co))
+                corr = ",".join(corr)
+
+                # for each corr
+                for co in corr.split(","):
+                    opts["corr"] = co
+                    for fields_ in isempty(plotname) or fields:
+                        for field in getattr(pipeline, fields_)[i]:
+                            fid = utils.get_field_id(msinfo, field)[0]
+                            globals()[plotter](pipeline, recipe, config,
+                                               plotname, msname, field,
+                                               i, label, prefix, opts,
+                                               ftype=fields_, fid=fid,
+                                               corr_label=corrs[int(co)])
+            else:
+                opts["corr"] = corr
+                for fields_ in isempty(plotname) or fields:
+                    for field in getattr(pipeline, fields_)[i]:
+                        fid = utils.get_field_id(msinfo, field)[0]
+                        globals()[plotter](pipeline, recipe, config,
+                                           plotname, msname, field, i, label,
+                                           prefix, opts, ftype=fields_,
+                                           fid=fid)

@@ -20,8 +20,8 @@ def worker(pipeline, recipe, config):
     cell = config['image_dd'].get('cell')
     colname = config['image_dd'].get('column')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
-    ddsols_t = config['calibrate_dd'].get('ddsols_time')
-    ddsols_f = config['calibrate_dd'].get('ddsols_freq')
+    ddsols_t = config['calibrate_dd'].get('dd_dd_timeslots_int')
+    ddsols_f = config['calibrate_dd'].get('dd_dd_channel_int')
     dist_ncpu = config['calibrate_dd'].get('dist_ncpu')
     label = config.get('label')
     USEPB = config.get('use_pb')
@@ -225,33 +225,31 @@ def worker(pipeline, recipe, config):
            step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
-              "data-column"       : "CORRECTED_DATA",
-              "out-column"        : "SUBDD_DATA",
-              "weight-column"     : "WEIGHT_SPECTRUM",
+              "data-column"       : config[key].get('dd_data_column'),
+              "out-column"        : config[key].get('dd_out_data_column'),
+              "weight-column"     : config[key].get('dd_weight_column'),
               "sol-jones"         : "G,DD",  # Jones terms to solve
               "sol-min-bl"        : config[key].get('sol_min_bl'),  # only solve for |uv| > 300 m
-              "sol-stall-quorum"  : 0.95,
-              "g-type"            : "complex-2x2",
-              "g-clip-high"       : 1.5,
-              "g-clip-low"        : 0.5,
+              "sol-stall-quorum"  : config[key].get('dd_sol_stall_quorum'),
+              "g-type"            : config[key].get('dd_g_type'),
+              "g-clip-high"       : config[key].get('dd_g_clip_high'),
+              "g-clip-low"        : config[key].get('dd_g_clip_false'),
               "g-solvable"        : True,
-              "g-update-type"     : "phase-diag",
-              "g-max-prior-error" : 0.35,
-              "dd-max-prior-error" : 0.35,
-              "g-max-post-error"  : 0.35,
-              "dd-max-post-error"  : 0.35,
-              #"g-time-int"        : gsols[0],
-              "g-time-int"        : 5,
-              "g-freq-int"        : 20000,
-              #"g-freq-int"        : gsols[1],
-              "dist-ncpu"         :  dist_ncpu,
+              "g-update-type"     : config[key].get('dd_g_update_type'),
+              "g-max-prior-error" : config[key].get('dd_g_max_prior_error'),
+              "dd-max-prior-error" : config[key].get('dd_dd_max_prior_error'),
+              "g-max-post-error"  : config[key].get('dd_g_max_post_error'),
+              "dd-max-post-error"  : config[key].get('dd_dd_max_post_error'),
+              "g-time-int"        : config[key].get('dd_g_timeslots_int'),
+              "g-freq-int"        : config[key].get('dd_g_channel_int'),
+              "dist-ncpu"         :  0,
               "dist-nworker"      : 5,
             #  "model-beam-pattern": prefix+"'_$(corr)_$(reim).fits':output",
             #  "montblanc-feed-type": "linear",
             #  "model-beam-l-axis" : "px",
             #  "model-beam-m-axis" : "py",
-             # "g-save-to"         : "g_final-cal_{0:s}.parmdb".format(mspref),
-              "dd-save-to"        : "dd_cal_final_{0:s}.parmdb".format(mspref),
+              "g-save-to"         : "g_final-cal_{0:s}_{1:s}.parmdb".format(mspref, field),
+              "dd-save-to"        : "dd_cal_final_{0:s}_{1:s}.parmdb".format(mspref, field),
               "dd-type"           : "complex-2x2",
               "dd-clip-high"      : 0.0,
               "dd-clip-low"       : 0.0,

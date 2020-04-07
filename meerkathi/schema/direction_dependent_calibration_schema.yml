@@ -181,16 +181,6 @@ mapping:
            desc: Number of cpus
            required: false
            example: '1'
-         ddsols_time:
-           type: int
-           desc: Solution intervals for ddjones in time
-           required: false 
-           example: '100'
-         ddsols_freq:
-           type: int
-           desc: Solution intervals for ddjones in frequency
-           required: false 
-           example: '100'
 
          de_sources_mode:
            type: str
@@ -236,6 +226,88 @@ mapping:
            desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
            required: false
            example: 'corr'
+         dd_data_column:
+           type: str
+           desc: Column to calibrate
+           required: false
+           example: 'CORRECTED_DATA'
+         dd_out_data_column:
+           type: str
+           desc: Output data column
+           required: false
+           example: 'SUBDD_DATA'
+         dd_weight_column:
+           type: str
+           desc: Column to read weights from. Weights are applied by default. Specify an\nempty string to disable.
+           required: false
+           example: "WEIGHT_SPECTRUM"
+         dd_sol_stall_quorum: 
+           type: float
+           desc: Minimum percentage of solutions which must have stalled before terminating\nthe solver.
+           required: false
+           example: "0.95"
+         dd_g_type: 
+           type: str
+           desc: Gain matrix type for g. Keep complex-2x2, because dd-cal fails otherwise.
+           required: false
+           example: 'complex-2x2'
+         dd_g_clip_high: 
+           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones
+           type: float
+           required: false
+           example: "1.5"
+         dd_g_clip_low: 
+           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones
+           type: float
+           required: false
+           example: "0.5"
+         dd_g_update_type:
+           desc: Determines update type. This does not change the Jones solver type, but restricts the update rule to pin the solutions within a certain subspace.
+           type: str
+           required: false
+           example: "phase-diag"
+         dd_g_max_prior_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the prior error estimate is above this value for G-jones.
+           example: "0.35"
+         dd_g_max_post_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the posterior variance estimate is above this value for G-jones.
+           example: "0.35"
+         dd_d_max_prior_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the prior error estimate is above this value for DE term.
+           example: "0.35"
+         dd_d_max_post_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the posterior variance estimate is above this value for DE term.
+           example: "0.35"
+         dd_g_timeslots_int: 
+           type: float
+           desc: Time solution interval in timeslot units for G-Jones.
+           required: false
+           example: "10"
+         dd_g_channel_int:
+           type: float
+           desc: Frequency solution interval in channel units for G-Jones.
+           example: "0"
+           required: false
+         dd_dd_timeslots_int: 
+           type: float
+           desc: Time solution interval in timeslot units for DE-Jones.
+           required: false
+           example: "100"
+         dd_dd_channel_int:
+           type: float
+           desc: Frequency solution interval in channel units for DE-Jones.
+           example: "100"
+           required: false
+                 
+
 
      copy_data:
        type: map

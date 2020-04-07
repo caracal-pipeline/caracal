@@ -178,7 +178,7 @@ mapping:
             required: False
             example: 'False'
           timerange: 
-            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
+            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
             example: ''

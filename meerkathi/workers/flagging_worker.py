@@ -134,19 +134,13 @@ def worker(pipeline, recipe, config):
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "after_%s_autocorr_power" % wname]), msname, cab_name=substep)
 
-            # clear static flags if any of them are enabled
-            static_flagging = True in [pipeline.enable_task(config, 
-                sflag) for sflag in ["flag_autocorr", "quack_flagging",
-                                     "flag_shadow", "flag_spw", "flag_time", 
-                                     "flag_scan", "flag_antennas", "static_mask"]]
-
-            if static_flagging:
-                substep = 'save_flags_before_static_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
-                manflags.add_cflags(pipeline, recipe, "_".join(
-                    [wname, "before_%s_static" % wname]), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_autocorr'):
-                step = 'flag_autocorr_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                static='autocorr'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -157,9 +151,17 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'quack_flagging'):
-                step = 'quack_flagging_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                static='quack'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -170,9 +172,17 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'flag_elevation'):
-                step = 'flag_elevation_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                static='elevation'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -183,8 +193,13 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'flag_shadow'):
+                static='shadow'
                 if config['flag_shadow'].get('include_full_mk64'):
                     #                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
@@ -203,7 +218,10 @@ def worker(pipeline, recipe, config):
                     addantennafile += ':input'
                 else:
                     addantennafile = None
-                step = 'flag_shadow_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -215,10 +233,18 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'flag_spw'):
+                static='spw'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 flagspwselection = config['flag_spw']['channels']
-                step = 'flag_spw_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
                 found_valid_data = 0
                 if config['flag_spw'].get('ensure_valid_selection'):
                     scalefactor, scalefactor_dict = 1, {
@@ -261,9 +287,18 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
+
 
             if pipeline.enable_task(config, 'flag_time'):
-                step = 'flag_time_{0:s}_{1:d}'.format(wname, i)
+                static='time'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 found_valid_data = 0
                 if config['flag_time'].get('ensure_valid_selection'):
                     if pipeline.startdate[i]:
@@ -291,9 +326,17 @@ def worker(pipeline, recipe, config):
                                 input=pipeline.input,
                                 output=pipeline.output,
                                 label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'flag_scan'):
-                step = 'flag_scan_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                static='scan'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -304,9 +347,18 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
+
 
             if pipeline.enable_task(config, 'flag_antennas'):
-                step = 'flag_antennas_{0:s}_{1:d}'.format(wname, i)
+                static='antennas'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
                 antennas = [config['flag_antennas']['antennas']]
                 times = [config['flag_antennas'].get('timerange')]
                 found_valid_data = [0]
@@ -348,9 +400,18 @@ def worker(pipeline, recipe, config):
                     elif ensure and not found_valid_data[nn]:
                         meerkathi.log.warn(
                             'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, times[nn], step))
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'static_mask'):
-                step = 'static_mask_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                static='static_mask'
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                manflags.add_cflags(pipeline, recipe, "_".join(
+                    [wname, "before_%s" % (static)]), msname, cab_name=substep)
+
                 recipe.add('cab/rfimasker', step,
                            {
                                "msname": msname,
@@ -363,15 +424,14 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Apply static mask ms={1:s}'.format(step, msname))
 
-            if static_flagging:
-                substep = 'save_flags_after_static_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                substep = 'save_flags_after_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
                 manflags.add_cflags(pipeline, recipe, "_".join(
-                    [wname, "after_%s_static" % wname]), msname, cab_name=substep)
+                    [wname, "after_%s" % (static)]), msname, cab_name=substep)
+
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
                 step = 'autoflag_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
-                # Clear autoflags if need be
-                substep = 'save_flags_before_automatic_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
+                # Clear autoflags if need be                substep = 'save_flags_before_automatic_{0:s}_{1:d}_{2:d}'.format(wname, i, j)
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
                 if config['field'] == 'target':

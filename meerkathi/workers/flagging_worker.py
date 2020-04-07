@@ -134,6 +134,29 @@ def worker(pipeline, recipe, config):
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "after_%s_autocorr_power" % wname]), msname, cab_name=substep)
 
+            # Define fields and field_ids to be used to only flag the fields selected with
+            # flagging:field (either 'target' or 'calibrators') and with
+            # flagging:calibrator_fields (for further selection among the calibrators)
+            if config['field'] == 'target':
+                fields = [target_ls[j]]
+            else:
+                fields = []
+                fld_string = config['calibrator_fields']
+                if fld_string == "auto":
+                    iter_fields = "gcal bpcal xcal fcal".split()
+                else:
+                    iter_fields = fld_string.split(",")
+                for item in iter_fields:
+                    if hasattr(pipeline, item):
+                        tfld = getattr(pipeline, item)[i]
+                    else:
+                        raise ValueError("Field given is invalid. Options are 'xcal bpcal gcal fcal'.")
+                    if tfld:
+                        fields += tfld
+                fields = list(set(fields))
+            field_ids = utils.get_field_id(msinfo, fields)
+            fields = ",".join(fields)
+
 
             if pipeline.enable_task(config, 'flag_autocorr'):
                 static='autocorr'
@@ -146,6 +169,7 @@ def worker(pipeline, recipe, config):
                                "vis": msname,
                                "mode": 'manual',
                                "autocorr": True,
+                               "field": fields,
                                "flagbackup": False
                            },
                            input=pipeline.input,
@@ -168,6 +192,7 @@ def worker(pipeline, recipe, config):
                                "mode": 'quack',
                                "quackinterval": config['quack_flagging'].get('quackinterval'),
                                "quackmode": config['quack_flagging'].get('quackmode'),
+                               "field": fields,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -189,6 +214,7 @@ def worker(pipeline, recipe, config):
                                "mode": 'elevation',
                                "lowerlimit": config['flag_elevation'].get('low'),
                                "upperlimit": config['flag_elevation'].get('high'),
+                               "field": fields,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -229,6 +255,7 @@ def worker(pipeline, recipe, config):
                                "tolerance": config['flag_shadow'].get('tolerance'),
                                "addantenna": addantennafile,
                                "flagbackup": False
+                               "field": fields,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -282,6 +309,7 @@ def worker(pipeline, recipe, config):
                                    "vis": msname,
                                    "mode": 'manual',
                                    "spw": flagspwselection,
+                                   "field": fields,
                                    "flagbackup": False,
                                },
                                input=pipeline.input,
@@ -392,6 +420,7 @@ def worker(pipeline, recipe, config):
                                         "mode": 'manual',
                                         "antenna": antenna,
                                         "timerange": times[nn],
+                                        "field": fields,
                                         "flagbackup": False,
                                     },
                                     input=pipeline.input,
@@ -436,28 +465,7 @@ def worker(pipeline, recipe, config):
                     wname, i, j)
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
-                if config['field'] == 'target':
-                    fields = [target_ls[j]]
-                    tricolour_strat = config['autoflag_rfi']['tricolour']['strategy']
-                else:
-                    fields = []
-                    fld_string = config['autoflag_rfi']["calibrator_fields"]
-                    if fld_string == "auto":
-                        iter_fields = "gcal bpcal xcal fcal".split()
-                    else:
-                        iter_fields = fld_string.split(",")
-                    for item in iter_fields:
-                        if hasattr(pipeline, item):
-                            tfld = getattr(pipeline, item)[i]
-                        else:
-                            raise ValueError("Field given is invalid. Options are 'xcal bpcal gcal fcal'.")
-                        if tfld:
-                            fields += tfld
-                    fields = list(set(fields))
-                    tricolour_strat = config['autoflag_rfi']['tricolour']['strategy']
 
-                field_ids = utils.get_field_id(msinfo, fields)
-                fields = ",".join(fields)
                 if config['autoflag_rfi']["flagger"] == "aoflagger":
                     recipe.add('cab/autoflagger', step,
                                {
@@ -473,6 +481,7 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: AOFlagger auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['autoflag_rfi']["flagger"] == "tricolour":
+                    tricolour_strat=config['autoflag_rfi']['tricolour']['strategy']
                     if config['autoflag_rfi']['tricolour']['mode'] == 'auto':
                         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
                         with open(msinfo, 'r') as stdr:
@@ -563,6 +572,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'summary',
+                               "field": fields,
                                "flagbackup": False,
                            },
                            input=pipeline.input,

@@ -55,20 +55,12 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  quack_flagging:
-    enable: false
+  field: calibrators 
+  label_in: cal
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
     ensure_valid_selection: false
-  flag_antennas:
-    enable: false
-    antennas: '0'
-  flag_scan:
-    enable: false
-    scans: '0'
   static_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
@@ -166,8 +158,8 @@ transform_data__2:
 
 flagging__2: 
   enable: true
+  field: target 
   label_in: corr
-  field: 'target'
   autoflag_rfi: 
     enable: true
     column: DATA

@@ -32,15 +32,15 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  autoflag_rfi:
-    enable: true
-    flagger: aoflagger
+  field: calibrators 
+  label_in: cal
   flag_autocorr:
     enable: true
   flag_shadow:
     enable: true
+  autoflag_rfi:
+    enable: true
+    flagger: aoflagger
     
 cross_cal:
   enable: true
@@ -69,8 +69,8 @@ transform_data__2:
   
 flagging__2:
   enable: true
+  field: target
   label_in: corr
-  field: 'target'
   autoflag_rfi:
     enable: true
     flagger: aoflagger

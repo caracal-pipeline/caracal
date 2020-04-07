@@ -24,13 +24,8 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  autoflag_rfi:
-    enable: true
-    flagger: tricolour
-    tricolour:
-      strategy: calibrator_mild_flagging.yaml
+  field: calibrators
+  label_in: cal
   flag_autocorr:
     enable: true
   flag_shadow:
@@ -38,6 +33,11 @@ flagging:
     include_full_mk64: true
   flag_spw:
     enable: true
+  autoflag_rfi:
+    enable: true
+    flagger: tricolour
+    tricolour:
+      strategy: calibrator_mild_flagging.yaml
     
 cross_cal:
   enable: true
@@ -83,9 +83,14 @@ transform_data__2:
   
 flagging__2:
   enable: true
+  field: target
   label_in: corr
-  field: 'target'
   flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+    include_full_mk64: true
+  flag_spw:
     enable: true
   autoflag_rfi:
     enable: true
@@ -105,12 +110,8 @@ masking:
 
 flagging__3:
   enable: false
+  field: target
   label_in: cont
-  field: 'target'
-  flag_autocorr:
-    enable: false
-  autoflag_rfi:
-    enable: false
   flag_spw:
     enable: true
     channels: '*:1417.2~1421.0MHz'

@@ -4,6 +4,7 @@ import meerkathi
 import pkg_resources
 import os
 import sys
+import pdb
 import ruamel.yaml
 from http.server import SimpleHTTPRequestHandler
 from http.server import HTTPServer
@@ -13,12 +14,12 @@ import traceback
 import pdb
 import logging
 import io
-from meerkathi.dispatch_crew.config_parser import config_parser as cp
+from meerkathi.dispatch_crew import config_parser
 from meerkathi.dispatch_crew import worker_help
 import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
-from meerkathi.view_controllers import event_loop
-from meerkathi.dispatch_crew.interruptable_process import interruptable_process
+# from meerkathi.view_controllers import event_loop
+# from meerkathi.dispatch_crew.interruptable_process import interruptable_process
 # from meerkathi.dispatch_crew.stream_director import stream_director
 
 
@@ -233,14 +234,14 @@ def log_logo():
 
 def execute_pipeline(args, arg_groups, block):
     # setup piping infractructure to send messages to the parent
-    def __run():
+    def __run(debug=False):
         """ Executes pipeline """
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
             log_logo()
             # Very good idea to print user options into the log before running:
-            cp().log_options(args.config)
+            config_parser.config_parser().log_options(args.config)
 
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()
@@ -255,37 +256,41 @@ def execute_pipeline(args, arg_groups, block):
 
             pipeline.run_workers()
         except SystemExit as e:
-            if e.code != 0:
-                log.error("A pipeline worker exited with code {0:} shutdown. This is likely a bug, please report.".format(e.code))
-                log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
-                    meerkathi.MEERKATHI_LOG, str(__version__)))
-                sys.exit(1)  # indicate failure
-            else:
-                log.info(
-                    "One or more pipeline workers requested graceful shutdown. Goodbye!")
+            # if e.code != 0:
+            log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
+            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
+                meerkathi.MEERKATHI_LOG, str(__version__)))
+            if debug:
+                log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
+                pdb.post_mortem(sys.exc_info()[2])
+            sys.exit(1)  # indicate failure
+            # else:
+            #     log.info("One or more pipeline workers requested a shutdown. Goodbye!")
+
         except KeyboardInterrupt:
-            log.info(
-                "Interrupt request received from user - gracefully shutting down. Goodbye!")
+            log.error("Ctrl+C received from user, shutting down. Goodbye!")
         except Exception as exc:
             log.error("{} [{}]".format(exc, type(exc).__name__), extra=dict(boldface=True))
             log.info("  More information can be found in the logfile at {0:s}".format(meerkathi.MEERKATHI_LOG))
             log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
             for line in traceback.format_exc().splitlines():
                 log.error(line, extra=dict(traceback_report=True))
+            if debug:
+                log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
+                pdb.post_mortem(sys.exc_info()[2])
             log.info("exiting with error code 1")
             sys.exit(1)  # indicate failure
 
-    if args.debug:
-        return __run()
+    return __run(debug=args.debug)
 
-    # now fork and block or continue depending on whether interaction is wanted
-    try:
-        wt = interruptable_process(target=__run)
-        wt.start()
-        wt.join(None if block else 0)
-    except KeyboardInterrupt:
-        wt.interrupt()
-    return wt
+    # # now fork and block or continue depending on whether interaction is wanted
+    # try:
+    #     wt = interruptable_process(target=__run)
+    #     wt.start()
+    #     wt.join(None if block else 0)
+    # except KeyboardInterrupt:
+    #     wt.interrupt()
+    # return wt
 
 ############################################################################
 # Driver entrypoint
@@ -293,11 +298,31 @@ def execute_pipeline(args, arg_groups, block):
 
 
 def main(argv):
-    parser = cp(argv)
-    args = parser.args
-    arg_groups = parser.arg_groups
+    # parse initial arguments to init basic switches
+    parser = config_parser.primary_parser(argv)
+    args, _ = parser.parse_known_args(argv)
 
     meerkathi.init_console_logging(boring=args.boring, debug=args.debug)
+
+    try:
+        parser = config_parser.config_parser(argv)
+    except config_parser.ConfigErrors as exc:
+        log.error("{}, list of errors follows:".format(exc))
+        for section, errors in exc.errors.items():
+            print("  {}:".format(section))
+            for err in errors:
+                print("    - {}".format(err))
+        sys.exit(1)  # indicate failure
+    except Exception as exc:
+        traceback.print_exc()
+        log.error("Error parsing arguments or configuration: {}".format(exc))
+        if args.debug:
+            log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
+            pdb.post_mortem(sys.exc_info()[2])
+        sys.exit(1)  # indicate failure
+
+    args = parser.args
+    arg_groups = parser.arg_groups
 
     # # start a new logfile by default
     # if args.log_append is False:
@@ -344,7 +369,7 @@ def main(argv):
         return
 
     if args.config is meerkathi.DEFAULT_CONFIG:
-        parser._config_parser__primary_parser().print_help()
+        config_parser.primary_parser().print_help()
         sys.exit(1)
         # log.error("The pipeline configuration file needs to be specified via the -c/--config option.")
         # log.info("Use --help for more info.")

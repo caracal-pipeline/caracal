@@ -96,7 +96,7 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      quack_flagging:
+      flag_quack:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
         mapping:
@@ -396,4 +396,5 @@ mapping:
             type: bool
             required: false
             example: 'True'
+
 

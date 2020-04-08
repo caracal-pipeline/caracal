@@ -180,7 +180,7 @@ def worker(pipeline, recipe, config):
                     [wname, "after_%s" % (static)]), msname, cab_name=substep)
 
 
-            if pipeline.enable_task(config, 'quack_flagging'):
+            if pipeline.enable_task(config, 'flag_quack'):
                 static='quack'
                 step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
                 substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
@@ -190,8 +190,8 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'quack',
-                               "quackinterval": config['quack_flagging'].get('quackinterval'),
-                               "quackmode": config['quack_flagging'].get('quackmode'),
+                               "quackinterval": config['flag_quack'].get('quackinterval'),
+                               "quackmode": config['flag_quackf'].get('quackmode'),
                                "field": fields,
                            },
                            input=pipeline.input,
@@ -254,7 +254,7 @@ def worker(pipeline, recipe, config):
                                "mode": 'shadow',
                                "tolerance": config['flag_shadow'].get('tolerance'),
                                "addantenna": addantennafile,
-                               "flagbackup": False
+                               "flagbackup": False,
                                "field": fields,
                            },
                            input=pipeline.input,
@@ -583,3 +583,4 @@ def worker(pipeline, recipe, config):
                 wname, i, j)
             manflags.add_cflags(pipeline, recipe, "_".join(
                 [wname, "after_%s" % wname]), msname, cab_name=substep)
+

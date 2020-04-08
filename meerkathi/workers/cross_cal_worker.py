@@ -259,7 +259,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
          "table"        : '{0:s}/{1:s}'.format(get_dir_path(pipeline.caltables, pipeline), gtab),
          "gaintype"     : term,
          "field"        : ",".join(map(str,field_id)),
-         "corr"         : 0,
+         "corr"         : '',
          "htmlname"     : '{0:s}/{1:s}'.format(get_dir_path(pipeline.reports, pipeline), gtab),
         },
         input=pipeline.input,

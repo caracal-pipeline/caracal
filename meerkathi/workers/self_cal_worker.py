@@ -1507,7 +1507,7 @@ def worker(pipeline, recipe, config):
 
                     if self_cal_iter_counter < 1:
                         self_cal_iter_counter = 1
-                    return True
+                    return False
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
             meerkathi.log.info(
@@ -1953,6 +1953,8 @@ def worker(pipeline, recipe, config):
 #            meerkathi.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
 #    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
 #                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
+            image_path = "{0:s}/image_{1:d}".format(pipeline.continuum,
+                                                    self_cal_iter_counter)
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
             if crystalball_model == 'auto':

@@ -12,6 +12,21 @@ import stimela.utils
 # Globals
 ##############################################################################
 
+class CaracalException(RuntimeError):
+    """Base class for pipeline logic errors"""
+    pass
+
+class UserInputError(CaracalException):
+    """Something wrong with user input"""
+    pass
+
+class ConfigurationError(CaracalException):
+    """Something wrong with the configuration"""
+    pass
+
+class BadDataError(CaracalException):
+    """Something wrong with the data"""
+    pass
 
 def report_version():
     # Distutils standard  way to do version numbering

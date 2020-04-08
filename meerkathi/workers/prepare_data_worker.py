@@ -1,5 +1,6 @@
 import os
 import sys
+import meerkathi
 from meerkathi.workers.utils import manage_flagsets as manflags
 
 NAME = "Prepare data for calibration"
@@ -71,7 +72,7 @@ def worker(pipeline, recipe, config):
                         input=pipeline.input, 
                         output=pipeline.output,
                         label="{0:s}:: List flag versions".format(step))
-                sys.exit(0)
+                meerkathi.log.warning("manage_flags mode is 'list'. Listing flag versions only!")
             else:
                 raise ValueError("Mode given for manage_flags worker is invalid. Valid options are reset, restore, save, list")
 

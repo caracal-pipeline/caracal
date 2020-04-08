@@ -258,8 +258,8 @@ def execute_pipeline(args, arg_groups, block):
         except SystemExit as e:
             # if e.code != 0:
             log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
-            log.error("Your logfile is here: {0:s}. You are running version: {1:s}".format(
-                meerkathi.MEERKATHI_LOG, str(__version__)))
+            log.info("  More information can be found in the logfile at {0:s}".format(meerkathi.MEERKATHI_LOG))
+            log.info("  You are running version {0:s}".format(str(__version__)), extra=dict(logfile_only=True))
             if debug:
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])

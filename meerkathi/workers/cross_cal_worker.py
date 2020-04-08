@@ -11,6 +11,8 @@ import re
 import json
 
 NAME = "Cross calibration"
+LABEL = 'cross_cal'
+
 # E.g. to split out continuum/<dir> from output/continuum/dir
 def get_dir_path(string, pipeline): 
     return string.split(pipeline.output)[1][1:]
@@ -257,7 +259,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
          "table"        : '{0:s}/{1:s}'.format(get_dir_path(pipeline.caltables, pipeline), gtab),
          "gaintype"     : term,
          "field"        : ",".join(map(str,field_id)),
-         "corr"         : 0,
+         "corr"         : '',
          "htmlname"     : '{0:s}/{1:s}'.format(get_dir_path(pipeline.reports, pipeline), gtab),
         },
         input=pipeline.input,

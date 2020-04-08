@@ -14,6 +14,8 @@ from stimela.pathformatter import pathformatter as spf
 from typing import Any
 
 NAME = 'Self calibration loop'
+LABEL = 'self_cal'
+
 
 # self_cal_iter_counter is used as a global variable.
 

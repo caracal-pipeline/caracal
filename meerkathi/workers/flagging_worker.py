@@ -191,7 +191,7 @@ def worker(pipeline, recipe, config):
                                "vis": msname,
                                "mode": 'quack',
                                "quackinterval": config['flag_quack'].get('quackinterval'),
-                               "quackmode": config['flag_quackf'].get('quackmode'),
+                               "quackmode": config['flag_quack'].get('quackmode'),
                                "field": fields,
                            },
                            input=pipeline.input,

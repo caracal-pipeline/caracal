@@ -314,20 +314,20 @@ def worker(pipeline, recipe, config):
             'Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(
                 nchan_dopp, comfreq0, comchanw))
         if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='wsclean' and corr_order:
-            meerkathi.log.info(
-                'wsclean will not work when the input measurement sets are ordered in different directions. Use casa_image')
-            sys.exit(1)
+            meerkathi.log.error('wsclean requires a consistent ordering of the frequency axis across multiple MSs')
+            meerkathi.log.error('(all increasing or all decreasing). Use casa_image if this is not the case.')
+            raise meerkathi.BadDataError("inconsistent frequency axis ordering across MSs")
 
     elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler'].get('outchangrid') != 'auto':
         if len(config['mstransform']['doppler']['outchangrid'].split(',')) != 3:
             meerkathi.log.error(
-                'Wrong format for mstransform:outchangrid in the .yml config file.')
+                'Incorrect format for mstransform:outchangrid in the .yml config file.')
             meerkathi.log.error(
                 'Current setting is mstransform:outchangrid:"{0:s}"'.format(
                     config['mstransform']['doppler']['outchangrid']))
             meerkathi.log.error(
-                'It must be "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
-            sys.exit(1)
+                'Expected "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
+            raise meerkathi.ConfigurationError("can't parse mstransform:outchangrid setting")
         nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['outchangrid'].split(
             ',')
         nchan_dopp = int(nchan_dopp)

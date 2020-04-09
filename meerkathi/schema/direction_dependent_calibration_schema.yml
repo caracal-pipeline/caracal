@@ -1,0 +1,497 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  direction_dependent_calibration:
+    type: map
+    desc: Perform direction dependent calibration on the data
+    mapping:
+     enable:
+       type: bool
+       desc: Carry out DD-calibration
+       required: True
+       example: 'False'
+     label:
+        type: str
+        desc: Label of the .MS files to process.
+        required: False
+        example: 'DD'
+     use_pb:
+        type: bool
+        desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
+        required: False
+        example: 'False' 
+
+     image_dd:
+       type: map
+       desc: Imaging parameters for DD calibration loop with DDFacet
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this section.
+           required: False
+           example: 'True'
+         npix:
+           type: int
+           desc: Number of pixels in the image. 
+           required: False
+           example: "5100"
+         cell:
+           type: float
+           desc: Pixel size in arcsec.
+           required: False
+           example: "1.3"
+         facets_nfacets: 
+           type: int
+           desc: Number of facets to use, same as Facets-NFacets.
+           required: false
+           example: '17'
+         weight_column: 
+          type: str
+          enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
+          desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
+          required: false
+          example: "WEIGHT"
+         weight_mode:
+          type: str
+          desc: "UV weighting mode"
+          enum: ["Natural", "Uniform", "Robust", "Briggs"]
+          required: false
+          example: "Briggs"
+         weight_robust:
+          type: float
+          desc: "Briggs robustness parameter, from -2 (more uniform) to 2 (more natural)"
+          required: false
+          example: "-0.4"
+         deconv_maxminoriter:
+           type: int
+           desc: Number of clean iterations
+           required: False
+           example: '100000'
+         freq_nband:
+           type: int
+           desc: "N Number of image bands for gridding."
+           required: false
+           example: '10'
+         freq_ndegridband:
+           type: int
+           desc: "N Number of image bands for degridding. 0 means degrid each channel."
+           required: false
+           example: '0'
+         deconv_rmsfactor:
+           type: float
+           desc: "X Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom)."
+           required: false
+           example: '0.0'
+         deconv_peakfactor:
+           type: float
+           desc: "X Set minor cycle stopping threshold to X*{peak residual} (HMP, Hogbom)."
+           required: false
+           example: '0.25'
+         deconv_mode:
+           type: str
+           enum: ["HMP","Hogbom","SSD", "GAClean"]
+           desc: "Deconvolution algorithm."
+           required: false
+           example: "Hogbom"
+         deconv_gain:
+           type: float
+           desc: "GAIN Loop gain (HMP, Hogbom)."
+           required: false
+           example: "0.1"
+         deconv_fluxthreshold:  
+           type: float
+           desc: "Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom)."
+           required: false
+           example: '1.0e-6'
+         deconv_allownegative:
+           type: bool
+           desc: "Allow negative components (HMP, Hogbom)."
+           required: false
+           example: "True"
+         hogbom_polyfitorder:
+           type: int
+           desc: "HOGBOM_POLYFITORDER polynomial order for frequency fitting"
+           required: false
+           example: "6"
+         parallel_ncpu:
+           type: int
+           desc: "Number of processes / threads to use in parallel mode. 0 - all available. 1 - disable parallelism"
+           required: false
+           example: "0" 
+         predict_colname:
+           type: str
+           desc: "MS column to write predict to. Can be left empty to disable"
+           required: false
+           example: "MODEL_DATA"
+         log_memory:
+           type: bool
+           desc: "log memory use"
+           required: false
+           example: "True"
+         cache_reset:
+           type: bool
+           desc: "Reset all caches (including PSF and dirty image). Change from default at your own risk."
+           required: false
+           example: "True"
+         log_boring: 
+           type: bool
+           desc: "Enable progress bars and other pretty console output. Doesn't seem to work."
+           required: false
+           example: "True"
+         data_colname:
+           type: str
+           desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
+           required: False
+           example: 'CORRECTED_DATA'
+         data_chunkhours: 
+           type: float
+           desc: "Chunk data into time bins of x hours to conserve memory"
+           required: false
+           example: '0.05'
+         output_mode:
+           type: str 
+           enum: ["Dirty","Clean", "Predict","PSF"]
+           desc: "Output mode"
+           required: false
+           example: "Clean"
+     calibrate_dd:
+       type: map
+       desc: Direction dependent calibration parameters
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this section.
+           required: False
+           example: 'True'
+         sigma:
+           type: float
+           desc: Threshold to use in detecting outlier regions in images by using CatDagger. 4.5 is a good value (also default), but may need a lower value for some images.
+           required: false
+           example: '4.5'
+         min_dist_from_phcentre:
+           type: int
+           desc: Number of pixels (radius) around the centre of the image in which sources will not be tagged. Default kept at 1300 (roughly 30').
+           required: false
+           example: '1300'
+         dist_ncpu:
+           type: int
+           desc: Number of cpus
+           required: false
+           example: '1'
+
+         de_sources_mode:
+           type: str
+           desc: Mode in which dE sources are tagged. 'auto' uses catdagger, while in 'manual' mode, one needs to give a list of sources. Use 'auto' with caution and at your own risk.
+           required: false
+           example: 'manual'
+         de_target_manual: 
+           seq:
+             - type: str 
+           desc: List of targets fieldnames for carrying out de calibration, the rest of the fields will not undergo direction-dependent calibration
+           required: false
+           example: ""
+         de_sources_manual:
+           seq:
+             - type: str
+           desc: List of sources per target to tag for DD calibration, in the same order as the de_target_manual list. Separate different sources per target by using ";".           
+           required: false
+           example: " "
+         sol_min_bl:
+           type: float
+           desc: Min baseline length to solve for.
+           required: false
+           example: '100'
+         madmax_enable:
+           type: bool
+           desc: Enable madmax flagging in Cubical.
+           required: false
+           example: 'true'
+         madmax_threshold:
+           seq:
+              - type: float
+           desc: Threshold for MAD flagging per baseline (specified in sigmas). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iteratins later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually decreasing values may be sensible.
+           required: false
+           example: '0'
+         madmax_global_threshold:
+           seq:
+              - type: float
+           desc: Threshold for global median MAD (MMAD) flagging. MMAD is computed as the median of the per-baseline MADs. Residuals exceeding S*MMAD/1.428 will be flagged.
+           required: false
+           example: '10.0'
+         madmax_estimate:
+           type: str
+           desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
+           required: false
+           example: 'corr'
+         dd_data_column:
+           type: str
+           desc: Column to calibrate
+           required: false
+           example: 'CORRECTED_DATA'
+         dd_out_data_column:
+           type: str
+           desc: Output data column
+           required: false
+           example: 'SUBDD_DATA'
+         dd_weight_column:
+           type: str
+           desc: Column to read weights from. Weights are applied by default. Specify an\nempty string to disable.
+           required: false
+           example: "WEIGHT_SPECTRUM"
+         dd_sol_stall_quorum: 
+           type: float
+           desc: Minimum percentage of solutions which must have stalled before terminating\nthe solver.
+           required: false
+           example: "0.95"
+         dd_g_type: 
+           type: str
+           desc: Gain matrix type for g. Keep complex-2x2, because dd-cal fails otherwise.
+           required: false
+           example: 'complex-2x2'
+         dd_g_clip_high: 
+           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones
+           type: float
+           required: false
+           example: "1.5"
+         dd_g_clip_low: 
+           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones
+           type: float
+           required: false
+           example: "0.5"
+         dd_g_update_type:
+           desc: Determines update type. This does not change the Jones solver type, but restricts the update rule to pin the solutions within a certain subspace.
+           type: str
+           required: false
+           example: "phase-diag"
+         dd_g_max_prior_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the prior error estimate is above this value for G-jones.
+           example: "0.35"
+         dd_g_max_post_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the posterior variance estimate is above this value for G-jones.
+           example: "0.35"
+         dd_dd_max_prior_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the prior error estimate is above this value for DE term.
+           example: "0.35"
+         dd_dd_max_post_error: 
+           type: float
+           required: false
+           desc: Flag solution intervals where the posterior variance estimate is above this value for DE term.
+           example: "0.35"
+         dd_g_timeslots_int: 
+           type: int
+           desc: Time solution interval in timeslot units for G-Jones.
+           required: false
+           example: "10"
+         dd_g_channel_int:
+           type: int
+           desc: Frequency solution interval in channel units for G-Jones.
+           example: "0"
+           required: false
+         dd_dd_timeslots_int: 
+           type: int
+           desc: Time solution interval in timeslot units for DE-Jones.
+           required: false
+           example: "100"
+         dd_dd_channel_int:
+           type: int
+           desc: Frequency solution interval in channel units for DE-Jones.
+           example: "100"
+           required: false
+                 
+
+
+     copy_data:
+       type: map
+       desc: Copy DD-calibrated data to CORRECTED_DATA column
+       mapping:
+         enable:  
+           type: bool
+           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column
+           required: false
+           example: 'True'
+
+     image_wsclean:
+       type: map
+       desc: Wsclean imaging paramaters for DD worker
+       mapping:
+         enable:
+           type: bool
+           desc: Enable wsclean imaging of the DD-calibrated data.
+           required: false
+           example: 'True'
+         img_ws_npix:
+           type: int
+           desc: Number of pixels in output image
+           required: false
+           example: '1800'
+         img_ws_padding:
+           type: float
+           desc: Padding in WSclean
+           required: false
+           example: '1.3'
+         img_ws_mgain:
+           type: float
+           desc: Image CLEANing gain
+           required: false
+           example: '0.90'
+         img_ws_cell:
+           type: float
+           desc: Image pixel size (arcsec)
+           required: false
+           example: '2.'
+         img_ws_weight:
+           type: str
+           enum: ["briggs", "uniform", "natural"]
+           desc: Image weighting type. If Briggs, set the img robust parameter
+           required: false
+           example: 'briggs'
+         img_ws_robust:
+           type: float
+           desc: Briggs robust value
+           required: false
+           example: '0.'
+         img_ws_uvtaper:
+           type: str
+           desc: Taper for imaging (arcsec)
+           required: false
+           example: '0'
+         img_ws_niter:
+           type: int
+           desc: Number of cleaning iterations
+           required: false
+           example: '1000000'
+         img_ws_nmiter:
+           type: int
+           desc: Number of major cycles
+           required: False
+           example: '0'
+         img_ws_cleanborder:
+           type: float
+           desc: Clean border
+           required: false
+           example: '1.3'
+         img_ws_nchans:
+           type: int
+           desc: Number of channesls in output image
+           required: false
+           example: '3'
+         img_ws_joinchannels:
+           type: bool
+           desc: Join channels to create MFS image
+           required: false
+           example: 'True'
+         img_ws_fit_spectral_pol:
+           type: int
+           desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
+           required: false
+           example: '2'
+         img_ws_pol:
+           type: str
+           desc: Stokes image to create
+           required: false
+           example: 'I'
+         img_ws_auto_mask:
+           type: float
+           desc: Auto masking threshold
+           required: false
+           example: '7'
+         img_ws_auto_threshold:
+           type: float
+           desc: Auto clean threshold
+           required: false
+           example: '0.5'
+         img_ws_column:
+           type: str
+           desc: Column to image
+           required: false
+           example: 'CORRECTED_DATA'
+         img_ws_fits_mask:
+            type: str
+            desc: filename of fits mask (in output/masking folder)
+            required: false
+            example: 'catalog_mask.fits'
+         img_ws_multi_scale:
+            type: bool
+            desc: switch on multiscale cleaning
+            required: false
+            example: 'False'
+         img_ws_multi_scale_scales:
+            seq:
+              - type: int
+            desc: scales of multiscale [0,10,20,etc, etc] in pixels
+            required: false
+            example: '10, 20, 30'
+         img_ws_local_rms:
+            type: bool
+            desc: switch on local rms measurement for cleaning
+            required: false
+            example: 'False'
+
+     transfer_model_dd:
+       type: map
+       desc: Repredict wsclean model to the highest channel resolution
+       mapping:
+         enable:
+           type: bool
+           desc: Execute this segment (default False)
+           required: false
+           example: 'False'
+         dd_model:
+           type: str
+           desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+           required: false
+           example: 'auto'
+         dd_spectra:
+           type: bool
+           desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
+           required: false
+           example: 'True'
+         dd_row_chunks:
+           type: int
+           desc: Number of rows of input .MS that are processed in a single chunk.
+           required: false
+           example: '0'
+         dd_model_chunks:
+           type: int
+           desc: Number of sky model components that are processed in a single chunk.
+           required: false
+           example: '0'
+         dd_exp-sign-convention:
+           type: str
+           desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
+           required: false
+           example: 'casa'
+         dd_within:
+           type: str
+           desc: Give JS9 region file. Only sources within those regions will be included.
+           required: false
+           example: ''
+         dd_points_only:
+           type: bool
+           desc: Select only point-only sources. Default is False.
+           required: false
+           example: 'False'
+         dd_num_sources:
+           type: int
+           desc: Select only N brightest sources. Default is 0
+           required: false
+           example: "0"
+         dd_num_workers:
+           type: int
+           desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
+           required: false
+           example: '0'
+         dd_memory_fraction:
+           type: float
+           desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+           required: false
+           example: '0.5'

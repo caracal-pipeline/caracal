@@ -233,7 +233,7 @@ def worker(pipeline, recipe, config):
                     '{0:s}/{1:s} does not exist. Please make sure that it is in place before proceeding.'.format(pathname, pb_name))
                 meerkathi.log.error(
                     'You may need to re-run the image_line worker with pb_cube enabled. EXITING.')
-                sys.exit(1)
+                raise meerkathi.ConfigurationError("missing primary beam file {}/{}".format(pathname, pb_name))
 
             else:  # i.e. mosaictype = 'continuum'
 

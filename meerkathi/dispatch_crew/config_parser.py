@@ -2,18 +2,121 @@ import argparse
 import yaml
 import meerkathi
 import os
-import sys
 import copy
 import ruamel.yaml
-import json
-import numpy.core
-from numpy import fromstring
-from pykwalify.core import Core
-import itertools
 from collections import OrderedDict
-import glob
+
+# shut this guy up
+import logging
+pykwalify_logger = logging.getLogger('pykwalify.core')
+pykwalify_logger.propagate = False
+pykwalify_logger.setLevel(logging.CRITICAL)
+
+from pykwalify.core import Core
+
 
 DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
+
+class ConfigErrors(RuntimeError):
+    def __init__(self, config_file, error_dict):
+        RuntimeError.__init__(self, "configuration file {} fails to validate".format(config_file))
+        self.config_file = config_file
+        self.errors = error_dict
+
+
+
+def primary_parser(add_help=True):
+    """Returns ArgumentParser for basic command-line options"""
+
+    parser = argparse.ArgumentParser(description="""
+Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
+interferometry.""",
+        usage="%(prog)s [-options] -c config_file",
+        epilog="""
+You can override configuration file settings using additional "--worker-option value" arguments. Use
+"-wh worker" to get help on a particular worker.
+
+To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself an initial configuration file, 
+then edit the file to suit your needs.
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=add_help)
+    add = parser.add_argument
+    add("-v", "--version", action='version',
+        version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__))
+
+    add('-c', '--config',
+        type=lambda a: is_valid_file(parser, a),
+        default=DEFAULT_CONFIG,
+        help='pipeline configuration file. This is a mandatory argument.')
+
+    add('-b', '--boring',
+        help='enable boring mode, i.e. suppress colours in console output',
+        action='store_true')
+
+    add('-sid', '--singularity-image-dir', metavar="DIR",
+        help='directory where stimela singularity images are stored')
+
+    add('-gdt', '--get-default-template', # metavar="TEMPLATE",
+            choices=meerkathi.SAMPLE_CONFIGS.keys(),
+            default="minimal",
+            help='init a configuration file from a default template')
+
+    add('-gd', '--get-default', metavar="FILE",
+        help='name of file where the template should be saved (use in conjunction with -gdt)')
+
+    add('-sw', '--start-worker', metavar="WORKER",
+        help='start pipeline at this worker')
+
+    add('-ew', '--end-worker', metavar="WORKER",
+        help='stop pipeline after this worker')
+
+    # add('-aaf', '--add-all-first', action='store_true',
+    #     help='add steps from all workers to pipeline before executing (default is execute in turn)')
+
+    add('-bl', '--stimela-build',
+        help='label of custom stimela build to use',
+        default=None)
+
+    add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
+        default="docker",
+        help='Container technology to use')
+
+    add('-wh', '--worker-help', metavar="WORKER",
+        help='prints help for a particular worker, then exits')
+
+    add('-pcs', '--print-calibrator-standard',
+        help='prints list of auxiliary calibrator standards, then exits',
+        action='store_true')
+
+    # add('--no-interactive',
+    #     help='Disable interactivity',
+    #     action='store_true')
+
+    add('-debug',
+        help='enable debugging mode',
+        action='store_true')
+
+    add('-nr','--no-reports',
+        help='disable generation of report about the pipeline run',
+        action='store_true')
+
+    add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
+        help='(ninja option) directory where custom pipeline workers can be found')
+    add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
+        help='(ninja option) path to custom schema for worker(s), can be specified multiple times')
+
+
+    # add('-rv', '--report-viewer', action='store_true',
+    #     help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
+    #
+    # add('--interactive-port', type=int, default=8888,
+    #     help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
+
+    # add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
+    #     action='store_true')
+
+    return parser
 
 
 def is_valid_file(parser, arg):
@@ -189,98 +292,8 @@ class config_parser:
                              "Please call store_global_schama first.")
         return copy.deepcopy(cls.__GLOBAL_SCHEMA)
 
-    @classmethod
-    def __primary_parser(cls, add_help=True):
-        parser = argparse.ArgumentParser(description="""
-Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
-interferometry.""",
-            usage="%(prog)s [-options] -c config_file",
-            epilog="""
-You can also specify "--worker_name-option_name option_value" to override settings in the configuration file.
-
-To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself  an initial configuration file, 
-then edit the file to suit your needs.
-    """,
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            add_help=add_help)
-        add = parser.add_argument
-        add("-v", "--version", action='version',
-            version='{0:s} version {1:s}'.format(parser.prog, meerkathi.__version__))
-
-        add('-c', '--config',
-            type=lambda a: is_valid_file(parser, a),
-            default=DEFAULT_CONFIG,
-            help='pipeline configuration file. This is a mandatory argument.')
-
-        add('-b', '--boring',
-            help='enable boring mode, i.e. suppress colours in console output',
-            action='store_true')
-
-        add('-sid', '--singularity-image-dir', metavar="DIR",
-            help='directory where stimela singularity images are stored')
-
-        add('-gdt', '--get-default-template', # metavar="TEMPLATE",
-                choices=["minimal", "meerkat"],
-                default="minimal",
-                help='init a configuration file from a default template')
-
-        add('-gd', '--get-default', metavar="FILE",
-            help='name of file where the template should be saved (use in conjunction with -gdt)')
-
-        add('-sw', '--start-worker', metavar="WORKER",
-            help='start pipeline at this worker')
-
-        add('-ew', '--end-worker', metavar="WORKER",
-            help='stop pipeline after this worker')
-
-        # add('-aaf', '--add-all-first', action='store_true',
-        #     help='add steps from all workers to pipeline before executing (default is execute in turn)')
-
-        add('-bl', '--stimela-build',
-            help='label of custom stimela build to use',
-            default=None)
-
-        add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
-            help='path to custom schema for worker(s), can be specified multiple times')
-
-        add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
-            default="docker",
-            help='Container technology to use')
-
-        add('-wh', '--worker-help', metavar="WORKER",
-            help='prints help for a particular worker, then exits')
-
-        add('-pcs', '--print-calibrator-standard',
-            help='prints list of auxiliary calibrator standards, then exits',
-            action='store_true')
-
-        # add('--no-interactive',
-        #     help='Disable interactivity',
-        #     action='store_true')
-
-        add('-debug',
-            help='enable debugging mode',
-            action='store_true')
-
-        add('-nr','--no-reports',
-            help='disable generation of report about the pipeline run',
-            action='store_true')
-
-        add('-wd', '--workers-directory', default='{:s}/workers'.format(meerkathi.pckgdir),
-            help='directory where custom pipeline workers can be found')
-
-        # add('-rv', '--report-viewer', action='store_true',
-        #     help='Start the interactive report viewer (requires X session with decent [ie. firefox] webbrowser installed).')
-        #
-        # add('--interactive-port', type=int, default=8888,
-        #     help='Port on which to listen when an interactive mode is selected (e.g the configuration editor)')
-
-        # add("-la", '--log-append', help="Append to existing log-meerkathi.txt file instead of replacing it",
-        #     action='store_true')
-
-        return parser
-
     __HAS_BEEN_INIT = False
+    _parser = None
 
     def __init__(self, args=None):
         """ Configuration parser. Sets up command line interface for MeerKATHI
@@ -301,7 +314,7 @@ then edit the file to suit your needs.
         # default configuration file
         # =========================================================
         # Create parser object
-        self._parser = parser = cls.__primary_parser()
+        config_parser._parser = parser = primary_parser()
 
         # Lambda for transforming sections and options
 
@@ -326,8 +339,10 @@ then edit the file to suit your needs.
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
 
-        self._parser = parser = cls.__primary_parser(add_help=True)
+        #self._parser = parser = cls.__primary_parser(add_help=True)
         groups = OrderedDict()
+
+        errors = OrderedDict()
 
         for worker, variables in tmp.items():
             if worker == "schema_version":
@@ -337,14 +352,28 @@ then edit the file to suit your needs.
             schema_fn = os.path.join(meerkathi.pckgdir,
                                      "schema", "{0:s}_schema.yml".format(_worker))
 
+            if not os.path.exists(schema_fn):
+                errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
+                continue
+
             # SCHEMA VALIDATION automatically check if variables of cfg file are given with appropriate syntax
             source_data = {
                 _worker: variables,
                 "schema_version": schema_version,
             }
             c = Core(source_data=source_data, schema_files=[schema_fn])
-            cls.__validated_schema[worker] = c.validate(
-                raise_exception=True)[_worker]
+
+            cls.__validated_schema[worker] = c.validate(raise_exception=False)[_worker]
+
+            # check for errors
+            if c.validation_errors:
+                errs = errors[worker] = []
+                for message in c.validation_errors:
+                    # crude hack: we're already fooling the schema by using "flagging" for the worker name
+                    # when the name is e.g. "flagger__2", so the message is misleading. Substitute the hack back.
+                    message = message.replace("'/{}'".format(_worker), "'/{}'".format(worker))
+                    errs.append(message)
+                continue
 
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(
@@ -355,6 +384,9 @@ then edit the file to suit your needs.
                                                  base_section=worker,
                                                  args=args,
                                                  parser=parser)
+        # raise errors
+        if errors:
+            raise ConfigErrors(args.config, errors)
 
         # finally parse remaining args and update parameter tree with user-supplied commandline arguments
 
@@ -489,7 +521,7 @@ then edit the file to suit your needs.
     def update_config(cls, args=None, update_mode="defaults"):
         """ Updates argument parser with values from config file """
         args = cls.__ARGS if not args else args
-        parser = cls.__primary_parser()
+        parser = cls._parser
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(
                 f, ruamel.yaml.RoundTripLoader, version=(1, 1))

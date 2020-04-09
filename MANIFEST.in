@@ -11,3 +11,4 @@ recursive-include meerkathi/data *.lsm
 recursive-include meerkathi/dispatch_crew *.py
 recursive-include meerkathi/workers *.py
 recursive-include meerkathi/scripts *.py *.html *.css *.js *.ipynb
+recursive-include meerkathi/notebooks *.ipynb

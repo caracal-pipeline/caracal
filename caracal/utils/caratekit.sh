@@ -832,6 +832,20 @@ then
     PYTHONPATH_OLD=${PYTHONPATH}
 fi
 
+if [[ -n "$CARATE_CONFIG_SOURCE" ]]
+then
+    if [[ -z $DI ]] && [[ -z $SI ]]
+    then
+        echo "No container technology in context with specifying an additional config"
+        echo "file. Stopping."
+	kill "$PPID";
+	exit 1; 
+    else
+	# Get the config file name
+        configfilename=`echo $CARATE_CONFIG_SOURCE | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
+    fi
+fi
+
 # This ensures that when stopping, the $HOME environment variable is restored
 # Variable defininition ends here in script
 ss+=""
@@ -953,18 +967,6 @@ SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}_sysinfo.txt
 # Empty into the sysinfo
 [[ ! -e ${SYA} ]] || (( ${FORCE} == 0 )) || checkex ${SYA} || rm -rf ${SYA}
 echo "$sya" >> ${SYA}
-
-if [[ -n "$CARATE_CONFIG_SOURCE" ]]
-then
-    if [[ -z $DI ]] && [[ -z $SI ]]
-    then
-        echo "No Stimela installation made in context with specifying an additional config"
-        echo "file. Ommitting testing that file"
-    else
- # Get the config file name
-        configfilename=`echo $CARATE_CONFIG_SOURCE | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
-    fi
-fi
 
 # Search for test data and set variable accordingly
 if [[ -e ${CARATE_TEST_DATA_DIR} ]]

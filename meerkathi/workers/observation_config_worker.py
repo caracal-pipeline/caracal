@@ -171,7 +171,7 @@ def worker(pipeline, recipe, config):
                     'Note that this metadata file is generally available only for MeerKAT-16/ROACH2 data.')
                 meerkathi.log.error(
                     'Please set the reference antenna manually in the config file and try again.')
-                sys.exit(1)
+                raise meerkathi.ConfigurationError("can't auto-select the reference antenna")
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:
@@ -192,9 +192,9 @@ def worker(pipeline, recipe, config):
         meerkathi.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                 ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
         if i == len(prefixes)-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
-            meerkathi.log.info(
-                'Some datasets have positive channel increment, some others negative. This will lead to errors. Exiting')
-            sys.exit(1)
+            meerkathi.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
+            raise meerkathi.BadDataError("MSs with mixed channel ordering not supported")
+
         # Get spectral frame
         with open(msinfo, 'r') as stdr:
             pipeline.specframe[i] = yaml.safe_load(

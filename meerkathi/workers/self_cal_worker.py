@@ -291,7 +291,7 @@ def worker(pipeline, recipe, config):
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
                 meerkathi.log.error(
                     "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")
-                sys.exit(1)
+                raise meerkathi.ConfigurationError("no mask found in output directory")
 
             image_opts.update({"fitsmask": fits_mask+':output'})
 
@@ -647,7 +647,8 @@ def worker(pipeline, recipe, config):
             if not os.path.isfile('{0:s}/{1:s}/{2:s}.gaul'.format(pipeline.output, img_dir, calmodel)):
                 meerkathi.log.error(
                     "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
-                sys.exit(1)
+                raise meerkathi.BadDataError("No model file found after the PyBDSM run")
+
             step = 'convert_extract_field{0:d}_iter{1:d}'.format(trg, num)
             recipe.add('cab/tigger_convert', step,
                        {

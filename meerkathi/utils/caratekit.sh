@@ -208,6 +208,10 @@ do
     then
         OC=1
     fi
+    if [[ "$arg" == "--omit-caracal-fetch" ]] || [[ "$arg" == "-of" ]]
+    then
+        OF=1
+    fi
     if [[ "$arg" == "--caracal-run-prefix" ]] || [[ "$arg" == "-rp" ]]
     then
         (( nextcount=argcount+1 ))
@@ -347,8 +351,10 @@ then
     echo "  --local-source ARG -ls ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_LOCAL_SOURCE"
     echo ""
-    echo "  --omit-caracal-reinstall -oc        Use current CARACal installation if"
-    echo "                                      present"
+    echo "  --omit-caracal-reinstall -oc        Do not pip install caracal"
+    echo ""
+    echo "  --omit-caracal-fetch -of            Do not fetch or copy caracal directory"
+    echo "                                      if present"
     echo ""
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
@@ -476,7 +482,7 @@ then
     echo "    \$CARATE_LOCAL_SOURCE is copied to the root directory if not"
     echo "    existing or if -f is set (notice that the directory tree should be a"
     echo "    valid meerkathi tree, ready for installation). If switches"
-    echo "    --omit-caracal-reinstall or -oc are set, the sources are also not copied"
+    echo "    --omit-caracal-fetch or -of are set, the sources are also not copied"
     echo "    across."
     echo ""
     echo "  - the caracal version CARATE_CARACAL_BUILD_NUMBER is checked out"
@@ -732,6 +738,13 @@ ss+=$'\n'
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
+    [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
+	echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}";
+	echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})";
+	echo "is set or switches --local-source or -ls are used). But it";
+	echo "does not exist. Stopping.";
+	kill "$PPID"; exit 1;
+    }
     ss+="local_source=${CARATE_LOCAL_SOURCE}"
     ss+=$'\n'
 else
@@ -742,6 +755,13 @@ fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
 then
+    [[ -f "${CARATE_CONFIG_SOURCE}" ]] || { \
+	echo "\$CARATE_CONFIG_SOURCE: ${CARATE_CONFIG_SOURCE}";
+	echo "is specified (environment variable \${CARATE_CONFIG_SOURCE})";
+	echo "is set or switches --config-source or -cs are used). But it";
+	echo "does not exist. Stopping.";
+	kill "$PPID"; exit 1;
+    }
     ss+="config_source=${CARATE_CONFIG_SOURCE}"
     ss+=$'\n'
 else
@@ -846,7 +866,7 @@ then
 fi
 
 # Check if workspace_root exists if we do not use force
-if (( $FORCE==0 ))
+if (( ${FORCE} == 0 ))
 then
     if [[ -d $WORKSPACE_ROOT ]]
     then
@@ -880,12 +900,11 @@ checkex () {
     if [[ -d ${tocheck} ]]
     then
 	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
-	
 	for file in ${files[@]}
 	do
 	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
-	    [[ ${e}=="" ]] && unset e
-	    [[ -z ${e} ]] && { \
+	    [[ ${e} == "" ]] && unset e
+	    [[ -z ${e} ]] || { \
 		a=`basename $file`; \
 		b=`find $tocheck -name $a` || true; \
 		c=($b); \
@@ -913,11 +932,10 @@ echo " Setting up build in $WORKSPACE_ROOT"
 echo "##########################################"
 echo
 
-#(( $FORCE==0 )) || { rm -rf $WORKSPACE_ROOT; }
 ss+="mkdir -p \${workspace_root}"
 mkdir -p ${WORKSPACE_ROOT}
 
-[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE}==0 )) || \
+[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE} == 0 )) || \
     checkex ${WORKSPACE_ROOT}/report || \
     rm -rf ${WORKSPACE_ROOT}/report
 mkdir -p ${WORKSPACE_ROOT}/report
@@ -926,14 +944,14 @@ mkdir -p ${WORKSPACE_ROOT}/report
 SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 
 # Empty ss into the small script
-[[ ! -e ${SS} ]] || (( $FORCE==0 )) || checkex ${SS} || rm -rf ${SS}
+[[ ! -e ${SS} ]] || (( ${FORCE} == 0 )) || checkex ${SS} || rm -rf ${SS}
 echo "$ss" >> ${SS}
 
 # Sysinfo
 SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}_sysinfo.txt
 
 # Empty into the sysinfo
-[[ ! -e ${SYA} ]] || (( $FORCE==0 )) || checkex ${SYA} || rm -rf ${SYA}
+[[ ! -e ${SYA} ]] || (( ${FORCE} == 0 )) || checkex ${SYA} || rm -rf ${SYA}
 echo "$sya" >> ${SYA}
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -972,7 +990,7 @@ then
 fi
 
 function cleanup {
-    if (( success==0 ))
+    if (( success == 0 ))
     then
 	echo "##########################################"
 	echo ""
@@ -1017,9 +1035,10 @@ trap cleanup EXIT
 
 [[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
 [[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
-if (( $FORCE != 0 ))
+if (( ${FORCE} != 0 ))
 then
-    [[ -n ${KH} ]] || [[ -n ${ORSR} ]] || \
+    [[ -n ${KH} ]] || \
+	[[ -n ${ORSR} ]] || \
 	checkex ${WORKSPACE_ROOT}/home || \
 	echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}
     # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake...
@@ -1047,16 +1066,23 @@ echo
 [[ ! -z ${CARATE_VIRTUALENV} ]] || CARATE_VIRTUALENV=${WORKSPACE_ROOT}/caracal_venv
 
 # Set the virtual environment
-if (( $FORCE != 0 ))
+if (( ${FORCE} != 0 ))
 then
     [[ -n ${ORSR} ]] || \
 	[[ -n ${OV} ]] || \
-	checkex ${CARATE_VIRTUALENV} || \
+	[[ -n ${OC} ]] || { \
+	    checkex ${CARATE_VIRTUALENV} && \
+		[[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
+	} || \
 	echo "rm -rf \${cvirtualenv}" >> ${SS}
+	    
     [[ -n ${ORSR} ]] || \
 	[[ -n ${OV} ]] || \
-	[[ -n ${FS} ]] || \
-	checkex ${CARATE_VIRTUALENV} || \
+	[[ -n ${OC} ]] || \
+	[[ -n ${FS} ]] || { \
+	checkex ${CARATE_VIRTUALENV} && \
+	    [[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
+	} || \
 	rm -rf ${CARATE_VIRTUALENV}
 fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
@@ -1099,12 +1125,14 @@ echo "##################"
 echo " Fetching CARACal "
 echo "##################"
 echo
-if (( $FORCE==1 ))
+if (( ${FORCE} == 1 ))
 then
     checkex ${WORKSPACE_ROOT}/meerkathi || \
+	[[ -n ${OF} ]] || \
 	echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
     [[ -n ${FS} ]] || \
 	checkex ${WORKSPACE_ROOT}/meerkathi || \
+	[[ -n ${OF} ]] || \
 	rm -rf ${WORKSPACE_ROOT}/meerkathi
 fi
 
@@ -1115,7 +1143,7 @@ then
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
         echo "Not re-fetching MeerKATHI, use -f if you want that or"
-        echo "omit -fs if you have set it."
+        echo "omit -of if you have set it."
 	echo ""
     else
 	echo "Fetching CARACal from local source ${local_source}"
@@ -1126,9 +1154,12 @@ then
 else
     if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
-        if (( $FORCE==0 ))
+        if (( ${FORCE} == 0 ))
         then	    
             echo "Not re-fetching MeerKATHI, use -f if you want that."
+	elif [[ -n ${OF} ]]
+	then
+	    echo "Not re-fetching MeerKATHI, turn off -of if you want that."
         else
 	    echo "Fetching MeerKATHI from https://github.com/ska-sa/meerkathi.git"
 	    checkex ${WORKSPACE_ROOT}/meerkathi || \
@@ -1136,7 +1167,7 @@ else
 	    [[ -n ${FS} ]] || \
 		checkex ${WORKSPACE_ROOT}/meerkathi || \
 		rm -rf ${WORKSPACE_ROOT}/meerkathi
-
+	    
             checkex ${WORKSPACE_ROOT}/meerkathi || \
 		echo "git clone https://github.com/ska-sa/meerkathi.git" >> ${SS}
             [[ -n ${FS} ]] || \
@@ -1245,13 +1276,13 @@ fi
 
 if [[ -n ${US} ]]
 then
-    echo "Intstalling stimela_last_stable.txt"
+    echo "Installing stimela_last_stable.txt"
     echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_last_stable.txt" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_last_stable.txt
 fi
 if [[ -n ${CARATE_LOCAL_STIMELA} ]]
 then
-    echo "Intstalling local stimela ${CARATE_LOCAL_STIMELA}"
+    echo "Installing local stimela ${CARATE_LOCAL_STIMELA}"
     echo "pip install -U --force-reinstall \${local_stimela}" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA}
 fi
@@ -1270,15 +1301,18 @@ then
     echo "Use -h flag for more information"
     kill "$PPID"; exit 0
 fi
+echo ""
 
-if [[ -z $ORSR ]]
+if [[ -z ${ORSR} ]]
 then
-    checkex ${HOME}/.stimela || echo "#############################"
-    checkex ${HOME}/.stimela || echo " Removing Stimela directory "
-    checkex ${HOME}/.stimela || echo "#############################"
-    checkex ${HOME}/.stimela || echo
-    checkex ${HOME}/.stimela || echo "Removing \${HOME}/.stimela/*"
-    checkex ${HOME}/.stimela || echo "rm -f \${HOME}/.stimela/*" >> ${SS}
+    checkex ${HOME}/.stimela || { \
+	echo "#############################" ; \
+	echo " Removing Stimela directory " ; \
+	echo "#############################" ; \
+	echo "" ; \
+	echo "Removing \${HOME}/.stimela/*" ; \
+	echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
+    }
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
 fi
 
@@ -1289,7 +1323,7 @@ then
     stimela_bs=`whoami | sed 's/@/_/g'`
     [[ ${stimela_ns} == ${stimela_bs} ]] && stimela_ns="" || stimela_ns=" -bl ${stimela_bs}"
 
-    if [[ -n $ORSR ]]
+    if [[ -n ${ORSR} ]]
     then
         echo "Omitting re-installation of Stimela Docker images"
         echo "##########################################" >> ${SYA}
@@ -1507,22 +1541,24 @@ runtest () {
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA} 
 
-    if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE}==0 ))
+    if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE} == 0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
         echo "and use old results. Use -f to override."
     else
 	[[ -z ${OD} ]] || \
-	    [[ ! -d ${WORKSPACE_ROOT}/${configfilename}_${contarch}/msdir ]] && \
-		CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD} || \
-		    CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${configfilename}_${contarch}/msdir
+	    [[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
+		CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
+	    } || { \
+		CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+	    }
 	
-	#Check if the test directory is a parent of any of the supplied directories 
+	#Check if the test directory is a parent of any of the supplied directories
 	if checkex ${WORKSPACE_ROOT}/${trname}
 	then
 	    # Go through the files and remove individually
 	    # continue here
-	    dirs=(input  msdir  output  stimela_parameter_files)
+	    dirs=(input msdir output stimela_parameter_files)
 	    for dire in ${dirs[@]}
 	    do
 		checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
@@ -1531,8 +1567,9 @@ runtest () {
 		    checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
 		    rm -rf ${workspace_root}/${trname}/${dire}
 	    done
-	else	    
-		echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
+	else
+	    echo got herehere
+	    echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
             [[ -n ${FS} ]] || \
 		rm -rf ${WORKSPACE_ROOT}/${trname}
 	fi	
@@ -1699,7 +1736,7 @@ runtestsample () {
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA}
 
-    if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( $FORCE==0 ))
+    if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE} == 0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
     else
@@ -1870,7 +1907,7 @@ then
 	singularity_loc=${WORKSPACE_ROOT}/stimela_singularity
 	singularity_locstring="\${workspace_root}/stimela_singularity"
     fi
-    if (( $FORCE==0 )) || [[ -n $ORSR ]]
+    if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]]
     then
         if [[ -e ${singularity_loc} ]]
         then

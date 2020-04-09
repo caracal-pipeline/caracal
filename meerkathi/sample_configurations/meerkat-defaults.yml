@@ -145,7 +145,7 @@ transform_data:
       enable: false
   obsinfo: 
     enable: true
-    listobs: false
+    listobs: true
 
 flagging__2: 
   enable: true

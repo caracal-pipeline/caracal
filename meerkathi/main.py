@@ -18,10 +18,6 @@ from meerkathi.dispatch_crew import config_parser
 from meerkathi.dispatch_crew import worker_help
 import meerkathi.dispatch_crew.caltables as mkct
 from meerkathi.workers.worker_administrator import worker_administrator as mwa
-# from meerkathi.view_controllers import event_loop
-# from meerkathi.dispatch_crew.interruptable_process import interruptable_process
-# from meerkathi.dispatch_crew.stream_director import stream_director
-
 
 __version__ = meerkathi.__version__
 pckgdir = meerkathi.pckgdir
@@ -29,6 +25,9 @@ DEFAULT_CONFIG = meerkathi.DEFAULT_CONFIG
 SAMPLE_CONFIGS = meerkathi.SAMPLE_CONFIGS = {
         "minimal" : "minimalConfig.yml",
         "meerkat" : "meerkat-defaults.yml",
+        "carate" : "carateConfig.yml",
+        "meerkat_continuum" : "meerkat-continuum-defaults.yml",
+        "mosaic_basic" : "mosaic_basic_config.yml",
         }
 SCHEMA = meerkathi.SCHEMA
 
@@ -217,21 +216,6 @@ def log_logo():
 
     log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
 
-      # """ Some nicities """
-    # log.info("")
-    #
-    # log.info("███╗   ███╗███████╗███████╗██████╗ ██╗  ██╗ █████╗ ████████╗██╗  ██╗██╗")
-    # log.info("████╗ ████║██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗╚══██╔══╝██║  ██║██║")
-    # log.info("██╔████╔██║█████╗  █████╗  ██████╔╝█████╔╝ ███████║   ██║   ███████║██║")
-    # log.info("██║╚██╔╝██║██╔══╝  ██╔══╝  ██╔══██╗██╔═██╗ ██╔══██║   ██║   ██╔══██║██║")
-    # log.info("██║ ╚═╝ ██║███████╗███████╗██║  ██║██║  ██╗██║  ██║   ██║   ██║  ██║██║")
-    # log.info("╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝")
-    # log.info("")
-    # parse config file and set up command line argument override parser
-    # log.info("A logfile will be dumped here: {0:s}".format(meerkathi.MEERKATHI_LOG))
-    # log.info("")
-
-
 def execute_pipeline(args, arg_groups, block):
     # setup piping infractructure to send messages to the parent
     def __run(debug=False):
@@ -248,7 +232,6 @@ def execute_pipeline(args, arg_groups, block):
 
             pipeline = mwa(arg_groups,
                            args.workers_directory, stimela_build=args.stimela_build,
-#                           add_all_first=args.add_all_first, prefix=args.general_prefix,
                            add_all_first=False,  prefix=args.general_prefix,
                            configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
                            container_tech=args.container_tech, start_worker=args.start_worker,
@@ -264,8 +247,6 @@ def execute_pipeline(args, arg_groups, block):
                 log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
                 pdb.post_mortem(sys.exc_info()[2])
             sys.exit(1)  # indicate failure
-            # else:
-            #     log.info("One or more pipeline workers requested a shutdown. Goodbye!")
 
         except KeyboardInterrupt:
             log.error("Ctrl+C received from user, shutting down. Goodbye!")
@@ -282,15 +263,6 @@ def execute_pipeline(args, arg_groups, block):
             sys.exit(1)  # indicate failure
 
     return __run(debug=args.debug)
-
-    # # now fork and block or continue depending on whether interaction is wanted
-    # try:
-    #     wt = interruptable_process(target=__run)
-    #     wt.start()
-    #     wt.join(None if block else 0)
-    # except KeyboardInterrupt:
-    #     wt.interrupt()
-    # return wt
 
 ############################################################################
 # Driver entrypoint
@@ -324,11 +296,6 @@ def main(argv):
     args = parser.args
     arg_groups = parser.arg_groups
 
-    # # start a new logfile by default
-    # if args.log_append is False:
-    #     with open(meerkathi.MEERKATHI_LOG, "w") as stdw:
-    #         pass
-
     if args.schema:
         schema = {}
         for item in args.schema:
@@ -346,21 +313,11 @@ def main(argv):
         print_worker_help(args)
         return
 
-    # if not args.no_interactive and args.report_viewer:
-    #     raise ValueError(
-    #         "Incompatible options: --no-interactive and --report-viewer")
-
     # User requests default config => dump and exit
     if args.get_default:
         log_logo()
         get_default(args.get_default_template, args.get_default)
         return
-
-    # # standalone report hosting
-    # if args.report_viewer:
-    #     log_logo()
-    #     start_viewer(args)
-    #     return
 
     if args.print_calibrator_standard:
         cdb = mkct.calibrator_database()
@@ -371,22 +328,5 @@ def main(argv):
     if args.config is meerkathi.DEFAULT_CONFIG:
         config_parser.primary_parser().print_help()
         sys.exit(1)
-        # log.error("The pipeline configuration file needs to be specified via the -c/--config option.")
-        # log.info("Use --help for more info.")
-        # sys.exit(1)
-
-    # if not args.no_interactive and \
-    #    args.config == DEFAULT_CONFIG and \
-    #    not args.get_default and \
-    #    not args.report_viewer:
-    #    # Run interactively
-    #     meerkathi.remove_log_handler(meerkathi.log_console_handler)
-    #     try:
-    #         event_loop().run()
-    #     except KeyboardInterrupt:
-    #         return
-    # else:
-       # Run non-interactively
     p = execute_pipeline(args, arg_groups, block=True)
-    # log.info("PIPELINER EXITS WITH RETURN CODE {}".format(p.exitcode))
     sys.exit(p.exitcode)  # must return exit code when non-interactive

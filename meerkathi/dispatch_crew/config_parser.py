@@ -58,7 +58,7 @@ then edit the file to suit your needs.
         help='directory where stimela singularity images are stored')
 
     add('-gdt', '--get-default-template', # metavar="TEMPLATE",
-            choices=["minimal", "meerkat"],
+            choices=meerkathi.SAMPLE_CONFIGS.keys(),
             default="minimal",
             help='init a configuration file from a default template')
 

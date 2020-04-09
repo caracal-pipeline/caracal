@@ -463,7 +463,7 @@ def worker(pipeline, recipe, config):
 
 
             if pipeline.enable_task(config, 'autoflag_rfi'):
-                step = '{0:s}_autoflag_rfi_ms{2:d}'.format(wname, msiter)
+                step = '{0:s}_autoflag_rfi_ms{1:d}'.format(wname, msiter)
                 substep = 'save_flags_before_{0:s}'.format(step)
                 # Clear autoflags if need be
                 manflags.add_cflags(pipeline, recipe, "_".join(

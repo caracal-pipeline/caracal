@@ -969,12 +969,13 @@ fi
 # Search for test data and set variable accordingly
 if [[ -e ${CARATE_TEST_DATA_DIR} ]]
 then
+
     # Check if there are any ms files
     mss=`find ${CARATE_TEST_DATA_DIR} -name *.ms`
-    [[ ! -z "$mss" ]] || [[ -n ${OD} ]] || { echo "Test data required in ${CARATE_TEST_DATA_DIR}"; echo ""; kill "$PPID"; exit 1; }
+    [[ -n "$mss" ]] || [[ -n ${OD} ]] || { echo "Test data required in ${CARATE_TEST_DATA_DIR}"; echo ""; kill "$PPID"; exit 1; }
     
     # This generates the dataid string
-    [[ ! -z "$mss" ]] && dataidstr="" || dataidstr=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
+    [[ -z "$mss" ]] && dataidstr="" || dataidstr=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     [[ ! -z "$mss" ]] || sya=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
@@ -1127,20 +1128,20 @@ echo "##################"
 echo
 if (( ${FORCE} == 1 ))
 then
-    checkex ${WORKSPACE_ROOT}/caracal || \
+    checkex ${WORKSPACE_ROOT}/meerkathi || \
 	[[ -n ${OF} ]] || \
-	echo "rm -rf \${workspace_root}/caracal" >> ${SS}
+	echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
     [[ -n ${FS} ]] || \
-	checkex ${WORKSPACE_ROOT}/caracal || \
+	checkex ${WORKSPACE_ROOT}/meerkathi || \
 	[[ -n ${OF} ]] || \
-	rm -rf ${WORKSPACE_ROOT}/caracal
+	rm -rf ${WORKSPACE_ROOT}/meerkathi
 fi
 
 echo "cd \${workspace_root}" >> ${SS}
 cd ${WORKSPACE_ROOT}
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
-    if [[ -e ${WORKSPACE_ROOT}/caracal ]]
+    if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
         echo "Not re-fetching CARACal, use -f if you want that or"
         echo "omit -of if you have set it."
@@ -1152,7 +1153,7 @@ then
 	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
     fi
 else
-    if [[ -e ${WORKSPACE_ROOT}/caracal ]]
+    if [[ -e ${WORKSPACE_ROOT}/meerkathi ]]
     then
         if (( ${FORCE} == 0 ))
         then	    
@@ -1162,16 +1163,16 @@ else
 	    echo "Not re-fetching CARACal, turn off -of if you want that."
         else
 	    echo "Fetching CARACal from https://github.com/ska-sa/caracal.git"
-	    checkex ${WORKSPACE_ROOT}/caracal || \
-		echo "rm -rf \${workspace_root}/caracal" >> ${SS}
+	    checkex ${WORKSPACE_ROOT}/meerkathi || \
+		echo "rm -rf \${workspace_root}/meerkathi" >> ${SS}
 	    [[ -n ${FS} ]] || \
-		checkex ${WORKSPACE_ROOT}/caracal || \
-		rm -rf ${WORKSPACE_ROOT}/caracal
+		checkex ${WORKSPACE_ROOT}/meerkathi || \
+		rm -rf ${WORKSPACE_ROOT}/meerkathi
 	    
-            checkex ${WORKSPACE_ROOT}/caracal || \
+            checkex ${WORKSPACE_ROOT}/meerkathi || \
 		echo "git clone https://github.com/ska-sa/caracal.git" >> ${SS}
             [[ -n ${FS} ]] || \
-		checkex ${WORKSPACE_ROOT}/caracal || \
+		checkex ${WORKSPACE_ROOT}/meerkathi || \
 		git clone https://github.com/ska-sa/caracal.git
         fi
     else
@@ -1183,8 +1184,8 @@ fi
 
 if [[ -n "$CARATE_CARACAL_BUILD_NUMBER" ]]
 then
-    echo "cd \${workspace_root}/caracal" >> ${SS}
-    cd ${WORKSPACE_ROOT}/caracal
+    echo "cd \${workspace_root}/meerkathi" >> ${SS}
+    cd ${WORKSPACE_ROOT}/meerkathi
     [[ -z $CARATE_LOCAL_SOURCE ]] || { \
 	echo "If an error occurs here, it likely means that the local installation";\
 	echo "of CARACal does not contain the build number. You may want to use the";\
@@ -1198,12 +1199,12 @@ then
 fi
 
 
-if [[ -d ${WORKSPACE_ROOT}/caracal ]]
+if [[ -d ${WORKSPACE_ROOT}/meerkathi ]]
 then
     # Report on CARACal build
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
-    cd ${WORKSPACE_ROOT}/caracal
+    cd ${WORKSPACE_ROOT}/meerkathi
     if [[ -n "$CARATE_LOCAL_SOURCE" ]]
     then
 	sya="CARACal build: local"; sya+=$'\n';
@@ -1263,22 +1264,22 @@ echo
 if [[ -z ${OC} ]]
 then
     echo "Installing CARACal using pip install"
-    echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal
+    echo "pip install -U --force-reinstall \${workspace_root}/meerkathi" >> ${SS}
+    [[ -n ${FS} ]] || pip install -U --force-reinstall ${WORKSPACE_ROOT}/meerkathi
 fi
 
 if [[ -n ${UM} ]]
 then
     echo "Installing stimela_master.txt"
-    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_master.txt
+    echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_master.txt" >> ${SS}
+    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_master.txt
 fi
 
 if [[ -n ${US} ]]
 then
     echo "Installing stimela_last_stable.txt"
-    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_last_stable.txt
+    echo "pip install -U --force-reinstall -r \${workspace_root}/meerkathi/stimela_last_stable.txt" >> ${SS}
+    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/meerkathi/stimela_last_stable.txt
 fi
 if [[ -n ${CARATE_LOCAL_STIMELA} ]]
 then
@@ -1301,7 +1302,6 @@ then
     echo "Use -h flag for more information"
     kill "$PPID"; exit 0
 fi
-echo ""
 
 if [[ -z ${ORSR} ]]
 then
@@ -1568,7 +1568,6 @@ runtest () {
 		    rm -rf ${workspace_root}/${trname}/${dire}
 	    done
 	else
-	    echo got herehere
 	    echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
             [[ -n ${FS} ]] || \
 		rm -rf ${WORKSPACE_ROOT}/${trname}
@@ -1833,7 +1832,7 @@ then
     confilename="minimalConfig"
     contarch="docker"
     caracalswitches="${stimela_ns}"
-    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\{workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
+    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations/${confilename}.yml" "\{workspace_root}/meerkathi/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
 fi
 
 if [[ -n ${DA} ]]
@@ -1843,7 +1842,7 @@ then
     confilename="carateConfig"
     contarch="docker"
     caracalswitches="${stimela_ns}"
-    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
+    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
 fi
 
 if [[ -n ${DI} ]] && [[ -n ${configfilename} ]]
@@ -1874,7 +1873,7 @@ then
       echo "You are checking the configurations in the remote master"
       echo "That seems silly but ok."
       echo ""
-      sample_location="${WORKSPACE_ROOT}/caracal/caracal/sample_configurations"
+      sample_location="${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations"
     fi
     for entry in "${sample_location}"/*
     do
@@ -1979,7 +1978,7 @@ then
     confilename="minimalConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
-    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
+    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
 fi
 
 if [[ -n ${SA} ]]
@@ -1989,7 +1988,7 @@ then
     confilename="carateConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
-    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
+    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/meerkathi/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${caracalswitches}"
 fi
 
 if [[ -n ${SI} ]] && [[ -n ${configfilename} ]]
@@ -2020,7 +2019,7 @@ then
       echo "You are checking the configurations in the remote master"
       echo "That seems silly but ok."
       echo ""
-      sample_location="${WORKSPACE_ROOT}/caracal/caracal/sample_configurations"
+      sample_location="${WORKSPACE_ROOT}/meerkathi/caracal/sample_configurations"
     fi
     for entry in "${sample_location}"/*
     do

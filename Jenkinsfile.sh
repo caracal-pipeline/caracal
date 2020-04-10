@@ -15,17 +15,17 @@
 #                                                  data, recommended data set
 #                                                  in that directory:
 #                                                  
-# ${WORKSPACE_ROOT}/projects/meerkathi             Local CARACal copy, available
+# ${WORKSPACE_ROOT}/projects/caracal             Local CARACal copy, available
 #                                                  before start of
 #                                                  Jenkinsfile.sh
 
 # It follows that the following should work as a Jenkins test, testing Singularity
 # and Docker installation:
-${WORKSPACE_ROOT}/projects/meerkathi/meerkathi/utils/carate.sh \
+${WORKSPACE_ROOT}/projects/caracal/caracal/utils/carate.sh \
     -ws "${WORKSPACE}/projects" \
     -td "${WORKSPACE}/../../../test-data" \
     -ct "CARACal_test" \
-    -ls "${WORKSPACE_ROOT}/projects/meerkathi" \
+    -ls "${WORKSPACE_ROOT}/projects/caracal" \
     -dm \
     -sm \
     -f \

@@ -28,15 +28,15 @@ requirements = [
     'regions',
 ]
 
-PACKAGE_NAME = 'meerkathi'
+PACKAGE_NAME = 'caracal'
 __version__ = '0.3.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
       description="End-to-end data reduction pipeline for radio interferometry data",
-      author="MeerKATHI peeps",
+      author="Caracal peeps",
       author_email="sphemakh@gmail.com",
-      url="https://github.com/ska-sa/meerkathi",
+      url="https://github.com/ska-sa/caracal",
       packages=[PACKAGE_NAME],
       install_requires=requirements,
       include_package_data=True,

@@ -20,15 +20,15 @@ def worker(pipeline, recipe, config):
 
     #if  we are running self cal we want to check the following
     if pipeline.config['self_cal']['enable']:
-        meerkathi.log.info(
+        caracal.log.info(
                     "Checking the consistency of the Self_Cal input")
         # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
         if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
             if pipeline.config['self_cal']['transfer_apply_gains']['enable']:
-                raise RunTimeError(
+                raise UserInputError(
                     'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
             if int(pipeline.config['self_cal']['start_at_iter']) != 1:
-                raise RunTimeError(
+                raise UserInputError(
                     "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         # First check we are actually running a calibrate
         if pipeline.config['self_cal']['calibrate']['enable']:
@@ -71,11 +71,10 @@ def worker(pipeline, recipe, config):
                 sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
-                        raise RunTimeError(
-                            "Not all applied time solutions fit in the timeslot_chunk. \n" 
-                            "Your timeslot chunk = {} \n".format(time_chunk)
+                        raise UserInputError(
+                            "Not all applied time solutions fit in the timeslot_chunk. \n" +
+                            "Your timeslot chunk = {} \n".format(time_chunk) +
                             "Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        sys.exit(2)
             # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
             if len(pipeline.config['self_cal']['calibrate']['Gsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
                 amount_sols = len(pipeline.config['self_cal']['calibrate']['Gsols_channel'])
@@ -113,16 +112,14 @@ def worker(pipeline, recipe, config):
                 sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
-                        meerkathi.log.info("Not all applied channel solutions fit in the channel_chunk. " )
-                        meerkathi.log.info("Your channel chunk = {}".format(channel_chunk))
-                        meerkathi.log.info("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        sys.exit(2)
+                        UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
+                                       "Your channel chunk = {} \n".format(channel_chunk) +
+                                       "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
         # Check some imaging stuff
         if pipeline.config['self_cal']['image']['enable']:
             if pipeline.config['self_cal']['img_maxuv_l'] > 0. and  pipeline.config['self_cal']['taper'] > 0.:
-                meerkathi.log.info(
+                UserInputError(
                     "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
-                sys.exit(2)
 
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]

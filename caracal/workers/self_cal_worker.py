@@ -210,7 +210,7 @@ def worker(pipeline, recipe, config):
             "joinchannels": joinchannels,
             "fit-spectral-pol":  fit_spectral_pol,
             "local-rms": True,
-            "auto-mask": 7,
+            "auto-mask": 6,
             "auto-threshold": config[key].get('clean_threshold')[0],
             "savesourcelist": False,
             "fitbeam": False,
@@ -268,7 +268,6 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
             "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],
-            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
@@ -277,14 +276,18 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale-scales": multiscale_scales})
 
         mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
-        if mask_key == 'auto_mask':
-            image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
+        if mask_key == 'wsclean':
+            image_opts.update({
+                "auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1],
+                "local-rms": config[key].get('clean_mask_local_rms')[num-1 if len(config[key].get('clean_mask_local_rms', [])) >= num else -1],
+                "local-rms-window": config[key].get('clean_mask_local_rms_window')[num-1 if len(config[key].get('clean_mask_local_rms_window', [])) >= num else -1],
+              })
         elif mask_key == 'sofia':
             fitmask_address = 'masking'
-            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
-        #elif '.' in  mask_key:
-        #    fitmask_address = 'masking/'+str(mask_key)
-        #    image_opts.update({"fitsmask": fitmask_address+':output'})
+            image_opts.update({
+                "fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num),
+                "local-rms": False,
+              })
         else:
             fits_mask = '{0:s}/{1:s}_{2:s}.fits'.format(
                 'masking', mask_key, field)
@@ -292,8 +295,10 @@ def worker(pipeline, recipe, config):
                 caracal.log.error(
                     "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")
                 raise caracal.ConfigurationError("no mask found in output directory")
-
-            image_opts.update({"fitsmask": fits_mask+':output'})
+            image_opts.update({
+                "fitsmask": fits_mask+':output',
+                "local-rms": False,
+              })
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -356,7 +361,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image'].get('local_rms')[num-1 if len(config['image'].get('local_rms', [])) >= num else -1],
+            "steps.doScaleNoise": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms', [])) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -381,7 +386,7 @@ def worker(pipeline, recipe, config):
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image'][key].get('scale_noise_window'),
+            "scaleNoise.windowSpatial": config['image'].get('clean_mask_local_rms_window')[num-1 if len(config['image'].get('clean_mask_local_rms_window', [])) >= num else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
@@ -393,7 +398,7 @@ def worker(pipeline, recipe, config):
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
-            "merge.positivity": config['image'][key].get('merge_positivity')[num-1 if len(config['image'][key].get('merge_positivity', [])) >= num else -1],
+            "merge.positivity": config['image'][key].get('only_positive_pix'),
         }
         if config['image'][key].get('flag'):
             flags_sof = config['image'][key].get('flagregion')

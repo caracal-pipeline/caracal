@@ -208,6 +208,10 @@ do
     then
         OC=1
     fi
+    if [[ "$arg" == "--caracal-release" ]] || [[ "$arg" == "-cr" ]]
+    then
+        CR=1
+    fi
     if [[ "$arg" == "--omit-caracal-fetch" ]] || [[ "$arg" == "-of" ]]
     then
         OF=1
@@ -260,7 +264,7 @@ done
 
 if [[ -n "$HE" ]] || [[ -n "$VE" ]]
 then
-    echo "testingathome.sh"
+    echo "caratekit.sh"
     echo "Testing CARACal"
     echo
     echo "Input via setting environment variables"
@@ -350,6 +354,8 @@ then
     echo ""
     echo "  --local-source ARG -ls ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_LOCAL_SOURCE"
+    echo ""
+    echo "  --caracal-release -cr               Install latest CARACal release version"
     echo ""
     echo "  --omit-caracal-reinstall -oc        Do not pip install caracal"
     echo ""
@@ -488,6 +494,9 @@ then
     echo "  - the caracal version CARATE_CARACAL_BUILD_NUMBER is checked out"
     echo "    using git if CARATE_CARACAL_BUILD_NUMBER is defined. If switches"
     echo "    --omit-caracal-reinstall or -oc are set, this is not done"
+    echo ""
+    echo "  - the latest CARACal release version is checked out and installed"
+    echo "    if switches --caracal-release or -cr are set"
     echo ""
     echo "  - caracal is installed via pip. If switches --omit-caracal-reinstall"
     echo "    or -oc are set, this is not done"
@@ -714,16 +723,33 @@ fi
 [[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
 [[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+=$'\n'
 
-# Force test number to be identical with build number, if it is defined
+# Do not force test id to be identical with build number any more, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
-    CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_NUMBER; \
+    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
+	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_NUMBER; \
+    }; \
+    [[ -z ${CR} ]] || { \
+	echo "You cannot define a CARATE_CARACAL_BUILD_NUMBER (through an environment"; \
+	echo "variable or using --caracal-build-number or -cb switches and use the"; \
+	echo "--caracal-release or -cr switches. Exiting."; \
+	kill "$PPID"; exit 1;
+    } ; \
+}
+
+[[ -z ${CR} ]] || { \
+    # Upon pypi release this has to be updated
+    # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
+    CR="0.1.0"
+    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
+	CARATE_CARACAL_TEST_ID=${CR}; \
+    }; \
 }
 
 [[ -n "$CARATE_CARACAL_TEST_ID" ]] || { \
-    echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID";\
-    echo "variable, giving your test directory a name, like (if you're using bash):";\
-    echo "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\"";\
-    echo "Otherwise choose any unique identifyer. You can also use the -ct switch.";\
+    echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID"; \
+    echo "variable, giving your test directory a name, like (if you're using bash):"; \
+    echo "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\""; \
+    echo "Otherwise choose any unique identifyer. You can also use the -ct switch."; \
     echo "";\
     kill "$PPID"; exit 1;
 }
@@ -738,13 +764,18 @@ ss+=$'\n'
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
-    [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
-	echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}";
-	echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})";
-	echo "is set or switches --local-source or -ls are used). But it";
-	echo "does not exist. Stopping.";
-	kill "$PPID"; exit 1;
-    }
+    if [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
+	   echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}"; \ 
+	   echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})"; \
+	   echo "is set or switches --local-source or -ls are used). But it"; \
+	   echo "does not exist. Stopping."; \
+	   kill "$PPID"; exit 1;
+       }
+       [[ -z ${CR} ]] || { \
+	   echo "Warning: both \${CARATE_LOCAL_SOURCE} and switches --caracal-release or -cr"; \
+	   echo "are set. This means that carate will try to check out the latest release from"; \
+	   echo "your local CARACal version. It might not be what you want."; \
+	   }
     ss+="local_source=${CARATE_LOCAL_SOURCE}"
     ss+=$'\n'
 else
@@ -1200,6 +1231,21 @@ then
     git checkout ${CARATE_CARACAL_BUILD_NUMBER}
 fi
 
+if [[ -n ${CR} ]]
+then
+    echo "cd \${workspace_root}/caracal" >> ${SS}
+    cd ${WORKSPACE_ROOT}/caracal
+    [[ -z $CARATE_LOCAL_SOURCE ]] || { \
+	echo "If an error occurs here, it likely means that the local installation";\
+	echo "of CARACal does not contain the latest release. Because you set the";\
+	echo "switches --caracal-release or -cr, caratekit is trying to install the";\
+	echo "latest release.";\
+    }
+    thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`
+    echo "git checkout ${thabuild}" >> ${SS}
+    git checkout ${thabuild}
+fi
+
 
 if [[ -d ${WORKSPACE_ROOT}/caracal ]]
 then
@@ -1207,7 +1253,8 @@ then
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     cd ${WORKSPACE_ROOT}/caracal
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    [[ -z ${CR} ]] || { sya=+="CARACal version: ${CR}"; sya+=$'\n'; }
+    if [[ -n "$CARATE_LOCAL_SOURCE" ]] && [[ -z ${CR} ]]
     then
 	sya="CARACal build: local"; sya+=$'\n';
     else
@@ -1228,7 +1275,7 @@ then
             [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
             stimelaline=`grep https://github.com/ratt-ru/Stimela setup.py` || true
             [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
-            [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+            [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
         else
             echo "Stimela build: ${stimelaline}" >> ${SYA}
         fi
@@ -1237,7 +1284,7 @@ then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt` || true
 	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
-        [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+        [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     elif [[ -n ${CARATE_LOCAL_STIMELA} ]]
     then
 	echo "Stimela build: ${CARATE_LOCAL_STIMELA} (local)" >> ${SYA}
@@ -1245,10 +1292,12 @@ then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
         [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
+	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote --tags https://github.com/ratt-ru/Stimela | grep ${stimelaline} | awk '{print $1}'` || true
+	[[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
 	
         [[ -n ${stimelaline} ]] || stimelaline=`grep 'https://github.com/ratt-ru/Stimela' setup.py` || true
         [[ -z ${stimelaline} ]] || [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
-        [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+        [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     fi
 
     echo "from: https://github.com/ratt-ru/Stimela" >> ${SYA}

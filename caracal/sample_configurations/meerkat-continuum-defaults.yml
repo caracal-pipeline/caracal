@@ -39,6 +39,7 @@ prepare_data:
 
 flagging:
   enable: true
+  field: calibrators
   label_in: ''
   flag_autocorr:
     enable: true
@@ -46,12 +47,6 @@ flagging:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
     ensure_valid_selection: false
-  flag_antennas:
-    enable: false
-    antennas: '0'
-  flag_scan:
-    enable: false
-    scans: '0'
   static_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
@@ -59,11 +54,8 @@ flagging:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
-  rfinder:
-    enable: false
-    telescope: MeerKAT
-    field: target
+    aoflagger:
+      strategy: firstpass_QUV.rfis
 
 cross_cal:
   enable: true
@@ -149,13 +141,14 @@ transform_data:
 
 flagging__2: 
   enable: true
-  label_in: corr
   field: target
+  label_in: corr
   autoflag_rfi: 
     enable: true
-    flagger: aoflagger
-    strategy: firstpass_QUV.rfis
     column: DATA
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
   rfinder: 
     enable: false
     field: target

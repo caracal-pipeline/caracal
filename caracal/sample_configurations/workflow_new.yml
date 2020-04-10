@@ -55,10 +55,8 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  quack_flagging:
-    enable: false
+  field: calibrators
+  label_in: cal
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
@@ -76,7 +74,8 @@ flagging:
   autoflag_rfi:
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
+    aoflagger:
+      strategy: firstpass_QUV.rfis
   rfinder:
     enable: true
     telescope: MeerKAT
@@ -165,13 +164,14 @@ transform_data__2:
 
 flagging__2: 
   enable: true
+  field: target
   label_in: corr
-  field: 'target'
   autoflag_rfi: 
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
     column: DATA
+    aoflagger:
+      strategy: firstpass_QUV.rfis
   rfinder: 
     enable: true
     field: target

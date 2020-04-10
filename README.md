@@ -13,10 +13,30 @@ Most dependencies are taken care of by using [pip](https://pypi.org/project/pip/
 - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist is required only if [Singularity](https://github.com/sylabs/singularity) is chosen as containerization technology to run [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) with (no known [Docker](https://www.docker.com/) dependencies).
 
 ## Manual installation
-(Placeholders for names of directories, names, and files, which can be chosen by the user are highligted in shell-style: ``${name}`` )
+(Shell-style is used when indicating names and paths of directories and files, which can be chosen by the user are highligted in : ``${name}`` )
 
 We recommend and describe an installation using a virtual environment created with [Virtualenv](https://virtualenv.pypa.io/en/latest/). This is not a requirement, but strongly recommended.
-### Virtualenv
+
+### Short version
+For the longer version see below. On most systems, you have to choose a path to the virtual environment ``${cvenv}``. The latest CARACal release can be obtained by typing:
+```
+$ python3 -m venv ${cvenv}  
+$ source ${cvenv}/bin/activate
+$ pip install -U pip setuptools wheel
+$ pip install -U meerkathi
+```
+Using [Docker](https://www.docker.com/):
+```
+$ stimela build
+```
+Using [Singularity](https://github.com/sylabs/singularity) choose a directory ${singularity_pull_folder} to store the [Singularity](https://github.com/sylabs/singularity) images in:  
+
+```  
+$ mkdir ${singularity_pull_folder}
+$ stimela pull --singularity --pull-folder ${singularity_pull_folder}
+```
+
+### Long version: virtualenv
 Make sure that virtualenv is installed and updated on your computer. E.g. on Ubuntu, do:
 ```
 $ sudo apt-get update
@@ -46,7 +66,7 @@ if you are using csh or tcsh . From now on all python installations using pip wi
 ```
 $ pip install -U pip setuptools wheel
 ```
-### CARACal
+### Long version: CARACal
 #### Current development branch
 *Warning: the current development branch obviously contains the most recent developments but it might contain bugs.*
 

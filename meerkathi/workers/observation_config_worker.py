@@ -24,15 +24,12 @@ def worker(pipeline, recipe, config):
                     "Checking the consistency of the Self_Cal input")
         # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
         if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
-            print(pipeline.config['self_cal']['transfer_apply_gains']['enable'])
             if pipeline.config['self_cal']['transfer_apply_gains']['enable']:
-                meerkathi.log.info(
+                raise RunTimeError(
                     'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
-                sys.exit(2)
             if int(pipeline.config['self_cal']['start_at_iter']) != 1:
-                meerkathi.log.info(
+                raise RunTimeError(
                     "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-                sys.exit(2)
         # First check we are actually running a calibrate
         if pipeline.config['self_cal']['calibrate']['enable']:
             #Then let's check that the solutions are reasonable and fit in our time chunks
@@ -74,9 +71,10 @@ def worker(pipeline, recipe, config):
                 sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
-                        meerkathi.log.info("Not all applied time solutions fit in the timeslot_chunk. " )
-                        meerkathi.log.info("Your timeslot chunk = {}".format(time_chunk))
-                        meerkathi.log.info("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                        raise RunTimeError(
+                            "Not all applied time solutions fit in the timeslot_chunk. \n" 
+                            "Your timeslot chunk = {} \n".format(time_chunk)
+                            "Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                         sys.exit(2)
             # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
             if len(pipeline.config['self_cal']['calibrate']['Gsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):

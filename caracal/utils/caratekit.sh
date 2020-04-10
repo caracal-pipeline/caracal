@@ -1170,7 +1170,7 @@ else
 	    [[ -n ${FS} ]] || \
 		checkex ${WORKSPACE_ROOT}/caracal || \
 		rm -rf ${WORKSPACE_ROOT}/caracal
-	    
+
             checkex ${WORKSPACE_ROOT}/caracal || \
 		echo "git clone https://github.com/ska-sa/caracal.git" >> ${SS}
             [[ -n ${FS} ]] || \
@@ -1329,7 +1329,7 @@ then
     then
         echo "Omitting re-installation of Stimela Docker images"
         echo "##########################################" >> ${SYA}
-	echo "Omitting re-installation of Stimela Docker images" >> ${SYA}
+	      echo "Omitting re-installation of Stimela Docker images" >> ${SYA}
         echo "##########################################" >> ${SYA}
         echo "" >> ${SYA}
     else
@@ -1342,7 +1342,7 @@ then
 
         echo "##########################################" >> ${SYA}
         echo "" >> ${SYA}
-	docker --version >> ${SYA}
+	      docker --version >> ${SYA}
         echo "" >> ${SYA}
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
@@ -1352,48 +1352,48 @@ then
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
         if [[ -n $PD ]]
         then
-	    ii = 1
-	    until (( ${ii} > ${IA} ))
-	    do
-	        echo "Running stimela pull -d"
-	        echo "stimela pull -d" >> ${SS}
-                if [[ -z ${FS} ]]
-	        then
-		    stimela pull -d && break || {
-			echo "stimela pull -d failed"
-			(( ii++ ))
-			}
-		else
-		    break
-	        fi
-	    done
-	    if (( ${ii} > ${IA} ))
-	    then
-		echo "Maximum number of pull attempts for Stimela reached."
-		echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
-		exit 1
-	    fi
+	          ii=1
+	          until (( ${ii} > ${IA} ))
+	          do
+	             echo "Running stimela pull -d"
+	             echo "stimela pull -d" >> ${SS}
+               if [[ -z ${FS} ]]
+    	         then
+    		           stimela pull -d && break || {
+    			         echo "stimela pull -d failed"
+    			         (( ii++ ))
+    			         }
+    		       else
+    		           break
+    	         fi
+    	      done
+    	      if (( ${ii} > ${IA} ))
+    	      then
+    		        echo "Maximum number of pull attempts for Stimela reached."
+    		        echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
+    		        exit 1
+    	      fi
         fi
-	ii=1
+	      ii=1
         until (( ${ii} > ${IA} ))
         do
             echo "Running stimela build"
             echo "stimela build${stimela_ns}" >> ${SS}
             if [[ -z ${FS} ]]
-	    then
-	        stimela build${stimela_ns} && break || {
-			echo "stimela build failed"
-			(( ii++ ))
-		    }
-	    else
-		break
-	    fi
+    	      then
+    	        stimela build${stimela_ns} && break || {
+    			    echo "stimela build failed"
+    			    (( ii++ ))
+    		      }
+    	      else
+    		      break
+    	      fi
         done
-	if (( ${ii} > ${IA} ))
-	then
-	    echo "Maximum number of build attempts for Stimela reached."
-	    exit 1
-	fi
+    	  if (( ${ii} > ${IA} ))
+    	  then
+    	    echo "Maximum number of build attempts for Stimela reached."
+    	    exit 1
+    	  fi
     fi
     echo ""
 fi

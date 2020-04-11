@@ -1,19 +1,90 @@
-<!-- [![Jenkins build Status](https://jenkins.meqtrees.net/job/caracal-cron/badge/icon)](https://jenkins.meqtrees.net/job/caracal-cron/) -->
 # Documentation
-
 https://caracal.readthedocs.io
 
 # Download & Install
+
 ## Usage and publication policy
+
 When using CARACal please be aware of and adhere to the [CARACal publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
 
 ## Software requirements
 Most dependencies are taken care of by using [pip](https://pypi.org/project/pip/) and [PiPy](https://pypi.org) to control Python dependencies and [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) as a platform-independent scripting framework. This leaves a small number of known dependencies (currently only one) that need to be installed prior to using CARACal:
+- [Python](https://www.python.org/) 3.6 or higher
 - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist is required only if [Singularity](https://github.com/sylabs/singularity) is chosen as containerization technology to run [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) with (no known [Docker](https://www.docker.com/) dependencies).
+
+## Manual installation
+(Shell-style is used when indicating names and paths of directories and files, which can be chosen by the user are highligted in : ``${name}`` )
+
+We recommend and describe an installation using a virtual environment created with [Virtualenv](https://virtualenv.pypa.io/en/latest/). This is not a requirement, but strongly recommended.
+
+### Short version
+For the longer version see below. On most systems, you have to choose a path to the virtual environment ``${cvenv}``. The latest CARACal release can be obtained by typing:
+```
+$ python3 -m venv ${cvenv}  
+$ source ${cvenv}/bin/activate
+$ pip install -U pip setuptools wheel
+$ pip install -U meerkathi
+```
+Using [Docker](https://www.docker.com/):
+```
+$ stimela build
+```
+Using [Singularity](https://github.com/sylabs/singularity) choose a directory ${singularity_pull_folder} to store the [Singularity](https://github.com/sylabs/singularity) images in:  
+
+```  
+$ mkdir ${singularity_pull_folder}
+$ stimela pull --singularity --pull-folder ${singularity_pull_folder}
+```
+
+### Long version: virtualenv
+Make sure that virtualenv is installed and updated on your computer. E.g. on Ubuntu, do:
+```
+$ sudo apt-get update
+$ sudo apt-get install python3-pip
+```
+Create a virtual environment called ``${cvenv}``:
+```  
+$ python3 -m venv ${cvenv}  
+```
+E.g.:
+```  
+$ python3 -m venv /home/myagi/vs/caracal_venv  
+```
+If this does not work on your machine, try:
+```
+$ virtualenv -p python3 ${cvenv}
+```
+Activate and upgrade the ``${cvenv}``:
+```
+$ source ${cvenv}/bin/activate
+```
+if you are using bash or sh and
+```
+> source ${cvenv}/bin/activate.csh
+```
+if you are using csh or tcsh . From now on all python installations using pip will be contained inside ${cvenv} and your global [Python](https://www.python.org/) is not affected. Install and/or upgrade the installation tools inside your virtualenv:
+```
+$ pip install -U pip setuptools wheel
+```
+### Long version: CARACal
+#### Current development branch
+*Warning: the current development branch obviously contains the most recent developments but it might contain bugs.*
+
+Select a target directory ``${motherdir}`` (e.g. ``/home/caine/software`` or ``/home/larusso/datareductions``) and clone CARACal into that directory, and install via pip:
+```
+$ cd ${motherdir}
+$ git clone https://github.com/ska-sa/caracal
+$ pip install -U --force-reinstall ./caracal
+```
+#### Via pip
+```
+$ pip install -U --force-reinstall caracal
+```
+
 
 ## Installation using caratekit.sh
 
-To newly install CARACal usig caratekit, download [caratekit.sh](https://github.com/ska-sa/caracal/raw/master/caracal/utils/caratekit.sh) and make it executable:
+To newly install CARACal using caratekit, download [caratekit.sh](https://github.com/ska-sa/caracal/raw/master/caracal/utils/caratekit.sh) and make it executable (alternatively clone caracal and find ``caratekit.sh`` ):
 ```
 $ chmod u+x caratekit.sh 
 ```

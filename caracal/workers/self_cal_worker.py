@@ -1614,7 +1614,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/aimfast', step,
                        {
                            "compare-models": models,
-                           "area-factor": config['aimfast'].get('area_factor')
+                           "tolerance": config['aimfast'].get('radius')
                        },
                        input=pipeline.input,
                        output=pipeline.output,

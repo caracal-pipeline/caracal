@@ -177,6 +177,11 @@ mapping:
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
             required: false
             example: '6'
+          radius:
+            type: float
+            desc: Radius to cross-match sources in arcsec
+            required: false
+            example: '0.6'
           normality_model:
             type: str
             enum: ["normaltest", "shapiro"]

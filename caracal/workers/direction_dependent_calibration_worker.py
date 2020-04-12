@@ -113,16 +113,7 @@ def worker(pipeline, recipe, config):
                  shared_memory="500gb",
                  label="ddf_image_for_mask_{0:s}:: DDFacet image for masking".format(field))
 
-            #image_path_to_make_mask = "continuum"+"/"+"image_3"+"/"
-            #copy over the file and delete when done. Brute force and inelegant approach.
-            #im_in_path = os.path.join(pipeline.output,image_path_to_make_mask)
-            #print("image_path",im_in_path)
-            #im_cp_path = os.path.join(pipeline.output,DD_DIR)
-            #print("image_copy_path",im_cp_path)
-            #imname = '{0:s}_{1:s}_{2:d}-MFS-image.fits'.format(pipeline.prefix,field,3)
-            #shutil.copyfile(im_in_path+'/'+imname,im_cp_path+'/'+imname)
-            #print("File copied")
-            #imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(image_path_to_make_mask,pipeline.prefix,field,3)
+
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
             output_folder = "/"+outdir+"/"
             recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{

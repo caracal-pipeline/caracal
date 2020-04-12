@@ -37,7 +37,7 @@ mapping:
            type: int
            desc: Number of pixels in the image. 
            required: False
-           example: "5100"
+           example: "8000"
          use_mask: 
            type: bool
            desc: Enable masks for DDfacet initial imaging.

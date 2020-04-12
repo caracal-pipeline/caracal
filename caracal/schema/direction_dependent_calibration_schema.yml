@@ -84,7 +84,7 @@ mapping:
            type: int
            desc: "N Number of image bands for degridding. 0 means degrid each channel."
            required: false
-           example: '0'
+           example: '15'
          deconv_rmsfactor:
            type: float
            desc: "X Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom)."

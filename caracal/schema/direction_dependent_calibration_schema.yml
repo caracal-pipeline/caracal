@@ -245,7 +245,7 @@ mapping:
            type: str
            desc: Column to read weights from. Weights are applied by default. Specify an\nempty string to disable.
            required: false
-           example: "WEIGHT_SPECTRUM"
+           example: "WEIGHT"
          dd_sol_stall_quorum: 
            type: float
            desc: Minimum percentage of solutions which must have stalled before terminating\nthe solver.

@@ -52,7 +52,7 @@ mapping:
            type: int
            desc: Number of facets to use, same as Facets-NFacets.
            required: false
-           example: '17'
+           example: '24'
          weight_column: 
           type: str
           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]

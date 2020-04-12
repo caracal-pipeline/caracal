@@ -117,7 +117,6 @@ def worker(pipeline, recipe, config):
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
             output_folder = "/"+outdir+"/"
             recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{
-                 #'image' : '{0:s}:output'.format(imagename),
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
                  'sigma' : sigmask,

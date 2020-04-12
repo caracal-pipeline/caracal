@@ -38,6 +38,11 @@ mapping:
            desc: Number of pixels in the image. 
            required: False
            example: "5100"
+         use_mask: 
+           type: bool
+           desc: Enable masks for DDfacet initial imaging.
+           required: False
+           example: "True"
          cell:
            type: float
            desc: Pixel size in arcsec.

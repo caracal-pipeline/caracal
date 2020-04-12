@@ -19,6 +19,7 @@ def worker(pipeline, recipe, config):
     npix = config['image_dd'].get('npix')
     cell = config['image_dd'].get('cell')
     colname = config['image_dd'].get('column')
+    use_mask = config['image_dd'].get('use_mask')
     fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
     ddsols_t = config['calibrate_dd'].get('dd_dd_timeslots_int')
     ddsols_f = config['calibrate_dd'].get('dd_dd_channel_int')
@@ -98,17 +99,53 @@ def worker(pipeline, recipe, config):
 
     def dd_precal_image(field,ms_list):
         dd_image_opts_precal = copy.deepcopy(dd_image_opts)
-        image_prefix_precal = prefix+"_"+field
-        outdir = field+"_ddcal"
+        outdir = field+"_ddcal/"
+        image_prefix_precal = "/"+outdir+"/"+prefix+"_"+field   #Add the output subdirectory to the imagename
         dd_ms_list = {"Data-MS" : ms_list}
+        dd_image_opts_precal.update(dd_ms_list)
+        if (use_mask):
+            sigmask = 10.0
+            dd_imagename = {"Output-Name": image_prefix_precal+"-DD-masking"}   #Add the mask image prefix
+            dd_image_opts_precal.update(dd_imagename)
+            recipe.add("cab/ddfacet", "ddf_image_for_mask_{0:s}".format(field), dd_image_opts_precal,
+                 input=INPUT,
+                 output=OUTPUT,
+                 shared_memory="500gb",
+                 label="ddf_image_for_mask_{0:s}:: DDFacet image for masking".format(field))
+
+            #image_path_to_make_mask = "continuum"+"/"+"image_3"+"/"
+            #copy over the file and delete when done. Brute force and inelegant approach.
+            #im_in_path = os.path.join(pipeline.output,image_path_to_make_mask)
+            #print("image_path",im_in_path)
+            #im_cp_path = os.path.join(pipeline.output,DD_DIR)
+            #print("image_copy_path",im_cp_path)
+            #imname = '{0:s}_{1:s}_{2:d}-MFS-image.fits'.format(pipeline.prefix,field,3)
+            #shutil.copyfile(im_in_path+'/'+imname,im_cp_path+'/'+imname)
+            #print("File copied")
+            #imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(image_path_to_make_mask,pipeline.prefix,field,3)
+            imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
+            output_folder = "/"+outdir+"/"
+            recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{
+                 #'image' : '{0:s}:output'.format(imagename),
+                 'image' : '{0:s}:output'.format(imname),
+                 'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
+                 'sigma' : sigmask,
+                 'boxes' : 9,
+                 'iters' : 20,
+                 'overlap': 0.3,
+                 'no-negative': True,
+                 'tolerance': 0.75,
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf_precal_{0:s}:: Make a mask for the initial ddf image'.format(field))
+            dd_maskopt = {"Mask-External" : "mask_ddf_precal_{0:s}.fits:output".format(field)}
+            dd_image_opts_precal.update(dd_maskopt)
+            recipe.run()
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
         dd_image_opts_precal.update(dd_imagename)
-        dd_image_opts_precal.update(dd_ms_list)
         recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
         input=INPUT,
-        output=OUTPUT+"/"+outdir,
+        output=OUTPUT,
         shared_memory="500gb",
-        label="ddf_image_{0:s}:: Primary beam corrected image".format(field))
+        label="ddf_image_{0:s}:: DDFacet initial image for DD calibration".format(field))
         recipe.run()
         recipe.jobs = []
     def dd_postcal_image(field,ms_list):
@@ -116,10 +153,36 @@ def worker(pipeline, recipe, config):
         outdir = field+"_ddcal"
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
-        dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
+        if (use_mask):
+            sigmask = 10.0
+            dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-masking"}
+            dd_image_opts_postcal.update(dd_imagename)
+            recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,
+                 input=INPUT,
+                 output=OUTPUT,
+                 label="ddf_image_postcal_{0:s}:: Primary beam corrected image".format(field),
+                 shared_memory="500gb")
+            imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_postcal,"-DD-masking")
+            output_folder = "/"+outdir+"/"
+            recipe.add("cab/cleanmask", "mask_ddf_postcal_{0:s}".format(field),{
+                 #'image' : '{0:s}:output'.format(imagename),
+                 'image' : '{0:s}:output'.format(imname),
+                 'output' : '{0:s}mask_ddf_precal_{1:s}.fits:output'.format(output_folder,field),
+                 'sigma' : sigmask,
+                 'boxes' : 9,
+                 'iters' : 20,
+                 'overlap': 0.3,
+                 'no-negative': True,
+                 'tolerance': 0.75,
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf_postcal_{0:s}:: Make a mask for the initial ddf image'.format(field))
+            dd_maskopt = {"Mask-External" : "mask_ddf_postcal_{0:s}.fits:output".format(field)}
+            dd_image_opts_postcal.update(dd_maskopt)
+
+
         dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRI'}
         dd_image_opts_postcal.update(dd_ms_list)
+        dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_image_opts_postcal.update(dd_imagename)
         dd_image_opts_postcal.update(dd_imagecol)
         if USEPB:
@@ -217,9 +280,14 @@ def worker(pipeline, recipe, config):
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'
+        print("pipeline.output", pipeline.output)
         outdir = field+"_ddcal"
         dicomod = prefix+"_"+field+"-DD-precal.DicoModel"
         dereg = "de-{0:s}.reg".format(field)
+        output_cubical = OUTPUT+"/"+outdir
+        test_path = spf("MODEL_DATA")
+        print("test_path",test_path)
+        print("output_cubical",output_cubical)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
@@ -278,7 +346,8 @@ def worker(pipeline, recipe, config):
               'degridding-MaxFacetSize': 0.15,
                },
                input=INPUT,
-               output=OUTPUT+"/"+outdir,
+               #output=OUTPUT+"/"+outdir,
+               output=output_cubical,
                shared_memory="400gb",
                label='dd_calibrate_{0:s}_{1:s}:: Carry out DD calibration'.format(mspref,field))
 
@@ -363,20 +432,20 @@ def worker(pipeline, recipe, config):
        print("Processing field",field,"for de calibration:")
 #       print(mslist)
 #       print(field)
-       if USEPB:
-          make_primary_beam()
+#       if USEPB:
+#          make_primary_beam()
        if pipeline.enable_task(config,'image_dd'):
           dd_precal_image(field,mslist)
     #sfind_intrinsic()
-       dagga(field)
-       if pipeline.enable_task(config,'calibrate_dd'):
-          dd_calibrate(field,mslist)
-       if pipeline.enable_task(config,'image_dd'):
-          dd_postcal_image(field,mslist)
-       if pipeline.enable_task(config, 'copy_data'):
-          cp_data_column(field,mslist)
-       if pipeline.enable_task(config, 'image_wsclean'):
-          img_wsclean(mslist,field)
-       if pipeline.enable_task(config,'transfer_model_dd'):
-          run_crystalball(mslist,field)
+#       dagga(field)
+#       if pipeline.enable_task(config,'calibrate_dd'):
+#          dd_calibrate(field,mslist)
+#       if pipeline.enable_task(config,'image_dd'):
+#          dd_postcal_image(field,mslist)
+#       if pipeline.enable_task(config, 'copy_data'):
+#          cp_data_column(field,mslist)
+#       if pipeline.enable_task(config, 'image_wsclean'):
+#          img_wsclean(mslist,field)
+#       if pipeline.enable_task(config,'transfer_model_dd'):
+#          run_crystalball(mslist,field)
 

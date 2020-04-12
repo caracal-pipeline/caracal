@@ -60,7 +60,7 @@ def worker(pipeline, recipe, config):
         "Data-ChunkHours"       : config['image_dd'].get('data_chunkhours'),
         "Output-Mode"           : config['image_dd'].get('output_mode'),
         "Output-Name"    : prefix+"-DD-precal",
-        "Output-Images"  : 'dmcri',
+        "Output-Images"  : 'dmcrioekzp',
         "Image-NPix"     : npix,
         "Image-Cell"     : cell,
         "Facets-NFacets" : config['image_dd'].get('facets_nfacets'),
@@ -170,7 +170,7 @@ def worker(pipeline, recipe, config):
             dd_image_opts_postcal.update(dd_maskopt)
 
 
-        dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRI'}
+        dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRIPMRIikz'}
         dd_image_opts_postcal.update(dd_ms_list)
         dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_image_opts_postcal.update(dd_imagename)

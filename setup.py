@@ -27,6 +27,7 @@ requirements = [
     'nbconvert',
     'regions',
     'radiopadre-client',
+    'jinja2',
 ]
 
 PACKAGE_NAME = 'caracal'

@@ -1059,7 +1059,7 @@ def worker(pipeline, recipe, config):
                         recipe.add('cab/sharpener',
                             step,
                             params,
-                            input=pipeline.input,
+                            input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
                             output=pipeline.output,
                             label='{0:s}:: Continuum Spectral Extraction'.format(step))
                     else:
@@ -1073,7 +1073,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/sharpener',
                         step,
                         params,
-                        input=pipeline.input,
+                        input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
                         output=pipeline.output,
                         label='{0:s}:: Continuum Spectral Extraction'.format(step))
 

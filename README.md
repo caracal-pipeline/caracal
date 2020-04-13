@@ -1,4 +1,27 @@
 The **Containerized Automated Radio Astronomy Calibration (CARACal)** pipeline is a Python-based script to reduce radiointerferometric data in the cm- to dm-wavelength range in an automatized fashion, reducing user-intervention to a minimum (ideally requiring only a configuration), and at the same time relying on state-of-the-arts data reduction software and  data reduciton techniques. It makes use of [Stimela](https://github.com/ratt-ru/Stimela), a platform-independent radio astronomy scripting environment, providing pre-fabricated containerized software packages. [Stimela](https://github.com/ratt-ru/Stimela) itself relies on [Kern](https://kernsuite.info/), a suite of [Ubuntu](https://ubuntu.com/) radio astronomy packages.
+- [Full documentation](#full-documentation)
+- [Download & Install](#download---install)
+  * [Usage and publication policy](#usage-and-publication-policy)
+  * [Software requirements and supported platforms](#software-requirements-and-supported-platforms)
+  * [Installing and running CARACal](#installing-and-running-caracal)
+    + [Installing and running manually](#installing-and-running-manually)
+      - [Manual installation](#manual-installation)
+        * [Current development branch](#current-development-branch)
+      - [Running CARACal manually](#running-caracal-manually)
+      - [Upgrading a manual CARACal installation](#upgrading-a-manual-caracal-installation)
+        * [Current development branch](#current-development-branch-1)
+    + [Installation using caratekit.sh](#installation-using-caratekitsh)
+  * [Using CARACal](#using-caracal)
+    + [Getting help](#getting-help)
+    + [Dumping a copy of the minimal default configuration file to the current directory](#dumping-a-copy-of-the-minimal-default-configuration-file-to-the-current-directory)
+    + [Running the pipeline](#running-the-pipeline)
+  * [Tips and Troubleshooting](#tips-and-troubleshooting)
+    + [Installing a Python 3 virtualenv](#installing-a-python-3-virtualenv)
+    + [Stimela cache file](#stimela-cache-file)
+    + [Singularity-specific issues](#singularity-specific-issues)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 # Full documentation
 https://caracal.readthedocs.io
 

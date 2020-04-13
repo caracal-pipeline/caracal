@@ -267,7 +267,7 @@ def worker(pipeline, recipe, config):
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
-            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold')) >= num else -1],
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
@@ -275,12 +275,12 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
 
-        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
+        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method')) >= num else -1]
         if mask_key == 'wsclean':
             image_opts.update({
-                "auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1],
-                "local-rms": config[key].get('clean_mask_local_rms')[num-1 if len(config[key].get('clean_mask_local_rms', [])) >= num else -1],
-                "local-rms-window": config[key].get('clean_mask_local_rms_window')[num-1 if len(config[key].get('clean_mask_local_rms_window', [])) >= num else -1],
+                "auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold')) >= num else -1],
+                "local-rms": config[key].get('clean_mask_local_rms')[num-1 if len(config[key].get('clean_mask_local_rms')) >= num else -1],
+                "local-rms-window": config[key].get('clean_mask_local_rms_window')[num-1 if len(config[key].get('clean_mask_local_rms_window')) >= num else -1],
               })
         elif mask_key == 'sofia':
             fitmask_address = 'masking'
@@ -361,7 +361,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms', [])) >= num else -1],
+            "steps.doScaleNoise": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms')) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -379,19 +379,19 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key].get('kernels')],
-            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold', [])) >= num else -1],
+            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold')) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image'].get('clean_mask_local_rms_window')[num-1 if len(config['image'].get('clean_mask_local_rms_window', [])) >= num else -1],
+            "scaleNoise.windowSpatial": config['image'].get('clean_mask_local_rms_window')[num-1 if len(config['image'].get('clean_mask_local_rms_window')) >= num else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": True,
+            "scaleNoise.perSCkernel": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms')) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
@@ -554,6 +554,10 @@ def worker(pipeline, recipe, config):
                        label='Extracted regridded mosaic')
 
             image_opts.update({"import.maskFile": fornax_namemask_regr})
+
+        print('########################################')
+        print(image_opts)
+        print('########################################')
         recipe.add('cab/sofia', step,
                    image_opts,
                    input=pipeline.output,
@@ -1141,7 +1145,7 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
         bsols_ = [config[key].get('Bsols_timeslots')[num - 1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                   config[key].get('Bsols_channel')[
-                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+                      num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         gasols_ = [
             config[key].get('DDsols_timeslots')[num - 1 if num <=
                                                       len(config[key].get('DDsols_timeslots')) else -1],

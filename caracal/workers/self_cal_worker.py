@@ -249,6 +249,8 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
+        recipe.run() # required because we want to check that the clean mask was created before adding the new imaging run to the queue
+
         step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
         image_opts = {
             "msname": mslist,
@@ -283,20 +285,23 @@ def worker(pipeline, recipe, config):
                 "local-rms-window": config[key].get('clean_mask_local_rms_window')[num-1 if len(config[key].get('clean_mask_local_rms_window')) >= num else -1],
               })
         elif mask_key == 'sofia':
-            fitmask_address = 'masking'
+            fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+                prefix,field, num)
+            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,fits_mask)):
+                raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\
+                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,fits_mask))
             image_opts.update({
-                "fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num),
+                "fitsmask": '{0:s}:output'.format(fits_mask),
                 "local-rms": False,
               })
         else:
-            fits_mask = '{0:s}/{1:s}_{2:s}.fits'.format(
-                'masking', mask_key, field)
+            fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
+                mask_key, field)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-                caracal.log.error(
-                    "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")
-                raise caracal.ConfigurationError("no mask found in output directory")
+                raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"\
+                    " in clean_mask_method, and that the mask exists.".format(pipeline.output, fits_mask))
             image_opts.update({
-                "fitsmask": fits_mask+':output',
+                "fitsmask": '{0:s}:output'.format(fits_mask),
                 "local-rms": False,
               })
 
@@ -555,9 +560,6 @@ def worker(pipeline, recipe, config):
 
             image_opts.update({"import.maskFile": fornax_namemask_regr})
 
-        print('########################################')
-        print(image_opts)
-        print('########################################')
         recipe.add('cab/sofia', step,
                    image_opts,
                    input=pipeline.output,

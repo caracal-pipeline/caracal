@@ -1,3 +1,4 @@
+The **Containerized Automated Radio Astronomy Calibration (CARACal)** pipeline is a Python-based script to reduce radiointerferometric data in the cm- to dm-wavelength range in an automatized fashion, reducing user-intervention to a minimum (ideally requiring only a configuration), and at the same time relying on state-of-the-arts data reduction software and  data reduciton techniques. It makes use of [Stimela](https://github.com/ratt-ru/Stimela), a platform-independent radio astronomy scripting environment, providing pre-fabricated containerized software packages. [Stimela](https://github.com/ratt-ru/Stimela) itself relies on [Kern](https://kernsuite.info/), a suite of [Ubuntu](https://ubuntu.com/) radio astronomy packages.
 # Documentation
 https://caracal.readthedocs.io
 
@@ -12,31 +13,36 @@ Most dependencies are taken care of by using [pip](https://pypi.org/project/pip/
 - [Python](https://www.python.org/) 3.6 or higher
 - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist is required only if [Singularity](https://github.com/sylabs/singularity) is chosen as containerization technology to run [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) with (no known [Docker](https://www.docker.com/) dependencies).
 
-## Manual installation
-(Shell-style is used when indicating names and paths of directories and files, which can be chosen by the user are highligted in : ``${name}`` )
+## Installing and running CARACal
+### Manual installation
+(Shell-style is used to indicate names and paths of directories and files which can be chosen by the user: ``${name}`` )
 
 We recommend and describe an installation using a virtual environment created with [Virtualenv](https://virtualenv.pypa.io/en/latest/). This is not a requirement, but strongly recommended.
 
-### Short version
-For the longer version see below. On most systems, you have to choose a path to the virtual environment ``${cvenv}``. The latest CARACal release can be obtained by typing:
+#### Short version
+For the longer version see below. On most systems you have to choose a path to a new virtual environment ``${caracal-venv}`` and potentially a directory to a stimela pull folder. The latest CARACal release can be obtained by typing:
 ```
-$ python3 -m venv ${cvenv}  
-$ source ${cvenv}/bin/activate
+$ python3 -m venv ${caracal-venv}  
+$ source ${caracal-venv}/bin/activate
 $ pip install -U pip setuptools wheel
-$ pip install -U meerkathi
+$ pip install -U caracal
 ```
 Using [Docker](https://www.docker.com/):
 ```
 $ stimela build
 ```
-Using [Singularity](https://github.com/sylabs/singularity) choose a directory ${singularity_pull_folder} to store the [Singularity](https://github.com/sylabs/singularity) images in:  
+Using [Singularity](https://github.com/sylabs/singularity) (choose a directory ``${singularity_pull_folder}`` to store the [Singularity](https://github.com/sylabs/singularity) images in):  
 
 ```  
-$ mkdir ${singularity_pull_folder}
 $ stimela pull --singularity --pull-folder ${singularity_pull_folder}
 ```
 
-### Long version: virtualenv
+Using [Podman](https://podman.io/) (currently not fully supported):
+```
+$ stimela pull -p
+```
+#### Long version
+##### virtualenv
 Make sure that virtualenv is installed and updated on your computer. E.g. on Ubuntu, do:
 ```
 $ sudo apt-get update
@@ -66,8 +72,8 @@ if you are using csh or tcsh . From now on all python installations using pip wi
 ```
 $ pip install -U pip setuptools wheel
 ```
-### Long version: CARACal
-#### Current development branch
+##### CARACal
+###### Current development branch
 *Warning: the current development branch obviously contains the most recent developments but it might contain bugs.*
 
 Select a target directory ``${motherdir}`` (e.g. ``/home/caine/software`` or ``/home/larusso/datareductions``) and clone CARACal into that directory, and install via pip:
@@ -76,7 +82,7 @@ $ cd ${motherdir}
 $ git clone https://github.com/ska-sa/caracal
 $ pip install -U --force-reinstall ./caracal
 ```
-#### Via pip
+###### Via pip
 ```
 $ pip install -U --force-reinstall caracal
 ```

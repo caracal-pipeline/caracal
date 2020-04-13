@@ -311,7 +311,11 @@ mapping:
            desc: Frequency solution interval in channel units for DE-Jones.
            example: "100"
            required: false
-                 
+         dist_nworker:
+           type: int
+           desc: Number of processes
+           example: "25"
+           required: false  
 
 
      copy_data:

@@ -37,7 +37,7 @@ assert ruamel.yaml.version_info >= (0, 12, 14)
 #    log.warning(
 #        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
 #    REPORTS = False
-REPORTS = False
+REPORTS = True
 
 class worker_administrator(object):
 # GIGJ commenting lines initiating a report
@@ -50,7 +50,7 @@ class worker_administrator(object):
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
-                 container_tech='docker', generate_reports=False):
+                 container_tech='docker', generate_reports=True):
 
         self.config = config
         self.add_all_first = add_all_first
@@ -351,5 +351,18 @@ class worker_administrator(object):
             # pipeline_logs = sorted(glob.glob(self.logs + '/*caracal.txt'))
             # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-caracal.txt'.format(self.output))
             if REPORTS and self.generate_reports:
-                reporter = mrr(self)
-                reporter.generate_reports()
+                #reporter = mrr(self)
+                #reporter.generate_reports()
+                if self.config['general']['init_notebooks']:
+                    nbdir = os.path.join(os.path.dirname(caracal.__file__), "notebooks")
+                    for notebook in self.config['general']['init_notebooks']:
+                        nbfile = notebook + ".ipynb"
+                        nbsrc = os.path.join(nbdir, nbfile)
+                        nbdest = os.path.join(self.output, nbfile)
+                        if os.path.exists(nbsrc):
+                            log.info("Generating standard notebook {}.html".format(notebook))
+                            subprocess.check_call(["run-radiopadre",
+                                                   "--nbconvert",
+                                                   nbdest])
+                        else:
+                            log.error("Standard notebook {} does not exist".format(nbsrc))

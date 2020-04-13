@@ -1,0 +1,105 @@
+schema_version: 0.3.0
+
+general:
+  prefix: mypipelinerun
+
+get_data:
+  dataid: ['']
+
+observation_config:
+  target: 
+    - 'all'
+  fcal: 
+    - 'longest'
+  bpcal: 
+    - 'longest'
+  gcal: 
+    - 'all'
+  xcal: 
+    - 'longest'
+  reference_antenna: '0'
+
+prepare_data:
+  enable: true
+
+transform_data:
+  enable: true
+  label_out: 'cal'
+  split_field:
+    enable: true
+    field: 'calibrators'
+    column: 'data'
+
+flagging:
+  enable: true
+  label_in: 'cal'
+  field: 'calibrators'
+  autoflag_rfi:
+    enable: true
+    flagger: aoflagger
+    fields: 'auto'
+  flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+    
+cross_cal:
+  enable: true
+  label_in: 'cal'
+  apply_cal:
+    enable: true
+    applyto:
+      - gcal
+      - bpcal
+
+polcal:
+  enable: false
+
+inspect_data:
+  label_in: 'cal'
+  label_out: '1gc'
+  enable: true
+
+transform_data__2:
+  enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+  
+flagging__2:
+  enable: true
+  label_in: corr
+  field: 'target'
+  autoflag_rfi:
+    enable: true
+    flagger: aoflagger
+    fields: target
+    
+masking:
+  enable: false
+
+self_cal:
+  enable: true
+  img_npix: 1800
+  img_cell: 2
+  cal_timeslots_chunk: 240
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    Gsols_timeslots: [120]
+
+image_line:
+  enable: true
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+  mstransform: 
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat

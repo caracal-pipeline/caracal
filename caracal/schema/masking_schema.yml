@@ -1,0 +1,146 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  masking:
+    type: map
+    desc: Create .FITS mask from catalog and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
+    mapping:
+      enable:
+        type: bool
+        desc: Execute this segment
+        required: true
+        example: 'False'
+      label_in:
+        type: str
+        desc: Label of the .MS file where to find information about the target.
+        required: false
+        example: 'corr'
+      label_out:
+        type: str
+        required: false
+        desc: Prefix used for the name of the .FITS mask created by this worker. The full name consists of this prefix followed by the target name extracted by the observation_config worker. To use this output .FITS mask as a clean mask in the self_cal worker users should set relevant entry of clean_mask_method to label_out.
+        example: 'catalog_mask'
+      centre_coord:
+        seq:
+          - type: str
+        required: false
+        desc: Coordinates of the centre of the field of view read from reference_dir by default
+        example: 'HH:MM:SS , DD:MM:SS'
+      mask_size:
+        type: int
+        desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
+        required: false
+        example: '1800'
+      cell_size:
+        type: float
+        desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
+        required: false
+        example: '2.'
+      extended_source_input:
+        type: str
+        required: false
+        desc: Name of the input mask for particularly extended sources in the field
+        example: 'Fornaxa_vla.FITS'
+
+
+      query_catalog:
+        type: map
+        desc: Query catalog to select field/sources from which extract the mask
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: false
+            example: 'true'
+          catalog:
+            type: str
+            required: false
+            desc: Name of catalog to query [NVSS/SUMSS]
+            enum: ['NVSS', 'SUMSS']
+            example: 'SUMSS'
+          width_image:
+            type: str
+            desc: Width of the region of sky we want to mask (keep larger than dirty image)
+            required: false
+            example: '1.2d'
+          thresh_nvss:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            required: false
+            example: '10e-3'
+
+      pb_correction:
+        type: map
+        desc: Correct input image for primary beam before exctracting mask
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: false
+            example: 'true'
+          frequency:
+            type: float
+            desc: Primary beam size changes with frequency, provide central frequency of considered dataset
+            required: false
+            example: '1.420405752'
+
+      make_mask:
+        type: map
+        desc: Build mask from existing image using SoFiA and/or threshold cutoff
+        mapping:
+          enable:
+            type: bool
+            desc: Execute this worker
+            required: false
+            example: 'true'
+          mask_with:
+            type: str
+            enum: ["thresh", "sofia"]
+            desc: Tool to use for masking
+            required: false
+            example: 'sofia'
+          input_image:
+            type: str
+            enum: ["pbcorr", "path_to_mask"]
+            desc: Input image where to create mask ???? what is this ???
+            required: false
+            example: 'pbcorr'
+          thresh_lev:
+            type: int
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            required: false
+            example: '5'
+          scale_noise_window:
+            type: int
+            desc: window size where SoFiA measures the local rms, units of pixels
+            required: false
+            example: '101'
+
+      merge_with_extended:
+        type: map
+        desc: Merge with mask of extended source
+        mapping:
+          enable:
+            type: bool
+            required: false
+            desc: Execute this worker
+            example: 'False'
+          extended_source_input:
+            type: str
+            desc: name of image of extended source to merge with current image
+            required: false
+            example: 'extended_mask.fits'
+          mask_with:
+            type: str
+            enum: ["thresh", "sofia"]
+            desc: Tool to use for masking
+            required: false
+            example: 'thresh'
+          thresh_lev:
+            type: float
+            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder
+            required: false
+            example: '8e-2'

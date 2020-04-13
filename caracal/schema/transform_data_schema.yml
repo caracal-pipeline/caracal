@@ -1,0 +1,187 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  transform_data:
+    desc: Split, avg and/or calibrate data
+    type: map
+    mapping:
+      enable:
+        desc: Execute this worker
+        type: bool
+        required: true
+        example: 'True'
+      label_in:
+        desc: Label of the input dataset
+        type: str
+        required: false
+        example: ''
+      label_out:
+        desc: Label of the output dataset
+        type: str
+        required: false
+        example: corr 
+
+      split_field:
+        desc: Make new ms of targets or calibrators
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'True'
+          field:
+            desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+            type: str
+            required: false
+            example: 'target'
+          time_average:
+            desc: Time averaging
+            type: str
+            required: false
+            example: ''
+          freq_average:
+            desc: Frequency averaging
+            type: int
+            required: false
+            example: '1'
+          column:
+            desc: Column to split, default is 'corrected'. 
+            type: str
+            required: false
+            example: 'corrected'
+          correlation:
+            desc: Select correlations
+            type: str
+            required: false
+            example: ''
+          usewtspectrum:
+            desc: Create a WEIGHT_SPECTRUM column in the output MS.
+            type: bool
+            required: false
+            example: 'True'
+          spw:
+            desc: Select spectral windows and channels
+            type: str
+            required: false
+            example: ''
+
+          otfcal:
+            desc: Apply OTF calibration
+            type: map
+            mapping:
+              enable:
+                desc: Execute this section
+                type: bool
+                required: false
+                example: 'False'
+              callib:
+                desc: Name of callib file to be used, if user has their own
+                type: str
+                required: false
+                example: ''
+              label_cal:
+                desc: Label of calibration tables to be used
+                type: str
+                required: false
+                example: '1gc1'
+              apply_delay_cal:
+                type: map
+                desc: Apply the delay correction calibration table to specified fields via the CASA applycal task.
+                mapping: 
+                  enable: 
+                    desc: Executes application of delay correction calibration table.
+                    type: bool
+                    required: false
+                    example: 'True'
+                  field: 
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the delay correction calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.             
+                    example: 'bpcal'
+              apply_bp_cal:
+                type: map
+                desc: Apply the bandpass table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of bandpass table.
+                    required: false
+                    example: 'True'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the bandpass table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'bpcal'.
+                    example: 'bpcal'
+              apply_gain_cal_gain:    
+                type: map
+                desc: Apply the gain calibration table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of gain calibration table.
+                    required: false
+                    example: 'False'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the gain calibration table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+                    example: 'gcal'
+              apply_transfer_fluxscale:
+                type: map
+                desc: Apply the fluxscale table to specified fields via the CASA applycal task.
+                mapping:
+                  enable:
+                    type: bool
+                    desc: Executes application of fluxscale table.
+                    required: false
+                    example: 'True'
+                  field:
+                    seq: 
+                      - type: str 
+                    desc: Field to select in the fluxscale table. Specify either the field number, name or as corrsponding to field spec in observation config, e.g. 'gcal'.
+                    required: false
+                    example: 'gcal'
+
+      changecentre:
+        desc: changes the phase centre
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'False'
+          ra:
+            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            type: str
+            required: false
+            example: '0h0m0.0s'
+          dec:
+            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            type: str
+            required: false
+            example: '0d0m0.0s'
+
+      obsinfo:
+        desc: Get observation information
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section
+            type: bool
+            required: false
+            example: 'True'
+          listobs:
+            desc: Run CASA listobs
+            type: bool
+            required: false
+            example: 'True'
+          summary_json:
+            desc: Run MSUtils function
+            type: bool
+            required: false
+            example: 'True'

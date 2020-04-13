@@ -1,12 +1,14 @@
-include meerkathi/bin/meerkathi
-recursive-include meerkathi/ *.py
-recursive-include meerkathi/ *.yml
-recursive-include meerkathi/data *.yml
-recursive-include meerkathi/data *.txt
-recursive-include meerkathi/data *.rfis
-recursive-include meerkathi/data/meerkat_files/fields/ *.FITS
-recursive-include meerkathi/data *.npy
-recursive-include meerkathi/data *.lsm
-recursive-include meerkathi/dispatch_crew *.py
-recursive-include meerkathi/workers *.py
-recursive-include meerkathi/scripts *.py *.html *.css *.js *.ipynb
+include caracal/bin/caracal
+recursive-include caracal/ *.py
+recursive-include caracal/ *.yml
+recursive-include caracal/data *.yml
+recursive-include caracal/data *.txt
+recursive-include caracal/data *.rfis
+recursive-include caracal/data *.yaml
+recursive-include caracal/data/meerkat_files/fields/ *.FITS
+recursive-include caracal/data *.npy
+recursive-include caracal/data *.lsm
+recursive-include caracal/dispatch_crew *.py
+recursive-include caracal/workers *.py
+recursive-include caracal/scripts *.py *.html *.css *.js *.ipynb
+recursive-include caracal/notebooks *.ipynb *.ipynb.j2 *.png

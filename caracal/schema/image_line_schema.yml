@@ -1,0 +1,504 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  image_line:
+    desc: Process visibilities for spectral line work and create line cubes and images.
+    type: map
+    mapping:
+      enable:
+        desc: Execute the image_line worker.
+        type: bool
+        required: true
+        example: 'False'
+      label:
+        desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the get_data worker, followed by the target ID (one file per target), followed by this label. This is the format used by Caracal whenever it writes an .MS file to disk (e.g., in the split_target worker).
+        type: str
+        required: false
+        example: 'corr'
+      line_name:
+        desc: Suffix to be used for the name of the output files (data cubes etc).
+        type: str
+        required: false
+        example: 'HI'
+      restfreq:
+        desc: Spectral line rest frequency.
+        type: str
+        required: false
+        example: '1.420405752GHz'
+
+      subtractmodelcol:
+        desc: Replace the CORRECTED_DATA column of the .MS file(s) with the difference CORRECTED_DATA - MODEL_DATA. This is useful for continuum subtraction as it subtracts the continuum clean model written to MODEL_DATA. WARNING! The CORRECTED_DATA column is overwritten. To undo this operation enable the addmodelcol segment in this worker.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the segment subtractmodelcol.
+            type: bool
+            required: false
+            example: 'True'  
+
+      addmodelcol:
+        desc: Replace the CORRECTED_DATA column of the .MS file(s) with the sum CORRECTED_DATA + MODEL_DATA. This is useful to undo the operation performed by subtractmodelcol in this worker. WARNING! The CORRECTED_DATA column is overwritten.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the segment addmodelcol.
+            type: bool
+            required: false
+            example: 'False'
+
+      mstransform:
+        desc: Perform Doppler-tracking corrections and/or UVLIN continuum subtraction with CASA mstransform. For each input .MS file, this produces an output .MS file whose name is the same as that of the input .MS file plus the suffix "_mst". 
+        type: map
+        mapping:
+          enable:
+            desc: Execute the segment mstransform.
+            type: bool
+            required: false
+            example: 'True'
+          column:
+            desc: Which column of the .MS file(s) to process.
+            type: str
+            required: false
+            example: 'corrected'
+          doppler:
+            desc: Include the Doppler-tracking correction in the run of CASA mstransform.
+            type: map
+            mapping:
+              enable:
+                desc: Enable the Doppler correction section.
+                type: bool
+                required: false
+                example: 'True'
+              telescope:
+                desc: Name of the telescope used to take the data. This is used to set the telescope's geographical coordinates when calculating the Doppler correction. Default is 'meerkat'. Current options are askap, atca, gmrt, meerkat, vla, wsrt.
+                type: str
+                enum: ['askap', 'atca', 'gmrt', 'meerkat','vla', 'wsrt']
+                required: true
+                example: 'meerkat'
+              mode:
+                desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT! Currently only frequency mode is supported. Other modes will throw an error.
+                type: str
+                enum: ['frequency', ]
+                required: false
+                example: 'frequency'
+              outframe:
+                desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, source.
+                type: str
+                enum : ['', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source']
+                required: false
+                example: 'bary'
+              veltype:
+                desc: Velocity used when regridding if mode = velocity. Current options are radio, optical.
+                type: str
+                enum: ['radio', 'optical']
+                required: false
+                example: 'radio'
+              outchangrid:
+                desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
+                type: str
+                required: false
+                example: 'auto'
+          uvlin:
+            desc: Include UVLIN-like continuum subtraction in the run of CASA mstransform.
+            type: map
+            mapping:
+              enable:
+                desc: Enable the UVLIN section.
+                type: bool
+                required: false
+                example: 'True'
+              fitspw:
+                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed.
+                type: str
+                required: false
+                example: ''
+              fitorder:
+                desc: Polynomial order of the continuum fit.
+                type: int
+                required: false
+                example: '1'
+          obsinfo:
+            desc: Create obsinfo.txt and obsinfo.json of the .MS file(s) created by CASA mstransform.
+            type: bool
+            required: false
+            example: 'True'
+
+      flag_mst_errors:
+        desc: Run AOFlagger to flag any faulty visibilities produced by CASA mstransform.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment flag_mst_errors.
+            type: bool
+            required: false
+            example: 'False'
+          strategy:
+            desc: AOFlagger strategy file
+            type: str
+            required: false
+            example: 'postmst.rfis'
+
+      sunblocker:
+        desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sunblocker.
+            type: bool
+            required: false
+            example: 'False'
+          use_mstransform:
+            desc: Run sunblocker on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            type: bool
+            required: false
+            example: 'True'
+          imsize:
+            desc: Image size (pixels). Use the same as in the make_cube section. This is used to set up the gridding of the visibilities.
+            type: int
+            required: false
+            example: '900'
+          cell:
+            desc: Pixel size (arcsec). Use the same as in the make_cube section. This is used to set up the gridding of the visibilities.
+            type: float
+            required: false
+            example: '2.'
+          threshold:
+            desc: Flag UV cells whose visibility deviates by more than this threshold from the average visibility on the UV plane. The threshold is in units of the rms dispersion of all visibilities.
+            type: float
+            required: false
+            example: '4.'
+          vampirisms:
+            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells where to flag.
+            type: bool
+            required: false
+            example: 'False'
+          uvmin:
+            desc: Minimum uvdistance to be analysed (in wavelengths).
+            type: float
+            required: false
+            example: '0.'
+          uvmax:
+            desc: Maximum uvdistance to be analysed (in wavelengths).
+            type: float
+            required: false
+            example: '2000'
+
+      make_cube:
+        desc: Make a line cube using either WSclean + SoFiA (optional for clean masks) or CASA Clean.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment make_cube.
+            type: bool
+            required: false
+            example: 'True'
+          image_with:
+            desc: Choose whether to image with WSclean + SoFiA ('wsclean') or with CASA Clean ('casa').
+            type: str
+            enum: ['wsclean', 'casa']
+            required: false
+            example: wsclean
+          use_mstransform:
+            desc: Image the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            type: bool
+            required: false
+            example: 'True'
+          pol:
+            desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations).
+            type: str
+            required: false
+            example: 'I'
+          spwid:
+            desc: Spectral window to use.
+            type: int
+            required: false
+            example: '0'
+          nchans:
+            desc: Number of channels of the line cube, 0 means all channels.
+            type: int
+            required: false
+            example: '0'
+          firstchan:
+            desc: First channel of the line cube.
+            type: int
+            required: false
+            example: '0'
+          binchans:
+            desc: Integer binning of channels.
+            type: int
+            required: false
+            example: '1'
+          npix:
+            desc: Image size in pixels. List of integers (width and height) or a single integer for square images.
+            type: seq
+            seq:
+              - type: int
+            required: false
+            example: '900 , 900'
+          cell:
+            desc: Pixel size. The default unit is arcsec, but other units can be specificied, e.g., 'scale 20asec'.
+            type: float
+            required: false
+            example: '2'
+          padding:
+            desc: Images have initial size padding*npix, and are later trimmed to npix.
+            type: float
+            required: false
+            example: '1.2'
+          weight:
+            desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the additional robust parameter has to be specified.
+            type: str
+            enum: ['natural', 'uniform', 'briggs']
+            required: false
+            example: 'briggs'
+          robust:
+            desc: Robust parameter in case of Briggs weighting.
+            type: float
+            required: false
+            example: '0'
+          taper:
+            desc: Gaussian taper FWHM in arcsec. Zero means no tapering.
+            type: float
+            required: false
+            example: '0'
+          niter:
+            desc: Maximum number of clean iterations to perform.
+            type: int
+            required: false
+            example: '1000000'
+          gain:
+            desc: Fraction of the peak that is cleaned in each minor iteration.
+            type: float
+            required: false
+            example: '0.1'
+          wscl_mgain:
+            desc: WSclean gain for major iterations, i.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+            type: float
+            required: false
+            example: '1.0'
+          wscl_sofia_niter:
+            desc: Maximum number of WSclean + SoFiA iterations. The initial cleaning is done with WSclean automasking or with a user clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSclean is only executed once and SoFiA is not used.
+            type: int
+            required: false
+            example: '2'
+          wscl_sofia_converge:
+            desc: Stop the WSclean + SoFiA iterations if the cube RMS has dropped by a factor < wscl_sofia_converge when comparing the last two iterations (considering only channels that were cleaned). If set to 0 then the maximum number of iterations is performed regardless of the noise change.
+            type: float
+            required: false
+            example: '1.1'
+          wscl_keep_final_products_only:
+            desc: If set to true it deletes WSclean + Sofia intermediate cubes from the output directory, if set to false it keeps all the cubes of the WSclean + SoFiA iterations.
+            type: bool
+            required: false
+            example: 'False'
+          wscl_user_clean_mask:
+            desc: WSclean user clean mask for first WSclean + SoFiA iteration (give filename, to be located in the output/masking folder).
+            type: str
+            required: false
+            example: ''
+          wscl_auto_mask:
+            desc: Used only during the first WSclean iteration. Clean blindly down to a threshold given by this parameter (in  units of the noise), then clean again the already cleaned pixels down to the parameter wscl_auto_threshold.
+            type: float
+            required: false
+            example: '10'
+          wscl_auto_threshold:
+            desc: WSclean cleaning threshold in units of the noise.
+            type: float
+            required: false
+            example: '0.5'
+          wscl_make_cube:
+            desc: If set to true the output of WSclean is a data cube, if set to false the output is one .FITS image per spectral channel.
+            type: bool
+            required: false
+            example: 'True'
+          wscl_no_update_mod:
+            desc: If set to true, WSclean will not store the line clean model in MODEL_DATA.
+            type: bool
+            required: false
+            example: 'True'
+          wscl_multi_scale:
+            desc: Switch on WSclean multiscale cleaning.
+            type: bool
+            required: false
+            example: 'False'
+          wscl_multi_scale_scales:
+            desc: List of scales of WSclean multiscale in units of pixels. Only used is wscl_multi_scale is set to True.
+            seq:
+              - type: int
+            required: false
+            example: '0, 10, 20, 30'
+          wscl_multi_scale_bias:
+            desc: Parameter to set the bias towards larger scales during multi-scale cleaning. A lower bias will give preference to larger scales.
+            type: float
+            required: false
+            example: '0.6'
+          casa_threshold:
+            desc: Flux level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
+            type: str
+            required: false
+            example: '10mJy'
+          casa_port2fits:
+            desc: Port CASA output to fits files.
+            type: bool
+            required: false
+            example: 'False'
+
+      remove_stokes_axis:
+        desc: Remove the Stokes axis from the line cube.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment remove_stokes_axis.
+            type: bool
+            required: false
+            example: 'False'
+
+      pb_cube:
+        desc: Make a primary beam cube.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment pb_cube.
+            type: bool
+            required: false
+            example: 'False'
+          apply_pb: 
+            desc: Whether to apply the primary beam correction to the image cube.
+            type: bool
+            required: false
+            example: 'False'
+      
+      freq_to_vel:
+        desc: Convert the spectral axis' header keys of the line cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment freq_to_vel.
+            type: bool
+            required: false
+            example: 'False'
+          reverse:
+            desc: Perform the inverse transformation and change the cube 3rd axis from radio velocity to frequency.
+            type: bool
+            required: false
+            example: 'False'
+      
+      sofia:
+        desc: Run SoFiA source finder to produce a detection mask, moment images and catalogues.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sofia.
+            type: bool
+            required: false
+            example: 'True'
+          flag:
+            desc: Use flag regions?
+            type: bool
+            required: false
+            example: 'False'
+          flagregion:
+            desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
+            seq:
+              - type: int
+            required: false
+            example: '0, 0, 0, 0, 0, 0'
+          rmsMode:
+            desc: Method to determine rms ('mad' for using median absolute deviation, 'std' for using standard deviation, 'negative' for using Gaussian fit to negative voxels).
+            type: str
+            required: false
+            example: 'mad'
+          threshold:
+            desc: SoFiA source finding threshold.
+            type: float
+            required: false
+            example: '4.0'
+          merge:
+            desc: Merge pixels detected by any of SoFiA source finding algorithms into objects. If turned on, pixels with a separation of less than mergeX pixels in the X direction, mergeY pixels in Y direction, and mergeZ channels in Z direction will be merged and identified as a single object in the mask. Objects whose extent is smaller than minSizeX, minSizeY or minSizeZ will be removed from the mask.
+            type: bool
+            required: false
+            example: 'False'
+          mergeX:
+            desc: Merging radius (in pixels) in the X direction (RA axis).
+            type: int
+            required: false
+            example: '2'
+          mergeY:
+            desc: Merging radius (in pixels) in the Y direction (Dec axis).
+            type: int
+            required: false
+            example: '2'
+          mergeZ:
+            desc: Merging radius (in channels) in Z direction (spectral axis).
+            type: int
+            required: false
+            example: '3'
+          minSizeX:
+            desc: Minimum size (in pixels) in the X direction (RA axis).
+            type: int
+            required: false
+            example: '3'
+          minSizeY:
+            desc: Minimum size (in pixels) in  the Y direction (Dec axis).
+            type: int
+            required: false
+            example: '3'
+          minSizeZ:
+            desc: Minimum size (in channels) in the Z direction (spectral axis).
+            type: int
+            required: false
+            example: '3'
+          do_cubelets:
+            desc: Create a cubelet for each detected emission-line object.
+            type: bool
+            required: false
+            example: 'True'
+          do_mom0:
+            desc: Create a moment-0 image of the field.
+            type: bool
+            required: false
+            example: 'True'
+          do_mom1:
+            desc: Create a moment-1 image of the field.
+            type: bool
+            required: false
+            example: 'True'
+
+      sharpener:
+        desc: Run sharpener to extract and plot the spectra of all continuum sources brighter than a given threshold.
+        type: map
+        mapping:
+          enable:
+            desc: Execute segment sharpener.
+            type: bool
+            required: false
+            example: 'False'
+          catalog:
+            desc: Type of catalog to use (PYBDSF/NVSS).
+            type: str
+            enum: ['NVSS', 'PYBDSF']
+            required: false
+            example: 'PYBDSF'
+          channels_per_plot:
+            desc: Number of channels to plot per detail plot.
+            type: int
+            required: false
+            example: '50'
+          thresh:
+            desc: Threshold to select sources in online catalogs (mJy).
+            type: float
+            required: false
+            example: '20'
+          width:
+            desc: Field of view of output catalog (degrees).
+            type: str
+            required: false
+            example: '1.0d'
+          label:
+            desc: Prefix label of plot names and titles.
+            type: str
+            required: false
+            example: ''

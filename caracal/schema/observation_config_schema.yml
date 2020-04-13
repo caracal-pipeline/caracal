@@ -1,0 +1,84 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+
+  observation_config:
+    type: map
+    desc: Setup some basic observation information
+    mapping:
+      obsinfo:
+        desc: Get observation information
+        type: map
+        mapping:
+          enable:
+            desc: Execute this section 
+            type: bool
+            required: true
+            example: 'True'
+          listobs:
+            desc: Run CASA listobs task to get observation information
+            type: bool
+            required: false
+            example: 'True'
+          summary_json:
+            desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
+            type: bool
+            required: false
+            example: 'True'
+          vampirisms:
+            desc: Returns sun free time range
+            type: bool
+            required: false
+            example: 'False'            
+          plot_elevation_tracks:
+            desc: Make Elevation vs Hour angle plots for observed fields
+            type: map
+            mapping:
+              enable:
+                desc: Enable this segment
+                type: bool
+                example: "False"
+                required: false
+              plotter:
+                desc: Application to use for making plots
+                type: str
+                enum: [plotms, owlcat]
+                example: owlcat
+                required: false
+      target:
+        desc: Field name of target field. Or 'all' for all the target fields. 
+        seq:
+          - type: str
+        required: false
+        example: 'all'
+      gcal:
+        desc: Field name of gain (amplitude/phase) calibrator field. Or set as 'all' for all the gcal fields, 'longest' to setlect the gcal field observed for the longest time, 'nearest' to select the gcal field closest to the target. Note that if multiple targets and gcals are present, then 'all' (for both) means each target will be paired with the closest gcal.
+        seq:
+          - type: str
+        required: false
+        example: 'all'
+      bpcal:
+        desc: Field name of bandpass calibrator field. Or set as 'all' for all the bpcal fields, 'longest' to setlect the bpcal field observed for the longest time, 'nearest' to select the bpcal field closest to the target.
+        seq:
+          - type: str
+        required: false
+        example: 'longest'
+      fcal:
+        desc: Field name of fluxscale calibrator field. Or set as 'all' for all the fcal fields, 'longest' to setlect the fcal field observed for the longest time, 'nearest' to select the fcal field closest   to the target.
+        seq:
+          - type: str
+        required: false
+        example: 'longest'
+      xcal:
+        desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
+        seq:
+          - type: str
+        required: false
+        example: 'longest'
+      reference_antenna:
+        desc: Reference antenna. 
+        type: str
+        required: true
+        example: '0'

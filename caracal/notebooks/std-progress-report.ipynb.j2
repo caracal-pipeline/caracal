@@ -1,3 +1,13 @@
+{% if general.title %}
+  {% set title = general.title %}
+{% else %}
+  {% set title = get_data.dataid|join(" ") %}
+{% endif %}
+{% if general.prefix %}
+  {% set suffix = " (" + general.prefix +")" %}
+{% else %}
+  {% set suffix = "" %}
+{% endif %}
 {
  "cells": [
   {
@@ -8,7 +18,7 @@
    "source": [
     "from radiopadre import ls                                       # everyone needs an ls function \n",
     "from radiopadre.layouts import Title, Section                  \n",
-    "Title(\"Progress report for {{ general.prefix }}\",            # edit the title as you like\n",
+    "Title(\"Live progress report for {{ title }}{{ suffix }}\",            # edit the title as you like\n",
     "  \"Logs | Reports | Plots | Obsinfo | Images | Caltables\", \n",
     "  logo=\".logo/caracal-logo-200px.png\", logo_width=100, logo_padding=8, \n",
     "  icon=\".logo/caracal-square-logo-32px.png\", icon_width=16,\n",

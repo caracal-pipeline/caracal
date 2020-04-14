@@ -1203,7 +1203,7 @@ fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then
     [[ -n ${FS} ]] && echo "python3 -m venv \${cvirtualenv}" >> ${SS}
-    [[ -n ${FS} ]] || { python3 -m venv ${CARATE_VIRTUALENV} && echo "python3 -m venv \${cvirtualenv}" >> ${SS}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; virtualenv -p python3 ${CARATE_VIRTUALENV} && echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS}; }
+    [[ -n ${FS} ]] || { echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; }
 fi
 
 # Report on virtualenv

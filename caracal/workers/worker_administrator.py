@@ -1,6 +1,5 @@
 import caracal
-from caracal import log, pckgdir
-from caracal.dispatch_crew import worker_help
+from caracal import log, pckgdir, notebooks
 import subprocess
 import json
 import sys
@@ -263,19 +262,9 @@ class worker_administrator(object):
 
         # Copy standard notebooks
         if self.config['general']['init_notebooks']:
-            nbdir = os.path.join(os.path.dirname(caracal.__file__), "notebooks")
-            for notebook in self.config['general']['init_notebooks']:
-                nbfile = notebook + ".ipynb"
-                nbsrc = os.path.join(nbdir, nbfile)
-                nbdest = os.path.join(self.output, nbfile)
-                if os.path.exists(nbsrc):
-                    if os.path.exists(nbdest):
-                        log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
-                    else:
-                        log.info("Creating standard notebook {}".format(nbdest))
-                        shutil.copyfile(nbsrc, nbdest)
-                else:
-                    log.error("Standard notebook {} does not exist".format(nbsrc))
+            notebooks.setup_default_notebooks(self.config['general']['init_notebooks'],
+                                              output_dir=self.output, prefix=self.prefix,
+                                              config=self.config)
 
     def enable_task(self, config, task):
         a = config.get(task)

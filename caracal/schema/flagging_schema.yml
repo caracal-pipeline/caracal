@@ -279,6 +279,11 @@ mapping:
                 type: str
                 required: False
                 example: 'firstpass_Q.rfis'
+              ensure_valid_strategy:
+                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit Caracal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
+                type: bool
+                required: False
+                example: 'True'
           tricolour:
             type: map
             mapping:

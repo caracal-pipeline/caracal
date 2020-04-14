@@ -472,6 +472,25 @@ def worker(pipeline, recipe, config):
                 #    [wname, "before_%s_automatic" % wname]), msname, cab_name=substep)
 
                 if config['autoflag_rfi']["flagger"] == "aoflagger":
+                    if config['autoflag_rfi']['aoflagger']['ensure_valid_strategy']:
+                        with open(msinfo, 'r') as stdr:
+                            ms_corr = yaml.load(stdr)['CORR']['CORR_TYPE']
+                        flag_corr=[]
+                        with open('{0:s}/{1:s}'.format(pipeline.input,config['autoflag_rfi']['aoflagger']['strategy'])) as stdr:
+                            for ss in stdr.readlines(): #<on-xx>
+                                for pp in 'xx,xy,yx,yy,stokes-i,stokes-q,stokes-u,stokes-v'.split(','):
+                                    if '<on-{0:s}>1</on-{0:s}>'.format(pp) in ss: flag_corr.append(pp)
+                        if (('stokes-u' in flag_corr or 'stokes-v' in flag_corr) and ('XY' not in ms_corr or 'YX' not in ms_corr)) or\
+                             ('xy' in flag_corr and 'XY' not in ms_corr) or\
+                             ('yx' in flag_corr and 'YX' not in ms_corr) or\
+                             (('stokes-i' in flag_corr or 'stokes-q' in flag_corr) and ('XX' not in ms_corr or 'YY' not in ms_corr)) or\
+                             ('xx' in flag_corr and 'XX' not in ms_corr) or\
+                             ('yy' in flag_corr and 'YY' not in ms_corr):
+                            raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"\
+                                             " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"\
+                                             " strategy or, if you know what you are doing, disable aoflagger: ensure_valid_strategy.".format(
+                                             pipeline.input,config['autoflag_rfi']['aoflagger']['strategy'],flag_corr,ms_corr,msname))
+
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,

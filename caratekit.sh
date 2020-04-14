@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bopo
+# bopol
 # The following ensures the script to stop on errors
 set -e
 

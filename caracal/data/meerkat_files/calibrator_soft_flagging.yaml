@@ -16,7 +16,7 @@ strategies:
             windows_time: [1, 2, 4, 8]
             windows_freq: [1, 2, 4, 8]
             background_reject: 2.0
-            background_iterations: 2
+            background_iterations: 5
             spike_width_time: 12.5
             spike_width_freq: 10.0
             time_extend: 3
@@ -31,7 +31,7 @@ strategies:
         name: residual_flag_initial
         task: uvcontsub_flagger
         kwargs:
-            major_cycles: 2
+            major_cycles: 7
             or_original_from_cycle: 1
             taylor_degrees: 20
             sigma: 15.0
@@ -46,12 +46,13 @@ strategies:
         kwargs:
             outlier_nsigma: 10
             windows_time: [1, 2, 4, 8]
+            windows_freq: [32, 48, 64, 128]
             background_reject: 2.0
-            background_iterations: 2
+            background_iterations: 5
             spike_width_time: 6.5
             spike_width_freq: 64.0
-            time_extend: 0
-            freq_extend: 0
+            time_extend: 3
+            freq_extend: 3
             freq_chunks: 10
             average_freq: 1
             flag_all_time_frac: 0.6
@@ -66,11 +67,30 @@ strategies:
             windows_time: [1, 2, 4, 8]
             windows_freq: [1, 2, 4, 8]
             background_reject: 2.0
-            background_iterations: 2
+            background_iterations: 5
             spike_width_time: 6.5
             spike_width_freq: 10.0
-            time_extend: 0
-            freq_extend: 0
+            time_extend: 3
+            freq_extend: 3
+            freq_chunks: 10
+            average_freq: 1
+            flag_all_time_frac: 0.6
+            flag_all_freq_frac: 0.8
+            rho: 1.3
+            num_major_iterations: 1
+    -   
+        name: final_st_narrow
+        task: sum_threshold
+        kwargs:
+            outlier_nsigma: 10
+            windows_time: [1, 2, 4, 8]
+            windows_freq: [1, 2, 4, 8]
+            background_reject: 2.0
+            background_iterations: 5
+            spike_width_time: 2
+            spike_width_freq: 10.0
+            time_extend: 3
+            freq_extend: 3
             freq_chunks: 10
             average_freq: 1
             flag_all_time_frac: 0.6
@@ -81,7 +101,7 @@ strategies:
         name: residual_flag_final
         task: uvcontsub_flagger
         kwargs:
-            major_cycles: 2
+            major_cycles: 10
             or_original_from_cycle: 0
             taylor_degrees: 25
             sigma: 13.0

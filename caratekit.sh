@@ -1047,9 +1047,11 @@ echo
 ss+="mkdir -p \${workspace_root}"
 mkdir -p ${WORKSPACE_ROOT}
 
-[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE} == 0 )) || [[ -n ${KR} ]] \
+[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE} == 0 )) || \
+    [[ -n ${KR} ]] || \
     checkex ${WORKSPACE_ROOT}/report || \
     rm -rf ${WORKSPACE_ROOT}/report
+
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
@@ -1088,6 +1090,7 @@ then
     echo "Total size of test data directory: ${outsize} MB" >> ${SYA}
     [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
 			echo "The real test data might hence be different."; \
+    }
     [[ -z ${OD} ]] || { echo "--keep-config-source or -kc switch is set."; \
 			echo "The real test data might hence be different."; \
     }

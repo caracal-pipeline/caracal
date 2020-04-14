@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# bopo
 # The following ensures the script to stop on errors
 set -e
 
@@ -136,6 +137,10 @@ do
     then
         KH=1
     fi
+    if [[ "$arg" == "--keep-report-dir" ]] || [[ "$arg" == "-kr" ]]
+    then
+        KR=1
+    fi
     if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
     then
         PD=1
@@ -160,6 +165,10 @@ do
     if [[ "$arg" == "--omit-copy-test-data" ]] || [[ "$arg" == "-od" ]]
     then
         OD=1
+    fi
+    if [[ "$arg" == "--move-test-data" ]] || [[ "$arg" == "-md" ]]
+    then
+        MD=1
     fi
     if [[ "$arg" == "--input-dir" ]] || [[ "$arg" == "-id" ]]
     then
@@ -223,6 +232,14 @@ do
         CARATE_CARACAL_RUN_PREFIX=${!nextcount}
  	firstletter=`echo ${CARATE_CARACAL_RUN_PREFIX} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_RUN_PREFIX="${cwd}/${CARATE_CARACAL_RUN_PREFIX}"
+    fi
+    if [[ "$arg" == "--caracal-former-run" ]] || [[ "$arg" == "-cf" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --caracal-former-run or -rf switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_CARACAL_FORMER_RUN=${!nextcount}
+ 	firstletter=`echo ${CARATE_CARACAL_FORMER_RUN} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_FORMER_RUN="${cwd}/${CARATE_CARACAL_FORMER_RUN}"
     fi
     if [[ "$arg" == "--local-source" ]] || [[ "$arg" == "-ls" ]]
     then
@@ -321,6 +338,11 @@ then
     echo "  CARATE_CARACAL_RUN_PREFIX:   The name prefix of an individual carate run. Will"
     echo "                               be automatically generated if not supplied."
     echo ""
+    echo "  CARATE_CARACAL_FORMER_RUN:   Name of a previous run prefix. If set, the test"
+    echo "                               directory of this run will be renamed into"
+    echo "                               \$CARATE_CARACAL_FORMER_RUN_suffix prior to running"
+    echo "                               the test." 
+    echo ""
     echo "Switches:"
     echo ""
     echo "  --help -h                           Show help"
@@ -349,8 +371,13 @@ then
     echo ""
     echo "  --omit-copy-test-data -od           Do not re-copy test data"
     echo ""
+    echo "  --move-test-data -md                Move test data instead of creating a copy"
+    echo ""
     echo "  --caracal-run-prefix ARG -rp ARG    Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_RUN_PREFIX"
+    echo ""
+    echo "  --caracal-former-run ARG -cf ARG    Use ARG instead of environment variable"
+    echo "                                      CARATE_CARACAL_FORMER_RUN"
     echo ""
     echo "  --local-source ARG -ls ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_LOCAL_SOURCE"
@@ -371,6 +398,9 @@ then
     echo ""
     echo "  --keep-home -kh                     Do not change the HOME environment"
     echo "                                      variable during installation test"
+    echo ""
+    echo "  --keep-report-dir -kd               Do not delete the report directory if it"
+    echo "                                      exists"
     echo ""
     echo "  --docker-minimal -dm                Test Docker installation and test run with"
     echo "                                      minimal configuration"
@@ -463,6 +493,8 @@ then
     echo " Re-installation of the virtual environment, the home directory, and"
     echo " the file .stimela in the home directory. If the option --keep-home or -kh is"
     echo " set, the directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre-"
+    echo " served. If the option --keep-report or -kr is"
+    echo " set, the directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
     echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the deletion of"
     echo " the virtualenv, --omit-caracal-reinstall will prevent the deletion (and re-"
     echo " installation of CARACal. If option --fast-simulation (-fs) is set, only the directory "
@@ -531,44 +563,44 @@ then
     echo "    --omit-stimela-reinstall or -os are set, this is not done"
     echo ""
     echo "  - when switch --singularity-minimal or -sm is set, a directory"
-    echo "    test_minimal_singularity is created (if not existing or if -f is"
+    echo "    minimal_singularity is created (if not existing or if -f is"
     echo "    set), the configuration file"
     echo "    caracal/caracal/sample_configurations/minimalConfig.yml is"
     echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the test_minimal_singularity"
+    echo "    are copied into the msdir directory in the minimal_singularity"
     echo "    directory and minimalConfig.yml is edited to point to those .ms"
     echo "    files in the variable dataid, then caracal is run with"
     echo "    minimalConfig.yml and declared successful if certain expected files"
     echo "    are created (see exceptions below)."
     echo ""
     echo "  - when switch --singularity_extended or -se is set, a directory"
-    echo "    test_extended_singularity is created (if not existing or if -f is"
+    echo "    extended_singularity is created (if not existing or if -f is"
     echo "    set), the configuration file"
     echo "    caracal/caracal/sample_configurations/extendedConfig.yml is"
     echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the test_extended_singularity"
+    echo "    are copied into the msdir directory in the extended_singularity"
     echo "    directory and extendedConfig.yml is edited to point to those .ms"
     echo "    files in the variable dataid, then caracal is run with"
     echo "    extendedConfig.yml and declared successful if certain expected files"
     echo "    are created (see exceptions below)."
     echo ""
     echo "  - when switch --docker-minimal or -dm is set, a directory"
-    echo "    \- test_minimal_docker is created (if not existing or if -f is set),"
+    echo "    \- minimal_docker is created (if not existing or if -f is set),"
     echo "    the configuration file"
     echo "    caracal/caracal/sample_configurations/minimalConfig.yml is"
     echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the test_minimal_docker"
+    echo "    are copied into the msdir directory in the minimal_docker"
     echo "    directory and minimalConfig.yml is edited to point to those .ms"
     echo "    files in the variable dataid, then caracal is run with"
     echo "    minimalConfig.yml and declared successful if certain expected files"
     echo "    are created (see exceptions below)."
     echo ""
     echo "  - when switch --docker_extended or -da is set, a directory"
-    echo "    test_extended_docker is created (if not existing or if -f is set),"
+    echo "    extended_docker is created (if not existing or if -f is set),"
     echo "    the configuration file"
     echo "    caracal/caracal/sample_configurations/extendedConfig.yml is"
     echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the test_extended_docker"
+    echo "    are copied into the msdir directory in the extended_docker"
     echo "    directory and extendedConfig.yml is edited to point to those .ms"
     echo "    files in the variable dataid, then caracal is run with"
     echo "    extendedConfig.yml and declared successful if certain expected files"
@@ -577,7 +609,7 @@ then
     echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
     echo "    switches --singularity-installation or -si set, then that yaml configuration"
     echo "    source is used for a further singularity test in the directory"
-    echo "    test_prefix_singularity, where prefix is the prefix of the yaml file. The line"
+    echo "    prefix_singularity, where prefix is the prefix of the yaml file. The line"
     echo "    dataid: ['...','...'] in that file is replaced by the appropriate line to"
     echo "    process the test data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set."
     echo "    See exceptions below."
@@ -585,7 +617,7 @@ then
     echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
     echo "    switches --docker-installation or -di set, then that yaml configuration"
     echo "    source is used for a further singularity test in the directory"
-    echo "    test_prefix_singularity, where prefix is the prefix of the yaml file. The line"
+    echo "    prefix_singularity, where prefix is the prefix of the yaml file. The line"
     echo "    dataid: ['...','...'] in that file is replaced by the appropriate line to"
     echo "    process the test data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set."
     echo "    See exceptions below."
@@ -607,13 +639,22 @@ then
     echo "    be copied if for a test run the directory with the test data does already"
     echo "    exist"
     echo ""
-    echo "  - when environment variable CARATE_CARACALRUN_PREFIX is set (or defined via"
-    echo "    --caracal-run-prefix or -rp switches) tests will not be named using that"
+    echo "  - when switches --move-test-data or -md are set, the test data will not"
+    echo "    be copied but moved. This is only possible if one test run is performed"
+    echo ""
+    echo "  - when environment variable CARATE_CARACAL_RUN_PREFIX is set (or defined via"
+    echo "    --caracal-run-prefix or -rp switches) tests will be named using that"
+    echo "    variable as a prefix and a suffix indicating the number of the test."
+    echo ""
+    echo "  - when environment variable CARATE_CARACAL_FORMER_RUN is set (or defined via"
+    echo "    --caracal-former-run or -cf switches) a former test directory with the name"
+    echo "    \${CARATE_CARACAL_FORMER_RUN}_suffix will be re-named into"
+    echo "    \${CARATE_CARACAL_RUN_PREFIX}_suffix if existent. suffix is the run number."
     echo "    variable as a prefix and a suffix indicating the number of the test."
     echo ""
     echo " For each test run, log-caracal.txt is searched for keywords indicating the start"
     echo " and the end of a worker and those numbers are reported."
-    echo " The test is declared failed and carate.sh returns 1 if:"
+    echo " The test is declared failed and caratekit.sh returns 1 if:"
     echo "   - No logfiles are produced before CARACal finishes"
     echo "   - log-caracal.txt does not contain any keyword indicating that a worker has started"
     echo "   - The number of keywords in log-caracal.txt indicating the start of a worker differs"
@@ -622,8 +663,17 @@ then
     echo ""
     echo " caratekit will create a report directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report"
     echo " containing three files:"
-    echo "   - a shell script \${CARATE_CARACAL_TEST_ID}.sh.txt reproducing all shell commands"
-    echo "     initiated by carate.sh"
+    echo "   - a shell script reproducing all shell commands initiated by carate.sh, if"
+    echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
+    echo "     switches --caracal-run-prefix or -cp) called"
+    echo "     \${CARATE_CARACAL_RUN_PREFIX}.sh.txt, called \${CARATE_CARACAL_TEST_ID}"
+    echo "     \${CARATE_CARACAL_TEST_ID}.sh.txt otherwise"
+    echo "   - a file with information about the computer and"
+    echo "     the environment that was used for the test, if"
+    echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
+    echo "     switches --caracal-run-prefix or -cp) called"
+    echo "     \${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt, called \${CARATE_CARACAL_TEST_ID}"
+    echo "     \${CARATE_CARACAL_TEST_ID}_sysinfo.txt otherwise"
     echo "   - a file ${CARATE_CARACAL_TEST_ID}_sysinfo.txt with information about the computer and"
     echo "     the environment that was used for the test"
     echo "   - copies of the configuration files, one per run"
@@ -696,7 +746,6 @@ ss+=$'\n'
 tdfault=0
 if [[ ! -n "${CARATE_TEST_DATA_DIR}" ]]
 then
-    CARATE_TEST_DATA_DIR_OLD=${CARATE_TEST_DATA_DIR}
     if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${DSC} ]] || [[ -n ${SSC} ]]
     then
 	tdfault=1
@@ -720,8 +769,8 @@ fi
     echo "and you have run this test before."
 }
 
-[[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
-[[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+=$'\n'
+[[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
+[[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+=$'\n'
 
 # Do not force test id to be identical with build number any more, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
@@ -756,7 +805,7 @@ fi
 ss+="caracal_test_id=${CARATE_CARACAL_TEST_ID}"
 ss+=$'\n'
 
-[[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || [[ -n "${DSC}" ]] || [[ -n "${SSC}" ]] ||{\
+[[ -n "${DM}" ]] || [[ -n "${DA}" ]] || [[ -n "${DI}" ]] || [[ -n "${SM}" ]] || [[ -n "${SA}" ]] || [[ -n "${SI}" ]] || [[ -n "${DSC}" ]] || [[ -n "${SSC}" ]] || {\
     echo "Please use one of the switches -dm, -da, -di, -sm, -sa, -si, -dsc, -ssc";\
     echo "";\
     kill "$PPID"; exit 1;
@@ -764,7 +813,7 @@ ss+=$'\n'
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
-    if [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
+    [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
 	   echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}"; \
 	   echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})"; \
 	   echo "is set or switches --local-source or -ls are used). But it"; \
@@ -811,6 +860,24 @@ counts=0
     echo "Use maximally one of switches and variables defined with -us -um -lst."; \
     kill "$PPID"; \
     exit 1; \
+    }
+
+# Determine the number of testruns
+numberoftests=0
+[[ -z ${DM} ]] || (( numberoftests+=1 ))
+[[ -z ${DA} ]] || (( numberoftests+=1 ))
+[[ -z ${SM} ]] || (( numberoftests+=1 ))
+[[ -z ${SA} ]] || (( numberoftests+=1 ))
+[[ -z ${DI} ]] || (( numberoftests+=1 ))
+[[ -z ${SI} ]] || (( numberoftests+=1 ))
+[[ -z ${DSC} ]] || (( numberoftests+=1 ))
+[[ -z ${SSC} ]] || (( numberoftests+=1 ))
+(( ${numberoftests} < 2 )) || \
+    [[ -z ${MD} ]] || {\
+	echo "Number of tests cannot be larger than 1 if switch --move-test-data or -md is set";\
+	echo "Exiting";\
+	echo "";\
+	kill "$PPID"; exit 1;
     }
 
 # Start test
@@ -980,12 +1047,13 @@ echo
 ss+="mkdir -p \${workspace_root}"
 mkdir -p ${WORKSPACE_ROOT}
 
-[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE} == 0 )) || \
+[[ ! -d ${WORKSPACE_ROOT}/report ]] || (( ${FORCE} == 0 )) || [[ -n ${KR} ]] \
     checkex ${WORKSPACE_ROOT}/report || \
     rm -rf ${WORKSPACE_ROOT}/report
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
+[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}.sh.txt || \
 SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 
 # Empty ss into the small script
@@ -993,6 +1061,7 @@ SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 echo "$ss" >> ${SS}
 
 # Sysinfo
+[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt || \
 SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}_sysinfo.txt
 
 # Empty into the sysinfo
@@ -1011,13 +1080,15 @@ then
     [[ -z "$mss" ]] && dataidstr="" || dataidstr=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
-    [[ ! -z "$mss" ]] || sya=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
-    [[ ! -z "$mss" ]] && echo "Test data directory was not defined." >> ${SYA} || echo "Files found in test data directory: ${sya}" >> ${SYA}
+    [[ -z "$mss" ]] || sya=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
+    [[ -z "$mss" ]] || echo "Files found in test data directory: ${sya}" >> ${SYA} || echo "Test data directory was not defined." >> ${SYA}
 
     # Size of test data
     outsize=`du -ms ${CARATE_TEST_DATA_DIR} | awk '{print $1}'`
     echo "Total size of test data directory: ${outsize} MB" >> ${SYA}
     [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
+			echo "The real test data might hence be different."; \
+    [[ -z ${OD} ]] || { echo "--keep-config-source or -kc switch is set."; \
 			echo "The real test data might hence be different."; \
     }
     echo "" >> ${SYA}
@@ -1081,9 +1152,9 @@ then
 	    [[ ${WORKSPACE_ROOT}/home == /home/${USER} ]] && \
 		echo "We do not delete /home/${USER}"; \
 	} || { \
-	    echo "rm -rf \${WORKSPACE_ROOT}/home"; \
+	    echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}; \
 	    [[ -n ${FS} ]] || \
-		echo "rm -rf \${WORKSPACE_ROOT}/home"; \
+		rm -rf \${WORKSPACE_ROOT}/home; \
 	}
 fi
 
@@ -1587,8 +1658,12 @@ runtest () {
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
 	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}_${testruns}
+	if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
+	then
+	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname=${CARATE_CARACAL_FORMER_RUN}_${testruns}
+	fi
     else
-	trname=test_${configfilename}_${contarch}
+	trname=${configfilename}_${contarch}
     fi
 
 
@@ -1602,33 +1677,41 @@ runtest () {
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
         echo "and use old results. Use -f to override."
     else
-	[[ -z ${OD} ]] || \
-	    [[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
-		CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
-	    } || { \
-		CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
-	    }
-	
-	#Check if the test directory is a parent of any of the supplied directories
-	if checkex ${WORKSPACE_ROOT}/${trname}
+	if [[ -e ${WORKSPACE_ROOT}/${frname} ]]
 	then
-	    # Go through the files and remove individually
-	    # continue here
-	    dirs=(input msdir output stimela_parameter_files)
-	    for dire in ${dirs[@]}
-	    do
-		checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-		    echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS}
-		[[ -n ${FS} ]] || \
+	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || { \
+		mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
+		CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
+	    }
+	else	
+	    [[ -z ${OD} ]] || \
+		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
+		    CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
+		} || { \
+		    CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+		}
+	
+	    #Check if the test directory is a parent of any of the supplied directories
+	    if checkex ${WORKSPACE_ROOT}/${trname}
+	    then
+		# Go through the files and remove individually
+		# continue here
+		dirs=(input msdir output stimela_parameter_files)
+		for dire in ${dirs[@]}
+		do
 		    checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-		    rm -rf ${workspace_root}/${trname}/${dire}
-	    done
-	else
-	    echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
-            [[ -n ${FS} ]] || \
-		rm -rf ${WORKSPACE_ROOT}/${trname}
-	fi	
-
+			echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS}
+		    [[ -n ${FS} ]] || \
+			checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+			rm -rf ${workspace_root}/${trname}/${dire}
+		done
+	    else
+		echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
+		[[ -n ${FS} ]] || \
+		    rm -rf ${WORKSPACE_ROOT}/${trname}
+	    fi	
+	fi
+	
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
 	echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS}
@@ -1646,7 +1729,7 @@ runtest () {
 	    [[ -n ${KC} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS}; \
 	    [[ -z ${KC} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS}; \
 	}
-
+	
 	[[ -n ${FS} ]] || \
 	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
 		[[ -n ${KC} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
@@ -1658,14 +1741,21 @@ runtest () {
 	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${configfilename}_${contarch}.yml.txt
 
 	# Check if source msdir is identical to the target msdir. If yes, don't copy
-	d=`stat -c %i $CARATE_TEST_DATA_DIR`
+	d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
 	e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
-	[[ $d == $e ]] || \
-	    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}
-	[[ $d == $e ]] || \
-	    [[ -n ${FS} ]] || \
-	    cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/
-
+	
+	[[ $d == $e ]] || { \
+	    [[ -n ${MD} ]] && { \
+		echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		[[ -n ${FS} ]] || \
+		    mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	    } || { \
+		echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		[[ -n ${FS} ]] || \
+		    cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	    } \
+	}
+	
 	# Now run the test
         echo "Running ${contarch} test (using ${configfilename}.yml)"
 	echo "cd \${workspace_root}/${trname}" >> ${SS}
@@ -1781,9 +1871,9 @@ runtestsample () {
 
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
-	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}_${testruns}
+	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}_cs_${testruns}
     else
-	trname=test_config_sample_${contarch}
+	trname=config_sample_${contarch}
     fi
 
     echo "##########################################" >> ${SYA}
@@ -1833,14 +1923,20 @@ runtestsample () {
     fi
 
     # Check if source msdir is identical to the target msdir. If yes, don't copy
-    d=`stat -c %i $CARATE_TEST_DATA_DIR`
+    d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
     e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
-    [[ $d == $e ]] || \
-	echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}
-    [[ $d == $e ]] || \
-	[[ -n ${FS} ]] || \
-	cp -r $CARATE_TEST_DATA_DIR/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/
-
+    [[ $d == $e ]] || { \
+	[[ -n ${MD} ]] && { \
+	    echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+	    [[ -n ${FS} ]] || \
+		    mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	} || { \
+	    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+	    [[ -n ${FS} ]] || \
+		cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	} \
+    }
+	
     #We need to take the config file from the meerkat input to our test directoru, always
     cp ${inputconfiglocation} ${configlocation}
 

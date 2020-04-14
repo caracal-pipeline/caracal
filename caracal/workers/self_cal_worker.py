@@ -249,8 +249,6 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        recipe.run() # required because we want to check that the clean mask was created before adding the new imaging run to the queue
-
         step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
         image_opts = {
             "msname": mslist,
@@ -312,7 +310,7 @@ def worker(pipeline, recipe, config):
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def sofia_mask(trg, num, img_dir, field):
-        step = 'make_sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
+        step = 'sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
         key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
@@ -1745,17 +1743,19 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
                 sofia_mask(target_iter, 0, get_dir_path(
-                image_path, pipeline), field)
+                    image_path, pipeline), field)
+                recipe.run()
+                recipe.jobs = []
                 config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)
                 image(target_iter, self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
                 #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
                 #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
                 #    sofia_mask(self_cal_iter_counter, get_dir_path(
@@ -1787,6 +1787,8 @@ def worker(pipeline, recipe, config):
                 if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
                     sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
+                    recipe.run()
+                    recipe.jobs = []
                 self_cal_iter_counter += 1
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)

@@ -1194,17 +1194,11 @@ then
 	[[ -n ${OC} ]] || { \
 	    checkex ${CARATE_VIRTUALENV} && \
 		[[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
-	} || \
-	echo "rm -rf \${cvirtualenv}" >> ${SS}
-	
-    [[ -n ${ORSR} ]] || \
-	[[ -n ${OV} ]] || \
-	[[ -n ${OC} ]] || \
-	[[ -n ${FS} ]] || { \
-	checkex ${CARATE_VIRTUALENV} && \
-	    [[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
-	} || \
-	rm -rf ${CARATE_VIRTUALENV}
+	} || { \
+	    echo "rm -rf \${cvirtualenv}" >> ${SS}; \
+	    [[ -n ${FS} ]] || \
+		rm -rf ${CARATE_VIRTUALENV}; \
+	    }
 fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then

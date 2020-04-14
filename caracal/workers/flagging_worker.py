@@ -218,7 +218,7 @@ def worker(pipeline, recipe, config):
                     addantennafile += ':input'
                 else:
                     addantennafile = None
-                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
+                step = 'flag_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j, static)
                 substep = 'save_flags_before_{3:s}_{0:s}_{1:d}_{2:d}'.format(wname, i, j,static)
                 manflags.add_cflags(pipeline, recipe, "_".join(
                     [wname, "before_%s" % (static)]), msname, cab_name=substep)

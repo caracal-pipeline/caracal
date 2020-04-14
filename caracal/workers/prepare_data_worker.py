@@ -14,7 +14,7 @@ def worker(pipeline, recipe, config):
         prefix = pipeline.prefixes[i]
 
         if pipeline.enable_task(config, 'fixvis'):
-            step = 'fixvis_{:d}'.format(i)
+            step = 'fixvis-ms{:d}'.format(i)
             recipe.add('cab/casa_fixvis', step,
                        {
                            "vis": msname,
@@ -33,23 +33,23 @@ def worker(pipeline, recipe, config):
 
             if mode == "restore":
                 if version == "caracal_legacy" and nolegacy:
-                    step = "save_legacy_{0:s}_{1:d}".format(wname, i)
+                    step = "save_legacy-{0:s}-ms{1:d}".format(wname, i)
                     manflags.add_cflags(pipeline, recipe, "caracal_legacy", msname, cab_name=step)
                 elif version in versions:
-                    step = "restore_flags_{0:s}_{1:d}".format(wname, i)
+                    step = "restore_flags-{0:s}-ms{1:d}".format(wname, i)
                     manflags.restore_cflags(pipeline, recipe, version, 
                             msname, cab_name=step)
                 else:
                     raise RuntimeError("Flag version '{0:s}' not found in" \
                             "flagversions file".format(version))
             elif mode == "initialize":
-                step = "save_legacy_{0:s}_{1:d}".format(wname, i)
+                step = "save_legacy-{0:s}-ms{1:d}".format(wname, i)
                 manflags.add_cflags(pipeline, recipe, "caracal_legacy", msname, cab_name=step)
             elif mode == "reset":
-                step = "reset_flags_{0:s}_{1:d}".format(wname, i)
+                step = "reset_flags-{0:s}-ms{1:d}".format(wname, i)
                 manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
                 # Unflag data
-                step = "unflag_all_{0:s}_{1:d}".format(wname, i)
+                step = "unflag_all-{0:s}-ms{1:d}".format(wname, i)
                 recipe.add("cab/casa_flagdata", step, 
                         {
                             "vis" : msname,
@@ -60,10 +60,10 @@ def worker(pipeline, recipe, config):
                         output=pipeline.output, 
                         label="{0:s}:: Save current flags".format(step))
             elif mode == "save":
-                step = "save_flags_{0:s}_{1:d}".format(wname, i)
+                step = "save_flags-{0:s}-ms{1:d}".format(wname, i)
                 manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
             elif mode == "list":
-                step = "list_flags_{0:s}_{1:d}".format(wname, i)
+                step = "list_flags-{0:s}-ms{1:d}".format(wname, i)
                 recipe.add("cab/casa_flagmanager", step, 
                         {
                             "vis" : msname,
@@ -77,7 +77,7 @@ def worker(pipeline, recipe, config):
                 raise ValueError("Mode given for manage_flags worker is invalid. Valid options are reset, restore, save, list")
 
         if config["clear_cal"]:
-            step = 'clear_cal_{:d}'.format(i)
+            step = 'clear_cal-ms{:d}'.format(i)
             fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
             recipe.add('cab/casa_clearcal', step,
                        {
@@ -91,7 +91,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, "spectral_weights"):
             specwts = config['spectral_weights']["mode"]
             if specwts == "uniform":
-                step = 'init_weights_{:d}'.format(i)
+                step = 'init_ws-ms{:d}'.format(i)
                 recipe.add('cab/casa_script', step,
                            {
                                "vis": msname,
@@ -104,7 +104,7 @@ def worker(pipeline, recipe, config):
 
             elif specwts == "estimate":
                 _config = config["spectral_weights"]
-                step = 'estimate_weights_{:d}'.format(i)
+                step = 'estimate_ws-ms{:d}'.format(i)
                 recipe.add('cab/msutils', step,
                            {
                                "msname": msname,
@@ -120,7 +120,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
             elif specwts == "delete":
-                step = 'delete_weight_spectrum{:d}'.format(i)
+                step = 'delete_ws-ms{:d}'.format(i)
                 recipe.add('cab/casa_script', step,
                            {
                                "vis": msname,

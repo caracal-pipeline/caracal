@@ -26,7 +26,7 @@ def worker(pipeline, recipe, config):
             data_path = pipeline.data_path
 
         if pipeline.enable_task(config, 'mvftoms'):
-            step = 'mvftoms_{:d}'.format(i)
+            step = 'mvftoms-{:d}'.format(i)
 
             if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname)):
                 os.system('rm -rf {0:s}/{1:s}'.format(pipeline.msdir, msname))
@@ -48,7 +48,7 @@ def worker(pipeline, recipe, config):
 
     for i, msname in enumerate(pipeline.msnames):
         if pipeline.enable_task(config, 'untar'):
-            step = 'untar_{:d}'.format(i)
+            step = 'untar-{:d}'.format(i)
             tar_options = config['untar'].get('tar_options')
 
             # Function to untar Ms from .tar file
@@ -92,7 +92,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Virtually concatenate datasets'.format(step))
 
         if config['combine'].get('tar').get("enable"):
-            step = 'tar_vc_{:d}'.format(i)
+            step = 'tar_vc-{:d}'.format(i)
             # Function to untar Ms from .tar file
 
             def tar(ms):
@@ -109,7 +109,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Create tarbal ms={1:s}'.format(step, msname))
 
         elif config['combine'].get('untar').get("enable"):
-            step = 'untar_vc_{:d}'.format(i)
+            step = 'untar_vc-{:d}'.format(i)
             # Function to untar Ms from .tar file
 
             def untar(ms):

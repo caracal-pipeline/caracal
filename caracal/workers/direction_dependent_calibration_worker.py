@@ -104,7 +104,7 @@ def worker(pipeline, recipe, config):
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
         dd_image_opts_precal.update(dd_imagename)
         dd_image_opts_precal.update(dd_ms_list)
-        recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
+        recipe.add("cab/ddfacet", "ddf_image-{0:s}".format(field), dd_image_opts_precal,
         input=INPUT,
         output=OUTPUT+"/"+outdir,
         shared_memory="500gb",
@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
         if USEPB:
             dd_image_opts_postcal.update(dd_beamopts)
 
-        recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,
+        recipe.add("cab/ddfacet", "ddf_image-postcal-{0:s}".format(field), dd_image_opts_postcal,
         input=INPUT,
         output=OUTPUT,
         label="ddf_image_postcal_{0:s}:: Primary beam corrected image".format(field),
@@ -179,7 +179,7 @@ def worker(pipeline, recipe, config):
             "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
            }
 
-           recipe.add('cab/catdagger', 'tag_sources_auto_mode', catdagger_opts,input=INPUT,
+           recipe.add('cab/catdagger', 'tag_sources-auto_mode', catdagger_opts,input=INPUT,
               output=OUTPUT+"/"+outdir,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
 
         if de_sources_mode == 'manual':
@@ -222,7 +222,7 @@ def worker(pipeline, recipe, config):
         dereg = "de-{0:s}.reg".format(field)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
+           step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
               "data-column"       : config[key].get('dd_data_column'),
@@ -286,7 +286,7 @@ def worker(pipeline, recipe, config):
         outdir = field+"_ddcal"
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'cp_datacol_{0:s}_{1:s}'.format(mspref,field)
+           step = 'cp_datacol-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/msutils', step, {
                "command" : 'copycol',
                "msname"  : ms,
@@ -304,7 +304,7 @@ def worker(pipeline, recipe, config):
         pref = "DD_wsclean"
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'img_wsclean_{0:s}_{1:s}'.format(mspref,field)
+           step = 'img_wsclean-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/wsclean', step, {
                "msname": mslist,
                "column": config[key].get('img_ws_column'),
@@ -339,7 +339,7 @@ def worker(pipeline, recipe, config):
         crystalball_model = '{0:s}_{1:s}-sources.txt'.format(pref, field)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'run_crystalball_{0:s}_{1:s}'.format(mspref,field)
+           step = 'run_crystalball-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/crystalball', step, {
                "ms": ms,
                "sky-model": crystalball_model+':output',

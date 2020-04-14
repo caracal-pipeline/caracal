@@ -192,7 +192,7 @@ def worker(pipeline, recipe, config):
         key = 'image'
         key_mt = 'calibrate'
 
-        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
+        step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
             "column": 'DATA',
@@ -249,7 +249,7 @@ def worker(pipeline, recipe, config):
             imcolumn = config[key].get(
                 'column')[num - 1 if len(config[key].get('column')) >= num else -1]
 
-        step = 'image_field{0:d}_iter{1:d}'.format(trg, num)
+        step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         image_opts = {
             "msname": mslist,
             "column": imcolumn,
@@ -299,10 +299,10 @@ def worker(pipeline, recipe, config):
                    image_opts,
                    input=pipeline.input,
                    output=pipeline.output,
-                   label='{:s}:: Make image after first round of calibration'.format(step))
+                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
 
     def sofia_mask(trg, num, img_dir, field):
-        step = 'make_sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
+        step = 'make_sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)
         key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
@@ -411,7 +411,7 @@ def worker(pipeline, recipe, config):
             imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(
                 prefix, num, mfsprefix)
 
-            recipe.add('cab/casa_importfits', step,
+            recipe.add('cab/casa_importfits', step+"-import-image",
                        {
                            "fitsimage": imagename,
                            "imagename": imagename_casa,
@@ -421,7 +421,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Image in casa format')
 
-            recipe.add('cab/casa_importfits', step,
+            recipe.add('cab/casa_importfits', step+"-import-mask",
                        {
                            "fitsimage": mask_name+':output',
                            "imagename": mask_name_casa,
@@ -431,8 +431,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Mask in casa format')
 
-            step = '3'
-            recipe.add('cab/casa_imregrid', step,
+            recipe.add('cab/casa_imregrid', step+"-regrid",
                        {
                            "template": imagename_casa+':output',
                            "imagename": mask_name_casa+':output',
@@ -443,8 +442,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Regridding mosaic to size and projection of dirty image')
 
-            step = '4'
-            recipe.add('cab/casa_exportfits', step,
+            recipe.add('cab/casa_exportfits', step+"-export-mosaic",
                        {
                            "fitsimage": mask_name+':output',
                            "imagename": mask_regrid_casa+':output',
@@ -454,8 +452,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Extracted regridded mosaic')
 
-            step = '5'
-            recipe.add(change_header, step,
+            recipe.add(change_header, step+"-export-mask",
                        {
                            "filename": pipeline.output+'/'+mask_name,
                            "headfile": pipeline.output+'/'+imagename,
@@ -470,7 +467,7 @@ def worker(pipeline, recipe, config):
 
         if config['image'][key].get('fornax_special') == True and config['image'][key].get('fornax_use_sofia') == True:
 
-            recipe.add('cab/sofia', step,
+            recipe.add('cab/sofia', step+"-fornax_special",
                        image_opts_forn,
                        input=pipeline.output,
                        output=pipeline.output+'/masking/',
@@ -494,7 +491,7 @@ def worker(pipeline, recipe, config):
             imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(
                 prefix, num, mfsprefix)
 
-            recipe.add('cab/casa_importfits', step,
+            recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
                        {
                            "fitsimage": imagename,
                            "imagename": imagename_casa,
@@ -504,7 +501,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Image in casa format')
 
-            recipe.add('cab/casa_importfits', step,
+            recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
                        {
                            "fitsimage": fornax_namemask+':output',
                            "imagename": mask_name_casa,
@@ -514,8 +511,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Mask in casa format')
 
-            step = '3'
-            recipe.add('cab/casa_imregrid', step,
+            recipe.add('cab/casa_imregrid', step+"-fornax_special-regrid",
                        {
                            "template": imagename_casa+':output',
                            "imagename": mask_name_casa+':output',
@@ -526,8 +522,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Regridding mosaic to size and projection of dirty image')
 
-            step = '4'
-            recipe.add('cab/casa_exportfits', step,
+            recipe.add('cab/casa_exportfits',  step+"-fornax_special-export-mosaic",
                        {
                            "fitsimage": fornax_namemask_regr+':output',
                            "imagename": mask_regrid_casa+':output',
@@ -537,8 +532,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Extracted regridded mosaic')
 
-            step = '5'
-            recipe.add(change_header, step,
+            recipe.add(change_header,  step+"-fornax_special-change_header",
                        {
                            "filename": pipeline.output+'/'+fornax_namemask_regr,
                            "headfile": pipeline.output+'/'+imagename,
@@ -549,6 +543,7 @@ def worker(pipeline, recipe, config):
                        label='Extracted regridded mosaic')
 
             image_opts.update({"import.maskFile": fornax_namemask_regr})
+
         recipe.add('cab/sofia', step,
                    image_opts,
                    input=pipeline.output,
@@ -558,7 +553,7 @@ def worker(pipeline, recipe, config):
     def make_cube(num, img_dir, field, imtype='model'):
         im = '{0:s}/{1:s}_{2:s}_{3}-cube.fits:output'.format(
             img_dir, prefix, field, num)
-        step = 'makecube_{}'.format(num)
+        step = 'makecube-{}'.format(num)
         images = ['{0:s}/{1:s}_{2:s}_{3}-{4:04d}-{5:s}.fits:output'.format(
             img_dir, prefix, field, num, i, imtype) for i in range(nchans)]
         recipe.add('cab/fitstool', step,
@@ -577,7 +572,7 @@ def worker(pipeline, recipe, config):
     def extract_sources(trg, num, img_dir, field):
         key = 'extract_sources'
         if config[key].get('detection_image'):
-            step = 'detection_image_field{0:d}_iter{1:d}'.format(trg, num)
+            step = 'detection_image-field{0:d}-iter{1:d}'.format(trg, num)
             detection_image = '{0:s}/{1:s}-detection_image_{0:s}_{1:d}.fits:output'.format(
                 img_dir, prefix, field, num)
             recipe.add('cab/fitstool', step,
@@ -604,7 +599,7 @@ def worker(pipeline, recipe, config):
                 im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
                     prefix, field, num, mfsprefix)
 
-            step = 'extract_field{0:d}_iter{1:d}'.format(trg, num)
+            step = 'extract-field{0:d}-iter{1:d}'.format(trg, num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
 
             if detection_image:
@@ -649,7 +644,7 @@ def worker(pipeline, recipe, config):
                     "No model file is found after the PYBDSM run. This probably means no sources were found either due to a bad calibration or to stringent values. ")
                 raise caracal.BadDataError("No model file found after the PyBDSM run")
 
-            step = 'convert_extract_field{0:d}_iter{1:d}'.format(trg, num)
+            step = 'convert-field{0:d}-iter{1:d}'.format(trg, num)
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel": '{0:s}/{1:s}.gaul:output'.format(img_dir, calmodel),
@@ -667,7 +662,7 @@ def worker(pipeline, recipe, config):
             combine = True
             mm = model.split('+')
             # Combine FITS models if more than one is given
-            step = 'combine_models_' + '_'.join(map(str, mm))
+            step = 'combine_models-' + '_'.join(map(str, mm))
             calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-FITS-combined.fits:output'.format(
                 img_dir, prefix, field, num)
             cubes = [make_cube(n, img_dir, field, 'model') for n in mm]
@@ -684,7 +679,7 @@ def worker(pipeline, recipe, config):
         else:
             calmodel = make_cube(num, img_dir, field)
 
-        step = 'predict_fromfits_{}'.format(num)
+        step = 'predict_from_fits-{}'.format(num)
         recipe.add('cab/lwimager', 'predict', {
             "msname": mslist[index],
             "simulate_fits": calmodel,
@@ -710,7 +705,7 @@ def worker(pipeline, recipe, config):
             img_dir, prefix, num)
 
         if enable:
-            step = 'combine_models_' + '_'.join(map(str, models))
+            step = 'combine_models-' + '_'.join(map(str, models))
             recipe.add('cab/tigger_convert', step,
                        {
                            "input-skymodel": model_names[0],
@@ -865,7 +860,7 @@ def worker(pipeline, recipe, config):
 
             bsols_ = [config[key].get('Bsols_timeslots')[num-1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                       config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
-            step = 'calibrate_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
+            step = 'calibrate-field{0:d}-iter{1:d}-ms{2:d}'.format(trg, num, i)
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": calmodel,
@@ -1006,7 +1001,7 @@ def worker(pipeline, recipe, config):
         #    print tilesize
             # Determine the number of tiles
 
-            step = 'calibrate_cubical_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
+            step = 'calibrate-cubical-field{0:d}-iter{1:d}-ms{2:d}'.format(trg, num, i)
 
             matrix_type = config['calibrate'].get('gain_matrix_type')[
             num-1 if len(config['calibrate'].get('gain_matrix_type')) >= num else -1]
@@ -1253,14 +1248,14 @@ def worker(pipeline, recipe, config):
                     counter += 1
                     remainder_flags += ",step_{0:d}_2gc_flags".format(counter)
                 mspref = msname_out.split(".ms")[0].replace("-", "_")
-                recipe.add("cab/flagms", "remove_2gc_flags_{0:s}".format(mspref),
+                recipe.add("cab/flagms", "remove_2gc_flags-{0:s}".format(mspref),
                            {
                                "msname": msname_out,
                                "remove": remainder_flags,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
+                           label="remove_2gc_flags-{0:s}:: Remove 2GC flags".format(mspref))
             else:
                 fromname = msname_out.replace(label_tgain, label)
                 if not config['transfer_apply_gains']['interpolate'].get('enable'):
@@ -1377,10 +1372,10 @@ def worker(pipeline, recipe, config):
             })
             # ensure proper logging for restore or interpolation
             if not enable_inter:
-                step = 'restore_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                step = 'restore_cubical_gains-{0:d}-{1:d}'.format(num, i)
                 stim_label = "{0:s}:: restore cubical gains ms={1:s}".format(step, msname_out)
             else:
-                step = 'apply_cubical_gains_{0:d}_{1:d}'.format(num, i)
+                step = 'apply_cubical_gains-{0:d}-{1:d}'.format(num, i)
                 stim_label = "{0:s}:: Apply cubical gains ms={1:s}".format(step, msname_out)
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                        input=pipeline.input,
@@ -1609,7 +1604,7 @@ def worker(pipeline, recipe, config):
                 'output/')[-1], model_files[ii + 1].split('output/')[-1]))
 
         if len(model_files) > 1:
-            step = "aimfast_comparing_models"
+            step = "aimfast-compare-models"
 
             recipe.add('cab/aimfast', step,
                        {
@@ -1621,7 +1616,7 @@ def worker(pipeline, recipe, config):
                        label="Plotting model comparisons")
 
         if len(res_files) > 1:
-            step = "aimfast_comparing_random_residuals"
+            step = "aimfast-compare-random_residuals"
 
             recipe.add('cab/aimfast', step,
                        {
@@ -1634,7 +1629,7 @@ def worker(pipeline, recipe, config):
                        label="Plotting random residuals comparisons")
 
         if len(res_files) > 1 and len(model_files) > 1:
-            step = "aimfast_comparing_source_residuals"
+            step = "aimfast-compare-source_residuals"
 
             recipe.add('cab/aimfast', step,
                        {
@@ -1652,7 +1647,7 @@ def worker(pipeline, recipe, config):
         B_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output,
                                                               get_dir_path(pipeline.continuum, pipeline), 'selfcal_products', 'g-gains*B.casa'))
         if len(B_tables) > 1:
-            step = 'plot_G_gain_table'
+            step = 'plot-btab'
 
             gain_table_name = config['calibrate']['ragavi_plot'].get('table',
                                                                      [table.split('output/')[-1] for table in B_tables])  # This probably needs changing?
@@ -1671,7 +1666,7 @@ def worker(pipeline, recipe, config):
         D_tables = glob.glob('{0:s}/{1:s}/{2:s}/{3:s}'.format(pipeline.output,
                                                               get_dir_path(pipeline.continuum, pipeline), 'selfcal_products', 'g-gains*D.casa'))
         if len(D_tables) > 1:
-            step = 'plot_D_gain_table'
+            step = 'plot_dtab'
 
             gain_table_name = config['calibrate']['ragavi_plot'].get('table',
                                                                      [table.split('output/')[-1] for table in D_tables])
@@ -1859,7 +1854,7 @@ def worker(pipeline, recipe, config):
                 final = '{0:s}/image_{1:s}/{2:s}_{3:s}_final-pybdsm.lsm.html\
 :output'.format(get_dir_path(pipeline.continuum, pipeline), mm[-1], prefix, field)
 
-                step = 'create_final_lsm_{0:s}_{1:s}'.format(*mm)
+                step = 'create-final_lsm-{0:s}-{1:s}'.format(*mm)
                 recipe.add('cab/tigger_convert', step,
                            {
                                "input-skymodel": models[0],
@@ -1877,7 +1872,7 @@ def worker(pipeline, recipe, config):
 :output'.format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field, num)
                 final = '{0:s}/image_{1:s}/{2:s}_{3:s}_final-pybdsm.lsm.html\
 :output'.format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field)
-                step = 'create_final_lsm_{0:s}'.format(num)
+                step = 'create-final_lsm-{0:s}'.format(num)
                 recipe.add('cab/tigger_convert', step,
                            {
                                "input-skymodel": inputlsm,
@@ -1899,7 +1894,7 @@ def worker(pipeline, recipe, config):
 
                 conv_model = '{0:s}/image_{1:d}/{2:s}_{3:s}-convolved_model.fits\
 :output'.format(get_dir_path(pipeline.continuum, pipeline), num, prefix, field)
-                recipe.add('cab/fitstool', step,
+                recipe.add('cab/fitstool', 'subtract-model',
                            {
                                "image": ['{0:s}/image_{1:d}/{2:s}_{3:s}_{4:d}{5:s}-{6:s}.fits\
 :output'.format(get_dir_path(pipeline.continuum, pipeline), num, prefix, target, num,
@@ -1914,7 +1909,7 @@ def worker(pipeline, recipe, config):
 
                 with_cc = '{0:s}/image_{1:d}/{2:s}_{3:s}-with_cc.fits:output'.format(get_dir_path(pipeline.continuum,
                                                                                                   pipeline), num, prefix, field)
-                recipe.add('cab/fitstool', step,
+                recipe.add('cab/fitstool', 'add-cc',
                            {
                                "image": ['{0:s}/image_{1:d}/{2:s}_{3:s}_{4:d}{5:s}-image.fits:output'.format(get_dir_path(pipeline.continuum,
                                                                                                                           pipeline), num, prefix, field, num, mfsprefix), conv_model],
@@ -1926,7 +1921,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Add clean components'.format(step))
 
-                recipe.add('cab/tigger_restore', step,
+                recipe.add('cab/tigger_restore', 'tigger-restore',
                            {
                                "input-image": with_cc,
                                "input-skymodel": final,
@@ -1940,7 +1935,7 @@ def worker(pipeline, recipe, config):
 
         for i, msname in enumerate(mslist):
             if pipeline.enable_task(config, 'flagging_summary'):
-                step = 'flagging_summary_image_selfcal_{0:d}'.format(i)
+                step = 'flagging_summary-selfcal-ms{0:d}'.format(i)
                 recipe.add('cab/casa_flagdata', step,
                            {
                                "vis": msname,
@@ -1961,7 +1956,7 @@ def worker(pipeline, recipe, config):
                                                                             pipeline), prefix, field, self_cal_iter_counter)
 
             for i, msname in enumerate(mslist_out):
-                step = 'transfer_model_field{0:d}_ms{1:d}'.format(target_iter,i)
+                step = 'transfer_model-field{0:d}-ms{1:d}'.format(target_iter,i)
                 recipe.add('cab/crystalball', step,
                            {
                                "ms": msname,

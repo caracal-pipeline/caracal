@@ -170,7 +170,7 @@ def worker(pipeline, recipe, config):
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field_{0:d}_{1:d}'.format(i,target_iter)
+                step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
                 if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
 
@@ -207,7 +207,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
                         config['changecentre'].get('ra'), config['changecentre'].get('dec')))
                     sys.exit(1)
-                step = 'changecentre_{0:d}_{1:d}'.format(i,target_iter)
+                step = 'changecentre-ms{0:d}-{1:d}'.format(i,target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "msname": tms,
@@ -225,7 +225,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
 
-                    step = 'listobs_{0:d}_{1:d}'.format(i,target_iter)
+                    step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
@@ -242,7 +242,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
 
-                    step = 'summary_json_{0:d}_{1:d}'.format(i,target_iter)
+                    step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
@@ -254,7 +254,7 @@ def worker(pipeline, recipe, config):
                                output=pipeline.output,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
 
-            step = 'fix_target_obsinfo_{:d}'.format(i)  # set directories
+            step = 'fix_target_obsinfo-ms{:d}'.format(i)  # set directories
             recipe.add(fix_target_obsinfo, step,
                        {
                            'fname': listfile,

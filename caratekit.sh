@@ -208,6 +208,10 @@ do
     then
         OC=1
     fi
+    if [[ "$arg" == "--caracal-release" ]] || [[ "$arg" == "-cr" ]]
+    then
+        CR=1
+    fi
     if [[ "$arg" == "--omit-caracal-fetch" ]] || [[ "$arg" == "-of" ]]
     then
         OF=1
@@ -260,7 +264,7 @@ done
 
 if [[ -n "$HE" ]] || [[ -n "$VE" ]]
 then
-    echo "testingathome.sh"
+    echo "caratekit.sh"
     echo "Testing CARACal"
     echo
     echo "Input via setting environment variables"
@@ -350,6 +354,8 @@ then
     echo ""
     echo "  --local-source ARG -ls ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_LOCAL_SOURCE"
+    echo ""
+    echo "  --caracal-release -cr               Install latest CARACal release version"
     echo ""
     echo "  --omit-caracal-reinstall -oc        Do not pip install caracal"
     echo ""
@@ -488,6 +494,9 @@ then
     echo "  - the caracal version CARATE_CARACAL_BUILD_NUMBER is checked out"
     echo "    using git if CARATE_CARACAL_BUILD_NUMBER is defined. If switches"
     echo "    --omit-caracal-reinstall or -oc are set, this is not done"
+    echo ""
+    echo "  - the latest CARACal release version is checked out and installed"
+    echo "    if switches --caracal-release or -cr are set"
     echo ""
     echo "  - caracal is installed via pip. If switches --omit-caracal-reinstall"
     echo "    or -oc are set, this is not done"
@@ -714,16 +723,33 @@ fi
 [[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
 [[ ! -n "$CARATE_TEST_DATA_DIR" ]] || ss+=$'\n'
 
-# Force test number to be identical with build number, if it is defined
+# Do not force test id to be identical with build number any more, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
-    CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_NUMBER; \
+    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
+	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_NUMBER; \
+    }; \
+    [[ -z ${CR} ]] || { \
+	echo "You cannot define a CARATE_CARACAL_BUILD_NUMBER (through an environment"; \
+	echo "variable or using --caracal-build-number or -cb switches and use the"; \
+	echo "--caracal-release or -cr switches. Exiting."; \
+	kill "$PPID"; exit 1;
+    } ; \
+}
+
+[[ -z ${CR} ]] || { \
+    # Upon pypi release this has to be updated
+    # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
+    CR="0.1.0"
+    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
+	CARATE_CARACAL_TEST_ID=${CR}; \
+    }; \
 }
 
 [[ -n "$CARATE_CARACAL_TEST_ID" ]] || { \
-    echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID";\
-    echo "variable, giving your test directory a name, like (if you're using bash):";\
-    echo "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\"";\
-    echo "Otherwise choose any unique identifyer. You can also use the -ct switch.";\
+    echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID"; \
+    echo "variable, giving your test directory a name, like (if you're using bash):"; \
+    echo "$export CARATE_CARACAL_TEST_ID=\"b027661de6ff93a183ff240b96af86583932fc1e\""; \
+    echo "Otherwise choose any unique identifyer. You can also use the -ct switch."; \
     echo "";\
     kill "$PPID"; exit 1;
 }
@@ -738,13 +764,18 @@ ss+=$'\n'
 
 if [[ -n "$CARATE_LOCAL_SOURCE" ]]
 then
-    [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
-	echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}";
-	echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})";
-	echo "is set or switches --local-source or -ls are used). But it";
-	echo "does not exist. Stopping.";
-	kill "$PPID"; exit 1;
-    }
+    if [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
+	   echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}"; \
+	   echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})"; \
+	   echo "is set or switches --local-source or -ls are used). But it"; \
+	   echo "does not exist. Stopping."; \
+	   kill "$PPID"; exit 1;
+       }
+       [[ -z ${CR} ]] || { \
+	   echo "Warning: both \${CARATE_LOCAL_SOURCE} and switches --caracal-release or -cr"; \
+	   echo "are set. This means that carate will try to check out the latest release from"; \
+	   echo "your local CARACal version. It might not be what you want."; \
+	   }
     ss+="local_source=${CARATE_LOCAL_SOURCE}"
     ss+=$'\n'
 else
@@ -925,7 +956,7 @@ checkex () {
 		}
 	    for subfile in ${c[@]}
 	    do
-		d=`stat -c %i $subfile`
+		d=`stat -c %i $subfile`	
 		[[ ${e} != ${d} ]] || { return 0; }
 	    done
 	done
@@ -1040,19 +1071,24 @@ trap cleanup EXIT
 [[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
 if (( ${FORCE} != 0 ))
 then
-    [[ -n ${KH} ]] || \
+    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake, so tons of protection...
+[[ -n ${KH} ]] || \
 	[[ -n ${ORSR} ]] || \
-	checkex ${WORKSPACE_ROOT}/home || \
-	echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}
-    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake...
-    [[ -n ${KH} ]] || \
-	[[ -n ${ORSR} ]] || \
-	[[ -n ${FS} ]] || \
-	checkex ${WORKSPACE_ROOT}/home || \
-	rm -rf ${WORKSPACE_ROOT}/home
+	false || { \
+	  [[ ${WORKSPACE_ROOT}/home == ${OLD_HOME} ]] && \
+	      echo "We do not delete ${OLD_HOME}"; \
+	} || { \
+	    [[ ${WORKSPACE_ROOT}/home == /home/${USER} ]] && \
+		echo "We do not delete /home/${USER}"; \
+	} || { \
+	    echo "rm -rf \${WORKSPACE_ROOT}/home"; \
+	    [[ -n ${FS} ]] || \
+		echo "rm -rf \${WORKSPACE_ROOT}/home"; \
+	}
 fi
 
 [[ -n ${KH} ]] || echo "mkdir -p ${WORKSPACE_ROOT}/home" >> ${SS}
+
 # Same here, don't do crazy stuff
 [[ -n ${KH} ]] || mkdir -p ${WORKSPACE_ROOT}/home
 
@@ -1078,7 +1114,7 @@ then
 		[[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
 	} || \
 	echo "rm -rf \${cvirtualenv}" >> ${SS}
-
+	
     [[ -n ${ORSR} ]] || \
 	[[ -n ${OV} ]] || \
 	[[ -n ${OC} ]] || \
@@ -1158,7 +1194,7 @@ else
     if [[ -e ${WORKSPACE_ROOT}/caracal ]]
     then
         if (( ${FORCE} == 0 ))
-        then
+        then	
             echo "Not re-fetching CARACal, use -f if you want that."
 	elif [[ -n ${OF} ]]
 	then
@@ -1170,7 +1206,7 @@ else
 	    [[ -n ${FS} ]] || \
 		checkex ${WORKSPACE_ROOT}/caracal || \
 		rm -rf ${WORKSPACE_ROOT}/caracal
-
+	
             checkex ${WORKSPACE_ROOT}/caracal || \
 		echo "git clone https://github.com/ska-sa/caracal.git" >> ${SS}
             [[ -n ${FS} ]] || \
@@ -1200,6 +1236,21 @@ then
     git checkout ${CARATE_CARACAL_BUILD_NUMBER}
 fi
 
+if [[ -n ${CR} ]]
+then
+    echo "cd \${workspace_root}/caracal" >> ${SS}
+    cd ${WORKSPACE_ROOT}/caracal
+    [[ -z $CARATE_LOCAL_SOURCE ]] || { \
+	echo "If an error occurs here, it likely means that the local installation";\
+	echo "of CARACal does not contain the latest release. Because you set the";\
+	echo "switches --caracal-release or -cr, caratekit is trying to install the";\
+	echo "latest release.";\
+    }
+    thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`
+    echo "git checkout ${thabuild}" >> ${SS}
+    git checkout ${thabuild}
+fi
+
 
 if [[ -d ${WORKSPACE_ROOT}/caracal ]]
 then
@@ -1207,7 +1258,8 @@ then
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     cd ${WORKSPACE_ROOT}/caracal
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    [[ -z ${CR} ]] || { sya=+="CARACal version: ${CR}"; sya+=$'\n'; }
+    if [[ -n "$CARATE_LOCAL_SOURCE" ]] && [[ -z ${CR} ]]
     then
 	sya="CARACal build: local"; sya+=$'\n';
     else
@@ -1228,7 +1280,7 @@ then
             [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
             stimelaline=`grep https://github.com/ratt-ru/Stimela setup.py` || true
             [[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
-            [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+            [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
         else
             echo "Stimela build: ${stimelaline}" >> ${SYA}
         fi
@@ -1237,7 +1289,7 @@ then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt` || true
 	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
-        [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+        [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     elif [[ -n ${CARATE_LOCAL_STIMELA} ]]
     then
 	echo "Stimela build: ${CARATE_LOCAL_STIMELA} (local)" >> ${SYA}
@@ -1245,10 +1297,12 @@ then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || true
         [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
-
+	[[ -z ${stimelaline} ]] || stimelabuild=`git ls-remote --tags https://github.com/ratt-ru/Stimela | grep ${stimelaline} | awk '{print $1}'` || true
+	[[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+	
         [[ -n ${stimelaline} ]] || stimelaline=`grep 'https://github.com/ratt-ru/Stimela' setup.py` || true
         [[ -z ${stimelaline} ]] || [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || true
-        [[ -z ${stimelaline} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
+        [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}
     fi
 
     echo "from: https://github.com/ratt-ru/Stimela" >> ${SYA}
@@ -1329,7 +1383,7 @@ then
     then
         echo "Omitting re-installation of Stimela Docker images"
         echo "##########################################" >> ${SYA}
-	      echo "Omitting re-installation of Stimela Docker images" >> ${SYA}
+	echo "Omitting re-installation of Stimela Docker images" >> ${SYA}
         echo "##########################################" >> ${SYA}
         echo "" >> ${SYA}
     else
@@ -1342,7 +1396,7 @@ then
 
         echo "##########################################" >> ${SYA}
         echo "" >> ${SYA}
-	      docker --version >> ${SYA}
+	docker --version >> ${SYA}
         echo "" >> ${SYA}
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
@@ -1352,48 +1406,48 @@ then
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune
         if [[ -n $PD ]]
         then
-	          ii=1
-	          until (( ${ii} > ${IA} ))
-	          do
-	             echo "Running stimela pull -d"
-	             echo "stimela pull -d" >> ${SS}
-               if [[ -z ${FS} ]]
-    	         then
-    		           stimela pull -d && break || {
-    			         echo "stimela pull -d failed"
-    			         (( ii++ ))
-    			         }
-    		       else
-    		           break
-    	         fi
-    	      done
-    	      if (( ${ii} > ${IA} ))
-    	      then
-    		        echo "Maximum number of pull attempts for Stimela reached."
-    		        echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
-    		        exit 1
-    	      fi
+	    ii=1
+	    until (( ${ii} > ${IA} ))
+	    do
+	        echo "Running stimela pull -d"
+	        echo "stimela pull -d" >> ${SS}
+                if [[ -z ${FS} ]]
+	        then
+		    stimela pull -d && break || {
+			echo "stimela pull -d failed"
+			(( ii++ ))
+			}
+		else
+		    break
+	        fi
+	    done
+	    if (( ${ii} > ${IA} ))
+	    then
+		echo "Maximum number of pull attempts for Stimela reached."
+		echo "Maximum number of pull attempts for Stimela reached." >> ${SYA}
+		exit 1
+	    fi
         fi
-	      ii=1
+	ii=1
         until (( ${ii} > ${IA} ))
         do
             echo "Running stimela build"
             echo "stimela build${stimela_ns}" >> ${SS}
             if [[ -z ${FS} ]]
-    	      then
-    	        stimela build${stimela_ns} && break || {
-    			    echo "stimela build failed"
-    			    (( ii++ ))
-    		      }
-    	      else
-    		      break
-    	      fi
+	    then
+	        stimela build${stimela_ns} && break || {
+			echo "stimela build failed"
+			(( ii++ ))
+		    }
+	    else
+		break
+	    fi
         done
-    	  if (( ${ii} > ${IA} ))
-    	  then
-    	    echo "Maximum number of build attempts for Stimela reached."
-    	    exit 1
-    	  fi
+	if (( ${ii} > ${IA} ))
+	then
+	    echo "Maximum number of build attempts for Stimela reached."
+	    exit 1
+	fi
     fi
     echo ""
 fi
@@ -1434,7 +1488,7 @@ testingoutput () {
     do
         (( total+=1 ))
 	[[ -z $hadcaracal2 ]] || { reporting+="$log is the second last log before ${caracallogsh}"; \
-				     reporting+=$'\n'; unset hadcaracal2; }
+				     reporting+=$'\n'; unset hadcaracal2; }	
 	[[ -z $hadcaracal ]] || { reporting+="$log is the last log before ${caracallogsh}"; reporting+=$'\n'; \
 				    hadcaracal2=1; unset hadcaracal; }
         [[ ${log} != ${caracallogsh} ]] || hadcaracal=1
@@ -1554,7 +1608,7 @@ runtest () {
 	    } || { \
 		CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
 	    }
-
+	
 	#Check if the test directory is a parent of any of the supplied directories
 	if checkex ${WORKSPACE_ROOT}/${trname}
 	then
@@ -1573,7 +1627,7 @@ runtest () {
 	    echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
             [[ -n ${FS} ]] || \
 		rm -rf ${WORKSPACE_ROOT}/${trname}
-	fi
+	fi	
 
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
@@ -1584,7 +1638,7 @@ runtest () {
 	    mkdir -p ${WORKSPACE_ROOT}/${trname}/input
 	    checkex ${WORKSPACE_ROOT}/${trname}/input || cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/
 	fi
-
+	
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
@@ -1616,7 +1670,7 @@ runtest () {
         echo "Running ${contarch} test (using ${configfilename}.yml)"
 	echo "cd \${workspace_root}/${trname}" >> ${SS}
         cd ${WORKSPACE_ROOT}/${trname}
-
+	
         # Notice that currently all output will be false, such that || true is required to ignore this
 	failed=0
 	echo caracal -c ${configfilename}.yml ${caracalswitches} || true
@@ -1634,7 +1688,7 @@ runtest () {
 	mes="CARACal run ${trname} did not return an error."
 	echo ${mes}
 	echo ${mes} >> ${SYA}
-    else
+    else	
 	mes="CARACal run ${trname} returned an error."
 	echo ${mes}
 	echo ${mes} >> ${SYA}
@@ -1653,7 +1707,7 @@ runtest () {
 	mes="CARACal run ${trname} did not return a faulty output."
 	echo ${mes}
 	echo ${mes} >> ${SYA}
-    else
+    else	
 	mes="This CARACal ${trname} returned a faulty output."
 	echo ${mes}
 	echo ${mes} >> ${SYA}
@@ -1918,7 +1972,7 @@ then
             echo "Will not re-create existing stimela_singularity and use old installation." >> ${SYA}
             echo "Use -f to override and unset -or or --omit-stimela-reinstall flags." >> ${SYA}
             echo "##########################################" >> ${SYA}
-            echo "" >> ${SYA}
+            echo "" >> ${SYA}	
         fi
     else
 	checkex ${singularity_loc} || \
@@ -1957,7 +2011,7 @@ then
 			}
 	    else
 		break
-	    fi
+	    fi		
 	done
 	if (( ${ii} > ${IA} ))
 	then

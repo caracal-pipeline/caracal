@@ -651,6 +651,9 @@ then
     echo "    \${CARATE_CARACAL_FORMER_RUN}_suffix will be re-named into"
     echo "    \${CARATE_CARACAL_RUN_PREFIX}_suffix if existent. suffix is the run number."
     echo "    variable as a prefix and a suffix indicating the number of the test."
+    echo "    Consecutively, the directories msdir, input, output, and"
+    echo "    stimela_parameter_files and their contents in"
+    echo "    \${CARATE_CARACAL_RUN_PREFIX}_suffix will not be deleted."
     echo ""
     echo " For each test run, log-caracal.txt is searched for keywords indicating the start"
     echo " and the end of a worker and those numbers are reported."
@@ -1297,7 +1300,7 @@ fi
 if [[ -n "$CARATE_CARACAL_BUILD_NUMBER" ]]
 then
     echo "cd \${workspace_root}/caracal" >> ${SS}
-    cd ${WORKSPACE_ROOT}/caracal
+    [[ -n ${FS} ]] || cd ${WORKSPACE_ROOT}/caracal
     [[ -z $CARATE_LOCAL_SOURCE ]] || { \
 	echo "If an error occurs here, it likely means that the local installation";\
 	echo "of CARACal does not contain the build number. You may want to use the";\
@@ -1307,7 +1310,7 @@ then
 	echo "you should not";\
     }
     echo "git checkout ${CARATE_CARACAL_BUILD_NUMBER}" >> ${SS}
-    git checkout ${CARATE_CARACAL_BUILD_NUMBER}
+    [[ -n ${FS} ]] || git checkout ${CARATE_CARACAL_BUILD_NUMBER}
 fi
 
 if [[ -n ${CR} ]]
@@ -1508,10 +1511,11 @@ then
             echo "Running stimela build"
             echo "stimela build${stimela_ns}" >> ${SS}
             if [[ -z ${FS} ]]
+#            if [[ -n ${FS} ]]
 	    then
-	        stimela build${stimela_ns} && break || {
-			echo "stimela build failed"
-			(( ii++ ))
+		stimela build${stimela_ns} && break || {
+			echo "stimela build failed ${ii}" ; \
+			(( ii++ )) ; \
 		    }
 	    else
 		break
@@ -1592,18 +1596,22 @@ testingoutput () {
     }
 
 
-    (( $worker_runs == $worker_fins )) || { reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-caracal.txt"; \
-					    reporting+=$'\n'; \
-					    echo "${reporting}"; \
-					    echo "${reporting}" >> ${SYA}; \
-					    return 1; }
-    [[ -z $caracallog ]] || (( $worker_runs > 0 )) || { reporting="No workers have started according to log-caracal.txt"; \
-				reporting+=$'\n'; \
-				reporting+="Returning error";\
-				reporting+=$'\n'; \
-				echo "${reporting}"; \
-				echo "${reporting}" >> ${SYA}; \
-				return 1; }
+    (( $worker_runs == $worker_fins )) || { \
+	reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-caracal.txt"; \
+	reporting+=$'\n'; \
+	echo "${reporting}"; \
+	echo "${reporting}" >> ${SYA}; \
+	return 1; \
+    }
+    [[ -z $caracallog ]] || (( $worker_runs > 0 )) || { \
+	reporting="No workers have started according to log-caracal.txt"; \
+	reporting+=$'\n'; \
+	reporting+="Returning error";\
+	reporting+=$'\n'; \
+	echo "${reporting}"; \
+	echo "${reporting}" >> ${SYA}; \
+	return 1; \
+    }
 
     # Notice that 0 is true in bash
     (( $total > 0 )) || { reporting="No logfiles produced. Returning error."; reporting+=$'\n'; \

@@ -230,16 +230,18 @@ do
         (( nextcount=argcount+1 ))
         (( $nextcount <= $# )) || { echo "Argument expected for --caracal-run-prefix or -rp switch, stopping."; kill "$PPID"; exit 1; }
         CARATE_CARACAL_RUN_PREFIX=${!nextcount}
- 	firstletter=`echo ${CARATE_CARACAL_RUN_PREFIX} | head -c 1`
-	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_RUN_PREFIX="${cwd}/${CARATE_CARACAL_RUN_PREFIX}"
+	# This is a name
+	# 	firstletter=`echo ${CARATE_CARACAL_RUN_PREFIX} | head -c 1`
+	#	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_RUN_PREFIX="${cwd}/${CARATE_CARACAL_RUN_PREFIX}"
     fi
     if [[ "$arg" == "--caracal-former-run" ]] || [[ "$arg" == "-cf" ]]
     then
         (( nextcount=argcount+1 ))
         (( $nextcount <= $# )) || { echo "Argument expected for --caracal-former-run or -rf switch, stopping."; kill "$PPID"; exit 1; }
         CARATE_CARACAL_FORMER_RUN=${!nextcount}
- 	firstletter=`echo ${CARATE_CARACAL_FORMER_RUN} | head -c 1`
-	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_FORMER_RUN="${cwd}/${CARATE_CARACAL_FORMER_RUN}"
+	# Same as before, this is a name
+# 	firstletter=`echo ${CARATE_CARACAL_FORMER_RUN} | head -c 1`
+#	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_FORMER_RUN="${cwd}/${CARATE_CARACAL_FORMER_RUN}"
     fi
     if [[ "$arg" == "--local-source" ]] || [[ "$arg" == "-ls" ]]
     then
@@ -1058,6 +1060,9 @@ mkdir -p ${WORKSPACE_ROOT}
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
+echo "\${CARATE_CARACAL_RUN_PREFIX}.sh.txt ${CARATE_CARACAL_RUN_PREFIX}.sh.txt"
+echo "\${CARATE_CARACAL_TEST_ID} ${CARATE_CARACAL_TEST_ID}"
+
 [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}.sh.txt || \
 SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 

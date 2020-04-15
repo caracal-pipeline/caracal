@@ -115,7 +115,7 @@ def worker(pipeline, recipe, config):
 
 
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
-            output_folder = "/"+outdir+"/"
+            output_folder = "/"+outdir
             recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
@@ -126,11 +126,13 @@ def worker(pipeline, recipe, config):
                  'no-negative': True,
                  'tolerance': 0.75,
                  }, input=INPUT, output = OUTPUT, label='mask_ddf_precal_{0:s}:: Make a mask for the initial ddf image'.format(field))
-            dd_maskopt = {"Mask-External" : "mask_ddf_precal_{0:s}.fits:output".format(field)}
-            dd_image_opts_precal.update(dd_maskopt)
             recipe.run()
+            recipe.jobs = []
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
         dd_image_opts_precal.update(dd_imagename)
+        if use_mask:
+            dd_maskopt = {"Mask-External" : "{0:s}mask_ddf_precal_{1:s}.fits:output".format(output_folder,field)}
+            dd_image_opts_precal.update(dd_maskopt)
         recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
         input=INPUT,
         output=OUTPUT,

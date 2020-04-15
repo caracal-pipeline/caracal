@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# bopol
+
 # The following ensures the script to stop on errors
 set -e
+
+# Find out which caratekit this is, will be needed later
+caratekit_install=`which caratekit.sh` || caratekit_install=""
+[[ -n ${caratekit_install} ]] || unset caratekit_install
 
 # The Carate Kid Mr. Myagi quotes, 16 fail quotes
 kkfailquotes=( \
@@ -39,6 +43,7 @@ echo "#######################"
 echo ""
 echo "caratekit.sh $*"
 echo ""
+
  sya="############################" ; sya+=$'\n\n'
 sya+="Caratekit system information"  ; sya+=$'\n\n'
 sya+="############################" ; sya+=$'\n\n'
@@ -69,6 +74,10 @@ do
     if [[ "$arg" == "--verbose" ]] || [[ "$arg" == "-v" ]]
     then
         VE=1
+    fi
+    if [[ "$arg" == "--install" ]] || [[ "$arg" == "-i" ]]
+    then
+        IN=1
     fi
     if [[ "$arg" == "--docker-minimal" ]] || [[ "$arg" == "-dm" ]]
     then
@@ -400,7 +409,7 @@ then
     echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
     echo ""
     echo "  --docker-installation -di           Test Docker installation/install Docker"
-    echo "                                      Stimela"
+    echo "                                      Stimela (no installation if -os is set)"
     echo ""
     echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
     echo "                                      omit the step when switch is not set"
@@ -423,7 +432,7 @@ then
     echo "  --caracal-former-run ARG -cf ARG    Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_FORMER_RUN"
     echo ""
-    echo "  --keep-report-dir -kd               Do not delete the report directory if it"
+    echo "  --keep-report-dir -kr               Do not delete the report directory if it"
     echo "                                      exists"
     echo ""
     echo "  --keep-home -kh                     Do not change the HOME environment"
@@ -775,6 +784,181 @@ then
     kill "$PPID"; exit 1;
 fi
 
+# Upgrade caratekit if requested
+if [[ -n ${IN} ]]
+then
+    echo "Upgrade/Installation requested,"
+    echo "upgrading/installing and then stopping."
+    echo ""
+
+        # Create a tempdir to pip clone caracal
+    mytmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
+    
+    # Create a trap to delete mytmpdir
+    function cleanup {      
+	rm -rf ${mytmpdir}
+	kill "$PPID"; \
+	exit 0; \
+    }
+    
+    # register the cleanup function to be called on the EXIT signal
+    trap cleanup EXIT
+    
+    # Now clone caracal
+    [[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git ${mytmpdir}
+#    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
+    
+    # Check out desired branch
+    cd ${mytmpdir}
+
+    # Upon pypi release this has to be updated
+    #    [[ -z ${CR} ]] || { \
+    #	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
+    #	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
+    #    }
+    
+    [[ -z ${CR} ]] || { \
+	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || { \
+	    "Not possible to both define a build id and requesting release branch."; \
+	    kill "$PPID"; \
+	    exit 0; \
+	}
+	CR="0.1.0"; \
+	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
+    }
+    
+    [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
+    
+    [[ -z ${thabuild} ]] || git checkout ${thabuild}
+
+    # Now ask if you can actually do this
+    [[ -z ${caratekit_install} ]] || { \
+	echo "The current caratekit.sh"; \
+	echo "${caratekit_install}"; \
+	echo "will be replaced"; \
+    }
+    echo "caratekit.sh from"
+    echo "https://github.com/ska-sa/caracal"
+    [[ -z ${CR} ]] || echo "Release ${CR}"
+    [[ -z ${thabuild} ]] || echo "Build ${thabuild}"
+    echo "will be installed"
+    [[ -z ${caratekit_install} ]] || echo "replacing the former one."
+    echo ""
+
+    if [[ -z ${OR} ]]
+    then
+	echo "Is that ok (Yes/No)?"
+	no_response=true
+	while [ "$no_response" == true ]; do
+	    read proceed
+	    case "$proceed" in
+		[Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+		    no_response=false
+		    ;;
+		[Nn][Oo]|[Nn])  # No or N.
+		    { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+		    ;;
+		*) # Anything else (including a blank) is invalid.
+		    { echo "That is not a valid response."; }
+		    ;;
+	    esac
+	done
+	#    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	echo ""
+    fi
+
+    if [[ -z ${caratekit_install} ]]
+    then	
+    	echo "Please provide installation directory (/usr/local/bin)"
+	no_response=true
+	while [ "$no_response" == true ]; do
+	    read proceed
+	    proceed=`echo ${proceed} | sed 's:/*$::'`
+	    if [[ -d ${proceed} ]]
+	    then
+		proceed=${proceed}/caratekit.sh
+		no_response=false
+	    elif [[ -z ${proceed} ]]
+	    then
+		proceed="/usr/local/bin/caratekit.sh"
+		no_response=false
+	    else
+		echo "Please provide an existing path to a directory"
+	    fi
+	done
+    else
+	proceed=${caratekit_install}
+    fi
+    echo ""
+    
+    # Now try to copy the file
+    success=false
+    echo "Trying:"
+    echo "\$ cp caratekit.sh ${proceed}"
+    cp caratekit.sh ${proceed} &>/dev/null && success=true || true
+    [[ ${success} == true ]] || { \
+	echo "Normal copy failed, trying to use sudo:"; \
+	echo "\$ sudo cp caratekit.sh ${proceed}"; \
+	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+    }
+    [[ ${success} == true ]] || { \
+	echo "No success, aborting"; \
+	kill "$PPID"; \
+	exit 0; \
+    }
+    echo ""
+    
+    caracalpath=`echo ${proceed} | sed 's|/[^/]*$||'`
+
+    # Check if the directory is in path
+    case :$PATH: # notice colons around the value
+    in *:${caracalpath}:*) ;; # do nothing, it's there
+       *:${caracalpath}/:*) ;; # do nothing, it's there
+       *) notinpath=true ;;
+    esac
+    if [[ ${notinpath} == true ]]
+    then
+	echo "None of the directories in \$PATH contains caratekit.sh"
+	echo "This means that you need to call"
+	echo "$ ${caracalpath}/caratekit.sh"
+	echo "instead of just"
+	echo "$ caratekit.sh"
+	echo "Shall this be prevented by adding"
+	echo "${caracalpath}"
+	echo "in your path, editing .bahrc and .cshrc ?"
+	echo "(this will modify/create the hidden files ~/.bahrc and ~/.cshrc)"
+	echo "(Yes/No)"
+	no_response=true
+	while [ "$no_response" == true ]; do
+	    read proceedn
+	    case "${proceedn}" in
+		[Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+		    no_response=false
+		    ;;
+		[Nn][Oo]|[Nn])  # No or N.
+		    no_response=true
+		    ;;
+		*) # Anything else (including a blank) is invalid.
+		    { echo "That is not a valid response."; }
+		    ;;
+	    esac
+	done
+	[[ no_response == true ]] || { \
+	    echo "" >> ~/.cshrc; \
+	    echo "set path = ( \${path} ${caracalpath} )" >> ~/.cshrc; \
+	    echo "" >> ~/.cshrc; \
+	    echo "export PATH=\$PATH:${caracalpath}" >> ~/.bashrc; \
+	    echo "" >> ~/.bashrc; \
+	    }
+    fi
+    echo "Installation successful"
+    echo ""
+    echo "#######################"
+    echo ""
+    exit
+fi
+exit
+
 echo "##########"
 echo " Starting "
 echo "##########"
@@ -877,9 +1061,11 @@ then
     ss+="local_caracal=${CARATE_LOCAL_CARACAL}"
     ss+=$'\n'
 else
-    echo "The variable CARATE_LOCAL_CARACAL is not set, meaning that CARACal"
-    echo "will be downloaded from https://github.com/ska-sa/caracal"
-    echo ""
+    [[ -n ${OF} ]] || { \
+	echo "The variable CARATE_LOCAL_CARACAL is not set, meaning that CARACal"; \
+	echo "will be downloaded from https://github.com/ska-sa/caracal"; \
+	echo ""; \
+    }
 fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -1244,7 +1430,6 @@ then
 fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then
-    [[ -n ${FS} ]] && echo "python3 -m venv \${cvirtualenv}" >> ${SS}
     [[ -n ${FS} ]] || { echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; echo "rm -rf \${cvirtualenv}" >> ${SS}; rm -rf ${CARATE_VIRTUALENV}; echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; }
 fi
 
@@ -1456,6 +1641,18 @@ then
 	fi
     done
 fi
+
+# Checking if caratekit has changed
+caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/caratekit.sh` || true
+[[ -z ${caratekit_install_changes} ]] || { \
+    echo "The installed caratekit.sh:"; \
+    echo "  ${caratekit_install}"; \
+    echo "differs from the one found in \${WORKSPACE_ROOT}/caracal:"; \
+    echo "  ${WORKSPACE_ROOT}/caracal/caratekit.sh"; \
+    echo "Consider updating your caratekit installation by typing:"; \
+    echo "  $ caratekit.sh --upgrade"; \
+    echo "";
+}
 
 if [[ -n ${UM} ]]
 then
@@ -1786,7 +1983,7 @@ runtest () {
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
         echo "and use old results. Use -f to override."
     else
-	if [[ -e ${WORKSPACE_ROOT}/${frname} ]]
+	if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
 	then
 	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || { \
 		mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
@@ -1847,7 +2044,7 @@ runtest () {
 
 	# This prevents the script to stop if there -fs is switched on
 	[[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
-	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${configfilename}_${contarch}.yml.txt
+	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${trname}_${configfilename}.yml.txt
 
 	# Check if source msdir is identical to the target msdir. If yes, don't copy
 	d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
@@ -1895,7 +2092,7 @@ runtest () {
 
     # Make a copy of the logfile
     caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
-    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/log-caracal_${trname}.txt
+    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${trname}_log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
     testingoutput ${WORKSPACE_ROOT} ${trname} || { true; failedoutput=1; }
@@ -2299,7 +2496,6 @@ then
       fi
     done
 fi
-
 
 success=1
 

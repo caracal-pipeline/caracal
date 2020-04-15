@@ -201,11 +201,11 @@ do
  	firstletter=`echo ${CARATE_LOCAL_STIMELA} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_LOCAL_STIMELA="${cwd}/${CARATE_LOCAL_STIMELA}"
     fi
-    if [[ "$arg" == "--caracal-build-number" ]] || [[ "$arg" == "-cb" ]]
+    if [[ "$arg" == "--caracal-build-id" ]] || [[ "$arg" == "-cb" ]]
     then
  (( nextcount=argcount+1 ))
- (( $nextcount <= $# )) || { echo "Argument expected for --caracal-build-number or -cb switch, stopping."; kill "$PPID"; exit 1; }
- CARATE_CARACAL_BUILD_NUMBER=${!nextcount}
+ (( $nextcount <= $# )) || { echo "Argument expected for --caracal-build-id or -cb switch, stopping."; kill "$PPID"; exit 1; }
+ CARATE_CARACAL_BUILD_ID=${!nextcount}
     fi
     if [[ "$arg" == "--caracal-test-id" ]] || [[ "$arg" == "-ct" ]]
     then
@@ -243,13 +243,13 @@ do
 # 	firstletter=`echo ${CARATE_CARACAL_FORMER_RUN} | head -c 1`
 #	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_FORMER_RUN="${cwd}/${CARATE_CARACAL_FORMER_RUN}"
     fi
-    if [[ "$arg" == "--local-source" ]] || [[ "$arg" == "-ls" ]]
+    if [[ "$arg" == "--local-caracal" ]] || [[ "$arg" == "-lc" ]]
     then
         (( nextcount=argcount+1 ))
-        (( $nextcount <= $# )) || { echo "Argument expected for --local-source or -ls switch, stopping."; kill "$PPID"; exit 1; }
-        CARATE_LOCAL_SOURCE=${!nextcount}
- 	firstletter=`echo ${CARATE_LOCAL_SOURCE} | head -c 1`
-	[[ ${firstletter} == "/" ]] || CARATE_LOCAL_SOURCE="${cwd}/${CARATE_LOCAL_SOURCE}"
+        (( $nextcount <= $# )) || { echo "Argument expected for --local-caracal or -lc switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_LOCAL_CARACAL=${!nextcount}
+ 	firstletter=`echo ${CARATE_LOCAL_CARACAL} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_LOCAL_CARACAL="${cwd}/${CARATE_LOCAL_CARACAL}"
     fi
     if [[ "$arg" == "--config-source" ]] || [[ "$arg" == "-cs" ]]
     then
@@ -300,8 +300,45 @@ then
     echo
     echo "Environmental variables recognized by this script:"
     echo
+
     echo "  CARATE_WORKSPACE:            Directory in which all tests are made"
     echo ""
+
+    echo "  CARATE_VIRTUALENV:           Location of the virtualenv directory"
+    echo "                               (optional)"
+    echo ""
+
+    echo "  CARATE_LOCAL_CARACAL:         Local CARACal copy to use. If not"
+    echo "                               set, CARACal will be downloaded"
+    echo "                               from https://github.com/ska-sa/caracal"
+    echo ""
+
+    echo "  CARATE_CARACAL_BUILD_ID: Build number to test. If not set, master"
+    echo "                               will be tested"
+    echo ""
+
+    echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
+    echo ""
+
+    echo "  CARATE_CARACAL_TEST_ID:      Only specify if CARATE_CARACAL_BUILD_ID"
+    echo "                               is undefined. All data and installations for"
+    echo "                               a specific test will be saved in the directory"
+    echo "                               \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID."
+    echo "                               CARATE_CARACAL_TEST_ID is changed to"
+    echo "                               CARATE_CARACAL_BUILD_ID"
+    echo "                               if CARATE_CARACAL_BUILD_ID is defined."
+    echo ""
+
+    echo "  CARATE_CARACAL_RUN_PREFIX:   The name prefix of an individual carate run. Will"
+    echo "                               be automatically generated if not supplied."
+    echo ""
+
+    echo "  CARATE_CARACAL_FORMER_RUN:   Name of a previous run prefix. If set, the test"
+    echo "                               directory of this run will be renamed into"
+    echo "                               \$CARATE_CARACAL_FORMER_RUN_suffix prior to running"
+    echo "                               the test." 
+    echo ""
+
     echo "  CARATE_TEST_DATA_DIR:        Directory containing test data (ms"
     echo "                               format)"
     echo ""
@@ -310,41 +347,10 @@ then
     echo "                               (optional)"
     echo ""
 
-    echo "  CARATE_VIRTUALENV:           Location of the virtualenv directory"
-    echo "                               (optional)"
-    echo ""
-
-    echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
-    echo "                               (optional)"
-    echo ""
-
-    echo "  CARATE_CARACAL_BUILD_NUMBER: Build number to test. If not set, master"
-    echo "                               will be tested"
-    echo ""
-
-    echo "  CARATE_CARACAL_TEST_ID:      Only specify if CARATE_CARACAL_BUILD_NUMBER"
-    echo "                               is undefined. All data and installations for"
-    echo "                               a specific test will be saved in the directory"
-    echo "                               \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID."
-    echo "                               CARATE_CARACAL_TEST_ID is changed to"
-    echo "                               CARATE_CARACAL_BUILD_NUMBER"
-    echo "                               if CARATE_CARACAL_BUILD_NUMBER is defined."
-    echo ""
-    echo "  CARATE_LOCAL_SOURCE:         Local CARACal copy to use. If not"
-    echo "                               set, CARACal will be downloaded"
-    echo "                               from https://github.com/ska-sa/caracal"
-    echo ""
     echo "  CARATE_CONFIG_SOURCE:        Local configuration file copy to use for an"
     echo "                               additional test"
     echo ""
-    echo "  CARATE_CARACAL_RUN_PREFIX:   The name prefix of an individual carate run. Will"
-    echo "                               be automatically generated if not supplied."
-    echo ""
-    echo "  CARATE_CARACAL_FORMER_RUN:   Name of a previous run prefix. If set, the test"
-    echo "                               directory of this run will be renamed into"
-    echo "                               \$CARATE_CARACAL_FORMER_RUN_suffix prior to running"
-    echo "                               the test." 
-    echo ""
+
     echo "Switches:"
     echo ""
     echo "  --help -h                           Show help"
@@ -354,26 +360,62 @@ then
     echo "  --workspace ARG -ws ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_WORKSPACE"
     echo ""
-    echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
-    echo "                                      CARATE_TEST_DATA_DIR"
-    echo ""
-    echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
-    echo "                                      CARATE_INPUT_DIR"
+    echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
+    echo "                                      to re-invoke pip, to run stimela build,"
+    echo "                                      etc."
     echo ""
     echo "  --virtualenv ARG -ve ARG            Use ARG instead of internal virtualenv"
     echo "                                      variable CARATE_VIRTUALENV"
     echo ""
     echo "  --omit-venv-reinstall -ov           Do not re-install the virtual environment"
     echo ""
-    echo "  --caracal-build-number ARG -cb ARG  Use ARG instead of environment variable"
-    echo "                                      CARATE_CARACAL_BUILD_NUMBER"
+    echo "  --caracal-release -cr               Install latest CARACal release version"
+    echo "                                      Default is to install current master"
+    echo ""
+    echo "  --local-caracal ARG -lc ARG         Use ARG instead of environment variable"
+    echo "                                      CARATE_LOCAL_CARACAL"
+    echo ""
+    echo "  --omit-caracal-reinstall -oc        Do not pip install caracal"
+    echo ""
+    echo "  --omit-caracal-fetch -of            Do not fetch or copy caracal directory"
+    echo "                                      if present"
+    echo ""
+    echo "  --caracal-build-id ARG -cb ARG      Use ARG instead of environment variable"
+    echo "                                      CARATE_CARACAL_BUILD_ID"
+    echo ""
+    echo "  --use-stimela-master -um            Use"
+    echo "                                      pip install -U --force-reinstall -r"
+    echo "                                                  (...)stimela_master.txt"
+    echo "                                      when installing CARACal"
+    echo ""
+    echo "  --use-stimela-stable -us            Use"
+    echo "                                      pip install -U --force-reinstall -r"
+    echo "                                                  (...)stimela_last_stable.txt"
+    echo "                                      when installing CARACal"
+    echo ""
+    echo "  --local-stimela ARG -lst ARG        Use pip install -U --force-reinstall ARG"
+    echo "                                      to install a local stimela (or whatever"
+    echo "                                      is in ARG) when installing CARACal"
+    echo ""
+    echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
+    echo ""
+    echo "  --docker-installation -di           Test Docker installation/install Docker"
+    echo "                                      Stimela"
+    echo ""
+    echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
+    echo "                                      omit the step when switch is not set"
+    echo ""
+    echo "  --omit-docker-prune -op             Do not prune system during docker install"
+    echo ""
+    echo "  --singularity-installation -si      Test Singularity installation/install"
+    echo "                                      Singularity Stimela"
+    echo ""
+    echo "  --singularity-root -sr              Do not install Singularity images in"
+    echo "                                      global \$CARATE_WORKSPACE but in the"
+    echo "                                      specific root directory"
     echo ""
     echo "  --caracal-test-id ARG -ct ARG       Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_TEST_ID"
-    echo ""
-    echo "  --omit-copy-test-data -od           Do not re-copy test data"
-    echo ""
-    echo "  --move-test-data -md                Move test data instead of creating a copy"
     echo ""
     echo "  --caracal-run-prefix ARG -rp ARG    Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_RUN_PREFIX"
@@ -381,15 +423,11 @@ then
     echo "  --caracal-former-run ARG -cf ARG    Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_FORMER_RUN"
     echo ""
-    echo "  --local-source ARG -ls ARG          Use ARG instead of environment variable"
-    echo "                                      CARATE_LOCAL_SOURCE"
+    echo "  --keep-report-dir -kd               Do not delete the report directory if it"
+    echo "                                      exists"
     echo ""
-    echo "  --caracal-release -cr               Install latest CARACal release version"
-    echo ""
-    echo "  --omit-caracal-reinstall -oc        Do not pip install caracal"
-    echo ""
-    echo "  --omit-caracal-fetch -of            Do not fetch or copy caracal directory"
-    echo "                                      if present"
+    echo "  --keep-home -kh                     Do not change the HOME environment"
+    echo "                                      variable during installation test"
     echo ""
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
@@ -398,11 +436,15 @@ then
     echo "                                      keep the confic source as it is. Only"
     echo "                                      if --config-source is supplied."
     echo ""
-    echo "  --keep-home -kh                     Do not change the HOME environment"
-    echo "                                      variable during installation test"
+    echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
+    echo "                                      CARATE_TEST_DATA_DIR"
     echo ""
-    echo "  --keep-report-dir -kd               Do not delete the report directory if it"
-    echo "                                      exists"
+    echo "  --omit-copy-test-data -od           Do not re-copy test data"
+    echo ""
+    echo "  --move-test-data -md                Move test data instead of creating a copy"
+    echo ""
+    echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
+    echo "                                      CARATE_INPUT_DIR"
     echo ""
     echo "  --docker-minimal -dm                Test Docker installation and test run with"
     echo "                                      minimal configuration"
@@ -410,319 +452,321 @@ then
     echo "  --docker-alternative -da            Test Docker installation and test run with"
     echo "                                      alternative configuration carateConfig.yml"
     echo ""
-    echo "  --docker-installation -di           Test Docker installation"
-    echo ""
-    echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
-    echo "                                      omit the step when switch is not set"
-    echo ""
-    echo "  --omit-docker-prune -op             Do not prune system during docker install"
-    echo ""
     echo "  --singularity-minimal -sm           Test Singularity installation and test run"
     echo "                                      with minimal configuration"
     echo ""
     echo "  --singularity-alternative -sa       Test Singularity installation and test run"
     echo "                                      alternative configuration carateConfig.yml"
     echo ""
-    echo "  --singularity-installation -si      Test Singularity installation"
-    echo ""
-    echo "  --singularity-root -sr              Do not install Singularity images in"
-    echo "                                      global \$CARATE_WORKSPACE but in the"
-    echo "                                      specific root directory (can then not be"
-    echo "                                      re-used)"
-    echo ""
-    echo "  --install-attempts -ia              Allowed number of attempts to pull images"
-    echo "                                      or to run stimela build"
-    echo ""
-    echo "  --use-stimela-master -um            Use"
-    echo "                                      pip install -U --force-reinstall -r (...)stimela_master.txt"
-    echo "                                      when installing CARACal"
-    echo ""
-    echo "  --use-stimela-stable -us            Use"
-    echo "                                      pip install -U --force-reinstall -r (...)stimela_last_stable.txt"
-    echo "                                      when installing CARACal"
-    echo ""
-    echo "  --local-stimela ARG -lst ARG        Use pip install -U --force-reinstall ARG"
-    echo "                                      to install a local stimela (or whatever is in ARG)"
-    echo "                                      when installing CARACal"
-    echo ""
-    echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
-    echo ""
-    echo "  --force -f                          Force replacement and re-installation of"
-    echo "                                      all components if possible (see below)"
-    echo "                                      "
-    echo ""
-    echo "  --fastsim -fs                       Omit all time-consuming steps"
-    echo ""
-    echo "  --override -or                      Override security question (showing root"
-    echo "                                      directory and asking whether to proceed.)"
-    echo ""
     echo "  --docker-sample-configs -dsc         Check all sample configurations to pass"
     echo "                                       observation config with docker."
     echo ""
     echo "  --singularity-sample-configs -ssc    Check all sample configurations to pass"
     echo "                                       observation config with singiularity."
-#    echo "  --small-script ARG -ss ARG          Generate a small script ARG showing all"
-#    echo "                                      steps taken by carate"
+    echo ""
+    echo "  --override -or                      Override security question (showing root"
+    echo "                                      directory and asking whether to proceed.)"
+    echo ""
+    echo "  --fastsim -fs                       Omit all time-consuming steps"
+    echo ""
+    echo "  --force -f                          Force replacement and re-installation of"
+    echo "                                      all components if possible (see below)"
+    echo "                                      "
     echo ""
 fi
 
 if [[ -n "$VE" ]]
 then
     echo ""
-    echo " The script creates a root directory"
-    echo " (Notice that all environment variables can also be supplied via the command"
-    echo "  line) \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, where"
-    echo " CARATE_WORKSPACE is an environment variable containing the path of a"
-    echo " parent directory to all tests done with this script. The variable"
-    echo " CARATE_CARACAL_TEST_ID is identical to the environment variable"
-    echo " CARATE_CARACAL_BUILD_NUMBER if that is set by the user, and has to"
-    echo " be supplied independently (i.e. to be defined prior to the script"
-    echo " call or supplied using switches --caracal-test-id or -ct) as an environment"
-    echo " variable if CARATE_CARACAL_BUILD_NUMBER is"
-    echo " not defined. The rationale behind that is that the test directory is"
-    echo " always linked to a git(hub) build number if that exists. Otherwise, if"
-    echo " CARATE_CARACAL_BUILD_NUMBER is not defined, the user can supply an"
-    echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root"
-    echo " directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home"
-    echo " directory called home, a virtual environment called"
-    echo " caracal_virtualenv, a CARACal copy caracal, and up to six test"
-    echo " directories are created, within which the tests are conducted. If the"
-    echo " --force or -f switch is set, existing directories and installations"
-    echo " are deleted and replaced, if not, only those directories"
-    echo " and files are created, which do not exist yet. Exceptions from that rule"
-    echo " exist. If the --omit-stimela-reinstall or -os switch is set, "
-    echo " a re-installation of stimela is preventedeven if -f is set. This includes the"
-    echo " Re-installation of the virtual environment, the home directory, and"
-    echo " the file .stimela in the home directory. If the option --keep-home or -kh is"
-    echo " set, the directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre-"
-    echo " served. If the option --keep-report or -kr is"
-    echo " set, the directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
-    echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the deletion of"
-    echo " the virtualenv, --omit-caracal-reinstall will prevent the deletion (and re-"
-    echo " installation of CARACal. If option --fast-simulation (-fs) is set, only the directory "
-    echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is deleted if option -f is"
-    echo " set. No directories or files supplied to caratekit.sh (including their"
-    echo " parent directories) are deleted."
-    echo ""
-    echo "  In detail (all installations in the root directory"
-    echo "  \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID):"
-    echo ""
-    echo "  - a directory called home is created (if not existing or if -f is set)"
-    echo "    and the HOME environment variable set to that home directory unless"
-    echo "    the --keep-home or -kh switches are set"
-    echo ""
-    echo "  - a python 3 virtual environment name caracal_venv is created (if not"
-    echo "    existing or if -f is set) and activated. It is not re-created if"
-    echo "    switches --omit-stimela-reinstall (-os) or --omit-virtualenv-reinstall (-ov)"
-    echo "    are set."
-    echo ""
-    echo "  - caracal is either downloaded to the root directory (if not existing"
-    echo "    or if -f is set) from https://github.com/ska-sa/caracal or, if the"
-    echo "    CARATE_LOCAL_SOURCE environment variable is set,"
-    echo "    \$CARATE_LOCAL_SOURCE is copied to the root directory if not"
-    echo "    existing or if -f is set (notice that the directory tree should be a"
-    echo "    valid caracal tree, ready for installation). If switches"
-    echo "    --omit-caracal-fetch or -of are set, the sources are also not copied"
-    echo "    across."
-    echo ""
-    echo "  - the caracal version CARATE_CARACAL_BUILD_NUMBER is checked out"
-    echo "    using git if CARATE_CARACAL_BUILD_NUMBER is defined. If switches"
-    echo "    --omit-caracal-reinstall or -oc are set, this is not done"
-    echo ""
-    echo "  - the latest CARACal release version is checked out and installed"
-    echo "    if switches --caracal-release or -cr are set"
-    echo ""
-    echo "  - caracal is installed via pip. If switches --omit-caracal-reinstall"
-    echo "    or -oc are set, this is not done"
-    echo ""
-    echo "  - if --use-stimela-master or -um switch is set,"
-    echo "    caracal/stimela_master.txt is installed via pip. If switches"
-    echo "    --omit-stimela-reinstall or -os are set, this is not done"
-    echo ""
-    echo "  - if --use-stimela-stable or -us switch is set,"
-    echo "    caracal/stimela_last_stable.txt is installed via pip. If switches"
-    echo "    --omit-stimela-reinstall or -os are set, this is not done"
-    echo ""
-    echo "  - when switches --docker-minimal, -dm, --docker-alternative, -da,"
-    echo "    --docker-installation, -di are set, home/.stimela is removed, docker"
-    echo "    system prune is invoked, and docker stimela is installed (stimela"
-    echo "    build). If switches"
-    echo "    --omit-stimela-reinstall or -os are set, this is not done"
-    echo ""
-    echo "  - when switches --pull-docker, -pd are set, stimela pull -d is invoked"
-    echo "    before running stimela build for Docker installation, omit step"
-    echo "    otherwise. If switches"
-    echo "    --omit-stimela-reinstall or -os are set, this is not done"
-    echo ""
-    echo "  - when switches --singularity-minimal, -sm, --singularity-alternative,"
-    echo "    -se, --singularity-installation, -si are set, home/.stimela is"
-    echo "    removed, and singularity stimela is by default installed in the"
-    echo "    directory (if not existing or if -f is set)"
-    echo "    \$CARATE_WORKSPACE/stimela_singularity. If --stimela-root or"
-    echo "    -sr are set, it is installed in rootfolder/stimela_singularity."
-    echo "    The first variant allows to re-use the same stimela installation"
-    echo "    In multiple tests. If switches"
-    echo "    --omit-stimela-reinstall or -os are set, this is not done"
-    echo ""
-    echo "  - when switch --singularity-minimal or -sm is set, a directory"
-    echo "    minimal_singularity is created (if not existing or if -f is"
-    echo "    set), the configuration file"
-    echo "    caracal/caracal/sample_configurations/minimalConfig.yml is"
-    echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the minimal_singularity"
-    echo "    directory and minimalConfig.yml is edited to point to those .ms"
-    echo "    files in the variable dataid, then caracal is run with"
-    echo "    minimalConfig.yml and declared successful if certain expected files"
-    echo "    are created (see exceptions below)."
-    echo ""
-    echo "  - when switch --singularity_extended or -se is set, a directory"
-    echo "    extended_singularity is created (if not existing or if -f is"
-    echo "    set), the configuration file"
-    echo "    caracal/caracal/sample_configurations/extendedConfig.yml is"
-    echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the extended_singularity"
-    echo "    directory and extendedConfig.yml is edited to point to those .ms"
-    echo "    files in the variable dataid, then caracal is run with"
-    echo "    extendedConfig.yml and declared successful if certain expected files"
-    echo "    are created (see exceptions below)."
-    echo ""
-    echo "  - when switch --docker-minimal or -dm is set, a directory"
-    echo "    \- minimal_docker is created (if not existing or if -f is set),"
-    echo "    the configuration file"
-    echo "    caracal/caracal/sample_configurations/minimalConfig.yml is"
-    echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the minimal_docker"
-    echo "    directory and minimalConfig.yml is edited to point to those .ms"
-    echo "    files in the variable dataid, then caracal is run with"
-    echo "    minimalConfig.yml and declared successful if certain expected files"
-    echo "    are created (see exceptions below)."
-    echo ""
-    echo "  - when switch --docker_extended or -da is set, a directory"
-    echo "    extended_docker is created (if not existing or if -f is set),"
-    echo "    the configuration file"
-    echo "    caracal/caracal/sample_configurations/extendedConfig.yml is"
-    echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
-    echo "    are copied into the msdir directory in the extended_docker"
-    echo "    directory and extendedConfig.yml is edited to point to those .ms"
-    echo "    files in the variable dataid, then caracal is run with"
-    echo "    extendedConfig.yml and declared successful if certain expected files"
-    echo "    are created (see exceptions below)."
-    echo ""
-    echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
-    echo "    switches --singularity-installation or -si set, then that yaml configuration"
-    echo "    source is used for a further singularity test in the directory"
-    echo "    prefix_singularity, where prefix is the prefix of the yaml file. The line"
-    echo "    dataid: ['...','...'] in that file is replaced by the appropriate line to"
-    echo "    process the test data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set."
-    echo "    See exceptions below."
-    echo ""
-    echo "  - when environment variable CARATE_CONFIG_SOURCE is set in combination with"
-    echo "    switches --docker-installation or -di set, then that yaml configuration"
-    echo "    source is used for a further singularity test in the directory"
-    echo "    prefix_singularity, where prefix is the prefix of the yaml file. The line"
-    echo "    dataid: ['...','...'] in that file is replaced by the appropriate line to"
-    echo "    process the test data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set."
-    echo "    See exceptions below."
-    echo ""
-    echo "  - when environment variable CARATE_INPUT_DIR is set the contents of that"
-    echo "    direcory will be copied into the input directory of CARACal prior to"
-    echo "    starting the test"
-    echo ""
-    echo "  - when environment variable CARATE_VIRTUALENV is set the that"
-    echo "    direcory is used as the location of the virtual environment"
-    echo ""
-    echo "  - when switch omit-venv-reinstall or -ov is set, the virtual environment will"
-    echo "    not be re-installed if already present."
-    echo ""
-    echo "  - when environment variable CARATE_LOCAL_STIMELA is set the that"
-    echo "    direcory is used as the Stimela location."
-    echo ""
-    echo "  - when switches --omit-copy-test-data or -od are set, the test data will not"
-    echo "    be copied if for a test run the directory with the test data does already"
-    echo "    exist"
-    echo ""
-    echo "  - when switches --move-test-data or -md are set, the test data will not"
-    echo "    be copied but moved. This is only possible if one test run is performed"
-    echo ""
-    echo "  - when environment variable CARATE_CARACAL_RUN_PREFIX is set (or defined via"
-    echo "    --caracal-run-prefix or -rp switches) tests will be named using that"
-    echo "    variable as a prefix and a suffix indicating the number of the test."
-    echo ""
-    echo "  - when environment variable CARATE_CARACAL_FORMER_RUN is set (or defined via"
-    echo "    --caracal-former-run or -cf switches) a former test directory with the name"
-    echo "    \${CARATE_CARACAL_FORMER_RUN}_suffix will be re-named into"
-    echo "    \${CARATE_CARACAL_RUN_PREFIX}_suffix if existent. suffix is the run number."
-    echo "    variable as a prefix and a suffix indicating the number of the test."
-    echo "    Consecutively, the directories msdir, input, output, and"
-    echo "    stimela_parameter_files and their contents in"
-    echo "    \${CARATE_CARACAL_RUN_PREFIX}_suffix will not be deleted."
-    echo ""
-    echo " For each test run, log-caracal.txt is searched for keywords indicating the start"
-    echo " and the end of a worker and those numbers are reported."
-    echo " The test is declared failed and caratekit.sh returns 1 if:"
-    echo "   - No logfiles are produced before CARACal finishes"
-    echo "   - log-caracal.txt does not contain any keyword indicating that a worker has started"
-    echo "   - The number of keywords in log-caracal.txt indicating the start of a worker differs"
-    echo "     from the number of keywords in log-caracal.txt indicating the end of a worker."
-    echo "   - If the exit status of CARACal is not 0 (success)"
-    echo ""
-    echo " caratekit will create a report directory \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report"
-    echo " containing three files:"
-    echo "   - a shell script reproducing all shell commands initiated by carate.sh, if"
-    echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
-    echo "     switches --caracal-run-prefix or -cp) called"
-    echo "     \${CARATE_CARACAL_RUN_PREFIX}.sh.txt, called \${CARATE_CARACAL_TEST_ID}"
-    echo "     \${CARATE_CARACAL_TEST_ID}.sh.txt otherwise"
-    echo "   - a file with information about the computer and"
-    echo "     the environment that was used for the test, if"
-    echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
-    echo "     switches --caracal-run-prefix or -cp) called"
-    echo "     \${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt, called \${CARATE_CARACAL_TEST_ID}"
-    echo "     \${CARATE_CARACAL_TEST_ID}_sysinfo.txt otherwise"
-    echo "   - a file ${CARATE_CARACAL_TEST_ID}_sysinfo.txt with information about the computer and"
-    echo "     the environment that was used for the test"
-    echo "   - copies of the configuration files, one per run"
-    echo "   - copies of the output log-caracal.txt, one per run"
-    echo " Note that in particular Stimela has components that are external to"
-    echo " the root directory and will be touched by this test.  "
-    echo ""
-    echo " Example 1:"
-    echo " Testing a pull request with commit/build number 6d562c... using Docker and"
-    echo " Singularity and installing using requirements.txt. The user is permanently"
-    echo " testing CARACal and has therefore a standard directory with test files and"
-    echo " a standard test location. Someone issues a pull request. The user looks up"
-    echo " the build number of the corresponding branch commit in github:"
-    echo " In the user's rc:"
-    echo "   export CARATE_WORKSPACE=/home/tester/software/caracal_tests"
-    echo "   export CARATE_TEST_DATA_DIR=/home/jozsa/software/caracal_tests/rawdata"
-    echo "   export PATH=\$PATH:/home/user/software/caracal/caracal/utils/carate.sh"
-    echo " or"
-    echo "   setenv CARATE_WORKSPACE \"/home/tester/software/caracal_tests\""
-    echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/caracal_tests/rawdata\""
-    echo "   set path = ( \$path /home/user/software/caracal/caracal/utils/carate.sh)"
-    echo " Then start carate"
-    echo "   \$carate.sh -dm -da -sm -sa -ur -f -cb 6d562c 2>&1 | tee carate_run.log"
-    echo ""
-    echo
-    echo " Example 2:"
-    echo " Testing a local installation using Docker only with an own configuration file"
-    echo " and installing using requirements.txt. The user is permanently testing"
-    echo " CARACal and has therefore a standard directory with test files and a "
-    echo " standard test location.:"
-    echo " In the user's rc:"
-    echo "   export CARATE_WORKSPACE=/home/tester/software/caracal_tests"
-    echo "   export CARATE_TEST_DATA_DIR=/home/jozsa/software/caracal_tests/rawdata"
-    echo "   export PATH=\$PATH:/home/user/software/caracal/caracal/utils/carate.sh"
-    echo " or"
-    echo "   setenv CARATE_WORKSPACE \"/home/tester/software/caracal_tests\""
-    echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/caracal_tests/rawdata\""
-    echo "   set path = ( \$path /home/user/software/caracal/caracal/utils/carate.sh)"
-    echo " Then start carate"
-    echo "   \$carate.sh -di -ur -f -cs $wherever/bla.yml -ct mynewthing -ss small_script.sh 2>&1 | tee carate_run.log"
-    echo " Notice that bla.yml should contain the line dataid: [''], which will be"
-    echo " replaced by a line containing the appropriate data sets from ../rawdata"
-    echo ""
-    echo ""
+echo " The script creates a root directory (Notice that all environment"
+echo " variables can also be supplied via the command line)"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, where CARATE_WORKSPACE"
+echo " is an environment variable containing the path of a parent directory"
+echo " to all tests done with this script. The variable"
+echo " CARATE_CARACAL_TEST_ID is identical to the environment variable"
+echo " CARATE_CARACAL_BUILD_ID if that is set by the user, and has to be"
+echo " supplied independently (i.e. to be defined prior to the script call"
+echo " or supplied using switches --caracal-test-id or -ct) as an"
+echo " environment variable if CARATE_CARACAL_BUILD_ID is not defined. The"
+echo " rationale behind that is that the test directory is always linked to"
+echo " a git(hub) build number if that exists. Otherwise, if"
+echo " CARATE_CARACAL_BUILD_ID is not defined, the user can supply an"
+echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home directory called"
+echo " home, a virtual environment called caracal_virtualenv, a CARACal copy"
+echo " caracal, and up to six test directories are created, within which the"
+echo " tests are conducted. If the --force or -f switch is set, existing"
+echo " directories and installations are deleted and replaced, if not, only"
+echo " those directories and files are created, which do not exist"
+echo " yet. Exceptions from that rule exist. If the --omit-stimela-reinstall"
+echo " or -os switch is set, a re-installation of stimela is preventedeven"
+echo " if -f is set. This includes the Re-installation of the virtual"
+echo " environment, the home directory, and the file .stimela in the home"
+echo " directory. If the option --keep-home or -kh is set, the directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre- served. If"
+echo " the option --keep-report or -kr is set, the directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
+echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the"
+echo " deletion of the virtualenv, --omit-caracal-reinstall will prevent the"
+echo " deletion (and re- installation of CARACal. If option"
+echo " --fast-simulation (-fs) is set, only the directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is deleted if"
+echo " option -f is set. No directories or files supplied to caratekit.sh"
+echo " (including their parent directories) are deleted."
+echo ""
+echo "  In detail (all installations in the root directory"
+echo "  \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID):"
+echo ""
+echo "  - a directory called home is created (if not existing or if -f is"
+echo "    set) and the HOME environment variable set to that home directory"
+echo "    unless the --keep-home or -kh switches are set"
+echo ""
+echo "  - a python 3 virtual environment name caracal_venv is created (if"
+echo "    not existing or if -f is set) and activated. It is not re-created"
+echo "    if switches --omit-stimela-reinstall (-os) or"
+echo "    --omit-virtualenv-reinstall (-ov) are set."
+echo ""
+echo "  - caracal is either downloaded to the root directory (if not"
+echo "    existing or if -f is set) from https://github.com/ska-sa/caracal"
+echo "    or, if the CARATE_LOCAL_CARACAL environment variable is set,"
+echo "    \$CARATE_LOCAL_CARACAL is copied to the root directory if not"
+echo "    existing or if -f is set (notice that the directory tree should be"
+echo "    a valid caracal tree, ready for installation). If switches"
+echo "    --omit-caracal-fetch or -of are set, the sources are also not"
+echo "    copied across."
+echo ""
+echo "  - the caracal version CARATE_CARACAL_BUILD_ID is checked out using"
+echo "    git if CARATE_CARACAL_BUILD_ID is defined. If switches"
+echo "    --omit-caracal-reinstall or -oc are set, this is not done"
+echo ""
+echo "  - the latest CARACal release version is checked out and installed if"
+echo "    switches --caracal-release or -cr are set"
+echo ""
+echo "  - caracal is installed via pip. If switches --omit-caracal-reinstall"
+echo "    or -oc are set, this is not done"
+echo ""
+echo "  - if --use-stimela-master or -um switch is set,"
+echo "    caracal/stimela_master.txt is installed via pip. If switches"
+echo "    --omit-stimela-reinstall or -os are set, this is not done"
+echo ""
+echo "  - if --use-stimela-stable or -us switch is set,"
+echo "    caracal/stimela_last_stable.txt is installed via pip. If switches"
+echo "    --omit-stimela-reinstall or -os are set, this is not done"
+echo ""
+echo "  - when switches --docker-minimal, -dm, --docker-alternative, -da,"
+echo "    --docker-installation, -di are set, home/.stimela is removed, docker"
+echo "    system prune is invoked, and docker stimela is installed (stimela"
+echo "    build). If switches --omit-stimela-reinstall or -os are set, this is"
+echo "    not done"
+echo ""
+echo "  - when switches --pull-docker, -pd are set, stimela pull -d is"
+echo "    invoked before running stimela build for Docker installation, omit"
+echo "    step otherwise. If switches --omit-stimela-reinstall or -os are"
+echo "    set, this is not done"
+echo ""
+echo "  - when switches --singularity-minimal, -sm,"
+echo "    --singularity-alternative, -se, --singularity-installation, -si"
+echo "    are set, home/.stimela is removed, and singularity stimela is by"
+echo "    default installed in the directory (if not existing or if -f is"
+echo "    set) \$CARATE_WORKSPACE/stimela_singularity. If --stimela-root or"
+echo "    -sr are set, it is installed in rootfolder/stimela_singularity."
+echo "    The first variant allows to re-use the same stimela installation"
+echo "    In multiple tests. If switches --omit-stimela-reinstall or -os are"
+echo "    set, this is not done"
+echo ""
+echo "  - when switch --singularity-minimal or -sm is set, a directory"
+echo "    minimal_singularity is created (if not existing or if -f is set),"
+echo "    the configuration file"
+echo "    caracal/caracal/sample_configurations/minimalConfig.yml is copied"
+echo "    to that directory, all .ms files from \$CARATE_TEST_DATA_DIR are"
+echo "    copied into the msdir directory in the minimal_singularity"
+echo "    directory and minimalConfig.yml is edited to point to those .ms"
+echo "    files in the variable dataid, then caracal is run with"
+echo "    minimalConfig.yml and declared successful if certain expected"
+echo "    files are created (see exceptions below)."
+echo ""
+echo "  - when switch --singularity_extended or -se is set, a directory"
+echo "    extended_singularity is created (if not existing or if -f is"
+echo "    set), the configuration file"
+echo "    caracal/caracal/sample_configurations/extendedConfig.yml is"
+echo "    copied to that directory, all .ms files from \$CARATE_TEST_DATA_DIR"
+echo "    are copied into the msdir directory in the extended_singularity"
+echo "    directory and extendedConfig.yml is edited to point to those .ms"
+echo "    files in the variable dataid, then caracal is run with"
+echo "    extendedConfig.yml and declared successful if certain expected files"
+echo "    are created (see exceptions below)."
+echo ""
+echo "  - when switch --docker-minimal or -dm is set, a directory \-"
+echo "    minimal_docker is created (if not existing or if -f is set), the"
+echo "    configuration file"
+echo "    caracal/caracal/sample_configurations/minimalConfig.yml is copied"
+echo "    to that directory, all .ms files from \$CARATE_TEST_DATA_DIR are"
+echo "    copied into the msdir directory in the minimal_docker directory"
+echo "    and minimalConfig.yml is edited to point to those .ms files in the"
+echo "    variable dataid, then caracal is run with minimalConfig.yml and"
+echo "    declared successful if certain expected files are created (see"
+echo "    exceptions below)."
+echo ""
+echo "  - when switch --docker_extended or -da is set, a directory"
+echo "    extended_docker is created (if not existing or if -f is set), the"
+echo "    configuration file"
+echo "    caracal/caracal/sample_configurations/extendedConfig.yml is copied"
+echo "    to that directory, all .ms files from \$CARATE_TEST_DATA_DIR are"
+echo "    copied into the msdir directory in the extended_docker directory"
+echo "    and extendedConfig.yml is edited to point to those .ms files in"
+echo "    the variable dataid, then caracal is run with extendedConfig.yml"
+echo "    and declared successful if certain expected files are created (see"
+echo "    exceptions below)."
+echo ""
+echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
+echo "    combination with switches --singularity-installation or -si set,"
+echo "    then that yaml configuration source is used for a further"
+echo "    singularity test in the directory prefix_singularity, where prefix"
+echo "    is the prefix of the yaml file. The line dataid: ['...','...'] in"
+echo "    that file is replaced by the appropriate line to process the test"
+echo "    data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set.  See"
+echo "    exceptions below."
+echo ""
+echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
+echo "    combination with switches --docker-installation or -di set, then"
+echo "    that yaml configuration source is used for a further singularity"
+echo "    test in the directory prefix_singularity, where prefix is the"
+echo "    prefix of the yaml file. The line dataid: ['...','...'] in that"
+echo "    file is replaced by the appropriate line to process the test data"
+echo "    sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set.  See"
+echo "    exceptions below."
+echo ""
+echo "  - when environment variable CARATE_INPUT_DIR is set the contents of"
+echo "    that direcory will be copied into the input directory of CARACal"
+echo "    prior to starting the test"
+echo ""
+echo "  - when environment variable CARATE_VIRTUALENV is set the that"
+echo "    direcory is used as the location of the virtual environment"
+echo ""
+echo "  - when switch omit-venv-reinstall or -ov is set, the virtual"
+echo "    environment will not be re-installed if already present."
+echo ""
+echo "  - when environment variable CARATE_LOCAL_STIMELA is set the that"
+echo "    direcory is used as the Stimela location."
+echo ""
+echo "  - when switches --omit-copy-test-data or -od are set, the test data"
+echo "    will not be copied if for a test run the directory with the test"
+echo "    data does already exist"
+echo ""
+echo "  - when switches --move-test-data or -md are set, the test data will"
+echo "    not be copied but moved. This is only possible if one test run is"
+echo "    performed"
+echo ""
+echo "  - when environment variable CARATE_CARACAL_RUN_PREFIX is set (or"
+echo "    defined via --caracal-run-prefix or -rp switches) tests will be"
+echo "    named using that variable as a prefix and a suffix indicating the"
+echo "    number of the test."
+echo ""
+echo "  - when environment variable CARATE_CARACAL_FORMER_RUN is set (or"
+echo "    defined via --caracal-former-run or -cf switches) a former test"
+echo "    directory with the name \${CARATE_CARACAL_FORMER_RUN}_suffix will"
+echo "    be re-named into \${CARATE_CARACAL_RUN_PREFIX}_suffix if"
+echo "    existent. suffix is the run number.  variable as a prefix and a"
+echo "    suffix indicating the number of the test.  Consecutively, the"
+echo "    directories msdir, input, output, and stimela_parameter_files and"
+echo "    their contents in \${CARATE_CARACAL_RUN_PREFIX}_suffix will not be"
+echo "    deleted."
+echo ""
+echo " For each test run, log-caracal.txt is searched for keywords"
+echo " indicating the start and the end of a worker and those numbers are"
+echo " reported.  The test is declared failed and caratekit.sh returns 1 if:"
+echo " "
+echo "   - No logfiles are produced before CARACal finishes"
+echo "   "
+echo "   - log-caracal.txt does not contain any keyword indicating that a"
+echo "     worker has started"
+echo ""
+echo "   - The number of keywords in log-caracal.txt indicating the start of"
+echo "     a worker differs from the number of keywords in log-caracal.txt"
+echo "     indicating the end of a worker."
+echo "     "
+echo "   - If the exit status of CARACal is not 0 (success)"
+echo ""
+echo " caratekit will create a report directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report containing three"
+echo " files:"
+echo " "
+echo "   - a shell script reproducing all shell commands initiated by carate.sh, if"
+echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
+echo "     switches --caracal-run-prefix or -cp) called"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}.sh.txt, called \${CARATE_CARACAL_TEST_ID}"
+echo "     \${CARATE_CARACAL_TEST_ID}.sh.txt otherwise"
+echo "     "
+echo "   - a file with information about the computer and the environment"
+echo "     that was used for the test, if CARATE_CARACAL_RUN_PREFIX is set"
+echo "     (as an environment variable or through switches"
+echo "     --caracal-run-prefix or -cp) called"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt, called"
+echo "     \${CARATE_CARACAL_TEST_ID} \${CARATE_CARACAL_TEST_ID}_sysinfo.txt"
+echo "     otherwise"
+echo "     "
+echo "   - a file ${CARATE_CARACAL_TEST_ID}_sysinfo.txt with information"
+echo "     about the computer and the environment that was used for the test"
+echo "     "
+echo "   - copies of the configuration files, one per run"
+echo "   "
+echo "   - copies of the output log-caracal.txt, one per run"
+echo "   "
+echo " Note that in particular Stimela has components that are external to"
+echo " the root directory and will be touched by this test."
+echo ""
+echo " Example 1:"
+echo " "
+echo " Testing a pull request with commit/build number 6d562c... using"
+echo " Docker and installing using requirements.txt. The user is permanently"
+echo " testing CARACal and has therefore a standard directory with test"
+echo " files and a standard test location. Someone issues a pull"
+echo " request. The user looks up the build number of the corresponding"
+echo " branch commit in github:"
+echo " "
+echo " In the user's rc:"
+echo ""
+echo "   export CARATE_WORKSPACE=/home/tester/software/caracal_tests"
+echo "   export CARATE_TEST_DATA_DIR=/home/jozsa/software/caracal_tests/rawdata"
+echo "   export PATH=\$PATH:/home/user/software/caracal/caracal/utils/carate.sh"
+echo ""
+echo " or"
+echo ""
+echo "   setenv CARATE_WORKSPACE \"/home/tester/software/caracal_tests\""
+echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/caracal_tests/rawdata\""
+echo "   set path = ( \$path /home/user/software/caracal/caracal/utils/carate.sh)"
+echo ""
+echo " Then start carate"
+echo ""
+echo "   \$carate.sh -dm -ur -f -cb 6d562c 2>&1 | tee carate_run.log"
+echo ""
+echo ""
+echo " Example 2:"
+echo ""
+echo " Testing a local installation using Docker only with an own"
+echo " configuration file and installing using requirements.txt. The user is"
+echo " permanently testing CARACal and has therefore a standard directory"
+echo " with test files and a standard test location.:"
+echo ""
+echo " In the user's rc:"
+echo "   export CARATE_WORKSPACE=/home/tester/software/caracal_tests"
+echo "   export CARATE_TEST_DATA_DIR=/home/jozsa/software/caracal_tests/rawdata"
+echo "   export PATH=\$PATH:/home/user/software/caracal/caracal/utils/carate.sh"
+echo ""
+echo " or"
+echo ""
+echo "   setenv CARATE_WORKSPACE \"/home/tester/software/caracal_tests\""
+echo "   setenv CARATE_TEST_DATA_DIR=\"/home/jozsa/software/caracal_tests/rawdata\""
+echo "   set path = ( \$path /home/user/software/caracal/caracal/utils/carate.sh)"
+echo ""
+echo " Then start carate"
+echo ""
+echo "   \$ carate.sh -di -ur -f -cs $wherever/bla.yml"
+echo "                -ct mynewthing 2>&1 | tee carate_run.log"
+echo ""
+echo " Notice that bla.yml should contain the line dataid: [''], which will be"
+echo " replaced by a line containing the appropriate data sets from ../rawdata"
+echo ""
 fi
 
 if [[ -n "$HE" ]] || [[ -n "$VE" ]]
@@ -778,13 +822,13 @@ fi
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+=$'\n'
 
 # Do not force test id to be identical with build number any more, if it is defined
-[[ -z "$CARATE_CARACAL_BUILD_NUMBER" ]] || { \
+[[ -z "$CARATE_CARACAL_BUILD_ID" ]] || { \
     [[ -n CARATE_CARACAL_TEST_ID ]] || { \
-	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_NUMBER; \
+	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_ID; \
     }; \
     [[ -z ${CR} ]] || { \
-	echo "You cannot define a CARATE_CARACAL_BUILD_NUMBER (through an environment"; \
-	echo "variable or using --caracal-build-number or -cb switches and use the"; \
+	echo "You cannot define a CARATE_CARACAL_BUILD_ID (through an environment"; \
+	echo "variable or using --caracal-build-id or -cb switches and use the"; \
 	echo "--caracal-release or -cr switches. Exiting."; \
 	kill "$PPID"; exit 1;
     } ; \
@@ -816,24 +860,24 @@ ss+=$'\n'
     kill "$PPID"; exit 1;
 }
 
-if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+if [[ -n "$CARATE_LOCAL_CARACAL" ]]
 then
-    [[ -d "${CARATE_LOCAL_SOURCE}" ]] || { \
-	   echo "\$CARATE_LOCAL_SOURCE: ${CARATE_LOCAL_SOURCE}"; \
-	   echo "is specified (environment variable \${CARATE_LOCAL_SOURCE})"; \
-	   echo "is set or switches --local-source or -ls are used). But it"; \
+    [[ -d "${CARATE_LOCAL_CARACAL}" ]] || { \
+	   echo "\$CARATE_LOCAL_CARACAL: ${CARATE_LOCAL_CARACAL}"; \
+	   echo "is specified (environment variable \${CARATE_LOCAL_CARACAL})"; \
+	   echo "is set or switches --local-caracal or -lc are used). But it"; \
 	   echo "does not exist. Stopping."; \
 	   kill "$PPID"; exit 1;
        }
        [[ -z ${CR} ]] || { \
-	   echo "Warning: both \${CARATE_LOCAL_SOURCE} and switches --caracal-release or -cr"; \
+	   echo "Warning: both \${CARATE_LOCAL_CARACAL} and switches --caracal-release or -cr"; \
 	   echo "are set. This means that carate will try to check out the latest release from"; \
 	   echo "your local CARACal version. It might not be what you want."; \
 	   }
-    ss+="local_source=${CARATE_LOCAL_SOURCE}"
+    ss+="local_caracal=${CARATE_LOCAL_CARACAL}"
     ss+=$'\n'
 else
-    echo "The variable CARATE_LOCAL_SOURCE is not set, meaning that CARACal"
+    echo "The variable CARATE_LOCAL_CARACAL is not set, meaning that CARACal"
     echo "will be downloaded from https://github.com/ska-sa/caracal"
     echo ""
 fi
@@ -979,7 +1023,8 @@ then
               ;;
 	esac
     done
-#    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+    #    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+    echo ""
 fi
 
 # Check if workspace_root exists if we do not use force
@@ -988,7 +1033,7 @@ then
     if [[ -d $WORKSPACE_ROOT ]]
     then
         echo "Be aware that no existing file will be replaced, use -f to override"
-        echo
+        echo ""
     fi
 fi
 
@@ -998,7 +1043,7 @@ checkex () {
     # supplied files ${CARATE_CONFIG_SOURCE}, return 0 (true) if yes
     # Check the input is a directory and if yes if it is a parent or one of
     # the user-supplied files and directories ${CARATE_INPUT_DIR}
-    # ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR},
+    # ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR},
     # return 0 (true) if yes
 
     # Input:
@@ -1016,7 +1061,7 @@ checkex () {
 
     if [[ -d ${tocheck} ]]
     then
-	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_SOURCE} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
+	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
 	for file in ${files[@]}
 	do
 	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
@@ -1060,9 +1105,6 @@ mkdir -p ${WORKSPACE_ROOT}
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
-echo "\${CARATE_CARACAL_RUN_PREFIX}.sh.txt ${CARATE_CARACAL_RUN_PREFIX}.sh.txt"
-echo "\${CARATE_CARACAL_TEST_ID} ${CARATE_CARACAL_TEST_ID}"
-
 [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}.sh.txt || \
 SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
 
@@ -1203,7 +1245,7 @@ fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then
     [[ -n ${FS} ]] && echo "python3 -m venv \${cvirtualenv}" >> ${SS}
-    [[ -n ${FS} ]] || { echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; }
+    [[ -n ${FS} ]] || { echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; echo "rm -rf \${cvirtualenv}" >> ${SS}; rm -rf ${CARATE_VIRTUALENV}; echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; }
 fi
 
 # Report on virtualenv
@@ -1253,7 +1295,7 @@ fi
 
 echo "cd \${workspace_root}" >> ${SS}
 cd ${WORKSPACE_ROOT}
-if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+if [[ -n "$CARATE_LOCAL_CARACAL" ]]
 then
     if [[ -e ${WORKSPACE_ROOT}/caracal ]]
     then
@@ -1261,10 +1303,10 @@ then
         echo "omit -of if you have set it."
 	echo ""
     else
-	echo "Fetching CARACal from local source ${local_source}"
+	echo "Fetching CARACal from local source ${local_caracal}"
 	echo
-        echo "cp -r \${local_source} \${workspace_root}/"  >> ${SS}
-	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_SOURCE} ${WORKSPACE_ROOT}/
+        echo "cp -r \${local_caracal} \${workspace_root}/"  >> ${SS}
+	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL} ${WORKSPACE_ROOT}/
     fi
 else
     if [[ -e ${WORKSPACE_ROOT}/caracal ]]
@@ -1296,27 +1338,27 @@ else
     fi
 fi
 
-if [[ -n "$CARATE_CARACAL_BUILD_NUMBER" ]]
+if [[ -n "$CARATE_CARACAL_BUILD_ID" ]]
 then
     echo "cd \${workspace_root}/caracal" >> ${SS}
     [[ -n ${FS} ]] || cd ${WORKSPACE_ROOT}/caracal
-    [[ -z $CARATE_LOCAL_SOURCE ]] || { \
+    [[ -z $CARATE_LOCAL_CARACAL ]] || { \
 	echo "If an error occurs here, it likely means that the local installation";\
 	echo "of CARACal does not contain the build number. You may want to use the";\
-	echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_NUMBER:";\
-	echo "In bash: $ unset CARATE_CARACAL_BUILD_NUMBER";\
-	echo "Also, you might have used switches --caracal-build-number or -cb, which";\
+	echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_ID:";\
+	echo "In bash: $ unset CARATE_CARACAL_BUILD_ID";\
+	echo "Also, you might have used switches --caracal-build-id or -cb, which";\
 	echo "you should not";\
     }
-    echo "git checkout ${CARATE_CARACAL_BUILD_NUMBER}" >> ${SS}
-    [[ -n ${FS} ]] || git checkout ${CARATE_CARACAL_BUILD_NUMBER}
+    echo "git checkout ${CARATE_CARACAL_BUILD_ID}" >> ${SS}
+    [[ -n ${FS} ]] || git checkout ${CARATE_CARACAL_BUILD_ID}
 fi
 
 if [[ -n ${CR} ]]
 then
     echo "cd \${workspace_root}/caracal" >> ${SS}
     cd ${WORKSPACE_ROOT}/caracal
-    [[ -z $CARATE_LOCAL_SOURCE ]] || { \
+    [[ -z $CARATE_LOCAL_CARACAL ]] || { \
 	echo "If an error occurs here, it likely means that the local installation";\
 	echo "of CARACal does not contain the latest release. Because you set the";\
 	echo "switches --caracal-release or -cr, caratekit is trying to install the";\
@@ -1327,6 +1369,7 @@ then
     git checkout ${thabuild}
 fi
 
+echo ""
 
 if [[ -d ${WORKSPACE_ROOT}/caracal ]]
 then
@@ -1335,7 +1378,7 @@ then
     echo "" >> ${SYA}
     cd ${WORKSPACE_ROOT}/caracal
     [[ -z ${CR} ]] || { sya=+="CARACal version: ${CR}"; sya+=$'\n'; }
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]] && [[ -z ${CR} ]]
+    if [[ -n "$CARATE_LOCAL_CARACAL" ]] && [[ -z ${CR} ]]
     then
 	sya="CARACal build: local"; sya+=$'\n';
     else
@@ -1384,6 +1427,7 @@ then
     echo "from: https://github.com/ratt-ru/Stimela" >> ${SYA}
     [[ -z ${ORSR} ]] || echo "Stimela has not been re-build, so this is a guess" >> ${SYA}
     echo "" >> ${SYA}
+    echo ""
 fi
 
 echo "####################"
@@ -1396,28 +1440,83 @@ echo
 if [[ -z ${OC} ]]
 then
     echo "Installing CARACal using pip install"
-    echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal
+    ii=1
+    until (( ${ii} > ${IA} ))
+    do
+	echo "Running pip install -U --force-reinstall \${workspace_root}/caracal"
+	echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
+        if [[ -z ${FS} ]]
+	then
+	    pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal && break || {
+		    echo "pip install -U --force-reinstall \${workspace_root}/caracal failed"
+		    (( ii++ ))
+		}
+	else
+	    break
+	fi
+    done
 fi
 
 if [[ -n ${UM} ]]
 then
     echo "Installing stimela_master.txt"
-    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_master.txt
+    ii=1
+    until (( ${ii} > ${IA} ))
+    do
+	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt"
+	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt" >> ${SS}
+        if [[ -z ${FS} ]]
+	then
+	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_master.txt && break || {
+		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt failed"
+		    (( ii++ ))
+		}
+	else
+	    break
+	fi
+    done
 fi
 
 if [[ -n ${US} ]]
 then
     echo "Installing stimela_last_stable.txt"
-    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt" >> ${SS}
-    [[ -n ${FS} ]] || pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_last_stable.txt
+    ii=1
+    until (( ${ii} > ${IA} ))
+    do
+	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt"
+	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt" >> ${SS}
+        if [[ -z ${FS} ]]
+	then
+	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_last_stable.txt && break || {
+		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt failed"
+		    (( ii++ ))
+		}
+	else
+	    break
+	fi
+    done
 fi
+
 if [[ -n ${CARATE_LOCAL_STIMELA} ]]
 then
     echo "Installing local stimela ${CARATE_LOCAL_STIMELA}"
     echo "pip install -U --force-reinstall \${local_stimela}" >> ${SS}
     [[ -n ${FS} ]] || pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA}
+    ii=1
+    until (( ${ii} > ${IA} ))
+    do
+	echo "Running pip install -U --force-reinstall \${CARATE_LOCAL_STIMELA}"
+	echo "pip install -U --force-reinstall -r  \${local_stimela}" >> ${SS}
+        if [[ -z ${FS} ]]
+	then
+	    pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA} && break || {
+		    echo "pip install -U --force-reinstall \${local_stimela} failed"
+		    (( ii++ ))
+		}
+	else
+	    break
+	fi
+    done
 fi
 
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]] && [[ -z $DSC ]] && [[ -z $SSC ]]
@@ -2027,10 +2126,10 @@ then
     contarch="docker"
     caracalswitches="${stimela_ns}"
     # First we need to know all the sample configurations present that are not old
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/caracal/sample_configurations/"
-      sample_location="${CARATE_LOCAL_SOURCE}/caracal/sample_configurations"
+      echo "Checking the configurations in ${CARATE_LOCAL_CARACAL}/caracal/sample_configurations/"
+      sample_location="${CARATE_LOCAL_CARACAL}/caracal/sample_configurations"
     else
       echo "You are checking the configurations in the remote master"
       echo "That seems silly but ok."
@@ -2173,10 +2272,10 @@ then
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     # First we need to know all the sample configurations present that are not old
-    if [[ -n "$CARATE_LOCAL_SOURCE" ]]
+    if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-      echo "Checking the configurations in ${CARATE_LOCAL_SOURCE}/caracal/sample_configurations/"
-      sample_location="${CARATE_LOCAL_SOURCE}/caracal/sample_configurations"
+      echo "Checking the configurations in ${CARATE_LOCAL_CARACAL}/caracal/sample_configurations/"
+      sample_location="${CARATE_LOCAL_CARACAL}/caracal/sample_configurations"
     else
       echo "You are checking the configurations in the remote master"
       echo "That seems silly but ok."

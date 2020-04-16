@@ -90,16 +90,16 @@ mapping:
         desc: Number of cleaning iterations
         required: false
         example: '1000000'
-      img_nmiter: 
+      img_nmiter:
         type: int
         desc: Number of major cycles
         required: False
-        example: '0'   
+        example: '0'
       img_cleanborder:
         type: float
         desc: Clean border
         required: false
-        example: '1.3' 
+        example: '1.3'
       img_nchans:
         type: int
         desc: Number of channesls in output image
@@ -156,16 +156,6 @@ mapping:
         desc: Number of self-calibration iterations to perform
         required: false
         example: '2'
-      cal_minuvw_m:
-          type: int
-          desc: Exclude short baselines in all of self cal [m]. If smaller than the exclusion in the imaging it will be fixed to that value.
-          required: false
-          example: '0'
-      start_at_iter:
-        type: int
-        desc: Start self-cal iteration loop at this start value, 1-based.
-        required: false
-        example: '1'
       cal_timeslots_chunk:
         desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
         type: int
@@ -264,7 +254,7 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
-          sofia_settings: 
+          sofia_settings:
             desc: SoFiA source finder settings to produce a .FITS clean mask. The mask is located in output/masking.
             type: map
             mapping:
@@ -308,7 +298,7 @@ mapping:
                 example: '4.0'
               fornax_use_sofia:
                 type: bool
-                desc: use sofia for mask of Fornax A instead of Fomalont mask  
+                desc: use sofia for mask of Fornax A instead of Fomalont mask
                 required: false
                 example: 'False'
 
@@ -347,7 +337,7 @@ mapping:
               - type: int
             desc: Source finder island threshold
             required: false
-            example: '3'         
+            example: '3'
 
       calibrate:
         type: map
@@ -408,7 +398,7 @@ mapping:
             desc: G-Jones frequency solution interval. The parameter cal_frq_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency chunk.
             required: false
             example: '0'
-          Bjones: 
+          Bjones:
            type: bool
            desc: Enable Bjones
            required: false
@@ -504,7 +494,7 @@ mapping:
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
             example: '1+2'
-          clean_model: 
+          clean_model:
             type: str
             desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
@@ -524,7 +514,7 @@ mapping:
         type: map
         desc: Interpolate gains over the high frequency resolution data
         mapping:
-          enable: 
+          enable:
             type: bool
             desc: Execute this segment
             required: false
@@ -540,7 +530,7 @@ mapping:
             mapping:
               enable:
                  type: bool
-                 desc: Enable gain interpolation. 
+                 desc: Enable gain interpolation.
                  required: false
                  example: 'True'
               timeslots_int:
@@ -625,6 +615,6 @@ mapping:
             example: '0'
           memory_fraction:
             type: float
-            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
             required: false
             example: '0.5'

@@ -62,9 +62,8 @@ cross_cal:
   otfdelay: true
   uvrange: '>150'
   label_in: 1gc1
-  load_flags:
-    version: after_flagging_automatic
-    merge: False
+  rewind_flags:
+    enable: false
   set_model:
     enable: true
     caracal_model: true

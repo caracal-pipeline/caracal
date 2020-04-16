@@ -24,7 +24,7 @@ def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""
         remove_us = flaglist[index:]
     else:
         return
-            
+
     for i,flag in enumerate(remove_us):
         recipe.add("cab/casa_flagmanager", cab_name, {
             "vis": ms,
@@ -33,7 +33,7 @@ def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="{0:s}:: Delete flags".format(label or cab_name))
+            label="{0:s}:: Delete flags (step {1:d})".format(label or cab_name, i))
 
 def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", merge=False):
     if flagname in get_flags(pipeline, ms):
@@ -41,7 +41,7 @@ def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="
                 "vis": ms,
                 "mode": "restore",
                 "versionname": flagname,
-                "merge" : "or" if merge else "replace",
+                "merge": "replace",
             },
             input=pipeline.input,
             output=pipeline.output,
@@ -49,9 +49,17 @@ def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="
     else:
         log.warn("Flag version [{0:s}] could not be found".format(flagname))
 
-def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""):
-    if flagname in get_flags(pipeline, ms):
-        return
+def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", overwrite=False):
+    if flagname in get_flags(pipeline, ms) and overwrite:
+        recipe.add("cab/casa_flagmanager", cab_name.replace('save','delete'), {
+            "vis": ms,
+            "mode": "delete",
+            "versionname": flagname,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="{0:s}:: Delete flag version".format(label or cab_name.replace('save','delete')))
+
     recipe.add("cab/casa_flagmanager", cab_name, {
         "vis": ms,
         "mode": "save",

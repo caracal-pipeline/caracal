@@ -20,7 +20,6 @@ def worker(pipeline, recipe, config):
         prefixes = pipeline.prefixes
         nobs = pipeline.nobs
 
-
     msiter=0
     for i in range(nobs):
         # loop over all input .MS files
@@ -48,7 +47,7 @@ def worker(pipeline, recipe, config):
             raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
                                  "User selected: '{}'".format(config['field']))
 
-        for m in mslist:  # check whether all ms files to be used exist
+        for m in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
@@ -61,15 +60,63 @@ def worker(pipeline, recipe, config):
                 raise IOError(
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
 
-            substep = 'save_flags_before_{0:s}_ms{1:d}'.format(wname, msiter)
-            manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_before'.format(
-                pipeline.prefix, wname), msname, cab_name=substep)
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+            flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
+            available_flagversions = manflags.get_flags(pipeline,msname)
+            if flags_before_worker in available_flagversions and not config['ignore_flag_versions']:
+                if not config['rewind_flags']["enable"]:
+                    caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname,msname,pipeline.prefix))
+                    ask_what_to_do = True
+                else:
+                    if available_flagversions.index(config['rewind_flags']["version"]) > available_flagversions.index(flags_before_worker) and not config['ignore_flag_versions']:
+                        caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname,msname,pipeline.prefix))
+                        caracal.log.error('and you are rewinding to a flag version which came after that.')
+                        ask_what_to_do = True
+                    else: ask_what_to_do = False
+            else: ask_what_to_do  = False
+            if ask_what_to_do:
+                caracal.log.error('Caracal will not overwrite the following flag versions unless you explicitely request it to:')
+                caracal.log.error('       {0:s}'.format(flags_before_worker))
+                caracal.log.error('       {0:s}'.format(flags_after_worker))
+                caracal.log.error('The current flag versions of this MS are (from the oldest to the most recent):')
+                for vv in  available_flagversions:
+                    caracal.log.error('       {0:s}'.format(vv))
+                caracal.log.error('You have the following options:')
+                caracal.log.error('    1) If you are happy with the flags currently stored in the FLAG column of this MS and')
+                caracal.log.error('       want to append new flags to them, change the name of this worker in the configuration')
+                caracal.log.error('       file by appending "__n" to it (where n is an integer not already occupied; see list')
+                caracal.log.error('       above). The new flags will be appended to the FLAG column, and new flag versions will')
+                caracal.log.error('       be added to the list above.')
+                caracal.log.error('    2) If you want to discard the flags obtained during the previous run of "{0:s}" (and,'.format(wname))
+                caracal.log.error('       necessarily, all flags obtained thereafter; see list above) rewind the flag versions')
+                caracal.log.error('       by enabling "{0:s}: rewind_flags" and setting "rewind_flags: version: {1:s}"'.format(wname, flags_before_worker))
+                caracal.log.error('       in the configuration file. You could rewind to an even earlier flag version if necessary.')
+                caracal.log.error('       You  will lose all flags appended to the FLAG column after that version, and take it')
+                caracal.log.error('       from there.')
+                caracal.log.error('    3) If you really know what you are doing  enable "{0:s}: ignore_flag_versions" .'.format(wname))
+                caracal.log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
+                caracal.log.error('       FLAG column or to whatever flag version you are rewinding to; the flag versions from')
+                caracal.log.error('       the previous run of "{0:s}" will be overwritten and appended to the list above; AND'.format(wname))
+                caracal.log.error('       all hell will break loose. Good luck!')
+                caracal.log.error('Whatever your decision, it will be applied to all MS files being processed together in this Caracal run.')
+                raise RuntimeError()
 
-            if config['load_flags']["enable"]:
-                version = config['load_flags']["version"]
-                merge = config['load_flags']["merge"]
-                substep = 'loading_flags_{0:s}'.format(version)
-                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep, merge=merge)
+            if config['rewind_flags']["enable"]:
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, msiter)
+                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, msiter)
+                manflags.delete_cflags(pipeline, recipe,
+                    available_flagversions[available_flagversions.index(version)+1],
+                    msname, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
+
+            else:
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
 
             # flag antennas automatically based on drifts in the scan average of the
             # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
@@ -117,9 +164,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input, output=pipeline.output,
                            label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step,msname))
 
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_autopowerspec'.format(pipeline.prefix,wname), msname, cab_name=substep)
-
             # Define fields and field_ids to be used to only flag the fields selected with
             # flagging:field (either 'target' or 'calibrators') and with
             # flagging:calibrator_fields (for further selection among the calibrators)
@@ -157,9 +201,6 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Flag auto-correlations ms={1:s}'.format(step, msname))
 
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_autocorr'.format(pipeline.prefix, wname), msname, cab_name=substep)
-
             if pipeline.enable_task(config, 'flag_quack'):
                 step = '{0:s}_quack_ms{1:d}'.format(wname, msiter)
                 recipe.add('cab/casa_flagdata', step,
@@ -174,8 +215,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_quack'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_elevation'):
                 step = '{0:s}_elevation_ms{1:d}'.format(wname, msiter)
@@ -191,8 +230,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_elevation'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow'].get('include_full_mk64'):
@@ -225,8 +262,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flag shadowed antennas ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_shadow'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_spw'):
                 step = '{0:s}_spw_ms{1:d}'.format(wname, msiter)
@@ -274,8 +309,6 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_spw'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_time'):
                 step = '{0:s}_time_ms{1:d}'.format(wname, msiter)
@@ -304,8 +337,6 @@ def worker(pipeline, recipe, config):
                                 input=pipeline.input,
                                 output=pipeline.output,
                                 label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_time'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_scan'):
                 step = '{0:s}_scan_ms{1:d}'.format(wname, msiter)
@@ -320,8 +351,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}::Flag out channels ms={1:s}'.format(step, msname))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_scan'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_antennas'):
                 step = '{0:s}_antennas_ms{1:d}'.format(wname, msiter)
@@ -365,8 +394,6 @@ def worker(pipeline, recipe, config):
                     elif ensure and not found_valid_data[nn]:
                         caracal.log.warn(
                             'The following time selection has been made in the flag_antennas module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, times[nn], antstep))
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_antennas'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_mask'):
                 step = '{0:s}_mask_ms{1:d}'.format(wname, msiter)
@@ -381,9 +408,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
-
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_mask'.format(pipeline.prefix, wname), msname, cab_name=substep)
 
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}_rfi_ms{1:d}'.format(wname, msiter)
@@ -466,9 +490,6 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError(
                         "Flagger, {0:s} is not available. Options are 'aoflagger, tricolour, tfcrop'.")
 
-                substep = 'save_flags_after_{0:s}'.format(step)
-                manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_rfi'.format(pipeline.prefix, wname), msname, cab_name=substep)
-
             if pipeline.enable_task(config, 'inspect'):
                 step = '{0:s}_inspect_ms{1:d}'.format(wname,msiter)
                 if config['field'] == 'target':
@@ -514,8 +535,6 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
-            substep = 'save_flags_after_{0:s}_ms{1:d}'.format(wname, msiter)
-            manflags.add_cflags(pipeline, recipe, '{0:s}_{1:s}_after'.format(
-                pipeline.prefix, wname), msname, cab_name=substep)
-
+            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, msiter)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
             msiter+=1

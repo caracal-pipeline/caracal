@@ -104,7 +104,6 @@ def worker(pipeline, recipe, config):
         dd_ms_list = {"Data-MS" : ms_list}
         dd_image_opts_precal.update(dd_ms_list)
         if (use_mask):
-            sigmask = 10.0
             dd_imagename = {"Output-Name": image_prefix_precal+"-DD-masking"}   #Add the mask image prefix
             dd_image_opts_precal.update(dd_imagename)
             recipe.add("cab/ddfacet", "ddf_image_for_mask_{0:s}".format(field), dd_image_opts_precal,
@@ -147,7 +146,6 @@ def worker(pipeline, recipe, config):
         dd_ms_list = {"Data-MS" : ms_list}
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
         if (use_mask):
-            sigmask = 10.0
             dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-masking"}
             dd_image_opts_postcal.update(dd_imagename)
             recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,

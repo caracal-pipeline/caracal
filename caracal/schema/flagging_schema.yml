@@ -36,19 +36,19 @@ mapping:
           enable:
             type: bool
             desc: enable this segement
-            example: 'True'
+            example: 'False'
             required: false
           version: 
             type: str
             desc: Flag version name
-            example: 'before_flagging_automatic'
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
             required: false
           merge:
             desc: Merge flags to restored with current flags. (uses 'or')
             type: bool
             example: 'False'
             required: false
-      autoflag_autocorr_powerspectra:
+      flag_autopowerspec:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
         mapping:
@@ -231,7 +231,7 @@ mapping:
             type: str
             required: False
             example: '0'
-      static_mask:
+      flag_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
         mapping: 
@@ -251,7 +251,7 @@ mapping:
             required: false
             example: ''
 
-      autoflag_rfi:
+      flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop. 
         type: map
         mapping:   
@@ -342,8 +342,8 @@ mapping:
                 desc: Correlation
                 example: ""
                 required: false
-      rfinder:
-        desc: A tool to investigate the presence of RFI
+      inspect:
+        desc: Inspect the presence of RFI using the diagnostic products of RFInder
         type: map
         mapping:
           enable:
@@ -392,7 +392,7 @@ mapping:
             type: bool
             required: False
             example: 'True'
-      flagging_summary:
+      summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map
         mapping:

@@ -50,11 +50,11 @@ flagging:
   flag_antennas:
     enable: false
     antennas: '0'
-  static_mask:
+  flag_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
     uvrange: '0~1000'
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
     aoflagger:
@@ -146,7 +146,7 @@ flagging__2:
   enable: true
   field: target
   label_in: corr
-  autoflag_rfi: 
+  flag_rfi: 
     enable: true
     column: DATA
     flagger: aoflagger

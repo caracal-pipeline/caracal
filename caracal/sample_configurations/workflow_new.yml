@@ -67,16 +67,16 @@ flagging:
   flag_scan:
     enable: false
     scans: '0'
-  static_mask:
+  flag_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
     uvrange: '0~1000'
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
     aoflagger:
       strategy: firstpass_QUV.rfis
-  rfinder:
+  inspect:
     enable: true
     telescope: MeerKAT
     field: 'bpcal,gcal'
@@ -166,13 +166,13 @@ flagging__2:
   enable: true
   field: target
   label_in: corr
-  autoflag_rfi: 
+  flag_rfi: 
     enable: true
     flagger: aoflagger
     column: DATA
     aoflagger:
       strategy: firstpass_QUV.rfis
-  rfinder: 
+  inspect: 
     enable: true
     field: target
 

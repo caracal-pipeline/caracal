@@ -26,7 +26,7 @@ flagging:
   enable: true
   field: calibrators
   label_in: cal
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: tricolour
     tricolour:
@@ -38,7 +38,7 @@ flagging:
     include_full_mk64: true
   flag_spw:
     enable: true
-    
+
 cross_cal:
   enable: true
   uvrange: '>150'
@@ -92,7 +92,7 @@ flagging__2:
     include_full_mk64: true
   flag_spw:
     enable: true
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
 

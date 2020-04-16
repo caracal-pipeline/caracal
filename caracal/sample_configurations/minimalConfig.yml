@@ -34,7 +34,7 @@ flagging:
   enable: true
   field: calibrators 
   label_in: cal
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
   flag_autocorr:
@@ -71,7 +71,7 @@ flagging__2:
   enable: true
   field: target 
   label_in: corr
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
     

@@ -47,11 +47,11 @@ flagging:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
     ensure_valid_selection: false
-  static_mask:
+  flag_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
     uvrange: '0~1000'
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
     aoflagger:
@@ -143,13 +143,13 @@ flagging__2:
   enable: true
   field: target
   label_in: corr
-  autoflag_rfi: 
+  flag_rfi: 
     enable: true
     column: DATA
     flagger: aoflagger
     aoflagger:
       strategy: firstpass_QUV.rfis
-  rfinder: 
+  inspect: 
     enable: false
     field: target
 

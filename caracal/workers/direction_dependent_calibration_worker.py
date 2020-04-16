@@ -119,12 +119,12 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
-                 'sigma' : sigmask,
-                 'boxes' : 9,
-                 'iters' : 20,
-                 'overlap': 0.3,
+                 'sigma' : config['image_dd'].get('mask_sigma'),
+                 'boxes' : config['image_dd'].get('mask_boxes'),
+                 'iters' : config['image_dd'].get('mask_iters'),
+                 'overlap': config['image_dd'].get('mask_overlap'),
                  'no-negative': True,
-                 'tolerance': 0.75,
+                 'tolerance': config['image_dd'].get('mask_tolerance'),
                  }, input=INPUT, output = OUTPUT, label='mask_ddf_precal_{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []
@@ -161,12 +161,12 @@ def worker(pipeline, recipe, config):
                  #'image' : '{0:s}:output'.format(imagename),
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits:output'.format(output_folder,field),
-                 'sigma' : sigmask,
-                 'boxes' : 9,
-                 'iters' : 20,
-                 'overlap': 0.3,
+                 'sigma' : config['image_dd'].get('mask_sigma'),
+                 'boxes' : config['image_dd'].get('mask_boxes'),
+                 'iters' : config['image_dd'].get('mask_iters'),
+                 'overlap': config['image_dd'].get('mask_overlap'),
                  'no-negative': True,
-                 'tolerance': 0.75,
+                 'tolerance': config['image_dd'].get('mask_tolerance'),
                  }, input=INPUT, output = OUTPUT, label='mask_ddf_postcal_{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []

@@ -71,7 +71,7 @@ do
     then
         HE=1
     fi
-    if [[ "$arg" == "--verbose" ]] || [[ "$arg" == "-v" ]]
+    if [[ "$arg" == "--verbose-help" ]] || [[ "$arg" == "-v" ]]
     then
         VE=1
     fi
@@ -252,6 +252,12 @@ do
 # 	firstletter=`echo ${CARATE_CARACAL_FORMER_RUN} | head -c 1`
 #	[[ ${firstletter} == "/" ]] || CARATE_CARACAL_FORMER_RUN="${cwd}/${CARATE_CARACAL_FORMER_RUN}"
     fi
+    if [[ "$arg" == "--caracal-run-medifix" ]] || [[ "$arg" == "-rm" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --caracal-run-medifix or -rm switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_CARACAL_RUN_MEDIFIX=${!nextcount}
+    fi
     if [[ "$arg" == "--local-caracal" ]] || [[ "$arg" == "-lc" ]]
     then
         (( nextcount=argcount+1 ))
@@ -348,6 +354,10 @@ then
     echo "                               the test." 
     echo ""
 
+    echo "  CARATE_CARACAL_RUN_MEDIFIX:  The additional identifyer for logfiles of an"
+    echo "                               individual carate run. Empty if not supplied."
+    echo ""
+
     echo "  CARATE_TEST_DATA_DIR:        Directory containing test data (ms"
     echo "                               format)"
     echo ""
@@ -364,7 +374,7 @@ then
     echo ""
     echo "  --help -h                           Show help"
     echo ""
-    echo "  --verbose -v                        Show verbose help"
+    echo "  --verbose-help -v                   Show verbose help"
     echo ""
     echo "  --workspace ARG -ws ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_WORKSPACE"
@@ -431,6 +441,9 @@ then
     echo ""
     echo "  --caracal-former-run ARG -cf ARG    Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_FORMER_RUN"
+    echo ""
+    echo "  --caracal-run-medifix ARG -rp ARG   Use ARG instead of environment variable"
+    echo "                                      CARATE_CARACAL_RUN_MEDIFIX"
     echo ""
     echo "  --keep-report-dir -kr               Do not delete the report directory if it"
     echo "                                      exists"
@@ -696,30 +709,34 @@ echo "     indicating the end of a worker."
 echo "     "
 echo "   - If the exit status of CARACal is not 0 (success)"
 echo ""
-echo " caratekit will create a report directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report containing three"
+echo " caratekit will create or add files to a report directory"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report containing report"
 echo " files:"
 echo " "
 echo "   - a shell script reproducing all shell commands initiated by carate.sh, if"
 echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
 echo "     switches --caracal-run-prefix or -cp) called"
-echo "     \${CARATE_CARACAL_RUN_PREFIX}.sh.txt, called \${CARATE_CARACAL_TEST_ID}"
-echo "     \${CARATE_CARACAL_TEST_ID}.sh.txt otherwise"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}_${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt, called"
+echo "     \${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt otherwise."
+echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, _${CARATE_CARACAL_RUN_MEDIFIX}"
+echo "     is left out."
 echo "     "
 echo "   - a file with information about the computer and the environment"
 echo "     that was used for the test, if CARATE_CARACAL_RUN_PREFIX is set"
 echo "     (as an environment variable or through switches"
 echo "     --caracal-run-prefix or -cp) called"
-echo "     \${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt, called"
-echo "     \${CARATE_CARACAL_TEST_ID} \${CARATE_CARACAL_TEST_ID}_sysinfo.txt"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt, called"
+echo "     \${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt"
 echo "     otherwise"
+echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, _${CARATE_CARACAL_RUN_MEDIFIX}"
+echo "     is left out."
 echo "     "
-echo "   - a file ${CARATE_CARACAL_TEST_ID}_sysinfo.txt with information"
+echo "   - a file ${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt with information"
 echo "     about the computer and the environment that was used for the test"
 echo "     "
-echo "   - copies of the configuration files, one per run"
+echo "   - copies of the configuration files, one per test"
 echo "   "
-echo "   - copies of the output log-caracal.txt, one per run"
+echo "   - copies of the output log-caracal.txt, one per test"
 echo "   "
 echo " Note that in particular Stimela has components that are external to"
 echo " the root directory and will be touched by this test."
@@ -780,7 +797,7 @@ fi
 
 if [[ -n "$HE" ]] || [[ -n "$VE" ]]
 then
-    echo "Stopping. Do not set switches --help --verbose -h -v to continue."
+    echo "Stopping. Do not set switches --help --verbose-help -h -v to continue."
     kill "$PPID"; exit 1;
 fi
 
@@ -805,8 +822,13 @@ then
     trap cleanup EXIT
     
     # Now clone caracal
+    if [[ -n "$CARATE_LOCAL_CARACAL" ]]
+    then
+	    [[ -n ${FS} ]] || cp ${CARATE_LOCAL_CARACAL}/caratekit.sh ${mytmpdir}/
+    else
     [[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git ${mytmpdir}
 #    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
+    fi
     
     # Check out desired branch
     cd ${mytmpdir}
@@ -831,11 +853,12 @@ then
     
     [[ -z ${thabuild} ]] || git checkout ${thabuild}
 
+    echo ""
     # Now ask if you can actually do this
     [[ -z ${caratekit_install} ]] || { \
 	echo "The current caratekit.sh"; \
 	echo "${caratekit_install}"; \
-	echo "will be replaced"; \
+	echo "will be replaced by"; \
     }
     echo "caratekit.sh from"
     echo "https://github.com/ska-sa/caracal"
@@ -955,9 +978,7 @@ then
     echo ""
     echo "#######################"
     echo ""
-    exit
 fi
-exit
 
 echo "##########"
 echo " Starting "
@@ -1179,6 +1200,9 @@ then
     fi
 fi
 
+# Determine CARATE_CARACAL_RUN_MEDIFIX to be something
+[[ -n CARATE_CARACAL_RUN_MEDIFIX ]] && CARATE_CARACAL_RUN_MEDIFIX="_${CARATE_CARACAL_RUN_MEDIFIX}" || CARATE_CARACAL_RUN_MEDIFIX=""
+
 # This ensures that when stopping, the $HOME environment variable is restored
 # Variable defininition ends here in script
 ss+=""
@@ -1291,16 +1315,16 @@ mkdir -p ${WORKSPACE_ROOT}
 mkdir -p ${WORKSPACE_ROOT}/report
 
 # Small script, use txt suffix to be able to upload to multiple platforms
-[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}.sh.txt || \
-SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}.sh.txt
+[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt || \
+SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt
 
 # Empty ss into the small script
 [[ ! -e ${SS} ]] || (( ${FORCE} == 0 )) || checkex ${SS} || rm -rf ${SS}
 echo "$ss" >> ${SS}
 
 # Sysinfo
-[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}_sysinfo.txt || \
-SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}_sysinfo.txt
+[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt || \
+SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt
 
 # Empty into the sysinfo
 [[ ! -e ${SYA} ]] || (( ${FORCE} == 0 )) || checkex ${SYA} || rm -rf ${SYA}
@@ -2044,7 +2068,7 @@ runtest () {
 
 	# This prevents the script to stop if there -fs is switched on
 	[[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
-	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${trname}_${configfilename}.yml.txt
+	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${trname}${CARATE_CARACAL_RUN_MEDIFIX}_${configfilename}.yml.txt
 
 	# Check if source msdir is identical to the target msdir. If yes, don't copy
 	d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
@@ -2092,7 +2116,7 @@ runtest () {
 
     # Make a copy of the logfile
     caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
-    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${trname}_log-caracal.txt
+    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${trname}${CARATE_CARACAL_RUN_MEDIFIX}_log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
     testingoutput ${WORKSPACE_ROOT} ${trname} || { true; failedoutput=1; }

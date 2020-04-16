@@ -43,6 +43,31 @@ mapping:
            desc: Enable masks for DDfacet initial imaging.
            required: False
            example: "True"
+         mask_sigma: 
+           type: float
+           desc: The number of standard deviations to use when clipping the initial image for masking.
+           required: False
+           example: '10.0'
+         mask_boxes:
+           type: int
+           desc: Will divide initial image (for making the mask) into this number of boxes, then perform sigma clipping in each of these boxes.
+           required: False
+           example: '9'
+         mask_iters:
+           type: int
+           desc: The number of iterations to perform sigma clipping on the image for masking, or 0 to clip until convergence is achieved.
+           required: False
+           example: '20'
+         mask_overlap: 
+           type: float
+           desc: Overlap region for the boxes. As a fraction of -nb/--boxes
+           required: False
+           example: '0.3' 
+         mask_tolerance:
+           type: float
+           desc: Tolerance for dilating the mask. Will stop dilating if percentage difference between dilations is smaller than this value.
+           required: False
+           example: '0.75'     
          cell:
            type: float
            desc: Pixel size in arcsec.

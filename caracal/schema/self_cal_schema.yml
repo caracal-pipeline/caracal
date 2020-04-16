@@ -156,6 +156,11 @@ mapping:
         desc: Number of self-calibration iterations to perform
         required: false
         example: '2'
+      start_at_iter:
+        type: int
+        desc: Start self-cal iteration loop at this start value, 1-based.
+        required: false
+        example: '1'
       cal_timeslots_chunk:
         desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
         type: int

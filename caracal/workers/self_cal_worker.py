@@ -204,19 +204,19 @@ def worker(pipeline, recipe, config):
             "fitbeam": False,
         }
         if maxuvl > 0.:
-            image_opts.update({
+            fake_image_opts.update({
                 "maxuv-l": maxuvl,
                 "taper-tukey": transuvl,
             })
         if float(taper) > 0.:
-            image_opts.update({
+            fake_image_opts.update({
                 "taper-gaussian": taper,
             })
         if min_uvw > 0:
-            image_opts.update({"minuvw-m": min_uvw})
+            fake_image_opts.update({"minuvw-m": min_uvw})
         if multiscale==True:
             fake_image_opts.update({"multiscale": multiscale})
-            fake_image_opts.update({"multiscale": multiscale_scales})
+            fake_image_opts.update({"multiscale-scales": multiscale_scales})
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,
@@ -985,9 +985,9 @@ def worker(pipeline, recipe, config):
                   config[key].get('Bsols_channel')[
                       num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
         gasols_ = [
-            config[key].get('GAsols_timeslots')[num - 1 if num <= 
+            config[key].get('GAsols_timeslots')[num - 1 if num <=
                                            len(config[key].get('GAsols_timeslots')) else -1],
-            config[key].get('GAsols_channel')[num - 1 if num <= 
+            config[key].get('GAsols_channel')[num - 1 if num <=
                                               len(config[key].get('GAsols_channel')) else -1]]
         if config[key].get('Bjones'):
             jones_chain += ',B'
@@ -1011,7 +1011,7 @@ def worker(pipeline, recipe, config):
         else:
            sol_terms = sol_term_iters
         flags = "-cubical"
-         
+
         for i,msname in enumerate(mslist):
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
             time_chunk_apply =    int(max(int(gsols_[0]), time_chunk)) if not (int(gsols_[0]) == 0 or time_chunk == 0) else 0
@@ -1034,10 +1034,10 @@ def worker(pipeline, recipe, config):
                 "weight-column": config[key].get('weight_column'),
                 "montblanc-dtype": 'float',
                 "g-solvable": True,
-                "g-type": CUBICAL_MT[matrix_type],                
+                "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
-                "g-freq-int": int(gsols_[1]),                
+                "g-freq-int": int(gsols_[1]),
                 "out-overwrite": config[key].get('overwrite'),
                 "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                            pipeline), num, msname.split('.ms')[0]),
@@ -1071,7 +1071,7 @@ def worker(pipeline, recipe, config):
                     "dd-solvable": True,
                     "dd-type": CUBICAL_MT[matrix_type],
                     "dd-time-int": int(gasols_[0]),
-                    "dd-freq-int": int(gasols_[1]),                 
+                    "dd-freq-int": int(gasols_[1]),
                     "dd-save-to": "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                     pipeline), num, msname.split('.ms')[0]),
                     "dd-clip-low": config.get('cal_gain_amplitude_clip_low'),
@@ -1101,12 +1101,12 @@ def worker(pipeline, recipe, config):
                 "data-time-chunk": time_chunk_apply,
                 "data-freq-chunk": freq_chunk_apply,}
             )
-            recipe.add('cab/cubical', step, cubical_opts,  
+            recipe.add('cab/cubical', step, cubical_opts,
                        input=pipeline.input,
                        output=pipeline.output,
                        shared_memory= config[key].get('shared_memory'),
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
-           
+
     def restore(num,  prod_path,mslist_out,enable_inter=True):
         key = 'calibrate'
 	    # to achieve accurate restauration we need to reset all parameters properly
@@ -1694,7 +1694,7 @@ def worker(pipeline, recipe, config):
     # if we use the new two_step analysis aimfast has to be run
     if config['calibrate'].get('two_step') and calwith == 'meqtrees':
         config['aimfast']['enable'] = True
-   
+
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):
         config['calibrate']['output_data'] = [k.replace(
@@ -1994,4 +1994,3 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 
         target_iter+=1
-

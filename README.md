@@ -1,3 +1,5 @@
+** WARNING: this README.md is under development in preparation of an immininent release. Some descriptions are pointing towards the future and features are not yet implemented. We try to highlight those **
+
 The **Containerized Automated Radio Astronomy Calibration (CARACal)** pipeline is a Python-based script to reduce radiointerferometric data in the cm- to dm-wavelength range in an automatized fashion, reducing user-intervention to a minimum (ideally requiring only a configuration), and at the same time relying on state-of-the-arts data reduction software and  data reduciton techniques. It makes use of [Stimela](https://github.com/ratt-ru/Stimela), a platform-independent radio astronomy scripting environment, providing pre-fabricated containerized software packages. [Stimela](https://github.com/ratt-ru/Stimela) itself relies on [Kern](https://kernsuite.info/), a suite of [Ubuntu](https://ubuntu.com/) radio astronomy packages.
 - [Full documentation](#full-documentation)
 - [Download & Install](#download---install)
@@ -48,7 +50,7 @@ The user chooses:
 - the name (including path) ${caracal-venv} of the virtualenv
 - the location ``${singularity_pull_folder}`` of a [Singularity](https://github.com/sylabs/singularity) pull-folder, where [Singularity](https://github.com/sylabs/singularity) images are stored (not required when using only [Docker](https://www.docker.com/) or [Podman](https://podman.io/), the latter currently not being fully supported).
 #### Manual installation
-The latest CARACal release can be obtained by typing:
+The latest CARACal release can be obtained by typing **(Not yet implemented)**:
 ```
 $ python3 -m venv ${caracal-venv}  
 $ source ${caracal-venv}/bin/activate

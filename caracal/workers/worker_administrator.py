@@ -347,7 +347,9 @@ class worker_administrator(object):
                     for notebook in self.config['general']['init_notebooks']:
                         nbfile = notebook + ".ipynb"
                         nbsrc = os.path.join(nbdir, nbfile)
-                        nbdest = os.path.join(self.output, nbfile)
+                        nbdest = os.path.join(self.output,
+                                              "{}-{}".format(self.prefix, nbfile)
+                                              if self.prefix else nbfile)
                         if os.path.exists(nbsrc):
                             log.info("Generating standard notebook {}.html".format(notebook))
                             subprocess.check_call(["run-radiopadre",

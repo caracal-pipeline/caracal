@@ -151,6 +151,10 @@ do
     then
         KR=1
     fi
+    if [[ "$arg" == "--keep-processing-dir" ]] || [[ "$arg" == "-kp" ]]
+    then
+        KP=1
+    fi
     if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
     then
         PD=1
@@ -297,6 +301,8 @@ do
 	ORSR=1
 	KR=1
 	OR=1
+	OD=1
+	KP=1
 	FORCE=1
     fi
 #    if [[ "$arg" == "--small-script" ]] || [[ "$arg" == "-ss" ]]
@@ -463,6 +469,11 @@ then
     echo "  --keep-report-dir -kr               Do not delete the report directory if it"
     echo "                                      exists"
     echo ""
+    echo "  --keep-report-dir -kp               Do not delete any of the content of a"
+    echo "                                      project directory (input, msdir, output,"
+    echo "                                      stimela_parameter_files) prior to"
+    echo "                                      starting a test"
+    echo ""
     echo "  --keep-home -kh                     Do not change the HOME environment"
     echo "                                      variable during installation test"
     echo ""
@@ -476,7 +487,7 @@ then
     echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_TEST_DATA_DIR"
     echo ""
-    echo "  --omit-copy-test-data -od           Do not re-copy test data"
+    echo "  --omit-copy-test-data -od           Do not re-copy test data and preserve msdir"
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
     echo ""
@@ -509,7 +520,7 @@ then
     echo "  --force -f                          Force replacement and re-installation of"
     echo "                                      all components if possible (see below)"
     echo ""
-    echo "  --caracal-datared -cd               Short for -cd -oc -of -os -kr -or -f"
+    echo "  --caracal-datared -cd               Short for -oc -of -os -kr -or -kp -od -f"
     echo ""
     echo ""
 fi
@@ -690,7 +701,8 @@ echo "    direcory is used as the Stimela location."
 echo ""
 echo "  - when switches --omit-copy-test-data or -od are set, the test data"
 echo "    will not be copied if for a test run the directory with the test"
-echo "    data does already exist"
+echo "    data does already exist, the directory will not be changed before"
+echo "    the data reduction starts."
 echo ""
 echo "  - when switches --move-test-data or -md are set, the test data will"
 echo "    not be copied but moved. This is only possible if one test run is"
@@ -2164,7 +2176,7 @@ runtest () {
 		}
 	
 	    #Check if the test directory is a parent of any of the supplied directories
-	    if checkex ${WORKSPACE_ROOT}/${trname}
+	    if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
 	    then
 		# Go through the files and remove individually
 		# continue here
@@ -2178,9 +2190,11 @@ runtest () {
 			rm -rf ${workspace_root}/${trname}/${dire}
 		done
 	    else
-		echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}
 		[[ -n ${FS} ]] || \
-		    rm -rf ${WORKSPACE_ROOT}/${trname}
+		    [[ -n ${KP} ]] || { \
+			echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
+			rm -rf ${WORKSPACE_ROOT}/${trname}; \
+		    }
 	    fi	
 	fi
 	
@@ -2193,10 +2207,11 @@ runtest () {
 	then
 	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
 	    mkdir -p ${WORKSPACE_ROOT}/${trname}/input
-	    checkex ${WORKSPACE_ROOT}/${trname}/input || { \
-		echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
-		cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
-	    }
+	    checkex ${WORKSPACE_ROOT}/${trname}/input || \
+		[[ -n ${KP} ]] || { \
+		    echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
+		    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
+		}
 	fi
 	
 	# Check if user-supplied file is already the one that we are working with before working with it
@@ -2413,7 +2428,7 @@ runtestsample () {
 	then
             echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
 	else
-	    dosomething
+	    true
 	fi
     else
 	if (( ${FORCE} == 0 ))

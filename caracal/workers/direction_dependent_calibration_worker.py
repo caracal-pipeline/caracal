@@ -37,7 +37,7 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, label)
     print("All_targets", all_targets)
-    #print("All_msfiles", all_msfile)
+    print("All_msfiles", all_msfile)
     #print("ms_dict",ms_dict)
     if not os.path.exists(OUTPUT):
        os.mkdir(OUTPUT)
@@ -144,7 +144,10 @@ def worker(pipeline, recipe, config):
         outdir = field+"_ddcal/"
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
+        print("Imaging",ms_list)
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
+        dd_image_opts_postcal.update(dd_ms_list)
+        dd_image_opts_postcal.update(dd_imagecol)
         if (use_mask):
             dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-masking"}
             dd_image_opts_postcal.update(dd_imagename)
@@ -428,22 +431,22 @@ def worker(pipeline, recipe, config):
        mslist = ms_dict[target]
        field = utils.filter_name(target)
        print("Processing field",field,"for de calibration:")
-#       print(mslist)
+       print(mslist)
 #       print(field)
-       if USEPB:
-          make_primary_beam()
-       if pipeline.enable_task(config,'image_dd'):
-          dd_precal_image(field,mslist)
+#       if USEPB:
+#          make_primary_beam()
+#       if pipeline.enable_task(config,'image_dd'):
+#          dd_precal_image(field,mslist)
     #sfind_intrinsic()
-       dagga(field)
-       if pipeline.enable_task(config,'calibrate_dd'):
-          dd_calibrate(field,mslist)
+#       dagga(field)
+#       if pipeline.enable_task(config,'calibrate_dd'):
+#          dd_calibrate(field,mslist)
        if pipeline.enable_task(config,'image_dd'):
           dd_postcal_image(field,mslist)
-       if pipeline.enable_task(config, 'copy_data'):
-          cp_data_column(field,mslist)
-       if pipeline.enable_task(config, 'image_wsclean'):
-          img_wsclean(mslist,field)
-       if pipeline.enable_task(config,'transfer_model_dd'):
-          run_crystalball(mslist,field)
+#       if pipeline.enable_task(config, 'copy_data'):
+#          cp_data_column(field,mslist)
+#       if pipeline.enable_task(config, 'image_wsclean'):
+#          img_wsclean(mslist,field)
+#       if pipeline.enable_task(config,'transfer_model_dd'):
+#          run_crystalball(mslist,field)
 

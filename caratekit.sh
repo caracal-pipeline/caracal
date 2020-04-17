@@ -2095,6 +2095,9 @@ runtest () {
     local SS_RUNTEST
     local SYA_RUNTEST
     local reportname
+    local faultylist
+    local jj
+    local reportprefy
 
     echo "##########################################"
     echo " $greetings_line "
@@ -2113,8 +2116,10 @@ runtest () {
 	then
 	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname=${CARATE_CARACAL_FORMER_RUN}_${testruns}
 	fi
+	reportprefy="_${configfilename}"
     else
 	trname=${configfilename}_${contarch}
+	reportprefy=""
     fi
 
     reportname=${trname}
@@ -2210,7 +2215,7 @@ runtest () {
 
 	# This prevents the script to stop if there -fs is switched on
 	[[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
-	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_${configfilename}.yml.txt
+	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}.yml.txt
 
 	# Check if source msdir is identical to the target msdir. If yes, don't copy
 	d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
@@ -2268,7 +2273,7 @@ runtest () {
     
     # Make a copy of the logfile
     caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
-    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_${configfilename}_log-caracal.txt
+    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}_log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
     testingoutput ${WORKSPACE_ROOT} ${trname} ${SYA_RUNTEST} || { true; failedoutput=1; }

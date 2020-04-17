@@ -372,35 +372,34 @@ def worker(pipeline, recipe, config):
         outdir = field+"_ddcal"
         imweight = config[key].get('img_ws_weight')
         pref = "DD_wsclean"
-        for ms in mslist:
-           mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'img_wsclean_{0:s}_{1:s}'.format(mspref,field)
-           recipe.add('cab/wsclean', step, {
-               "msname": mslist,
-               "column": config[key].get('img_ws_column'),
-               "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key].get('img_ws_robust')),
-               "nmiter": sdm.dismissable(config[key].get('img_ws_nmiter')),
-               "npix": config[key].get('img_ws_npix'),
-               "padding": config[key].get('img_ws_padding'),
-               "scale": config[key].get('img_ws_cell', cell),
-               "prefix": '{0:s}_{1:s}'.format(pref, field),
-               "niter": config[key].get('img_ws_niter'),
-               "mgain": config[key].get('img_ws_mgain'),
-               "pol": config[key].get('img_ws_pol'),
-               "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper')),
-               "channelsout": config[key].get('img_ws_nchans'),
-               "joinchannels": config[key].get('img_ws_joinchannels'),
-               "local-rms": config[key].get('img_ws_local_rms'),
-               "fit-spectral-pol": config[key].get('img_ws_fit_spectral_pol'),
-               "auto-threshold": config[key].get('img_ws_auto_threshold'),
-               "auto-mask": config[key].get('img_ws_auto_mask'),
-               "multiscale": config[key].get('img_ws_multi_scale'),
-               "multiscale-scales": sdm.dismissable(config[key].get('img_ws_multi_scale_scales')),
-               "savesourcelist": True if config[key].get('img_ws_niter')>0 else False,
-             },
-               input=INPUT,
-               output=OUTPUT+"/"+outdir,
-               label='img_wsclean_{0:s}_{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
+        mspref = mslist[0].split('.ms')[0].replace('-','_')
+        step = 'img_wsclean_{0:s}_{1:s}'.format(mspref,field)
+        recipe.add('cab/wsclean', step, {
+            "msname": mslist,
+            "column": config[key].get('img_ws_column'),
+            "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key].get('img_ws_robust')),
+            "nmiter": sdm.dismissable(config[key].get('img_ws_nmiter')),
+            "npix": config[key].get('img_ws_npix'),
+            "padding": config[key].get('img_ws_padding'),
+            "scale": config[key].get('img_ws_cell', cell),
+            "prefix": '{0:s}_{1:s}'.format(pref, field),
+            "niter": config[key].get('img_ws_niter'),
+            "mgain": config[key].get('img_ws_mgain'),
+            "pol": config[key].get('img_ws_pol'),
+            "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper')),
+            "channelsout": config[key].get('img_ws_nchans'),
+            "joinchannels": config[key].get('img_ws_joinchannels'),
+            "local-rms": config[key].get('img_ws_local_rms'),
+            "fit-spectral-pol": config[key].get('img_ws_fit_spectral_pol'),
+            "auto-threshold": config[key].get('img_ws_auto_threshold'),
+            "auto-mask": config[key].get('img_ws_auto_mask'),
+            "multiscale": config[key].get('img_ws_multi_scale'),
+            "multiscale-scales": sdm.dismissable(config[key].get('img_ws_multi_scale_scales')),
+            "savesourcelist": True if config[key].get('img_ws_niter')>0 else False,
+        },
+        input=INPUT,
+        output=OUTPUT+"/"+outdir,
+        label='img_wsclean_{0:s}_{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
 
     def run_crystalball(mslist,field):
         key='transfer_model_dd'
@@ -433,20 +432,20 @@ def worker(pipeline, recipe, config):
        print("Processing field",field,"for de calibration:")
        print(mslist)
 #       print(field)
-#       if USEPB:
-#          make_primary_beam()
-#       if pipeline.enable_task(config,'image_dd'):
-#          dd_precal_image(field,mslist)
+       if USEPB:
+          make_primary_beam()
+       if pipeline.enable_task(config,'image_dd'):
+          dd_precal_image(field,mslist)
     #sfind_intrinsic()
-#       dagga(field)
-#       if pipeline.enable_task(config,'calibrate_dd'):
-#          dd_calibrate(field,mslist)
+       dagga(field)
+       if pipeline.enable_task(config,'calibrate_dd'):
+          dd_calibrate(field,mslist)
        if pipeline.enable_task(config,'image_dd'):
           dd_postcal_image(field,mslist)
-#       if pipeline.enable_task(config, 'copy_data'):
-#          cp_data_column(field,mslist)
-#       if pipeline.enable_task(config, 'image_wsclean'):
-#          img_wsclean(mslist,field)
-#       if pipeline.enable_task(config,'transfer_model_dd'):
-#          run_crystalball(mslist,field)
+       if pipeline.enable_task(config, 'copy_data'):
+          cp_data_column(field,mslist)
+       if pipeline.enable_task(config, 'image_wsclean'):
+          img_wsclean(mslist,field)
+       if pipeline.enable_task(config,'transfer_model_dd'):
+          run_crystalball(mslist,field)
 

@@ -76,6 +76,10 @@ do
     then
         VE=1
     fi
+        if [[ "$arg" == "--data-reduction-info" ]] || [[ "$arg" == "-dr" ]]
+    then
+        DR=1
+    fi
     if [[ "$arg" == "--install" ]] || [[ "$arg" == "-i" ]]
     then
         IN=1
@@ -826,9 +830,88 @@ echo " replaced by a line containing the appropriate data sets from ../rawdata"
 echo ""
 fi
 
-if [[ -n "$HE" ]] || [[ -n "$VE" ]]
+if [[ -n "$DR" ]]
 then
-    echo "Stopping. Do not set switches --help --verbose-help -h -v to continue."
+    echo " Data reduction with caratekit"
+    echo ""
+    echo " It is possible to use caratekit.sh to perform a data reduction."
+    echo " The advantage is that it is easy to report issues at"
+    echo " https://github.com/ska-sa/caracal/issues"
+    echo ""
+    echo " To create an installation the user chooses"
+    echo "   - The location \${workspace} of a parent directory to a "
+    echo "     caratekit test directory."
+    echo "   - A name \${caracal_testdir} of the caracal test directory"
+    echo " Installation/upgrade with [Docker](https://www.docker.com/) as"
+    echo " containerisation technology:"
+    echo " "
+    echo " \$ caratekit.sh -ws \${workspace} -cr -di -ct \${caracal_testdir}"
+    echo "                -rp install -f"
+    echo " "
+    echo " Installation/upgrade with Singularity as containerisation"
+    echo " technology:"
+    echo " "
+    echo " \$ caratekit.sh -ws \${workspace} -cr -si -ct \${caracal_testdir}"
+    echo "                -rp install -f"
+    echo " "
+    echo " "
+    echo " Data reduction using caratekit.sh"
+    echo ""
+    echo " Multiple variants are possible, here we present three. See"
+    echo " https://github.com/ska-sa/caracal/blob/master/README.md for more"
+    echo " details."
+    echo ""
+    echo " The user uses the same"
+    echo ""
+    echo "   - Workspace directory \${workspace} as has been used to install"
+    echo "     caratekit.sh"
+    echo ""
+    echo "   - The same target directory \${carate_target} that caratekit.sh has"
+    echo "     been installed in."
+    echo ""
+    echo " The user chooses:"
+    echo ""
+    echo "   - The name \${project} of the data reduction project"
+    echo ""
+    echo "   - The location \${configfile}.yml of a CARACal configuration"
+    echo "     file. Templates can be found in the directory"
+    echo "     \${workspace}/\${caracal_testdir}/caracal/caracal/sample_configurations. A"
+    echo "     choice to start with is the file minimalConfig.yml."
+    echo ""
+    echo "   - The name \${rawdata} of a directory containing the measurement"
+    echo "     sets (which have to have the suffix .ms) that are supposed to be"
+    echo "     processed in the data reduction."
+    echo ""
+    echo " Simple data reduction"
+    echo ""
+    echo " If the user assumes to run CARACal only once but also at the"
+    echo " beginning of any other data reduction process the user edits the file"
+    echo " \${configfile}.yml following the CARACal description. Notice that using"
+    echo " caratekit.sh the default is that the contents of the parameter dataid"
+    echo " will be replaced to reflect the measurement sets found in the"
+    echo " \${rawdata} directory. This can be overridden by using the caratekit.sh"
+    echo " -kc switch. A (partial) data reduction is then conducted following the"
+    echo " command (Docker):"
+    echo ""
+    echo "   \$ caratekit.sh -ws \${workspace} -cd -di -ct \${caracal_testdir} -rp"
+    echo "                \${project} -cs \${configfile}.yml -td \${rawdata}"
+    echo ""
+    echo " (Singularity):"
+    echo ""
+    echo "   \$ caratekit.sh -ws \${workspace} -cd -si -ct \${caracal_testdir} -rp"
+    echo "                  \${project} -cs \${configfile}.yml -td \${rawdata}"
+    echo ""
+    echo " More detail can be found at:"
+    echo " https://github.com/ska-sa/caracal/blob/master/README.md"
+    echo ""
+fi
+
+if [[ -n "$HE" ]] || [[ -n "$VE" ]] || [[ -n "$DR" ]]
+then
+    echo "Stopping. Do not set switches --help"
+    echo "--verbose-help -h -v"
+    echo "--data-reduction-info -dr to continue."
+    echo ""
     kill "$PPID"; exit 1;
 fi
 
@@ -1006,6 +1089,13 @@ then
 	    }
     fi
     echo "Installation successful"
+    echo ""
+    echo "To learn about caratekit.sh type:"
+    echo " $ caratekit.sh -h"
+    echo " $ caratekit.sh -v"
+    echo ""
+    echo "To learn quickly about data reduction with caratekit.sh type:"
+    echo " $ caratekit.sh -dr"
     echo ""
     echo "#######################"
     echo ""
@@ -1685,6 +1775,8 @@ caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/c
     endimessage+="  ${WORKSPACE_ROOT}/caracal/caratekit.sh"; endimessage+=$'\n'; \
     endimessage+="Consider updating your caratekit installation by typing:"; endimessage+=$'\n'; \
     endimessage+="  $ caratekit.sh --install"; endimessage+=$'\n'; \
+    endimessage+=$'\n';
+    endimessage+="Details can be found at https://github.com/ska-sa/caracal"; endimessage+=$'\n'; \
     endimessage+=$'\n';
     endimessage+="########################################################"
     endimessage+=$'\n';

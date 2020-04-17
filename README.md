@@ -35,7 +35,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 
 ## Software requirements and supported platforms
 Most dependencies are taken care of by using [pip](https://pypi.org/project/pip/) and [PiPy](https://pypi.org) to control Python dependencies and [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) as a platform-independent scripting framework. This leaves a small number of known dependencies (currently only one) that need to be installed prior to using CARACal:
-- [Python](https://www.python.org/) 3.6 or higher
+- [Python](https://www.python.org/) 3.5 or higher
 - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist is required only if [Singularity](https://github.com/sylabs/singularity) is chosen as containerization technology to run [Stimela](https://github.com/ratt-ru/Stimela/tree/master/stimela) with (no known [Docker](https://www.docker.com/) dependencies).
 
 CARACal fully supports [Docker](https://www.docker.com/) and [Singularity](https://github.com/sylabs/singularity). It is also possible to use it in combination with [Podman](https://podman.io/).

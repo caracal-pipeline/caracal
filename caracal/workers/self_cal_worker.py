@@ -631,12 +631,12 @@ def worker(pipeline, recipe, config):
                 os.remove(
                     '{0:s}/{1:s}/{2:s}.fits'.format(pipeline.output, img_dir, calmodel))
             except:
-                print('No Previous fits log found.')
+                caracal.log.info('No Previous fits log found.')
             try:
                 os.remove(
                     '{0:s}/{1:s}/{2:s}.lsm.html'.format(pipeline.output, img_dir, calmodel))
             except:
-                print('No Previous lsm.html found.')
+                caracal.log.info('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
                        {
                            "image": im,
@@ -870,6 +870,7 @@ def worker(pipeline, recipe, config):
                 elif config[key].get('two_step'):
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
+
             elif config[key].get('two_step'):
                 gasols_ = [config[key].get('GAsols_timeslots')[
                               num - 1 if num <= len(config[key].get('GAsols_timeslots')) else -1],
@@ -881,6 +882,7 @@ def worker(pipeline, recipe, config):
                 else:
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
+                    matrix_type = 'GainDiag'
                     gsols_ = gasols_
 
             bsols_ = [config[key].get('Bsols_timeslots')[num-1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
@@ -889,7 +891,6 @@ def worker(pipeline, recipe, config):
             outdata = config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]
             if outdata == 'CORRECTED_DATA':
                 outdata = 'CORR_DATA'
-            print(pipeline.output,msname)
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": calmodel,
@@ -898,7 +899,7 @@ def worker(pipeline, recipe, config):
                            "msname": msname,
                            "threads": ncpu,
                            "column": incolumn,
-                           "output-data": config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1],
+                           "output-data": outdata,
                            "output-column": outcolumn,
                            "prefix": '{0:s}/{1:s}_{2:s}_{3:d}_meqtrees'.format(get_dir_path(prod_path, pipeline),
                                                                                pipeline.dataid[i], msname[:-3], num),
@@ -934,7 +935,6 @@ def worker(pipeline, recipe, config):
         # If the model string contains a +, then combine the appropriate models
         if isinstance(model, str) and len(model.split('+')) > 1:
             mm = model.split('+')
-            print(mm,num, img_dir, field)
             calmodel, fits_model = combine_models(mm, num, img_dir, field)
         # If it doesn't then don't combine.
         else:
@@ -1232,14 +1232,14 @@ def worker(pipeline, recipe, config):
             fullres_data = get_obs_data(msname_out)
             int_time_fullres = fullres_data['EXPOSURE']
             channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0] / fullres_data['SPW']['NUM_CHAN'][0]
-            print("Integration time of full-resolution data is:", int_time_fullres)
-            print("Channel size of full-resolution data is:", channelsize_fullres)
+            caracal.log.info("Integration time of full-resolution data is:", int_time_fullres)
+            caracal.log.info("Channel size of full-resolution data is:", channelsize_fullres)
             # Corresponding numbers for the self-cal -ed MS:
             avg_data = get_obs_data(mslist[i])
             int_time_avg = avg_data['EXPOSURE']
             channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0] / avg_data['SPW']['NUM_CHAN'][0]
-            print("Integration time of averaged data is:", int_time_avg)
-            print("Channel size of averaged data is:", channelsize_avg)
+            caracal.log.info("Integration time of averaged data is:", int_time_avg)
+            caracal.log.info("Channel size of averaged data is:", channelsize_avg)
             # Compare the channel and timeslot ratios:
             ratio_timeslot = int_time_avg / int_time_fullres
             ratio_channelsize = channelsize_avg / channelsize_fullres
@@ -1697,9 +1697,8 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if we use the new two_step analysis aimfast has to be run
-    #IF we run with meqtrees we have to run extract sources
-    if config['calibrate'].get('two_step') and calwith == 'meqtrees':
-        config['aimfast']['enable'] = True
+    #if config['calibrate'].get('two_step') and calwith == 'meqtrees':
+    #    config['aimfast']['enable'] = True
 
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):

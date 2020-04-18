@@ -233,10 +233,10 @@ ${workspace}
    ├── report (report directory)
    │   └── install
    │       ├── install.sh.txt (template shell script)
-   │       └── install_sysinfo.txt (system information file)
-   └── (stimela_singularity)
+   │       └── install-sysinfo.txt (system information file)
+   └── (stimela-singularity)
 ```
-caracal is a local copy of caracal (release branch **currently master branch**), which is installed using the ``virtualenv`` ``caracal_venv``. ``home`` is a replacement of the ``${HOME}`` directory, in which currently only one hidden directory, ``.stimela`` is stored. This can be ignored in nearly all cases, but it is essential to have. The report directory contains automatically generated reports about ``caratekit.sh`` runs. The example run is called ``install`` (see switch ``-rp``). This is reflected in a sub-directory named ``install`` in the report directory. This ``caratekit.sh`` run creates two report files, ``install.sh.txt``, a bash-script re-tracing the installation steps (not documenting the creation of the reports), and ``install_sysinfo.txt``, a file containing information about the system and the installed software of the machine that is being used. Generally, a ``caratekit.sh`` run can generate multiple report sub-directories, each of which can contain up to four files and one directory (see next section [Data reduction using ``caratekit.sh``](#data_reduction_using_caratekit_sh)). 
+caracal is a local copy of caracal (release branch **currently master branch**), which is installed using the ``virtualenv`` ``caracal_venv``. ``home`` is a replacement of the ``${HOME}`` directory, in which currently only one hidden directory, ``.stimela`` is stored. This can be ignored in nearly all cases, but it is essential to have. The report directory contains automatically generated reports about ``caratekit.sh`` runs. The example run is called ``install`` (see switch ``-rp``). This is reflected in a sub-directory named ``install`` in the report directory. This ``caratekit.sh`` run creates two report files, ``install.sh.txt``, a bash-script re-tracing the installation steps (not documenting the creation of the reports), and ``install-sysinfo.txt``, a file containing information about the system and the installed software of the machine that is being used. Generally, a ``caratekit.sh`` run can generate multiple report sub-directories, each of which can contain up to four files and one directory (see next section [Data reduction using ``caratekit.sh``](#data_reduction_using_caratekit_sh)). 
 
 #### Data reduction using caratekit.sh
 Multiple variants are possible, here we present three.
@@ -276,15 +276,15 @@ ${workspace}
    ├── report (report directory)
    │   └── install
    │   │     ├── install.sh.txt (template shell script)
-   │   │     └── install_sysinfo.txt (system information file)
+   │   │     └── install-sysinfo.txt (system information file)
    │   └── ${project}
-   │       ├── ${project}_${configfile}_log-caracal.txt
-   │       ├── ${project}_${configfile}.yml.txt
+   │       ├── ${project}-${configfile}-log-caracal.txt
+   │       ├── ${project}-${configfile}.yml.txt
    │       ├── ${project}.sh.txt
-   │       └── ${project}_sysinfo.txt
-   └── (stimela_singularity)
+   │       └── ${project}-sysinfo.txt
+   └── (stimela-singularity)
 ```
-With above settings, ``caratekit.sh`` copies the measurement sets found in ``${rawdata}`` into the newly created directory ``${project}/msdir``, and the CARACal configuration file ``${configfile}`` into the directory ``${project}``, to then start CARACal using the ``${configfile}`` (``caracal -c ${configfile}``). It also creates a new sub-directory ``${project}`` to  report. Apart from the shell script ``${project}.sh.txt`` and the system info file ``${project}_sysinfo.txt``, this sub-directory contains a copy ``${project}_${configfile}_log-caracal.txt`` of the CARACal logfile and a copy ``${project}_${configfile}.yml.txt`` of the CARACal configuration file. Should the data reduction process be interrupted by an error, a further sub-directory ``${project}_badlogs`` to ``${caracal_testdir}/report/${project}`` is created containing all logfiles indicating an error (the logfiles are literally parsed for the expression "ERROR" and added if it is found).
+With above settings, ``caratekit.sh`` copies the measurement sets found in ``${rawdata}`` into the newly created directory ``${project}/msdir`` (see switch ``-md`` for moving test data instead), and the CARACal configuration file ``${configfile}`` into the directory ``${project}``, to then start CARACal using the ``${configfile}`` (``caracal -c ${configfile}``). It also creates a new sub-directory ``${project}`` to  report. Apart from the shell script ``${project}.sh.txt`` and the system info file ``${project}-sysinfo.txt``, this sub-directory contains a copy ``${project}-${configfile}-log-caracal.txt`` of the CARACal logfile and a copy ``${project}-${configfile}.yml.txt`` of the CARACal configuration file. Should the data reduction process be interrupted by an error, a further sub-directory ``${project}-badlogs`` to ``${caracal_testdir}/report/${project}`` is created containing all logfiles indicating an error (the logfiles are literally parsed for the expression "ERROR" and added if it is found).
 
 *Any bug report to the [CARACal issue tracker](https://github.com/ska-sa/caracal/issues) can be substantially improved by submitting the files in the specific ``report`` directory along with the issue.*
 ##### Follow-up steps to a data reduction by method 1: renaming the project
@@ -332,11 +332,10 @@ ${workspace}
 such that issues and reports can be tracked by the names.
 
  ##### Follow-up steps to a data reduction by method 2: using a middle name
-Using method 2, the user defines a set of consecutive configuration files, for simplicity ``${configfile}_a``, ``${configfile}_b``, ... , and a set of consecutive middle names ("midfixes"), e.g. ``00``, ``01``, ... . The individual names are again the user's choice... 
-
-By using the ``-cf ${project}_jj -cf ${project}_ii`` switches, the directory  ``${project}_ii`` is re-named into ``${project}_jj`` and a symbolic link ``${project}_ii`` is created pointing to directory ``${project}_jj``. Then, the data reduction is re-started using the  CARACal configuration file provided with switch ``-cf``. The purpose of this is to maintain data reduction reports corresponding to the single data reduction steps, which would otherwise be overwritten. 
+Using method 2, the user defines a set of consecutive configuration files, for simplicity ``${configfile}_a``, ``${configfile}_b``, ... , and a set of consecutive medifixes (middle names), e.g. ``00``, ``01``, ... for report files. The medifixes will then be inserted in the report file names. If the user does not choose the same medifixes (as in the example), a set of report files with different names are created for each ``caratekit.sh`` call. The individual names are again the user's choice... 
 
 E.g, invoking
+
 ([Docker](https://www.docker.com/))
 ```
 $ caratekit.sh -ws ${workspace} -cd -di -ct ${caracal_testdir} -rp ${project} -rm "00" -cs ${configfile}_a.yml -td ${rawdata}
@@ -364,14 +363,14 @@ ${workspace}
    ├── report (report directory)
    │   ├── install
    │   ├── ${project}
-   │   │   ├── ${project}_00.sh.txt
-   │   │   ├── ${project}_00_sysinfo.txt
-   │   │   ├── ${project}_00_${configfile}_a.yml.txt
-   |   │   ├── ${project}_00_${configfile}_a_log-caracal.txt
-   │   │   ├── ${project}_01.sh.txt
-   │   │   ├── ${project}_01_sysinfo.txt
-   │   │   ├── ${project}_01_${configfile}_b.yml.txt
-   |   │   ├── ${project}_01_${configfile}_b_log-caracal.txt 
+   │   │   ├── ${project}-00.sh.txt
+   │   │   ├── ${project}-00-sysinfo.txt
+   │   │   ├── ${project}-00-${configfile}_a.yml.txt
+   |   │   ├── ${project}-00-${configfile}_a-log-caracal.txt
+   │   │   ├── ${project}-01.sh.txt
+   │   │   ├── ${project}-01-sysinfo.txt
+   │   │   ├── ${project}-01-${configfile}_b.yml.txt
+   |   │   ├── ${project}-01-${configfile}_b-log-caracal.txt 
    │   │   ⋮
    │   ⋮ 
    ⋮

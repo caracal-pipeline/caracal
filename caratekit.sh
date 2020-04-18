@@ -622,8 +622,8 @@ echo "  - when switches --singularity-minimal, -sm,"
 echo "    --singularity-alternative, -se, --singularity-installation, -si"
 echo "    are set, home/.stimela is removed, and singularity stimela is by"
 echo "    default installed in the directory (if not existing or if -f is"
-echo "    set) \$CARATE_WORKSPACE/stimela_singularity. If --stimela-root or"
-echo "    -sr are set, it is installed in rootfolder/stimela_singularity."
+echo "    set) \$CARATE_WORKSPACE/stimela-singularity. If --stimela-root or"
+echo "    -sr are set, it is installed in rootfolder/stimela-singularity."
 echo "    The first variant allows to re-use the same stimela installation"
 echo "    In multiple tests. If switches --omit-stimela-reinstall or -os are"
 echo "    set, this is not done"
@@ -2704,20 +2704,20 @@ then
     ###### export SINGULARITY_CACHEDIR=$CARATE_WORKSPACE/.singularity
     if [[ -n "$SR" ]]
     then
-	singularity_loc=${CARATE_WORKSPACE}/stimela_singularity
-	singularity_locstring="\${workspace}/stimela_singularity"
+	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity
+	singularity_locstring="\${workspace}/stimela-singularity"
     else
-	singularity_loc=${WORKSPACE_ROOT}/stimela_singularity
-	singularity_locstring="\${workspace_root}/stimela_singularity"
+	singularity_loc=${WORKSPACE_ROOT}/stimela-singularity
+	singularity_locstring="\${workspace_root}/stimela-singularity"
     fi
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]]
     then
         if [[ -e ${singularity_loc} ]]
         then
-            echo "Will not re-create existing stimela_singularity and use old installation."
+            echo "Will not re-create existing stimela-singularity and use old installation."
             echo "Use -f to override and unset -or or --omit-stimela-reinstall flags."
             sya_sing+="##########################################"; sya_sing+=$'\n'
-            sya_sing+="Will not re-create existing stimela_singularity and use old installation."; sya_sing+=$'\n'
+            sya_sing+="Will not re-create existing stimela-singularity and use old installation."; sya_sing+=$'\n'
             sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags."; sya_sing+=$'\n'
             sya_sing+="##########################################"; sya_sing+=$'\n'
             sya_sing+=$'\n; sya_sing+=$'\n''

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#hurzl
+
 # The following ensures the script to stop on errors
 set -e
 
@@ -429,12 +429,12 @@ then
     echo ""
     echo "  --use-stimela-master -um            Use"
     echo "                                      pip install -U --force-reinstall -r"
-    echo "                                                  (...)stimela_master.txt"
+    echo "                                                  (...)stimela-master.txt"
     echo "                                      when installing CARACal"
     echo ""
     echo "  --use-stimela-stable -us            Use"
     echo "                                      pip install -U --force-reinstall -r"
-    echo "                                                  (...)stimela_last_stable.txt"
+    echo "                                                  (...)stimela-last_stable.txt"
     echo "                                      when installing CARACal"
     echo ""
     echo "  --local-stimela ARG -lst ARG        Use pip install -U --force-reinstall ARG"
@@ -600,11 +600,11 @@ echo "  - caracal is installed via pip. If switches --omit-caracal-reinstall"
 echo "    or -oc are set, this is not done"
 echo ""
 echo "  - if --use-stimela-master or -um switch is set,"
-echo "    caracal/stimela_master.txt is installed via pip. If switches"
+echo "    caracal/stimela-master.txt is installed via pip. If switches"
 echo "    --omit-stimela-reinstall or -os are set, this is not done"
 echo ""
 echo "  - if --use-stimela-stable or -us switch is set,"
-echo "    caracal/stimela_last_stable.txt is installed via pip. If switches"
+echo "    caracal/stimela-last_stable.txt is installed via pip. If switches"
 echo "    --omit-stimela-reinstall or -os are set, this is not done"
 echo ""
 echo "  - when switches --docker-minimal, -dm, --docker-alternative, -da,"
@@ -751,22 +751,22 @@ echo " "
 echo "   - a shell script reproducing all shell commands initiated by carate.sh, if"
 echo "     CARATE_CARACAL_RUN_PREFIX is set (as an environment variable or through"
 echo "     switches --caracal-run-prefix or -cp) called"
-echo "     \${CARATE_CARACAL_RUN_PREFIX}_${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt, called"
-echo "     \${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt otherwise."
-echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, _${CARATE_CARACAL_RUN_MEDIFIX}"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}-${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt, called"
+echo "     \${CARATE_CARACAL_TEST_ID}-${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt otherwise."
+echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, -${CARATE_CARACAL_RUN_MEDIFIX}"
 echo "     is left out."
 echo "     "
 echo "   - a file with information about the computer and the environment"
 echo "     that was used for the test, if CARATE_CARACAL_RUN_PREFIX is set"
 echo "     (as an environment variable or through switches"
 echo "     --caracal-run-prefix or -cp) called"
-echo "     \${CARATE_CARACAL_RUN_PREFIX}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt, called"
-echo "     \${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt"
+echo "     \${CARATE_CARACAL_RUN_PREFIX}-${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt, called"
+echo "     \${CARATE_CARACAL_TEST_ID}-${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt"
 echo "     otherwise"
-echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, _${CARATE_CARACAL_RUN_MEDIFIX}"
+echo "     If ${CARATE_CARACAL_RUN_MEDIFIX} is not defined, -${CARATE_CARACAL_RUN_MEDIFIX}"
 echo "     is left out."
 echo "     "
-echo "   - a file ${CARATE_CARACAL_TEST_ID}_${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt with information"
+echo "   - a file ${CARATE_CARACAL_TEST_ID}-${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt with information"
 echo "     about the computer and the environment that was used for the test"
 echo "     "
 echo "   - copies of the configuration files, one per test"
@@ -1319,7 +1319,7 @@ then
 	exit 1;
     else
 	# Get the config file name
-        configfilename=`echo $CARATE_CONFIG_SOURCE | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
+        configfilename=`echo ${CARATE_CONFIG_SOURCE} | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'`
     fi
 fi
 
@@ -1328,7 +1328,7 @@ fi
 [[ ! -n "${CARATE_INPUT_DIR}" ]] || ss+=$'\n'
 
 # Determine CARATE_CARACAL_RUN_MEDIFIX to be something
-[[ -n ${CARATE_CARACAL_RUN_MEDIFIX} ]] && CARATE_CARACAL_RUN_MEDIFIX="_${CARATE_CARACAL_RUN_MEDIFIX}" || CARATE_CARACAL_RUN_MEDIFIX=""
+[[ -n ${CARATE_CARACAL_RUN_MEDIFIX} ]] && CARATE_CARACAL_RUN_MEDIFIX="-${CARATE_CARACAL_RUN_MEDIFIX}" || CARATE_CARACAL_RUN_MEDIFIX=""
 
 # This ensures that when stopping, the $HOME environment variable is restored
 # Variable defininition ends here in script
@@ -1450,8 +1450,8 @@ SS=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIFI
 echo "$ss" >> ${SS}
 
 # Sysinfo
-[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt || \
-SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt
+[[ -n ${CARATE_CARACAL_RUN_PREFIX} ]] && SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt || \
+SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt
 
 # Empty into the sysinfo
 [[ ! -e ${SYA} ]] || (( ${FORCE} == 0 )) || checkex ${SYA} || rm -rf ${SYA}
@@ -1561,7 +1561,7 @@ function cleanup {
 trap cleanup EXIT
 
 [[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
-[[ -n ${KH} ]] || export HOME=$WORKSPACE_ROOT/home
+[[ -n ${KH} ]] || export HOME=${WORKSPACE_ROOT}/home
 if (( ${FORCE} != 0 ))
 then
     # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake, so tons of protection...
@@ -1626,7 +1626,7 @@ then
     echo "" >> ${SYA}
 fi
 
-echo "Entering virtualenv in $WORKSPACE_ROOT"
+echo "Entering virtualenv in ${WORKSPACE_ROOT}"
 echo ". \${cvirtualenv}/bin/activate" >> ${SS}
 [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
 
@@ -1784,16 +1784,16 @@ caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/c
 
 if [[ -n ${UM} ]]
 then
-    echo "Installing stimela_master.txt"
+    echo "Installing stimela-master.txt"
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt"
-	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt" >> ${SS}
+	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt"
+	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt" >> ${SS}
         if [[ -z ${FS} ]]
 	then
-	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_master.txt && break || {
-		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_master.txt failed"
+	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-master.txt && break || {
+		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt failed"
 		    (( ii++ ))
 		}
 	else
@@ -1804,16 +1804,16 @@ fi
 
 if [[ -n ${US} ]]
 then
-    echo "Installing stimela_last_stable.txt"
+    echo "Installing stimela-last_stable.txt"
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt"
-	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt" >> ${SS}
+	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt"
+	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt" >> ${SS}
         if [[ -z ${FS} ]]
 	then
-	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela_last_stable.txt && break || {
-		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela_last_stable.txt failed"
+	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-last_stable.txt && break || {
+		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt failed"
 		    (( ii++ ))
 		}
 	else
@@ -1873,7 +1873,7 @@ then
     # Get Stimela tag. This can be simplified...
     if [[ -n ${US} ]]
     then
-	stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela_last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || \
+	stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela-last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || \
 	    true
         if [[ -z ${stimelaline} ]]
         then
@@ -1894,7 +1894,7 @@ then
     elif [[ -n ${UM} ]]
     then
         # Stimela tag depends on whether the repository is in or not
-        stimelaline=`grep https://github.com/ratt-ru/Stimela stimela_master.txt` || \
+        stimelaline=`grep https://github.com/ratt-ru/Stimela stimela-master.txt` || \
 	    true
 	[[ -z ${stimelaline} ]] || \
 	    stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
@@ -2215,14 +2215,14 @@ runtest () {
     
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
-	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}_${testruns}
+	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname="${CARATE_CARACAL_RUN_PREFIX}-${testruns}"
 	if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
 	then
-	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname=${CARATE_CARACAL_FORMER_RUN}_${testruns}
+	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname="${CARATE_CARACAL_FORMER_RUN}-${testruns}"
 	fi
-	reportprefy="_${configfilename}"
+	reportprefy="-${configfilename}"
     else
-	trname=${configfilename}_${contarch}
+	trname="${configfilename}-${contarch}"
 	reportprefy=""
     fi
 
@@ -2236,7 +2236,7 @@ runtest () {
     cat ${SS} >> ${SS_RUNTEST}
     [[ -z ${sscontainer} ]] || echo "${sscontainer}" >> ${SS_RUNTEST}
     
-    SYA_RUNTEST=${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_sysinfo.txt
+    SYA_RUNTEST=${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-sysinfo.txt
     [[ ! -e ${SYA_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SYA_RUNTEST} || rm -rf ${SYA_RUNTEST}
     cat ${SYA} >> ${SYA_RUNTEST}
     [[ -z ${syacontainer} ]] || echo "${syacontainer}" >> ${SYA_RUNTEST}
@@ -2380,7 +2380,7 @@ runtest () {
     
     # Make a copy of the logfile
     caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
-    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}_log-caracal.txt
+    [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}-log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
     testingoutput ${WORKSPACE_ROOT} ${trname} ${SYA_RUNTEST} || { true; failedoutput=1; }
@@ -2402,7 +2402,7 @@ runtest () {
     echo "" >> ${SYA_RUNTEST}
     echo "" >> ${SYA}
     
-    [[ ! -e ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs ]] || rm -r ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs
+    [[ ! -e ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs ]] || rm -r ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
 
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
@@ -2415,14 +2415,14 @@ runtest () {
 	faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` )
 	if (( ${#faultylist[@]} > 0 ))
 	then
-	    mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs
-	    rm -f ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs/*
+	    mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
+	    rm -f ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/*
 	    for jj in "${faultylist[*]}"
 	    do
-		cp ${jj} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs/
+		cp ${jj} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/
 	    done
 	    echo "Logfiles indicating strange behaviour have been collected in the directory"
-	    echo "${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}_badlogs/"
+	    echo "${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/"
 	    echo ""
 	fi
 	
@@ -2504,9 +2504,9 @@ runtestsample () {
 
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
-	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}_cs_${testruns}
+	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}-cs-${testruns}
     else
-	trname=config_sample_${contarch}
+	trname="config_sample-${contarch}"
     fi
 
     echo "##########################################" >> ${SYA}
@@ -2781,7 +2781,7 @@ fi
 if [[ -n ${SM} ]]
 then
     (( testrunnumber+=1 ))
-    greetings_line="Singularity: minimalConfig_singularity"
+    greetings_line="Singularity: minimalConfig-singularity"
     confilename="minimalConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"

@@ -364,7 +364,7 @@ mapping:
               - type: str
             desc: Data to output after calibration
             required: false
-            example: 'CORRECTED_DATA'
+            example: 'CORR_DATA'
           gain_matrix_type:
             seq:
               - type: str

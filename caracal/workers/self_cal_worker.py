@@ -871,8 +871,8 @@ def worker(pipeline, recipe, config):
                     outcolumn = "CORRECTED_DATA"
                     incolumn = "CORRECTED_DATA_PHASE"
             elif config[key].get('two_step'):
-                gasols_ = [config[key].get('GAsols_time')[
-                              num - 1 if num <= len(config[key].get('GAsols_time')) else -1],
+                gasols_ = [config[key].get('GAsols_timeslots')[
+                              num - 1 if num <= len(config[key].get('GAsols_timeslots')) else -1],
                           config[key].get('GAsols_channel')[
                               num - 1 if num <= len(config[key].get('GAsols_channel')) else -1]]
                 if gasols_[0] == -1:
@@ -886,6 +886,10 @@ def worker(pipeline, recipe, config):
             bsols_ = [config[key].get('Bsols_timeslots')[num-1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                       config[key].get('Bsols_channel')[num-1 if num <= len(config[key].get('Bsols_channel')) else -1]]
             step = 'calibrate_field{0:d}_iter{1:d}_ms{2:d}'.format(trg, num, i)
+            outdata = config[key].get('output_data')[num-1 if len(config[key].get('output_data')) >= num else -1]
+            if outdata == 'CORRECTED_DATA':
+                outdata = 'CORR_DATA'
+            print(pipeline.output,msname)
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": calmodel,
@@ -1553,7 +1557,8 @@ def worker(pipeline, recipe, config):
 
         else:
             # Use the image
-            if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORR_DATA":
+            if config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORR_DATA" or \
+                config['calibrate'].get('output_data')[num-1 if num <= len(config['calibrate'].get('output_data')) else -1] == "CORRECTED_DATA":
                 aimfast_settings.update({"restored-image" : '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir, prefix, field, num, mfsprefix)})
 
             else:
@@ -1692,6 +1697,7 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if we use the new two_step analysis aimfast has to be run
+    #IF we run with meqtrees we have to run extract sources
     if config['calibrate'].get('two_step') and calwith == 'meqtrees':
         config['aimfast']['enable'] = True
 

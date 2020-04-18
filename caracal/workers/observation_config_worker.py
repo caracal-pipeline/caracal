@@ -76,45 +76,47 @@ def worker(pipeline, recipe, config):
                                 "Your timeslot chunk = {} \n".format(time_chunk) +
                                 "Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                 # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
-                if len(pipeline.config['self_cal']['calibrate']['Gsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
-                    amount_sols = len(pipeline.config['self_cal']['calibrate']['Gsols_channel'])
-                else:
-                    amount_sols = int(pipeline.config['self_cal']['cal_niter'])
-                #  we collect all time solutions
-                solutions = pipeline.config['self_cal']['calibrate']['Gsols_channel'][:amount_sols]
-                # if we do Bjones we add those
-                if pipeline.config['self_cal']['calibrate']['Bjones']:
-                    if len(pipeline.config['self_cal']['calibrate']['Bsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
-                        amount_sols = len(pipeline.config['self_cal']['calibrate']['Bsols_channel'])
+                # This is not an option for meqtrees
+                if pipeline.config['self_cal']['calibrate_with'].lower() == 'cubical':
+                    if len(pipeline.config['self_cal']['calibrate']['Gsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                        amount_sols = len(pipeline.config['self_cal']['calibrate']['Gsols_channel'])
                     else:
                         amount_sols = int(pipeline.config['self_cal']['cal_niter'])
-                    solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_channel'][:amount_sols])
-                # Same for GA solutions
-                if pipeline.config['self_cal']['calibrate']['two_step']:
-                    if len(pipeline.config['self_cal']['calibrate']['GAsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
-                        amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_channel'])
+                    #  we collect all time solutions
+                    solutions = pipeline.config['self_cal']['calibrate']['Gsols_channel'][:amount_sols]
+                    # if we do Bjones we add those
+                    if pipeline.config['self_cal']['calibrate']['Bjones']:
+                        if len(pipeline.config['self_cal']['calibrate']['Bsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                            amount_sols = len(pipeline.config['self_cal']['calibrate']['Bsols_channel'])
+                        else:
+                            amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                        solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_channel'][:amount_sols])
+                    # Same for GA solutions
+                    if pipeline.config['self_cal']['calibrate']['two_step']:
+                        if len(pipeline.config['self_cal']['calibrate']['GAsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
+                            amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_channel'])
+                        else:
+                            amount_sols = int(pipeline.config['self_cal']['cal_niter'])
+                        for i,val in enumerate(pipeline.config['self_cal']['calibrate']['GAsols_channel'][:amount_sols]):
+                            if val >= 0:
+                                solutions.append(val)
+                    # then we assign the timechunk
+                    if pipeline.config['self_cal']['cal_channel_chunk'] == -1:
+                        if np.min(solutions) != 0.:
+                            channel_chunk = max(solutions)
+                        else:
+                            channel_chunk = 0
                     else:
-                        amount_sols = int(pipeline.config['self_cal']['cal_niter'])
-                    for i,val in enumerate(pipeline.config['self_cal']['calibrate']['GAsols_channel'][:amount_sols]):
-                        if val >= 0:
-                            solutions.append(val)
-                # then we assign the timechunk
-                if pipeline.config['self_cal']['cal_channel_chunk'] == -1:
-                    if np.min(solutions) != 0.:
-                        channel_chunk = max(solutions)
-                    else:
-                        channel_chunk = 0
-                else:
-                    channel_chunk = pipeline.config['self_cal']['cal_channel_chunk']
-                # if channel_chunk is not 0 all solutions should fit in there.
-                # if it is 0 then it does not matter as we are not checking remainder intervals
-                if channel_chunk != 0:
-                    sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
-                    for val in sol_int_array:
-                        if val != int(val):
-                            UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
-                                           "Your channel chunk = {} \n".format(channel_chunk) +
-                                           "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                        channel_chunk = pipeline.config['self_cal']['cal_channel_chunk']
+                    # if channel_chunk is not 0 all solutions should fit in there.
+                    # if it is 0 then it does not matter as we are not checking remainder intervals
+                    if channel_chunk != 0:
+                        sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
+                        for val in sol_int_array:
+                            if val != int(val):
+                                UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
+                                               "Your channel chunk = {} \n".format(channel_chunk) +
+                                               "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
             # Check some imaging stuff
             if pipeline.config['self_cal']['image']['enable']:
                 if pipeline.config['self_cal']['img_maxuv_l'] > 0. and  pipeline.config['self_cal']['taper'] > 0.:

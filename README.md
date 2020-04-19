@@ -20,7 +20,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 
 We strongly recommend and describe an installation using a Python3 virtual environment. Only try outside a virtual environment if you know what you are doing.
 
-Choose the name `${caracal-venv}` of the virtual environment. Then:
+Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ```
 python3 -m venv ${caracal-venv}
@@ -65,7 +65,7 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f
 
 ## Run Caracal and get help
 
-You can get help and run Caracal with the commands:
+Once inside the virtual environment, you can get help and run Caracal with the commands:
 
 ```
 caracal --help

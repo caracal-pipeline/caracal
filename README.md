@@ -1,7 +1,7 @@
 # Full documentation
-https://caracal.readthedocs.io, which includes the installation & basic usage instructions copied below, and much more.
+https://caracal.readthedocs.io, which includes the Install & Run instructions copied below, and much more.
 
-# Installation & basic usage
+# Installation & Run
 
 ## Usage and publication policy
 
@@ -61,14 +61,14 @@ If using [Singularity](https://github.com/sylabs/singularity):
 caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 ```
 
-## Run Caracal
+## Run
 
-If you installed Caracal manually activate the virtual environment with:
+If you installed Caracal manually, activate the virtual environment with:
 ```
 source ${caracal-venv}/bin/activate
 ```
 
-If you installed Caracal with the caratekit.sh script activate the virtual environment with:
+If you installed Caracal with the caratekit.sh script, activate the virtual environment with:
 ```
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```

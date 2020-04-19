@@ -61,19 +61,23 @@ If using [Singularity](https://github.com/sylabs/singularity):
 caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 ```
 
-### Run and get help
+### Run Caracal
 
-Activate the virtual environment:
+Activate the virtual environment.
+
+If you installed manually:
+```
+source ${caracal-venv}/bin/activate
+```
+
+If you installed with the caratekit.sh script:
+```
+source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
+```
+
+Run Caracal with the command:
 
 ```
-source ${caracal-venv}/bin/activate # for manual installation
-source ${workspace}/${caracal_dir}/caracal_venv/bin/activate # for installation with the caratekit.sh script
-```
-
-Get help and run Caracal with the commands:
-
-```
-caracal --help
 caracal - c ${your-configuration-file}
 ```
 

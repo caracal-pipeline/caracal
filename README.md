@@ -73,7 +73,7 @@ If you installed Caracal with the caratekit.sh script, activate the virtual envi
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```
 
-Run Caracal with the command:
+Run Caracal with:
 
 ```
 caracal - c ${your-configuration-file}

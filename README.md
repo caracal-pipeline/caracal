@@ -18,7 +18,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 
 ### Manual installation
 
-We strongly recommend and describe an installation using a Python3 virtual environment (see [Installing a Python 3 virtualenv](#Installing-a-Python-3-virtualenv) for more information on this). Try outside a virtual environment only if you know what you are doing.
+We strongly recommend and describe an installation using a Python3 virtual environment (see [Installing a Python 3 virtualenv](#Installing-a-Python-3-virtualenv) for more information on this). Only try outside a virtual environment if you know what you are doing.
 
 Choose the name `${caracal-venv}` of the virtual environment. Then:
 

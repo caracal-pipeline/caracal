@@ -3,7 +3,7 @@ import os
 import glob
 import warnings
 import stimela.dismissable as sdm
-import stimela.recipe as stimela
+import stimela.recipe
 import astropy
 import shutil
 from astropy.io import fits
@@ -719,9 +719,9 @@ def worker(pipeline, recipe, config):
                                 'cab/fitstool',
                                 step,
                                 {
-                                    "image": ['{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-{5:04d}-{6:s}.fits:output'.format(
+                                    "file_pattern": '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output'.format(
                                             cube_dir, pipeline.prefix, field, line_name,
-                                            j, d, mm) for d in range(nchans)],
+                                            j, mm),
                                     "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,
@@ -1034,7 +1034,7 @@ def worker(pipeline, recipe, config):
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener'].get('channels_per_plot'),
-                          "workdir": '{0:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
+                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IOi["output"]),
                           "label": config['sharpener'].get('label', pipeline.prefix)
                           }
 

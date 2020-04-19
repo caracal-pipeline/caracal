@@ -62,7 +62,6 @@ flagging:
 
 cross_cal:
   enable: true
-  otfdelay: true
   uvrange: '>150'
   label_in: ''
   label_cal: 1gc1

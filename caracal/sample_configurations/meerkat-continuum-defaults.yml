@@ -59,7 +59,6 @@ flagging:
 
 cross_cal:
   enable: true
-  otfdelay: true
   uvrange: '>150'
   label_in: 1gc1
   rewind_flags:

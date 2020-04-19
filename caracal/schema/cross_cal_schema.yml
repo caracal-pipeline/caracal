@@ -42,11 +42,6 @@ mapping:
         type: bool
         example: 'False'
         required: false
-      otfdelay:  
-        type: bool
-        required: false
-        desc: Set whether to apply the delay calibration on the fly when solving for other calibration terms.
-        example: 'True'
       uvrange: 
         type: str
         required: false

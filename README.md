@@ -1,20 +1,20 @@
 # Full documentation
 https://caracal.readthedocs.io, which includes the Download & Install instructions copied below, and much more.
 
-# Installation
+# Installation and basic usage
 
-### Usage and publication policy
+## Usage and publication policy
 
 When using CARACal please be aware of and adhere to the [CARACal publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
 
-### Requirements
+## Requirements
 - [Python](https://www.python.org) 3.5 or higher.
 - Container technology of your choice. It can be one of the following:
   - [Docker](https://www.docker.com);
   - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist;
   - [Podman](https://podman.io) **(currently not fully supported)**.
 
-### Manual installation
+## Manual installation
 
 We strongly recommend and describe an installation using a Python3 virtual environment. Only try outside a virtual environment if you know what you are doing.
 
@@ -45,7 +45,7 @@ If using [Podman](https://podman.io) (currently not fully supported):
 stimela pull -p
 ``` 
 
-### Installation with the caratekit.sh script
+## Installation with the caratekit.sh script
 
 Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the Caracal directory `${caracal_dir}`.
 
@@ -61,7 +61,7 @@ If using [Singularity](https://github.com/sylabs/singularity):
 caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 ```
 
-### Run Caracal
+## Run Caracal
 
 Activate the virtual environment.
 
@@ -81,4 +81,4 @@ Run Caracal with the command:
 caracal - c ${your-configuration-file}
 ```
 
-For complete install instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.
+For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

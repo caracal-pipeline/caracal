@@ -1,7 +1,7 @@
 # Full documentation
-https://caracal.readthedocs.io, which includes the Download & Install instructions copied below, and much more.
+https://caracal.readthedocs.io, which includes the installation & basic usage instructions copied below, and much more.
 
-# Installation and basic usage
+# Installation & basic usage
 
 ## Usage and publication policy
 

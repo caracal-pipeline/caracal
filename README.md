@@ -1,20 +1,18 @@
 # Full documentation
 https://caracal.readthedocs.io, which includes the Download & Install instructions copied below, and much more.
 
-# Usage and publication policy
+# Installation
+
+### Usage and publication policy
 
 When using CARACal please be aware of and adhere to the [CARACal publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
 
-# Download & Install
-
-## Requirements
+### Requirements
 - [Python](https://www.python.org) 3.5 or higher.
 - Container technology of your choice. It can be one of the following:
   - [Docker](https://www.docker.com);
   - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist;
   - [Podman](https://podman.io) **(currently not fully supported)**.
-
-## Installation
 
 ### Manual installation
 
@@ -54,22 +52,29 @@ Download the installation script https://github.com/ska-sa/caracal/blob/master/c
 If using [Docker](https://www.docker.com):
 
 ```
-caratekit.sh -ws ${workspace} -cr -di -ct ${caracal_dir} -rp install -f
+caratekit.sh -ws ${workspace} -cr -di -ct ${caracal_dir} -rp install -f -kh
 ```
 
 If using [Singularity](https://github.com/sylabs/singularity):
 
 ```
-caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f
+caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 ```
 
-## Run Caracal and get help
+### Run and get help
 
-Once inside the virtual environment, you can get help and run Caracal with the commands:
+Activate the virtual environment:
+
+```
+source ${caracal-venv}/bin/activate # for manual installation
+source ${workspace}/${caracal_dir}/caracal_venv/bin/activate # for installation with the caratekit.sh script
+```
+
+Get help and run Caracal with the commands:
 
 ```
 caracal --help
 caracal - c ${your-configuration-file}
 ```
 
-For complete Download & Install instructions, trouble-shooting tips, and a full user manual please see https://caracal.readthedocs.io.
+For complete install instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

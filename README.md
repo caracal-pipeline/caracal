@@ -12,7 +12,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 - Container technology of your choice. It can be one of the following:
   - [Docker](https://www.docker.com);
   - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist;
-  - [Podman](https://podman.io) **currently not fully supported**.
+  - [Podman](https://podman.io) **(currently not fully supported)**.
 
 ## Installation
 

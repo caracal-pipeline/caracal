@@ -63,14 +63,12 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 ## Run Caracal
 
-Activate the virtual environment.
-
-If you installed manually:
+If you installed Caracal manually activate the virtual environment with:
 ```
 source ${caracal-venv}/bin/activate
 ```
 
-If you installed with the caratekit.sh script:
+If you installed Caracal with the caratekit.sh script activate the virtual environment with:
 ```
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```

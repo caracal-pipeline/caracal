@@ -383,7 +383,7 @@ mapping:
             example: '100Gb'
           two_step:
             type: bool
-            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the teps automatically.
+            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the solution sizes automatically.
             required: false
             example: 'False'
           add_vis_model:

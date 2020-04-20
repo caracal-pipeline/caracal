@@ -938,7 +938,7 @@ then
     # Now clone caracal
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-	    [[ -n ${FS} ]] || cp ${CARATE_LOCAL_CARACAL}/caratekit.sh ${mytmpdir}/
+	    [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
     else
     [[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git ${mytmpdir}
 #    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
@@ -1036,7 +1036,8 @@ then
     [[ ${success} == true ]] || { \
 	echo "Normal copy failed, trying to use sudo:"; \
 	echo "\$ sudo cp caratekit.sh ${proceed}"; \
-	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+#	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+	sudo cp caratekit.sh ${proceed} && success=true || true ; \
     }
     [[ ${success} == true ]] || { \
 	echo "No success, aborting"; \
@@ -1082,9 +1083,9 @@ then
 	done
 	[[ no_response == true ]] || { \
 	    echo "" >> ~/.cshrc; \
-	    echo "set path = ( \${path} ${caracalpath} )" >> ~/.cshrc; \
+	    echo "set path = ( ${caracalpath} \${path} )" >> ~/.cshrc; \
 	    echo "" >> ~/.cshrc; \
-	    echo "export PATH=\$PATH:${caracalpath}" >> ~/.bashrc; \
+	    echo "export PATH=${caracalpath}:\$PATH" >> ~/.bashrc; \
 	    echo "" >> ~/.bashrc; \
 	    }
     fi
@@ -1150,9 +1151,13 @@ fi
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+=$'\n'
 
 # Do not force test id to be identical with build number any more, if it is defined
+echo got here
 [[ -z "$CARATE_CARACAL_BUILD_ID" ]] || { \
-    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
-	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_ID; \
+    echo got here; \
+    echo "(${CARATE_CARACAL_TEST_ID})"; \
+    [[ -n ${CARATE_CARACAL_TEST_ID} ]] || { \
+	echo got here;
+	CARATE_CARACAL_TEST_ID=${CARATE_CARACAL_BUILD_ID}; \
     }; \
     [[ -z ${CR} ]] || { \
 	echo "You cannot define a CARATE_CARACAL_BUILD_ID (through an environment"; \

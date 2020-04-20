@@ -1207,41 +1207,12 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         gasols_ = [
             config[key].get('GAsols_timeslots')[num - 1 if num <=
-                                                      len(config[key].get('DDsols_timeslots')) else -1],
+                                                      len(config[key].get('GAsols_timeslots')) else -1],
             config[key].get('GAsols_channel')[num - 1 if num <=
-                                                         len(config[key].get('DDsols_channel')) else -1]]
-
-        # If we want to interpolate our we get the interpolation interval
-        if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
-            if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
-                gsols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
-            if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
-                gsols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
-            time_chunk_in = gsols_[0] if (
-                        gsols_[0] > config['transfer_apply_gains']['interpolate'].get('timeslots_chunk') != 0.) else \
-                config['transfer_apply_gains']['interpolate'].get('timeslots_chunk')
-            freq_chunk_in = gsols_[1] if (
-                        gsols_[1] > config['transfer_apply_gains']['interpolate'].get('channel_chunk') != 0) else \
-                config['transfer_apply_gains']['interpolate'].get('channel_chunk')
-        else:
-            time_chunk_in = gsols_[0] if (gsols_[0] > time_chunk != 0.) else \
-                time_chunk
-            freq_chunk_in = gsols_[1] if (gsols_[1] > freq_chunk != 0.) else \
-                freq_chunk
-        if config[key].get('Bjones'):
-            jones_chain += ',B'
-            bupdate = gupdate
-            if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
-                if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
-                    bsols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
-                if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
-                    bsols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
-            if bsols_[0] > time_chunk_in:
-                time_chunk_in = bsols_[0]
-            if bsols_[1] > freq_chunk_in:
-                freq_chunk_in = bsols_[1]
+                                                         len(config[key].get('GAsols_channel')) else -1]]
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
+        second_matrix_invoked = False
         if (matrix_type == 'GainDiag' or matrix_type == 'Gain2x2'):
             #Then check whether the scales different
             if (gasols_[0] != -1 and gasols_[0] != gsols_[0]) or (gasols_[1] != -1 and gasols_[1] != gsols_[1]):
@@ -1252,20 +1223,12 @@ def worker(pipeline, recipe, config):
                         gasols_[0] = gsols_[0]
                     if gasols_[1] == -1:
                         gasols_[1] = gsols_[1]
-                    if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
-                        if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
-                            gasols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
-                        if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
-                            gasols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
-                    if gasols_[0] > time_chunk_in:
-                        time_chunk_in = gasols_[0]
-                    if gasols_[1] > freq_chunk_in:
-                        freq_chunk_in = gasols_[1]
-        # if we are interpolating to 1 without setting the chunks th
-        if freq_chunk_in == 1:
-            freq_chunk_in = freq_chunk
-        if time_chunk_in == 1:
-            time_chunk_in = time_chunk
+        # If we want to interpolate our we get the interpolation interval
+
+        if config[key].get('Bjones'):
+            jones_chain += ',B'
+            bupdate = gupdate
+
 
         # select the right datasets
         if enable_inter:
@@ -1297,25 +1260,50 @@ def worker(pipeline, recipe, config):
             gsols_apply = copy.deepcopy(gsols_)
             bsols_apply = copy.deepcopy(bsols_)
             gasols_apply = copy.deepcopy(gasols_)
-            time_chunk_apply = copy.deepcopy(time_chunk_in)
-            freq_chunk_apply = copy.deepcopy(freq_chunk_in)
-            ##Read the time and frequency channels of the  'fullres'
-            fullres_data = get_obs_data(msname_out)
-            int_time_fullres = fullres_data['EXPOSURE']
-            channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0] / fullres_data['SPW']['NUM_CHAN'][0]
-            caracal.log.info("Integration time of full-resolution data is:", int_time_fullres)
-            caracal.log.info("Channel size of full-resolution data is:", channelsize_fullres)
-            # Corresponding numbers for the self-cal -ed MS:
-            avg_data = get_obs_data(mslist[i])
-            int_time_avg = avg_data['EXPOSURE']
-            channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0] / avg_data['SPW']['NUM_CHAN'][0]
-            caracal.log.info("Integration time of averaged data is:", int_time_avg)
-            caracal.log.info("Channel size of averaged data is:", channelsize_avg)
-            # Compare the channel and timeslot ratios:
-            ratio_timeslot = int_time_avg / int_time_fullres
-            ratio_channelsize = channelsize_avg / channelsize_fullres
-            # If we are restoring a step we need to restore the flags of the 2gc process
-            if not enable_inter:
+            if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                time_chunk_apply = config['transfer_apply_gains']['interpolate']['timeslots_chunk']
+                freq_chunk_apply = config['transfer_apply_gains']['interpolate']['channel_chunk']
+            else:
+                time_chunk_apply = copy.deepcopy(time_chunk)
+                freq_chunk_apply = copy.deepcopy(freq_chunk)
+            if enable_inter:
+                ##Read the time and frequency channels of the  'fullres'
+                fullres_data = get_obs_data(msname_out)
+                int_time_fullres = fullres_data['EXPOSURE']
+                channelsize_fullres = fullres_data['SPW']['TOTAL_BANDWIDTH'][0] / fullres_data['SPW']['NUM_CHAN'][0]
+                caracal.log.info("Integration time of full-resolution data is: {}".format(int_time_fullres))
+                caracal.log.info("Channel size of full-resolution data is: {}".format(channelsize_fullres))
+                # Corresponding numbers for the self-cal -ed MS:
+                avg_data = get_obs_data(mslist[i])
+                int_time_avg = avg_data['EXPOSURE']
+                channelsize_avg = avg_data['SPW']['TOTAL_BANDWIDTH'][0] / avg_data['SPW']['NUM_CHAN'][0]
+                caracal.log.info("Integration time of averaged data is: {}".format(int_time_avg))
+                caracal.log.info("Channel size of averaged data is:{}".format(channelsize_avg))
+                # Compare the channel and timeslot ratios:
+                ratio_timeslot = int_time_avg / int_time_fullres
+                ratio_channelsize = channelsize_avg / channelsize_fullres
+                fromname = msname_out.replace(label_tgain, label)
+                if not config['transfer_apply_gains']['interpolate'].get('enable'):
+                    gsols_apply[0] = int(ratio_timeslot * gsols_[0])
+                    gsols_apply[1] = int(ratio_channelsize * gsols_[1])
+                    time_chunk_apply = int(max(int(ratio_timeslot*gsols_[0]), time_chunk_apply)) if not (
+                                int(gsols_[0]) == 0 or time_chunk_apply == 0) else 0
+                    freq_chunk_apply = int(max(int(ratio_channelsize * gsols_[1]), freq_chunk_apply)) if not (
+                                int(gsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                else:
+                    if config['transfer_apply_gains']['interpolate']['timeslots_int'] < 0:
+                        gsols_apply[0] = int(ratio_timeslot * gsols_[0])
+                    else:
+                        gsols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
+                    if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                        gsols_apply[1] = int(ratio_timeslot * gsols_[1])
+                    else:
+                        gsols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                    time_chunk_apply = int(max(int(ratio_timeslot*gsols_[0]), time_chunk_apply)) if not (
+                                int(gsols_[0]) == 0 or time_chunk_apply == 0) else 0
+                    freq_chunk_apply = int(max(int(ratio_channelsize * gsols_[1]), freq_chunk_apply)) if not (
+                                int(gsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+            else:
                 fromname = msname_out
                 # First remove the later flags
                 counter = num + 1
@@ -1333,15 +1321,7 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label="remove_2gc_flags_{0:s}:: Remove 2GC flags".format(mspref))
-            else:
-                fromname = msname_out.replace(label_tgain, label)
-                if not config['transfer_apply_gains']['interpolate'].get('enable'):
-                    gsols_apply[0] = int(ratio_timeslot * gsols_[0])
-                    gsols_apply[1] = int(ratio_channelsize * gsols_[1])
-                    time_chunk_apply = int(max(gsols_[0], time_chunk_in)) if not (
-                                int(gsols_[0]) == 0 or time_chunk_in == 0) else 0
-                    freq_chunk_apply = int(max(gsols_[1], freq_chunk_in)) if not (
-                                int(gsols_[1]) == 0 or freq_chunk_in == 0) else 0
+
             #Table NameError
 
 
@@ -1402,13 +1382,28 @@ def worker(pipeline, recipe, config):
 
             # expand
             if config[key].get('Bjones'):
-                if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
-                    bsols_apply[0] = int(ratio_timeslot * bsols_[0])
-                    bsols_apply[1] = int(ratio_channelsize * bsols_[1])
-                    time_chunk_apply = int(max(bsols_[0], time_chunk_in)) if not (
-                                int(bsols_[0]) == 0 or time_chunk_in == 0) else 0
-                    freq_chunk_apply = int(max(bsols_[1], freq_chunk_in)) if not (
-                                int(bsols_[1]) == 0 or freq_chunk_in == 0) else 0
+                if enable_inter:
+                    if not config['transfer_apply_gains']['interpolate'].get('enable'):
+                        bsols_apply[0] = int(ratio_timeslot * bsols_[0])
+                        bsols_apply[1] = int(ratio_channelsize * bsols_[1])
+                        time_chunk_apply = int(max(int(ratio_timeslot*bsols_[0]), time_chunk_apply)) if not (
+                                    int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
+                        freq_chunk_apply = int(max(int(ratio_channelsize * bsols_[1]), freq_chunk_apply)) if not (
+                                    int(bsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                    else:
+                        if config['transfer_apply_gains']['interpolate']['timeslots_int'] < 0:
+                            bsols_apply[0] = int(ratio_timeslot * bsols_[0])
+                        else:
+                            bsols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
+                        if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                            bsols_apply[1] = int(ratio_timeslot * bsols_[1])
+                        else:
+                            bsols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                        time_chunk_apply = int(max(int(ratio_timeslot*bsols_[0]), time_chunk_apply)) if not (
+                                    int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
+                        freq_chunk_apply = int(max(int(ratio_channelsize * bsols_[1]), freq_chunk_apply)) if not (
+                                    int(bsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+
 
                 cubical_gain_interp_opts.update({
                     "b-update-type": bupdate,
@@ -1441,13 +1436,27 @@ def worker(pipeline, recipe, config):
                         "b-load-from": b_table_name
                     })
             if second_matrix_invoked:
-                if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
+                if not config['transfer_apply_gains']['interpolate'].get('enable'):
                     gasols_apply[0] = int(ratio_timeslot * gasols_[0])
                     gasols_apply[1] = int(ratio_channelsize * gasols_[1])
-                    time_chunk_apply = int(max(gasols_[0], time_chunk_in)) if not (
-                                int(gasols_[0]) == 0 or time_chunk_in == 0) else 0
-                    freq_chunk_apply = int(max(gasols_[1], freq_chunk_in)) if not (
-                                int(gasols_[1]) == 0 or freq_chunk_in == 0) else 0
+                    time_chunk_apply = int(max(int(ratio_timeslot*gasols_[0]), time_chunk_apply)) if not (
+                                int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
+                    freq_chunk_apply = int(max(int(ratio_channelsize * gasols_[1]), freq_chunk_apply)) if not (
+                                int(gasols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                else:
+                    if config['transfer_apply_gains']['interpolate']['timeslots_int'] < 0:
+                        gasols_apply[0] = int(ratio_timeslot * gasols_[0])
+                    else:
+                        gasols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
+                    if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                        gasols_apply[1] = int(ratio_timeslot * gasols_[1])
+                    else:
+                        gasols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                    time_chunk_apply = int(max(int(ratio_timeslot*gasols_[0]), time_chunk_apply)) if not (
+                                int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
+                    freq_chunk_apply = int(max(int(ratio_channelsize * gasols_[1]), freq_chunk_apply)) if not (
+                                int(gasols_[1]) == 0 or freq_chunk_apply == 0) else 0
+
                 cubical_gain_interp_opts.update({
                     "dd-update-type": 'amp-diag',
                     "dd-type": CUBICAL_MT[matrix_type],

@@ -411,23 +411,23 @@ mapping:
           Bsols_timeslots:
             seq:
               - type: int
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps.
             required: false
             example: '0'
           Bsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps.
             required: false
             example: '2'
           GAsols_timeslots:
-            desc: Time intervals for amplitude calibration in Cubical [matrix_type]. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
+            desc: Time intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
             seq:
               - type: float
             required: false
             example: '-1'
           GAsols_channel:
-            desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defualt to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
+            desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
             seq:
               - type: float
             required: false

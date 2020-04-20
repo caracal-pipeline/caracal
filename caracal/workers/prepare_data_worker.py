@@ -41,7 +41,7 @@ def worker(pipeline, recipe, config):
                 else:
                     caracal.log.error('You asked to save the current FLAG column to a legacy flag version called "caracal_legacy"')
                     caracal.log.error('but that already exists. Caracal will not overwrite it unless you explicitely request that')
-                    caracal.log.error('by setting in  the configuration file:')
+                    caracal.log.error('by setting in the configuration file:')
                     caracal.log.error('    prepare_data: manage_flags: overwrite_legacy_flags: true')
                     caracal.log.error('Think twice whether you really need to do this.')
                     raise RuntimeError()

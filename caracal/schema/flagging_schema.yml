@@ -30,7 +30,7 @@ mapping:
         required: False
         example: 'auto'
       rewind_flags:
-        desc: Restore flags to specified state.
+        desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:

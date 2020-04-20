@@ -6,7 +6,7 @@ mapping:
 
   self_cal:
     type: map
-    desc: Perform Self calibration on the data
+    desc: Perform Self calibration on the data.
     mapping:
       enable:
         type: bool
@@ -15,9 +15,28 @@ mapping:
         example: 'False'
       label:
         type: str
-        desc: Label of the .MS files to process
+        desc: Label of the .MS files to process.
         required: false
         example: 'corr'
+      rewind_flags:
+        desc: Rewind flags to specified version.
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'False'
+            required: false
+          version: 
+            type: str
+            desc: Flag version name.
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            required: false
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        example: 'False'
+        required: false
       calibrate_with:
         type: str
         enum: ["meqtrees", "cubical"]

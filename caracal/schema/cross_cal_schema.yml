@@ -24,7 +24,7 @@ mapping:
         desc: Label for output files.
         example: '1gc1'
       rewind_flags:
-        desc: Restore flags to specified state
+        desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:
@@ -34,7 +34,7 @@ mapping:
             required: false
           version: 
             type: str
-            desc: Flag version name
+            desc: Flag version name.
             example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
             required: false
       overwrite_flag_versions:

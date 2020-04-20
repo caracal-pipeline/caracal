@@ -400,7 +400,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.error('           {0:s}: rewind_flags: version: {1:s}'.format(wname, flags_before_worker))
                 caracal.log.error('       You could rewind to an even earlier flag version if necessary. You will lose all flags')
                 caracal.log.error('       appended to the FLAG column after that version, and take it from there.')
-                caracal.log.error('    3) If you really know what you are doing allow Caracal to overwrite flag versions by setting:')
+                caracal.log.error('    3) If you really know what you are doing, allow Caracal to overwrite flag versions by setting:')
                 caracal.log.error('           {0:s}: overwrite_flag_versions: true'.format(wname))
                 caracal.log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
                 caracal.log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag versions from')

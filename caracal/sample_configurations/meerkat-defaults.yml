@@ -184,18 +184,11 @@ direction_dependent_calibration:
   use_pb: true
   calibrate_dd:
     enable: True
-    sigma: 0.4
     de_sources_mode: manual
-    de_sources_manual: ['14h15m26.0s,-65d57m16.5s,80']
-    de_target_manual: ['circinus-p3']
-  image_dd:
-    deconv_maxminoriter: 10000
-    freq_nband: 10
   copy_data:
     enable: true
   image_wsclean:
     enable: true
-    img_ws_npix: 5000
   transfer_model_dd:
     enable: true
 

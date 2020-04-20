@@ -363,19 +363,19 @@ def worker(pipeline, recipe, config):
             flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
             flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
             available_flagversions = manflags.get_flags(pipeline,msname)
-            if flags_before_worker in available_flagversions and not config['ignore_flag_versions']:
+            if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
                 if not config['rewind_flags']["enable"]:
                     caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname,msname,pipeline.prefix))
                     ask_what_to_do = True
                 else:
-                    if available_flagversions.index(config['rewind_flags']["version"]) > available_flagversions.index(flags_before_worker) and not config['ignore_flag_versions']:
+                    if available_flagversions.index(config['rewind_flags']["version"]) > available_flagversions.index(flags_before_worker) and not config['overwrite_flag_versions']:
                         caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname,msname,pipeline.prefix))
                         caracal.log.error('and you are rewinding to a later flag version: {0:s} .'.format(config['rewind_flags']["version"]))
                         ask_what_to_do = True
                     else: ask_what_to_do = False
             else: ask_what_to_do  = False
             if ask_what_to_do:
-                caracal.log.error('Running "{0:s}" again will create an inconcistency between flag versions, it will get messy.'.format(wname))
+                caracal.log.error('Running "{0:s}" again will attempt to overwrite existing flag versions, it might get messy.'.format(wname))
                 caracal.log.error('Caracal will not overwrite the "{0:s}" flag versions unless you explicitely request that.'.format(wname))
                 caracal.log.error('The current flag versions of this MS are (from the oldest to the most recent):')
                 for vv in  available_flagversions:
@@ -400,12 +400,12 @@ def worker(pipeline, recipe, config):
                 caracal.log.error('           {0:s}: rewind_flags: version: {1:s}'.format(wname, flags_before_worker))
                 caracal.log.error('       You could rewind to an even earlier flag version if necessary. You will lose all flags')
                 caracal.log.error('       appended to the FLAG column after that version, and take it from there.')
-                caracal.log.error('    3) If you really know what you are doing ignore the flag versions by setting:')
-                caracal.log.error('           {0:s}: ignore_flag_versions: true'.format(wname))
+                caracal.log.error('    3) If you really know what you are doing allow Caracal to overwrite flag versions by setting:')
+                caracal.log.error('           {0:s}: overwrite_flag_versions: true'.format(wname))
                 caracal.log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
                 caracal.log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag versions from')
                 caracal.log.error('       the previous run of "{0:s}" will be overwritten and appended to the list above (or'.format(wname))
-                caracal.log.error('       to that list truncated to the version you are rewinding to); AND all hell will break loose.')
+                caracal.log.error('       to that list truncated to the flag version you are rewinding to).')
                 caracal.log.error('Your choice will be applied to all MS files being processed together in this run of Caracal.')
                 raise RuntimeError()
 
@@ -419,10 +419,10 @@ def worker(pipeline, recipe, config):
                     msname, cab_name=substep)
                 if  version != flags_before_worker:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
                 substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
@@ -587,7 +587,7 @@ def worker(pipeline, recipe, config):
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i)
-            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['ignore_flag_versions'])
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         gt_final, itp_final, fd_final = get_caltab_final(
                        copy.deepcopy(gaintables), interps, "nearest", "target", ftable=ftable)

@@ -30,15 +30,15 @@ mapping:
           enable:
             type: bool
             desc: enable this segement
-            example: 'True'
+            example: 'False'
             required: false
           version: 
             type: str
             desc: Flag version name
             example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
             required: false
-      ignore_flag_versions:
-        desc: Ignore conflict with existing flag versions. Not recommended. Only enable this if you know what you are doing.
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
         required: false

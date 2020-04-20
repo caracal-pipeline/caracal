@@ -26,7 +26,7 @@ def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""
         return
 
     for i,flag in enumerate(remove_us):
-        recipe.add("cab/casa_flagmanager", cab_name, {
+        recipe.add("cab/casa_flagmanager", '{0:s}_{1:d}'.format(cab_name,i), {
             "vis": ms,
             "mode": "delete",
             "versionname": flag,

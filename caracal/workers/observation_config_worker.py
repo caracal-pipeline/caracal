@@ -22,16 +22,35 @@ def worker(pipeline, recipe, config):
         if pipeline.config['self_cal']['enable']:
             caracal.log.info(
                         "Checking the consistency of the Self_Cal input")
+
+
+
             # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
             if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
                 if pipeline.config['self_cal']['transfer_apply_gains']['enable']:
-                    raise UserInputError(
+                    raise caracal.UserInputError(
                         'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
                 if int(pipeline.config['self_cal']['start_at_iter']) != 1:
-                    raise UserInputError(
+                    raise caracal.UserInputError(
                         "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+                if int(pipeline.config['self_cal']['cal_channel_chunk']) != -1:
+                        caracal.log.info("The channel chunk has no effect on MeqTrees.")
+            else:
+                if int(pipeline.config['self_cal']['start_at_iter']) != 1:
+                    raise caracal.UserInputError(
+                        "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
             # First check we are actually running a calibrate
             if pipeline.config['self_cal']['calibrate']['enable']:
+                # Running with a model shorter than the output type is dengerous with 'CORR_RES'
+                if 'CORR_RES' in  pipeline.config['self_cal']['calibrate']['output_data']:
+                    if len(pipeline.config['self_cal']['calibrate']['model']) < pipeline.config['self_cal']['cal_niter']:
+                        raise caracal.UserInputError(
+                            "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
+
+                # Make sure we are not using two_step with CubiCal
+                if pipeline.config['self_cal']['calibrate_with'].lower() == 'cubical' and pipeline.config['self_cal']['calibrate']['two_step']:
+                    raise caracal.UserInputError(
+                        "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
                 #Then let's check that the solutions are reasonable and fit in our time chunks
                 #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
                 #  we check there are enough solution
@@ -49,7 +68,12 @@ def worker(pipeline, recipe, config):
                         amount_sols = int(pipeline.config['self_cal']['cal_niter'])
                     solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_timeslots'][:amount_sols])
                 # Same for GA solutions
-                if pipeline.config['self_cal']['calibrate']['two_step']:
+                if len(pipeline.config['self_cal']['calibrate']['gain_matrix_type']) < int(pipeline.config['self_cal']['cal_niter']):
+                    amount_matrix = len(pipeline.config['self_cal']['calibrate']['gain_matrix_type'])
+                else:
+                    amount_matrix = int(pipeline.config['self_cal']['cal_niter'])
+                if 'GainDiag' in pipeline.config['self_cal']['calibrate']['gain_matrix_type'][:amount_matrix] or \
+                    'Gain2x2' in pipeline.config['self_cal']['calibrate']['gain_matrix_type'][:amount_matrix]:
                     if len(pipeline.config['self_cal']['calibrate']['GAsols_timeslots']) < int(pipeline.config['self_cal']['cal_niter']):
                         amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_timeslots'])
                     else:
@@ -71,7 +95,7 @@ def worker(pipeline, recipe, config):
                     sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
                     for val in sol_int_array:
                         if val != int(val):
-                            raise UserInputError(
+                            raise caracal.UserInputError(
                                 "Not all applied time solutions fit in the timeslot_chunk. \n" +
                                 "Your timeslot chunk = {} \n".format(time_chunk) +
                                 "Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
@@ -92,7 +116,8 @@ def worker(pipeline, recipe, config):
                             amount_sols = int(pipeline.config['self_cal']['cal_niter'])
                         solutions.append(pipeline.config['self_cal']['calibrate']['Bsols_channel'][:amount_sols])
                     # Same for GA solutions
-                    if pipeline.config['self_cal']['calibrate']['two_step']:
+                    if 'GainDiag' in pipeline.config['self_cal']['calibrate']['gain_matrix_type'][:amount_matrix] or \
+                        'Gain2x2' in pipeline.config['self_cal']['calibrate']['gain_matrix_type'][:amount_matrix]:
                         if len(pipeline.config['self_cal']['calibrate']['GAsols_channel']) < int(pipeline.config['self_cal']['cal_niter']):
                             amount_sols = len(pipeline.config['self_cal']['calibrate']['GAsols_channel'])
                         else:
@@ -114,13 +139,13 @@ def worker(pipeline, recipe, config):
                         sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
                         for val in sol_int_array:
                             if val != int(val):
-                                UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
+                                caracal.UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
                                                "Your channel chunk = {} \n".format(channel_chunk) +
                                                "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
             # Check some imaging stuff
             if pipeline.config['self_cal']['image']['enable']:
                 if pipeline.config['self_cal']['img_maxuv_l'] > 0. and  pipeline.config['self_cal']['taper'] > 0.:
-                    UserInputError(
+                    caracal.UserInputError(
                         "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
 
     if pipeline.virtconcat:

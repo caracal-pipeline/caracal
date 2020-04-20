@@ -368,9 +368,9 @@ mapping:
           gain_matrix_type:
             seq:
               - type: str
-            desc: Gain matrix type
+            desc: Gain matrix type. GainDiagPhase = phase only calibration, GainDiagAmp = amplitude only, GainDiag = Amplitude + Phase, Gain2x2 = Amplitude + Phase taken non-diagonal terms into account.
             required: false
-            example: 'GainDiagPhase'
+            example: 'GainDiagPhase, GainDiag'
           model_mode:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
@@ -383,7 +383,7 @@ mapping:
             example: '100Gb'
           two_step:
             type: bool
-            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false.
+            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the teps automatically.
             required: false
             example: 'False'
           add_vis_model:
@@ -394,13 +394,13 @@ mapping:
           Gsols_timeslots:
             seq:
               - type: float
-            desc: G-Jones time solution interval. The parameter cal_time_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time chunk.
+            desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time of the observations.
             required: false
             example: '1'
           Gsols_channel:
             seq:
               - type: float
-            desc: G-Jones frequency solution interval. The parameter cal_frq_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency chunk.
+            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency range in a channel.
             required: false
             example: '0'
           Bjones:
@@ -421,17 +421,17 @@ mapping:
             required: false
             example: '2'
           GAsols_timeslots:
-            desc: Time intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
+            desc: Time intervals for amplitude calibration in Cubical [matrix_type]. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
             seq:
               - type: float
             required: false
-            example: '0'
+            example: '-1'
           GAsols_channel:
-            desc: Channel intervals for amplitude calibration in two_step scale procedure for phase vs amp. 0 indicates average all.
+            desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defualt to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
             seq:
               - type: float
             required: false
-            example: '0'
+            example: '-1'
           weight_column:
             desc: Column with weights
             type: str

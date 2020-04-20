@@ -64,38 +64,70 @@ def worker(pipeline, recipe, config):
     maxuvl = config.get('img_maxuv_l')
     transuvl = maxuvl*config.get('img_transuv_l')/100.
     multiscale = config.get('img_multi_scale')
+
     if multiscale == True:
         multiscale_scales = sdm.dismissable(config.get('img_multi_scale_scales'))
     if taper == '':
         taper = None
     label = config['label']
+    cal_niter = config.get('cal_niter')
     time_chunk = config.get('cal_timeslots_chunk')
     #If user sets value that is not -1 use  that
+    if len(config['calibrate']['gain_matrix_type']) < int(cal_niter):
+        amount_matrix = len(config['calibrate']['gain_matrix_type'])
+    else:
+        amount_matrix = int(cal_niter)
     if int(time_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
-        all_time_solution = config['calibrate'].get('Gsols_timeslots')
+        if len(config['calibrate'].get('Gsols_timeslots')) < cal_niter:
+            g_amount_sols = len(config['calibrate'].get('Gsols_timeslots'))
+        else:
+            g_amount_sols = cal_niter
+        all_time_solution = config['calibrate'].get('Gsols_timeslots')[:g_amount_sols]
         # add the various sections
         if config['calibrate'].get('Bjones', False):
-            all_time_solution.append(config[key].get('Bsols_timeslots')[:])
-        if  config['calibrate'].get('two_step',False):
-            for val in config['calibrate'].get('GAsols_timeslots'):
+            if len(config['calibrate'].get('Bsols_timeslots')) < cal_niter:
+                b_amount_sols = len(config['calibrate'].get('Bsols_timeslots'))
+            else:
+                b_amount_sols = cal_niter
+            all_time_solution.append(config['calibrate']['Bsols_timeslots'][:b_amounts_sols])
+        if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
+            'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
+            if len(config['calibrate']['GAsols_timeslots']) < cal_niter:
+                amount_sols = len(config['calibrate']['GAsols_timeslots'])
+            else:
+                amount_sols = int(cal_niter)
+            for val in config['calibrate']['GAsols_timeslots'][:amount_sols]:
                 if int(val) >= 0:
                     all_time_solution.append(val)
         if min(all_time_solution) == 0:
             time_chunk = 0
         else:
             time_chunk = max(all_time_solution)
+    # And for the frequencies
     freq_chunk = config.get('cal_channel_chunk')
-
     #If user sets value that is not -1 then use that
     if int(freq_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
-        all_freq_solution = config['calibrate'].get('Gsols_channel')
+        if len(config['calibrate']['Gsols_channel']) < cal_niter:
+            g_amount_sols = len(config['calibrate']['Gsols_channel'])
+        else:
+            g_amount_sols = cal_niter
+        all_freq_solution = config['calibrate']['Gsols_channel'][:g_amount_sols]
         # add the various sections
-        if config['calibrate'].get('Bjones', False):
-            all_freq_solution.append(config[key].get('Bsols_channel')[:])
-        if  config['calibrate'].get('two_step',False):
-            for val in config['calibrate'].get('GAsols_channel'):
+        if config['calibrate']['Bjones']:
+            if len(config['calibrate']['Bsols_channel']) < cal_niter:
+                b_amount_sols = len(config['calibrate']['Bsols_channel'])
+            else:
+                b_amount_sols = cal_niter
+            all_freq_solution.append(config['calibrate']['Bsols_channel'][:b_amount_sols])
+        if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
+            'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
+            if len(config['calibrate']['GAsols_channel']) < cal_niter:
+                amount_sols = len(config['calibrate']['GAsols_channel'])
+            else:
+                amount_sols = int(cal_niter)
+            for val in config['calibrate']['GAsols_channel'][:amount_sols]:
                 if int(val) >= 0:
                     all_freq_solution.append(val)
         if min(all_freq_solution) == 0:
@@ -106,7 +138,7 @@ def worker(pipeline, recipe, config):
     min_uvw = config.get('minuvw_m')
     ncpu = config.get('ncpu')
     mfsprefix = ["", '-MFS'][int(nchans > 1)]
-    cal_niter = config.get('cal_niter')
+
     # label of MS where we transform selfcal gaintables
     label_tgain = config['transfer_apply_gains'].get('transfer_to_label')
     # label of MS where we interpolate and transform model column
@@ -872,6 +904,7 @@ def worker(pipeline, recipe, config):
                     incolumn = "CORRECTED_DATA_PHASE"
 
             elif config[key].get('two_step'):
+                #This mode is actually not accesible for now as aimfast is swithed on automatically
                 gasols_ = [config[key].get('GAsols_timeslots')[
                               num - 1 if num <= len(config[key].get('GAsols_timeslots')) else -1],
                           config[key].get('GAsols_channel')[
@@ -930,7 +963,11 @@ def worker(pipeline, recipe, config):
         key = 'calibrate'
 
         modellist = []
-        model = config[key].get('model', num)[num-1]
+        #if model is unset for this iteration then just run with the model
+        if len(config[key]['model']) >= num:
+            model = config[key]['model'][num-1]
+        else:
+            model = num
         ### Defines the pybdsf models (and fitsmodels for some weird reasons)
         # If the model string contains a +, then combine the appropriate models
         if isinstance(model, str) and len(model.split('+')) > 1:
@@ -995,16 +1032,25 @@ def worker(pipeline, recipe, config):
                                               len(config[key].get('GAsols_channel')) else -1]]
         if config[key].get('Bjones'):
             jones_chain += ',B'
-            matrix_type = 'Gain2x2'
-
             bupdate = gupdate
+
+        second_matrix_invoked = False
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
-        # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
-        if config[key].get('two_step'):
-            gupdate = 'phase-diag'
-            if gasols_[0] != -1:
+        # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix
+        # first check if we are doing amplitude and phase
+        if (matrix_type == 'GainDiag' or matrix_type == 'Gain2x2'):
+            #Then check whether the scales different
+            if (gasols_[0] != -1 and gasols_[0] != gsols_[0]) or (gasols_[1] != -1 and gasols_[1] != gsols_[1]):
+                gupdate = 'phase-diag'
                 jones_chain += ',DD'
-                matrix_type = 'Gain2x2'
+                second_matrix_invoked = True
+                if gasols_[0] == -1:
+                    gasols_[0] = gsols_[0]
+                if gasols_[1] == -1:
+                    gasols_[1] = gsols_[1]
+        # If we are using more than one matrix we need to set the matrix type to Gain2x2
+        if len(jones_chain.split(",")) > 1:
+            matrix_type = 'Gain2x2'
         # Need to ad the solution term iterations
         sol_term_iters = config[key].get('sol_term_iters')
         if sol_term_iters == 'auto':
@@ -1018,8 +1064,20 @@ def worker(pipeline, recipe, config):
 
         for i,msname in enumerate(mslist):
             step = 'calibrate_cubical_{0:d}_{1:d}'.format(num, i, field)
-            time_chunk_apply =    int(max(int(gsols_[0]), time_chunk)) if not (int(gsols_[0]) == 0 or time_chunk == 0) else 0
-            freq_chunk_apply =    int(max(int(gsols_[1]), freq_chunk)) if not (int(gsols_[1]) == 0 or freq_chunk == 0) else 0
+            if gupdate == 'phase-diag':
+                g_table_name = "{0:s}/g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0])
+            elif gupdate == 'amp-diag':
+                g_table_name = "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0])
+            elif gupdate == 'diag':
+                g_table_name = "{0:s}/g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0])
+            elif gupdate == 'full':
+                g_table_name = "{0:s}/g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0])
+            else:
+                raise RuntimeError("Something has corrupted the selfcal run")
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
@@ -1038,16 +1096,15 @@ def worker(pipeline, recipe, config):
                 "out-casa-gaintables": True,
                 "weight-column": config[key].get('weight_column'),
                 "montblanc-dtype": 'float',
+                "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0]),
                 "g-solvable": True,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
                 "out-overwrite": config[key].get('overwrite'),
-                "g-save-to": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                           pipeline), num, msname.split('.ms')[0]),
-                "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0]),
+                "g-save-to": g_table_name,
                 "g-clip-low": config.get('cal_gain_amplitude_clip_low'),
                 "g-clip-high": config.get('cal_gain_amplitude_clip_high'),
                 "g-max-prior-error": config.get('cal_max_prior_error'),
@@ -1066,11 +1123,7 @@ def worker(pipeline, recipe, config):
                 cubical_opts.update({
                     "flags-apply": flags,
                 })
-            if config[key].get('two_step') and gasols_[0] != -1:
-                time_chunk_apply = int(max(int(gasols_[0]), time_chunk_apply)) if not (
-                            int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
-                freq_chunk_apply = int(max(int(gasols_[1]), freq_chunk_apply)) if not (
-                            int(gasols_[1]) == 0 or freq_chunk_apply == 0) else 0
+            if second_matrix_invoked:
                 cubical_opts.update({
                     "dd-update-type": 'amp-diag',
                     "dd-solvable": True,
@@ -1085,10 +1138,20 @@ def worker(pipeline, recipe, config):
                     "dd-max-post-error": config.get('cal_max_post_error'),
                 })
             if config[key].get('Bjones', False):
-                time_chunk_apply = int(max(int(bsols_[0]), time_chunk_apply)) if not (
-                            int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
-                freq_chunk_apply = int(max(int(bsols_[1]), freq_chunk_apply)) if not (
-                            int(bsols_[1]) == 0 or freq_chunk_apply == 0) else 0
+                if bupdate == 'phase-diag':
+                    b_table_name = "{0:s}/b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, msname.split('.ms')[0])
+                elif bupdate == 'amp-diag':
+                    b_table_name = "{0:s}/b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, msname.split('.ms')[0])
+                elif bupdate == 'diag':
+                    b_table_name = "{0:s}/b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, msname.split('.ms')[0])
+                elif bupdate == 'full':
+                    b_table_name = "{0:s}/b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, msname.split('.ms')[0])
+                else:
+                    raise RuntimeError("Something has corrupted the selfcal run")
                 cubical_opts.update({
                     "b-update-type": bupdate,
                     "b-solvable": True,
@@ -1096,15 +1159,15 @@ def worker(pipeline, recipe, config):
                     "b-freq-int": int(bsols_[1]),
                     "b-type": CUBICAL_MT[matrix_type],
                     "b-clip-low": config.get('cal_gain_amplitude_clip_low'),
-                    "b-save-to": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0]),
+                    "b-save-to": b_table_name,
                     "b-clip-high": config.get('cal_gain_amplitude_clip_high'),
                     "b-max-prior-error": config.get('cal_max_prior_error'),
                     "b-max-post-error": config.get('cal_max_post_error'),}
                 )
+            # Time chunk and freq chunk have been checked and approved before so they are what they are
             cubical_opts.update({
-                "data-time-chunk": time_chunk_apply,
-                "data-freq-chunk": freq_chunk_apply,}
+                "data-time-chunk": time_chunk,
+                "data-freq-chunk": freq_chunk,}
             )
             recipe.add('cab/cubical', step, cubical_opts,
                        input=pipeline.input,
@@ -1167,7 +1230,6 @@ def worker(pipeline, recipe, config):
                 freq_chunk
         if config[key].get('Bjones'):
             jones_chain += ',B'
-            matrix_type = 'Gain2x2'
             bupdate = gupdate
             if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
                 if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
@@ -1180,20 +1242,25 @@ def worker(pipeline, recipe, config):
                 freq_chunk_in = bsols_[1]
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
-        if config[key].get('two_step'):
-            gupdate = 'phase-diag'
-            if gasols_[0] != -1:
-                jones_chain += ',DD'
-                matrix_type = 'Gain2x2'
-                if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
-                    if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
-                        gasols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
-                    if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
-                        gasols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
-                if gasols_[0] > time_chunk_in:
-                    time_chunk_in = gasols_[0]
-                if gasols_[1] > freq_chunk_in:
-                    freq_chunk_in = gasols_[1]
+        if (matrix_type == 'GainDiag' or matrix_type == 'Gain2x2'):
+            #Then check whether the scales different
+            if (gasols_[0] != -1 and gasols_[0] != gsols_[0]) or (gasols_[1] != -1 and gasols_[1] != gsols_[1]):
+                    gupdate = 'phase-diag'
+                    jones_chain += ',DD'
+                    second_matrix_invoked = True
+                    if gasols_[0] == -1:
+                        gasols_[0] = gsols_[0]
+                    if gasols_[1] == -1:
+                        gasols_[1] = gsols_[1]
+                    if enable_inter and config['transfer_apply_gains']['interpolate'].get('enable'):
+                        if int(config['transfer_apply_gains']['interpolate'].get('timeslots_int')) >= 0:
+                            gasols_[0] = config['transfer_apply_gains']['interpolate'].get('timeslots_int')
+                        if int(config['transfer_apply_gains']['interpolate'].get('channel_int')) >= 0:
+                            gasols_[1] = config['transfer_apply_gains']['interpolate'].get('channel_int')
+                    if gasols_[0] > time_chunk_in:
+                        time_chunk_in = gasols_[0]
+                    if gasols_[1] > freq_chunk_in:
+                        freq_chunk_in = gasols_[1]
         # if we are interpolating to 1 without setting the chunks th
         if freq_chunk_in == 1:
             freq_chunk_in = freq_chunk
@@ -1209,6 +1276,9 @@ def worker(pipeline, recipe, config):
                 apmode = 'ar'
             else:
                 apmode = 'ac'
+        # if we have more than one matrix set the matrixtype correctly
+        if len(jones_chain.split(",")) > 1:
+            matrix_type = 'Gain2x2'
         # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
         # Hence the following fix. This should be removed once the fix makes it into stimela.
         matrix_type = 'Gain2x2'
@@ -1272,6 +1342,8 @@ def worker(pipeline, recipe, config):
                                 int(gsols_[0]) == 0 or time_chunk_in == 0) else 0
                     freq_chunk_apply = int(max(gsols_[1], freq_chunk_in)) if not (
                                 int(gsols_[1]) == 0 or freq_chunk_in == 0) else 0
+            #Table NameError
+
 
             # build cubical commands
             cubical_gain_interp_opts = {
@@ -1304,17 +1376,28 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
+            #Set the table name
+            if gupdate == 'phase-diag':
+                g_table_name = "{0:s}/g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, fromname.split('.ms')[0])
+            elif gupdate == 'amp-diag':
+                g_table_name = "{0:s}/g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, fromname.split('.ms')[0])
+            elif gupdate == 'diag':
+                g_table_name = "{0:s}/g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, fromname.split('.ms')[0])
+            elif gupdate == 'full':
+                g_table_name = "{0:s}/g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                    pipeline), num, fromname.split('.ms')[0])
+            else:
+                raise RuntimeError("Something has corrupted the application of the tables")
             if config['transfer_apply_gains']['interpolate'].get('enable'):
                 cubical_gain_interp_opts.update({
-                    "g-xfer-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                 pipeline), num,
-                                                                                    fromname.split('.ms')[0])
+                    "g-xfer-from": g_table_name
                 })
             else:
                 cubical_gain_interp_opts.update({
-                    "g-load-from": "{0:s}/g-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                 pipeline), num,
-                                                                                    fromname.split('.ms')[0])
+                    "g-load-from": g_table_name
                 })
 
             # expand
@@ -1326,6 +1409,7 @@ def worker(pipeline, recipe, config):
                                 int(bsols_[0]) == 0 or time_chunk_in == 0) else 0
                     freq_chunk_apply = int(max(bsols_[1], freq_chunk_in)) if not (
                                 int(bsols_[1]) == 0 or freq_chunk_in == 0) else 0
+
                 cubical_gain_interp_opts.update({
                     "b-update-type": bupdate,
                     "b-type": CUBICAL_MT[matrix_type],
@@ -1333,19 +1417,30 @@ def worker(pipeline, recipe, config):
                     "b-freq-int": int(bsols_apply[1]),
                     "b-solvable": False
                 })
+                #Set the table name
+                if bupdate == 'phase-diag':
+                    b_table_name = "{0:s}/b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                       pipeline), num, fromname.split('.ms')[0])
+                elif bupdate == 'amp-diag':
+                    b_table_name = "{0:s}/b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                       pipeline), num, fromname.split('.ms')[0])
+                elif bupdate == 'diag':
+                    b_table_name = "{0:s}/b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                       pipeline), num, fromname.split('.ms')[0])
+                elif bupdate == 'full':
+                    b_table_name = "{0:s}/b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                        pipeline), num, fromname.split('.ms')[0])
+                else:
+                    raise RuntimeError("Something has corrupted the application of the tables")
                 if config['transfer_apply_gains']['interpolate'].get('enable'):
                     cubical_gain_interp_opts.update({
-                        "b-xfer-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                     pipeline), num,
-                                                                                        fromname.split('.ms')[0])
+                        "b-xfer-from": b-table_name
                     })
                 else:
                     cubical_gain_interp_opts.update({
-                        "b-load-from": "{0:s}/b-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                     pipeline), num,
-                                                                                        fromname.split('.ms')[0])
+                        "b-load-from": b_table_name
                     })
-            if config[key].get('two_step') and gasols_[0] != -1:
+            if second_matrix_invoked:
                 if enable_inter and not config['transfer_apply_gains']['interpolate'].get('enable'):
                     gasols_apply[0] = int(ratio_timeslot * gasols_[0])
                     gasols_apply[1] = int(ratio_channelsize * gasols_[1])
@@ -1699,8 +1794,8 @@ def worker(pipeline, recipe, config):
         calibrate = calibrate_cubical
 
     # if we use the new two_step analysis aimfast has to be run
-    #if config['calibrate'].get('two_step') and calwith == 'meqtrees':
-    #    config['aimfast']['enable'] = True
+    if config['calibrate'].get('two_step') and calwith == 'meqtrees':
+        config['aimfast']['enable'] = True
 
     # if we do not run pybdsm we always need to output the corrected data column
     if not pipeline.enable_task(config, 'extract_sources'):

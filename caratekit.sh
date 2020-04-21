@@ -1122,29 +1122,39 @@ echo ""
 ss="workspace=${CARATE_WORKSPACE}"
 ss+=$'\n'
 tdfault=0
-if [[ ! -n "${CARATE_TEST_DATA_DIR}" ]]
+if [[ -z "${CARATE_TEST_DATA_DIR}" ]]
 then
     if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${DSC} ]] || [[ -n ${SSC} ]]
     then
 	tdfault=1
     else
-	[[ ! -n ${CARATE_CONFIG_SOURCE} ]] || tdfault=1
+	[[ -z ${CARATE_CONFIG_SOURCE} ]] || tdfault=1
     fi
     CARATE_TEST_DATA_DIR_OLD=""
 else
-    [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=1
+    [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=2
     CARATE_TEST_DATA_DIR_OLD=${CARATE_TEST_DATA_DIR}
 fi
+
+# If there is an error of the first kind, check if the od switch is set
+if [[ ${tdfault} == 1 ]]
+then
+    [[ -z ${OD} ]] || { \
+	tdfault = 0;
+	}
+fi
+
+
 (( $tdfault == 0 )) || { \
-    echo "You likely have to define a CARATE_TEST_DATA_DIR variable, like (if";\
+    echo "You have to define a CARATE_TEST_DATA_DIR variable, like (if";\
     echo "you're using bash):";\
     echo "$ export CARATE_TEST_DATA_DIR=\"/home/username/caracal_tests/rawdata\"";\
     echo "Or use the -td switch.";\
     echo "You also have to create that directory $CARATE_TEST_DATA_DIR";\
     echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
     echo "These test data will be copied across for the test.";\
-    echo "This is not true only if you are using the --omit-copy-test-data or -od switches"
-    echo "and you have run this test before."
+    kill "$PPID"; \
+    exit 0; \
 }
 
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
@@ -1403,6 +1413,7 @@ checkex () {
 	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
 	for file in ${files[@]}
 	do
+	    echo file ${file}
 	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
 	    [[ ${e} == "" ]] && unset e
 	    [[ -z ${e} ]] || { \
@@ -1422,7 +1433,7 @@ checkex () {
 	for file in ${files[@]}
 	do
 	    d=`stat -c %i $file`
-	    [[ ${e} != ${d} ]] || { echo why; }
+	    [[ ${e} != ${d} ]] || { return 0; }
 	done
     fi
     return 1
@@ -2268,7 +2279,13 @@ runtest () {
 		} || { \
 		    CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
 		}
-	
+	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || { \
+		echo "No test data to process"; \
+		echo "This likely means that you have set the -od switch"; \
+		echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
+		echo "Stopping."; \
+		}
+	    
 	    #Check if the test directory is a parent of any of the supplied directories
 	    if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
 	    then
@@ -2291,12 +2308,10 @@ runtest () {
 		    }
 	    fi	
 	fi
-	
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
 	echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
         mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
-	
 	if [[ -d ${CARATE_INPUT_DIR} ]]
 	then
 	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
@@ -2307,7 +2322,6 @@ runtest () {
 		    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 		}
 	fi
-	
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
@@ -2315,7 +2329,7 @@ runtest () {
 	    [[ -n ${KC} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
 	    [[ -z ${KC} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
 	}
-	
+
 	[[ -n ${FS} ]] || \
 	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
 		[[ -n ${KC} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
@@ -2414,7 +2428,7 @@ runtest () {
         echo "" >> ${SYA_RUNTEST}
 
 	# Collect all files that indicate an error and dump them into the report directory
-	faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` )
+	[[ -d ${WORKSPACE_ROOT}/${trname}/output/logs/ ]] && faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` ) || faultylist=()
 	if (( ${#faultylist[@]} > 0 ))
 	then
 	    mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
@@ -2553,13 +2567,12 @@ runtestsample () {
 		rm -rf ${WORKSPACE_ROOT}/${trname}
 	fi
     fi
-
+    exit
     echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
     echo "${WORKSPACE_ROOT}/${trname}"
 
     echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS}
     mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
-    
     if [[ -d ${CARATE_INPUT_DIR} ]]
     then
 	echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS}

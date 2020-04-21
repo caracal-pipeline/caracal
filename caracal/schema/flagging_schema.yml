@@ -5,7 +5,7 @@ mapping:
     required: True
 
   flagging:
-    desc: Flagging of the data.
+    desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
     mapping:
       enable: 
@@ -48,6 +48,15 @@ mapping:
         type: bool
         required: False
         example: 'False'
+      unflag:
+        desc: Unflag all visibilities for the selected field(s).
+        type: map
+        mapping:
+          enable:
+            desc: Enable the unflag segment.
+            type: bool
+            required: False
+            example: 'False'
       flag_autopowerspec:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
@@ -72,16 +81,6 @@ mapping:
             type: str
             required: False
             example: 'DATA'
-          fields:
-            desc: Fields to flag. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal, target).
-            type: str
-            required: False
-            example: 'auto'
-          calibrator_fields: 
-            desc: Calibrator fields. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal).
-            type: str
-            required: False
-            example: 'auto'
           threads: 
             desc: Number of threads to use.
             type: int
@@ -192,6 +191,20 @@ mapping:
             type: bool
             required: False
             example: 'False'
+      flag_scan:
+        desc: Flag bad scans. Uses CASA Flagdata task.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the flag_scan segment.
+            type: bool
+            required: False
+            example: 'False'
+          scans:
+            desc: Scans to flag. CASA flagdata syntax.
+            type: str
+            required: False
+            example: '0'
       flag_antennas:
         desc: Flag bad antennas. Or just the ones you have sworn a vendetta against.
         type: map
@@ -216,20 +229,6 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      flag_scan:
-        desc: Flag bad scans. Uses CASA Flagdata task.
-        type: map
-        mapping: 
-          enable:
-            desc: Enable the flag_scan segment.
-            type: bool
-            required: False
-            example: 'False'
-          scans: 
-            desc: Scans to flag. CASA flagdata syntax.
-            type: str
-            required: False
-            example: '0'
       flag_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
@@ -249,7 +248,6 @@ mapping:
             type: str
             required: False
             example: ''
-
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop. 
         type: map

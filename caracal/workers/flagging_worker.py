@@ -128,52 +128,6 @@ def worker(pipeline, recipe, config):
                 substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
                 manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
-            # flag antennas automatically based on drifts in the scan average of the
-            # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
-            # not field structure dependent, since it is just based on the DC of the field
-            # Compares scan to median power of scans per field per channel
-            # Also compares antenna to median of the array per scan per field per channel
-            # This should catch any antenna with severe temperature problems
-            if pipeline.enable_task(config, 'flag_autopowerspec'):
-                step = '{0:s}_autopowerspec_ms{1:d}'.format(wname, msiter)
-                def_fields = ",".join(map(str, utils.get_field_id(
-                    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,target,xcal").split(","))))
-                def_calfields = ",".join(map(str, utils.get_field_id(
-                    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,xcal").split(","))))
-                if config['flag_autopowerspec'].get('fields') != 'auto' and \
-                   not set(config['flag_autopowerspec'].get('fields').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
-                    raise KeyError(
-                        "autoflag on autocorrelations powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
-                if config['flag_autopowerspec'].get('calibrator_fields') != 'auto' and \
-                   not set(config['flag_autopowerspec'].get('calibrator_fields').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
-                    raise KeyError(
-                        "autoflag on autocorrelations powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
-
-                fields = def_fields if config['flag_autopowerspec'].get('fields') == 'auto' else \
-                    ",".join([getattr(pipeline, key + "_id")[i][0]
-                              for key in config['flag_autopowerspec'].get('fields').split(',')])
-                calfields = def_calfields if config['flag_autopowerspec'].get('calibrator_fields') == 'auto' else \
-                    ",".join([getattr(pipeline, key + "_id")[i][0]
-                              for key in config['flag_autopowerspec'].get('calibrator_fields').split(',')])
-
-                fields = ",".join(set(fields.split(",")))
-                calfields = ",".join(set(calfields.split(",")))
-
-                recipe.add("cab/politsiyakat_autocorr_amp", step,
-                           {
-                               "msname": msname,
-                               "field": fields,
-                               "cal_field": calfields,
-                               "scan_to_scan_threshold": config["flag_autopowerspec"].get("scan_to_scan_threshold"),
-                               "antenna_to_group_threshold": config["flag_autopowerspec"].get("antenna_to_group_threshold"),
-                               "dpi": 300,
-                               "plot_size": 6,
-                               "nproc_threads": config['flag_autopowerspec'].get('threads'),
-                               "data_column": config['flag_autopowerspec'].get('column')
-                           },
-                           input=pipeline.input, output=pipeline.output,
-                           label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step,msname))
-
             # Define fields and field_ids to be used to only flag the fields selected with
             # flagging:field (either 'target' or 'calibrators') and with
             # flagging:calibrator_fields (for further selection among the calibrators)
@@ -196,6 +150,63 @@ def worker(pipeline, recipe, config):
                 fields = list(set(fields))
             field_ids = utils.get_field_id(msinfo, fields)
             fields = ",".join(fields)
+
+            if pipeline.enable_task(config, 'unflag'):
+                step = '{0:s}_unflag_ms{1:d}'.format(wname, msiter)
+                recipe.add('cab/casa_flagdata', step,
+                           {
+                               "vis": msname,
+                               "mode": 'unflag',
+                               "field": fields,
+                               "flagbackup": False,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Unflag ms={1:s}'.format(step, msname))
+
+            # flag antennas automatically based on drifts in the scan average of the
+            # auto correlation spectra per field. This doesn't strictly require any calibration. It is also
+            # not field structure dependent, since it is just based on the DC of the field
+            # Compares scan to median power of scans per field per channel
+            # Also compares antenna to median of the array per scan per field per channel
+            # This should catch any antenna with severe temperature problems
+            if pipeline.enable_task(config, 'flag_autopowerspec'):
+                step = '{0:s}_autopowerspec_ms{1:d}'.format(wname, msiter)
+                # OLD FIELDS SELECTION FOR THIS STEP ONLY
+                #def_fields = ",".join(map(str, utils.get_field_id(
+                #    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,target,xcal").split(","))))
+                #def_calfields = ",".join(map(str, utils.get_field_id(
+                #    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,xcal").split(","))))
+                #if config['flag_autopowerspec'].get('fields') != 'auto' and \
+                #   not set(config['flag_autopowerspec'].get('fields').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
+                #    raise KeyError(
+                #        "autoflag on autocorrelations powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
+                #if config['flag_autopowerspec'].get('calibrator_fields') != 'auto' and \
+                #   not set(config['flag_autopowerspec'].get('calibrator_fields').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
+                #    raise KeyError(
+                #        "autoflag on autocorrelations powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
+                #aps_fields = def_fields if config['flag_autopowerspec'].get('fields') == 'auto' else \
+                #    ",".join([getattr(pipeline, key + "_id")[i][0]
+                #              for key in config['flag_autopowerspec'].get('fields').split(',')])
+                #aps_calfields = def_calfields if config['flag_autopowerspec'].get('calibrator_fields') == 'auto' else \
+                #    ",".join([getattr(pipeline, key + "_id")[i][0]
+                #              for key in config['flag_autopowerspec'].get('calibrator_fields').split(',')])
+                #aps_fields = ",".join(set(aps_fields.split(",")))
+                #aps_calfields = ",".join(set(aps_calfields.split(",")))
+                recipe.add("cab/politsiyakat_autocorr_amp", step,
+                           {
+                               "msname": msname,
+                               "field": fields,
+                               "cal_field": fields,
+                               "scan_to_scan_threshold": config["flag_autopowerspec"].get("scan_to_scan_threshold"),
+                               "antenna_to_group_threshold": config["flag_autopowerspec"].get("antenna_to_group_threshold"),
+                               "dpi": 300,
+                               "plot_size": 6,
+                               "nproc_threads": config['flag_autopowerspec'].get('threads'),
+                               "data_column": config['flag_autopowerspec'].get('column')
+                           },
+                           input=pipeline.input, output=pipeline.output,
+                           label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step,msname))
 
             if pipeline.enable_task(config, 'flag_autocorr'):
                 step = '{0:s}_autocorr_ms{1:d}'.format(wname, msiter)

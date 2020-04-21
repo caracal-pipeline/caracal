@@ -37,11 +37,11 @@ mapping:
             required: false
             example: 'True'
           mode: 
-            desc: Manage flag mode. If "save_legacy_flags" save the current FLAG column as a "caracal_legacy" flag version (if that already exists, "overwrite_legacy_flags" below allows you to overwrite it, but think twice). If "unflag_and_reset" unflag all data and delete all flag versions. (But that is nasty! Why would you do it?). If "restore" restore flags from the flag version specified by "version" below, and delete all flag versions created after that version.
+            desc: Manage flag mode. If "save_legacy_flags" save the current FLAG column as a "caracal_legacy" flag version (if that already exists, "overwrite_legacy_flags" below allows you to overwrite it, but think twice). If "restore" restore flags from the flag version specified by "version" below, and delete all flag versions created after that version.
             type: str
             required: false
             example: 'restore'
-            enum: [save_legacy_flags, unflag_and_reset, restore]
+            enum: [save_legacy_flags, restore]
           version:
             desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
             type: str

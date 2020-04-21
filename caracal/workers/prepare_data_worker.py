@@ -62,20 +62,20 @@ def worker(pipeline, recipe, config):
                         caracal.log.error('    prepare_data: manage_flags: mode: save_legacy')
                     raise RuntimeError()
 
-            elif mode == "unflag_and_reset":
-                step = "reset_flags_{0:s}_{1:d}".format(wname, i)
-                manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
-                # Unflag data
-                step = "unflag_all_{0:s}_{1:d}".format(wname, i)
-                recipe.add("cab/casa_flagdata", step,
-                        {
-                            "vis" : msname,
-                            "mode" : "unflag",
-                            "flagbackup" : False,
-                        },
-                        input=pipeline.input,
-                        output=pipeline.output,
-                        label="{0:s}:: Save current flags".format(step))
+            #elif mode == "unflag_and_reset":
+            #    step = "reset_flags_{0:s}_{1:d}".format(wname, i)
+            #    manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
+            #    # Unflag data
+            #    step = "unflag_all_{0:s}_{1:d}".format(wname, i)
+            #    recipe.add("cab/casa_flagdata", step,
+            #            {
+            #                "vis" : msname,
+            #                "mode" : "unflag",
+            #                "flagbackup" : False,
+            #            },
+            #            input=pipeline.input,
+            #            output=pipeline.output,
+            #            label="{0:s}:: Save current flags".format(step))
 
             #elif mode == "save":
             #    step = "save_flags_{0:s}_{1:d}".format(wname, i)

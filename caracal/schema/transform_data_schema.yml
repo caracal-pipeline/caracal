@@ -23,6 +23,20 @@ mapping:
         type: str
         required: false
         example: corr 
+      rewind_flags:
+        desc: Rewind flags to specified version.
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'False'
+            required: false
+          version: 
+            type: str
+            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            required: false
 
       split_field:
         desc: Make new ms of targets or calibrators

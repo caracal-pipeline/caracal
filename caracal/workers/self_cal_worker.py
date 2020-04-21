@@ -124,54 +124,7 @@ def worker(pipeline, recipe, config):
                 "MS file {0:s} does not exist. Please check that it is where it should be.".format(m))
         if pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_at_iter']:
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
-            flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-            available_flagversions = manflags.get_flags(pipeline,m)
-            if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
-                if not config['rewind_flags']["enable"]:
-                    caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname,m,pipeline.prefix))
-                    ask_what_to_do = True
-                else:
-                    if available_flagversions.index(config['rewind_flags']["version"]) > available_flagversions.index(flags_before_worker) and not config['overwrite_flag_versions']:
-                        caracal.log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname,m,pipeline.prefix))
-                        caracal.log.error('and you are rewinding to a later flag version: {0:s} .'.format(config['rewind_flags']["version"]))
-                        ask_what_to_do = True
-                    else: ask_what_to_do = False
-            else: ask_what_to_do  = False
-            if ask_what_to_do:
-                caracal.log.error('Running "{0:s}" again will attempt to overwrite existing flag versions, it might get messy.'.format(wname))
-                caracal.log.error('Caracal will not overwrite the "{0:s}" flag versions unless you explicitely request that.'.format(wname))
-                caracal.log.error('The current flag versions of this MS are (from the oldest to the most recent):')
-                for vv in  available_flagversions:
-                    if vv == flags_before_worker:
-                        caracal.log.error('       {0:s}        <-- (this worker)'.format(vv))
-                    elif vv == flags_after_worker:
-                        caracal.log.error('       {0:s}         <-- (this worker)'.format(vv))
-                    elif config['rewind_flags']["enable"] and vv == config['rewind_flags']["version"]:
-                        caracal.log.error('       {0:s}        <-- (rewinding to this version)'.format(vv))
-                    else:
-                        caracal.log.error('       {0:s}'.format(vv))
-                caracal.log.error('You have the following options:')
-                caracal.log.error('    1) If you are happy with the flags currently stored in the FLAG column of this MS and')
-                caracal.log.error('       want to append new flags to them, change the name of this worker in the configuration')
-                caracal.log.error('       file by appending "__n" to it (where n is an integer not already taken in the list')
-                caracal.log.error('       above). The new flags will be appended to the FLAG column, and new flag versions will')
-                caracal.log.error('       be added to the list above.')
-                caracal.log.error('    2) If you want to discard the flags obtained during the previous run of "{0:s}" (and,'.format(wname))
-                caracal.log.error('       necessarily, all flags obtained thereafter; see list above) rewind the flag versions')
-                caracal.log.error('       by setting in the configuration file:')
-                caracal.log.error('           {0:s}: rewind_flags: enable: true'.format(wname))
-                caracal.log.error('           {0:s}: rewind_flags: version: {1:s}'.format(wname, flags_before_worker))
-                caracal.log.error('       You could rewind to an even earlier flag version if necessary. You will lose all flags')
-                caracal.log.error('       appended to the FLAG column after that version, and take it from there.')
-                caracal.log.error('    3) If you really know what you are doing, allow Caracal to overwrite flag versions by setting:')
-                caracal.log.error('           {0:s}: overwrite_flag_versions: true'.format(wname))
-                caracal.log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
-                caracal.log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag versions from')
-                caracal.log.error('       the previous run of "{0:s}" will be overwritten and appended to the list above (or'.format(wname))
-                caracal.log.error('       to that list truncated to the flag version you are rewinding to).')
-                caracal.log.error('Your choice will be applied to all MS files being processed together in this run of Caracal.')
-                raise RuntimeError()
+            flags_before_worker, flags_after_worker = manflags.handle_conflicts(pipeline, wname, m, config)
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]

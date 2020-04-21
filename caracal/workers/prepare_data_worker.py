@@ -44,7 +44,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.error('by setting in the configuration file:')
                     caracal.log.error('    prepare_data: manage_flags: overwrite_legacy_flags: true')
                     caracal.log.error('Think twice whether you really need to do this.')
-                    raise RuntimeError()
+                    raise RuntimeError('Flag version conflicts')
 
             elif mode == "restore":
                 if version in available_flagversions:
@@ -60,7 +60,7 @@ def worker(pipeline, recipe, config):
                     if version == "caracal_legacy":
                         caracal.log.error('You may actually want to create that "caracal legacy" flag version with:')
                         caracal.log.error('    prepare_data: manage_flags: mode: save_legacy')
-                    raise RuntimeError()
+                    raise RuntimeError('Flag version conflicts')
 
             #elif mode == "unflag_and_reset":
             #    step = "reset_flags_{0:s}_{1:d}".format(wname, i)

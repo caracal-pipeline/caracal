@@ -1428,7 +1428,7 @@ def worker(pipeline, recipe, config):
                     })
             cubical_gain_interp_opts.update({
                 "data-time-chunk": time_chunk_apply,
-                "data-freq-chunk": freq_chunk_apply
+                "data-freq-chunk": int(freq_chunk_apply)
             })
             # ensure proper logging for restore or interpolation
             if not enable_inter:

@@ -39,7 +39,7 @@ def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_versi
         log.error('       necessarily, all flags obtained thereafter; see list above) rewind the flag versions')
         log.error('       by setting in the configuration file:')
         log.error('           {0:s}: rewind_flags: enable: true'.format(wname))
-        log.error('           {0:s}: rewind_flags: version: {1:s}'.format(wname, flags_bw))
+        log.error('           {0:s}: rewind_flags: {1:s}: {2:s}'.format(wname, read_version, flags_bw))
         log.error('       You could rewind to an even earlier flag version if necessary. You will lose all flags')
         log.error('       appended to the FLAG column after that version, and take it from there.')
         log.error('    3) If you really know what you are doing, allow Caracal to overwrite flag versions by setting:')

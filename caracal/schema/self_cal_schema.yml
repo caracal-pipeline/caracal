@@ -33,7 +33,7 @@ mapping:
             example: 'null'
             required: false
           transfer_apply_gains_version:
-            type: strt
+            type: str
             desc: Flag version to restore. This is applied to the .MS file(s) identified by "transfer_to_label" in the "transfer_apply_gains" section below. Set to "null" to skip this rewind step. Note that all flag versions saved after this version will be deleted.
             example: 'null'
             required: false

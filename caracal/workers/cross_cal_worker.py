@@ -336,6 +336,8 @@ def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
 
     if pipeline.virtconcat:
@@ -359,11 +361,24 @@ def worker(pipeline, recipe, config):
         prefix = '{0:s}-{1:s}'.format(prefix, label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save_flags_before_{0:s}_{1:d}'.format(wname, i)
-            fversion = "before_%s" % wname
-            _version = config['load_flags']["version"]
-            manflags.add_cflags(pipeline, recipe, "_".join(
-                        [wname, fversion]), msname, cab_name=substep)
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+
+            if config['rewind_flags']["enable"]:
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
+                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            else:
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         def flag_gains(cal, opts, datacolumn="CPARAM"):
             opts = dict(opts)
@@ -527,11 +542,8 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save_flags_after_{0:s}_{1:d}'.format(wname, i)
-            fversion = "after_%s" % wname
-            _version = config['load_flags']["version"]
-            manflags.add_cflags(pipeline, recipe, "_".join(
-                    [wname, fversion]), msname, cab_name=substep)
+            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         gt_final, itp_final, fd_final = get_caltab_final(
                        copy.deepcopy(gaintables), interps, "nearest", "target", ftable=ftable)

@@ -55,12 +55,10 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
+  field: calibrators
+  label_in: cal
   flag_autocorr:
     enable: true
-  quack_flagging:
-    enable: false
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
@@ -71,22 +69,22 @@ flagging:
   flag_scan:
     enable: false
     scans: '0'
-  static_mask:
+  flag_mask:
     enable: true
     mask: labelled_rfimask.pickle.npy
     uvrange: '0~1000'
-  autoflag_rfi:
+  flag_rfi:
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
-  rfinder:
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+  inspect:
     enable: true
     telescope: MeerKAT
     field: 'bpcal,gcal'
 
 cross_cal:
   enable: true
-  otfdelay: true
   uvrange: '>150'
   label_cal: 1gc1
   label_in: 'cal'
@@ -167,14 +165,15 @@ transform_data__2:
 
 flagging__2: 
   enable: true
+  field: target
   label_in: corr
-  field: 'target'
-  autoflag_rfi: 
+  flag_rfi: 
     enable: true
     flagger: aoflagger
-    strategy: firstpass_QUV.rfis
     column: DATA
-  rfinder: 
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+  inspect: 
     enable: true
     field: target
 

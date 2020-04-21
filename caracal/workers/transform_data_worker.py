@@ -8,8 +8,8 @@ import re
 import json
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_flagsets
 from caracal.workers.utils import manage_fields as manfields
+from caracal.workers.utils import manage_flagsets as manflags
 
 NAME = 'Split and average target data'
 LABEL = 'split_target'
@@ -167,15 +167,28 @@ def worker(pipeline, recipe, config):
                 tms = '{0:s}_{1:s}.ms'.format(
                        msname, label_out)
 
+            if config['rewind_flags']["enable"]:
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
+                manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
+                available_flag_versions = manflags.get_flags(pipeline, fms)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
+
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
                 step = 'split_field_{0:d}_{1:d}'.format(i,target_iter)
+
+                # If the output of this run of mstransform exists, delete it first
                 if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-
                     os.system(
                         'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
+
                 recipe.add('cab/casa_mstransform', step,
                            {
                                "vis": fms,

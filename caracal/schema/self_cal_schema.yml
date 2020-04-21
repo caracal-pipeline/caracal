@@ -27,10 +27,15 @@ mapping:
             desc: enable this segement
             example: 'False'
             required: false
-          version: 
+          version:
             type: str
-            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
-            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
+            required: false
+          transfer_apply_gains_version:
+            type: strt
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "transfer_to_label" in the "transfer_apply_gains" section below. Set to "null" to skip this rewind step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
             required: false
       overwrite_flag_versions:
         desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.

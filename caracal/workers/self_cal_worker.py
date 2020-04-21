@@ -127,9 +127,10 @@ def worker(pipeline, recipe, config):
                 "MS file {0:s} does not exist. Please check that it is where it should be.".format(m))
         if pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_at_iter']:
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config,
+                flags_before_worker, flags_after_worker)
 
-            if config['rewind_flags']["enable"]:
+            if config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null':
                 version = config['rewind_flags']["version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
@@ -154,15 +155,12 @@ def worker(pipeline, recipe, config):
                 raise IOError(
                     "MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
 
-            # Flag rewind only available for input .MS, not for .MS we are transfering the gains to.
-            # The reason is that they don't have the same flag versions (e.g., one has flagging, the
-            # other has flagging__2, thus they cannot be rewinded to a same version name
-            config['rewind_flags']["enable"] = False # Horrible hack
-
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config, flags_before_worker, flags_after_worker)
-            if config['rewind_flags']["enable"]:
-                version = config['rewind_flags']["version"]
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config,
+                flags_before_worker, flags_after_worker, read_version = 'transfer_ms_version')
+
+            if config['rewind_flags']["enable"] and config['rewind_flags']["transfer_ms_version"] != 'null':
+                version = config['rewind_flags']["transfer_ms_version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)

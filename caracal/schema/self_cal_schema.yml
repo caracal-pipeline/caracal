@@ -559,11 +559,6 @@ mapping:
             desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
             required: false
             example: 'auto'
-          spectra:
-            type: bool
-            desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
-            required: false
-            example: 'True'
           row_chunks:
             type: int
             desc: Number of rows of input .MS that are processed in a single chunk.
@@ -574,11 +569,6 @@ mapping:
             desc: Number of sky model components that are processed in a single chunk.
             required: false
             example: '0'
-          exp-sign-convention:
-            type: str
-            desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
-            required: false
-            example: 'casa'
           within:
             type: str
             desc: Give JS9 region file. Only sources within those regions will be included.

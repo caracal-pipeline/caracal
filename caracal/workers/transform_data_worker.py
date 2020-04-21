@@ -8,8 +8,8 @@ import re
 import json
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_flagsets
 from caracal.workers.utils import manage_fields as manfields
+from caracal.workers.utils import manage_flagsets as manflags
 
 NAME = 'Split and average target data'
 LABEL = 'split_target'

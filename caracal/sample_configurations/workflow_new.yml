@@ -25,7 +25,7 @@ observation_config:
   reference_antenna: '0'
   
 prepare_data: 
-  enable: false
+  enable: true
   fixvis: 
     enable: false
   manage_flags: 
@@ -57,6 +57,8 @@ flagging:
   enable: true
   field: calibrators
   label_in: cal
+  flag_autocorr:
+    enable: true
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'

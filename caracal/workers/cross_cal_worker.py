@@ -336,6 +336,8 @@ def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
 
     if pipeline.virtconcat:
@@ -360,16 +362,17 @@ def worker(pipeline, recipe, config):
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            flags_before_worker, flags_after_worker = manflags.handle_conflicts(pipeline, wname, msname, config)
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                 substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
-                manflags.delete_cflags(pipeline, recipe,
-                    available_flagversions[available_flagversions.index(version)+1],
-                    msname, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
                 if  version != flags_before_worker:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])

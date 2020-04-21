@@ -14,6 +14,8 @@ LABEL = 'flagging'
 def worker(pipeline, recipe, config):
     label = config['label_in']
     wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
         prefixes = [pipeline.prefix]
@@ -64,16 +66,17 @@ def worker(pipeline, recipe, config):
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
 
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            flags_before_worker, flags_after_worker = manflags.handle_conflicts(pipeline, wname, msname, config)
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, msiter)
                 manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
-                substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, msiter)
-                manflags.delete_cflags(pipeline, recipe,
-                    available_flagversions[available_flagversions.index(version)+1],
-                    msname, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, msiter)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
                 if  version != flags_before_worker:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])

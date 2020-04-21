@@ -51,10 +51,11 @@ def worker(pipeline, recipe, config):
                     step = "restore_flags_{0:s}_ms{1:d}".format(wname, i)
                     manflags.restore_cflags(pipeline, recipe, version,
                             msname, cab_name=step)
-                    step = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=step)
+                    if available_flagversions[-1] != version:
+                        step = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            msname, cab_name=step)
                 else:
                     caracal.log.error('The flag version {0:s} you asked to restore does not exist for {1:s}.'.format(version, msname))
                     if version == "caracal_legacy":

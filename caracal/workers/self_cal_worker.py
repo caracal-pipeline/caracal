@@ -785,7 +785,10 @@ def worker(pipeline, recipe, config):
         # which is anyway achieved by the **above** statement; no need to further specify vismodel.
 
         if config[key].get('model_mode') == 'pybdsm_vis':
-            model = config[key].get('model')[num-1]
+            if len(config[key]['model']) >= num:
+                model = config[key]['model'][num-1]
+            else:
+                model = str(num)
 
             modelcolumn = 'MODEL_DATA'
             if isinstance(model, str) and len(model.split('+')) > 1:
@@ -803,7 +806,11 @@ def worker(pipeline, recipe, config):
         #vismodel =False
         elif config[key].get('model_mode') == 'pybdsm_only':
             vismodel = False
-            model = config[key].get('model', num)[num-1]
+            if len(config[key]['model']) >= num:
+                model = config[key]['model'][num-1]
+            else:
+                model = str(num)
+
             if isinstance(model, str) and len(model.split('+')) > 1:
                 mm = model.split('+')
                 calmodel, fits_model = combine_models(mm, num, img_dir, field,
@@ -967,7 +974,7 @@ def worker(pipeline, recipe, config):
         if len(config[key]['model']) >= num:
             model = config[key]['model'][num-1]
         else:
-            model = num
+            model = str(num)
         ### Defines the pybdsf models (and fitsmodels for some weird reasons)
         # If the model string contains a +, then combine the appropriate models
         if isinstance(model, str) and len(model.split('+')) > 1:

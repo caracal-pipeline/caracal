@@ -1634,7 +1634,7 @@ def worker(pipeline, recipe, config):
                 mm = model.split('+')
                 combine_models(mm, num, img_dir, field)
         else:
-            model = num
+            model = str(num)
         # in case we are in the last round, imaging has made a model that is longer then the expected model column
         # Therefore we take this last model if model is not defined
         if num == cal_niter+1:

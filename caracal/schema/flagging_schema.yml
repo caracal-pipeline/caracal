@@ -39,7 +39,7 @@ mapping:
             required: False
             example: 'False'
           version: 
-            desc: Flag version name.
+            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
             type: str
             required: False
             example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'

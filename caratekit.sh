@@ -1151,12 +1151,9 @@ fi
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+=$'\n'
 
 # Do not force test id to be identical with build number any more, if it is defined
-echo got here
 [[ -z "$CARATE_CARACAL_BUILD_ID" ]] || { \
-    echo got here; \
     echo "(${CARATE_CARACAL_TEST_ID})"; \
     [[ -n ${CARATE_CARACAL_TEST_ID} ]] || { \
-	echo got here;
 	CARATE_CARACAL_TEST_ID=${CARATE_CARACAL_BUILD_ID}; \
     }; \
     [[ -z ${CR} ]] || { \

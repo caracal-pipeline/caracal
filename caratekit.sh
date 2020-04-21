@@ -1491,9 +1491,10 @@ then
     [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
 			echo "The real test data might hence be different."; \
     }
-    [[ -z ${OD} ]] || { echo "--keep-config-source or -kc switch is set."; \
+    [[ -z ${OD} ]] || { echo "--omit-copy-test-data or -od switch is set."; \
 			echo "The real test data might hence be different."; \
     }
+    echo ""
     echo "" >> ${SYA}
 fi
 

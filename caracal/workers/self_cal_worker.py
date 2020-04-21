@@ -157,10 +157,10 @@ def worker(pipeline, recipe, config):
 
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
             available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config,
-                flags_before_worker, flags_after_worker, read_version = 'transfer_ms_version')
+                flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
 
-            if config['rewind_flags']["enable"] and config['rewind_flags']["transfer_ms_version"] != 'null':
-                version = config['rewind_flags']["transfer_ms_version"]
+            if config['rewind_flags']["enable"] and config['rewind_flags']["transfer_apply_gains_version"] != 'null':
+                version = config['rewind_flags']["transfer_apply_gains_version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)

@@ -2083,9 +2083,6 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'transfer_model'):
-#            caracal.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
-#    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
-#                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
             image_path = "{0:s}/image_{1:d}".format(pipeline.continuum,
                                                     self_cal_iter_counter)
             crystalball_model = config['transfer_model'].get('model')
@@ -2099,10 +2096,8 @@ def worker(pipeline, recipe, config):
                            {
                                "ms": msname,
                                "sky-model": crystalball_model+':output',
-                               "spectra": config['transfer_model'].get('spectra'),
                                "row-chunks": config['transfer_model'].get('row_chunks'),
                                "model-chunks": config['transfer_model'].get('model_chunks'),
-                               "exp-sign-convention": config['transfer_model'].get('exp_sign_convention'),
                                "within": sdm.dismissable(config['transfer_model'].get('within') or None),
                                "points-only": config['transfer_model'].get('points_only'),
                                "num-sources": sdm.dismissable(config['transfer_model'].get('num_sources')),

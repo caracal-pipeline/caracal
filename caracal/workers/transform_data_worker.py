@@ -3,7 +3,7 @@ import sys
 import caracal
 import stimela.dismissable as sdm
 import getpass
-import stimela.recipe as stimela
+import stimela.recipe
 import re
 import json
 import numpy as np
@@ -135,7 +135,7 @@ def worker(pipeline, recipe, config):
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
                 for j in range(len(caltablelist)):
                     stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                        stimela.CONT_IO[recipe.JOB_TYPE]["output"], 'caltables',  caltablelist[j]))
+                        stimela.recipe.CONT_IO["output"], 'caltables',  caltablelist[j]))
                     stdw.write(' calwt=False')
                     stdw.write(' tinterp=\''+str(interplist[j])+'\'')
                     stdw.write(' finterp=\'linear\'')

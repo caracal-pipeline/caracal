@@ -25,7 +25,7 @@ observation_config:
   reference_antenna: '0'
   
 prepare_data: 
-  enable: false
+  enable: true
   fixvis: 
     enable: false
   manage_flags: 
@@ -57,6 +57,8 @@ flagging:
   enable: true
   label_in: 'cal'
   field: 'calibrators'
+  flag_autocorr:
+    enable: true
   quack_flagging:
     enable: false
   flag_spw:

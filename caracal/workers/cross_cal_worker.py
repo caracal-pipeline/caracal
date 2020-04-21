@@ -164,7 +164,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                     input=pipeline.input, output=pipeline.output,
                     label="%s:: Image %s field" % (step, ftype))
 
-            step = "make_mask_%s_%d__%d_%s_2" % (label, itern, obs, ftype)
+            step = "make_mask_%s_%d__%d_%s_2" % (label, itern, iobs, ftype)
             recipe.add("cab/cleanmask", step, {
                 "image" : maskim,
                 "output" : maskim,
@@ -176,7 +176,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 output=pipeline.output,
                 label="make mask")
 
-            step = "%s_%s_%d_%d_%s_2" % (name, label, itern, obs, ftype)
+            step = "%s_%s_%d_%d_%s_2" % (name, label, itern, iobs, ftype)
             recipe.add(RULES[term]["cab"], step, {
                     "msname" : msname,
                     "name" : "%s_%s" % (prefix, ftype),

@@ -153,9 +153,14 @@ def worker(pipeline, recipe, config):
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
+
+            # Flag rewind only available for input .MS, not for .MS we are transfering the gains to.
+            # The reason is that they don't have the same flag versions (e.g., one has flagging, the
+            # other has flagging__2, thus they cannot be rewinded to a same version name
+            config['rewind_flags']["enable"] = False # Horrible hack
+
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
             available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config, flags_before_worker, flags_after_worker)
-
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)

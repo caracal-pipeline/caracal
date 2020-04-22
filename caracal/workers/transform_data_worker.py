@@ -11,8 +11,8 @@ from caracal.dispatch_crew import utils
 from caracal.workers.utils import manage_flagsets
 from caracal.workers.utils import manage_fields as manfields
 
-NAME = 'Split and average target data'
-LABEL = 'split_target'
+NAME = 'Transform data sets (split and/or average)'
+LABEL = 'transform_data'
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {

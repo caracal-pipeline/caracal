@@ -1034,7 +1034,7 @@ def worker(pipeline, recipe, config):
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener'].get('channels_per_plot'),
-                          "workdir": '{0:s}/'.format(stimela.CONT_IO[recipe.JOB_TYPE]["output"]),
+                          "workdir": '{0:s}/'.format(stimela.CONT_IO["output"]),
                           "label": config['sharpener'].get('label', pipeline.prefix)
                           }
 

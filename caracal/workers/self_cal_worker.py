@@ -12,6 +12,7 @@ from caracal.dispatch_crew import utils
 from astropy.io import fits as fits
 from stimela.pathformatter import pathformatter as spf
 from typing import Any
+from caracal.workers.utils import manage_flagsets as manflags
 
 NAME = 'Self calibration loop'
 LABEL = 'self_cal'
@@ -47,6 +48,12 @@ SOL_TERMS = {
 
 
 def worker(pipeline, recipe, config):
+    wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
+    flag_main_ms = pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_at_iter']
+    rewind_main_ms = config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null'
+    rewind_transf_ms = config['rewind_flags']["enable"] and config['rewind_flags']["transfer_apply_gains_version"] != 'null'
     npix = config['img_npix']
     padding = config['img_padding']
     spwid = config.get('spwid')
@@ -147,18 +154,67 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, label)
 
-    for m in all_msfile:  # check whether all ms files to be used exist
+    i = 0
+    for i, m in enumerate(all_msfile):
+        # check whether all ms files to be used exist
         if not os.path.exists(os.path.join(pipeline.msdir, m)):
             raise IOError(
                 "MS file {0:s} does not exist. Please check that it is where it should be.".format(m))
 
+        # Write and manage flag versions only if flagging tasks are being
+        # executed on these .MS files, or if the user asks to rewind flags
+        if flag_main_ms or rewind_main_ms:
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config,
+                flags_before_worker, flags_after_worker)
+            if rewind_main_ms:
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
+                manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        m, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, m,
+                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            else:
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, m,
+                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
+
+    i += 1
     if pipeline.enable_task(config, 'transfer_apply_gains'):
         t, all_msfile_tgain, ms_dict_tgain = utils.target_to_msfiles(
             pipeline.target, pipeline.msnames, label_tgain)
-        for m in all_msfile_tgain:  # check whether all ms files to be used exist
+        for j, m in enumerate(all_msfile_tgain):
+            # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
+
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, m, config,
+                flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
+            if rewind_transf_ms:
+                version = config['rewind_flags']["transfer_apply_gains_version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
+                manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        m, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i+j)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, m,
+                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            else:
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i+j)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, m,
+                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
     if pipeline.enable_task(config, 'transfer_model'):
         t, all_msfile_tmodel, ms_dict_tmodel = utils.target_to_msfiles(
@@ -1487,7 +1543,7 @@ def worker(pipeline, recipe, config):
                     })
             cubical_gain_interp_opts.update({
                 "data-time-chunk": time_chunk_apply,
-                "data-freq-chunk": freq_chunk_apply
+                "data-freq-chunk": int(freq_chunk_apply)
             })
             # ensure proper logging for restore or interpolation
             if not enable_inter:
@@ -2109,3 +2165,19 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Transfer model {2:s} to ms={1:s}'.format(step, msname, crystalball_model))
 
         target_iter+=1
+
+    i = 0
+    # Write and manage flag versions only if flagging tasks are being
+    # executed on these .MS files, or if the user asks to rewind flags
+    if flag_main_ms or rewind_main_ms:
+        for i, m in enumerate(all_msfile):
+            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, m,
+                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+
+    i += 1
+    if pipeline.enable_task(config, 'transfer_apply_gains'):
+        for j, m in enumerate(all_msfile_tgain):
+            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i+j)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, m,
+                cab_name=substep, overwrite=config['overwrite_flag_versions'])

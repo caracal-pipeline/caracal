@@ -306,6 +306,11 @@ mapping:
                 type: str
                 required: False
                 example: 'calibrator_mild_flagging.yaml'
+              ncpu:
+                desc: Number of CPUs to use.
+                type: int
+                required: False
+                example: '1'
           tfcrop:
             type: map
             mapping:

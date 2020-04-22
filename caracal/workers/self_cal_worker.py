@@ -210,7 +210,7 @@ def worker(pipeline, recipe, config):
             "joinchannels": joinchannels,
             "fit-spectral-pol":  fit_spectral_pol,
             "local-rms": True,
-            "auto-mask": 7,
+            "auto-mask": 6,
             "auto-threshold": config[key].get('clean_threshold')[0],
             "savesourcelist": False,
             "fitbeam": False,
@@ -267,8 +267,7 @@ def worker(pipeline, recipe, config):
             "joinchannels": config[key].get('joinchannels', joinchannels),
             "fit-spectral-pol": config[key].get('fit_spectral_pol', fit_spectral_pol),
             "savesourcelist": True if config[key].get('niter', niter)>0 else False,
-            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold', [])) >= num else -1],
-            "local-rms": config[key].get('local_rms')[num-1 if len(config[key].get('local_rms', [])) >= num else -1],
+            "auto-threshold": config[key].get('clean_threshold')[num-1 if len(config[key].get('clean_threshold')) >= num else -1],
         }
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
@@ -276,24 +275,33 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
 
-        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method', [])) >= num else -1]
-        if mask_key == 'auto_mask':
-            image_opts.update({"auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold', [])) >= num else -1]})
+        mask_key = config[key].get('clean_mask_method')[num-1 if len(config[key].get('clean_mask_method')) >= num else -1]
+        if mask_key == 'wsclean':
+            image_opts.update({
+                "auto-mask": config[key].get('clean_mask_threshold')[num-1 if len(config[key].get('clean_mask_threshold')) >= num else -1],
+                "local-rms": config[key].get('clean_mask_local_rms')[num-1 if len(config[key].get('clean_mask_local_rms')) >= num else -1],
+                "local-rms-window": config[key].get('clean_mask_local_rms_window')[num-1 if len(config[key].get('clean_mask_local_rms_window')) >= num else -1],
+              })
         elif mask_key == 'sofia':
-            fitmask_address = 'masking'
-            image_opts.update({"fitsmask": '{0:s}/{1:s}_{2:s}_{3:d}_clean_mask.fits:output'.format(fitmask_address, prefix,field, num)})
-        #elif '.' in  mask_key:
-        #    fitmask_address = 'masking/'+str(mask_key)
-        #    image_opts.update({"fitsmask": fitmask_address+':output'})
+            fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+                prefix,field, num)
+            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,fits_mask)):
+                raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\
+                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,fits_mask))
+            image_opts.update({
+                "fitsmask": '{0:s}:output'.format(fits_mask),
+                "local-rms": False,
+              })
         else:
-            fits_mask = '{0:s}/{1:s}_{2:s}.fits'.format(
-                'masking', mask_key, field)
+            fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
+                mask_key, field)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
-                caracal.log.error(
-                    "No mask is found in output/masking. Please run masking-worker or put a mask in output/masking called clean_mask_method[0].fits format ")
-                raise caracal.ConfigurationError("no mask found in output directory")
-
-            image_opts.update({"fitsmask": fits_mask+':output'})
+                raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"\
+                    " in clean_mask_method, and that the mask exists.".format(pipeline.output, fits_mask))
+            image_opts.update({
+                "fitsmask": '{0:s}:output'.format(fits_mask),
+                "local-rms": False,
+              })
 
         recipe.add('cab/wsclean', step,
                    image_opts,
@@ -302,7 +310,7 @@ def worker(pipeline, recipe, config):
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def sofia_mask(trg, num, img_dir, field):
-        step = 'make_sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
+        step = 'sofia_mask_field{0:d}_iter{1:d}'.format(trg,num)
         key = 'sofia_settings'
 
         if config['img_joinchannels'] == True:
@@ -356,7 +364,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image'].get('local_rms')[num-1 if len(config['image'].get('local_rms', [])) >= num else -1],
+            "steps.doScaleNoise": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms')) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -374,26 +382,26 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key].get('kernels')],
-            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold', [])) >= num else -1],
+            "SCfind.threshold": config['image'].get('clean_mask_threshold')[num-1 if len(config['image'].get('clean_mask_threshold')) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image'][key].get('scale_noise_window'),
+            "scaleNoise.windowSpatial": config['image'].get('clean_mask_local_rms_window')[num-1 if len(config['image'].get('clean_mask_local_rms_window')) >= num else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": True,
+            "scaleNoise.perSCkernel": config['image'].get('clean_mask_local_rms')[num-1 if len(config['image'].get('clean_mask_local_rms')) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
-            "merge.positivity": config['image'][key].get('merge_positivity')[num-1 if len(config['image'][key].get('merge_positivity', [])) >= num else -1],
+            "merge.positivity": config['image'][key].get('only_positive_pix'),
         }
         if config['image'][key].get('flag'):
             flags_sof = config['image'][key].get('flagregion')
@@ -549,6 +557,7 @@ def worker(pipeline, recipe, config):
                        label='Extracted regridded mosaic')
 
             image_opts.update({"import.maskFile": fornax_namemask_regr})
+
         recipe.add('cab/sofia', step,
                    image_opts,
                    input=pipeline.output,
@@ -1136,7 +1145,7 @@ def worker(pipeline, recipe, config):
                       num - 1 if num <= len(config[key].get('Gsols_channel')) else -1]]
         bsols_ = [config[key].get('Bsols_timeslots')[num - 1 if num <= len(config[key].get('Bsols_timeslots')) else -1],
                   config[key].get('Bsols_channel')[
-                      num - 1 if num <= len(config[key].get('Bsols_channel', [])) else -1]]
+                      num - 1 if num <= len(config[key].get('Bsols_channel')) else -1]]
         gasols_ = [
             config[key].get('DDsols_timeslots')[num - 1 if num <=
                                                       len(config[key].get('DDsols_timeslots')) else -1],
@@ -1508,7 +1517,7 @@ def worker(pipeline, recipe, config):
 
                     if self_cal_iter_counter < 1:
                         self_cal_iter_counter = 1
-                    return True
+                    return False
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
             caracal.log.info(
@@ -1596,7 +1605,7 @@ def worker(pipeline, recipe, config):
         model_files = []
         for ii in range(0, cal_niter + 1):
             model_file = glob.glob(
-                "{0:s}/image_{1:d}/{2:s}_{3:s}_?.lsm.html".format(pipeline.continuum, ii+1, prefix, field))
+                "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii+1, prefix, field))
             model_files.append(model_file)
 
         model_files = sorted(model_files)
@@ -1614,7 +1623,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/aimfast', step,
                        {
                            "compare-models": models,
-                           "area-factor": config['aimfast'].get('area_factor')
+                           "tolerance": config['aimfast'].get('radius')
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -1734,17 +1743,19 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(image_path):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
                 sofia_mask(target_iter, 0, get_dir_path(
-                image_path, pipeline), field)
+                    image_path, pipeline), field)
+                recipe.run()
+                recipe.jobs = []
                 config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)
                 image(target_iter, self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(
-                image_path, pipeline), mslist, field)
+                    image_path, pipeline), mslist, field)
                 #if config['image'].get('clean_mask_method')[self_cal_iter_counter if len(config['image'].get('clean_mask_method')) > self_cal_iter_counter else -1]=='sofia':
                 #    config['image'].get('clean_mask_threshold')[0]=config['image'].get('clean_mask_threshold')[1]
                 #    sofia_mask(self_cal_iter_counter, get_dir_path(
@@ -1776,6 +1787,8 @@ def worker(pipeline, recipe, config):
                 if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
                     sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                         image_path, pipeline), field)
+                    recipe.run()
+                    recipe.jobs = []
                 self_cal_iter_counter += 1
                 image_path = "{0:s}/image_{1:d}".format(
                      pipeline.continuum, self_cal_iter_counter)
@@ -1954,6 +1967,8 @@ def worker(pipeline, recipe, config):
 #            caracal.log.info('Transfer the model {0:s}/{1:s}_{2:d}-sources.txt to all input \
 #    .MS files with label {3:s}'.format(get_dir_path(image_path, pipeline),
 #                                       prefix, self_cal_iter_counter, config['transfer_model'].get('transfer_to_label')))
+            image_path = "{0:s}/image_{1:d}".format(pipeline.continuum,
+                                                    self_cal_iter_counter)
             crystalball_model = config['transfer_model'].get('model')
             mslist_out = ms_dict_tmodel[target]
             if crystalball_model == 'auto':

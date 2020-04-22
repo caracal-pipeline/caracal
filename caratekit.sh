@@ -938,7 +938,7 @@ then
     # Now clone caracal
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-	    [[ -n ${FS} ]] || cp ${CARATE_LOCAL_CARACAL}/caratekit.sh ${mytmpdir}/
+	    [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
     else
     [[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git ${mytmpdir}
 #    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
@@ -955,9 +955,9 @@ then
     
     [[ -z ${CR} ]] || { \
 	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || { \
-	    "Not possible to both define a build id and requesting release branch."; \
+	    "Not possible to both define a build id and requesting release branch at the same time."; \
 	    kill "$PPID"; \
-	    exit 0; \
+	    exit 1; \
 	}
 	CR="0.1.0"; \
 	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
@@ -1036,12 +1036,13 @@ then
     [[ ${success} == true ]] || { \
 	echo "Normal copy failed, trying to use sudo:"; \
 	echo "\$ sudo cp caratekit.sh ${proceed}"; \
-	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+#	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+	sudo cp caratekit.sh ${proceed} && success=true || true ; \
     }
     [[ ${success} == true ]] || { \
 	echo "No success, aborting"; \
 	kill "$PPID"; \
-	exit 0; \
+	exit 1; \
     }
     echo ""
     
@@ -1082,9 +1083,9 @@ then
 	done
 	[[ no_response == true ]] || { \
 	    echo "" >> ~/.cshrc; \
-	    echo "set path = ( \${path} ${caracalpath} )" >> ~/.cshrc; \
+	    echo "set path = ( ${caracalpath} \${path} )" >> ~/.cshrc; \
 	    echo "" >> ~/.cshrc; \
-	    echo "export PATH=\$PATH:${caracalpath}" >> ~/.bashrc; \
+	    echo "export PATH=${caracalpath}:\$PATH" >> ~/.bashrc; \
 	    echo "" >> ~/.bashrc; \
 	    }
     fi
@@ -1121,29 +1122,39 @@ echo ""
 ss="workspace=${CARATE_WORKSPACE}"
 ss+=$'\n'
 tdfault=0
-if [[ ! -n "${CARATE_TEST_DATA_DIR}" ]]
+if [[ -z "${CARATE_TEST_DATA_DIR}" ]]
 then
     if [[ -n ${DM} ]] || [[ -n ${DA} ]] || [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${DSC} ]] || [[ -n ${SSC} ]]
     then
 	tdfault=1
     else
-	[[ ! -n ${CARATE_CONFIG_SOURCE} ]] || tdfault=1
+	[[ -z ${CARATE_CONFIG_SOURCE} ]] || tdfault=1
     fi
     CARATE_TEST_DATA_DIR_OLD=""
 else
-    [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=1
+    [[ -e ${CARATE_TEST_DATA_DIR} ]] || tdfault=2
     CARATE_TEST_DATA_DIR_OLD=${CARATE_TEST_DATA_DIR}
 fi
+
+# If there is an error of the first kind, check if the od switch is set
+if [[ ${tdfault} == 1 ]]
+then
+    [[ -z ${OD} ]] || { \
+	tdfault = 0;
+	}
+fi
+
+
 (( $tdfault == 0 )) || { \
-    echo "You likely have to define a CARATE_TEST_DATA_DIR variable, like (if";\
+    echo "You have to define a CARATE_TEST_DATA_DIR variable, like (if";\
     echo "you're using bash):";\
     echo "$ export CARATE_TEST_DATA_DIR=\"/home/username/caracal_tests/rawdata\"";\
     echo "Or use the -td switch.";\
     echo "You also have to create that directory $CARATE_TEST_DATA_DIR";\
     echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
     echo "These test data will be copied across for the test.";\
-    echo "This is not true only if you are using the --omit-copy-test-data or -od switches"
-    echo "and you have run this test before."
+    kill "$PPID"; \
+    exit 1; \
 }
 
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
@@ -1151,8 +1162,9 @@ fi
 
 # Do not force test id to be identical with build number any more, if it is defined
 [[ -z "$CARATE_CARACAL_BUILD_ID" ]] || { \
-    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
-	CARATE_CARACAL_TEST_ID=$CARATE_CARACAL_BUILD_ID; \
+    echo "(${CARATE_CARACAL_TEST_ID})"; \
+    [[ -n ${CARATE_CARACAL_TEST_ID} ]] || { \
+	CARATE_CARACAL_TEST_ID=${CARATE_CARACAL_BUILD_ID}; \
     }; \
     [[ -z ${CR} ]] || { \
 	echo "You cannot define a CARATE_CARACAL_BUILD_ID (through an environment"; \
@@ -1353,7 +1365,7 @@ then
 	      no_response=false
               ;;
 	    [Nn][Oo]|[Nn])  # No or N.
-	      { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	      { echo "Cowardly quitting"; kill "$PPID"; exit 0; }
               ;;
 	    *) # Anything else (including a blank) is invalid.
 	      { echo "That is not a valid response."; }
@@ -1401,6 +1413,7 @@ checkex () {
 	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
 	for file in ${files[@]}
 	do
+	    echo file ${file}
 	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
 	    [[ ${e} == "" ]] && unset e
 	    [[ -z ${e} ]] || { \
@@ -1420,7 +1433,7 @@ checkex () {
 	for file in ${files[@]}
 	do
 	    d=`stat -c %i $file`
-	    [[ ${e} != ${d} ]] || { echo why; }
+	    [[ ${e} != ${d} ]] || { return 0; }
 	done
     fi
     return 1
@@ -1478,9 +1491,10 @@ then
     [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
 			echo "The real test data might hence be different."; \
     }
-    [[ -z ${OD} ]] || { echo "--keep-config-source or -kc switch is set."; \
+    [[ -z ${OD} ]] || { echo "--omit-copy-test-data or -od switch is set."; \
 			echo "The real test data might hence be different."; \
     }
+    echo ""
     echo "" >> ${SYA}
 fi
 
@@ -1957,7 +1971,7 @@ then
     echo "--docker-sample-configs or -dsc"
     echo "--singularity-sample-configs or -ssc"
     echo "Use -h flag for more information"
-    kill "$PPID"; exit 0
+    kill "$PPID"; exit 1
 fi
 
 if [[ -z ${ORSR} ]]
@@ -2266,7 +2280,13 @@ runtest () {
 		} || { \
 		    CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
 		}
-	
+	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || { \
+		echo "No test data to process"; \
+		echo "This likely means that you have set the -od switch"; \
+		echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
+		echo "Stopping."; \
+		}
+	    
 	    #Check if the test directory is a parent of any of the supplied directories
 	    if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
 	    then
@@ -2289,12 +2309,10 @@ runtest () {
 		    }
 	    fi	
 	fi
-	
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
 	echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
         mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
-	
 	if [[ -d ${CARATE_INPUT_DIR} ]]
 	then
 	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
@@ -2305,7 +2323,6 @@ runtest () {
 		    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 		}
 	fi
-	
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
@@ -2313,7 +2330,7 @@ runtest () {
 	    [[ -n ${KC} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
 	    [[ -z ${KC} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
 	}
-	
+
 	[[ -n ${FS} ]] || \
 	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
 		[[ -n ${KC} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
@@ -2412,7 +2429,7 @@ runtest () {
         echo "" >> ${SYA_RUNTEST}
 
 	# Collect all files that indicate an error and dump them into the report directory
-	faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` )
+	[[ -d ${WORKSPACE_ROOT}/${trname}/output/logs/ ]] && faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` ) || faultylist=()
 	if (( ${#faultylist[@]} > 0 ))
 	then
 	    mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
@@ -2557,7 +2574,6 @@ runtestsample () {
 
     echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS}
     mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
-    
     if [[ -d ${CARATE_INPUT_DIR} ]]
     then
 	echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS}

@@ -439,6 +439,7 @@ def worker(pipeline, recipe, config):
                                    "field-names": fields,
                                    "flagging-strategy": 'polarisation',
                                    "config" : tricolour_strat,
+                                   "nworkers": config['flag_rfi']['tricolour'].get('ncpu'),
                                },
                                input=pipeline.input,
                                output=pipeline.output,

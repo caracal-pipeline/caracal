@@ -955,9 +955,9 @@ then
     
     [[ -z ${CR} ]] || { \
 	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || { \
-	    "Not possible to both define a build id and requesting release branch."; \
+	    "Not possible to both define a build id and requesting release branch at the same time."; \
 	    kill "$PPID"; \
-	    exit 0; \
+	    exit 1; \
 	}
 	CR="0.1.0"; \
 	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
@@ -1042,7 +1042,7 @@ then
     [[ ${success} == true ]] || { \
 	echo "No success, aborting"; \
 	kill "$PPID"; \
-	exit 0; \
+	exit 1; \
     }
     echo ""
     
@@ -1154,7 +1154,7 @@ fi
     echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
     echo "These test data will be copied across for the test.";\
     kill "$PPID"; \
-    exit 0; \
+    exit 1; \
 }
 
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
@@ -1365,7 +1365,7 @@ then
 	      no_response=false
               ;;
 	    [Nn][Oo]|[Nn])  # No or N.
-	      { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	      { echo "Cowardly quitting"; kill "$PPID"; exit 0; }
               ;;
 	    *) # Anything else (including a blank) is invalid.
 	      { echo "That is not a valid response."; }
@@ -1971,7 +1971,7 @@ then
     echo "--docker-sample-configs or -dsc"
     echo "--singularity-sample-configs or -ssc"
     echo "Use -h flag for more information"
-    kill "$PPID"; exit 0
+    kill "$PPID"; exit 1
 fi
 
 if [[ -z ${ORSR} ]]
@@ -2568,7 +2568,7 @@ runtestsample () {
 		rm -rf ${WORKSPACE_ROOT}/${trname}
 	fi
     fi
-    exit
+
     echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
     echo "${WORKSPACE_ROOT}/${trname}"
 

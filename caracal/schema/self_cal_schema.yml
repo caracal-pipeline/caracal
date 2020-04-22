@@ -6,7 +6,7 @@ mapping:
 
   self_cal:
     type: map
-    desc: Perform Self calibration on the data
+    desc: Perform Self calibration on the data.
     mapping:
       enable:
         type: bool
@@ -15,9 +15,33 @@ mapping:
         example: 'False'
       label:
         type: str
-        desc: Label of the .MS files to process
+        desc: Label of the .MS files to process.
         required: false
         example: 'corr'
+      rewind_flags:
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'False'
+            required: false
+          version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
+            required: false
+          transfer_apply_gains_version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "transfer_to_label" in the "transfer_apply_gains" section below. Set to "null" to skip this rewind step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
+            required: false
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        example: 'False'
+        required: false
       calibrate_with:
         type: str
         enum: ["meqtrees", "cubical"]
@@ -177,6 +201,11 @@ mapping:
             desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
             required: false
             example: '6'
+          radius:
+            type: float
+            desc: Radius to cross-match sources in arcsec
+            required: false
+            example: '0.6'
           normality_model:
             type: str
             enum: ["normaltest", "shapiro"]
@@ -204,52 +233,56 @@ mapping:
             desc: Column to image
             required: false
             example: 'DATA, CORRECTED_DATA'
-          clean_mask_method:
-            seq:
-              - type: str
-            desc: Method used to create a clean mask for cleaning with WSclean. The possible values are 1) "auto_mask" to use WSclean auto-masking method with threshold set by clean_mask_threshold; 2) "sofia" to create a clean mask using SoFiA with threshold set by clean_mask_threshold and additional settings in sofia_settings; 3) an prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
-            required: false
-            example: 'auto_mask, auto_mask'
-          clean_mask_threshold:
-            seq:
-              - type: float
-            desc: Masking threshold in units of the (local) noise (for either WSclean auto-masking or SoFiA).
-            required: false
-            example: '10.0, 6.0'
           clean_threshold:
             seq:
               - type: float
             desc: WSclean clean threshold in units of the (local) noise.
             required: false
             example: '0.5, 0.5'
-          local_rms:
+          clean_mask_method:
+            seq:
+              - type: str
+            desc: Method used to create the clean mask. The possible values are 1) "wsclean" to use WSclean's auto-masking (threshold set by clean_mask_threshold below); 2) "sofia" to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+            required: false
+            example: 'wsclean, wsclean'
+          clean_mask_threshold:
+            seq:
+              - type: float
+            desc: Threshold used to create the clean mask when clean_mask_method = wsclean or sofia, in units of the (local) noise.
+            required: false
+            example: '10.0, 6.0'
+          clean_mask_local_rms:
             seq:
               - type: bool
-            desc: Use a local rms measurement both when cleaning and creating a clean mask (both WSClean and SoFiA).
+            desc: Use a local rms measurement when creating a clean mask with clean_mask_method = wsclean or sofia. If clean_mask_method = wsclean, this local_rms setting is used also for the clean_threshold above. Otherwise it is only used to define the clean mask, while clean_threshold is in units of the global noise.
             required: false
             example: 'False, False'
+          clean_mask_local_rms_window:
+            desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = sofia, in PSF for clean_mask_method = wsclean.
+            seq:
+              - type: int
+            required: false
+            example: '31, 31'
           sofia_settings: 
             desc: SoFiA source finder settings to produce a .FITS clean mask. The mask is located in output/masking.
             type: map
             mapping:
+              kernels:
+                seq:
+                  - type: float
+                desc: FWHM of spatial Gaussian kernels in pixels.
+                required: false
+                example: '0., 3., 6., 9.'
+              only_positive_pix:
+                type: bool
+                desc: Merges only positive pixels of sources in mask
+                required: false
+                example: 'True'
               flag:
                 desc: Use flag regions (yes/no)?
                 type: bool
                 required: false
                 example: 'False'
-              kernels:
-                seq:
-                  - type: float
-                desc: FWHM of spatial kernels
-                required: false
-                example: '0., 3., 6., 9.'
-              merge_positivity:
-                seq:
-                  - type: bool
-                desc: If set to true, only positive signals will be merged into detections, and all negative signals will be discarded. This is useful for data sets with
-                   significant negative artefacts, such as sidelobes.
-                required: false
-                example: 'True, true'
               flagregion:
                 desc: Pixel/channel range(s) to be flagged prior to source finding. Format is [[x1, x2, y1, y2, z1, z2], ...].
                 seq:
@@ -275,16 +308,6 @@ mapping:
               fornax_use_sofia:
                 type: bool
                 desc: use sofia for mask of Fornax A instead of Fomalont mask  
-                required: false
-                example: 'False'
-              scale_noise_window:
-                type: int
-                desc: window size where to measure local rms in pixels
-                required: false
-                example: '31'
-              positivity:
-                type: bool
-                desc: merges only positive pixesl of sources in mask  
                 required: false
                 example: 'False'
 
@@ -560,11 +583,6 @@ mapping:
             desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
             required: false
             example: 'auto'
-          spectra:
-            type: bool
-            desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
-            required: false
-            example: 'True'
           row_chunks:
             type: int
             desc: Number of rows of input .MS that are processed in a single chunk.
@@ -575,11 +593,6 @@ mapping:
             desc: Number of sky model components that are processed in a single chunk.
             required: false
             example: '0'
-          exp-sign-convention:
-            type: str
-            desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
-            required: false
-            example: 'casa'
           within:
             type: str
             desc: Give JS9 region file. Only sources within those regions will be included.

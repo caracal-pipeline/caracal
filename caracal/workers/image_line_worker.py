@@ -3,7 +3,7 @@ import os
 import glob
 import warnings
 import stimela.dismissable as sdm
-import stimela.recipe as stimela
+import stimela.recipe
 import astropy
 import shutil
 from astropy.io import fits
@@ -20,6 +20,7 @@ import numpy as np
 import yaml
 from caracal.dispatch_crew import utils
 import itertools
+from caracal.workers.utils import manage_flagsets as manflags
 
 # To split out cubes/<dir> from output/cubes/dir
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
@@ -182,6 +183,13 @@ LABEL = 'image_line'
 
 
 def worker(pipeline, recipe, config):
+    wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
+    flag_main_ms = pipeline.enable_task(config, 'sunblocker') and not config['sunblocker']['use_mstransform']
+    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
+    rewind_main_ms = config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null'
+    rewind_mst_ms = config['rewind_flags']["enable"] and config['rewind_flags']["mstransform_version"] != 'null'
     label = config['label']
     line_name = config['line_name']
     if label != '':
@@ -236,7 +244,6 @@ def worker(pipeline, recipe, config):
 
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
-
     if pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'],
             'doppler') and config['mstransform']['doppler'].get('outchangrid') == 'auto':
         firstchanfreq = list(itertools.chain.from_iterable(firstchanfreq_all))
@@ -339,6 +346,31 @@ def worker(pipeline, recipe, config):
         nchan_dopp, comfreq0, comchanw = None, None, None
 
     for i, msname in enumerate(all_msfiles):
+
+        # Write and manage flag versions only if flagging tasks are being
+        # executed on these .MS files, or if the user asks to rewind flags
+        if flag_main_ms or rewind_main_ms:
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config,
+                flags_before_worker, flags_after_worker)
+            if config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null':
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
+                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname,
+                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            else:
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname,
+                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
+
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
@@ -371,10 +403,12 @@ def worker(pipeline, recipe, config):
         msname_mst = msname.replace('.ms', '_mst.ms')
 
         if pipeline.enable_task(config, 'mstransform'):
-            if os.path.exists(
-                    '{1:s}/{0:s}'.format(msname_mst, pipeline.msdir)):
+            # If the output of this run of mstransform exists, delete it first
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
+                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
                 os.system(
-                    'rm -r {1:s}/{0:s}'.format(msname_mst, pipeline.msdir))
+                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
+
             col = config['mstransform'].get('column')
             step = 'mstransform-ms{:d}'.format(i)
             recipe.add('cab/casa_mstransform',
@@ -428,6 +462,33 @@ def worker(pipeline, recipe, config):
                         step,
                         msname_mst))
 
+        recipe.run()
+        recipe.jobs = []
+
+        # Write and manage flag versions of the mst .MS files only if they have just
+        # been created, their FLAG is being changed, or the user asks to rewind flags
+        if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
+            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname_mst, config,
+                flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
+            if rewind_mst_ms:
+                version = config['rewind_flags']["transfer_apply_gains_version"]
+                substep = 'rewind_to_{0:s}_mst{1:d}'.format(version, i)
+                manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_mst{1:d}'.format(version, i)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname_mst, cab_name=substep)
+                if  version != flags_before_worker:
+                    substep = 'save_{0:s}_mst{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname_mst,
+                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            else:
+                substep = 'save_{0:s}_mst{1:d}'.format(flags_before_worker, i)
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname_mst,
+                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
+
         if pipeline.enable_task(config, 'flag_mst_errors'):
             step = 'flag_mst_errors-ms{0:d}'.format(i)
             recipe.add('cab/autoflagger',
@@ -470,6 +531,16 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Block out sun'.format(step))
+
+        if flag_main_ms or rewind_main_ms:
+            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname,
+                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+
+        if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
+            substep = 'save_{0:s}_mst{1:d}'.format(flags_after_worker, i)
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname_mst,
+                cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         recipe.run()
         recipe.jobs = []
@@ -719,9 +790,9 @@ def worker(pipeline, recipe, config):
                                 'cab/fitstool',
                                 step,
                                 {
-                                    "image": ['{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-{5:04d}-{6:s}.fits:output'.format(
+                                    "file_pattern": '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-*-{5:s}.fits:output'.format(
                                             cube_dir, pipeline.prefix, field, line_name,
-                                            j, d, mm) for d in range(nchans)],
+                                            j, mm),
                                     "output": stacked_cube,
                                     "stack": True,
                                     "delete-files": True,
@@ -828,8 +899,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
         if config['make_cube'].get('use_mstransform'):
-            all_targets, all_msfiles, ms_dict = target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel, True)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -1034,7 +1104,7 @@ def worker(pipeline, recipe, config):
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener'].get('channels_per_plot'),
-                          "workdir": '{0:s}/'.format(stimela.CONT_IO["output"]),
+                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
                           "label": config['sharpener'].get('label', pipeline.prefix)
                           }
 

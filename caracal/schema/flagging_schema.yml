@@ -2,52 +2,67 @@ type: map
 mapping:
   schema_version:
     type: str
-    required: true
+    required: True
 
   flagging:
-    desc: Flagging of the data.
+    desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
     mapping:
       enable: 
-        desc: Execute flagging of the data.
+        desc: Execute the flagging worker.
         type: bool
         required: True
         example: 'False'
-      label_in:
-        desc: The label is added to the input .MS file name to define the name of the .MS file that should be flagged, <input>-<label>.ms. Default is an empty string, i.e., the original .MS is flagged.
-        type: str
-        required: false
-        example: ''
       field:
-        desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging steps flag_time, flag_scan and static_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
         type: str
-        required: false
+        enum: ['target', 'calibrators']
+        required: False
         example: 'calibrators'
-      load_flags:
-        desc: Restore flags to specified state
+      label_in:
+        desc: This label is added to the input .MS file(s) name given in the get_data worker to define the name of the .MS file(s) that should be flagged. These are <input>_<label>.ms if 'field' (see above) is set to 'calibrators', or <input>-<target>_<label>.ms if 'field' is set to 'target' (one .MS file for each target in the input .MS). If empty, the original .MS is flagged with the field selection explained in 'field' above.
+        type: str
+        required: False
+        example: ''
+      calibrator_fields:
+        desc: If 'field' above is set to 'calibrators', users can specify here what subset of calibrators to process. This should be a comma-separated list of 'xcal' ,'bpcal', 'gcal' and/or 'fcal', which were all set by the observation_config worker. Alternatively, 'auto' selects all calibrators.
+        type: str
+        required: False
+        example: 'auto'
+      rewind_flags:
+        desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:
+            desc: Enable the rewind_flags segement.
             type: bool
-            desc: enable this segement
-            example: 'True'
-            required: false
-          version: 
-            type: str
-            desc: Flag version name
-            example: 'before_flagging_automatic'
-            required: false
-          merge:
-            desc: Merge flags to restored with current flags. (uses 'or')
-            type: bool
+            required: False
             example: 'False'
-            required: false
-      autoflag_autocorr_powerspectra:
+          version: 
+            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            type: str
+            required: False
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+      overwrite_flag_versions:
+        desc: Allow Caracal to ovewrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        required: False
+        example: 'False'
+      unflag:
+        desc: Unflag all visibilities for the selected field(s).
+        type: map
+        mapping:
+          enable:
+            desc: Enable the unflag segment.
+            type: bool
+            required: False
+            example: 'False'
+      flag_autopowerspec:
         desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
         mapping:
           enable:
-            desc: Enables flagging of antennas based on drifts in the scan average of the auto correlation spectra per field.
+            desc: Enable the flag_autopowerspec segment.
             type: bool
             required: False
             example: 'False'
@@ -59,23 +74,13 @@ mapping:
           antenna_to_group_threshold: 
             desc: Threshold for flagging in sigma above array median power spectra per scan per field per channel.
             type: int
-            required: false
+            required: False
             example: '5'
           column:
             desc: Data column to flag.
             type: str
             required: False
             example: 'DATA'
-          fields:
-            desc: Fields to flag. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal, target).
-            type: str
-            required: False
-            example: 'auto'
-          calibrator_fields: 
-            desc: Calibrator fields. Given as 'auto' or comma-seperated keys (keys in gcal, bpcal).
-            type: str
-            required: False
-            example: 'auto'
           threads: 
             desc: Number of threads to use.
             type: int
@@ -86,16 +91,16 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enables flagging of autocorrelations.
+            desc: Enable the flag_autocorr segment.
             type: bool
             required: False
             example: 'False'
-      quack_flagging:
+      flag_quack:
         desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
         type: map
         mapping:
           enable:
-            desc: Enable quack flagging.
+            desc: Enable the flag_quack segment.
             type: bool
             required: False
             example: 'False'
@@ -115,7 +120,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable flagging based on pointing elevation.
+            desc: Enable the flag_elevation segment.
             type: bool
             required: False
             example: 'False'
@@ -134,7 +139,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enables flagging of shadowed antennas.
+            desc: Enables the flag_shadow segment.
             type: bool
             required: False
             example: 'False'
@@ -153,7 +158,7 @@ mapping:
         type: map
         mapping: 
           enable:
-            desc: Enable flagging spectral windows/ channels.
+            desc: Enable the flag_spw segment.
             type: bool
             required: False
             example: 'False'
@@ -167,13 +172,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      
       flag_time: 
         desc: Flag timerange in the data using CASA FLAGDATA task.
         type: map
         mapping: 
           enable: 
-            desc: Enabla flagging timeranges.
+            desc: Enable the flag_time segment.
             type: bool
             required: False
             example: 'False'
@@ -187,12 +191,26 @@ mapping:
             type: bool
             required: False
             example: 'False'
+      flag_scan:
+        desc: Flag bad scans. Uses CASA Flagdata task.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the flag_scan segment.
+            type: bool
+            required: False
+            example: 'False'
+          scans:
+            desc: Scans to flag. CASA flagdata syntax.
+            type: str
+            required: False
+            example: '0'
       flag_antennas:
         desc: Flag bad antennas. Or just the ones you have sworn a vendetta against.
         type: map
         mapping:
           enable: 
-            desc: Enables flagging of bad antennas. 
+            desc: Enable the flag_antennas segment.
             type: bool
             required: False
             example: 'False'
@@ -202,7 +220,7 @@ mapping:
             required: False
             example: '0'
           timerange: 
-            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS-YYYY/MM/DD/HH:MM:SS'.
+            desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
             example: ''
@@ -211,143 +229,129 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      flag_scan:
-        desc: Flag bad scans. Uses CASA Flagdata task.
-        type: map
-        mapping: 
-          enable:
-            desc: Enables flagging of bad scans. 
-            type: bool
-            required: False
-            example: 'False'
-          scans: 
-            desc: Scans to flag. CASA flagdata syntax.
-            type: str
-            required: False
-            example: '0'
-      static_mask:
+      flag_mask:
         desc: Apply static mask to flag out known RFI, Meerkat specific. 
         type: map
         mapping: 
           enable:
-            desc: Enables the application of static mask on the data.
+            desc: Enable the flag_mask segment.
             type: bool
             required: False
             example: 'False'
           mask: 
             desc: The mask to apply. 
             type: str
-            required: false
+            required: False
             example: 'labelled_rfimask.pickle.npy'
           uvrange:
             desc: UV range to select (CASA style range, e.g. lower~upper) for flagging. Leave blank for entire array.
             type: str
-            required: false
+            required: False
             example: ''
-
-      autoflag_rfi:
-        desc: Flag RFI using AOFlagger software. 
+      flag_rfi:
+        desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop. 
         type: map
         mapping:   
           enable: 
-            desc: Enable RFI flagging with AOFlagger or tricolour
+            desc: Enable the flag_rfi segment.
             type: bool
             required: False
             example: 'False'
           flagger:
-            desc: Choose flagger for automatic flagging
+            desc: Choose flagger for automatic flagging. Possible choices are 'aoflagger', 'tricolour' and 'tfcrop'.
             type: str
             enum: ["aoflagger", "tricolour", "tfcrop"]
-            required: false
-            example: "aoflagger"
-          strategy: 
-            desc: The AOFlagger strategy file to use.
-            type: str
             required: False
-            example: 'firstpass_QUV.rfis'
+            example: "aoflagger"
           column: 
-            desc: Specify column to flag
+            desc: Specify which column to flag.
             type: str
             required: False
             example: 'DATA'
-          fields: 
-            desc: comma separated list of (zero-indexed) field ids to process
-            type: str
-            required: false
-            example: 'auto'
-          calibrator_fields:
-            desc: comma separated list of (zero-indexed) field ids to process
-            type: str
-            required: false
-            example: 'auto'
-          bands: 
-            desc: comma separated list of (zero-indexed) band ids to process
-            type: str
-            required: false
-            example: 'auto'
-          window_backend:
-            desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
-            type: str
-            enum: ["numpy", "zarr-disk"]
-            required: false
-            example: "numpy"
-          tricolour_mode:
-            desc: If set to 'auto', decides the tricolour flagging strategy based on the bandwidth of the dataset. Else uses tricolour_calibrator_strat. 
-            type: str
-            required: false
-            enum: ['auto', 'manual']
-            example: 'auto'
-          tricolour_calibrator_strat_narrowband:
-            type: str
-            required: False
-            example: 'calibrator_mild_flagging.yaml'
-          tricolour_calibrator_strat:
-            type: str
-            required: False
-            example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
-          usewindowstats:
-            type: str 
-            desc: Calculate additional flags using sliding window statistics
-            enum: ["none", "sum", "std", "both"]
-            example: "std"
-            required: false
-          combinescans:
-            type: bool
-            desc: Accumulate data across scans depending on the value of ntime
-            example: "False"
-            required: false
-          flagdimension:
-            type: str 
-            desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
-            enum: [freq, time, freqtime, timefreq]
-            example: freqtime
-            required: false
-          timecutoff:
-            type: float
-            desc: Flagging thresholds in units of deviation from the fit 
-            example: "4.0"
-            required: false
-          freqcutoff:
-            type: float
-            desc: Flagging thresholds in units of deviation from the fit 
-            example: "3.0"
-            required: false
-          correlation:
-            type: str 
-            desc: Correlation
-            example: ""
-            required: false
-      rfinder:
-        desc: A tool to investigate the presence of RFI
+          aoflagger:
+            type: map
+            mapping:
+              strategy: 
+                desc: The AOFlagger strategy file to use.
+                type: str
+                required: False
+                example: 'firstpass_Q.rfis'
+              ensure_valid_strategy:
+                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit Caracal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
+                type: bool
+                required: False
+                example: 'True'
+          tricolour:
+            type: map
+            mapping:
+              window_backend:
+                desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
+                type: str
+                enum: ["numpy", "zarr-disk"]
+                required: False
+                example: "numpy"
+              mode:
+                desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
+                type: str
+                enum: ['auto', 'manual']
+                required: False
+                example: 'auto'
+              strategy:
+                desc: Tricolour strategy file.
+                type: str
+                required: False
+                example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
+              strategy_narrowband:
+                desc: Tricolour strategy file to be used for an MS with narrow bandwidth if mode = auto (see above).
+                type: str
+                required: False
+                example: 'calibrator_mild_flagging.yaml'
+          tfcrop:
+            type: map
+            mapping:
+              usewindowstats:
+                desc: Calculate additional flags using sliding window statistics.
+                type: str 
+                enum: ["none", "sum", "std", "both"]
+                required: False
+                example: "std"
+              combinescans:
+                desc: Accumulate data across scans depending on the value of ntime.
+                type: bool
+                required: False
+                example: "False"
+              flagdimension:
+                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq).
+                type: str 
+                enum: [freq, time, freqtime, timefreq]
+                required: False
+                example: "freqtime"
+              timecutoff:
+                desc: Flagging thresholds in units of deviation from the fit.
+                type: float
+                required: False
+                example: "4.0"
+              freqcutoff:
+                desc: Flagging thresholds in units of deviation from the fit.
+                type: float
+                required: False
+                example: "3.0"
+              correlation:
+                desc: Correlation.
+                type: str 
+                required: False
+                example: ""
+      inspect:
+        desc: Inspect the presence of RFI using the diagnostic products of RFInder.
         type: map
         mapping:
           enable:
-            desc: Enable invsetigation of rfi with rfinder
+            desc: Enable the inspect segment.
             type: bool
             required: False
             example: 'False'
           telescope:
-            desc: Name of telescope
+            desc: Name of telescope.
             type: str
             required: False
             example: 'MeerKAT'
@@ -357,43 +361,43 @@ mapping:
             required: False
             example: 'target'
           polarization:
-            desc:  Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS)
+            desc: Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS).
             type: str
             enum: ['xx', 'XX', 'yy', 'YY', 'xy', 'XY', 'yx', 'YX', 'q', 'Q']
             required: False
             example: 'q'
           spw_enable:
-            desc: Enable spw for rebinning
+            desc: Enable spw for rebinning.
             type: bool
             required: False
             example: 'True'
           spw_width:
-            desc: Channel width of rebinned output table (MHz)
+            desc: Channel width of rebinned output table (MHz).
             type: int
             required: False
             example: '10'
           time_enable:
-            desc: Enable time chunking
+            desc: Enable time chunking.
             type: bool
             required: False
             example: 'True'
           time_step:
-            desc: Time chunks in minutes
+            desc: Time chunks in minutes.
             type: int
             required: False
             example: '5'
           movies_in_report:
-            desc: Generate movies in a repo
+            desc: Generate movies in a repo.
             type: bool
             required: False
             example: 'True'
-      flagging_summary:
+      summary:
         desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
         type: map
         mapping:
           enable:
-            desc: Enables the writing of flagging summary.
+            desc: Enable the summary segment.
             type: bool
-            required: false
+            required: False
             example: 'True'
 

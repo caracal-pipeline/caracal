@@ -92,6 +92,10 @@ def worker(pipeline, recipe, config):
                 # if time_chunk is not 0 all solutions should fit in there.
                 # if it is 0 then it does not matter as we are not checking remainder intervals
                 if time_chunk != 0:
+                    if 0. in solutions:
+                        raise caracal.UserInputError("You are using all timeslots in your solutions (i.e. 0) but have set cal_timeslots_chunk, please set it to 0 for using all timeslots.  \n" +
+                                           "Your timeslots chunk = {} \n".format(time_chunk) +
+                                           "Your timeslots solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                     sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
                     for val in sol_int_array:
                         if val != int(val):
@@ -136,10 +140,14 @@ def worker(pipeline, recipe, config):
                     # if channel_chunk is not 0 all solutions should fit in there.
                     # if it is 0 then it does not matter as we are not checking remainder intervals
                     if channel_chunk != 0:
+                        if 0. in solutions:
+                            raise caracal.UserInputError("You are using all channels in your solutions (i.e. 0) but have set cal_channel_chunk, please set it to 0 for using all channels.  \n" +
+                                                "Your channel chunk = {} \n".format(channel_chunk) +
+                                                "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                         sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
                         for val in sol_int_array:
                             if val != int(val):
-                                caracal.UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
+                                raise caracal.UserInputError("Not all applied channel solutions fit in the channel_chunk. \n" +
                                                "Your channel chunk = {} \n".format(channel_chunk) +
                                                "Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
             # Check some imaging stuff

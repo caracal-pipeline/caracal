@@ -899,8 +899,8 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
         if config['make_cube'].get('use_mstransform'):
-            all_targets, all_msfiles, ms_dict = target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel, True)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
+                pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}-obsinfo.json'.format(

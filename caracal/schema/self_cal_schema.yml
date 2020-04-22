@@ -94,26 +94,36 @@ mapping:
         desc: Briggs robust value
         required: false
         example: '0.'
-      img_uvtaper:
+      img_taper:
         type: str
-        desc: Taper for imaging (arcsec)
+        desc: Gaussian taper for imaging (arcsec)
         required: false
-        example: '0'
+        example: '0.'
+      img_maxuv_l:
+        type: float
+        desc: Taper for imaging (lambda)
+        required: false
+        example: '0.'
+      img_transuv_l:
+        type: float
+        desc: Transition length of tukey taper (taper-tukey in wsclean, in % of maxuv)
+        required: false
+        example: '10.'
       img_niter:
         type: int
         desc: Number of cleaning iterations
         required: false
         example: '1000000'
-      img_nmiter: 
+      img_nmiter:
         type: int
         desc: Number of major cycles
         required: False
-        example: '0'   
+        example: '0'
       img_cleanborder:
         type: float
         desc: Clean border
         required: false
-        example: '1.3' 
+        example: '1.3'
       img_nchans:
         type: int
         desc: Number of channesls in output image
@@ -155,6 +165,16 @@ mapping:
         desc: Higher gain amplitude clipping
         required: false
         example: '2.'
+      cal_max_prior_error:
+        type: float
+        desc: Flag solution intervals where the prior variance estimate is above this value.
+        required: false
+        example: '0.1'
+      cal_max_post_error:
+        type: float
+        desc: Flag solution intervals where the posterior variance estimate is above this value.
+        required: false
+        example: '0.1'
       cal_niter:
         type: int
         desc: Number of self-calibration iterations to perform
@@ -263,7 +283,7 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
-          sofia_settings: 
+          sofia_settings:
             desc: SoFiA source finder settings to produce a .FITS clean mask. The mask is located in output/masking.
             type: map
             mapping:
@@ -307,7 +327,7 @@ mapping:
                 example: '4.0'
               fornax_use_sofia:
                 type: bool
-                desc: use sofia for mask of Fornax A instead of Fomalont mask  
+                desc: use sofia for mask of Fornax A instead of Fomalont mask
                 required: false
                 example: 'False'
 
@@ -346,7 +366,7 @@ mapping:
               - type: int
             desc: Source finder island threshold
             required: false
-            example: '3'         
+            example: '3'
 
       calibrate:
         type: map
@@ -366,15 +386,15 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration
+            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA' where CORR_DATA and CORRECTED_DATA are synonyms.
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:
             seq:
               - type: str
-            desc: Gain matrix type
+            desc: Gain matrix type. GainDiagPhase = phase only calibration, GainDiagAmp = amplitude only, GainDiag = Amplitude + Phase, Gain2x2 = Amplitude + Phase taken non-diagonal terms into account.
             required: false
-            example: 'GainDiagPhase'
+            example: 'GainDiagPhase, GainDiag'
           model_mode:
             type: str
             desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
@@ -387,7 +407,7 @@ mapping:
             example: '100Gb'
           two_step:
             type: bool
-            desc: Trigger a two step calibration process where the phase only calibration is applied before continuing with amplitude + phase cal. When cubical is used this happens simultaneous and gain parameters can be used with DDsols parameters. Set DDsol_time to -1 one to avoid amplitude calibration in an itereation. The parameter DDjones should be set to false.
+            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the solution sizes automatically.
             required: false
             example: 'False'
           add_vis_model:
@@ -398,16 +418,16 @@ mapping:
           Gsols_timeslots:
             seq:
               - type: float
-            desc: G-Jones time solution interval. The parameter cal_time_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time chunk.
+            desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time of the observations.
             required: false
             example: '1'
           Gsols_channel:
             seq:
               - type: float
-            desc: G-Jones frequency solution interval. The parameter cal_frq_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency chunk.
+            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency range in a channel.
             required: false
             example: '0'
-          Bjones: 
+          Bjones:
            type: bool
            desc: Enable Bjones
            required: false
@@ -415,32 +435,27 @@ mapping:
           Bsols_timeslots:
             seq:
               - type: int
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps.
             required: false
             example: '0'
           Bsols_channel:
             seq:
               - type: float
-            desc: Gsols for individual calibration steps, if not given will default to cal_Gsols
+            desc: Bsols for individual calibration steps.
             required: false
             example: '2'
-          DDjones:
-            type: bool
-            desc: Enable direction dependent calibration, currently experimental.
-            required: false
-            example: 'False'
-          DDsols_timeslots:
-            desc: Calibration solution intervals
+          GAsols_timeslots:
+            desc: Time intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
             seq:
               - type: float
             required: false
-            example: '0'
-          DDsols_channel:
-            desc: Calibration solution intervals
+            example: '-1'
+          GAsols_channel:
+            desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
             seq:
               - type: float
             required: false
-            example: '0'
+            example: '-1'
           weight_column:
             desc: Column with weights
             type: str
@@ -462,12 +477,16 @@ mapping:
             type: str
             required: false
             example: 'auto'
+          overwrite:
+            desc: Allow cubical to overwrite existing output
+            type: bool
+            required: false
+            example: 'True'
           dist_max_chunks:
             desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
             type: int
             required: false
             example: '4'
-          
           ragavi_plot:
             type: map
             desc: Plotting dignostics plots for delay correction calibration.
@@ -504,7 +523,7 @@ mapping:
             desc: Model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
             example: '1+2'
-          clean_model: 
+          clean_model:
             type: str
             desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
             required: false
@@ -524,7 +543,7 @@ mapping:
         type: map
         desc: Interpolate gains over the high frequency resolution data
         mapping:
-          enable: 
+          enable:
             type: bool
             desc: Execute this segment
             required: false
@@ -540,7 +559,7 @@ mapping:
             mapping:
               enable:
                  type: bool
-                 desc: Enable gain interpolation. 
+                 desc: Enable gain interpolation.
                  required: false
                  example: 'True'
               timeslots_int:
@@ -615,6 +634,6 @@ mapping:
             example: '0'
           memory_fraction:
             type: float
-            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
             required: false
             example: '0.5'

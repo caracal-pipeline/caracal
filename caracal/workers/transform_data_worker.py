@@ -171,7 +171,7 @@ def worker(pipeline, recipe, config):
                 version = config['rewind_flags']["version"]
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
                 manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
-                available_flag_versions = manflags.get_flags(pipeline, fms)
+                available_flagversions = manflags.get_flags(pipeline, fms)
                 if available_flagversions[-1] != version:
                     substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
                     manflags.delete_cflags(pipeline, recipe,

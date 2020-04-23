@@ -477,8 +477,8 @@ mapping:
             type: str
             required: false
             example: 'auto'
-          overwrite:
-            desc: Allow cubical to overwrite existing output
+          overwrite_gain_tables:
+            desc: Allow cubical to overwrite the existing gain_tables for self calibration that were produced in a previous run of the selfcal worker. The gain tables do not take prefixes into account so be careful with new runs.
             type: bool
             required: false
             example: 'True'

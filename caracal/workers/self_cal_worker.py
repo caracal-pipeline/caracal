@@ -1176,7 +1176,7 @@ def worker(pipeline, recipe, config):
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
                 "g-freq-int": int(gsols_[1]),
-                "out-overwrite": config[key].get('overwrite_gain_tables'),
+                "out-overwrite": config[key].get('overwrite_cubical'),
                 "g-save-to": g_table_name,
                 "g-clip-low": config.get('cal_gain_amplitude_clip_low'),
                 "g-clip-high": config.get('cal_gain_amplitude_clip_high'),

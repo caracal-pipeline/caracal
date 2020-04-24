@@ -333,7 +333,7 @@ def worker(pipeline, recipe, config):
                     else:
                         raise ValueError("You wanted to ensure a valid time range but we could not find a start and end time")
                 for nn,antenna in enumerate(antennas):
-                    antstep = 'ant-{0:s}-ms{1:d}-{2:s}'.format(wname, i, antenna.replace(',','_'))
+                    antstep = 'ant-{0:s}-ms{1:d}-antsel{2:d}'.format(wname, i, nn)
                     if found_valid_data[nn] or not ensure:
                         recipe.add('cab/casa_flagdata', antstep,
                                     {

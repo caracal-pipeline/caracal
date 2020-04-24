@@ -128,27 +128,6 @@ def worker(pipeline, recipe, config):
             # This should catch any antenna with severe temperature problems
             if pipeline.enable_task(config, 'flag_autopowerspec'):
                 step = '{0:s}-autopowerspec-ms{1:d}'.format(wname, msiter)
-                # OLD FIELDS SELECTION FOR THIS STEP ONLY
-                #def_fields = ",".join(map(str, utils.get_field_id(
-                #    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,target,xcal").split(","))))
-                #def_calfields = ",".join(map(str, utils.get_field_id(
-                #    msinfo, manfields.get_field(pipeline, i, "bpcal,gcal,xcal").split(","))))
-                #if config['flag_autopowerspec'].get('fields') != 'auto' and \
-                #   not set(config['flag_autopowerspec'].get('fields').split(',')) <= set(['gcal', 'bpcal', 'fcal', 'target']):
-                #    raise KeyError(
-                #        "autoflag on autocorrelations powerspectra fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal' or 'target'")
-                #if config['flag_autopowerspec'].get('calibrator_fields') != 'auto' and \
-                #   not set(config['flag_autopowerspec'].get('calibrator_fields').split(',')) <= set(['gcal', 'bpcal', 'fcal']):
-                #    raise KeyError(
-                #        "autoflag on autocorrelations powerspectra calibrator fields can only be 'auto' or be a combination of 'gcal', 'bpcal', 'fcal'")
-                #aps_fields = def_fields if config['flag_autopowerspec'].get('fields') == 'auto' else \
-                #    ",".join([getattr(pipeline, key + "_id")[i][0]
-                #              for key in config['flag_autopowerspec'].get('fields').split(',')])
-                #aps_calfields = def_calfields if config['flag_autopowerspec'].get('calibrator_fields') == 'auto' else \
-                #    ",".join([getattr(pipeline, key + "_id")[i][0]
-                #              for key in config['flag_autopowerspec'].get('calibrator_fields').split(',')])
-                #aps_fields = ",".join(set(aps_fields.split(",")))
-                #aps_calfields = ",".join(set(aps_calfields.split(",")))
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
                            {
                                "msname": msname,
@@ -439,7 +418,6 @@ def worker(pipeline, recipe, config):
                                    "field-names": fields,
                                    "flagging-strategy": 'polarisation',
                                    "config" : tricolour_strat,
-                                   "nworkers": config['flag_rfi']['tricolour'].get('ncpu'),
                                },
                                input=pipeline.input,
                                output=pipeline.output,

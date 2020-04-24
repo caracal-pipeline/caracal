@@ -417,13 +417,13 @@ mapping:
             example: 'True'
           Gsols_timeslots:
             seq:
-              - type: float
+              - type: int
             desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time of the observations.
             required: false
             example: '1'
           Gsols_channel:
             seq:
-              - type: float
+              - type: int
             desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency range in a channel.
             required: false
             example: '0'
@@ -440,20 +440,20 @@ mapping:
             example: '0'
           Bsols_channel:
             seq:
-              - type: float
+              - type: int
             desc: Bsols for individual calibration steps.
             required: false
             example: '2'
           GAsols_timeslots:
             desc: Time intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
             seq:
-              - type: float
+              - type: int
             required: false
             example: '-1'
           GAsols_channel:
             desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
             seq:
-              - type: float
+              - type: int
             required: false
             example: '-1'
           weight_column:

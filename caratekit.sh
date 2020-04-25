@@ -184,6 +184,16 @@ do
     then
         OD=1
     fi
+    if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
+    then
+        OD=1
+    fi
+    if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --copy-data-id or -ci switch, stopping."; kill "$PPID"; exit 1; }
+	CARATE_COPY_DATA_ID=${!nextcount}
+    fi
     if [[ "$arg" == "--move-test-data" ]] || [[ "$arg" == "-md" ]]
     then
         MD=1
@@ -383,6 +393,10 @@ then
     echo "                               individual carate run. Empty if not supplied."
     echo ""
 
+    echo "  CARATE_COPY_MS:              Names of the measurement sets to be copied"
+    echo "                               (comma-separated list without .ms extensions)"
+    echo ""
+
     echo "  CARATE_TEST_DATA_DIR:        Directory containing test data (ms"
     echo "                               format)"
     echo ""
@@ -494,6 +508,19 @@ then
     echo "  --omit-copy-test-data -od           Do not re-copy test data and preserve msdir"
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
+    ####
+    ####
+    ####
+    echo ""
+    echo "  --copy-config-data -cc              Copy test data as specified in the config-"
+    echo "                                      file parameter dataid unless"
+    echo "                                      CARATE_COPY_DATA_ID is defined"
+    echo ""
+    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
+    echo "                                      CARATE_COPY_DATA_ID"
+    ####
+    ####
+    ####
     echo ""
     echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_INPUT_DIR"
@@ -2733,10 +2760,12 @@ then
             echo "Will not re-create existing stimela-singularity and use old installation."
             echo "Use -f to override and unset -or or --omit-stimela-reinstall flags."
             sya_sing+="##########################################"; sya_sing+=$'\n'
+	    sya_sing+=$'\n'
             sya_sing+="Will not re-create existing stimela-singularity and use old installation."; sya_sing+=$'\n'
             sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags."; sya_sing+=$'\n'
+	    sya_sing+=$'\n'
             sya_sing+="##########################################"; sya_sing+=$'\n'
-            sya_sing+=$'\n; sya_sing+=$'\n''
+            sya_sing+=$'\n';
         fi
     else
 	checkex ${singularity_loc} || \

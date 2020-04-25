@@ -1,11 +1,9 @@
 import os, shutil, glob, copy
+import numpy as np
 import sys
-import yaml
-import json
 import caracal
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
-from astropy.io import fits as fits
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u 
 from astropy.wcs import WCS 
@@ -92,10 +90,10 @@ def worker(pipeline, recipe, config):
         "coeff"   : 'me',
         "coefficients-file": "meerkat_beam_coeffs_em_zp_dct.npy",}
 
-        recipe.add("cab/eidos", "make_primary_beam", eidos_opts,
+        recipe.add("cab/eidos", "make-pb", eidos_opts,
         input=INPUT,
         output=OUTPUT,
-        label="make_primary_beam:: Generate beams from Eidos",)
+        label="make-pb:: Generate primary beams from Eidos",)
 
     def dd_precal_image(field,ms_list):
         dd_image_opts_precal = copy.deepcopy(dd_image_opts)
@@ -106,16 +104,16 @@ def worker(pipeline, recipe, config):
         if (use_mask):
             dd_imagename = {"Output-Name": image_prefix_precal+"-DD-masking"}   #Add the mask image prefix
             dd_image_opts_precal.update(dd_imagename)
-            recipe.add("cab/ddfacet", "ddf_image_for_mask_{0:s}".format(field), dd_image_opts_precal,
+            recipe.add("cab/ddfacet", "ddf_image-for_mask-{0:s}".format(field), dd_image_opts_precal,
                  input=INPUT,
                  output=OUTPUT,
                  shared_memory="500gb",
-                 label="ddf_image_for_mask_{0:s}:: DDFacet image for masking".format(field))
+                 label="ddf_image-for_mask-{0:s}:: DDFacet image for masking".format(field))
 
 
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
             output_folder = "/"+outdir
-            recipe.add("cab/cleanmask", "mask_ddf_precal_{0:s}".format(field),{
+            recipe.add("cab/cleanmask", "mask_ddf-precal-{0:s}".format(field),{
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
                  'sigma' : config['image_dd'].get('mask_sigma'),
@@ -124,7 +122,7 @@ def worker(pipeline, recipe, config):
                  'overlap': config['image_dd'].get('mask_overlap'),
                  'no-negative': True,
                  'tolerance': config['image_dd'].get('mask_tolerance'),
-                 }, input=INPUT, output = OUTPUT, label='mask_ddf_precal_{0:s}:: Make a mask for the initial ddf image'.format(field))
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf-precal-{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
@@ -132,11 +130,11 @@ def worker(pipeline, recipe, config):
         if use_mask:
             dd_maskopt = {"Mask-External" : "{0:s}mask_ddf_precal_{1:s}.fits:output".format(output_folder,field)}
             dd_image_opts_precal.update(dd_maskopt)
-        recipe.add("cab/ddfacet", "ddf_image_{0:s}".format(field), dd_image_opts_precal,
-        input=INPUT,
-        output=OUTPUT,
-        shared_memory="500gb",
-        label="ddf_image_{0:s}:: DDFacet initial image for DD calibration".format(field))
+        recipe.add("cab/ddfacet", "ddf_image-{0:s}".format(field), dd_image_opts_precal,
+                    input=INPUT,
+                    output=OUTPUT,
+                    shared_memory="500gb",
+                    label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field))
         recipe.run()
         recipe.jobs = []
     def dd_postcal_image(field,ms_list):
@@ -151,14 +149,14 @@ def worker(pipeline, recipe, config):
         if (use_mask):
             dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-masking"}
             dd_image_opts_postcal.update(dd_imagename)
-            recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,
+            recipe.add("cab/ddfacet", "ddf_image-postcal-{0:s}".format(field), dd_image_opts_postcal,
                  input=INPUT,
                  output=OUTPUT,
-                 label="ddf_image_postcal_{0:s}:: Primary beam corrected image".format(field),
+                 label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
                  shared_memory="500gb")
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_postcal,"-DD-masking")
             output_folder = "/"+outdir
-            recipe.add("cab/cleanmask", "mask_ddf_postcal_{0:s}".format(field),{
+            recipe.add("cab/cleanmask", "mask_ddf-postcal-{0:s}".format(field),{
                  #'image' : '{0:s}:output'.format(imagename),
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits:output'.format(output_folder,field),
@@ -168,7 +166,7 @@ def worker(pipeline, recipe, config):
                  'overlap': config['image_dd'].get('mask_overlap'),
                  'no-negative': True,
                  'tolerance': config['image_dd'].get('mask_tolerance'),
-                 }, input=INPUT, output = OUTPUT, label='mask_ddf_postcal_{0:s}:: Make a mask for the initial ddf image'.format(field))
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf-postcal-{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []
 
@@ -185,11 +183,11 @@ def worker(pipeline, recipe, config):
         if USEPB:
             dd_image_opts_postcal.update(dd_beamopts)
 
-        recipe.add("cab/ddfacet", "ddf_image_postcal_{0:s}".format(field), dd_image_opts_postcal,
-        input=INPUT,
-        output=OUTPUT,
-        label="ddf_image_postcal_{0:s}:: Primary beam corrected image".format(field),
-        shared_memory="500gb")
+        recipe.add("cab/ddfacet", "ddf_image-postcal-{0:s}".format(field), dd_image_opts_postcal,
+                    input=INPUT,
+                    output=OUTPUT,
+                    label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
+                    shared_memory="500gb")
 
 #    def sfind_intrinsic():
 #        DDF_INT_IMAGE = prefix+"-DD-precal.int.restored.fits:output"
@@ -239,8 +237,8 @@ def worker(pipeline, recipe, config):
             "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
            }
 
-           recipe.add('cab/catdagger', 'tag_sources_auto_mode', catdagger_opts,input=INPUT,
-              output=OUTPUT+"/"+outdir,label='tag_sources_auto_mode::Tag dE sources with CatDagger')
+           recipe.add('cab/catdagger', 'tag_sources-auto_mode', catdagger_opts,input=INPUT,
+              output=OUTPUT+"/"+outdir,label='tag_sources-auto_mode::Tag dE sources with CatDagger')
 
         if de_sources_mode == 'manual':
            img = prefix+"_"+field+"-DD-precal.app.restored.fits"
@@ -287,7 +285,7 @@ def worker(pipeline, recipe, config):
         print("output_cubical",output_cubical)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'dd_calibrate_{0:s}_{1:s}'.format(mspref,field)
+           step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
               "data-column"       : config[key].get('dd_data_column'),
@@ -350,13 +348,13 @@ def worker(pipeline, recipe, config):
                #output=OUTPUT+"/"+outdir,
                output=output_cubical,
                shared_memory="400gb",
-               label='dd_calibrate_{0:s}_{1:s}:: Carry out DD calibration'.format(mspref,field))
+               label='dd_calibrate-{0:s}-{1:s}:: Carry out DD calibration'.format(mspref,field))
 
     def cp_data_column(field,mslist):
         outdir = field+"_ddcal"
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'cp_datacol_{0:s}_{1:s}'.format(mspref,field)
+           step = 'cp_datacol-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/msutils', step, {
                "command" : 'copycol',
                "msname"  : ms,
@@ -365,7 +363,7 @@ def worker(pipeline, recipe, config):
                               },
                input=INPUT,
                output=OUTPUT+"/"+outdir,
-               label='cp_datacol_{0:s}_{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field))
+               label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field))
       
     def img_wsclean(mslist,field):
         key='image_wsclean'
@@ -373,7 +371,7 @@ def worker(pipeline, recipe, config):
         imweight = config[key].get('img_ws_weight')
         pref = "DD_wsclean"
         mspref = mslist[0].split('.ms')[0].replace('-','_')
-        step = 'img_wsclean_{0:s}_{1:s}'.format(mspref,field)
+        step = 'img_wsclean-{0:s}-{1:s}'.format(mspref,field)
         recipe.add('cab/wsclean', step, {
             "msname": mslist,
             "column": config[key].get('img_ws_column'),
@@ -399,7 +397,7 @@ def worker(pipeline, recipe, config):
         },
         input=INPUT,
         output=OUTPUT+"/"+outdir,
-        label='img_wsclean_{0:s}_{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
+        label='img_wsclean-{0:s}-{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
 
     def run_crystalball(mslist,field):
         key='transfer_model_dd'
@@ -408,7 +406,7 @@ def worker(pipeline, recipe, config):
         crystalball_model = '{0:s}_{1:s}-sources.txt'.format(pref, field)
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
-           step = 'run_crystalball_{0:s}_{1:s}'.format(mspref,field)
+           step = 'crystalball-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/crystalball', step, {
                "ms": ms,
                "sky-model": crystalball_model+':output',
@@ -424,7 +422,7 @@ def worker(pipeline, recipe, config):
              },
                input=INPUT,
                output=OUTPUT+"/"+outdir,
-               label='run_crystalball_{0:s}_{1:s}:: Run Crystalball'.format(mspref,field))
+               label='crystalball-{0:s}-{1:s}:: Run Crystalball'.format(mspref,field))
 
     for target in de_targets:
        mslist = ms_dict[target]

@@ -26,6 +26,7 @@ requirements = [
     'pandas',
     'nbconvert',
     'regions',
+    'jinja2'
 ]
 
 PACKAGE_NAME = 'caracal'

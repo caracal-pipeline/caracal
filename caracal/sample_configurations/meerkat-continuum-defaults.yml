@@ -32,7 +32,7 @@ prepare_data:
     enable: false
   manage_flags: 
     enable: true
-    mode: restore
+    mode: save_legacy_flags
     version: caracal_legacy
   clear_cal: true
   spectral_weights:

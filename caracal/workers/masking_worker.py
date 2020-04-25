@@ -246,27 +246,6 @@ def worker(pipeline, recipe, config):
 
         fits.writeto(out_beam, gauss, hdr, overwrite=True)
 
-    def make_mosaic(catalog_table, fields_dir, mask_dir):
-
-        tab = ascii.read(catalog_table)
-        unique, counts = np.unique(tab['Mosaic'], return_counts=True)
-        mosaic_tmpdir = mask_dir+'/formosaic/'
-        mosaic_outdir = mask_dir+'/mosaic/'
-        if os.path.exists(mosaic_tmpdir) == False:
-            os.mkdir(mosaic_tmpdir)
-
-        for i in range(0, len(unique)):
-
-            summsfield = fields_dir+str(unique[i])+'.FITS'
-            outfield = mosaic_tmpdir+str(unique[i])+'.FITS'
-            shutil.copy(summsfield, outfield)
-
-        if os.path.exists(mosaic_outdir) == True:
-            shutil.rmtree(mosaic_outdir)
-
-        montage.mosaic(mosaic_tmpdir, mosaic_outdir)
-        shutil.rmtree(mosaic_tmpdir)
-
     def pbcorr(beam, mosaic_regrid, mosaic_pbcorr):
 
         pblist = fits.open(beam)

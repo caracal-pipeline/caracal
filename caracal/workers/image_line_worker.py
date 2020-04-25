@@ -372,7 +372,7 @@ def worker(pipeline, recipe, config):
                     cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
-            step = 'modelsub_{:d}'.format(i)
+            step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
                            "command": 'sumcols',
@@ -387,7 +387,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Subtract model column'.format(step))
 
         if pipeline.enable_task(config, 'addmodelcol'):
-            step = 'modeladd_{:d}'.format(i)
+            step = 'modeladd-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
                            "command": 'sumcols',
@@ -410,7 +410,7 @@ def worker(pipeline, recipe, config):
                     'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
 
             col = config['mstransform'].get('column')
-            step = 'mstransform_{:d}'.format(i)
+            step = 'mstransform-ms{:d}'.format(i)
             recipe.add('cab/casa_mstransform',
                        step,
                        {"msname": msname,
@@ -434,7 +434,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
             if config['mstransform'].get('obsinfo', True):
-                step = 'listobs_{:d}'.format(i)
+                step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
                            step,
                            {"vis": msname_mst,
@@ -446,7 +446,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Get observation information ms={1:s}'.format(step,
                                                                                        msname_mst))
 
-                step = 'summary_json_{:d}'.format(i)
+                step = 'summary_json-ms{:d}'.format(i)
                 recipe.add(
                     'cab/msutils',
                     step,
@@ -490,7 +490,7 @@ def worker(pipeline, recipe, config):
                     cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         if pipeline.enable_task(config, 'flag_mst_errors'):
-            step = 'flag_mst_errors'
+            step = 'flag_mst_errors-ms{0:d}'.format(i)
             recipe.add('cab/autoflagger',
                        step,
                        {"msname": msname_mst,
@@ -506,7 +506,7 @@ def worker(pipeline, recipe, config):
                 msnamesb = msname_mst
             else:
                 msnamesb = msname
-            step = 'sunblocker_{0:d}'.format(i)
+            step = 'sunblocker-ms{0:d}'.format(i)
             prefix = pipeline.prefix[i]
             recipe.add("cab/sunblocker", step,
                        {
@@ -696,13 +696,13 @@ def worker(pipeline, recipe, config):
                     if own_line_clean_mask:
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                             get_dir_path(pipeline.masking, pipeline), own_line_clean_mask)})
-                        step = 'make_cube_{0:s}_{1:d}_with_user_mask'.format(line_name, j)
+                        step = 'make_cube-{0:s}-{1:d}-with_user_mask'.format(line_name, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube'].get('wscl_auto_mask')})
-                        step = 'make_cube_{0:s}_{1:d}_with_automasking'.format(line_name, j)
+                        step = 'make_cube-{0:s}-{1:d}-with_automasking'.format(line_name, j)
                     
                 else:
-                    step = 'make_sofia_mask_' + str(j - 1)
+                    step = 'make_sofia_mask-' + str(j - 1)
                     line_clean_mask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output'.format(
                         pipeline.prefix, field, line_name, j)
                     line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
@@ -751,7 +751,7 @@ def worker(pipeline, recipe, config):
                         j -= 1
                         break
 
-                    step = 'make_cube_{0:s}_{1:d}_with_SoFiA_mask'.format(line_name, j)
+                    step = 'make_cube-{0:s}-{1:d}-with_SoFiA_mask'.format(line_name, j)
                     line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(cube_dir, line_clean_mask)})
                     if 'auto-mask' in line_image_opts:
                         del(line_image_opts['auto-mask'])
@@ -778,7 +778,7 @@ def worker(pipeline, recipe, config):
                         if config['make_cube'].get('wscl_mgain') < 1.0:
                             imagetype.append('first-residual')
                     for mm in imagetype:
-                        step = 'make_{0:s}_cube'.format(
+                        step = 'make-{0:s}-cube'.format(
                             mm.replace('-', '_'))
                         if not os.path.exists('{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits'.format(
                                 cube_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
@@ -822,7 +822,7 @@ def worker(pipeline, recipe, config):
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits:output'.format(
                             cube_dir, pipeline.prefix, field, line_name, j, ss)
                         recipe.add(fix_specsys,
-                                   'fix_specsys_{0:s}_cube'.format(ss),
+                                   'fix_specsys-{0:s}_cube'.format(ss.replace("_", "-")),
                                    {'filename': cubename,
                                        'specframe': specframe_all,
                                     },
@@ -899,8 +899,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
         if config['make_cube'].get('use_mstransform'):
-            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -964,9 +963,9 @@ def worker(pipeline, recipe, config):
         # Construct weight specification
         if config['make_cube'].get('weight') == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['make_cube'].get('robust', robust))
+                config['make_cube'].get('robust'))
         else:
-            weight = config['make_cube'].get('weight', weight)
+            weight = config['make_cube'].get('weight')
 
         for target in (all_targets):
             if config['make_cube'].get('use_mstransform'):
@@ -1025,7 +1024,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             for uu in range(len(cube_list)):
                 recipe.add(remove_stokes_axis,
-                           'remove_cube_stokes_axis_{0:d}'.format(uu),
+                           'remove_cube_stokes_axis-{0:d}'.format(uu),
                            {'filename': cube_list[uu]+':output',
                             },
                            input=pipeline.input,
@@ -1034,7 +1033,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'pb_cube'):
             for uu in range(len(image_cube_list)):
-                recipe.add(make_pb_cube, 'make pb_cube_{0:d}'.format(uu),
+                recipe.add(make_pb_cube, 'make pb_cube-{0:d}'.format(uu),
                        {'filename': image_cube_list[uu]+':output',
                         'apply_corr': config['pb_cube'].get('apply_pb')},
                        input=pipeline.input,
@@ -1050,7 +1049,7 @@ def worker(pipeline, recipe, config):
                     'Converting spectral axis of cubes from radio velocity to frequency')
             for uu in range(len(cube_list)):
                 recipe.add(freq_to_vel,
-                    'spectral_header_to_vel_radio_cube_{0:d}'.format(uu),
+                    'spectral_header-to-vel_radio-cube-{0:d}'.format(uu),
                     {
                         'filename': cube_list[uu]+':output',
                         'reverse': config['freq_to_vel'].get('reverse')},
@@ -1063,7 +1062,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'sofia'):
             for uu in range(len(image_cube_list)):
-                step = 'sofia_source_finding_{0:d}'.format(uu)
+                step = 'sofia-source_finding-{0:d}'.format(uu)
                 recipe.add(
                     'cab/sofia',
                     step,
@@ -1097,7 +1096,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):
-                step = 'continuum_spectral_extraction_{0:d}'.format(uu)
+                step = 'continuum-spectral_extraction-{0:d}'.format(uu)
     
                 params = {"enable_spec_ex": True,
                           "enable_source_catalog": True,
@@ -1105,7 +1104,7 @@ def worker(pipeline, recipe, config):
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener'].get('channels_per_plot'),
-                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IOi["output"]),
+                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
                           "label": config['sharpener'].get('label', pipeline.prefix)
                           }
 

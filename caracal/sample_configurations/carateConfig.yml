@@ -9,7 +9,7 @@ observation_config:
   reference_antenna: 'm010'   
 
 prepare_data:
-  enable: false
+  enable: true
   spectral_weights:
     enable: true
     mode: uniform

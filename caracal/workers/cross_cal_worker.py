@@ -116,7 +116,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             iters[term] = 0
 
         itern = iters[term]
-        step = "%s_%s_%d_%d_%s" % (name, label, itern, iobs, ftype)
+        step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
         params = {}
         params["vis"] = msname
         if term == "A":
@@ -139,9 +139,9 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                     input=pipeline.input, output=pipeline.output,
                     label="%s::" % step)
         elif term == "I":
-            step = "%s_%s_%d_%d_%s" % (name, label, itern, iobs, ftype)
-            applycal(msname, recipe, gaintables_gcal, 
-                interps_gcal, fields_gcal, CALS[ftype], pipeline, iobs, calmode="calflag")
+            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            applycal(msname, recipe, gaintables,
+                interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
             mask_prefix = "mask_%s_%s" %(prefix, ftype)
             maskim = "mask_%s_%s-image.fits:output" %(prefix, ftype)
             mask = "mask_%s_%s-mask.fits:output" %(prefix, ftype)
@@ -164,7 +164,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                     input=pipeline.input, output=pipeline.output,
                     label="%s:: Image %s field" % (step, ftype))
 
-            step = "make_mask_%s_%d__%d_%s_2" % (label, itern, iobs, ftype)
+            step = "make_mask-%s-%d-%d-%s-2" % (label, itern, iobs, ftype)
             recipe.add("cab/cleanmask", step, {
                 "image" : maskim,
                 "output" : maskim,
@@ -176,7 +176,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 output=pipeline.output,
                 label="make mask")
 
-            step = "%s_%s_%d_%d_%s_2" % (name, label, itern, iobs, ftype)
+            step = "%s-%s-%d-%d-%s-2" % (name, label, itern, iobs, ftype)
             recipe.add(RULES[term]["cab"], step, {
                     "msname" : msname,
                     "name" : "%s_%s" % (prefix, ftype),
@@ -253,7 +253,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
-    step = "plotgains_%s_%d_%s" % (term, i, "".join(map(str,field_id)))
+    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str,field_id)))
     recipe.add('cab/ragavi', step,
         {
          "table"        : '{0:s}/{1:s}'.format(get_dir_path(pipeline.caltables, pipeline), gtab),
@@ -270,7 +270,7 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
     """
     Transfer fluxscale
     """
-    step = "transfer_fluxscale_%s_%d" % (label, i)
+    step = "transfer_fluxscale-%s-%d" % (label, i)
     recipe.add("cab/casa_fluxscale", step, {
         "vis" : msname,
         "caltable" : gaintable,
@@ -319,7 +319,7 @@ def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
 
     gaintables, interps, fields = get_caltab_final(gaintable, interp, gainfield, field, ftable=fluxtable)
 
-    step = "apply_gains_%s_%s_%d" % (field, label, i)
+    step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
         "vis" : msname,
         "field" : ",".join(getattr(pipeline, field)[i]),
@@ -380,19 +380,6 @@ def worker(pipeline, recipe, config):
                 substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
                 manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
-        def flag_gains(cal, opts, datacolumn="CPARAM"):
-            opts = dict(opts)
-            if 'enable' in opts:
-                del(opts['enable'])
-            step = 'flag_{0:s}_{1:s}_{2:d}'.format(cal, worker_label, i)
-            opts["vis"] = '{0:s}/{1:s}.{2:s}'.format(get_dir_path(
-                pipeline.caltables, pipeline), prefix, table_suffix[cal]+':output')
-            opts["datacolumn"] = datacolumn
-            recipe.add('cab/casa_flagdata', step, opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Flagging gains'.format(step))
-
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
@@ -449,7 +436,7 @@ def worker(pipeline, recipe, config):
 
                     raise RuntimeError('The flux calibrator field "{}" could not be '
                                        'found in our database or in the CASA NRAO database'.format(fluxscale_field))
-            step = 'set_model_cal_{0:d}'.format(i)
+            step = 'set_model_cal-{0:d}'.format(i)
             cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
                opts,
@@ -573,7 +560,7 @@ def worker(pipeline, recipe, config):
             json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary_crosscal_{0:s}_{1:d}'.format(label, i)
+            step = 'flagging_summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
                            "vis" : msname,

@@ -8,7 +8,7 @@ mapping:
     desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
     mapping:
-      enable: 
+      enable:
         desc: Execute the flagging worker.
         type: bool
         required: True
@@ -38,7 +38,7 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          version: 
+          version:
             desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
             type: str
             required: False
@@ -71,7 +71,7 @@ mapping:
             type: int
             required: False
             example: '3'
-          antenna_to_group_threshold: 
+          antenna_to_group_threshold:
             desc: Threshold for flagging in sigma above array median power spectra per scan per field per channel.
             type: int
             required: False
@@ -81,7 +81,7 @@ mapping:
             type: str
             required: False
             example: 'DATA'
-          threads: 
+          threads:
             desc: Number of threads to use.
             type: int
             required: False
@@ -105,12 +105,12 @@ mapping:
             required: False
             example: 'False'
           quackinterval:
-            desc: Time interval (in seconds) to flag. 
+            desc: Time interval (in seconds) to flag.
             type: float
             required: False
             example: '8.'
-          quackmode: 
-            desc: Quack flagging mode. Either 'beg', which flags scan begining, 'endb', which flags end of the scan, 'end', which flags everything but the first specified seconds of the scan and 'tail' which flags all but the last specified seconds of the scan. 
+          quackmode:
+            desc: Quack flagging mode. Either 'beg', which flags scan begining, 'endb', which flags end of the scan, 'end', which flags everything but the first specified seconds of the scan and 'tail' which flags all but the last specified seconds of the scan.
             type: str
             enum: ["beg", "endb", "end", "tail"]
             required: False
@@ -153,16 +153,16 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      flag_spw: 
+      flag_spw:
         desc: Flag spectral windows/channels. Of course, through FLAGDATA.
         type: map
-        mapping: 
+        mapping:
           enable:
             desc: Enable the flag_spw segment.
             type: bool
             required: False
             example: 'False'
-          channels: 
+          channels:
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel" e.g. "*:856~880MHz". End channel not inclusive.
             type: str
             required: False
@@ -172,16 +172,16 @@ mapping:
             type: bool
             required: False
             example: 'False'
-      flag_time: 
+      flag_time:
         desc: Flag timerange in the data using CASA FLAGDATA task.
         type: map
-        mapping: 
-          enable: 
+        mapping:
+          enable:
             desc: Enable the flag_time segment.
             type: bool
             required: False
             example: 'False'
-          timerange: 
+          timerange:
             desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
@@ -209,17 +209,17 @@ mapping:
         desc: Flag bad antennas. Or just the ones you have sworn a vendetta against.
         type: map
         mapping:
-          enable: 
+          enable:
             desc: Enable the flag_antennas segment.
             type: bool
             required: False
             example: 'False'
           antennas:
-            desc: Antennas to flag. Follows the CASA Flagdata syntax. 
+            desc: Antennas to flag. Follows the CASA Flagdata syntax.
             type: str
             required: False
             example: '0'
-          timerange: 
+          timerange:
             desc: Timerange to flag. Required in the format 'YYYY/MM/DD/HH:MM:SS~YYYY/MM/DD/HH:MM:SS'.
             type: str
             required: False
@@ -230,16 +230,16 @@ mapping:
             required: False
             example: 'False'
       flag_mask:
-        desc: Apply static mask to flag out known RFI, Meerkat specific. 
+        desc: Apply static mask to flag out known RFI, Meerkat specific.
         type: map
-        mapping: 
+        mapping:
           enable:
             desc: Enable the flag_mask segment.
             type: bool
             required: False
             example: 'False'
-          mask: 
-            desc: The mask to apply. 
+          mask:
+            desc: The mask to apply.
             type: str
             required: False
             example: 'labelled_rfimask.pickle.npy'
@@ -249,10 +249,10 @@ mapping:
             required: False
             example: ''
       flag_rfi:
-        desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop. 
+        desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop.
         type: map
-        mapping:   
-          enable: 
+        mapping:
+          enable:
             desc: Enable the flag_rfi segment.
             type: bool
             required: False
@@ -263,7 +263,7 @@ mapping:
             enum: ["aoflagger", "tricolour", "tfcrop"]
             required: False
             example: "aoflagger"
-          column: 
+          column:
             desc: Specify which column to flag.
             type: str
             required: False
@@ -271,7 +271,7 @@ mapping:
           aoflagger:
             type: map
             mapping:
-              strategy: 
+              strategy:
                 desc: The AOFlagger strategy file to use.
                 type: str
                 required: False
@@ -285,7 +285,7 @@ mapping:
             type: map
             mapping:
               window_backend:
-                desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline. 
+                desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline.
                 type: str
                 enum: ["numpy", "zarr-disk"]
                 required: False
@@ -306,17 +306,12 @@ mapping:
                 type: str
                 required: False
                 example: 'calibrator_mild_flagging.yaml'
-              ncpu:
-                desc: Number of CPUs to use.
-                type: int
-                required: False
-                example: '1'
           tfcrop:
             type: map
             mapping:
               usewindowstats:
                 desc: Calculate additional flags using sliding window statistics.
-                type: str 
+                type: str
                 enum: ["none", "sum", "std", "both"]
                 required: False
                 example: "std"
@@ -327,7 +322,7 @@ mapping:
                 example: "False"
               flagdimension:
                 desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq).
-                type: str 
+                type: str
                 enum: [freq, time, freqtime, timefreq]
                 required: False
                 example: "freqtime"
@@ -343,7 +338,7 @@ mapping:
                 example: "3.0"
               correlation:
                 desc: Correlation.
-                type: str 
+                type: str
                 required: False
                 example: ""
       inspect:
@@ -405,4 +400,3 @@ mapping:
             type: bool
             required: False
             example: 'True'
-

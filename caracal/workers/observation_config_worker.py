@@ -172,7 +172,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo'].get('listobs'):
-                step = 'listobs_{:d}'.format(i)
+                step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                            {
                                "vis": msname,
@@ -184,7 +184,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo'].get('summary_json'):
-                step = 'summary_json_{:d}'.format(i)
+                step = 'summary_json-ms{:d}'.format(i)
                 recipe.add('cab/msutils', step,
                            {
                                "msname": msname,
@@ -211,7 +211,7 @@ def worker(pipeline, recipe, config):
           #              label="{:s}:: Plotting elevation tracks".format(step))
 
             if config['obsinfo'].get('vampirisms'):
-                step = 'vampirisms_{0:d}'.format(i)
+                step = 'vampirisms-ms{0:d}'.format(i)
                 recipe.add('cab/sunblocker', step,
                            {
                                "command": 'vampirisms',
@@ -225,7 +225,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
-                step = "elevation_plots_{:d}".format(i)
+                step = "elevation_plots-ms{:d}".format(i)
                 if config['obsinfo']["plot_elevation_tracks"].get("plotter") in ["plotms"]:
                     recipe.add("cab/casa_plotms", step, {
                                "vis" : msname,

@@ -18,6 +18,7 @@ from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
 from caracal.workers.worker_administrator import worker_administrator as mwa
+import stimela
 
 __version__ = caracal.__version__
 pckgdir = caracal.pckgdir
@@ -275,6 +276,7 @@ def main(argv):
     args, _ = parser.parse_known_args(argv)
 
     caracal.init_console_logging(boring=args.boring, debug=args.debug)
+    stimela.logger().setLevel(logging.DEBUG if args.debug else logging.INFO)
 
     try:
         parser = config_parser.config_parser(argv)

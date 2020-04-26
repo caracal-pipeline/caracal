@@ -60,6 +60,8 @@ FORCE=0
 SS="/dev/null"
 IA=5
 endimessage=""
+ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
+SHORT_TEST_DATA_IDS=( "1477074305.subset" )
 
 # current working directory
 cwd=`pwd`
@@ -522,6 +524,20 @@ then
     ####
     ####
     echo ""
+    echo "  --copy-config-data -cc              Copy test data as specified in the"
+    echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
+    echo "                                      unless CARATE_COPY_DATA_ID is defined."
+    echo "                                      Ignored if CARATE_CONFIG_SOURCE is not"
+    echo "                                      defined and switches --config-source -cs"
+    echo "                                      are not used"
+    echo ""
+    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
+    echo "                                      CARATE_COPY_DATA_ID. Note that this over-"
+    echo "                                      rides --copy-config-data or -cc"
+    ####
+    ####
+    ####
+    echo ""
     echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_INPUT_DIR"
     echo ""
@@ -600,7 +616,7 @@ echo "  \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID):"
 echo ""
 echo "  - a directory called home is created (if not existing or if -f is"
 echo "    set) and the HOME environment variable set to that home directory"
-echo "    unless the --keep-home or -kh switches are set"
+echo "    unless the --keep-home or -kh switches are set."
 echo ""
 echo "  - a python 3 virtual environment name caracal_venv is created (if"
 echo "    not existing or if -f is set) and activated. It is not re-created"
@@ -675,7 +691,9 @@ echo "    are copied into the msdir directory in the extended_singularity"
 echo "    directory and extendedConfig.yml is edited to point to those .ms"
 echo "    files in the variable dataid, then caracal is run with"
 echo "    extendedConfig.yml and declared successful if certain expected files"
-echo "    are created (see exceptions below)."
+echo "    are created (see exceptions using variable CARATE_COPY_DATA_ID or"
+echo "     switches --keep-config-source, -ks, --copy-config-data -cc,"
+echo "     --copy-data-id, -ci below)."
 echo ""
 echo "  - when switch --docker-minimal or -dm is set, a directory \-"
 echo "    minimal_docker is created (if not existing or if -f is set), the"
@@ -686,7 +704,9 @@ echo "    copied into the msdir directory in the minimal_docker directory"
 echo "    and minimalConfig.yml is edited to point to those .ms files in the"
 echo "    variable dataid, then caracal is run with minimalConfig.yml and"
 echo "    declared successful if certain expected files are created (see"
-echo "    exceptions below)."
+echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
+echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    -ci below)."
 echo ""
 echo "  - when switch --docker_extended or -da is set, a directory"
 echo "    extended_docker is created (if not existing or if -f is set), the"
@@ -697,7 +717,9 @@ echo "    copied into the msdir directory in the extended_docker directory"
 echo "    and extendedConfig.yml is edited to point to those .ms files in"
 echo "    the variable dataid, then caracal is run with extendedConfig.yml"
 echo "    and declared successful if certain expected files are created (see"
-echo "    exceptions below)."
+echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
+echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    -ci below)."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --singularity-installation or -si set,"
@@ -705,8 +727,10 @@ echo "    then that yaml configuration source is used for a further"
 echo "    singularity test in the directory prefix_singularity, where prefix"
 echo "    is the prefix of the yaml file. The line dataid: ['...','...'] in"
 echo "    that file is replaced by the appropriate line to process the test"
-echo "    data sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set.  See"
-echo "    exceptions below."
+echo "    data sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
+echo "    changed using variable CARATE_COPY_DATA_ID or switches"
+echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    -ci . See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --docker-installation or -di set, then"
@@ -714,8 +738,10 @@ echo "    that yaml configuration source is used for a further singularity"
 echo "    test in the directory prefix_singularity, where prefix is the"
 echo "    prefix of the yaml file. The line dataid: ['...','...'] in that"
 echo "    file is replaced by the appropriate line to process the test data"
-echo "    sets in \$CARATE_TEST_DATA_DIR unless switch -kc is set.  See"
-echo "    exceptions below."
+echo "    sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
+echo "    changed using variable CARATE_COPY_DATA_ID or switches"
+echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    -ci . See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_INPUT_DIR is set the contents of"
 echo "    that direcory will be copied into the input directory of CARACal"
@@ -728,9 +754,26 @@ echo "  - when switch omit-venv-reinstall or -ov is set, the virtual"
 echo "    environment will not be re-installed if already present."
 echo ""
 echo "  - when environment variable CARATE_LOCAL_STIMELA is set the that"
-echo "    direcory is used as the Stimela location."
+echo "    direcory is used as the Stimela location. Notice that all environ-"
+echo "    ment variables can be re-defined by using appropriate switches,"
+echo "    in this case --local-stimela or -lst." 
 echo ""
-echo "  - when switches --omit-copy-test-data or -od are set, the test data"
+echo "  - when environment variable CARATE_COPY_DATA_ID is set, it contains"
+echo "    a comma- or space-separated list of dataids (Measurement Set names"
+echo "    without the .ms suffixes). Instead of using all data sets in the"
+echo "    test data directory, only data sets with that ID are used and the"
+echo "    configuration file adjusted accordingly. Alternatively to setting"
+echo "    the environment variable, it is possible to use switches"
+echo "    --copy-config-data or -cc."
+echo ""
+echo "  - when switches --copy-config-data or -cc are set, the dataids"
+echo "    (Measurement Set names without the .ms suffixes) are read from"
+echo "    the configuration file parameter dataid unless it is not empty."
+echo "    Dataids set in CARATE_COPY_DATA_ID or by using switches"
+echo "    --copy-config-data or -cc get preference and --copy-config-data"
+echo "    or -cc is ignored if they are set."
+echo ""
+echo "  - when switches --omit-copy-test-data -od are set, the test data"
 echo "    will not be copied if for a test run the directory with the test"
 echo "    data does already exist, the directory will not be changed before"
 echo "    the data reduction starts."
@@ -942,6 +985,53 @@ then
     kill "$PPID"; exit 1;
 fi
 
+function isin {
+    
+    # Checks if all elements of $1 are in $2
+    # return 0 (true) if yes, return 1 (false) if no
+    local i
+    local j
+    local anerror
+    local -n firstset=$1
+    local -n secondset=$2
+
+    for i in ${firstset[@]}
+    do
+	anerror=1
+	for j in ${secondset[@]}
+	do
+	    [[ ${i} != ${j} ]] || { anerror=0; break; }
+	done
+	[[ ${anerror} == 0 ]] || break
+    done
+
+    return ${anerror}
+}
+
+function waitforresponse {
+    local mes=${1}
+    local no_response
+    local proceed
+    
+    [[ ${mes} == "" ]] || mes=${mes}' '
+    echo "${mes}(Yes/No)"
+    no_response=true
+    while [ "$no_response" == true ]; do
+	read proceed
+	case "$proceed" in
+	    [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+		return 0
+		;;
+	    [Nn][Oo]|[Nn])  # No or N.
+		return 1
+		;;
+	    *) # Anything else (including a blank) is invalid.
+		{ echo "That is not a valid response."; }
+		;;
+	esac
+    done
+}
+
 # Upgrade caratekit if requested
 if [[ -n ${IN} ]]
 then
@@ -1011,23 +1101,7 @@ then
 
     if [[ -z ${OR} ]]
     then
-	echo "Is that ok (Yes/No)?"
-	no_response=true
-	while [ "$no_response" == true ]; do
-	    read proceed
-	    case "$proceed" in
-		[Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
-		    no_response=false
-		    ;;
-		[Nn][Oo]|[Nn])  # No or N.
-		    { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
-		    ;;
-		*) # Anything else (including a blank) is invalid.
-		    { echo "That is not a valid response."; }
-		    ;;
-	    esac
-	done
-	#    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
 	echo ""
     fi
 
@@ -1092,29 +1166,14 @@ then
 	echo "${caracalpath}"
 	echo "in your path, editing .bahrc and .cshrc ?"
 	echo "(this will modify/create the hidden files ~/.bahrc and ~/.cshrc)"
-	echo "(Yes/No)"
-	no_response=true
-	while [ "$no_response" == true ]; do
-	    read proceedn
-	    case "${proceedn}" in
-		[Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
-		    no_response=false
-		    ;;
-		[Nn][Oo]|[Nn])  # No or N.
-		    no_response=true
-		    ;;
-		*) # Anything else (including a blank) is invalid.
-		    { echo "That is not a valid response."; }
-		    ;;
-	    esac
-	done
-	[[ no_response == true ]] || { \
-	    echo "" >> ~/.cshrc; \
-	    echo "set path = ( ${caracalpath} \${path} )" >> ~/.cshrc; \
-	    echo "" >> ~/.cshrc; \
-	    echo "export PATH=${caracalpath}:\$PATH" >> ~/.bashrc; \
-	    echo "" >> ~/.bashrc; \
-	    }
+	if waitforresponse
+	then
+	    echo "" >> ~/.cshrc
+	    echo "set path = ( ${caracalpath} \${path} )" >> ~/.cshrc
+	    echo "" >> ~/.cshrc
+	    echo "export PATH=${caracalpath}:\$PATH" >> ~/.bashrc
+	    echo "" >> ~/.bashrc
+	fi
     fi
     echo "Installation successful"
     echo ""
@@ -1383,23 +1442,7 @@ echo ""
 
 if [[ -z ${OR} ]]
 then
-    echo "Is that ok (Yes/No)?"
-    no_response=true
-    while [ "$no_response" == true ]; do
-	read proceed
-	case "$proceed" in
-	    [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
-	      no_response=false
-              ;;
-	    [Nn][Oo]|[Nn])  # No or N.
-	      { echo "Cowardly quitting"; kill "$PPID"; exit 0; }
-              ;;
-	    *) # Anything else (including a blank) is invalid.
-	      { echo "That is not a valid response."; }
-              ;;
-	esac
-    done
-    #    [[ $proceed == "Yes" ]] || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+    waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
     echo ""
 fi
 
@@ -1498,15 +1541,133 @@ SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIF
 echo "$sya" >> ${SYA}
 
 # Search for test data and set variable accordingly
-if [[ -e ${CARATE_TEST_DATA_DIR} ]]
+if [[ -d ${CARATE_TEST_DATA_DIR} ]]
 then
 
     # Check if there are any ms files
     mss=`find ${CARATE_TEST_DATA_DIR} -name *.ms`
     [[ -n "$mss" ]] || [[ -n ${OD} ]] || { echo "Test data required in ${CARATE_TEST_DATA_DIR}"; echo ""; kill "$PPID"; exit 1; }
 
-    # This generates the dataid string
-    [[ -z "$mss" ]] && dataidstr="" || dataidstr=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}' | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
+    # Secondly, get the potential test data names
+
+    # This generates the dataid string, first find all mss in the directory
+    [[ -z "$mss" ]] && idlist=( ) || idlist=( `ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==;s/\.[^.]*$//}' | sed '{:q;N;s/\n/ /g;t q}'` )
+
+    # First default it so define the final list of mss as this
+    dataid_final=( ${idlist[@]} )
+    
+    # Second attempt: identify dataids from the input config file
+    dataid_config=( )
+    [[ -z ${CARATE_CONFIG_SOURCE} ]] || dataid_config=( `cat ${CARATE_CONFIG_SOURCE} | grep dataid | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
+
+    [[ -z ${CC} ]] || (( ${#dataid_config[@]} == 0 )) || dataid_final=( ${dataid_config[@]} )
+    
+    dataid_provided=( )
+    # Third attempt: use dataids from the command line
+    [[ -z ${CARATE_COPY_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_COPY_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
+
+    echo ${CARATE_COPY_DATA_ID} | grep dataid | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}
+    
+    # More than one found, means that the final data ids are changed
+    (( ${#dataid_provided[@]} == 0 )) || dataid_final=( ${dataid_provided[@]} )
+
+    # OK, now we check if the data sets requested are present in the directory
+    [[ -n ${OD} ]] || \
+	isin dataid_final idlist || { \
+	    echo "The test data specified either directly or using"; \
+	    echo "the configuration file with the ids"; \
+	    echo "${dataid_final[@]}"; \
+	    echo "are not present in the"; \
+	    echo "test data directory"; \
+	    echo "$CARATE_TEST_DATA_DIR"; \
+	    echo "Quitting."; \
+	    echo ""; \
+	    kill "$PPID"; \
+	    exit 1; \
+	    }
+
+    isalternative=0
+    # Check if the test data are the standard data and ask if this is ok
+    if isin dataid_final ALTERNATIVE_TEST_DATA_IDS && isin ALTERNATIVE_TEST_DATA_IDS dataid_final
+    then
+	isalternative=1
+    fi
+
+    # Warn if these are unusual data sets
+    if [[ -n ${DA} ]] || [[ -n ${SA} ]]
+    then
+	if [[ isalternative != 1 ]]
+	then
+	    echo "You intend to use unusual data sets for switches"
+	    echo "--docker-alternative, -da, --singularity-alternative, or -sa"
+	    echo "The dataids are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
+    fi
+    
+    isshort=0
+    # Check if the test data are the standard data and ask if this is ok
+    if isin dataid_final SHORT_TEST_DATA_IDS && isin SHORT_TEST_DATA_IDS dataid_final
+    then
+	isshort=1
+    fi
+
+    # Warn if these are unusual data sets
+    if [[ -n ${DM} ]] || [[ -n ${SM} ]]
+    then
+	if [[ isshort != 1 ]]
+	then
+	    echo "You intend to use unusual data sets for switches"
+	    echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
+	    echo "The dataids are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
+    fi
+
+    # Finally, if there is a difference between the chosen data sets and the ones in the config file, this will be commented.
+    if (( ${#dataid_config[@]} != 0 ))
+    then
+	notequalconfs=0
+	isin dataid_config dataid_final && isin dataid_final dataid_config || notequalconfs=1
+	if (( notequalconfs == 1 ))
+	then
+	    echo "You intend to use different data sets in your test"
+	    echo "run than are specified in your configuration file"
+	    echo "The dataids in the configuration file are:"
+	    echo ${dataid_config[@]}
+	    echo "The dataids that will be used are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+		echo ""
+	fi
+    fi
+
+    dataidstr=`echo ${dataid_final[@]} | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
+
+    # Finally finally we create the copy or move string
+    copytestdatastr=""
+    for ii in ${dataid_final[@]}
+    do
+	copytestdatastr+="${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
+    done
+
+    #echo copytestdatastr ${copytestdatastr}
+    #echo stringcopytestdatastr ${stringcopytestdatastr}
+    
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     [[ -z "$mss" ]] || sya=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
@@ -2374,13 +2535,13 @@ runtest () {
 	
 	[[ $d == $e ]] || { \
 	    [[ -n ${MD} ]] && { \
-		echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+		echo "mv ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
 		[[ -n ${FS} ]] || \
-		    mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		    mv ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	    } || { \
-		echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+		echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
 		[[ -n ${FS} ]] || \
-		    cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		    cp -r ${stringcopytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	    } \
 	}
 	

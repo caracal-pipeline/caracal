@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import caracal.dispatch_crew.utils as utils
 import yaml
 import caracal
@@ -22,8 +23,6 @@ def worker(pipeline, recipe, config):
         if pipeline.config['self_cal']['enable']:
             caracal.log.info(
                         "Checking the consistency of the Self_Cal input")
-
-
 
             # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
             if pipeline.config['self_cal']['calibrate_with'].lower() == 'meqtrees':
@@ -180,7 +179,7 @@ def worker(pipeline, recipe, config):
                                "overwrite": True,
                            },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo'].get('summary_json'):
@@ -193,22 +192,8 @@ def worker(pipeline, recipe, config):
                                "outfile": '{0:s}-obsinfo.json'.format(msroot),
                            },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
-
-          #  if config['obsinfo']["plot_elevation_tracks"]:
-          #      step = "elevation_plots_{:d}".format(i)
-          #      recipe.add("cab/casa_plotms", step, {
-          #              "vis" : msname,
-          #              "xaxis" : "hourangle",
-          #              "yaxis" : "elevation",
-          #              "coloraxis" : "field",
-          #              "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
-          #              "overwrite" : True,
-          #          },
-          #              input=pipeline.input,
-          #              output=pipeline.diagnostic_plots,
-          #              label="{:s}:: Plotting elevation tracks".format(step))
 
             if config['obsinfo'].get('vampirisms'):
                 step = 'vampirisms-ms{0:d}'.format(i)
@@ -221,7 +206,7 @@ def worker(pipeline, recipe, config):
                                "verb": True,
                            },
                        input=pipeline.input,
-                       output=pipeline.output,
+                       output=pipeline.obsinfo,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
@@ -236,7 +221,7 @@ def worker(pipeline, recipe, config):
                                "overwrite" : True,
                                },
                                input=pipeline.input,
-                               output=pipeline.diagnostic_plots,
+                               output=pipeline.obsinfo,
                                label="{:s}:: Plotting elevation tracks".format(step))
                 elif config['obsinfo']["plot_elevation_tracks"].get("plotter") in ["owlcat"]:
                     recipe.add("cab/owlcat_plotelev", step, {
@@ -244,7 +229,7 @@ def worker(pipeline, recipe, config):
                                "output-name" : "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
                                },
                                input=pipeline.input,
-                               output=pipeline.diagnostic_plots,
+                               output=pipeline.obsinfo,
                                label="{:s}:: Plotting elevation tracks".format(step))
 
         recipe.run()
@@ -269,13 +254,12 @@ def worker(pipeline, recipe, config):
     pipeline.dish_diameter = config.get('dish_diameter')
 
     for i, prefix in enumerate(prefixes):
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, pipeline.dataid[i])
-        caracal.log.info('Extracting info from {2:s} and (if present, and only for the purpose of automatically setting the reference antenna) the metadata file {0:s}/{1:s}-obsinfo.json'.format(
-            pipeline.data_path, pipeline.dataid[i], msinfo))
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])
+        caracal.log.info('Extracting MS info from {0:s} '.format(msinfo))
         msname = msnames[i]
         # get the  actual date stamp for the start and end of the observations.
         # This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file
-        with open('{0:s}/{1:s}-obsinfo.txt'.format(pipeline.output, pipeline.dataid[i]), 'r') as stdr:
+        with open(msinfo, 'r') as stdr:
             content = stdr.readlines()
         for line in content:
             info_on_line = [x for x in line.split() if x != '']
@@ -284,34 +268,21 @@ def worker(pipeline, recipe, config):
                     calender_month_abbr = ['jan', 'feb', 'mar', 'apr', 'may','jun', 'jul', 'aug', 'sep', 'oct', 'nov',
                                            'dec']
                     startdate,starttime =info_on_line[2].split('/')
-                    hr,min,sec = starttime.split(':')
+                    hr,minute,sec = starttime.split(':')
                     day,month_abbr,year = startdate.split('-')
                     month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
-                    correct_date = ''.join([year,month_num,day,hr,min,sec])
+                    correct_date = ''.join([year,month_num,day,hr,minute,sec])
                     pipeline.startdate[i] = float(correct_date)
                     enddate,endtime =info_on_line[4].split('/')
-                    hr,min,sec = endtime.split(':')
+                    hr,minute,sec = endtime.split(':')
                     day,month_abbr,year = enddate.split('-')
                     month_num = '{:02d}'.format(calender_month_abbr.index(month_abbr.lower())+1)
-                    correct_date = ''.join([year,month_num,day,hr,min,sec])
+                    correct_date = ''.join([year,month_num,day,hr,minute,sec])
                     pipeline.enddate[i] = float(correct_date)
 
         # get reference antenna
         if config.get('reference_antenna') == 'auto':
-            msmeta = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.data_path, pipeline.dataid[i])
-            if path.exists(msmeta):
-                pipeline.reference_antenna[i] = utils.meerkat_refant(msmeta)
-                caracal.log.info('Auto selecting reference antenna as {:s}'.format(
-                    pipeline.reference_antenna[i]))
-            else:
-                caracal.log.error(
-                    'Cannot auto select reference antenna because the metadata file {0:s}, which should have been provided by the observatory, does not exist.'.format(msmeta))
-                caracal.log.error(
-                    'Note that this metadata file is generally available only for MeerKAT-16/ROACH2 data.')
-                caracal.log.error(
-                    'Please set the reference antenna manually in the config file and try again.')
-                raise caracal.ConfigurationError("can't auto-select the reference antenna")
+            pipeline.reference_antenna[i] = '0' 
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:

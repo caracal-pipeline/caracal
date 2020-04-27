@@ -246,27 +246,6 @@ def worker(pipeline, recipe, config):
 
         fits.writeto(out_beam, gauss, hdr, overwrite=True)
 
-    def make_mosaic(catalog_table, fields_dir, mask_dir):
-
-        tab = ascii.read(catalog_table)
-        unique, counts = np.unique(tab['Mosaic'], return_counts=True)
-        mosaic_tmpdir = mask_dir+'/formosaic/'
-        mosaic_outdir = mask_dir+'/mosaic/'
-        if os.path.exists(mosaic_tmpdir) == False:
-            os.mkdir(mosaic_tmpdir)
-
-        for i in range(0, len(unique)):
-
-            summsfield = fields_dir+str(unique[i])+'.FITS'
-            outfield = mosaic_tmpdir+str(unique[i])+'.FITS'
-            shutil.copy(summsfield, outfield)
-
-        if os.path.exists(mosaic_outdir) == True:
-            shutil.rmtree(mosaic_outdir)
-
-        montage.mosaic(mosaic_tmpdir, mosaic_outdir)
-        shutil.rmtree(mosaic_tmpdir)
-
     def pbcorr(beam, mosaic_regrid, mosaic_pbcorr):
 
         pblist = fits.open(beam)
@@ -481,7 +460,7 @@ def worker(pipeline, recipe, config):
             # read catalog table
             fields_dir = pipeline.input+'/fields/'
 
-            step = '1'  # set directories
+            step = 'prepare'  # set directories
             recipe.add(set_mosaic_files, step,
                        {
                            'catalog_table': catalog_tab,
@@ -493,7 +472,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Preparing folders')
 
-            step = '2'
+            step = 'mosaic'
             recipe.add('cab/montage', step,
                        {
                            'input_dir': 'masking/formosaic'+':output',
@@ -502,7 +481,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Mosaicing catalog')
 
-            step = '5'  # cleanup
+            step = 'cleanup'  # cleanup
             recipe.add(move_files, step,
                        {
                            'catalog_name': catalog_name,
@@ -519,7 +498,7 @@ def worker(pipeline, recipe, config):
 
                 catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
-                recipe.add(query_catalog_nvss, 'query_source_catalog',
+                recipe.add(query_catalog_nvss, 'query-nvss',
                            {
                                'centre': centre,
                                'width_im': config[key].get('width_image'),
@@ -542,7 +521,7 @@ def worker(pipeline, recipe, config):
                     cat_mask = mask_dir+'/'+config.get('label_out')+'_'+str(target)+'.fits'
                 catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
-                recipe.add(make_mask_nvss, 'Build mask from NVSS catalog',
+                recipe.add(make_mask_nvss, 'make_mask-nvss',
                            {
                                "catalog_table": catalog_tab,
                                "centre": centre,
@@ -557,7 +536,7 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
             if pipeline.enable_task(config, 'pb_correction'):
 
-                recipe.add(build_beam, 'build_gaussian_primary_beam',
+                recipe.add(build_beam, 'make_pb',
                            {
                                'obs_freq': config['pb_correction'].get('frequency'),
                                'centre': centre,
@@ -578,7 +557,7 @@ def worker(pipeline, recipe, config):
                 mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
                 mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
 
-                step = '1'
+                step = 'import-mosaic'
                 recipe.add('cab/casa_importfits', step,
                            {
                                "fitsimage": mosaic+':output',
@@ -589,7 +568,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Mosaic in casa format')
 
-                step = '2'
+                step = 'import-beam'
                 recipe.add('cab/casa_importfits', step,
                            {
                                "fitsimage": beam+':output',
@@ -600,7 +579,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Beam in casa format')
 
-                step = '3'
+                step = 'regrid'
                 recipe.add('cab/casa_imregrid', step,
                            {
                                "template": beam_casa+':output',
@@ -612,7 +591,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Regridding mosaic to size and projection of dirty image')
 
-                step = '4'
+                step = 'export'
                 recipe.add('cab/casa_exportfits', step,
                            {
                                "fitsimage": mosaic_regrid+':output',
@@ -623,7 +602,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Extracted regridded mosaic')
 
-                recipe.add(pbcorr, 'Correcting_mosaic_for_primary_beam',
+                recipe.add(pbcorr, 'correct_pb',
                            {
                                "mosaic_regrid": pipeline.output+'/'+mosaic_regrid,
                                "mosaic_pbcorr": pipeline.output+'/'+mosaic_pbcorr,
@@ -645,7 +624,7 @@ def worker(pipeline, recipe, config):
                 else:
                     cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
 
-                recipe.add(make_mask, 'Build_mask_from_mosaic',
+                recipe.add(make_mask, 'make_mask-mosaic',
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+in_image,
                                "mask": cat_mask,
@@ -688,13 +667,13 @@ def worker(pipeline, recipe, config):
                     "writeCat.basename": str(config.get('label_out')),
                 }
 
-                recipe.add('cab/sofia', step,
+                step = "make_mask-sofia"
+                recipe.add('cab/sofia', 'make_mask-sofia',
                            image_opts,
                            input=pipeline.output,
                            output=pipeline.output+'/masking/',
                            label='{0:s}:: Make SoFiA mask'.format(step))
-                step = '5'
-                recipe.add(change_header, step,
+                recipe.add(change_header, 'extract-mosaic',
                            {
                                "filename": final_mask,
                                "headfile": pipeline.output+'/'+imagename,
@@ -718,7 +697,7 @@ def worker(pipeline, recipe, config):
             beam = 'masking/gauss_pbeam.fits'
 
             if os.path.exists(pipeline.output+'/'+beam) == False:
-                recipe.add(build_beam, 'build gaussian primary beam',
+                recipe.add(build_beam, 'build_pb',
                            {
                                'obs_freq': config['pb_correction'].get('frequency'),
                                'centre': centre,
@@ -732,8 +711,7 @@ def worker(pipeline, recipe, config):
             beam_casa = 'masking/gauss_pbeam.image'
 
             if os.path.exists(pipeline.output+'/'+beam_casa) == False:
-                step = '0'
-                recipe.add('cab/casa_importfits', step,
+                recipe.add('cab/casa_importfits', 'import-pb',
                            {
                                "fitsimage": beam+':output',
                                "imagename": beam_casa,
@@ -741,14 +719,13 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='Beam in casa format')
+                           label='Importing beam for extended mask')
 
             ext_name_root = ext_name.split('.')[0]
             extended_pbcorr = 'masking/'+ext_name_root+'_pbcorr.fits'
             extended_mask = '/masking/'+ext_name_root+'_mask.fits'
 
-            step = '1'
-            recipe.add('cab/casa_importfits', step,
+            recipe.add('cab/casa_importfits', 'import-mosaic',
                        {
                            "fitsimage": extended+":input",
                            "imagename": extended_casa+":output",
@@ -756,10 +733,9 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='Fornax A in casa format')
+                       label='Importing extended mask')
 
-            step = '2'
-            recipe.add('cab/casa_imregrid', step,
+            recipe.add('cab/casa_imregrid', 'regrid',
                        {
                            "imagename": extended_casa+":output",
                            "template": beam_casa+":output",
@@ -768,10 +744,9 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='Regridding Fornax A')
+                       label='Regridding extended mask')
 
-            step = '3'
-            recipe.add('cab/casa_exportfits', step,
+            recipe.add('cab/casa_exportfits', 'export',
                        {
                            "fitsimage": extended_regrid+":output",
                            "imagename": extended_regrid_casa+":output",
@@ -779,9 +754,9 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='Extracted regridded Fornax A')
+                       label='Exporting extended mask')
 
-            recipe.add(pbcorr, 'Correcting extended for primary beam',
+            recipe.add(pbcorr, 'correct_pb',
                        {
                            "mosaic_regrid": pipeline.output+'/'+extended_regrid,
                            "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
@@ -789,11 +764,11 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='Correcting mosaic for primary beam')
+                       label='Correcting mask for primary beam')
 
             if config['merge_with_extended'].get('mask_with') == 'thresh':
 
-                recipe.add(make_mask, 'Build mask for extended',
+                recipe.add(make_mask, 'make_mask-extend',
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
                                "mask": pipeline.output+extended_mask,
@@ -804,7 +779,7 @@ def worker(pipeline, recipe, config):
                            label='Mask done')
 
             cat_mask = config['mask_prefix'].get('mask_with')
-            recipe.add(merge_masks, 'Merging VLA Fornax into catalog mask',
+            recipe.add(merge_masks, 'make_mask-merge', # 'Merging VLA Fornax into catalog mask',
                        {
                            "extended_mask": pipeline.output+extended_mask,
                            "catalog_mask": cat_mask,
@@ -814,8 +789,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Total mask done')
 
-        step = '10'  # cleanup
-        recipe.add(cleanup_mosaic_files, step,
+        recipe.add(cleanup_mosaic_files, 'cleanup',
                    {
                        'catalog_name': catalog_name,
                        'mask_dir': mask_dir,

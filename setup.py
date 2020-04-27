@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela>=1.3.0',
+    'stimela>=1.4.1',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -31,7 +31,7 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 setup(name=PACKAGE_NAME,
       version=__version__,

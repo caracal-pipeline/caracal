@@ -9,7 +9,7 @@ observation_config:
   reference_antenna: 'm010'   
 
 prepare_data:
-  enable: false
+  enable: true
   spectral_weights:
     enable: true
     mode: uniform
@@ -24,12 +24,13 @@ transform_data:
 
 flagging:
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  autoflag_rfi:
+  field: calibrators
+  label_in: cal
+  flag_rfi:
     enable: true
     flagger: tricolour
-    tricolour_calibrator_strat: calibrator_mild_flagging.yaml
+    tricolour:
+      strategy: calibrator_mild_flagging.yaml
   flag_autocorr:
     enable: true
   flag_shadow:
@@ -37,7 +38,7 @@ flagging:
     include_full_mk64: true
   flag_spw:
     enable: true
-    
+
 cross_cal:
   enable: true
   uvrange: '>150'
@@ -82,14 +83,18 @@ transform_data__2:
   
 flagging__2:
   enable: true
+  field: target
   label_in: corr
-  field: 'target'
   flag_autocorr:
     enable: true
-  autoflag_rfi:
+  flag_shadow:
+    enable: true
+    include_full_mk64: true
+  flag_spw:
+    enable: true
+  flag_rfi:
     enable: true
     flagger: aoflagger
-    fields: target
 
 transform_data__3:
   enable: true
@@ -105,12 +110,8 @@ masking:
 
 flagging__3:
   enable: false
+  field: target
   label_in: cont
-  field: 'target'
-  flag_autocorr:
-    enable: false
-  autoflag_rfi:
-    enable: false
   flag_spw:
     enable: true
     channels: '*:1417.2~1421.0MHz'
@@ -135,7 +136,7 @@ self_cal:
     enable: true
     model: ['1','2','3']
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
-    Gsols_channel: ['0', '0', '0']
+    Gsols_channel: [0, 0, 0]
     Gsols_timeslots: [120, 60, 20]
     shared_memory: 250GB
   transfer_apply_gains:

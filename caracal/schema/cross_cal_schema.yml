@@ -23,30 +23,25 @@ mapping:
         required: false
         desc: Label for output files.
         example: '1gc1'
-      load_flags:
-        desc: Restore flags to specified state
+      rewind_flags:
+        desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:
             type: bool
             desc: enable this segement
-            example: 'True'
+            example: 'False'
             required: false
           version: 
             type: str
-            desc: Flag version name
-            example: 'after_flagging_automatic'
+            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
             required: false
-          merge:
-            desc: Merge flags to restored with current flags. (uses 'or')
-            type: bool
-            example: 'False'
-            required: false
-      otfdelay:  
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
+        example: 'False'
         required: false
-        desc: Set whether to apply the delay calibration on the fly when solving for other calibration terms.
-        example: 'True'
       uvrange: 
         type: str
         required: false

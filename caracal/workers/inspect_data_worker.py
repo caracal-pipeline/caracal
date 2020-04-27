@@ -15,7 +15,7 @@ def get_dir_path(string, pipeline):
 
 
 def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid):
-    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
+    step = 'plot-{0:s}-{1:d}-{2:d}'.format(plotname, iobs, fid)
     colouraxis = opts.get("colouraxis", None)
     recipe.add("cab/casa_plotms", step, {
         "vis": msname,
@@ -31,7 +31,7 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         "avgchannel": config[plotname].get('avgchannel'),
         "coloraxis": sdm(colouraxis),
         "iteraxis": sdm(opts.get('iteraxis', None)),
-        "plotfile": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}.png'.format(prefix, label, field, plotname, ftype),
+        "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}.png'.format(prefix, label, field, plotname, ftype),
         "expformat": 'png',
         "exprange": 'all',
         "overwrite": True,
@@ -44,7 +44,7 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
 
 
 def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, corr_label=None):
-    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
+    step = 'plot-{0:s}-{1:d}-{2:d}'.format(plotname, iobs, fid)
     column = config[plotname]['column']
     if column == "corrected":
         column = "CORRECTED_DATA"
@@ -62,7 +62,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
         "col": column,
-        "png": '{0:s}_{1:s}_{2:s}_{3:s}_{4:s}{5:s}.png'.format(prefix, label, field, plotname, ftype, corr_label),
+        "png": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}.png'.format(prefix, label, field, plotname, ftype, corr_label),
     },
         input=pipeline.input,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
@@ -70,7 +70,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
 
 
 def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, corr_label=None):
-    step = 'plot_{0:s}_{1:d}_{2:d}'.format(plotname, iobs, fid)
+    step = 'plot-{0:s}-{1:d}-{2:d}'.format(plotname, iobs, fid)
     column = config[plotname]['column']
     if column == "corrected":
         column = "CORRECTED_DATA"
@@ -92,7 +92,7 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         # "colour-axis": opts.get("colour-axis", None),
         "data-column": column,
         "field": str(fid),
-        "htmlname": "{0:s}_{1:s}_{2:s}_{3:s}_{4:s}{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
+        "htmlname": "{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
         "iter-axis": sdm(opts.get('iter-axis', None)),
         # "tbin": float(config[plotname].get('avgtime', None)),
 

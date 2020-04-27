@@ -1104,7 +1104,7 @@ def worker(pipeline, recipe, config):
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener']['channels_per_plot'],
                           "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
-                          "label": config['sharpener']['label'])
+                          "label": config['sharpener']['label'],
                           }
 
                 if config['sharpener']['catalog'] == 'PYBDSF':

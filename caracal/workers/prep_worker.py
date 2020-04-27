@@ -60,7 +60,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.error('The flag version {0:s} you asked to restore does not exist for {1:s}.'.format(version, msname))
                     if version == "caracal_legacy":
                         caracal.log.error('You may actually want to create that "caracal legacy" flag version with:')
-                        caracal.log.error('    prepare_data: manage_flags: mode: save_legacy')
+                        caracal.log.error('    prepare_data: manage_flags: mode: save_legacy_flags')
                     raise RuntimeError('Flag version conflicts')
 
             #elif mode == "unflag_and_reset":

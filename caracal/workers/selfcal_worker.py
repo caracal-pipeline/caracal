@@ -1142,7 +1142,7 @@ def worker(pipeline, recipe, config):
                 "data-ms": msname,
                 "data-column": 'DATA',
                 "model-list": modellist,
-                "sel-ddid": sdm.dismissable(config[key]['spwid']),
+                "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,
                 "log-memory": True,
                 "sol-jones": jones_chain,
@@ -1394,7 +1394,7 @@ def worker(pipeline, recipe, config):
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
-                "sel-ddid": sdm.dismissable(config[key]['spwid']),
+                "sel-ddid": sdm.dismissable(spwid),
                 "sol-jones": jones_chain,
                 "sol-term-iters": ",".join(sol_terms),
                 "sel-diag": take_diag_terms,

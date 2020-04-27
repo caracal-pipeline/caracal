@@ -11,6 +11,7 @@ from regions import PixCoord, write_ds9, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
 NAME = 'Direction-dependent Calibration'
+LABEL = "ddcal"
 
 
 def worker(pipeline, recipe, config):

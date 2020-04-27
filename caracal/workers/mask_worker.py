@@ -24,8 +24,8 @@ else:
     opt_import_error = None
 
 
-NAME = 'Make masks'
-LABEL = 'masking'
+NAME = 'Make Masks'
+LABEL = 'mask'
 
 @requires(require_msg, opt_import_error)
 def worker(pipeline, recipe, config):

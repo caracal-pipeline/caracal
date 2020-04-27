@@ -7,7 +7,7 @@ from stimela.dismissable import dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflields
 import stimela
 
-NAME = "Crosshand calibration"
+NAME = "Crosshand Calibration"
 LABEL = 'polcal'
 
 def worker(pipeline, recipe, config):

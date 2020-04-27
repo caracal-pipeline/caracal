@@ -5,8 +5,8 @@ import sys
 import numpy as np
 from os import path
 
-NAME = 'Automatically categorize observed fields'
-LABEL = 'observation_config'
+NAME = 'Automatically Categorize Observed Fields'
+LABEL = 'obsconf'
 
 def repeat_val(val, n):
     l = []

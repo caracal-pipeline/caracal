@@ -3,8 +3,8 @@ import sys
 import caracal
 from caracal.workers.utils import manage_flagsets as manflags
 
-NAME = "Prepare data for calibration"
-LABEL = 'prepare_data'
+NAME = "Prepare Data for Processing"
+LABEL = 'prep'
 
 def worker(pipeline, recipe, config):
 

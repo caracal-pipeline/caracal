@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  self_cal:
+  selfcal:
     type: map
     desc: Perform Self calibration on the data.
     mapping:

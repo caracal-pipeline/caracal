@@ -8,8 +8,8 @@ import re
 import caracal
 import sys
 
-NAME = 'Flagging'
-LABEL = 'flagging'
+NAME = 'Flag'
+LABEL = 'flag'
 
 def worker(pipeline, recipe, config):
     label = config['label_in']

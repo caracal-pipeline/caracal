@@ -14,8 +14,8 @@ from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
 
-NAME = 'Self calibration loop'
-LABEL = 'self_cal'
+NAME = 'Continuum Imaging and Self-calibration Loop'
+LABEL = 'selfcal'
 
 
 # self_cal_iter_counter is used as a global variable.
@@ -280,6 +280,7 @@ def worker(pipeline, recipe, config):
             "scale": config[key].get('cell', cell),
             "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
             "niter": niter,
+            "gain": config["img_gain"],
             "mgain": mgain,
             "pol":  pol,
             "channelsout": nchans,
@@ -347,6 +348,7 @@ def worker(pipeline, recipe, config):
             "scale": config[key].get('cell', cell),
             "prefix": '{0:s}/{1:s}_{2:s}_{3:d}'.format(img_dir, prefix, field, num),
             "niter": config[key].get('niter', niter),
+            "gain": config["img_gain"],
             "mgain": config[key].get('mgain', mgain),
             "pol": config[key].get('pol', pol),
             "channelsout": nchans,

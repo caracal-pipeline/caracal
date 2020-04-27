@@ -5,7 +5,8 @@ from stimela.dismissable import dismissable as sdm
 from caracal import log
 import caracal.dispatch_crew.utils as utils
 
-NAME = 'Inspect data'
+NAME = 'Inspect Data'
+LAbeL = "inspect"
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 

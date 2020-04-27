@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy import wcs
 from caracal.dispatch_crew import utils
 
-NAME = "Mosaic images"
+NAME = "Mosaic Images and Cubes"
 LABEL = 'mosaic'
 
 

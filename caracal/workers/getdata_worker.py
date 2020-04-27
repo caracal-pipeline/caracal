@@ -7,8 +7,8 @@ import caracal.dispatch_crew.meerkat_archive_interface as mai
 import stimela.dismissable as sdm
 import warnings
 
-NAME = "Get data"
-LABEL = 'get_data'
+NAME = "Get Data"
+LABEL = 'getdata'
 
 
 def worker(pipeline, recipe, config):

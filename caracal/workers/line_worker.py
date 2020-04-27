@@ -22,6 +22,9 @@ from caracal.dispatch_crew import utils
 import itertools
 from caracal.workers.utils import manage_flagsets as manflags
 
+NAME = 'Process and Image Line Data'
+LABEL = 'line'
+
 # To split out cubes/<dir> from output/cubes/dir
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
@@ -177,9 +180,6 @@ def calc_rms(filename, linemaskname):
             y2 = newcube[newmask == 0]
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
-
-NAME = 'Make spectral line cube'
-LABEL = 'image_line'
 
 
 def worker(pipeline, recipe, config):

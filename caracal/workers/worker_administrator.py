@@ -27,24 +27,9 @@ import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
-# GIGJ commenting lines initiating a report
-# try:
-#    import caracal.scripts as scripts
-#    from caracal.scripts import reporter as mrr
-#    REPORTS = True
-# except ImportError:
-#    log.warning(
-#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
-#    REPORTS = False
 REPORTS = False
 
 class worker_administrator(object):
-# GIGJ commenting lines initiating a report
-#    def __init__(self, config, workers_directory,
-#                 stimela_build=None, prefix=None, configFileName=None,
-#                 add_all_first=False, singularity_image_dir=None,
-#                 start_worker=None, end_worker=None,
-#                 container_tech='docker', generate_reports=True):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
@@ -58,6 +43,7 @@ class worker_administrator(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.obsinfo = self.config['general']['output'] + '/obsinfo'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + \
             '/diagnostic_plots'

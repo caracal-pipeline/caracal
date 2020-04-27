@@ -507,8 +507,10 @@ class config_parser:
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
                                         choices="true yes 1 false no 0".split(), default=default_value)
                 elif isinstance(default_value, (list, tuple)):
+                    #parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
+                    #                    type=dtype, nargs="+", default=default_value)
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                                        type=dtype, nargs="+", default=default_value)
+                                        type=dtype, nargs="+", default=list(map(dtype, default_value)))
                 else:
                     parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
                                         type=dtype, default=default_value)

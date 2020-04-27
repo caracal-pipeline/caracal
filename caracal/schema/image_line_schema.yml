@@ -29,6 +29,31 @@ mapping:
         required: false
         example: '1.420405752GHz'
 
+      rewind_flags:
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
+        type: map
+        mapping:
+          enable:
+            type: bool
+            desc: enable this segement
+            example: 'False'
+            required: false
+          version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
+            required: false
+          mstransform_version:
+            type: str
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above plus the "_mst" suffix. Set to "null" to skip this rewind step. Note that all flag versions saved after this version will be deleted.
+            example: 'null'
+            required: false
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        example: 'False'
+        required: false
+
       subtractmodelcol:
         desc: Replace the CORRECTED_DATA column of the .MS file(s) with the difference CORRECTED_DATA - MODEL_DATA. This is useful for continuum subtraction as it subtracts the continuum clean model written to MODEL_DATA. WARNING! The CORRECTED_DATA column is overwritten. To undo this operation enable the addmodelcol segment in this worker.
         type: map

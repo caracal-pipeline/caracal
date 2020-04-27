@@ -116,7 +116,7 @@ def worker(pipeline, recipe, config):
 
         # Need to average down the calibrators to get enough SNR on the crosshands
         # for solving
-        recipe.add("cab/casa_oldsplit", "split_avg_data", {
+        recipe.add("cab/casa_oldsplit", "split-avg_data", {
             "vis": msname,
             "outputvis": avgmsname,
             "datacolumn": "corrected",
@@ -140,16 +140,16 @@ def worker(pipeline, recipe, config):
                 t.putcol("RECEPTOR_ANGLE", ang)
                 log.info("Receptor angle rotated")
 
-        recipe.add(__correct_feed_convention, "correct_feed_convention", {
+        recipe.add(__correct_feed_convention, "correct-feed_convention", {
             "ms": os.path.abspath(os.path.join(pipeline.msdir, msname)),
         },
-            input=INPUT, output=OUTPUT, label="correct_feed_convention")
+            input=INPUT, output=OUTPUT, label="correct-feed_convention")
 
-        recipe.add(__correct_feed_convention, "correct_feed_convention_avg", {
+        recipe.add(__correct_feed_convention, "correct-feed_convention_avg", {
             "ms": os.path.abspath(os.path.join(pipeline.msdir, avgmsname)),
         },
             input=INPUT, output=OUTPUT, label="correct_feed_convention_avg")
-        step = 'clearcal_{:d}'.format(i)
+        step = 'clearcal-ms{:d}'.format(i)
         recipe.add('cab/casa_clearcal', step,
                    {
                        "vis": avgmsname,
@@ -159,7 +159,7 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label="INIT averaged dataset for cross hand cal")
 
-        step = 'summary_avg_json_{:d}'.format(i)
+        step = 'summary_avg_json-ms{:d}'.format(i)
         recipe.add('cab/msutils', step,
                    {
                        "msname": msname,
@@ -185,7 +185,7 @@ def worker(pipeline, recipe, config):
         if config['set_model'].get('enable'):
             cf = get_field('xcal')
             if not DISABLE_CROSSHAND_PHASE_CAL:
-                recipe.add("cab/casa_setjy", "set_model_calms_%d" % 0, {
+                recipe.add("cab/casa_setjy", "set_model-cal-avg", {
                     "msname": avgmsname,
                     "usescratch": True,
                     "field": cf,
@@ -239,7 +239,7 @@ def worker(pipeline, recipe, config):
             else:
                 raise RuntimeError('The flux calibrator field "{}" could not be found in our database or in the '
                                    'CASA NRAO database'.format(field))
-            step = 'set_model_cal_{0:d}'.format(i)
+            step = 'set_model-cal-ms{0:d}'.format(i)
 
             recipe.add('cab/casa_setjy' if "skymodel" not in opts else 'cab/simulator', step,
                        opts,

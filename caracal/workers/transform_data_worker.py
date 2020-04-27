@@ -3,16 +3,16 @@ import sys
 import caracal
 import stimela.dismissable as sdm
 import getpass
-import stimela.recipe as stimela
+import stimela.recipe
 import re
 import json
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_flagsets
 from caracal.workers.utils import manage_fields as manfields
+from caracal.workers.utils import manage_flagsets as manflags
 
-NAME = 'Split and average target data'
-LABEL = 'split_target'
+NAME = 'Transform data sets (split and/or average)'
+LABEL = 'transform_data'
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
@@ -135,7 +135,7 @@ def worker(pipeline, recipe, config):
             with open(os.path.join(pipeline.output, callib), 'w') as stdw:
                 for j in range(len(caltablelist)):
                     stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                        stimela.CONT_IO[recipe.JOB_TYPE]["output"], 'caltables',  caltablelist[j]))
+                        stimela.recipe.CONT_IO["output"], 'caltables',  caltablelist[j]))
                     stdw.write(' calwt=False')
                     stdw.write(' tinterp=\''+str(interplist[j])+'\'')
                     stdw.write(' finterp=\'linear\'')
@@ -167,15 +167,27 @@ def worker(pipeline, recipe, config):
                 tms = '{0:s}_{1:s}.ms'.format(
                        msname, label_out)
 
+            if config['rewind_flags']["enable"]:
+                version = config['rewind_flags']["version"]
+                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
+                manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
+                available_flagversions = manflags.get_flags(pipeline, fms)
+                if available_flagversions[-1] != version:
+                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
+                    manflags.delete_cflags(pipeline, recipe,
+                        available_flagversions[available_flagversions.index(version)+1],
+                        msname, cab_name=substep)
+
             flagv = tms+'.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field_{0:d}_{1:d}'.format(i,target_iter)
+                step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
+                # If the output of this run of mstransform exists, delete it first
                 if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-
                     os.system(
                         'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
+
                 recipe.add('cab/casa_mstransform', step,
                            {
                                "vis": fms,
@@ -207,7 +219,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
                         config['changecentre'].get('ra'), config['changecentre'].get('dec')))
                     sys.exit(1)
-                step = 'changecentre_{0:d}_{1:d}'.format(i,target_iter)
+                step = 'changecentre-ms{0:d}-{1:d}'.format(i,target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "msname": tms,
@@ -225,7 +237,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
 
-                    step = 'listobs_{0:d}_{1:d}'.format(i,target_iter)
+                    step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
@@ -242,7 +254,7 @@ def worker(pipeline, recipe, config):
                     else:
                         listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
 
-                    step = 'summary_json_{0:d}_{1:d}'.format(i,target_iter)
+                    step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
@@ -254,7 +266,7 @@ def worker(pipeline, recipe, config):
                                output=pipeline.output,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
 
-            step = 'fix_target_obsinfo_{:d}'.format(i)  # set directories
+            step = 'fix_target_obsinfo-ms{:d}'.format(i)  # set directories
             recipe.add(fix_target_obsinfo, step,
                        {
                            'fname': listfile,

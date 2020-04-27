@@ -406,7 +406,7 @@ def worker(pipeline, recipe, config):
 
     mask_dir = pipeline.masking + '/'
 
-    centre = config.get('centre_coord')
+    centre = config['centre_coord']
 
     flabel = config['label_in']
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
@@ -433,11 +433,11 @@ def worker(pipeline, recipe, config):
                 centre[0] = centreCoord.ra.hms
                 centre[1] = centreCoord.dec.dms
 
-        mask_cell = config.get('cell_size')
-        mask_imsize = config.get('mask_size')
+        mask_cell = config['cell_size']
+        mask_imsize = config['mask_size']
 
-        final_mask = mask_dir+str(config.get('label_out'))+'_'+str(target)+'.fits'
-        catalog_name = config['query_catalog'].get('catalog')
+        final_mask = mask_dir+str(config['label_out'])+'_'+str(target)+'.fits'
+        catalog_name = config['query_catalog']['catalog']
 
         catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
@@ -449,7 +449,7 @@ def worker(pipeline, recipe, config):
                 recipe.add(query_catalog_sumss, 'query_source_catalog',
                            {
                                'centre': centre,
-                               'width_im': config[key].get('width_image'),
+                               'width_im': config[key]['width_image'],
                                'cat_name': catalog_name,
                                'catalog_table': catalog_tab,
                            },
@@ -501,12 +501,12 @@ def worker(pipeline, recipe, config):
                 recipe.add(query_catalog_nvss, 'query-nvss',
                            {
                                'centre': centre,
-                               'width_im': config[key].get('width_image'),
+                               'width_im': config[key]['width_image'],
                                'cat_name': catalog_name,
-                               'thresh': config[key].get('thresh_nvss'),
+                               'thresh': config[key]['thresh_nvss'],
                                'cell': mask_cell,
                                'imsize': mask_imsize,
-                               'obs_freq': config['pb_correction'].get('frequency'),
+                               'obs_freq': config['pb_correction']['frequency'],
                                'catalog_table': catalog_tab,
                            },
                            input=pipeline.input,
@@ -518,7 +518,7 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'merge_with_extended') == False:
                     cat_mask = final_mask
                 else:
-                    cat_mask = mask_dir+'/'+config.get('label_out')+'_'+str(target)+'.fits'
+                    cat_mask = mask_dir+'/'+config['label_out']+'_'+str(target)+'.fits'
                 catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
                 recipe.add(make_mask_nvss, 'make_mask-nvss',
@@ -538,7 +538,7 @@ def worker(pipeline, recipe, config):
 
                 recipe.add(build_beam, 'make_pb',
                            {
-                               'obs_freq': config['pb_correction'].get('frequency'),
+                               'obs_freq': config['pb_correction']['frequency'],
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
@@ -612,12 +612,12 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Correcting mosaic for primary beam')
 
-            if config['make_mask'].get('input_image') == 'pbcorr':
+            if config['make_mask']['input_image'] == 'pbcorr':
                 in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
             else:
-                in_image = 'masking/' + config['make_mask'].get('input_image')
+                in_image = 'masking/' + config['make_mask']['input_image']
 
-            if config['make_mask'].get('mask_with') == 'thresh':
+            if config['make_mask']['mask_with'] == 'thresh':
 
                 if pipeline.enable_task(config, 'merge_with_extended') == False:
                     cat_mask = final_mask
@@ -628,13 +628,13 @@ def worker(pipeline, recipe, config):
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+in_image,
                                "mask": cat_mask,
-                               "contour": config['make_mask'].get('thresh_lev'),
+                               "contour": config['make_mask']['thresh_lev'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Mask done')
 
-            elif config['make_mask'].get('mask_with') == 'sofia':
+            elif config['make_mask']['mask_with'] == 'sofia':
 
                 imagename = in_image
                 def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
@@ -652,19 +652,19 @@ def worker(pipeline, recipe, config):
                     "steps.doWriteCat": False,
                     "SCfind.kernelUnit": 'pixel',
                     "SCfind.kernels": def_kernels,
-                    "SCfind.threshold": config['make_mask'].get('thresh_lev'),
+                    "SCfind.threshold": config['make_mask']['thresh_lev'],
                     "SCfind.rmsMode": 'mad',
                     "SCfind.edgeMode": 'constant',
                     "SCfind.fluxRange": 'all',
                     "scaleNoise.statistic": 'mad',
-                    "scaleNoise.windowSpatial": config['make_mask'].get('scale_noise_window'),
+                    "scaleNoise.windowSpatial": config['make_mask']['scale_noise_window'],
                     "scaleNoise.windowSpectral":   1,
                     "scaleNoise.method": 'local',
                     "scaleNoise.fluxRange":   'all',
                     "scaleNoise.scaleX": True,
                     "scaleNoise.scaleY": True,
                     "scaleNoise.scaleZ": False,
-                    "writeCat.basename": str(config.get('label_out')),
+                    "writeCat.basename": str(config['label_out']),
                 }
 
                 step = "make_mask-sofia"
@@ -687,7 +687,7 @@ def worker(pipeline, recipe, config):
 
             key = 'merge_with_extended'
 
-            ext_name = config[key].get('extended_source_input')
+            ext_name = config[key]['extended_source_input']
             extended = 'fields/'+ext_name
             extended_casa = 'masking/extended.image'
 
@@ -699,7 +699,7 @@ def worker(pipeline, recipe, config):
             if os.path.exists(pipeline.output+'/'+beam) == False:
                 recipe.add(build_beam, 'build_pb',
                            {
-                               'obs_freq': config['pb_correction'].get('frequency'),
+                               'obs_freq': config['pb_correction']['frequency'],
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
@@ -766,19 +766,19 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Correcting mask for primary beam')
 
-            if config['merge_with_extended'].get('mask_with') == 'thresh':
+            if config['merge_with_extended']['mask_with'] == 'thresh':
 
                 recipe.add(make_mask, 'make_mask-extend',
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
                                "mask": pipeline.output+extended_mask,
-                               "contour": config['merge_with_extended'].get('thresh_lev'),
+                               "contour": config['merge_with_extended']['thresh_lev'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Mask done')
 
-            cat_mask = config['mask_prefix'].get('mask_with')
+            cat_mask = config['mask_prefix']['mask_with']
             recipe.add(merge_masks, 'make_mask-merge', # 'Merging VLA Fornax into catalog mask',
                        {
                            "extended_mask": pipeline.output+extended_mask,

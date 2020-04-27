@@ -135,7 +135,7 @@ mapping:
             required: false
           flag:
             type: map
-            desc: Apply existing gains and flag corrected data
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
             mapping:
               column:
                 type: str
@@ -229,7 +229,7 @@ mapping:
             required: false
           flag:
             type: map
-            desc: Apply existing gains and flag corrected data
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
             mapping:
               column:
                 type: str

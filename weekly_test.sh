@@ -6,4 +6,5 @@ ${caracal_version}/caratekit.sh \
     -da \
     -sa \
     -f \
-    -or
+    -or \
+    -op

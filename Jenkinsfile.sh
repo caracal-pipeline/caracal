@@ -26,5 +26,5 @@ pull_request_data=$TEST_OUTPUT_DIR
 export pull_request_data
 pull_request_name=$TEST_OUTPUT_DIR/$(cd $PULLFOLDER; git rev-parse HEAD)
 export pull_request_name
-mkdir -p $pull_requst_name
+mkdir -p $pull_request_name
 source $PULLFOLDER/pull_request.sh

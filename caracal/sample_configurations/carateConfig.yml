@@ -9,19 +9,21 @@ getdata:
 obsconf:
   reference_antenna: 'm010'   
 
+transform:
+  enable: true
+  label_out: cal
+  split_field:
+    enable: true
+    field: calibrators
+    column: 'data'
+
 prep:
   enable: true
+  label_in: cal
+  field: calibrators
   spectral_weights:
     enable: true
     mode: uniform
-
-transform:
-  enable: true
-  label_out: 'cal'
-  split_field:
-    enable: true
-    field: 'calibrators'
-    column: 'data'
 
 flag:
   enable: true
@@ -80,6 +82,14 @@ transform__2:
       enable: true
       label_cal: '1gc1'
   
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  spectral_weights:
+    enable: true
+    mode: uniform
+
 flag__2:
   enable: true
   field: target

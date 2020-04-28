@@ -28,6 +28,7 @@ obsconf:
 
 prep:
   enable: true
+  label_in: ''
   fixvis: 
     enable: false
   manage_flags: 

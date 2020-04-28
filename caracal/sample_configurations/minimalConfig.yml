@@ -19,16 +19,18 @@ obsconf:
     - 'longest'
   reference_antenna: '0'
 
-prep:
-  enable: true
-
 transform:
   enable: true
   label_out: 'cal'
   split_field:
     enable: true
-    field: 'calibrators'
+    field: calibrators
     column: 'data'
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
 
 flag:
   enable: true
@@ -67,6 +69,11 @@ transform__2:
       enable: true
       label_cal: '1gc1'
   
+prep__2:
+  enable: true
+  label_in: corr 
+  field: target
+
 flag__2:
   enable: true
   field: target 

@@ -24,18 +24,10 @@ obsconf:
     - longest
   reference_antenna: '0'
   
-prep:
-  enable: true
-  manage_flags: 
-    enable: true
-  spectral_weights:
-    enable: true
-    mode: uniform
-
 transform:
   enable: true
   label_in: ''
-  label_out: 'cal'
+  label_out: cal
   split_field:
     enable: true
     field: 'calibrators'
@@ -44,6 +36,18 @@ transform:
     column: data
     correlation: ''
     spw: ''
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+  fixvis:
+    enable: false
+  manage_flags:
+    enable: true
+  spectral_weights:
+    enable: true
+    mode: uniform
 
 flag:
   enable: true
@@ -153,7 +157,19 @@ transform__2:
     enable: true
     listobs: true
 
-flag__2:
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  fixvis:
+    enable: false
+  manage_flags:
+    enable: true
+  spectral_weights:
+    enable: true
+    mode: uniform
+
+flag__2: 
   enable: true
   field: target
   label_in: corr

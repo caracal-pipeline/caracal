@@ -21,6 +21,7 @@ observation_config:
 
 prepare_data:
   enable: true
+  label_in: ''
 
 transform_data:
   enable: true

@@ -13,6 +13,17 @@ mapping:
         type: bool
         required: true
         example: 'False'
+      label_in:
+        type: str
+        required: true
+        desc: Label of measurement set to work on.
+        example: ''
+      field:
+        desc: Fields to work on. Only used if 'label_in' is not empty.
+        type: str
+        enum: ['target', 'calibrators']
+        required: False
+        example: ''
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map

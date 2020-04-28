@@ -54,7 +54,7 @@ def worker(pipeline, recipe, config):
     flag_main_ms = pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_at_iter']
     rewind_main_ms = config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null'
     rewind_transf_ms = config['rewind_flags']["enable"] and config['rewind_flags']["transfer_apply_gains_version"] != 'null'
-    spwid = config['spwid']
+    spwid = str(config['spwid'])
     niter = config['img_niter']
     imgweight = config['img_weight']
     robust = config['img_robust']

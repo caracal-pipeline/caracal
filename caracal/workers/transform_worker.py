@@ -176,7 +176,7 @@ def worker(pipeline, recipe, config):
                     substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
                     manflags.delete_cflags(pipeline, recipe,
                         available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=substep)
+                        fms, cab_name=substep)
 
             flagv = tms+'.flagversions'
 

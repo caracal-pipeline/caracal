@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import sys
 import os
 import caracal.dispatch_crew.utils as utils
@@ -237,7 +238,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                         label="%s:: %s calibration" % (step, term))
 
             if config[ftype]["plotgains"]:
-                plotgains(recipe, pipeline, field_id, caltable+":output", iobs, term=term)
+                plotgains(recipe, pipeline, field_id, caltable, iobs, term=term)
 
             fields.append(",".join(field))
             interps.append(interp)
@@ -256,14 +257,15 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str,field_id)))
     recipe.add('cab/ragavi', step,
         {
-         "table"        : '{0:s}/{1:s}'.format(get_dir_path(pipeline.caltables, pipeline), gtab),
-         "gaintype"     : term,
-         "field"        : ",".join(map(str,field_id)),
-         "corr"         : '',
-         "htmlname"     : '{0:s}/{1:s}'.format(get_dir_path(pipeline.reports, pipeline), gtab),
+        "table"         : f"{gtab}:msfile",
+        "gaintype"     : term,
+        "field"        : ",".join(map(str,field_id)),
+        "corr"         : '',
+        "htmlname"     : gtab,
         },
         input=pipeline.input,
-        output=pipeline.output,
+        msdir=pipeline.caltables,
+        output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
         label='{0:s}:: Plot gaincal phase'.format(step))
 
 def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, reference, label=""):
@@ -357,7 +359,7 @@ def worker(pipeline, recipe, config):
 
         refant = pipeline.reference_antenna[i] or '0'
         prefix = prefixes[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
+        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
         prefix = '{0:s}-{1:s}'.format(prefix, label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
@@ -466,7 +468,7 @@ def worker(pipeline, recipe, config):
                             pipeline, i, reference=fluxscale_field, label=label)
                     fstrings = map(str, pipeline.bpcal_id[i])
                     fstrings = ",".join(fstrings)
-                    plotgains(recipe, pipeline, fstrings, ftable+":output", i, term='F')
+                    plotgains(recipe, pipeline, fstrings, ftable, i, term='F')
             else:
                 ftable = None
 
@@ -498,7 +500,7 @@ def worker(pipeline, recipe, config):
                     transfer_fluxscale(msname, recipe, gtable+":output", ftable, 
                             pipeline, i, reference=fluxscale_field, label=label)
                     plotgains(recipe, pipeline, pipeline.bpcal_id[i], 
-                            ftable+":output", i, term='F')
+                            ftable, i, term='F')
             else:
                 ftable = None
 
@@ -515,7 +517,7 @@ def worker(pipeline, recipe, config):
                 transfer_fluxscale(msname, recipe, gtable+":output", ftable, 
                         pipeline, i, reference=fluxscale_field, label=label)
                 plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
-                    ftable+":output", i, term='F')
+                    ftable, i, term='F')
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]

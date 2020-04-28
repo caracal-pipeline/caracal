@@ -6,7 +6,7 @@ from caracal import log
 import caracal.dispatch_crew.utils as utils
 
 NAME = 'Inspect Data'
-LAbeL = "inspect"
+LABEL = "inspect"
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 

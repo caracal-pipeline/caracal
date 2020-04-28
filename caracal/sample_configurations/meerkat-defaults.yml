@@ -15,15 +15,15 @@ observation_config:
   obsinfo: 
     enable: true
   target:
-    - 'all'
+    - all
   gcal: 
-    - 'all'
+    - all
   bpcal:
-    - 'longest'
+    - longest
   fcal:
-    - 'longest'
+    - longest
   xcal:
-    - 'longest'
+    - longest
   reference_antenna: '0'
 
 prepare_data: 
@@ -73,7 +73,6 @@ cross_cal:
     enable: true
     caracal_model: true
   primary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
@@ -82,7 +81,6 @@ cross_cal:
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGAKG
     apply: B

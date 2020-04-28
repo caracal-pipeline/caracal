@@ -1,4 +1,4 @@
-# Manage flagsets
+# -*- coding: future_fstrings -*-
 import os
 import sys
 from caracal import log

@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os
 import sys
 import caracal
@@ -52,10 +53,10 @@ def worker(pipeline, recipe, config):
 # TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
     def fix_target_obsinfo(fname):
         if pipeline.enable_task(config, 'split_field'):
-            with open(os.path.join(pipeline.output, fname), 'r') as stdr:
+            with open(os.path.join(pipeline.obsinfo, fname), 'r') as stdr:
                 d = json.load(stdr)
             d["FIELD"]["INTENTS"] = ['TARGET']
-            with open(os.path.join(pipeline.output, fname), "w") as stdw:
+            with open(os.path.join(pipeline.obsinfo, fname), "w") as stdw:
                 json.dump(d, stdw)
 
     def get_gain_field(applyme, applyto=None):
@@ -245,7 +246,7 @@ def worker(pipeline, recipe, config):
                                    "overwrite": True,
                                },
                                input=pipeline.input,
-                               output=pipeline.output,
+                               output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
                 if (config['obsinfo'].get('summary_json')):
@@ -263,7 +264,7 @@ def worker(pipeline, recipe, config):
                                    "outfile": listfile
                                },
                                input=pipeline.input,
-                               output=pipeline.output,
+                               output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
 
             step = 'fix_target_obsinfo-ms{:d}'.format(i)  # set directories
@@ -272,7 +273,7 @@ def worker(pipeline, recipe, config):
                            'fname': listfile,
                        },
                        input=pipeline.input,
-                       output=pipeline.output,
+                       output=pipeline.obsinfo,
                        label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))
 
-            target_iter+=1
+            target_iter += 1

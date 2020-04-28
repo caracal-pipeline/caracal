@@ -11,7 +11,7 @@ mkdir $TEST_OUTPUT_DIR
 HOME=$WORKSPACE_ROOT
 export HOME
 cd $TEST_OUTPUT_DIR
-cp $TEST_DATA_DIR/pull_request_data.tar
+cp $TEST_DATA_DIR/pull_request_data.tar .
 tar -xvf pull_request_data.tar
 cd ..
 

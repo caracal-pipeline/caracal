@@ -280,9 +280,10 @@ def worker(pipeline, recipe, config):
                     correct_date = ''.join([year,month_num,day,hr,minute,sec])
                     pipeline.enddate[i] = float(correct_date)
 
-        # get reference antenna
-        if config.get('reference_antenna') == 'auto':
-            pipeline.reference_antenna[i] = '0' 
+        # get reference antenna LEAVING THIS LINE HERE
+        # FOR WHEN WE COME UP WITH A WAY TO AUTOSELECT
+        #if config.get('reference_antenna') == 'auto':
+        #    pipeline.reference_antenna[i] = '0'
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:

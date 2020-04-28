@@ -78,7 +78,7 @@ mapping:
         required: false
         example: 'longest'
       reference_antenna:
-        desc: Reference antenna. 
+        desc: Reference antenna, which can be identified by an antenna name or number.
         type: str
         required: true
         example: '0'

@@ -19,16 +19,18 @@ observation_config:
     - 'longest'
   reference_antenna: '0'
 
-prepare_data:
-  enable: true
-
 transform_data:
   enable: true
   label_out: 'cal'
   split_field:
     enable: true
-    field: 'calibrators'
+    field: calibrators
     column: 'data'
+
+prepare_data:
+  enable: true
+  label_in: cal
+  field: calibrators
 
 flagging:
   enable: true
@@ -67,6 +69,11 @@ transform_data__2:
       enable: true
       label_cal: '1gc1'
   
+prepare_data__2:
+  enable: true
+  label_in: corr 
+  field: target
+
 flagging__2:
   enable: true
   field: target 

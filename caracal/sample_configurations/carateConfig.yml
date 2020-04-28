@@ -8,19 +8,21 @@ get_data:
 observation_config:
   reference_antenna: 'm010'   
 
+transform_data:
+  enable: true
+  label_out: cal
+  split_field:
+    enable: true
+    field: calibrators
+    column: 'data'
+
 prepare_data:
   enable: true
+  label_in: cal
+  field: calibrators
   spectral_weights:
     enable: true
     mode: uniform
-
-transform_data:
-  enable: true
-  label_out: 'cal'
-  split_field:
-    enable: true
-    field: 'calibrators'
-    column: 'data'
 
 flagging:
   enable: true
@@ -79,6 +81,14 @@ transform_data__2:
       enable: true
       label_cal: '1gc1'
   
+prepare_data__2:
+  enable: true
+  label_in: corr
+  field: target
+  spectral_weights:
+    enable: true
+    mode: uniform
+
 flagging__2:
   enable: true
   field: target

@@ -8,6 +8,7 @@ import yaml
 import re
 import caracal
 import sys
+import numpy as np
 
 NAME = 'Flagging'
 LABEL = 'flagging'
@@ -52,6 +53,8 @@ def worker(pipeline, recipe, config):
         else:
             raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
                                  "User selected: '{}'".format(config['field']))
+
+        mslist = np.unique(np.array(mslist)).tolist()
 
         for m in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, m)):

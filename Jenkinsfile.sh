@@ -4,7 +4,7 @@ set -u
 WORKSPACE_ROOT="$WORKSPACE/$BUILD_NUMBER"
 TEST_OUTPUT_DIR="$WORKSPACE_ROOT/test-output"
 TEST_DATA_DIR="$WORKSPACE/../../../test-data"
-PULLFOLDER="projects/meerkathi
+PULLFOLDER=projects/meerkathi
 mkdir $TEST_OUTPUT_DIR
 
 #Custom home for this run's temporary stuff

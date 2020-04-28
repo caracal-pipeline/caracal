@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_flagsets as manflags
 import os
@@ -59,7 +60,7 @@ def worker(pipeline, recipe, config):
 
         for j, msname in enumerate(mslist):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msname[:-3])
+                pipeline.obsinfo, msname[:-3])
 
             if not os.path.exists(msinfo):
                 raise IOError(
@@ -238,7 +239,7 @@ def worker(pipeline, recipe, config):
                             spws = '*'
                         edges = [
                             ii*scalefactor for ii in map(float, ff[-1].split('~'))]
-                        if spws == '*':
+                        if '*' in spws:
                             spws = list(range(len(pipeline.firstchanfreq[i])))
                         elif '~' in spws:
                             spws = list(
@@ -401,7 +402,7 @@ def worker(pipeline, recipe, config):
                 elif config['flag_rfi']["flagger"] == "tricolour":
                     tricolour_strat=config['flag_rfi']['tricolour']['strategy']
                     if config['flag_rfi']['tricolour']['mode'] == 'auto':
-                        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
+                        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
                         with open(msinfo, 'r') as stdr:
                                   bandwidth = yaml.load(stdr)['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
                                   print("Total Bandwidth =", bandwidth, "MHz")

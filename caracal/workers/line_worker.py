@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import sys
 import os
 import glob
@@ -210,7 +211,7 @@ def worker(pipeline, recipe, config):
         # Upate pipeline attributes (useful if, e.g., channel averaging was
         # performed by the split_data worker)
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-            pipeline.output, msfile[:-3])
+            pipeline.obsinfo, msfile[:-3])
         caracal.log.info('Updating info from {0:s}'.format(msinfo))
         with open(msinfo, 'r') as stdr:
             spw = yaml.load(stdr)['SPW']['NUM_CHAN']
@@ -267,7 +268,7 @@ def worker(pipeline, recipe, config):
 
         for i, msfile in enumerate(all_msfiles):
             msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(
-                pipeline.output, msfile[:-3])
+                pipeline.obsinfo, msfile[:-3])
             with open(msinfo, 'r') as searchfile:
                 for longdatexp in searchfile:
                     if "Observed from" in longdatexp:
@@ -442,7 +443,7 @@ def worker(pipeline, recipe, config):
                             "overwrite": True,
                             },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information ms={1:s}'.format(step,
                                                                                        msname_mst))
 
@@ -457,7 +458,7 @@ def worker(pipeline, recipe, config):
                         "outfile": '{0:s}-obsinfo.json'.format(msname_mst[:-3]),
                     },
                     input=pipeline.input,
-                    output=pipeline.output,
+                    output=pipeline.obsinfo,
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(
                         step,
                         msname_mst))
@@ -568,7 +569,7 @@ def worker(pipeline, recipe, config):
                 # as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}_mst-obsinfo.json'.format(
-                        pipeline.output, msfile[:-3])
+                        pipeline.obsinfo, msfile[:-3])
                     caracal.log.info(
                         'Updating info from {0:s}'.format(msinfo))
 
@@ -604,9 +605,8 @@ def worker(pipeline, recipe, config):
                                          config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
 
         else:
-            #all_targets, all_msfiles, ms_dict = target_to_msfiles(pipeline.target,pipeline.msnames,flabel,False)
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msfile[:-3])
+                pipeline.obsinfo, msfile[:-3])
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw
@@ -902,7 +902,7 @@ def worker(pipeline, recipe, config):
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                        pipeline.output, msfile[:-3])
+                        pipeline.obsinfo, msfile[:-3])
                     caracal.log.info(
                         'Updating info from {0:s}'.format(msinfo))
                     with open(msinfo, 'r') as stdr:
@@ -934,7 +934,7 @@ def worker(pipeline, recipe, config):
                                          config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msfile[:-3])
+                pipeline.obsinfo, msfile[:-3])
             with open(msinfo, 'r') as stdr:
                 spw = yaml.load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw

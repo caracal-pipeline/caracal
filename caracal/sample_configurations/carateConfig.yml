@@ -47,14 +47,12 @@ crosscal:
   set_model:
     enable: true
   primary_cal:
-    enable: true
     order: KGBAKGBK
     combine: ["", "", "", null, "","", scan, scan]
     solint: [inf, inf, inf, null, inf, inf, inf, inf]
     calmode: [a, ap, ap, null, a, ap, ap, a] 
     B_fillgaps: 70
   secondary_cal:
-    enable: true
     order: GAG
     apply: KB
     combine: ["", null, ""] 

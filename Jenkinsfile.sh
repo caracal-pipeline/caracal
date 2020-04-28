@@ -1,14 +1,14 @@
 set -e
 set -u
 
-WORKSPACE_ROOT="$WORKSPACE/$BUILD_NUMBER"
-TEST_OUTPUT_DIR="$WORKSPACE_ROOT/test-output"
+WKS_ROOT="$WORKSPACE/$BUILD_NUMBER"
+TEST_OUTPUT_DIR="$WKS_ROOT/test-output"
 TEST_DATA_DIR="$WORKSPACE/../../../test-data"
 PULLFOLDER=projects/meerkathi
 mkdir $TEST_OUTPUT_DIR
 
 #Custom home for this run's temporary stuff
-HOME=$WORKSPACE_ROOT
+HOME=$WKS_ROOT
 export HOME
 cd $TEST_OUTPUT_DIR
 cp $TEST_DATA_DIR/pull_request_data.tar .

@@ -443,7 +443,7 @@ def worker(pipeline, recipe, config):
                             "overwrite": True,
                             },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information ms={1:s}'.format(step,
                                                                                        msname_mst))
 
@@ -458,7 +458,7 @@ def worker(pipeline, recipe, config):
                         "outfile": '{0:s}-obsinfo.json'.format(msname_mst[:-3]),
                     },
                     input=pipeline.input,
-                    output=pipeline.output,
+                    output=pipeline.obsinfo,
                     label='{0:s}:: Get observation information as a json file ms={1:s}'.format(
                         step,
                         msname_mst))

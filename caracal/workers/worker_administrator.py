@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import caracal
 from caracal import log, pckgdir, notebooks
 import subprocess

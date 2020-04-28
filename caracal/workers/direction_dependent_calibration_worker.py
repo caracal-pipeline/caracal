@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os, shutil, glob, copy
 import numpy as np
 import sys

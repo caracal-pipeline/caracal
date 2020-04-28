@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import sys
 import os
 import caracal.dispatch_crew.utils as utils

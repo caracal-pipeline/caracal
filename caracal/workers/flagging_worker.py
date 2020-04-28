@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_flagsets as manflags
 import os

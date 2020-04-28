@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: future_fstrings -*-
 
 import pkg_resources
 import os

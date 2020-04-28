@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os
 import sys
 import math
@@ -264,7 +265,7 @@ def worker(pipeline, recipe, config):
         if os.path.exists(mosaic_outdir) == True:
             shutil.rmtree(mosaic_outdir)
 
-        montage.mosaic(mosaic_tmpdir, mosaic_outdir)
+        #montage.mosaic(mosaic_tmpdir, mosaic_outdir) TODO(filippo) montage is not imported
         shutil.rmtree(mosaic_tmpdir)
 
     def pbcorr(beam, mosaic_regrid, mosaic_pbcorr):

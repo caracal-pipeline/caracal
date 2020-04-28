@@ -352,7 +352,7 @@ class worker_administrator(object):
                                               if self.prefix else nbfile)
                         if os.path.exists(nbsrc):
                             log.info("Generating standard notebook {}.html".format(notebook))
-                            subprocess.check_call(["run-radiopadre",
+                            subprocess.check_call(["run-radiopadre", "-u",
                                                    "--nbconvert",
                                                    nbdest])
                         else:

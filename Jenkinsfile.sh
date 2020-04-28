@@ -24,7 +24,7 @@ caracal_version=$WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/
 export caracal_version
 pull_request_data=$TEST_OUTPUT_DIR
 export pull_request_data
-pull_request_name=$TEST_OUTPUT_DIR/$(cd $PULLFOLDER; git rev-parse HEAD)
+pull_request_name=$(cd $PULLFOLDER; git rev-parse HEAD)
 export pull_request_name
 mkdir -p $pull_request_name
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/pull_test.sh

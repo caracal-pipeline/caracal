@@ -1733,8 +1733,7 @@ def worker(pipeline, recipe, config):
 
             else:
                 try:
-                    im = config['calibrate'].get(
-                        'output_data').index("CORR_RES") + 1
+                    im = config['calibrate']['output_data'].index("CORR_RES") + 1
                 except ValueError:
                     im = num
                 aimfast_settings.update({"restored-image": '{0:s}/{1:s}_{2:s}_{3:d}{4:s}-image.fits:output'.format(img_dir,
@@ -2029,8 +2028,7 @@ def worker(pipeline, recipe, config):
                     if int(mm[-1]) > self_cal_iter_counter:
                         num = str(self_cal_iter_counter)
             else:
-                extract_sources = len(config['extract_sources'].get(
-                    'thresh_isl', [self_cal_iter_counter]))
+                extract_sources = len(config['extract_sources']['thresh_isl'])
                 if extract_sources > 1:
                     num = '{:d}+{:d}'.format(self_cal_iter_counter -
                                              1, self_cal_iter_counter)

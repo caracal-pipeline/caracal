@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: future_fstrings -*-
 
 import caracal
 import pkg_resources
@@ -330,14 +330,4 @@ def main(argv):
     if args.config is caracal.DEFAULT_CONFIG:
         config_parser.primary_parser().print_help()
         sys.exit(1)
-    p = execute_pipeline(args, arg_groups, block=True)
-
-    # Here is a nasty hack that I hand over to Oleg and Peter
-    # Formerly:
-    # sys.exit(p.exitcode)
-    # p seems to be ill defined as this gives an error "sys.exit(p.exitcode) AttributeError: 'NoneType' object has no attribute 'exitcode'"
-    # So for the handover:
-    try:
-        sys.exit(p.exitcode)  # must return exit code when non-interactive
-    finally:
-        sys.exit(0) 
+    execute_pipeline(args, arg_groups, block=True)

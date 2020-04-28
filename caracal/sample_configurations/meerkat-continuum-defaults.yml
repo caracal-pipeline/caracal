@@ -28,6 +28,9 @@ observation_config:
 
 prepare_data: 
   enable: true
+  label_in: ''
+  fixvis: 
+    enable: false
   manage_flags: 
     enable: true
     mode: save_legacy_flags

@@ -30,7 +30,7 @@ prepare_data:
     enable: false
   manage_flags: 
     enable: true
-  clear_cal: true
+  clear_cal: false
   spectral_weights:
     enable: true
     mode: uniform
@@ -79,7 +79,7 @@ flagging:
     aoflagger:
       strategy: firstpass_QUV.rfis
   inspect:
-    enable: true
+    enable: false
     telescope: MeerKAT
     field: 'bpcal,gcal'
 
@@ -118,7 +118,7 @@ polcal:
   enable: false
 
 inspect_data: 
-  enable: false
+  enable: true
   label_in: 'cal'
   label_out: '1gc'
   fields:
@@ -185,7 +185,7 @@ masking:
   label_in: corr
 
 self_cal:
-  enable: false
+  enable: true
   img_npix: 4096
   img_cell: 1.3
   image:
@@ -195,7 +195,7 @@ self_cal:
     Gsols_timeslots: [120]
 
 image_line:
-  enable: false
+  enable: true
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

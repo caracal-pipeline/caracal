@@ -4,7 +4,7 @@ set -u
 WKS_ROOT="$WORKSPACE/$BUILD_NUMBER"
 TEST_OUTPUT_DIR="$WKS_ROOT/test-output"
 TEST_DATA_DIR="$WORKSPACE/../../../test-data"
-PULLFOLDER=projects/meerkathi
+PULLFOLDER=projects/caracal
 mkdir $TEST_OUTPUT_DIR
 
 #Custom home for this run's temporary stuff
@@ -20,7 +20,7 @@ cd ..
 ###
 caracal_tests=$TEST_OUTPUT_DIR
 export caracal_tests
-caracal_version=$WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/ 
+caracal_version=$WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/
 export caracal_version
 pull_request_data=$TEST_OUTPUT_DIR
 export pull_request_data

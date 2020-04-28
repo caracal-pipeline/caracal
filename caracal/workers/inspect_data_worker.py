@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os
 import sys
 import yaml
@@ -129,7 +130,7 @@ def worker(pipeline, recipe, config):
         label = config.get('label_out')
 
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-            pipeline.output, msname[:-3])
+            pipeline.obsinfo, msname[:-3])
 
         corr = config.get('correlation')
         if corr == 'auto':

@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import caracal
 from caracal import log, pckgdir, notebooks
 import subprocess
@@ -39,12 +40,6 @@ assert ruamel.yaml.version_info >= (0, 12, 14)
 REPORTS = True
 
 class worker_administrator(object):
-# GIGJ commenting lines initiating a report
-#    def __init__(self, config, workers_directory,
-#                 stimela_build=None, prefix=None, configFileName=None,
-#                 add_all_first=False, singularity_image_dir=None,
-#                 start_worker=None, end_worker=None,
-#                 container_tech='docker', generate_reports=True):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
@@ -52,12 +47,12 @@ class worker_administrator(object):
                  container_tech='docker', generate_reports=True):
 
         self.config = config
-        self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.obsinfo = self.config['general']['output'] + '/obsinfo'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + \
             '/diagnostic_plots'
@@ -261,20 +256,19 @@ class worker_administrator(object):
                 subprocess.check_call(["cp", "-r", f, self.input])
 
         # Copy standard notebooks
-        if self.config['general']['init_notebooks']:
-            notebooks.setup_default_notebooks(self.config['general']['init_notebooks'],
-                                              output_dir=self.output, prefix=self.prefix,
-                                              config=self.config)
+        self._init_notebooks = self.config['general']['init_notebooks']
+        self._report_notebooks = self.config['general']['report_notebooks']
+        all_nbs = set(self._init_notebooks) + set(self._report_notebooks)
+        if all_nbs:
+            notebooks.setup_default_notebooks(all_nbs, output_dir=self.output, prefix=self.prefix, config=self.config)
 
     def enable_task(self, config, task):
-        a = config.get(task)
-        if a:
-            return a['enable']
-        else:
-            False
+        return task in config and config[task].get("enable")
 
     def run_workers(self):
         """ Runs the  workers """
+        report_updated = False
+
         for _name, _worker, i in self.workers:
             try:
                 worker = __import__(_worker)
@@ -312,48 +306,32 @@ class worker_administrator(object):
             # 1st get correct section of config file
             log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-            # Save worker recipes for later execution
-            # execute each worker after adding its steps
 
-            if self.add_all_first:
-                log.info("{0:s}: adding before running".format(_worker))
-                self.recipes[_worker] = recipe
+                ## old dead code
+                # Save worker recipes for later execution
+                # execute each worker after adding its steps
+            # if self.add_all_first:
+            #     log.info("{0:s}: adding before running".format(_worker))
+            #     self.recipes[_worker] = recipe
+            # else:
+
+            log.info("{0:s}: running".format(label))
+            recipe.run()
+            log.info("{0:s}: finished".format(label))
+
+            # this should be in the cab cleanup code, no?
+            casa_last = glob.glob(self.output + '/*.last')
+            for file_ in casa_last:
+                os.remove(file_)
+
+            # update report at end of worker if so configured
+            if self.generate_reports and config["report"]:
+                notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)
+                report_updated = True
             else:
-                log.info("{0:s}: running".format(label))
-                recipe.run()
-                log.info("{0:s}: finished".format(label))
-                casa_last = glob.glob(self.output + '/*.last')
-                for file_ in casa_last:
-                    os.remove(file_)
+                report_updated = False
 
-        # Execute all workers if they saved for later execution
-        try:
-            if self.add_all_first:
-                for worker in self.workers:
-                    if worker not in self.skip:
-                       log.info("Running worker next in queue")
-                       self.recipes[worker[1]].run()
-                       log.info("Finished worker next in queue")
-        finally:  # write reports even if the pipeline only runs partially
-            ## this is no longer needed -- the log is opened directly in the correct location
-            # os.remove(caracal.BASE_CARACAL_LOG)
-            # pipeline_logs = sorted(glob.glob(self.logs + '/*caracal.txt'))
-            # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-caracal.txt'.format(self.output))
-            if REPORTS and self.generate_reports:
-                #reporter = mrr(self)
-                #reporter.generate_reports()
-                if self.config['general']['init_notebooks']:
-                    nbdir = os.path.join(os.path.dirname(caracal.__file__), "notebooks")
-                    for notebook in self.config['general']['init_notebooks']:
-                        nbfile = notebook + ".ipynb"
-                        nbsrc = os.path.join(nbdir, nbfile)
-                        nbdest = os.path.join(self.output,
-                                              "{}-{}".format(self.prefix, nbfile)
-                                              if self.prefix else nbfile)
-                        if os.path.exists(nbsrc):
-                            log.info("Generating standard notebook {}.html".format(notebook))
-                            subprocess.check_call(["run-radiopadre", "-u",
-                                                   "--nbconvert",
-                                                   nbdest])
-                        else:
-                            log.error("Standard notebook {} does not exist".format(nbsrc))
+        # generate final report
+        if self.generate_reports and not report_updated:
+            notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)
+

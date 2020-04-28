@@ -13,24 +13,21 @@ get_data:
 
 observation_config:
   target:
-    - 'all'
+    - all
   fcal:
-    - 'longest'
+    - longest
   bpcal:
-    - 'longest'
+    - longest
   gcal:
-    - 'all'
+    - all
   xcal:
-    - 'longest'
+    - longest
   reference_antenna: '0'
   
 prepare_data: 
   enable: true
-  fixvis: 
-    enable: false
   manage_flags: 
     enable: true
-  clear_cal: true
   spectral_weights:
     enable: true
     mode: uniform
@@ -47,11 +44,6 @@ transform_data:
     column: data
     correlation: ''
     spw: ''
-    otfcal:
-      enable: false
-  obsinfo:
-    enable: true
-    listobs: true
 
 flagging:
   enable: true
@@ -79,7 +71,7 @@ flagging:
     aoflagger:
       strategy: firstpass_QUV.rfis
   inspect:
-    enable: true
+    enable: false
     telescope: MeerKAT
     field: 'bpcal,gcal'
 
@@ -91,7 +83,6 @@ cross_cal:
   set_model:
     enable: true
   primary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
@@ -100,7 +91,6 @@ cross_cal:
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGAKG
     apply: B
@@ -118,7 +108,7 @@ polcal:
   enable: false
 
 inspect_data: 
-  enable: false
+  enable: true
   label_in: 'cal'
   label_out: '1gc'
   fields:
@@ -185,7 +175,7 @@ masking:
   label_in: corr
 
 self_cal:
-  enable: false
+  enable: true
   img_npix: 4096
   img_cell: 1.3
   image:
@@ -195,7 +185,7 @@ self_cal:
     Gsols_timeslots: [120]
 
 image_line:
-  enable: false
+  enable: true
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

@@ -98,7 +98,7 @@ then edit the file to suit your needs.
         action='store_true')
 
     add('-nr','--no-reports',
-        help='disable generation of report about the pipeline run',
+        help='disable generation of HTML reports',
         action='store_true')
 
     add('-wd', '--workers-directory', default='{:s}/workers'.format(caracal.pckgdir),

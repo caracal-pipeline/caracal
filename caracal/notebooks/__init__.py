@@ -3,6 +3,7 @@ import glob
 import shutil
 import jinja2
 import traceback
+import subprocess
 
 import caracal
 from caracal import log
@@ -11,9 +12,7 @@ _j2env = None
 
 SOURCE_NOTEBOOK_DIR = os.path.dirname(__file__)
 
-
 def setup_default_notebooks(notebooks, output_dir, prefix, config):
-
     # setup logos
     logodir = os.path.join(output_dir, ".logo")
     if not os.path.exists(logodir):
@@ -64,3 +63,26 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
             continue
 
         log.error("Standard notebook {} does not exist".format(nbsrc))
+
+
+def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
+    if container_tech == "docker":
+        contopt = "--docker"
+    elif container_tech == "singularity":
+        contopt = "--singularity"
+    else:
+        log.warning("Container technology {} not supported by radiopadre, skipping report rendering")
+        return
+
+    for notebook in notebooks:
+        if prefix:
+            notebook = "{}-{}".format(prefix, notebook)
+        nbdest = os.path.join(output_dir, notebook + ".ipynb")
+        if os.path.exists(nbdest):
+            log.info("Rendering report notebook {}.html".format(notebook))
+            try:
+                subprocess.check_call(["run-radiopadre", "-u", contopt, "--nbconvert", nbdest])
+            except subprocess.CalledProcessError as exc:
+                log.warning("Rendering failed with error code {}. HTML report will not be available.".format(exc.returncode))
+        else:
+            log.warning("Report notebook {} not found, skipping report rendering".format(nbdest))

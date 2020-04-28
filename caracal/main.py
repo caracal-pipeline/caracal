@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: future_fstrings -*-
 
 import caracal
 import pkg_resources
@@ -17,7 +17,7 @@ import io
 from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import worker_administrator as mwa
+from caracal.workers.worker_administrator import worker_administrator
 import stimela
 
 __version__ = caracal.__version__
@@ -231,12 +231,12 @@ def execute_pipeline(args, arg_groups, block):
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()
 
-            pipeline = mwa(arg_groups,
-                           args.workers_directory, stimela_build=args.stimela_build,
-                           add_all_first=False,  prefix=args.general_prefix,
-                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                           container_tech=args.container_tech, start_worker=args.start_worker,
-                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+            pipeline = worker_administrator(arg_groups,
+                                            args.workers_directory, stimela_build=args.stimela_build,
+                                            add_all_first=False, prefix=args.general_prefix,
+                                            configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
+                                            container_tech=args.container_tech, start_worker=args.start_worker,
+                                            end_worker=args.end_worker, generate_reports=not args.no_reports)
 
             pipeline.run_workers()
         except SystemExit as e:
@@ -330,14 +330,4 @@ def main(argv):
     if args.config is caracal.DEFAULT_CONFIG:
         config_parser.primary_parser().print_help()
         sys.exit(1)
-    p = execute_pipeline(args, arg_groups, block=True)
-
-    # Here is a nasty hack that I hand over to Oleg and Peter
-    # Formerly:
-    # sys.exit(p.exitcode)
-    # p seems to be ill defined as this gives an error "sys.exit(p.exitcode) AttributeError: 'NoneType' object has no attribute 'exitcode'"
-    # So for the handover:
-    try:
-        sys.exit(p.exitcode)  # must return exit code when non-interactive
-    finally:
-        sys.exit(0) 
+    execute_pipeline(args, arg_groups, block=True)

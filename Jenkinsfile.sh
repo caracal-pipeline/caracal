@@ -20,7 +20,7 @@ cd ..
 ###
 caracal_tests=$TEST_OUTPUT_DIR
 export caracal_tests
-caracal_version=$(cd $PULLFOLDER; git rev-parse HEAD) 
+caracal_version=$WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/ 
 export caracal_version
 pull_request_data=$TEST_OUTPUT_DIR
 export pull_request_data

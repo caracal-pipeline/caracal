@@ -1,4 +1,3 @@
-# -*- coding: future_fstrings -*-
 import os
 import sys
 import caracal
@@ -18,19 +17,16 @@ def worker(pipeline, recipe, config):
         msn = pipeline.msnames[i][:-3]
         prefix = pipeline.prefixes[i]
 
-        if config['field'] == 'target':
+        if label=='':
+            mslist.append(pipeline.msnames[i])
+
+        elif config['field'] == 'target':
            for target in pipeline.target[i]:
                 field = utils.filter_name(target)
-                mslist.append(pipeline.msnames[i] if label == \
-                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
+                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
 
         elif config['field'] == 'calibrators':
-            mslist.append(pipeline.msnames[i] if label == \
-                  '' else '{0:s}_{1:s}.ms'.format(msn, label))
-
-        else:
-            raise ValueError("Eligible values for 'field' if 'label_in' is not empty: 'target' or 'calibrators'. "\
-                                 "User selected: '{}'".format(config['field']))
+            mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
 
         mslist = np.unique(np.array(mslist)).tolist()
 

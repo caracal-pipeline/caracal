@@ -2209,8 +2209,8 @@ then
         # This $HOME is not the usual $HOME, see above
 	[[ -z ${OR} ]] || pruneforce=' -f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
-        [[ -n ${OP} ]] || { ss_docker+="docker system prune"; ss_docker+=$'\n'; }
-        [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker ${pruneforce} system prune
+        [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
+        [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
         if [[ -n $PD ]]
         then
 	    ii=1

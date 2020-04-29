@@ -9,6 +9,7 @@ from caracal.workers.utils import manage_fields as manfields
 import copy
 import re
 import json
+import glob
 
 NAME = "Cross calibration"
 LABEL = 'cross_cal'
@@ -570,3 +571,11 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
+            summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
+                                    "flagging_summary-1gc1-{2:d}-*"
+                                    ".txt".format(pipeline.output, wname, i))[0]
+            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
+            manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)

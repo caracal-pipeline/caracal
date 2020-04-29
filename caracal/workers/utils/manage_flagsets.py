@@ -1,7 +1,11 @@
 # Manage flagsets
 import os
 import sys
+import json
+import math
 from caracal import log
+from bokeh.layouts import row, column
+from bokeh.plotting import figure, output_file, save
 
 def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
     av_flagversions = get_flags(pipeline, ms)
@@ -226,3 +230,85 @@ else:
         input=pipeline.input,
         output=pipeline.output,
         label=label or cab_name)
+
+
+def get_json_flag_summary(pipeline, flagmanager_summary_file, prefix, wname):
+    """Generate json file with flag summary using log from flagmanager"""
+    with open(flagmanager_summary_file) as f:
+        data = f.readlines()
+
+    summary_flags = {}
+    main_separator=' flagged:'
+    summary_keys = ['field ', 'antenna ', 'scan ', 'correlation ']
+    json_file = flagmanager_summary_file.replace('.txt', '.json')
+    json_file = json_file.replace('log-flagging-', wname)
+    for summary_key in summary_keys:
+        keys = []
+        flagged = []
+        for d in data:
+            if summary_key in d:
+                value = d.split(summary_key)[1].split(main_separator)[0]
+                if value not in keys:
+                    keys.append(value)
+                    flagged.append(float(d.split()[-1][1:-2]))
+        summary_flags[summary_key] = {'key': keys, 'value': flagged}
+    log.info("Saving flag summary in {}".format(json_file))
+    with open(json_file, 'w') as f:
+        json.dump(summary_flags, f)
+    return json_file
+
+
+def flag_summary_plots(pipeline, json_flag_summary, prefix, wname, nob):
+    """Generate flagging summary plots"""
+    plots={
+           'field ': {'title':'Field RFI summary',
+                      'x_label': 'Field',
+                      'y_label': 'Flagged data (%)',
+                      'rotate_xlabel':False},
+           'antenna ': {'title':'Antenna RFI summary',
+                        'x_label': 'Antenna',
+                        'y_label': 'Flagged data (%)',
+                        'rotate_xlabel':True},
+           'scan ': {'title':'Scans RFI summary',
+                     'x_label': 'Scans',
+                     'y_label': 'Flagged data (%)',
+                     'rotate_xlabel':True},
+           'correlation ': {'title':'Correlation RFI summary',
+                            'x_label': 'Correlation',
+                            'y_label': 'Flagged data (%)',
+                            'rotate_xlabel':False}
+          }
+    with open(json_flag_summary) as f:
+        summary_flags = json.load(f)
+    plot_list = []
+    outfile = ('{0:s}/diagnostic_plots/{1:s}-{2:s}-'
+               'flagging-summary-plots-{3:d}.html').format(
+                  pipeline.output, prefix, wname, nob)
+    for plot_key in summary_flags.keys():
+        keys = summary_flags[plot_key]['key']
+        flagged = summary_flags[plot_key]['value']
+        if plot_key=='scan ':
+            zipped_lists = zip(list(map(int, keys)), flagged)
+            keys, flagged = zip(*sorted(zipped_lists))
+            keys = [str(key) for key in keys]
+
+        rotate_xlabel=plots[plot_key]['rotate_xlabel']
+        x_label=plots[plot_key]['x_label']
+        y_label=plots[plot_key]['y_label']
+        title=plots[plot_key]['title']
+        plotter = figure(x_range=keys, x_axis_label=x_label, y_axis_label=y_label,
+                         plot_width=600, plot_height=400, title=title)
+
+        plotter.vbar(x=keys, top=flagged, width=0.9)
+
+        plotter.xgrid.grid_line_color = None
+        plotter.y_range.start = 0
+        plotter.title.align = 'center'
+        if rotate_xlabel:
+            plotter.xaxis.major_label_orientation = math.pi/2
+        plot_list.append(plotter)
+    if len(plot_list) == 4:
+       output_file(outfile)
+       log.info("Saving flag summary plots in {}".format(outfile))
+       save(column(row(plot_list[0], plot_list[3]),
+                   row(plot_list[2], plot_list[1])))

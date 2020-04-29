@@ -2207,7 +2207,7 @@ then
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-	[[ -z ${OR} ]] || pruneforce=' -f'
+	[[ -z ${OR} ]] || pruneforce='-f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}

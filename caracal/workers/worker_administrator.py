@@ -258,7 +258,7 @@ class worker_administrator(object):
         # Copy standard notebooks
         self._init_notebooks = self.config['general']['init_notebooks']
         self._report_notebooks = self.config['general']['report_notebooks']
-        all_nbs = set(self._init_notebooks) + set(self._report_notebooks)
+        all_nbs = set(self._init_notebooks) | set(self._report_notebooks)
         if all_nbs:
             notebooks.setup_default_notebooks(all_nbs, output_dir=self.output, prefix=self.prefix, config=self.config)
 

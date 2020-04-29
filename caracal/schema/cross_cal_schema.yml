@@ -289,3 +289,8 @@ mapping:
             desc: Execute printing flagging summary.            
             required: false
             example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

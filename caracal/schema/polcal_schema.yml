@@ -116,5 +116,10 @@ mapping:
             required: false
             desc: Execute this segment.
             example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'
 
 

@@ -237,8 +237,10 @@ def execute_pipeline(args, arg_groups, block):
                                             configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
                                             container_tech=args.container_tech, start_worker=args.start_worker,
                                             end_worker=args.end_worker, generate_reports=not args.no_reports)
-
-            pipeline.run_workers()
+            if args.report:
+                pipeline.regenerate_reports()
+            else:
+                pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:
             log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
@@ -330,4 +332,9 @@ def main(argv):
     if args.config is caracal.DEFAULT_CONFIG:
         config_parser.primary_parser().print_help()
         sys.exit(1)
+
+    if args.report and args.no_reports:
+        log.error("-report contradicts --no-reports")
+        sys.exit(1)
+
     execute_pipeline(args, arg_groups, block=True)

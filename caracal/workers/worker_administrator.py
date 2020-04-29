@@ -326,12 +326,14 @@ class worker_administrator(object):
 
             # update report at end of worker if so configured
             if self.generate_reports and config["report"]:
-                notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)
+                self.regenerate_reports()
                 report_updated = True
             else:
                 report_updated = False
 
         # generate final report
         if self.generate_reports and not report_updated:
-            notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)
+            self.regenerate_reports()
 
+    def regenerate_reports(self):
+        notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)

@@ -89,6 +89,11 @@ then edit the file to suit your needs.
         help='prints list of auxiliary calibrator standards, then exits',
         action='store_true')
 
+    add('-report',
+        help='(re)generates a final HTML report, if configured, then exits',
+        action='store_true')
+
+
     # add('--no-interactive',
     #     help='Disable interactivity',
     #     action='store_true')
@@ -97,8 +102,10 @@ then edit the file to suit your needs.
         help='enable debugging mode',
         action='store_true')
 
+
+
     add('-nr','--no-reports',
-        help='disable generation of HTML reports',
+        help='disable generation of HTML reports throughout the pipeline',
         action='store_true')
 
     add('-wd', '--workers-directory', default='{:s}/workers'.format(caracal.pckgdir),

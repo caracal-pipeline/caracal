@@ -102,6 +102,7 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
 LOGGER_NAME = "CARACal"
 STIMELA_LOGGER_NAME = "CARACal.Stimela"
+DEBUG = 0
 
 log = logging.getLogger(LOGGER_NAME)
 
@@ -128,7 +129,9 @@ def create_logger():
 
 def init_console_logging(boring=False, debug=False):
     """Sets up console logging"""
-    global log_console_handler, log_console_formatter
+    global log_console_handler, log_console_formatter, DEBUG
+
+    DEBUG = debug
 
     log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 

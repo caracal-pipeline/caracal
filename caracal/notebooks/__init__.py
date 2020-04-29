@@ -3,10 +3,12 @@ import glob
 import shutil
 import jinja2
 import traceback
-import subprocess
+import time
 
 import caracal
 from caracal import log
+
+from stimela.utils import xrun, StimelaCabRuntimeError
 
 _j2env = None
 
@@ -64,25 +66,44 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
 
         log.error("Standard notebook {} does not exist".format(nbsrc))
 
+_radiopadre_updated = False
 
 def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
+    opts = ["--non-interactive"]
+
     if container_tech == "docker":
-        contopt = "--docker"
+        opts.append("--docker")
     elif container_tech == "singularity":
-        contopt = "--singularity"
+        opts.append("--singularity")
     else:
-        log.warning("Container technology {} not supported by radiopadre, skipping report rendering")
+        log.warning("Container technology '{}' not supported by radiopadre, skipping report rendering")
         return
 
+    if caracal.DEBUG:
+        opts += ['-v', '2', '--container-debug']
+
+    # first time run with -u
+    global _radiopadre_updated
+    if not _radiopadre_updated:
+        opts.append('--update')
+        _radiopadre_updated = True
+    start_time = time.time()
+
+    log.info("Rendering report(s)")
     for notebook in notebooks:
         if prefix:
             notebook = "{}-{}".format(prefix, notebook)
         nbdest = os.path.join(output_dir, notebook + ".ipynb")
+        nbhtml = os.path.join(output_dir, notebook + ".html")
         if os.path.exists(nbdest):
-            log.info("Rendering report notebook {}.html".format(notebook))
             try:
-                subprocess.check_call(["run-radiopadre", "-u", contopt, "--nbconvert", nbdest])
-            except subprocess.CalledProcessError as exc:
-                log.warning("Rendering failed with error code {}. HTML report will not be available.".format(exc.returncode))
+                xrun("run-radiopadre", opts + ["--nbconvert", nbdest], log=log)
+            except StimelaCabRuntimeError as exc:
+                log.warning("Report {} failed to render ({}). HTML report will not be available.".format(nbhtml, exc))
+            # check that HTML file actually showed up (sometimes the container doesn't report an error)
+            if os.path.exists(nbhtml) and os.path.getmtime(nbhtml) >= start_time:
+                log.info("Rendered report {}".format(nbhtml))
+            else:
+                log.warning("Report {} failed to render {} {}".format(nbhtml, os.path.getmtime(nbhtml), start_time))
         else:
             log.warning("Report notebook {} not found, skipping report rendering".format(nbdest))

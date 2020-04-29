@@ -54,7 +54,7 @@ mapping:
         seq:
           - type: str
         required: false
-        example: my-progress-report
+        example: detailed-final-report
       final_report:
         desc: Render report_notebooks to HTML at the end of each pipeline run
         required: false

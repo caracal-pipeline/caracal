@@ -1081,8 +1081,8 @@ def worker(pipeline, recipe, config):
                         "merge.minSizeY": config['sofia']['minSizeY'],
                         "merge.minSizeZ": config['sofia']['minSizeZ'],
                     },
-                    input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
-                    output='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
+                    input='/'.join(image_cube_list[uu].split('/')[:-1]),
+                    output='/'.join(image_cube_list[uu].split('/')[:-1]),
                     label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,image_cube_list[uu]))
 
         if pipeline.enable_task(config, 'sharpener'):
@@ -1099,6 +1099,7 @@ def worker(pipeline, recipe, config):
                           "label": config['sharpener']['label'],
                           }
 
+                runsharp = False
                 if config['sharpener']['catalog'] == 'PYBDSF':
                     catalogs = []
                     nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
@@ -1111,11 +1112,13 @@ def worker(pipeline, recipe, config):
                     catalogs = sorted(catalogs)
                     catalogs = [cat for catalogs in catalogs for cat in catalogs]
                     # Right now, this is the last catalog made
-                    catalog_file = catalogs[-1].split('output/')[-1]
-                    params["catalog_file"] = '{0:s}:output'.format(catalog_file)
+                    if len(catalogs):
+                        catalog_file = catalogs[-1].split('output/')[-1]
+                        params["catalog_file"] = '{0:s}:output'.format(catalog_file)
+                    else: catalog_file = []
 
                     if len(catalog_file) > 0:
-
+                        runsharp = True
                         params["catalog"] = "PYBDSF"
                         recipe.add('cab/sharpener',
                             step,
@@ -1128,6 +1131,7 @@ def worker(pipeline, recipe, config):
                             'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
 
                 elif config['sharpener']['catalog'] == 'NVSS':
+                    runsharp = True
                     params["thresh"] = config['sharpener']['thresh']
                     params["width"] = config['sharpener']['width']
                     params["catalog"] = "NVSS"
@@ -1142,9 +1146,10 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
 
                 # Move the sharpener output to diagnostic_plots
-                sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
-                finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
-                    pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
-                if os.path.exists(finalsharpOut):
-                    shutil.rmtree(finalsharpOut)
-                shutil.move(sharpOut, finalsharpOut)
+                if runsharp:
+                    sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
+                    finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
+                        pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
+                    if os.path.exists(finalsharpOut):
+                        shutil.rmtree(finalsharpOut)
+                    shutil.move(sharpOut, finalsharpOut)

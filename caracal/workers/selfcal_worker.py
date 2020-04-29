@@ -47,6 +47,14 @@ SOL_TERMS = {
     "DD": "20",
 }
 
+def check_config(config):
+    """
+    Optional function to check consistency of config, invoked before the pipeline runs.
+    its purpose is to log warnings, or raise exceptions on bad errors.
+    """
+    caracal.log.warning("selfcal config consistency check needs to be moved from obsconfig to here")
+
+
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER

@@ -16,30 +16,26 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "import json\n",
-    "import numpy as np\n",
-    "from glob import glob\n",
-    "\n",
-    "from IPython.display import HTML\n",
-    "\n",
-    "from radiopadre import ls                                                # everyone needs an ls function\n",
-    "from radiopadre import settings\n",
-    "from radiopadre.table import tabulate\n",
-    "from radiopadre.layouts import Title, Section\n",
-    "\n",
-    "from bokeh.io import output_notebook\n",
-    "from bokeh.layouts import row, column\n",
-    "from bokeh.plotting import figure, output_file, show\n",
-    "from bokeh.models import HoverTool, LinearAxis, Range1d\n",
-    "\n",
-    "output_notebook()\n",
-    "settings.html.width = 800\n",
-    "settings.html.height = 800\n",
-    "Title(\"CARACal Data Reduction\",                                          # edit the title as you like\n",
-    "      \"Observation info | Fields Info | Flagging Data | Gain Plots | Data Inspection | Cross-Cal flagging | \"\n",
-    "      \"Target flagging | Target RFInder | Continuum Images | Calibration Diagnostics |  Self-Cal flagging | \"\n",
-    "      \"Continuum Statistics | Continuum Cross-matching | Sun Blocker | Cube Images | Moment Images | \"\n",
-    "      \"Spectral Analysis Logs\")"
+    "from radiopadre import ls                                       # everyone needs an ls function \n",
+    "from radiopadre.layouts import Title, Section                  \n",
+    "Title(\"Live progress report for {{ title }}{{ suffix }}\",            # edit the title as you like\n",
+    "  \"Logs | Reports | Plots | Obsinfo | Images | Caltables\", \n",
+    "  logo=\".logo/caracal-logo-200px.png\", logo_width=100, logo_padding=8, \n",
+    "  icon=\".logo/caracal-square-logo-32px.png\", icon_width=16,\n",
+    "  ) # sets up sections "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [],
+   "source": [
+    "logs = ls(\"logs/log*txt -rt\", section=\"*Logs\").filter(bool)\n",
+    "logs.title = \"MeerKATHI logs (most recent first)\"\n",
+    "logs.thumbs(head=0, tail=10)"
    ]
   },
   {
@@ -48,19 +44,18 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "HTML('''<script>\n",
-    "code_show=true; \n",
-    "function code_toggle() {\n",
-    " if (code_show){\n",
-    " $('div.input').hide();\n",
-    " } else {\n",
-    " $('div.input').show();\n",
-    " }\n",
-    " code_show = !code_show\n",
-    "} \n",
-    "$( document ).ready(code_toggle);\n",
-    "</script>\n",
-    "<form action=\"javascript:code_toggle()\"><input type=\"submit\" value=\"Click here to toggle on/off the raw code.\"></form>''')"
+    "ls(\"reports/*html -rt\", section=\"*Reports\").thumbs"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [],
+   "source": [
+    "ls(\"diagnostic_plots/crosscal -rt\", section=\"*Plots\").thumbs"
    ]
   },
   {
@@ -69,141 +64,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "def plot_flagged_summary(summary_files, main_separator=' flagged:'):\n",
-    "    try:\n",
-    "        plots={\n",
-    "               'field ': {'x_label': 'Field', 'y_label': 'Flagged data (%)', 'title':'Field RFI summary', 'rotate_xlabel':False},\n",
-    "               'antenna ': {'x_label': 'Antenna', 'y_label': 'Flagged data (%)', 'title':'Antenna RFI summary', 'rotate_xlabel':True},\n",
-    "               'scan ': {'x_label': 'Scans', 'y_label': 'Flagged data (%)', 'title':'Scans RFI summary', 'rotate_xlabel':True},\n",
-    "               'correlation ': {'x_label': 'Correlation', 'y_label': 'Flagged data (%)', 'title':'Correlation RFI summary', 'rotate_xlabel':False}\n",
-    "              }\n",
-    "\n",
-    "        fs = glob(summary_files)\n",
-    "        with open(fs[0]) as f:\n",
-    "            data = f.readlines()\n",
-    "\n",
-    "        plot_list = []\n",
-    "        for plot_key in plots.keys():\n",
-    "            keys = []\n",
-    "            flagged = []\n",
-    "            for d in data:\n",
-    "                if plot_key in d:\n",
-    "                    value = d.split(plot_key)[1].split(main_separator)[0]\n",
-    "                    if value not in keys:\n",
-    "                        keys.append(value)\n",
-    "                        flagged.append(float(d.split()[-1][1:-2]))\n",
-    "\n",
-    "            if len(keys) > 0:\n",
-    "                if plot_key=='scan ':\n",
-    "                    zipped_lists = zip(list(map(int, keys)), flagged)\n",
-    "                    keys, flagged = zip(*sorted(zipped_lists))\n",
-    "                    keys = [str(key) for key in keys]\n",
-    "\n",
-    "                rotate_xlabel=plots[plot_key]['rotate_xlabel']\n",
-    "                x_label=plots[plot_key]['x_label']\n",
-    "                y_label=plots[plot_key]['y_label']\n",
-    "                title=plots[plot_key]['title']\n",
-    "                plotter = figure(x_range=keys, x_axis_label=x_label, y_axis_label=y_label,\n",
-    "                                 plot_width=400, plot_height=300, title=title)\n",
-    "\n",
-    "                plotter.vbar(x=keys, top=flagged, width=0.9)\n",
-    "\n",
-    "                plotter.xgrid.grid_line_color = None\n",
-    "                plotter.y_range.start = 0\n",
-    "                plotter.title.align = 'center'\n",
-    "                if rotate_xlabel:\n",
-    "                    plotter.xaxis.major_label_orientation = np.pi/2\n",
-    "                plot_list.append(plotter)\n",
-    "        if len(plot_list) == 4:\n",
-    "            show(column(row(plot_list[0], plot_list[3]),\n",
-    "                        row(plot_list[2], plot_list[1])))\n",
-    "        else:\n",
-    "            return HTML(\"<p style='color:#ff0000; font-weight:bold'>Could not load specified files. \"\n",
-    "                            \"This step may not have run, or there was a trainsmash. Check the logs</p>\")\n",
-    "    except IndexError:\n",
-    "        return HTML(\"<p style='color:#ff0000; font-weight:bold'>Could not load specified files. \"\n",
-    "                    \"This step may not have run, or there was a trainsmash. Check the logs</p>\")\n",
-    "\n",
-    "def plot_aimfast_stats(filename='fidelity_results.json'):\n",
-    "    if glob(filename):\n",
-    "        with open(filename) as f:  \n",
-    "            data = json.load(f)\n",
-    "        res_stats = dict()\n",
-    "        dr_stats = dict()\n",
-    "        for par, val in data.items():\n",
-    "            if '.fits' not in par and 'models' not in val and type(val) is not list:\n",
-    "                for p, v in val.items():\n",
-    "                    if type(v) is dict:\n",
-    "                        dr_stats[p] = v\n",
-    "                        val_copy = val.copy()\n",
-    "                        val_copy.pop(p)\n",
-    "                res_stats[par] = val_copy\n",
-    "                res_stats[par]['NORM'] = res_stats[par]['NORM'][0]\n",
-    "\n",
-    "        res_stats = dict(sorted(res_stats.items()))\n",
-    "        dr_stats = dict(sorted(dr_stats.items()))\n",
-    "        \n",
-    "        im_keys = []\n",
-    "        rms_values = []\n",
-    "        stddev_values = []\n",
-    "        mad_values = []\n",
-    "        slidingdev_values = []\n",
-    "        skew_values = []\n",
-    "        kurt_values = []\n",
-    "        norm_values = []\n",
-    "        for res_stat in res_stats:\n",
-    "            im_keys.append(res_stat.replace('-residual', ''))\n",
-    "            rms_values.append(res_stats[res_stat]['RMS'])\n",
-    "            stddev_values.append(res_stats[res_stat]['STDDev'])\n",
-    "            mad_values.append(res_stats[res_stat]['MAD'])\n",
-    "            slidingdev_values.append(res_stats[res_stat]['SLIDING_STDDev'])\n",
-    "            skew_values.append(res_stats[res_stat]['SKEW'])\n",
-    "            kurt_values.append(res_stats[res_stat]['KURT'])\n",
-    "            norm_values.append(res_stats[res_stat]['NORM'])\n",
-    "\n",
-    "        width = 400\n",
-    "        height = 300\n",
-    "        multiplier = 10e6 # micro\n",
-    "\n",
-    "        # Vriance plots\n",
-    "        variance_plotter = figure(x_range=im_keys, x_axis_label=\"Image\", y_axis_label=\"Flux density (µJy)\",\n",
-    "                                  plot_width=width, plot_height=height, title='Residual Variance')\n",
-    "        variance_plotter.line(im_keys, np.array(stddev_values)*multiplier, legend_label='std', color='blue')\n",
-    "        variance_plotter.line(im_keys, np.array(mad_values)*multiplier, legend_label='mad', color='red')\n",
-    "        variance_plotter.line(im_keys, np.array(slidingdev_values)*multiplier, legend_label='sliding', color='green')\n",
-    "        variance_plotter.title.align = 'center'\n",
-    "\n",
-    "        # Moment 3 & 4 plots\n",
-    "        mom34_plotter = figure(x_range=im_keys, x_axis_label=\"Image\", y_axis_label=\"Value\",\n",
-    "                               plot_width=width, plot_height=height, title='Skewness & Kurtosis')\n",
-    "        mom34_plotter.line(im_keys, skew_values, legend_label='Skewness', color='blue')\n",
-    "        mom34_plotter.line(im_keys, kurt_values, legend_label='kurtosis', color='red')\n",
-    "        mom34_plotter.title.align = 'center'\n",
-    "        \n",
-    "        # Normality test plot\n",
-    "        normalised = np.array(norm_values)/norm_values[0]\n",
-    "        norm_plotter = figure(x_range=im_keys, x_axis_label=\"Image\", y_axis_label=\"Value\",\n",
-    "                              plot_width=width, plot_height=height, title='Normality Tests')\n",
-    "        norm_plotter.vbar(x=im_keys, top=normalised, width=0.9)\n",
-    "        #norm_plotter.y_range.start = 0\n",
-    "        norm_plotter.title.align = 'center'\n",
-    "\n",
-    "        # Dynamic Range plot\n",
-    "        dr_keys = []\n",
-    "        dr_values = []\n",
-    "        for dr_stat in dr_stats:\n",
-    "            dr_keys.append(dr_stat.replace('-model', ''))\n",
-    "            dr_values.append(dr_stats[dr_stat]['DR'])\n",
-    "        dr_plotter = figure(x_range=dr_keys, x_axis_label=\"Image\", y_axis_label=\"Value\",\n",
-    "                            plot_width=width, plot_height=height, title='Dynamic Range')\n",
-    "        dr_plotter.vbar(x=dr_keys, top=dr_values, width=0.9)\n",
-    "        #dr_plotter.y_range.start = 0\n",
-    "        dr_plotter.title.align = 'center'\n",
-    "        return (show(column(row(variance_plotter, mom34_plotter),\n",
-    "                        row(norm_plotter, dr_plotter))),)\n",
-    "    else:\n",
-    "        return (HTML(\"<p style='color:#ff0000; font-weight:bold'>Could not load specified files. \"\n",
-    "                    \"This step may not have run, or there was a trainsmash. Check the logs</p>\"),)"
+    "ls(\"*obsinfo.txt diagnostic_plots/*elev*png\", section=\"Obsinfo\").thumbs"
    ]
   },
   {
@@ -212,13 +73,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "obsinfo = ls(\"*-obsinfo.txt\", section=\"Observation info\")\n",
-    "obsinfo.title = \"Observation Information\"\n",
-    "if obsinfo:\n",
-    "    obsinfo[-1][0:8].show(number=False)\n",
-    "else:\n",
-    "    HTML(\"<p style='color:#ff0000; font-weight:bold'>Could not load specified files. \"\n",
-    "         \"This step may not have run, or there was a trainsmash. Check the logs</p>\")"
+    "ls(\"continuum/image*/*MFS*fits\", section=\"*Images\").thumbs(vmin=-0.0001, vmax=0.001, zoom=8)"
    ]
   },
   {
@@ -227,237 +82,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "elev_plot = ls(\"diagnostic_plots/*elevation-tracks*.png\", section=\"Fields Info\")\n",
-    "elev_plot.title = \"Elevation Plot\"\n",
-    "if obsinfo:\n",
-    "    start_line = obsinfo[-1]('Fields')[0][0]+1\n",
-    "    end_line = obsinfo[-1]('Spectral')[0][0]\n",
-    "    get_sources = obsinfo[-1][start_line:end_line].extract(\n",
-    "                      \"([^\\s]+)\\s+([^\\s]+)\\s+([^\\s]+)\\s+([^\\s]+)\\s+([^\\s]+)\\s+([^\\s]+)\\s+([^\\s]+)\", \n",
-    "                      [0, 2, 3, 4])\n",
-    "else:\n",
-    "    get_sources = \"No observation info file\"\n",
-    "tabulate([elev_plot.thumbs, get_sources], cw=[0.6, 0.4], maxcol=2)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "summary_file = \"logs*/log-flagging-flagging_summary_flagging_0__0-*.txt\"\n",
-    "rfi_summary = ls(summary_file, section=\"Flagging Data\")\n",
-    "plot_flagged_summary(summary_file)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "gain_files = \"reports/*1gc*\"\n",
-    "gain_plots = ls(gain_files, section=\"Gain Plots\")\n",
-    "gain_plots.html.thumbs"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "inspect_files = \"diagnostic_plots/crosscal/*.png\"\n",
-    "inspect_plots = ls(\"{} -rt\".format(inspect_files), section=\"Data Inspection\")\n",
-    "inspect_plots.thumbs"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "summary_file = \"logs*/log-cross_cal-flagging_summary_crosscal_1gc1_0*.txt\"\n",
-    "rfi_summary = ls(summary_file, section=\"Cross-Cal flagging\")\n",
-    "plot_flagged_summary(summary_file)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "summary_file = \"logs*/log-flagging-flagging_summary_flagging__2_0_*.txt\"\n",
-    "rfi_summary = ls(summary_file, section=\"Target flagging\")\n",
-    "plot_flagged_summary(summary_file)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "rfinder_file = \"rfi_q*/time_report.html\"\n",
-    "rfinder_plot = ls(rfinder_file, section=\"Target RFInder\")\n",
-    "rfinder_plot.html.thumbs(width=1200,height=1000)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "image_files = \"continuum/image*/*MFS-image.fits\"\n",
-    "image_plots = ls(image_files, section=\"Continuum Images\")\n",
-    "image_plots.thumbs(vmin=-0.0002, vmax=0.002, maxcol=5)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "residual_files = \"continuum/image*/*MFS-residual.fits\"\n",
-    "residual_plots = ls(residual_files)\n",
-    "residual_plots.thumbs(vmin=-0.0001, vmax=0.001, maxcol=5)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "model_files = \"continuum/image*/*MFS-model.fits\"\n",
-    "model_plots = ls(model_files)\n",
-    "model_plots.thumbs(vmin=-0.00002, vmax=0.00002, maxcol=5)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "psf_files = \"continuum/image*/*MFS-psf.fits\"\n",
-    "psf_plots = ls(psf_files)\n",
-    "psf_plots.thumbs(vmin=-0.0002, vmax=0.002, maxcol=5)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "image_files = \"continuum/image*/*MFS-dirty.fits\"\n",
-    "image_plot = ls(image_files)\n",
-    "image_plot.thumbs(vmin=-0.0002, vmax=0.002, maxcol=5)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "calibration_files = \"continuum/selfcal_products/*png\"\n",
-    "calibration_plots = ls(calibration_files, section=\"Calibration Diagnostics\")\n",
-    "calibration_plots.thumbs(maxcol=6)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "summary_files = \"logs*/log-self_cal-flagging_summary_image_selfcal_0*.txt\"\n",
-    "rfi_summary = ls(summary_files, section=\"Self-Cal flagging\")\n",
-    "plot_flagged_summary(summary_files)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "fidelity_file = \"fidelity_results.json\"\n",
-    "fidelity = ls(fidelity_file, section=\"Continuum Statistics\")\n",
-    "plot_aimfast_stats(filename=fidelity_file)[0]"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "cross_match_files = \"diagnostic_plots/selfcal/*html\"\n",
-    "cross_match_plot = ls(cross_match_files, section=\"Continuum Cross-matching\")\n",
-    "cross_match_plot.thumbs()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "sunblocker_files = \"diagnostic_plots/*sunblocker.svg\"\n",
-    "sunblocker_plot = ls(sunblocker_files, section=\"Sun Blocker\")\n",
-    "sunblocker_plot.thumbs()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "cube_image_files = \"cubes/cube*/*[*image|*residual].fits\"\n",
-    "cube_image_plots = ls(cube_image_files, section=\"Cube Images\")\n",
-    "cube_image_plots.thumbs(vmin=-0.0001, vmax=0.001)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "moment0_image_files = \"cubes/cube*/*image_mom0.fits\"\n",
-    "moment0_image_plots = ls(moment0_image_files, section=\"Moment Images\")\n",
-    "moment0_image_plots.thumbs(vmin=-0.02, vmax=0.005)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "moment1_image_files = \"cubes/cube*/*image_mom1.fits\"\n",
-    "moment1_image_plots = ls(moment1_image_files)\n",
-    "moment1_image_plots.thumbs(vmin=1e9, vmax=2e9)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "sharpener_file = \"diagnostic_plots/wlm_J0001_1527_sharpOut/plot/output_all_plots_*.pdf\"\n",
-    "sharpener_plots = ls(sharpener_file, section=\"Spectral Analysis\")\n",
-    "sharpener_plots.thumbs()"
+    "ls(\"caltables/*-*-*.*\", section=\"*Caltables\").thumbs"
    ]
   }
  ],

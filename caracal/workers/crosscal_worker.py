@@ -11,11 +11,11 @@ import copy
 import re
 import json
 
-NAME = "Cross calibration"
-LABEL = 'cross_cal'
+NAME = "Cross-calibration"
+LABEL = 'crosscal'
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
-def get_dir_path(string, pipeline): 
+def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
 
 FLAG_NAMES = [""]
@@ -88,7 +88,7 @@ def get_last_gain(gaintables, my_term="dummy"):
     else:
         return []
 
-def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype, 
+def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
@@ -98,7 +98,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
     iters = {}
 
     if prev and prev_name:
-        for item in config[ftype].get("apply", ""):
+        for item in config[ftype]['apply']:
             gaintables.append("%s_%s.%s%d" % (prefix, prev_name, item, prev["iters"][item]))
             ft = RULES[item]["field"]
             fields.append(",".join(getattr(pipeline, ft)[iobs]))
@@ -135,7 +135,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if gaintables:
                 applycal(msname, recipe, gaintables,
                     interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
-            recipe.add(RULES[term]["cab"], step, 
+            recipe.add(RULES[term]["cab"], step,
                     copy.deepcopy(params),
                     input=pipeline.input, output=pipeline.output,
                     label="%s::" % step)
@@ -228,11 +228,11 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if "I" not in order and smodel and term != 'B':
                 params["smodel"] = ["1", "0", "0", "0"]
 
-            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
+            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables,
                     caltable):
                 caracal.log.info("Reusing existing gain table '%s' as requested" % caltable)
             else:
-                recipe.add(RULES[term]["cab"], step, 
+                recipe.add(RULES[term]["cab"], step,
                         copy.deepcopy(params),
                         input=pipeline.input, output=pipeline.caltables,
                         label="%s:: %s calibration" % (step, term))
@@ -309,7 +309,7 @@ def get_caltab_final(gaintable, interp, gainfield, field, ftable=None):
 
     return gaintables, interps, fields
 
-def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i, 
+def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
         calmode="calflag", label="", fluxtable=None):
     """
     Apply gains
@@ -317,7 +317,7 @@ def applycal(msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
 
     Parameters:
       order: order in which to apply gains
-    """ 
+    """
 
     gaintables, interps, fields = get_caltab_final(gaintable, interp, gainfield, field, ftable=fluxtable)
 
@@ -392,7 +392,7 @@ def worker(pipeline, recipe, config):
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
 
         if pipeline.enable_task(config, 'set_model'):
-            if config['set_model'].get('no_verify'):
+            if config['set_model']['no_verify']:
                 opts = {
                     "vis": msname,
                     "field": fluxscale_field,
@@ -403,14 +403,14 @@ def worker(pipeline, recipe, config):
                 modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
                 modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
                 standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
-                if config['set_model'].get('caracal_model') and modelsky:
+                if config['set_model']['caracal_model'] and modelsky:
 
                     # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel": modelsky,
                         "msname": msname,
                         "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
-                        "threads": config["set_model"].get('threads'),
+                        "threads": config["set_model"]['threads'],
                         "mode": "simulate",
                         "tile-size": 128,
                         "column": "MODEL_DATA",
@@ -430,7 +430,7 @@ def worker(pipeline, recipe, config):
                     opts = {
                         "vis": msname,
                         "field": fluxscale_field,
-                        "standard": config['set_model'].get('standard', standard),
+                        "standard": standard,
                         "usescratch": False,
                         "scalebychan": True,
                     }
@@ -451,7 +451,7 @@ def worker(pipeline, recipe, config):
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
         if gcal_set == set() or len(gcal_set - fcal_set) == 0:
-            primary = solve(msname, msinfo, recipe, config, pipeline, i, 
+            primary = solve(msname, msinfo, recipe, config, pipeline, i,
                     prefix, label=label, ftype="primary_cal")
             caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
@@ -460,11 +460,11 @@ def worker(pipeline, recipe, config):
             # apply to calibration fields
             if len(pipeline.bpcal[i]) > 1:
                 ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
-                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables,
                         ftable):
                     caracal.log.info("Reusing existing gain table '%s' as requested" % ftable)
                 else:
-                    transfer_fluxscale(msname, recipe, gtable+":output", ftable, 
+                    transfer_fluxscale(msname, recipe, gtable+":output", ftable,
                             pipeline, i, reference=fluxscale_field, label=label)
                     fstrings = map(str, pipeline.bpcal_id[i])
                     fstrings = ",".join(fstrings)
@@ -479,12 +479,12 @@ def worker(pipeline, recipe, config):
                 applycal(msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "target", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
         else:
-            primary = solve(msname, msinfo, recipe, config, pipeline, i, 
+            primary = solve(msname, msinfo, recipe, config, pipeline, i,
                     prefix, label=label, ftype="primary_cal")
 
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable, 
+                    prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable,
                     prev=primary, prev_name="primary_cal", smodel=True)
 
             interps = primary["interps"]
@@ -493,11 +493,11 @@ def worker(pipeline, recipe, config):
             # Transfer fluxscale
             if len(pipeline.bpcal[i]) > 1:
                 ftable = "%s_primary_cal.F%d" % (prefix, primary["iters"]["G"])
-                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                if config["primary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables,
                         ftable):
                     caracal.log.info("Reusing existing gain table '%s' as requested" % ftable)
                 else:
-                    transfer_fluxscale(msname, recipe, gtable+":output", ftable, 
+                    transfer_fluxscale(msname, recipe, gtable+":output", ftable,
                             pipeline, i, reference=fluxscale_field, label=label)
                     plotgains(recipe, pipeline, pipeline.bpcal_id[i], 
                             ftable, i, term='F')
@@ -510,11 +510,11 @@ def worker(pipeline, recipe, config):
 
             # Transfer fluxscale
             ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
-            if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables, 
+            if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables,
                     ftable):
                 caracal.log.info("Reusing existing gain table '%s' as requested" % ftable)
             else:
-                transfer_fluxscale(msname, recipe, gtable+":output", ftable, 
+                transfer_fluxscale(msname, recipe, gtable+":output", ftable,
                         pipeline, i, reference=fluxscale_field, label=label)
                 plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
                     ftable, i, term='F')
@@ -524,7 +524,7 @@ def worker(pipeline, recipe, config):
             gaintables = secondary["gaintables"]
 
             if "gcal" in config["apply_cal"]["applyto"]:
-                applycal(msname, recipe, copy.deepcopy(gaintables), interps, 
+                applycal(msname, recipe, copy.deepcopy(gaintables), interps,
                         gainfields, "gcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(msname, recipe, copy.deepcopy(gaintables), interps,

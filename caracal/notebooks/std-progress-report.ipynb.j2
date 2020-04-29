@@ -1,7 +1,7 @@
 {% if general.title %}
   {% set title = general.title %}
 {% else %}
-  {% set title = get_data.dataid|join(" ") %}
+  {% set title = getdata.dataid|join(" ") %}
 {% endif %}
 {% if general.prefix %}
   {% set suffix = " (" + general.prefix +")" %}

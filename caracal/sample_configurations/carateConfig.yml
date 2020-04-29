@@ -2,13 +2,14 @@ schema_version: 0.3.0
 
 general:
   prefix: mypipelinerun
-get_data:
+
+getdata:
   dataid: ['']
 
-observation_config:
+obsconf:
   reference_antenna: 'm010'   
 
-transform_data:
+transform:
   enable: true
   label_out: cal
   split_field:
@@ -16,7 +17,7 @@ transform_data:
     field: calibrators
     column: 'data'
 
-prepare_data:
+prep:
   enable: true
   label_in: cal
   field: calibrators
@@ -24,7 +25,7 @@ prepare_data:
     enable: true
     mode: uniform
 
-flagging:
+flag:
   enable: true
   field: calibrators
   label_in: cal
@@ -41,7 +42,7 @@ flagging:
   flag_spw:
     enable: true
 
-cross_cal:
+crosscal:
   enable: true
   uvrange: '>150'
   label_in: 'cal'
@@ -68,12 +69,12 @@ cross_cal:
 polcal:
   enable: false
 
-inspect_data:
+inspect:
   label_in: 'cal'
   label_out: '1gc'
   enable: true
 
-transform_data__2:
+transform__2:
   enable: true
   split_field:
     enable: true
@@ -81,7 +82,7 @@ transform_data__2:
       enable: true
       label_cal: '1gc1'
   
-prepare_data__2:
+prep__2:
   enable: true
   label_in: corr
   field: target
@@ -89,7 +90,7 @@ prepare_data__2:
     enable: true
     mode: uniform
 
-flagging__2:
+flag__2:
   enable: true
   field: target
   label_in: corr
@@ -104,7 +105,7 @@ flagging__2:
     enable: true
     flagger: aoflagger
 
-transform_data__3:
+transform__3:
   enable: true
   label_in: corr
   label_out: cont
@@ -113,10 +114,10 @@ transform_data__3:
     freq_average: 4
     column: data
 
-masking:
+mask:
   enable: false
 
-flagging__3:
+flag__3:
   enable: false
   field: target
   label_in: cont
@@ -124,7 +125,7 @@ flagging__3:
     enable: true
     channels: '*:1417.2~1421.0MHz'
 
-self_cal:
+selfcal:
   enable: true
   label: cont
   ncpu: 12
@@ -161,7 +162,7 @@ self_cal:
     memory_fraction: 0.45
     transfer_to_label: corr
 
-transform_data__4:
+transform__4:
   enable: true
   label_in: 'corr'
   label_out: 'l'
@@ -171,7 +172,7 @@ transform_data__4:
     otfcal:
       enable: false
 
-image_line:
+line:
   enable: true
   label: 'l'
   restfreq: '1.420405752GHz'

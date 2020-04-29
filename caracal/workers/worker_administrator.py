@@ -73,7 +73,7 @@ class worker_administrator(object):
         sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
-        # general, get_data and observation config are all mendatory. 
+        # general, getdata and obsconf are all mendatory. 
         # That's why the lowest starting index is 2 (third element)
         start_idx = last_mandatory
         end_idx = len(self.config.keys())
@@ -129,7 +129,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline"):
+        if config["general"]["init_pipeline"]:
             self.init_pipeline()
 
         # save configuration file

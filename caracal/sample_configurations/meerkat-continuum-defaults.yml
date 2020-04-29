@@ -15,26 +15,26 @@ observation_config:
   obsinfo: 
     enable: true
   target:
-    - 'all'
+    - all
   gcal: 
-    - 'all'
+    - all
   bpcal:
-    - 'longest'
+    - longest
   fcal:
-    - 'longest'
+    - longest
   xcal:
-    - 'longest'
+    - longest
   reference_antenna: '0'
 
 prepare_data: 
   enable: true
+  label_in: ''
   fixvis: 
     enable: false
   manage_flags: 
     enable: true
     mode: save_legacy_flags
     version: caracal_legacy
-  clear_cal: true
   spectral_weights:
     enable: true
     mode: uniform
@@ -69,7 +69,6 @@ cross_cal:
     enable: true
     caracal_model: true
   primary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
@@ -78,7 +77,6 @@ cross_cal:
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGAKG
     apply: B

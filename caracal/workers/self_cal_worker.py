@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os
 import shutil
 import glob
@@ -1124,7 +1125,7 @@ def worker(pipeline, recipe, config):
         for i,msname in enumerate(mslist):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
             # Hence this temporary fix.
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname[:-3])
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
             with open(msinfo, 'r') as stdr:
                 corrs = yaml.load(stdr,Loader=yaml.FullLoader)['CORR']['CORR_TYPE']
             if len(corrs) > 2:
@@ -1325,7 +1326,7 @@ def worker(pipeline, recipe, config):
         for i, msname_out in enumerate(mslist_out):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
             # Hence this temporary fix.
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.output, msname_out[:-3])
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname_out[:-3])
             with open(msinfo, 'r') as stdr:
                 corrs = yaml.load(stdr,Loader=yaml.FullLoader)['CORR']['CORR_TYPE']
             if len(corrs) > 2:
@@ -1574,7 +1575,7 @@ def worker(pipeline, recipe, config):
 
     def get_obs_data(msname):
         "Extracts data from the json data file"
-        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.output,msname[:-3])
+        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo,msname[:-3])
         with open(filename) as f:
             data = json.load(f)
         return data

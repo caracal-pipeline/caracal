@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  transform_data:
+  transform:
     desc: Split, avg and/or calibrate data
     type: map
     mapping:

@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  inspect_data:
+  inspect:
     type: map
     desc: Diagnostic plots of the first-pass cross-calibrated data.
     mapping:

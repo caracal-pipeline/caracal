@@ -3,10 +3,10 @@ schema_version: 0.3.0
 general:
   prefix: mypipelinerun
 
-get_data:
+getdata:
   dataid: ['']
 
-observation_config:
+obsconf:
   target: 
     - 'all'
   fcal: 
@@ -19,7 +19,7 @@ observation_config:
     - 'longest'
   reference_antenna: '0'
 
-transform_data:
+transform:
   enable: true
   label_out: 'cal'
   split_field:
@@ -27,12 +27,12 @@ transform_data:
     field: calibrators
     column: 'data'
 
-prepare_data:
+prep:
   enable: true
   label_in: cal
   field: calibrators
 
-flagging:
+flag:
   enable: true
   field: calibrators 
   label_in: cal
@@ -44,7 +44,7 @@ flagging:
   flag_shadow:
     enable: true
     
-cross_cal:
+crosscal:
   enable: true
   label_in: 'cal'
   apply_cal:
@@ -56,12 +56,12 @@ cross_cal:
 polcal:
   enable: false
 
-inspect_data:
+inspect:
   label_in: 'cal'
   label_out: '1gc'
   enable: true
 
-transform_data__2:
+transform__2:
   enable: true
   split_field:
     enable: true
@@ -69,12 +69,12 @@ transform_data__2:
       enable: true
       label_cal: '1gc1'
   
-prepare_data__2:
+prep__2:
   enable: true
   label_in: corr 
   field: target
 
-flagging__2:
+flag__2:
   enable: true
   field: target 
   label_in: corr
@@ -82,10 +82,10 @@ flagging__2:
     enable: true
     flagger: aoflagger
     
-masking:
+mask:
   enable: false
 
-self_cal:
+selfcal:
   enable: true
   img_npix: 1800
   img_cell: 2
@@ -96,7 +96,7 @@ self_cal:
     enable: true
     Gsols_timeslots: [120]
 
-image_line:
+line:
   enable: true
   restfreq: '1.420405752GHz'
   make_cube:

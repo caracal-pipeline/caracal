@@ -4,7 +4,7 @@ mapping:
     type: str
     required: True
 
-  get_data:
+  getdata:
     type: map
     desc: Download and/or convert/unarchive data so that its in the MS format for further processing
     mapping:

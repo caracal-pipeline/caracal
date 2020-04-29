@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  direction_dependent_calibration:
+  ddcal:
     type: map
     desc: Perform direction dependent calibration on the data
     mapping:

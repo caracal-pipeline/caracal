@@ -23,6 +23,9 @@ from caracal.dispatch_crew import utils
 import itertools
 from caracal.workers.utils import manage_flagsets as manflags
 
+NAME = 'Process and Image Line Data'
+LABEL = 'line'
+
 # To split out cubes/<dir> from output/cubes/dir
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
@@ -30,10 +33,8 @@ def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 def freq_to_vel(filename, reverse):
     C = 2.99792458e+8       # m/s
     HI = 1.4204057517667e+9  # Hz
-    filename = filename.split(':')
-    filename = '{0:s}/{1:s}'.format(filename[1], filename[0])
     if not os.path.exists(filename):
-        caracal.log.info(
+        caracal.log.warn(
             'Skipping conversion for {0:s}. File does not exist.'.format(filename))
     else:
         with fits.open(filename, mode='update') as cube:
@@ -69,18 +70,16 @@ def freq_to_vel(filename, reverse):
                     del headcube['cunit3']
             else:
                 if not reverse:
-                    caracal.log.info(
+                    caracal.log.warn(
                         'Skipping conversion for {0:s}. Input is not a cube or not in frequency.'.format(filename))
                 else:
-                    caracal.log.info(
+                    caracal.log.warn(
                         'Skipping conversion for {0:s}. Input is not a cube or not in velocity.'.format(filename))
 
 
 def remove_stokes_axis(filename):
-    filename = filename.split(':')
-    filename = '{0:s}/{1:s}'.format(filename[1], filename[0])
     if not os.path.exists(filename):
-        caracal.log.info(
+        caracal.log.warn(
             'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(filename))
     else:
         with fits.open(filename, mode='update') as cube:
@@ -94,7 +93,7 @@ def remove_stokes_axis(filename):
                 if 'cunit4' in headcube:
                     del headcube['cunit4']
             else:
-                caracal.log.info(
+                caracal.log.warn(
                     'Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
 
@@ -111,10 +110,8 @@ def fix_specsys(filename, specframe):
         5: 'TOPOCENT'}[
         np.unique(
             np.array(specframe))[0]]
-    filename = filename.split(':')
-    filename = '{0:s}/{1:s}'.format(filename[1], filename[0])
     if not os.path.exists(filename):
-        caracal.log.info(
+        caracal.log.warn(
             'Skipping SPECSYS fix for {0:s}. File does not exist.'.format(filename))
     else:
         with fits.open(filename, mode='update') as cube:
@@ -124,11 +121,8 @@ def fix_specsys(filename, specframe):
             headcube['specsys3'] = specsys3
 
 def make_pb_cube(filename, apply_corr):
-
-    filename = filename.split(':')
-    filename = '{0:s}/{1:s}'.format(filename[1], filename[0])
     if not os.path.exists(filename):
-        caracal.log.info(
+        caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
     else:
         with fits.open(filename) as cube:
@@ -179,9 +173,6 @@ def calc_rms(filename, linemaskname):
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
 
-NAME = 'Make spectral line cube'
-LABEL = 'image_line'
-
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
@@ -205,7 +196,7 @@ def worker(pipeline, recipe, config):
         '{2:s}-{0:s}-{1:s}'.format(did, config['label'],
             pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
-    restfreq = config.get('restfreq')
+    restfreq = config['restfreq']
 
     for i, msfile in enumerate(all_msfiles):
         # Upate pipeline attributes (useful if, e.g., channel averaging was
@@ -246,7 +237,7 @@ def worker(pipeline, recipe, config):
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
     if pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'],
-            'doppler') and config['mstransform']['doppler'].get('outchangrid') == 'auto':
+            'doppler') and config['mstransform']['doppler']['outchangrid'] == 'auto':
         firstchanfreq = list(itertools.chain.from_iterable(firstchanfreq_all))
         chanw = list(itertools.chain.from_iterable(chanw_all))
         lastchanfreq = list(itertools.chain.from_iterable(lastchanfreq_all))
@@ -258,7 +249,7 @@ def worker(pipeline, recipe, config):
             'atca': [-30.307665436, 149.550164466],
             'askap': [116.5333, -16.9833],
         }
-        tellocation = teldict[config['mstransform']['doppler'].get('telescope')]
+        tellocation = teldict[config['mstransform']['doppler']['telescope']]
         telloc = EarthLocation.from_geodetic(tellocation[0], tellocation[1])
         firstchanfreq_dopp, chanw_dopp, lastchanfreq_dopp = firstchanfreq, chanw, lastchanfreq
         corr_order = False
@@ -321,12 +312,12 @@ def worker(pipeline, recipe, config):
         caracal.log.info(
             'Calculated common Doppler-corrected channel grid for all input .MS: {0:d} channels starting at {1:s} and with channel width {2:s}.'.format(
                 nchan_dopp, comfreq0, comchanw))
-        if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='wsclean' and corr_order:
+        if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='wsclean' and corr_order:
             caracal.log.error('wsclean requires a consistent ordering of the frequency axis across multiple MSs')
             caracal.log.error('(all increasing or all decreasing). Use casa_image if this is not the case.')
             raise caracal.BadDataError("inconsistent frequency axis ordering across MSs")
 
-    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler'].get('outchangrid') != 'auto':
+    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler']['outchangrid'] != 'auto':
         if len(config['mstransform']['doppler']['outchangrid'].split(',')) != 3:
             caracal.log.error(
                 'Incorrect format for mstransform:outchangrid in the .yml config file.')
@@ -410,31 +401,31 @@ def worker(pipeline, recipe, config):
                 os.system(
                     'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
 
-            col = config['mstransform'].get('column')
+            col = config['mstransform']['column']
             step = 'mstransform-ms{:d}'.format(i)
             recipe.add('cab/casa_mstransform',
                        step,
                        {"msname": msname,
                         "outputvis": msname_mst,
                         "regridms": pipeline.enable_task(config['mstransform'], 'doppler'),
-                        "mode": config['mstransform']['doppler'].get('mode'),
+                        "mode": config['mstransform']['doppler']['mode'],
                         "nchan": sdm.dismissable(nchan_dopp),
                         "start": sdm.dismissable(comfreq0),
                         "width": sdm.dismissable(comchanw),
                         "interpolation": 'nearest',
                         "datacolumn": col,
                         "restfreq": restfreq,
-                        "outframe": config['mstransform']['doppler'].get('outframe'),
-                        "veltype": config['mstransform']['doppler'].get('veltype'),
+                        "outframe": config['mstransform']['doppler']['outframe'],
+                        "veltype": config['mstransform']['doppler']['veltype'],
                         "douvcontsub": pipeline.enable_task(config['mstransform'], 'uvlin'),
-                        "fitspw": sdm.dismissable(config['mstransform']['uvlin'].get('fitspw')),
-                        "fitorder": config['mstransform']['uvlin'].get('fitorder'),
+                        "fitspw": sdm.dismissable(config['mstransform']['uvlin']['fitspw']),
+                        "fitorder": config['mstransform']['uvlin']['fitorder'],
                         },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
-            if config['mstransform'].get('obsinfo', True):
+            if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
                            step,
@@ -471,9 +462,9 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
             available_flagversions = manflags.handle_conflicts(pipeline, wname, msname_mst, config,
-                flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
+                flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
             if rewind_mst_ms:
-                version = config['rewind_flags']["transfer_apply_gains_version"]
+                version = config['rewind_flags']["mstransform_version"]
                 substep = 'rewind_to_{0:s}_mst{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
                 if available_flagversions[-1] != version:
@@ -496,14 +487,14 @@ def worker(pipeline, recipe, config):
                        step,
                        {"msname": msname_mst,
                         "column": 'DATA',
-                        "strategy": config['flag_mst_errors'].get('strategy'),
+                        "strategy": config['flag_mst_errors']['strategy'],
                        },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config, 'sunblocker'):
-            if config['sunblocker'].get('use_mstransform', True):
+            if config['sunblocker']['use_mstransform']:
                 msnamesb = msname_mst
             else:
                 msnamesb = msname
@@ -514,20 +505,20 @@ def worker(pipeline, recipe, config):
                            "command": "phazer",
                            "inset": msnamesb,
                            "outset": msnamesb,
-                           "imsize": config['sunblocker'].get('imsize'),
-                           "cell": config['sunblocker'].get('cell'),
+                           "imsize": config['sunblocker']['imsize'],
+                           "cell": config['sunblocker']['cell'],
                            "pol": 'i',
                            "threshmode": 'fit',
-                           "threshold": config['sunblocker'].get('threshold'),
+                           "threshold": config['sunblocker']['threshold'],
                            "mode": 'all',
                            "radrange": 0,
                            "angle": 0,
                            "show": prefix + '.sunblocker.svg',
                            "verb": True,
                            "dryrun": False,
-                           "uvmax": config['sunblocker'].get('uvmax'),
-                           "uvmin": config['sunblocker'].get('uvmin'),
-                           "vampirisms": config['sunblocker'].get('vampirisms'),
+                           "uvmax": config['sunblocker']['uvmax'],
+                           "uvmin": config['sunblocker']['uvmin'],
+                           "vampirisms": config['sunblocker']['vampirisms'],
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -553,7 +544,7 @@ def worker(pipeline, recipe, config):
                 shutil.copy(plot, pipeline.diagnostic_plots)
                 os.remove(plot)
 
-    if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='wsclean':
+    if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='wsclean':
         nchans_all, specframe_all = [], []
         label = config['label']
         if label != '':
@@ -561,7 +552,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
 
-        if config['make_cube'].get('use_mstransform'):
+        if config['make_cube']['use_mstransform']:
             all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
                 pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
@@ -602,7 +593,7 @@ def worker(pipeline, recipe, config):
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all.append([nchan_dopp for kk in chanw_all[i]])
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler'].get('outframe')] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
 
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -619,8 +610,8 @@ def worker(pipeline, recipe, config):
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
-        spwid = config['make_cube'].get('spwid')
-        nchans = config['make_cube'].get('nchans')
+        spwid = config['make_cube']['spwid']
+        nchans = config['make_cube']['nchans']
         if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
@@ -628,44 +619,44 @@ def worker(pipeline, recipe, config):
         # Assuming user wants same spw for all msfiles and they have same
         # specframe
         specframe_all = [ss[spwid] for ss in specframe_all][0]
-        firstchan = config['make_cube'].get('firstchan')
-        binchans = config['make_cube'].get('binchans')
+        firstchan = config['make_cube']['firstchan']
+        binchans = config['make_cube']['binchans']
         channelrange = [firstchan, firstchan + nchans * binchans]
-        npix = config['make_cube'].get('npix')
+        npix = config['make_cube']['npix']
         if len(npix) == 1:
             npix = [npix[0], npix[0]]
 
         # Construct weight specification
-        if config['make_cube'].get('weight') == 'briggs':
+        if config['make_cube']['weight'] == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['make_cube'].get('robust'))
+                config['make_cube']['robust'])
         else:
-            weight = config['make_cube'].get('weight')
-        wscl_niter = config['make_cube'].get('wscl_sofia_niter')
-        wscl_tol = config['make_cube'].get('wscl_sofia_converge')
+            weight = config['make_cube']['weight']
+        wscl_niter = config['make_cube']['wscl_sofia_niter']
+        wscl_tol = config['make_cube']['wscl_sofia_converge']
 
         line_image_opts = {
             "weight": weight,
-            "taper-gaussian": str(config['make_cube'].get('taper')),
-            "pol": config['make_cube'].get('pol'),
+            "taper-gaussian": str(config['make_cube']['taper']),
+            "pol": config['make_cube']['pol'],
             "npix": npix,
-            "padding": config['make_cube'].get('padding'),
-            "scale": config['make_cube'].get('cell'),
+            "padding": config['make_cube']['padding'],
+            "scale": config['make_cube']['cell'],
             "channelsout": nchans,
             "channelrange": channelrange,
-            "niter": config['make_cube'].get('niter'),
-            "gain": config['make_cube'].get('gain'),
-            "mgain": config['make_cube'].get('wscl_mgain'),
-            "auto-threshold": config['make_cube'].get('wscl_auto_threshold'),
-            "multiscale": config['make_cube'].get('wscl_multi_scale'),
-            "multiscale-scales": config['make_cube'].get('wscl_multi_scale_scales'),
-            "multiscale-scale-bias": config['make_cube'].get('wscl_multi_scale_bias'),
-            "no-update-model-required": config['make_cube'].get('wscl_no_update_mod')
+            "niter": config['make_cube']['niter'],
+            "gain": config['make_cube']['gain'],
+            "mgain": config['make_cube']['wscl_mgain'],
+            "auto-threshold": config['make_cube']['wscl_auto_threshold'],
+            "multiscale": config['make_cube']['wscl_multi_scale'],
+            "multiscale-scales": config['make_cube']['wscl_multi_scale_scales'],
+            "multiscale-scale-bias": config['make_cube']['wscl_multi_scale_bias'],
+            "no-update-model-required": config['make_cube']['wscl_no_update_mod']
         }
 
-        for target in (all_targets):
+        for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))
-            if config['make_cube'].get('use_mstransform'):
+            if config['make_cube']['use_mstransform']:
                 mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
@@ -691,18 +682,17 @@ def worker(pipeline, recipe, config):
                     })
 
                 if j == 1:
-                    own_line_clean_mask = config['make_cube'].get(
-                        'wscl_user_clean_mask')
+                    own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                             get_dir_path(pipeline.masking, pipeline), own_line_clean_mask)})
-                        step = 'make_cube-{0:s}-{1:d}-with_user_mask'.format(line_name, j)
+                        step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
-                        line_image_opts.update({"auto-mask": config['make_cube'].get('wscl_auto_mask')})
-                        step = 'make_cube-{0:s}-{1:d}-with_automasking'.format(line_name, j)
-                    
+                        line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
+                        step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking'.format(line_name, tt, j)
+
                 else:
-                    step = 'make_sofia_mask-' + str(j - 1)
+                    step = 'make_sofia_mask-field{0:d}-iter{1:d}'.format(tt, j - 1)
                     line_clean_mask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output'.format(
                         pipeline.prefix, field, line_name, j)
                     line_clean_mask_file = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
@@ -751,16 +741,16 @@ def worker(pipeline, recipe, config):
                         j -= 1
                         break
 
-                    step = 'make_cube-{0:s}-{1:d}-with_SoFiA_mask'.format(line_name, j)
+                    step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_SoFiA_mask'.format(line_name, tt, j)
                     line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(cube_dir, line_clean_mask)})
                     if 'auto-mask' in line_image_opts:
                         del(line_image_opts['auto-mask'])
-                    
+
                 recipe.add('cab/wsclean',
                            step, line_image_opts,
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{:s}:: Image Line'.format(step))
+                           label='{0:s}:: Image Line'.format(step))
                 recipe.run()
                 recipe.jobs = []
 
@@ -771,18 +761,18 @@ def worker(pipeline, recipe, config):
 
                 # Stack channels together into cubes and fix spectral frame
                 if config['make_cube']['wscl_make_cube']:
-                    if not config['make_cube'].get('niter'):
+                    if not config['make_cube']['niter']:
                         imagetype = ['dirty', 'image']
                     else:
                         imagetype = ['dirty', 'image', 'psf', 'residual', 'model']
-                        if config['make_cube'].get('wscl_mgain') < 1.0:
+                        if config['make_cube']['wscl_mgain'] < 1.0:
                             imagetype.append('first-residual')
                     for mm in imagetype:
-                        step = 'make-{0:s}-cube'.format(
-                            mm.replace('-', '_'))
+                        step = '{0:s}-cubestack-field{1:d}-iter{2:d}'.format(
+                            mm.replace('-', '_'), tt, j)
                         if not os.path.exists('{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}-0000-{5:s}.fits'.format(
                                 cube_dir, pipeline.prefix, field, line_name, j, mm, pipeline.output)):
-                            caracal.log.info('Skipping container {0:s}. Single channels do not exist.'.format(step))
+                            caracal.log.warn('Skipping container {0:s}. Single channels do not exist.'.format(step))
                         else:
                             stacked_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(cube_dir,
                                             pipeline.prefix, field, line_name, j, mm)
@@ -818,17 +808,18 @@ def worker(pipeline, recipe, config):
                                 cubedata[:, tobeblanked] = np.nan
                                 fits.writeto('{0:s}/{1:s}'.format(pipeline.output, stacked_cube), cubedata, header = cubehead, overwrite = True)
 
+                    caracal.log.info('Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}'.format(tt, j))
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
-                        cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits:output'.format(
-                            cube_dir, pipeline.prefix, field, line_name, j, ss)
+                        cubename = '{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
+                            cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
                         recipe.add(fix_specsys,
-                                   'fix_specsys-{0:s}_cube'.format(ss.replace("_", "-")),
+                                   'fixspecsys-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
                                    {'filename': cubename,
-                                       'specframe': specframe_all,
-                                    },
+                                    'specframe': specframe_all,},
                                    input=pipeline.input,
                                    output=pipeline.output,
                                    label='Fix spectral reference frame for cube {0:s}'.format(cubename))
+
                     recipe.run()
                     recipe.jobs = []
 
@@ -850,7 +841,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info('Stopping anyway. Maximum number of SoFiA + WSclean iterations reached.')
                     else:
                         caracal.log.info('Starting a new SoFiA + WSclean iteration.')
-                    
+
             # Out of SoFiA + WSclean loop -- prepare final data products
             for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                 if 'dirty' in ss:
@@ -875,7 +866,7 @@ def worker(pipeline, recipe, config):
                     os.rename(MFScubename, finalMFScubename)
 
             for j in range(1, wscl_niter):
-                if config['make_cube'].get('wscl_keep_final_products_only'):
+                if config['make_cube']['wscl_keep_final_products_only']:
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
@@ -890,7 +881,7 @@ def worker(pipeline, recipe, config):
                         if os.path.exists(MFScubename):
                             os.remove(MFScubename)
 
-    if pipeline.enable_task(config, 'make_cube') and config['make_cube'].get('image_with')=='casa':
+    if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='casa':
         cube_dir = get_dir_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
         label = config['label']
@@ -898,7 +889,7 @@ def worker(pipeline, recipe, config):
             flabel = '_' + label
         else:
             flabel = label
-        if config['make_cube'].get('use_mstransform'):
+        if config['make_cube']['use_mstransform']:
             all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
@@ -932,7 +923,7 @@ def worker(pipeline, recipe, config):
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler'].get('outframe', 'bary')] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msfile[:-3])
@@ -948,8 +939,8 @@ def worker(pipeline, recipe, config):
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
-        spwid = config['make_cube'].get('spwid')
-        nchans = config['make_cube'].get('nchans')
+        spwid = config['make_cube']['spwid']
+        nchans = config['make_cube']['nchans']
         if nchans == 0:
             # Assuming user wants same spw for all msfiles and they have same
             # number of channels
@@ -957,105 +948,105 @@ def worker(pipeline, recipe, config):
         # Assuming user wants same spw for all msfiles and they have same
         # specframe
         specframe_all = [ss[spwid] for ss in specframe_all][0]
-        firstchan = config['make_cube'].get('firstchan')
-        binchans = config['make_cube'].get('binchans')
+        firstchan = config['make_cube']['firstchan']
+        binchans = config['make_cube']['binchans']
         channelrange = [firstchan, firstchan + nchans * binchans]
         # Construct weight specification
-        if config['make_cube'].get('weight') == 'briggs':
+        if config['make_cube']['weight'] == 'briggs':
             weight = 'briggs {0:.3f}'.format(
-                config['make_cube'].get('robust'))
+                config['make_cube']['robust'])
         else:
-            weight = config['make_cube'].get('weight')
+            weight = config['make_cube']['weight']
 
-        for target in (all_targets):
-            if config['make_cube'].get('use_mstransform'):
+        for tt, target in enumerate(all_targets):
+            if config['make_cube']['use_mstransform']:
                 mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
             field = utils.filter_name(target)
 
-            step = 'make_line_cube'
+            step = 'make_line_cube-field{0:d}'.format(tt)
             image_opts = {
                 "msname": mslist,
                 "prefix": '{0:s}/{1:s}_{2:s}_{3:s}'.format(cube_dir, pipeline.prefix, field, line_name),
                 "mode": 'channel',
                 "nchan": nchans,
-                "start": config['make_cube'].get('firstchan'),
+                "start": config['make_cube']['firstchan'],
                 "interpolation": 'nearest',
-                "niter": config['make_cube'].get('niter'),
-                "gain": config['make_cube'].get('gain'),
+                "niter": config['make_cube']['niter'],
+                "gain": config['make_cube']['gain'],
                 "psfmode": 'hogbom',
-                "threshold": config['make_cube'].get('casa_threshold'),
-                "npix": config['make_cube'].get('npix'),
-                "cellsize": config['make_cube'].get('cell'),
-                "weight": config['make_cube'].get('weight'),
-                "robust": config['make_cube'].get('robust'),
-                "stokes": config['make_cube'].get('pol'),
-                "port2fits": config['make_cube'].get('casa_port2fits'),
+                "threshold": config['make_cube']['casa_threshold'],
+                "npix": config['make_cube']['npix'],
+                "cellsize": config['make_cube']['cell'],
+                "weight": config['make_cube']['weight'],
+                "robust": config['make_cube']['robust'],
+                "stokes": config['make_cube']['pol'],
+                "port2fits": config['make_cube']['casa_port2fits'],
                 "restfreq": restfreq,
             }
-            if config['make_cube'].get('taper') != '':
+            if config['make_cube']['taper'] != '':
                 image_opts.update({
                     "uvtaper": True,
-                    "outertaper": config['make_cube'].get('taper'),
+                    "outertaper": config['make_cube']['taper'],
                 })
             recipe.add('cab/casa_clean', step, image_opts,
                        input=pipeline.input,
                        output=pipeline.output,
-                       label='{:s}:: Image Line'.format(step))
+                       label='{0:s}:: Image Line'.format(step))
 
     recipe.run()
     recipe.jobs = []
-    
+
     # Once all cubes have been made fix the headers etc.
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
     cube_dir = get_dir_path(pipeline.cubes, pipeline)
-    for target in all_targets:
+    for tt, target in enumerate(all_targets):
         field = utils.filter_name(target)
 
         casa_cube_list=glob.glob('{0:s}/{1:s}/{2:s}_{3:s}_{4:s}*.fits'.format(
             pipeline.output,cube_dir, pipeline.prefix, field, line_name))
         wscl_cube_list=glob.glob('{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
             pipeline.output,cube_dir, pipeline.prefix, field, line_name))
-        # rm first occurrence of pipeline.output in cube file names
-        cube_list = [''.join(cc.split(pipeline.output+'/')[1:]) for cc in casa_cube_list+wscl_cube_list]
+        cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
-        
+
         if pipeline.enable_task(config, 'remove_stokes_axis'):
+            caracal.log.info('Removing Stokes axis of all cubes/images of target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(remove_stokes_axis,
                            'remove_cube_stokes_axis-{0:d}'.format(uu),
-                           {'filename': cube_list[uu]+':output',
-                            },
+                           {'filename': cube_list[uu],},
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
 
         if pipeline.enable_task(config, 'pb_cube'):
+            caracal.log.info('Creating primary beam cubes for target {0:d}'.format(tt))
             for uu in range(len(image_cube_list)):
-                recipe.add(make_pb_cube, 'make pb_cube-{0:d}'.format(uu),
-                       {'filename': image_cube_list[uu]+':output',
-                        'apply_corr': config['pb_cube'].get('apply_pb')},
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
+                recipe.add(make_pb_cube,
+                           'make pb_cube-{0:d}'.format(uu),
+                           {'filename': image_cube_list[uu],
+                            'apply_corr': config['pb_cube']['apply_pb'],},
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
 
         if pipeline.enable_task(config, 'freq_to_vel'):
-            if not config['freq_to_vel'].get('reverse'):
+            if not config['freq_to_vel']['reverse']:
                 caracal.log.info(
-                    'Converting spectral axis of cubes from frequency to radio velocity')
+                    'Converting spectral axis of all cubes from frequency to radio velocity for target {0:d}'.format(tt))
             else:
                 caracal.log.info(
-                    'Converting spectral axis of cubes from radio velocity to frequency')
+                    'Converting spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(freq_to_vel,
-                    'spectral_header-to-vel_radio-cube-{0:d}'.format(uu),
-                    {
-                        'filename': cube_list[uu]+':output',
-                        'reverse': config['freq_to_vel'].get('reverse')},
-                    input=pipeline.input,
-                    output=pipeline.output,
-                    label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cube_list[uu]))
+                           'convert-spectral_header-cube{0:d}'.format(uu),
+                           {'filename': cube_list[uu],
+                            'reverse': config['freq_to_vel']['reverse'],},
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Convert spectral axis from frequency to radio velocity for cube {0:s}'.format(cube_list[uu]))
 
         recipe.run()
         recipe.jobs = []
@@ -1068,63 +1059,66 @@ def worker(pipeline, recipe, config):
                     step,
                     {
                         "import.inFile": image_cube_list[uu].split('/')[-1]+':input',
-                        "steps.doFlag": config['sofia'].get('flag'),
+                        "steps.doFlag": config['sofia']['flag'],
                         "steps.doScaleNoise": True,
                         "steps.doSCfind": True,
-                        "steps.doMerge": config['sofia'].get('merge'),
+                        "steps.doMerge": config['sofia']['merge'],
                         "steps.doReliability": False,
                         "steps.doParameterise": False,
                         "steps.doWriteMask": True,
-                        "steps.doMom0": config['sofia'].get('do_mom0'),
-                        "steps.doMom1": config['sofia'].get('do_mom1'),
-                        "steps.doCubelets": config['sofia'].get('do_cubelets'),
+                        "steps.doMom0": config['sofia']['do_mom0'],
+                        "steps.doMom1": config['sofia']['do_mom1'],
+                        "steps.doCubelets": config['sofia']['do_cubelets'],
                         "steps.doWriteCat": False,
-                        "flag.regions": config['sofia'].get('flagregion'),
-                        "scaleNoise.statistic": config['sofia'].get('rmsMode'),
-                        "SCfind.threshold": config['sofia'].get('threshold'),
-                        "SCfind.rmsMode": config['sofia'].get('rmsMode'),
-                        "merge.radiusX": config['sofia'].get('mergeX'),
-                        "merge.radiusY": config['sofia'].get('mergeY'),
-                        "merge.radiusZ": config['sofia'].get('mergeZ'),
-                        "merge.minSizeX": config['sofia'].get('minSizeX'),
-                        "merge.minSizeY": config['sofia'].get('minSizeY'),
-                        "merge.minSizeZ": config['sofia'].get('minSizeZ'),
+                        "flag.regions": config['sofia']['flagregion'],
+                        "scaleNoise.statistic": config['sofia']['rmsMode'],
+                        "SCfind.threshold": config['sofia']['threshold'],
+                        "SCfind.rmsMode": config['sofia']['rmsMode'],
+                        "merge.radiusX": config['sofia']['mergeX'],
+                        "merge.radiusY": config['sofia']['mergeY'],
+                        "merge.radiusZ": config['sofia']['mergeZ'],
+                        "merge.minSizeX": config['sofia']['minSizeX'],
+                        "merge.minSizeY": config['sofia']['minSizeY'],
+                        "merge.minSizeZ": config['sofia']['minSizeZ'],
                     },
-                    input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
-                    output='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
+                    input='/'.join(image_cube_list[uu].split('/')[:-1]),
+                    output='/'.join(image_cube_list[uu].split('/')[:-1]),
                     label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,image_cube_list[uu]))
 
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):
                 step = 'continuum-spectral_extraction-{0:d}'.format(uu)
-    
+
                 params = {"enable_spec_ex": True,
                           "enable_source_catalog": True,
                           "enable_abs_plot": True,
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
-                          "channels_per_plot": config['sharpener'].get('channels_per_plot'),
+                          "channels_per_plot": config['sharpener']['channels_per_plot'],
                           "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
-                          "label": config['sharpener'].get('label', pipeline.prefix)
+                          "label": config['sharpener']['label'],
                           }
 
-                if config['sharpener'].get('catalog') == 'PYBDSF':
+                runsharp = False
+                if config['sharpener']['catalog'] == 'PYBDSF':
                     catalogs = []
                     nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
-    
+
                     for ii in range(0, len(nimages)):
                         catalog = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(
                                 pipeline.continuum, ii + 1, pipeline.prefix, field))
                         catalogs.append(catalog)
-    
+
                     catalogs = sorted(catalogs)
                     catalogs = [cat for catalogs in catalogs for cat in catalogs]
                     # Right now, this is the last catalog made
-                    catalog_file = catalogs[-1].split('output/')[-1]
-                    params["catalog_file"] = '{0:s}:output'.format(catalog_file)
-    
+                    if len(catalogs):
+                        catalog_file = catalogs[-1].split('output/')[-1]
+                        params["catalog_file"] = '{0:s}:output'.format(catalog_file)
+                    else: catalog_file = []
+
                     if len(catalog_file) > 0:
-    
+                        runsharp = True
                         params["catalog"] = "PYBDSF"
                         recipe.add('cab/sharpener',
                             step,
@@ -1133,12 +1127,13 @@ def worker(pipeline, recipe, config):
                             output=pipeline.output,
                             label='{0:s}:: Continuum Spectral Extraction'.format(step))
                     else:
-                        caracal.log.info(
+                        caracal.log.warn(
                             'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
 
-                elif config['sharpener'].get('catalog') == 'NVSS':
-                    params["thresh"] = config['sharpener'].get('thresh')
-                    params["width"] = config['sharpener'].get('width')
+                elif config['sharpener']['catalog'] == 'NVSS':
+                    runsharp = True
+                    params["thresh"] = config['sharpener']['thresh']
+                    params["width"] = config['sharpener']['width']
                     params["catalog"] = "NVSS"
                     recipe.add('cab/sharpener',
                         step,
@@ -1149,11 +1144,12 @@ def worker(pipeline, recipe, config):
 
                 recipe.run()
                 recipe.jobs = []
-    
+
                 # Move the sharpener output to diagnostic_plots
-                sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
-                finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
-                    pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
-                if os.path.exists(finalsharpOut):
-                    shutil.rmtree(finalsharpOut)
-                shutil.move(sharpOut, finalsharpOut)
+                if runsharp:
+                    sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
+                    finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
+                        pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
+                    if os.path.exists(finalsharpOut):
+                        shutil.rmtree(finalsharpOut)
+                    shutil.move(sharpOut, finalsharpOut)

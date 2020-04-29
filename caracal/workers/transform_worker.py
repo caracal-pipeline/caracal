@@ -12,8 +12,8 @@ from caracal.dispatch_crew import utils
 from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_flagsets as manflags
 
-NAME = 'Transform data sets (split and/or average)'
-LABEL = 'transform_data'
+NAME = 'Transform Data by Splitting/Average/Applying calibration'
+LABEL = 'transform'
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
@@ -61,9 +61,9 @@ def worker(pipeline, recipe, config):
 
     def get_gain_field(applyme, applyto=None):
         if applyme == 'delay_cal':
-            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_delay_cal'].get('field'))
+            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_delay_cal']['field'])
         if applyme == 'bp_cal':
-            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_bp_cal'].get('field'))
+            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_bp_cal']['field'])
         if applyme == 'gain_cal_flux':
             return manfields.get_field(pipeline, i, 'fcal')
         if applyme == 'gain_cal_gain':
@@ -109,21 +109,21 @@ def worker(pipeline, recipe, config):
 
             docallib = True
 
-            if config['split_field'].get('column') != 'corrected':
+            if config['split_field']['column'] != 'corrected':
                 caracal.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field'].get('column')))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['column']))
             dcol = 'corrected'
 
         # write calibration library file for OTF cal
         elif pipeline.enable_task(config['split_field'], 'otfcal'):
             caltablelist, gainfieldlist, interplist = [], [], []
             calprefix = '{0:s}-{1:s}'.format(prefix,
-                                             config['split_field']['otfcal'].get('label_cal'))
+                                             config['split_field']['otfcal']['label_cal'])
             callib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix,calprefix)
 
             with open(os.path.join('{}/callibs'.format(pipeline.caltables),
                                   'callib_{0:s}-{1:s}.json'.format(prefix,
-                                  config['split_field']['otfcal'].get('label_cal')))) as f:
+                                  config['split_field']['otfcal']['label_cal']))) as f:
                 callib_dict = json.load(f)
 
             for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
@@ -144,14 +144,14 @@ def worker(pipeline, recipe, config):
                     stdw.write(' spwmap=0\n')
 
             docallib = True
-            if config['split_field'].get('column') != 'corrected':
+            if config['split_field']['column'] != 'corrected':
                 caracal.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field'].get('column')))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['column']))
             dcol = 'corrected'
 
         else:
             docallib = False
-            dcol = config['split_field'].get('column')
+            dcol = config['split_field']['column']
 
         target_iter=0
         for target in target_ls:
@@ -177,7 +177,7 @@ def worker(pipeline, recipe, config):
                     substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
                     manflags.delete_cflags(pipeline, recipe,
                         available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=substep)
+                        fms, cab_name=substep)
 
             flagv = tms+'.flagversions'
 
@@ -193,14 +193,14 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": fms,
                                "outputvis": tms,
-                               "timeaverage": True if (config['split_field'].get('time_average') != '' and config['split_field'].get('time_average') != '0s') else False,
-                               "timebin": config['split_field'].get('time_average'),
-                               "chanaverage": True if config['split_field'].get('freq_average') > 1 else False,
-                               "chanbin": config['split_field'].get('freq_average'),
-                               "spw": config['split_field'].get('spw'),
+                               "timeaverage": True if (config['split_field']['time_average'] != '' and config['split_field']['time_average'] != '0s') else False,
+                               "timebin": config['split_field']['time_average'],
+                               "chanaverage": True if config['split_field']['freq_average'] > 1 else False,
+                               "chanbin": config['split_field']['freq_average'],
+                               "spw": config['split_field']['spw'],
                                "datacolumn": dcol,
-                               "correlation": config['split_field'].get('correlation'),
-                               "usewtspectrum": config['split_field'].get('usewtspectrum'),
+                               "correlation": config['split_field']['correlation'],
+                               "usewtspectrum": config['split_field']['usewtspectrum'],
                                "field": target,
                                "keepflags": True,
                                "docallib": docallib,
@@ -214,25 +214,25 @@ def worker(pipeline, recipe, config):
                 config, 'split_field') else fms
 
             if pipeline.enable_task(config, 'changecentre'):
-                if config['changecentre'].get('ra') == '' or config['changecentre'].get('dec') == '':
+                if config['changecentre']['ra'] == '' or config['changecentre']['dec'] == '':
                     caracal.log.error(
                         'Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
                     caracal.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
-                        config['changecentre'].get('ra'), config['changecentre'].get('dec')))
+                        config['changecentre']['ra'], config['changecentre']['dec']))
                     sys.exit(1)
                 step = 'changecentre-ms{0:d}-{1:d}'.format(i,target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "msname": tms,
                                "outputvis": tms,
-                               "phasecenter": 'J2000 {0:s} {1:s}'.format(config['changecentre'].get('ra'), config['changecentre'].get('dec')),
+                               "phasecenter": 'J2000 {0:s} {1:s}'.format(config['changecentre']['ra'], config['changecentre']['dec']),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
 
             if pipeline.enable_task(config, 'obsinfo'):
-                if (config['obsinfo'].get('listobs')):
+                if (config['obsinfo']['listobs']):
                     if pipeline.enable_task(config, 'split_field'):
                         listfile = '{0:s}-obsinfo.txt'.format(tms[:-3])
                     else:
@@ -249,7 +249,7 @@ def worker(pipeline, recipe, config):
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
-                if (config['obsinfo'].get('summary_json')):
+                if (config['obsinfo']['summary_json']):
                     if pipeline.enable_task(config, 'split_field'):
                         listfile = '{0:s}-obsinfo.json'.format(tms[:-3])
                     else:

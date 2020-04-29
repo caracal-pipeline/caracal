@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  image_line:
+  line:
     desc: Process visibilities for spectral line work and create line cubes and images.
     type: map
     mapping:

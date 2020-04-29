@@ -6,7 +6,8 @@ from stimela.dismissable import dismissable as sdm
 from caracal import log
 import caracal.dispatch_crew.utils as utils
 
-NAME = 'Inspect data'
+NAME = 'Inspect Data'
+LABEL = "inspect"
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 
@@ -25,11 +26,11 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         "timerange": '',
         "antenna": '',
         "xaxis": opts['xaxis'],
-        "xdatacolumn": config[plotname].get('column'),
+        "xdatacolumn": config[plotname]['column'],
         "yaxis": opts['yaxis'],
-        "ydatacolumn": config[plotname].get('column'),
-        "avgtime": config[plotname].get('avgtime'),
-        "avgchannel": config[plotname].get('avgchannel'),
+        "ydatacolumn": config[plotname]['column'],
+        "avgtime": config[plotname]['avgtime'],
+        "avgchannel": config[plotname]['avgchannel'],
         "coloraxis": sdm(colouraxis),
         "iteraxis": sdm(opts.get('iteraxis', None)),
         "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}.png'.format(prefix, label, field, plotname, ftype),
@@ -89,13 +90,13 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         "canvas-height": opts['canvas-height'],
         "canvas-width": opts['canvas-width'],
         "corr": opts["corr"],
-        # "cbin": int(config[plotname].get('avgchannel', None)),
+        # "cbin": int(config[plotname]['avgchannel']),
         # "colour-axis": opts.get("colour-axis", None),
         "data-column": column,
         "field": str(fid),
         "htmlname": "{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
         "iter-axis": sdm(opts.get('iter-axis', None)),
-        # "tbin": float(config[plotname].get('avgtime', None)),
+        # "tbin": float(config[plotname]['avgtime']),
 
     },
         input=pipeline.input,
@@ -106,13 +107,13 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
 def worker(pipeline, recipe, config):
 
     def isempty(sec):
-        if config[sec].get('fields') in ["", [""], None, "null"]:
+        if config[sec]['fields'] in ["", [""], None, "null"]:
             return False
         else:
-            return config[sec].get('fields')
+            return config[sec]['fields']
 
-    uvrange = config.get('uvrange')
-    fields = config.get('fields')
+    uvrange = config['uvrange']
+    fields = config['fields']
     plotter = config["plotter"]
     if pipeline.virtconcat:
         msnames = [pipeline.vmsname]
@@ -127,12 +128,12 @@ def worker(pipeline, recipe, config):
         msname = msnames[i] if not config['label_in'] else '{0:s}_{1:s}.ms'.format(
             msnames[i][:-3], config['label_in'])
         prefix = prefixes[i]
-        label = config.get('label_out')
+        label = config['label_out']
 
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
             pipeline.obsinfo, msname[:-3])
 
-        corr = config.get('correlation')
+        corr = config['correlation']
         if corr == 'auto':
             with open(msinfo, 'r') as stdr:
                 corrs = yaml.load(stdr)['CORR']['CORR_TYPE']

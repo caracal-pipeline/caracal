@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  observation_config:
+  obsconf:
     type: map
     desc: Setup some basic observation information
     mapping:

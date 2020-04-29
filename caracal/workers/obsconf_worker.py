@@ -6,8 +6,8 @@ import sys
 import numpy as np
 from os import path
 
-NAME = 'Automatically categorize observed fields'
-LABEL = 'observation_config'
+NAME = 'Automatically Categorize Observed Fields'
+LABEL = 'obsconf'
 
 def repeat_val(val, n):
     l = []
@@ -170,7 +170,7 @@ def worker(pipeline, recipe, config):
         msroot = msname[:-3]
 
         if pipeline.enable_task(config, 'obsinfo'):
-            if config['obsinfo'].get('listobs'):
+            if config['obsinfo']['listobs']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs', step,
                            {
@@ -182,7 +182,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
-            if config['obsinfo'].get('summary_json'):
+            if config['obsinfo']['summary_json']:
                 step = 'summary_json-ms{:d}'.format(i)
                 recipe.add('cab/msutils', step,
                            {
@@ -195,7 +195,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.obsinfo,
                            label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
-            if config['obsinfo'].get('vampirisms'):
+            if config['obsinfo']['vampirisms']:
                 step = 'vampirisms-ms{0:d}'.format(i)
                 recipe.add('cab/sunblocker', step,
                            {
@@ -211,7 +211,7 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
                 step = "elevation_plots-ms{:d}".format(i)
-                if config['obsinfo']["plot_elevation_tracks"].get("plotter") in ["plotms"]:
+                if config['obsinfo']["plot_elevation_tracks"]["plotter"] in ["plotms"]:
                     recipe.add("cab/casa_plotms", step, {
                                "vis" : msname,
                                "xaxis" : "hourangle",
@@ -223,7 +223,7 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label="{:s}:: Plotting elevation tracks".format(step))
-                elif config['obsinfo']["plot_elevation_tracks"].get("plotter") in ["owlcat"]:
+                elif config['obsinfo']["plot_elevation_tracks"]["plotter"] in ["owlcat"]:
                     recipe.add("cab/owlcat_plotelev", step, {
                                "msname" : msname,
                                "output-name" : "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
@@ -237,7 +237,7 @@ def worker(pipeline, recipe, config):
 
     # initialse things
     for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
-        val = config.get(item)
+        val = config[item]
         for attr in ["", "_ra", "_dec", "_id"]:
             setattr(pipeline, item+attr, repeat_val(val, pipeline.nobs))
 
@@ -250,8 +250,8 @@ def worker(pipeline, recipe, config):
     setattr(pipeline, 'enddate', repeat_val(None, pipeline.nobs))
 
     # Set antenna properties
-    pipeline.Tsys_eta = config.get('Tsys_eta')
-    pipeline.dish_diameter = config.get('dish_diameter')
+    #pipeline.Tsys_eta = config['Tsys_eta']
+    #pipeline.dish_diameter = config['dish_diameter']
 
     for i, prefix in enumerate(prefixes):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])

@@ -22,6 +22,7 @@ requirements = [
     'ipdb',
     'astropy',
     'matplotlib',
+    'bokeh',
     'aplpy',
     'pandas',
     'nbconvert',

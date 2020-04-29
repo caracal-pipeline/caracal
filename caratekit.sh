@@ -1605,8 +1605,8 @@ then
 	    if [[ -z ${OR} ]]
 	    then
 		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+		echo ""
 	    fi
-	    echo ""
 	fi
     fi
     
@@ -1874,7 +1874,6 @@ then
 	echo ""
     else
 	echo "Fetching CARACal from local source ${local_caracal}"
-	echo
         echo "cp -r \${local_caracal} \${workspace_root}/" >> ${SS}
 	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL} ${WORKSPACE_ROOT}/
     fi
@@ -2264,6 +2263,8 @@ then
     fi
 fi
 
+echo ""
+
 testingoutput () {
 
     # Function to test output after running a pipeline
@@ -2542,7 +2543,7 @@ runtest () {
 	    } || { \
 		echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
 		[[ -n ${FS} ]] || \
-		    cp -r ${stringcopytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		    cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	    } \
 	}
 	
@@ -2760,7 +2761,6 @@ runtestsample () {
 
     echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
     echo "${WORKSPACE_ROOT}/${trname}"
-
     echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS}
     mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
     if [[ -d ${CARATE_INPUT_DIR} ]]
@@ -2772,7 +2772,6 @@ runtestsample () {
 	    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 	    }
     fi
-
     # Check if source msdir is identical to the target msdir. If yes, don't copy
     d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
     e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
@@ -2787,7 +2786,7 @@ runtestsample () {
 		cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	} \
     }
-	
+
     #We need to take the config file from the meerkat input to our test directoru, always
     cp ${inputconfiglocation} ${configlocation}
 

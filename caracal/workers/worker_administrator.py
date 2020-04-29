@@ -277,10 +277,26 @@ class worker_administrator(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
                     _worker, self.workers_directory))
 
+        active_workers = []
+        # first, check that workers import, and check their configs
+        for _name, _worker, i in self.workers:
             config = self.config[_name]
-            if config.get('enable') is False:
+            if 'enable' in config and not config['enable']:
                 self.skip.append(_worker)
                 continue
+            log.info("configuring worker {}".format(_name))
+            try:
+                worker = __import__(_worker)
+            except ImportError:
+                log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
+                raise
+            if hasattr(worker, 'check_config'):
+                worker.check_config(config)
+            active_workers.append((_name, worker, config))
+
+        # now run the actual pipeline
+        #for _name, _worker, i in self.workers:
+        for _name, worker, config in active_workers:
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             label = getattr(worker, 'LABEL', None)
@@ -307,19 +323,12 @@ class worker_administrator(object):
             log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
 
-                ## old dead code
-                # Save worker recipes for later execution
-                # execute each worker after adding its steps
-            # if self.add_all_first:
-            #     log.info("{0:s}: adding before running".format(_worker))
-            #     self.recipes[_worker] = recipe
-            # else:
-
             log.info("{0:s}: running".format(label))
             recipe.run()
             log.info("{0:s}: finished".format(label))
 
             # this should be in the cab cleanup code, no?
+
             casa_last = glob.glob(self.output + '/*.last')
             for file_ in casa_last:
                 os.remove(file_)

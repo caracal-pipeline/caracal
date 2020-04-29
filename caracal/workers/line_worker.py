@@ -462,9 +462,9 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
             available_flagversions = manflags.handle_conflicts(pipeline, wname, msname_mst, config,
-                flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
+                flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
             if rewind_mst_ms:
-                version = config['rewind_flags']["transfer_apply_gains_version"]
+                version = config['rewind_flags']["mstransform_version"]
                 substep = 'rewind_to_{0:s}_mst{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
                 if available_flagversions[-1] != version:

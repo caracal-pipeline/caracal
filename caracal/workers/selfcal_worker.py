@@ -408,7 +408,7 @@ def worker(pipeline, recipe, config):
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)
-        key = 'sofia_settings'
+        key = 'img_sofia_settings'
 
         if config['img_joinchannels'] == True:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
@@ -417,10 +417,10 @@ def worker(pipeline, recipe, config):
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config['image'][key]['fornax_special'] == True and config['image'][key]['fornax_use_sofia'] == True:
+        if config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == True:
             forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config['image'][key]['fornax_thresh'][
-                num-1 if len(config['image'][key]['fornax_thresh']) >= num else -1]
+            forn_thresh = config[key]['fornax_thresh'][
+                num-1 if len(config[key]['fornax_thresh']) >= num else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -478,7 +478,7 @@ def worker(pipeline, recipe, config):
             "parameters.fitBusyFunction": False,
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
-            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config['image'][key]['kernels']],
+            "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key]['kernels']],
             "SCfind.threshold": config['image']['clean_mask_threshold'][num-1 if len(config['image']['clean_mask_threshold']) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
@@ -498,15 +498,15 @@ def worker(pipeline, recipe, config):
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
-            "merge.positivity": config['image'][key]['only_positive_pix'],
+            "merge.positivity": config[key]['only_positive_pix'],
         }
-        if config['image'][key]['flag']:
-            flags_sof = config['image'][key]['flagregion']
+        if config[key]['flag']:
+            flags_sof = config[key]['flagregion']
             image_opts.update({"flag.regions": flags_sof})
 
-        if config['image'][key]['inputmask']:
+        if config[key]['inputmask']:
             # change header of inputmask so it is the same as image
-            mask_name = 'masking/'+config['image'][key]['inputmask']
+            mask_name = 'masking/'+config[key]['inputmask']
 
             mask_name_casa = mask_name.split('.fits')[0]
             mask_name_casa = mask_name_casa+'.image'
@@ -570,7 +570,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"import.maskFile": mask_name})
             image_opts.update({"import.inFile": imagename})
 
-        if config['image'][key]['fornax_special'] == True and config['image'][key]['fornax_use_sofia'] == True:
+        if config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == True:
 
             recipe.add('cab/sofia', step+"-fornax_special",
                        image_opts_forn,
@@ -581,7 +581,7 @@ def worker(pipeline, recipe, config):
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
             image_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config['image'][key]['fornax_special'] == True and config['image'][key]['fornax_use_sofia'] == False:
+        elif config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == False:
 
             # this mask should be regridded to correct f.o.v.
 
@@ -1916,7 +1916,6 @@ def worker(pipeline, recipe, config):
             os.mkdir(image_path)
 
         mask_key = config['image']['clean_mask_method'][0]
-        #print(mask_key)
         if pipeline.enable_task(config, 'image'):
             if mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(

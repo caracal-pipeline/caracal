@@ -8,6 +8,7 @@ import json
 import re
 import copy
 import caracal
+import numpy as np
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from astropy.io import fits as fits
@@ -52,7 +53,147 @@ def check_config(config):
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
     """
-    caracal.log.warning("selfcal config consistency check needs to be moved from obsconfig to here")
+    # Before doing anything let's check there are no conflicting instruction in the yml file
+
+    caracal.log.info(
+                "Checking the consistency of the selfcal input")
+
+    # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
+    if config['calibrate_with'].lower() == 'meqtrees':
+        if config['transfer_apply_gains']['enable']:
+            raise caracal.UserInputError(
+                'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
+        if int(config['start_at_iter']) != 1:
+            raise caracal.UserInputError(
+                "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
+        if int(config['cal_channel_chunk']) != -1:
+                caracal.log.info("The channel chunk has no effect on MeqTrees.")
+    else:
+        if int(config['start_at_iter']) != 1:
+            raise caracal.UserInputError(
+                "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
+    # First check we are actually running a calibrate
+    if config['calibrate']['enable']:
+        # Running with a model shorter than the output type is dengerous with 'CORR_RES'
+        if 'CORR_RES' in  config['calibrate']['output_data']:
+            if len(config['calibrate']['model']) < config['cal_niter']:
+                raise caracal.UserInputError(
+                    "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
+
+        # Make sure we are not using two_step with CubiCal
+        if config['calibrate_with'].lower() == 'cubical' and config['calibrate']['two_step']:
+            raise caracal.UserInputError(
+                "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
+        #Then let's check that the solutions are reasonable and fit in our time chunks
+        #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
+        #  we check there are enough solution
+        if len(config['calibrate']['Gsols_timeslots']) < int(config['cal_niter']):
+            amount_sols = len(config['calibrate']['Gsols_timeslots'])
+        else:
+            amount_sols = int(config['cal_niter'])
+        #  we collect all time solutions
+        solutions = config['calibrate']['Gsols_timeslots'][:amount_sols]
+        # if we do Bjones we add those
+        if config['calibrate']['Bjones']:
+            if len(config['calibrate']['Bsols_timeslots']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['Bsols_timeslots'])
+            else:
+                amount_sols = int(config['cal_niter'])
+            solutions.append(config['calibrate']['Bsols_timeslots'][:amount_sols])
+        # Same for GA solutions
+        if len(config['calibrate']['gain_matrix_type']) < int(config['cal_niter']):
+            amount_matrix = len(config['calibrate']['gain_matrix_type'])
+        else:
+            amount_matrix = int(config['cal_niter'])
+        if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
+            'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
+            if len(config['calibrate']['GAsols_timeslots']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['GAsols_timeslots'])
+            else:
+                amount_sols = int(config['cal_niter'])
+            for i,val in enumerate(config['calibrate']['GAsols_timeslots'][:amount_sols]):
+                if val >= 0:
+                    solutions.append(val)
+        # then we assign the timechunk
+        if config['cal_timeslots_chunk'] == -1:
+            if np.min(solutions) != 0.:
+                time_chunk = np.max(solutions)
+            else:
+                time_chunk = 0
+        else:
+            time_chunk = config['cal_timeslots_chunk']
+        # if time_chunk is not 0 all solutions should fit in there.
+        # if it is 0 then it does not matter as we are not checking remainder intervals
+        if time_chunk != 0:
+            if 0. in solutions:
+                caracal.log.error("You are using all timeslots in your solutions (i.e. 0) but have set cal_timeslots_chunk, please set it to 0 for using all timeslots.")
+                caracal.log.error("Your timeslots chunk = {}".format(time_chunk))
+                caracal.log.error("Your timeslots solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                raise caracal.UserInputError("Inconsistent selfcal chunking")
+            sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
+            for val in sol_int_array:
+                if val != int(val):
+                    caracal.log.error("Not all applied time solutions fit in the timeslot_chunk.")
+                    caracal.log.error("Your timeslot chunk = {}".format(time_chunk))
+                    caracal.log.error("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+        # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
+        # This is not an option for meqtrees
+        if config['calibrate_with'].lower() == 'cubical':
+            if len(config['calibrate']['Gsols_channel']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['Gsols_channel'])
+            else:
+                amount_sols = int(config['cal_niter'])
+            #  we collect all time solutions
+            solutions = config['calibrate']['Gsols_channel'][:amount_sols]
+            # if we do Bjones we add those
+            if config['calibrate']['Bjones']:
+                if len(config['calibrate']['Bsols_channel']) < int(config['cal_niter']):
+                    amount_sols = len(config['calibrate']['Bsols_channel'])
+                else:
+                    amount_sols = int(config['cal_niter'])
+                solutions.append(config['calibrate']['Bsols_channel'][:amount_sols])
+            # Same for GA solutions
+            if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
+                'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
+                if len(config['calibrate']['GAsols_channel']) < int(config['cal_niter']):
+                    amount_sols = len(config['calibrate']['GAsols_channel'])
+                else:
+                    amount_sols = int(config['cal_niter'])
+                for i,val in enumerate(config['calibrate']['GAsols_channel'][:amount_sols]):
+                    if val >= 0:
+                        solutions.append(val)
+            # then we assign the timechunk
+            if config['cal_channel_chunk'] == -1:
+                if np.min(solutions) != 0.:
+                    channel_chunk = max(solutions)
+                else:
+                    channel_chunk = 0
+            else:
+                channel_chunk = config['cal_channel_chunk']
+            # if channel_chunk is not 0 all solutions should fit in there.
+            # if it is 0 then it does not matter as we are not checking remainder intervals
+            if channel_chunk != 0:
+                if 0. in solutions:
+                    caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set cal_channel_chunk, please set it to 0 for using all channels.")
+                    caracal.log.error("Your channel chunk = {} \n".format(channel_chunk))
+                    caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+                sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
+                for val in sol_int_array:
+                    if val != int(val):
+                        caracal.log.error("Not all applied channel solutions fit in the channel_chunk.")
+                        caracal.log.error("Your channel chunk = {} \n".format(channel_chunk))
+                        caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
+                        raise caracal.UserInputError("Inconsistent selfcal chunking")
+    # Check some imaging stuff
+    if config['image']['enable']:
+        if config['img_maxuv_l'] > 0. and  config['taper'] > 0.:
+            caracal.UserInputError(
+                "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
+
+
+
 
 
 

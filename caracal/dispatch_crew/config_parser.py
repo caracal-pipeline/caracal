@@ -428,12 +428,13 @@ class config_parser:
             '''
             this recursive function checks if the elements in the array are empty (needed for the variables of the config file)
             '''
-            if type(alist) not in (list, tuple):
+            if type(alist) not in (list, tuple, dict):
                 return False
             for a in alist:
                 if not _empty(a):
                     return False
             return True
+
 
         """ Recursively creates subparser tree for the config """
         def xformer(s): return s.replace('-', '_')

@@ -428,14 +428,11 @@ class config_parser:
             '''
             this recursive function checks if the elements in the array are empty (needed for the variables of the config file)
             '''
-            try:
-                for a in alist:
-                    if not _empty(a):
-                        return False
-            except:
-                # we will reach here if alist is not a iterator/list
+            if type(alist) not in (list, tuple):
                 return False
-
+            for a in alist:
+                if not _empty(a):
+                    return False
             return True
 
         """ Recursively creates subparser tree for the config """

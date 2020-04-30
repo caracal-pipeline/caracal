@@ -53,11 +53,6 @@ def check_config(config):
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
     """
-    # Before doing anything let's check there are no conflicting instruction in the yml file
-
-    caracal.log.info(
-                "Checking the consistency of the selfcal input")
-
     # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
     if config['calibrate_with'].lower() == 'meqtrees':
         if config['transfer_apply_gains']['enable']:
@@ -66,7 +61,7 @@ def check_config(config):
         if int(config['start_at_iter']) != 1:
             raise caracal.UserInputError(
                 "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-        if int(config['cal_channel_chunk']) != -1:
+        if int(config['cal_cubical']['channel_chunk']) != -1:
                 caracal.log.info("The channel chunk has no effect on MeqTrees.")
     else:
         if int(config['start_at_iter']) != 1:
@@ -81,7 +76,7 @@ def check_config(config):
                     "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
 
         # Make sure we are not using two_step with CubiCal
-        if config['calibrate_with'].lower() == 'cubical' and config['calibrate']['two_step']:
+        if config['calibrate_with'].lower() == 'cubical' and config['cal_meqtrees']['two_step']:
             raise caracal.UserInputError(
                 "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
         #Then let's check that the solutions are reasonable and fit in our time chunks
@@ -94,7 +89,7 @@ def check_config(config):
         #  we collect all time solutions
         solutions = config['calibrate']['Gsols_timeslots'][:amount_sols]
         # if we do Bjones we add those
-        if config['calibrate']['Bjones']:
+        if config['cal_Bjones']:
             if len(config['calibrate']['Bsols_timeslots']) < int(config['cal_niter']):
                 amount_sols = len(config['calibrate']['Bsols_timeslots'])
             else:
@@ -147,7 +142,7 @@ def check_config(config):
             #  we collect all time solutions
             solutions = config['calibrate']['Gsols_channel'][:amount_sols]
             # if we do Bjones we add those
-            if config['calibrate']['Bjones']:
+            if config['cal_Bjones']:
                 if len(config['calibrate']['Bsols_channel']) < int(config['cal_niter']):
                     amount_sols = len(config['calibrate']['Bsols_channel'])
                 else:
@@ -164,13 +159,13 @@ def check_config(config):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
-            if config['cal_channel_chunk'] == -1:
+            if config['cal_cubical']['channel_chunk'] == -1:
                 if np.min(solutions) != 0.:
                     channel_chunk = max(solutions)
                 else:
                     channel_chunk = 0
             else:
-                channel_chunk = config['cal_channel_chunk']
+                channel_chunk = config['cal_cubical']['channel_chunk']
             # if channel_chunk is not 0 all solutions should fit in there.
             # if it is 0 then it does not matter as we are not checking remainder intervals
             if channel_chunk != 0:
@@ -188,7 +183,7 @@ def check_config(config):
                         raise caracal.UserInputError("Inconsistent selfcal chunking")
     # Check some imaging stuff
     if config['image']['enable']:
-        if config['img_maxuv_l'] > 0. and  config['taper'] > 0.:
+        if config['img_maxuv_l'] > 0. and  config['img_taper'] > 0.:
             caracal.UserInputError(
                 "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
 

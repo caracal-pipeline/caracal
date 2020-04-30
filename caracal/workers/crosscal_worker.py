@@ -7,6 +7,7 @@ import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_fields as manfields
+from caracal.workers.utils import manage_caltabs as manGtabs
 import copy
 import re
 import json
@@ -106,9 +107,12 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
     field = getattr(pipeline, CALS[ftype])[iobs]
     order = config[ftype]["order"]
-#    field_id = getattr(pipeline, CALS[ftype]+"_id")[iobs]
     field_id = utils.get_field_id(msinfo, field)
 
+    applied = False
+    # no need to apply gains multiple when encountering consecutive terms that need to
+    nterms = len(order)
+    flux_scaled = False
     for i,term in enumerate(order):
         name = RULES[term]["name"]
         if term in iters:
@@ -117,86 +121,84 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             iters[term] = 0
 
         itern = iters[term]
-        step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
         params = {}
         params["vis"] = msname
-        if term == "A":
-            params["mode"] = RULES[term]["mode"]
-            params["field"] = ",".join(field)
-            params["datacolumn"] = config[ftype]["flag"]["column"]
-            params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
-            params["combinescans"] = config[ftype]["flag"]["combinescans"]
-            params["flagdimension"] = config[ftype]["flag"]["flagdimension"]
-            params["flagbackup"] = False
-            params["timecutoff"] = config[ftype]["flag"]["timecutoff"]
-            params["freqcutoff"] = config[ftype]["flag"]["freqcutoff"]
-            params["correlation"] = config[ftype]["flag"]["correlation"]
-            # apply existing gaintables before flagging
-            if gaintables:
+
+        step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+        
+        if term in "IA":
+            ftable_ = None
+            if i==0:
+                raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed."\
+                        "an I only makes sense after a G or K (usually both)."
+                        "Please review your 'order' option in the self_cal:secondary_cal section")
+            # Assume that only secondary cal field will do I, and only after a G has been done. 
+            if term == "I":
+                if "G" not in order[:i]:
+                    raise RuntimeError("Have encountered a request to image the secondary calibrator without any G tables to apply first.")
+                else:
+                    imagenow = True
+                if not flux_scaled:
+                    gtable_ = "%s_%s.G%d" % (prefix, prev_name, prev["iters"]["G"])
+                    ftable_ = "%s_%s.F%d" % (prefix, prev_name, prev["iters"]["G"])
+                    transfer_fluxscale(msname, recipe, gtable_+":output", ftable_+":output", pipeline, 
+                    iobs, reference=pipeline.fluxscale_reference, label=label)
+                    flux_scaled = True
+            if term == "A":
+                if not set("KGB").intersection(order[:i]):
+                    raise RuntimeError("Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
+                flagnow = True
+
+            if not applied:
                 applycal(msname, recipe, gaintables,
-                    interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
-            recipe.add(RULES[term]["cab"], step,
-                    copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s::" % step)
-        elif term == "I":
-            step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
-            applycal(msname, recipe, gaintables,
-                interps, fields, CALS[ftype], pipeline, iobs, calmode="calflag")
-            mask_prefix = "mask_%s_%s" %(prefix, ftype)
-            maskim = "mask_%s_%s-image.fits:output" %(prefix, ftype)
-            mask = "mask_%s_%s-mask.fits:output" %(prefix, ftype)
-            recipe.add(RULES[term]["cab"], step, {
-                    "msname" : msname,
-                    "name" : mask_prefix,
-                    "size" : 2048,
-                    "scale" : "1.5asec",
-                    "channels-out" : 1,
-                    "auto-mask" : 6,
-                    "auto-threshold" : 3,
-                    "local-rms-window" : 50,
-                    "local-rms" : True,
-                    "padding" : 1.4,
-                    "niter" : 1000000000,
-                    "weight" : "briggs 0.0",
-                    "mgain" : 1.0,
-                    "field" : field_id,
-                },
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s:: Image %s field" % (step, ftype))
+                        interps, fields, CALS[ftype], pipeline, iobs,
+                        calmode="calflag", fluxtable=ftable_)
+                applied = True
+            else:
+                caracal.log.info("Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
 
-            step = "make_mask-%s-%d-%d-%s-2" % (label, itern, iobs, ftype)
-            recipe.add("cab/cleanmask", step, {
-                "image" : maskim,
-                "output" : maskim,
-                "boxes" : 13,
-                "sigma" : 10,
-                "no-negative" : True,
-            },
-                input=pipeline.input,
-                output=pipeline.output,
-                label="make mask")
+            if flagnow:
+                print(RULES[term])
+                params["mode"] = RULES[term]["mode"]
+                params["field"] = ",".join(field)
+                params["datacolumn"] = config[ftype]["flag"]["column"]
+                params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
+                params["combinescans"] = config[ftype]["flag"]["combinescans"]
+                params["flagdimension"] = config[ftype]["flag"]["flagdimension"]
+                params["flagbackup"] = False
+                params["timecutoff"] = config[ftype]["flag"]["timecutoff"]
+                params["freqcutoff"] = config[ftype]["flag"]["freqcutoff"]
+                params["correlation"] = config[ftype]["flag"]["correlation"]
+                recipe.add(RULES[term]["cab"], step,
+                        copy.deepcopy(params),
+                        input=pipeline.input, output=pipeline.output,
+                        label="%s::" % step)
+                flagnow = False
 
-            step = "%s-%s-%d-%d-%s-2" % (name, label, itern, iobs, ftype)
-            recipe.add(RULES[term]["cab"], step, {
-                    "msname" : msname,
-                    "name" : "%s_%s" % (prefix, ftype),
-                    "size" : 2048,
-                    "scale" : "1.5asec",
-                    "column" : "CORRECTED_DATA",
-                    "auto-mask" : 4,
-                    "auto-threshold" : 3,
-                    "local-rms-window" : 50,
-                    "local-rms" : True,
-                    "padding" : 1.4,
-                    "fits-mask" : mask,
-                    "niter" : 1000000000,
-                    "weight" : "briggs 0.0",
-                    "mgain" : 0.8,
-                    "field" : field_id,
-                },
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s:: Image %s field" % (step, ftype))
+            elif imagenow:
+                for fid in field_id:
+                    step = "%s_%s_%d_%d_%s_field%d" % (name, label, itern, iobs, ftype, fid)
+                    calimage = "%s_%s_%d_field%d:output" %(prefix, ftype, iobs, fid)
+                    recipe.add(RULES[term]["cab"], step, {
+                            "msname" : msname,
+                            "name" : calimage,
+                            "size" : config[ftype]["image"]['npix'],
+                            "scale" : config[ftype]["image"]['cell'],
+                            "channels-out" : config[ftype]["image"]['nchans'],
+                            "auto-mask" : config[ftype]["image"]['auto_mask'],
+                            "auto-threshold" : config[ftype]["image"]['auto_threshold'],
+                            "local-rms-window" : config[ftype]["image"]['rms_window'],
+                            "local-rms" : config[ftype]["image"]['local_rms'],
+                            "padding" : config[ftype]["image"]['padding'],
+                            "niter" : config[ftype]["image"]['niter'],
+                            "weight" : config[ftype]["image"]["weight"],
+                            "mgain" : config[ftype]["image"]['mgain'],
+                            "field" : fid,
+                        },
+                            input=pipeline.input, output=pipeline.crosscal_continuum,
+                            label="%s:: Image %s field" % (step, ftype))
+                imagenow = False
+
         else:
             interp = RULES[term]["interp"]
             caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
@@ -218,6 +220,18 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if term != "K":
                 params["uvrange"] = config["uvrange"]
 
+            # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
+            # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
+            case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1
+            case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal"
+                
+            if case_1 or case_2:
+                params["caltable"] = append_last_secondary + ":output"
+                params["append"] = True
+                caltable = append_last_secondary
+            else:
+                params["caltable"] = caltable
+
             if append_last_secondary and term == "G" and order.count("G") == itern+1:
                 params["caltable"] = append_last_secondary + ":output"
                 params["append"] = True
@@ -228,11 +242,17 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if "I" not in order and smodel and term != 'B':
                 params["smodel"] = ["1", "0", "0", "0"]
 
-            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables,
+            can_reuse = False
+            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
                     caltable):
+                # check if field is in gain table
+                fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, "check_field_in_tab")
+                if set(fields_in_tab["field_id"]).issubset(field_id):
+                    can_reuse = True
+            if can_reuse:
                 caracal.log.info("Reusing existing gain table '%s' as requested" % caltable)
             else:
-                recipe.add(RULES[term]["cab"], step,
+                recipe.add(RULES[term]["cab"], step, 
                         copy.deepcopy(params),
                         input=pipeline.input, output=pipeline.caltables,
                         label="%s:: %s calibration" % (step, term))
@@ -390,6 +410,8 @@ def worker(pipeline, recipe, config):
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
+
+        pipeline.fluxscale_reference = fluxscale_field
 
         if pipeline.enable_task(config, 'set_model'):
             if config['set_model']['no_verify']:

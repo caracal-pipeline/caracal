@@ -52,6 +52,7 @@ class worker_administrator(object):
         self.caltables = self.config['general']['output'] + '/caltables'
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
+        self.crosscal_continuum = self.config['general']['output'] + '/continuum/crosscal'
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports

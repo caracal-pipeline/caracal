@@ -451,6 +451,11 @@ mapping:
             desc: Source finder island threshold
             required: false
             example: '3'
+          detection_image:
+            type: bool
+            desc: Constrain the pybdsm source finding to only find sources included in the clean model.
+            required: false
+            example: 'False'
 
       calibrate:
         type: map

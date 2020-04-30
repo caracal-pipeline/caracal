@@ -207,6 +207,16 @@ mapping:
             desc: use sofia for mask of Fornax A instead of Fomalont mask
             required: false
             example: 'False'
+      cal_niter:
+        type: int
+        desc: Number of self-calibration iterations to perform
+        required: false
+        example: '2'
+      start_at_iter:
+              type: int
+              desc: Start self-cal iteration loop at this start value, 1-based.
+              required: false
+              example: '1'
       cal_gain_amplitude_clip_low:
         type: float
         desc: Lower gain amplitude clipping
@@ -217,37 +227,107 @@ mapping:
         desc: Higher gain amplitude clipping
         required: false
         example: '2.'
-      cal_max_prior_error:
-        type: float
-        desc: Flag solution intervals where the prior variance estimate is above this value.
-        required: false
-        example: '0.1'
-      cal_max_post_error:
-        type: float
-        desc: Flag solution intervals where the posterior variance estimate is above this value.
-        required: false
-        example: '0.1'
-      cal_niter:
-        type: int
-        desc: Number of self-calibration iterations to perform
-        required: false
-        example: '2'
-      start_at_iter:
-        type: int
-        desc: Start self-cal iteration loop at this start value, 1-based.
-        required: false
-        example: '1'
       cal_timeslots_chunk:
         desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
         type: int
         required: false
         example: '-1'
-      cal_channel_chunk:
-        desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries. -1 Uses largest solution interval
-        type: int
+      cal_model_mode:
+        type: str
+        desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
         required: false
-        example: '-1'
-
+        example: 'vis_only'
+      cal_Bjones:
+        type: bool
+        desc: Enable Bjones
+        required: false
+        example: 'False'
+      cal_cubical:
+        desc: Parameters that only apply when using Cubical for the calibration
+        type: map
+        mapping:
+          max_prior_error:
+            type: float
+            desc: Flag solution intervals where the prior variance estimate is above this value in.
+            required: false
+            example: '0.1'
+          max_post_error:
+            type: float
+            desc: Flag solution intervals where the posterior variance estimate is above this value.
+            required: false
+            example: '0.1'
+          channel_chunk:
+            desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries. -1 Uses largest solution interval
+            type: int
+            required: false
+            example: '-1'
+          weight_column:
+            desc: Column with weights for use in Cubical.
+            type: str
+            required: false
+            example: 'WEIGHT'
+          shared_memory:
+            type: str
+            desc: Set the amount of shared memory for cubical. Default '100Gb'
+            required: false
+            example: '100Gb'
+          madmax_flagging:
+            desc: Flags based on maximum of mad in Cubical
+            type: bool
+            required: false
+            example: 'True'
+          madmax_flag_thresh:
+            desc: Threshold for madmax flagging in Cubical the provided list works exactly as described in Cubical readthedocs for the parameter --madmax-threshold
+            seq:
+              - type: int
+            required: false
+            example: '0, 10'
+          sol_term_iters:
+            desc: Number of iterations per Jones term for cubical. Always a 3 digit array with iterations for 'G,B,GA' even when B or GA are not used.
+            seq:
+              - type: int
+            required: false
+            example: '50, 50, 50'
+          overwrite:
+            desc: Allow cubical to overwrite the existing gain_tables and other CubiCal output for self calibration that were produced in a previous run of the selfcal worker with the same prefix.
+            type: bool
+            required: false
+            example: 'True'
+          dist_max_chunks:
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
+            type: int
+            required: false
+            example: '4'
+          ragavi_plot:
+            type: map
+            desc: Plotting dignostics plots for selfcal calibration.
+            mapping:
+              enable:
+                type: bool
+                desc: Enables plotting dignostics
+                required: false
+                example: 'False'
+              gaintype:
+                seq:
+                - type: str
+                desc: "List of gain solution types"
+                required: false
+                example: 'G'
+              field:
+                seq:
+                - type: int
+                desc: "Fields to plot. Specify by field id, index."
+                required: false
+                example: '0'
+      cal_meqtrees:
+        desc: Parameters that only apply when using MeqTrees for the calibration
+        type: map
+        mapping:
+          two_step:
+            type: bool
+            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the solution sizes automatically.
+            required: false
+            example: 'False'
       aimfast:
         type: map
         desc: Quality assessment parameter
@@ -289,7 +369,6 @@ mapping:
             desc: Generate html plots for comparing catalogs and residuals
             required: false
             example: 'True'
-
       image:
         type: map
         desc: Imaging parameter
@@ -400,26 +479,6 @@ mapping:
             desc: Gain matrix type. GainDiagPhase = phase only calibration, GainDiagAmp = amplitude only, GainDiag = Amplitude + Phase, Gain2x2 = Amplitude + Phase taken non-diagonal terms into account.
             required: false
             example: 'GainDiagPhase, GainDiag'
-          model_mode:
-            type: str
-            desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
-            required: false
-            example: 'vis_only'
-          shared_memory:
-            type: str
-            desc: Set the amount of shared memory for cubical. Default '100Gb'
-            required: false
-            example: '100Gb'
-          two_step:
-            type: bool
-            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the solution sizes automatically.
-            required: false
-            example: 'False'
-          add_vis_model:
-            type: bool
-            desc: Add/Use clean components from latest imaging step to/as sky model for calibation
-            required: false
-            example: 'True'
           Gsols_timeslots:
             seq:
               - type: int
@@ -432,11 +491,6 @@ mapping:
             desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency range in a channel.
             required: false
             example: '0'
-          Bjones:
-           type: bool
-           desc: Enable Bjones
-           required: false
-           example: 'False'
           Bsols_timeslots:
             seq:
               - type: int
@@ -461,58 +515,6 @@ mapping:
               - type: int
             required: false
             example: '-1'
-          weight_column:
-            desc: Column with weights
-            type: str
-            required: false
-            example: 'WEIGHT'
-          madmax_flagging:
-            desc: Flags based on maximum of mad
-            type: bool
-            required: false
-            example: 'True'
-          madmax_flag_thresh:
-            desc: Threshold for madmax flagging
-            seq:
-              - type: int
-            required: false
-            example: '0, 10'
-          sol_term_iters:
-            desc: Number of iterations per Jones term. If set to 'auto', uses hardcoded iteration numbers depending on the jones chain.
-            type: str
-            required: false
-            example: 'auto'
-          overwrite_cubical:
-            desc: Allow cubical to overwrite the existing gain_tables and other CubiCal output for self calibration that were produced in a previous run of the selfcal worker with the same prefix.
-            type: bool
-            required: false
-            example: 'True'
-          dist_max_chunks:
-            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
-            type: int
-            required: false
-            example: '4'
-          ragavi_plot:
-            type: map
-            desc: Plotting dignostics plots for delay correction calibration.
-            mapping:
-              enable:
-                type: bool
-                desc: Enables plotting dignostics
-                required: false
-                example: 'False'
-              gaintype:
-                seq:
-                - type: str
-                desc: "List of gain solution types"
-                required: false
-                example: 'G'
-              field:
-                seq:
-                - type: int
-                desc: "Fields to plot. Specify by field id, index."
-                required: false
-                example: '0'
 
       restore_model:
         type: map

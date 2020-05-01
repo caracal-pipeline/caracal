@@ -333,11 +333,6 @@ mapping:
         type: map
         desc: Apply calibration
         mapping:
-          enable:
-            type: bool
-            desc: Execute this section
-            required: false
-            example: 'True'
           applyto:
             seq:
               - type: str

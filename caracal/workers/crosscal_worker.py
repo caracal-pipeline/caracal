@@ -125,6 +125,24 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         params["vis"] = msname
 
         step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+        # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
+        # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
+        case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1
+        case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal"
+        if case_1 or case_2:
+            params["caltable"] = append_last_secondary + ":output"
+            params["append"] = True
+            caltable = append_last_secondary
+        else:
+            caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
+
+        can_reuse = False
+        if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
+                caltable):
+            # check if field is in gain table
+            fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, "check_field_in_tab")
+            if set(fields_in_tab["field_id"]).issubset(field_id):
+                can_reuse = True
         
         if term in "IA":
             ftable_ = None
@@ -158,7 +176,6 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 caracal.log.info("Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
 
             if flagnow:
-                print(RULES[term])
                 params["mode"] = RULES[term]["mode"]
                 params["field"] = ",".join(field)
                 params["datacolumn"] = config[ftype]["flag"]["column"]
@@ -201,14 +218,15 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         else:
             interp = RULES[term]["interp"]
-            caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
+            params["caltable"] = caltable
             params["refant"] = pipeline.reference_antenna[iobs]
             params["solint"] = first_if_single(config[ftype]["solint"], i)
             params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
-            params["solnorm"] = config[ftype]["solnorm"]
             params["field"] = ",".join(field)
             if term == "B":
                 params["bandtype"] = term
+                params["solnorm"] = config[ftype]["B_solnorm"]
+                params["fillgaps"] = config[ftype]["B_fillgaps"]
             else:
                 params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
                 params["gaintype"] = term
@@ -221,35 +239,9 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if term != "K":
                 params["uvrange"] = config["uvrange"]
 
-            # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
-            # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
-            case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1
-            case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal"
-                
-            if case_1 or case_2:
-                params["caltable"] = append_last_secondary + ":output"
-                params["append"] = True
-                caltable = append_last_secondary
-            else:
-                params["caltable"] = caltable
-
-            if append_last_secondary and term == "G" and order.count("G") == itern+1:
-                params["caltable"] = append_last_secondary + ":output"
-                params["append"] = True
-                caltable = append_last_secondary
-            else:
-                params["caltable"] = caltable
-
             if "I" not in order and smodel and term != 'B':
                 params["smodel"] = ["1", "0", "0", "0"]
 
-            can_reuse = False
-            if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
-                    caltable):
-                # check if field is in gain table
-                fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, "check_field_in_tab")
-                if set(fields_in_tab["field_id"]).issubset(field_id):
-                    can_reuse = True
             if can_reuse:
                 caracal.log.info("Reusing existing gain table '%s' as requested" % caltable)
             else:

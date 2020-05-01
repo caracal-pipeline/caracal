@@ -124,7 +124,7 @@ mapping:
             required: false
             example: "70"
           plotgains:
-            desc: Plot gains.
+            desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool
             required: false
             example: "True"
@@ -172,51 +172,51 @@ mapping:
                 required: false
       secondary_cal:
         type: map
-        desc: Calibrating on the amplitude/phase calibrator field
+        desc: Calibrating on the gain calibrator field.
         mapping:
           reuse_existing_gains:
+            desc: Reuse gain tables if they exist. Note that this does not check whether the existing tables were obtained with the same Caracal settings. Use with caution.
             type: bool
             required: false
-            desc: Reuse gain tables if they exist
             example: "False"
+          apply:
+            type: str
+            desc: Calibration terms solved for in the primary_cal segment that should be applied to the secondary calibrator before solving for the terms in 'order' below.
+            required: false
+            example: B
           order:
             type: str
             required: false
-            desc: "Order in which to solve for gains for this field. E.g, if order is set to 'KGB', the we solve for delays, then the phase and amplitude, and finally the bandpass. The full options are: K-delay calibration; G-amplitude and phase calibration; B-bandpass calibration; A-automatic flagging (existing gains will be applied first); I-Do a self-callibration"
-            example: KG
+            desc: Order of the calibration/flagging/imaging steps for the secondary calibrator. E.g, if order is set to 'KGB' then we solve for delays, then gains and finally bandpass. The full options are 1) K - delay calibration, 2) G - gain calibration (set whether to solve for amplitude, phase or both with 'calmode' below), 3) B - bandpass calibration, 4) A - automatic flagging with CASA tfcrop (existing gains will be applied first), 5) I - imaging with WSClean using the settings in 'image' below, which fills the MODEL column of  the .MS file(s) with a sky model and, therefore, enables self-calibration with a subsequent G step.
+            example: G
+          calmode:
+            desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
+            seq:
+              - type: str
+            required: false
+            example: "a, ap, ap"
+          solint:
+            desc: For each step in 'order' above, set the solution interval. Set to 'inf' to obtain a single solution (see also 'combine' below). Include time units, e.g., '120s' or '2min'.
+            seq:
+              - type: str
+            required: false
+            example: "120s, 120s, inf"
+          combine:
+            desc: For each step in 'order' above, set along what axis the data should be combined before solving. Options are '' (i.e., no data combination; solutions break at obs, scan, field, and spw boundarie), 'obs', 'scan', 'spw', 'field'. To combine along multiple axes use comma-separated axis names in a single string, e.g., 'obs,scan'. This setting is only relevant for the steps of type K, G and B included in 'order' above. For A steps this setting is ignored and an empty string may be used.
+            seq:
+              - type: str
+            required: false
+            example: "'', '', scan"
           solnorm:
             type: bool
             required: false
             desc: Normalise average solution amplitude to 1.0
             example: "False"
-          combine: 
-            seq:
-              - type: str
-            desc: Parameter to combine different data axis for solving. Options are ['','obs', 'scan', 'spw', 'field', 'obs,scan', 'scan,ob']
-            example: "'', scan"
-            required: false
-          solint:
-            seq:
-              - type: str
-            desc: Solution interval for delay-correction calibration.
-            example: "120s, 120s"
-            required: false
-          calmode:
-            seq:
-              - type: str
-            desc: Type of solution
-            example: "a, ap, ap"
-            required: false
-          apply:
-            type: str
-            desc: Gains to apply from calibration of bandpass field
-            example: B
-            required: false
           plotgains:
+            desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool
-            desc: Plot gains
-            example: "True"
             required: false
+            example: "True"
           flag:
             type: map
             desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.

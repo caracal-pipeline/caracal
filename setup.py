@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela>=1.4.1',
+    'stimela @ git+https://github.com/ratt-ru/Stimela@shadems-direct-cab',
     'scipy',
     'pysolr',
     'progressbar2',

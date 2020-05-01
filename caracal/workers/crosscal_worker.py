@@ -205,12 +205,12 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             params["refant"] = pipeline.reference_antenna[iobs]
             params["solint"] = first_if_single(config[ftype]["solint"], i)
             params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
-            params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
             params["solnorm"] = config[ftype]["solnorm"]
             params["field"] = ",".join(field)
             if term == "B":
                 params["bandtype"] = term
             else:
+                params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
                 params["gaintype"] = term
             otf_apply = get_last_gain(gaintables, my_term=term)
             if otf_apply:
@@ -522,8 +522,9 @@ def worker(pipeline, recipe, config):
                 else:
                     transfer_fluxscale(msname, recipe, gtable+":output", ftable,
                             pipeline, i, reference=fluxscale_field, label=label)
-                    plotgains(recipe, pipeline, pipeline.bpcal_id[i], 
-                            ftable, i, term='F')
+                    if config["primary_cal"]["plotgains"]:
+                        plotgains(recipe, pipeline, pipeline.bpcal_id[i], 
+                                ftable, i, term='F')
             else:
                 ftable = None
 
@@ -539,8 +540,9 @@ def worker(pipeline, recipe, config):
             else:
                 transfer_fluxscale(msname, recipe, gtable+":output", ftable,
                         pipeline, i, reference=fluxscale_field, label=label)
-                plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
-                    ftable, i, term='F')
+                if config["secondary_cal"]["plotgains"]:
+                    plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
+                            ftable, i, term='F')
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]

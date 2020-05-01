@@ -6,128 +6,128 @@ mapping:
 
   crosscal:
     type: map
-    desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration)
+    desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration).
     mapping:
       enable: 
+        desc: Execute the crosscal worker.
         type: bool
         required: true
-        desc: Execute this segment.
         example: 'True'
       label_in:
+        desc: Label of the .MS file(s) to work on.
         type: str
         required: true
-        desc: Label of measurement set to work on.
         example: 'cal'
       label_cal:
+        desc: Label for output files (calibration tables, images).
         type: str
         required: false
-        desc: Label for output files.
         example: '1gc1'
       rewind_flags:
-        desc: Rewind flags to specified version.
+        desc: Rewind flags to version specified by "version" below, and delete all flag versions that had been saved after it.
         type: map
         mapping:
           enable:
+            desc: Execute the rewind_flags segement.
             type: bool
-            desc: enable this segement
-            example: 'False'
             required: false
+            example: 'False'
           version: 
             type: str
-            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
-            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            desc: Flag version to rewind to. Note that all flag versions that had been saved after this version will be deleted.
             required: false
+            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
       overwrite_flag_versions:
         desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
+        required: false
         example: 'False'
-        required: false
       uvrange: 
+        desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
         type: str
         required: false
-        desc: Set the U-V range for data selection, e.g. '>50'.
-        example: '>50' 
+        example: '>50'
       casa_version: 
+        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
         type: str
         required: false
-        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
         example: '47'
       set_model:
+        desc: Fill in the MODEL column of the .MS file(s) for the field selected by "field" below in preparation for crosscalibration. This can use CASA setjy for point-source models, or MeqTrees for available local sky models.
         type: map
-        desc: Essentially setjy task from CASA.
         mapping:
           enable:
+            desc: Execute the set_model segment.
             type: bool
-            desc: Execute the setjy task.
             required: false
             example: 'True'
           caracal_model:
+            desc: Use sky models available in CARACal. At the moment this includes PKS1934-638 and 0408-6545 MeerKAT sky models.
             type: bool
             required: false
-            desc: Use built-in sky models in CARACal
             example: 'False'
           no_verify:
+            desc: Enables setting standard manually [???].
             type: bool
-            desc: Enables setting standard manually.
             required: false
             example: 'False'
           field:
+            desc: Set the field to execute the set_model segment on. Specify either the field number, field name or field specification as per obsconf worker (e.g., "fcal").
             type: str 
-            desc: Set the field to carry out setjy on. Specify either the field number, name or even as 'fcal' corresponding to field specification in observation config.   
             required: false
             example: 'fcal'
           threads:
             type: int
-            desc: Set the number of threads to use when predicting local sky model using MeqTrees.
+            desc: Number of threads used by MeqTrees if caracal_model above is enabled.
             required: false
             example: '8'
       primary_cal:
         type: map
-        desc: Calibrating on the bandpass calibrator field
+        desc: Calibrating on the bandpass/flux calibrator field.
         mapping:
           reuse_existing_gains:
+            desc: Reuse gain tables if they exist. Note that this does not check whether the existing tables were obtained with the same Caracal settings. Use with caution.
             type: bool
             required: false
-            desc: Reuse gain tables if they exist
             example: "False"
           order:
+            desc: Order in which to solve for gains for this field. E.g, if order is set to 'KGB', then we solve for delays, then gains and finally bandpass. The full options are 1) K - delay calibration, 2) G - gain calibration (decide whether to solve for amplitude, phase or  both with 'calmode' below), 3) B - bandpass calibration, 4) A - automatic flagging with CASA tfcrop (existing gains will be applied first).
             type: str
             required: false
-            desc: "Order in which to solve for gains for this field. E.g, if order is set to 'KGB', the we solve for delays, then the phase and amplitude, and finally the bandpass. The full options are: K-delay calibration; G-amplitude and phase calibration; B-bandpass calibration; A-automatic flagging (existing gains will be applied first)."
             example: KGB
-          solnorm:
-            type: bool
-            required: false
-            desc: Normalise average solution amplitude to 1.0
-            example: "False"
-          combine: 
-            seq:
-              - type: str
-            desc: Parameter to combine different data axis for solving. Options are ['','obs', 'scan', 'spw', 'field', 'obs,scan', 'scan,ob']
-            example: "'', '', scan"
-            required: false
-          solint:
-            seq:
-              - type: str
-            desc: Solution interval for delay-correction calibration.
-            example: "120s, 120s, inf"
-            required: false
           calmode:
+            desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
             seq:
               - type: str
-            desc: Type of solution
+            required: false
             example: "a, ap, ap"
+          solint:
+            desc: For each step in 'order' above, set the solution interval. Set to 'inf' to obtain a single solution (see also 'combine' below). Include time units, e.g., '120s' or '2min'.
+            seq:
+              - type: str
             required: false
-          B_fillgaps:
-            type: int
-            desc: Fill flagged solution channels by interpolation
-            example: "70"
+            example: "120s, 120s, inf"
+          combine:
+            desc: For each step in 'order' above, set along what axis the data should be combined before solving. Options are '' (i.e., no data combination; solutions break at obs, scan, field, and spw boundarie), 'obs', 'scan', 'spw', 'field'. To combine along multiple axes use comma-separated axis names in a single string, e.g., 'obs,scan'. This setting is only relevant for the steps of type K, G and B included in 'order' above. For A steps this setting is ignored and an empty string may be used.
+            seq:
+              - type: str
             required: false
-          plotgains:
+            example: "'', '', scan"
+          solnorm:
+            desc: Normalise average solution amplitude to 1.0.
             type: bool
-            desc: Plot gains
-            example: "True"
             required: false
+            example: "False"
+          B_fillgaps:
+            desc: Fill flagged solution channels by interpolation.
+            type: int
+            required: false
+            example: "70"
+          plotgains:
+            desc: Plot gains.
+            type: bool
+            required: false
+            example: "True"
           flag:
             type: map
             desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.

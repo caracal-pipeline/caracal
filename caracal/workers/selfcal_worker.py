@@ -459,16 +459,15 @@ def worker(pipeline, recipe, config):
         else:
             matrix_type = 'null'
         # If we have a two_step selfcal and Gaindiag we want to use  CORRECTED_DATA
-        if config['calibrate_with'].lower() == 'meqtrees' and config['cal_meqtrees']['two_step']:
-            if matrix_type == 'GainDiag':
+        if config['calibrate_with'].lower() == 'meqtrees' and config['cal_meqtrees']['two_step'] and num > 1:
+            if trace_matrix[-1] == 'GainDiag':
                 imcolumn = "CORRECTED_DATA"
             # If we do not have gaindiag but do have two step selfcal check against stupidity and that we are actually ending with ampphase cal and written to a special phase column
-            elif matrix_type == 'GainDiagPhase' and config[key_mt]['gain_matrix_type'][-1] == 'GainDiag':
+            elif trace_matrix[-1] == 'GainDiagPhase':
                 imcolumn = 'CORRECTED_DATA_PHASE'
             # If none of these apply then do our normal sefcal
             else:
-                imcolumn = config[key][
-                    'column'][num - 1 if len(config[key]['column']) >= num else -1]
+                raise RuntimeError("Something has gone wrong in the two step processing")
         else:
             imcolumn = config[key][
                 'column'][num - 1 if len(config[key]['column']) >= num else -1]
@@ -1040,7 +1039,7 @@ def worker(pipeline, recipe, config):
             # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key]['gain_matrix_type'][
                 num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
-            if config['cal_meqtrees']['two_step'] and config[key]['aimfast']:
+            if config['cal_meqtrees']['two_step'] and pipeline.enable_task(config, 'aimfast'):
                 if num == 1:
                     matrix_type = 'GainDiagPhase'
                     SN = 3
@@ -1055,17 +1054,17 @@ def worker(pipeline, recipe, config):
                 for scan_key in obs_data['SCAN']['0']:
                     tot_time += obs_data['SCAN']['0'][scan_key]
                 no_ant = len(obs_data['ANT']['DISH_DIAMETER'])
-                DR = fidelity_data['{0}_{1}-residual'.format(
-                    prefix, num)]['{0}_{1}-model'.format(prefix, num)]['DR']
-                Noise = fidelity_data['{0}_{1}-residual'.format(
-                    prefix, num)]['STDDev']
+                DR = fidelity_data['{0}_{2}_{1}-residual'.format(
+                    prefix, num, field)]['{0}_{2}_{1}-model'.format(prefix, num, field)]['DR']
+                Noise = fidelity_data['{0}_{2}_{1}-residual'.format(
+                    prefix, num, field)]['STDDev']
                 flux = DR * Noise
                 solvetime = int(Noise**2 * SN**2 * tot_time *
                                 no_ant / (flux**2 * 2.) / int_time)
 
                 if num > 1:
-                    DR = fidelity_data['{0}_{1}-residual'.format(
-                        prefix, num-1)]['{0}_{1}-model'.format(prefix, num-1)]['DR']
+                    DR = fidelity_data['{0}_{2}_{1}-residual'.format(
+                        prefix, num-1, field)]['{0}_{2}_{1}-model'.format(prefix, num-1, field)]['DR']
                     flux = DR*Noise
                     prev_solvetime = int(
                         Noise**2*SN**2*tot_time*no_ant/(flux**2*2.)/int_time)
@@ -1149,7 +1148,7 @@ def worker(pipeline, recipe, config):
                            "Bjones-ampl-clipping": config['cal_Bjones'],
                            "Bjones-ampl-clipping-low": config['cal_gain_amplitude_clip_low'],
                            "Bjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
-                           "make-plots": True,
+                           "make-plots": False,
                            "tile-size": time_chunk,
                        },
                        input=pipeline.input,

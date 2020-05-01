@@ -118,11 +118,6 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
-          solnorm:
-            desc: Normalise average solution amplitude to 1.0.
-            type: bool
-            required: false
-            example: "False"
           B_fillgaps:
             desc: Fill flagged solution channels by interpolation.
             type: int
@@ -212,7 +207,7 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
-          solnorm:
+          B_solnorm:
             type: bool
             required: false
             desc: Normalise average solution amplitude to 1.0

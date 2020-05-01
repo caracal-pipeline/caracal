@@ -205,6 +205,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             params["refant"] = pipeline.reference_antenna[iobs]
             params["solint"] = first_if_single(config[ftype]["solint"], i)
             params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
+            params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
             params["solnorm"] = config[ftype]["solnorm"]
             params["field"] = ",".join(field)
             if term == "B":

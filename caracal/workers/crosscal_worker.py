@@ -145,6 +145,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 can_reuse = True
         
         if term in "IA":
+            imagenow = False
+            flagnow = False
             ftable_ = None
             if i==0:
                 raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed."\

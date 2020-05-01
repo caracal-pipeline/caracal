@@ -62,7 +62,8 @@ flag:
 crosscal:
   enable: true
   uvrange: '>150'
-  label_in: 1gc1
+  label_in: ''
+  label_cal: 1gc1
   rewind_flags:
     enable: false
   set_model:

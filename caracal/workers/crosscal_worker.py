@@ -11,6 +11,7 @@ from caracal.workers.utils import manage_caltabs as manGtabs
 import copy
 import re
 import json
+import glob
 
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
@@ -128,7 +129,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
         # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
         case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1
-        case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal"
+        case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal" and "I" in order[i:]
         if case_1 or case_2:
             params["caltable"] = append_last_secondary + ":output"
             params["append"] = True
@@ -526,17 +527,18 @@ def worker(pipeline, recipe, config):
                 applycal(msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label, fluxtable=ftable)
 
-            # Transfer fluxscale
-            ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
-            if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables,
-                    ftable):
-                caracal.log.info("Reusing existing gain table '%s' as requested" % ftable)
-            else:
-                transfer_fluxscale(msname, recipe, gtable+":output", ftable,
-                        pipeline, i, reference=fluxscale_field, label=label)
-                if config["secondary_cal"]["plotgains"]:
-                    plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
-                            ftable, i, term='F')
+            # Transfer fluxscale will be done by solve() if self-caling secondary
+            if "I" not in config["secondary_cal"]["order"]:
+                ftable = "%s_secondary_cal.F%d" % (prefix, primary["iters"]["G"])
+                if config["secondary_cal"]["reuse_existing_gains"] and exists(pipeline.caltables,
+                        ftable):
+                    caracal.log.info("Reusing existing gain table '%s' as requested" % ftable)
+                else:
+                    transfer_fluxscale(msname, recipe, gtable+":output", ftable,
+                            pipeline, i, reference=fluxscale_field, label=label)
+                    if config["secondary_cal"]["plotgains"]:
+                        plotgains(recipe, pipeline, pipeline.gcal_id[i] + [fluxscale_field_id], 
+                                ftable, i, term='F')
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]
@@ -591,3 +593,11 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
+            summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
+                                    "flagging_summary-1gc1-{2:d}-*"
+                                    ".txt".format(pipeline.output, wname, i))[0]
+            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
+            manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)

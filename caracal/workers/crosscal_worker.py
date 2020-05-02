@@ -128,14 +128,13 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
         # Case 1: Append last gain solutions to primary gain table so fluxscale is possible
         # Case 2: Append to primary gain table so can adjust fluxscale for imaging 
-        case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1
+        case_1 = append_last_secondary and term == "G" and order.count("G") == itern+1 
         case_2 = term == "G" and iters["G"] == 0 and ftype == "secondary_cal" and "I" in order[i:]
-        if case_1 or case_2:
-            params["caltable"] = append_last_secondary + ":output"
+        caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
+        if (case_1 or case_2) and not flux_scaled:
+            caltable = append_last_secondary or caltable
+            params["caltable"] = caltable + ":output"
             params["append"] = True
-            caltable = append_last_secondary
-        else:
-            caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
 
         can_reuse = False
         if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, 
@@ -233,6 +232,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             else:
                 params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
                 params["gaintype"] = term
+            # Apply existing gains on the fly when solving
             otf_apply = get_last_gain(gaintables, my_term=term)
             if otf_apply:
                 params["gaintable"] = [gaintables[count]+":output" for count in otf_apply]
@@ -253,7 +253,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                         input=pipeline.input, output=pipeline.caltables,
                         label="%s:: %s calibration" % (step, term))
 
-            if config[ftype]["plotgains"]:
+            # Assume gains were plotted when they were created
+            if config[ftype]["plotgains"] and not can_reuse:
                 plotgains(recipe, pipeline, field_id, caltable, iobs, term=term)
 
             fields.append(",".join(field))
@@ -502,7 +503,8 @@ def worker(pipeline, recipe, config):
 
             gtable = "%s_primary_cal.G%d" % (prefix, primary["iters"]["G"])
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary_cal", append_last_secondary=gtable,
+                    prefix, label=label, ftype="secondary_cal", 
+                    append_last_secondary=gtable,
                     prev=primary, prev_name="primary_cal", smodel=True)
 
             interps = primary["interps"]
@@ -596,8 +598,7 @@ def worker(pipeline, recipe, config):
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
-            summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
-                                    "flagging_summary-1gc1-{2:d}-*"
-                                    ".txt".format(pipeline.output, wname, i))[0]
+            summary_log = glob.glob("{0:s}/log-{1:s}-{2:s}-*"
+                                    ".txt".format(pipeline.logs, wname, step))[0]
             json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
             manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)

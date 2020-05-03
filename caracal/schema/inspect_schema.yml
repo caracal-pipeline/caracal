@@ -27,7 +27,7 @@ mapping:
         type: str
         desc: Application to use for making plots
         enum: [plotms, shadems, ragavi_vis]
-        example: shadems
+        example: ragavi_vis
         required: false
       correlation: 
         type: str

@@ -318,7 +318,7 @@ mapping:
                 type: int
                 desc: Number of cleaning iterations
                 required: false
-                example: '200000'
+                example: '120000'
               nchans:
                 type: int
                 desc: Number of channesls in output image

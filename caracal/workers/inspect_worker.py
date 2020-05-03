@@ -183,7 +183,7 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["real_imag"] = dict(
             plotms={"xaxis": "imag", "yaxis": "real",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems={"xaxis": "r", "yaxis": "i"},
+            shadems={"xaxis": "real", "yaxis": "imag"},
             ragavi_vis={"xaxis": "real", "yaxis": "imaginary",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
@@ -191,7 +191,7 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["amp_phase"] = dict(
             plotms={"xaxis": "amp", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems={"xaxis": "a", "yaxis": "p"},
+            shadems={"xaxis": "real", "yaxis": "imag"},
             ragavi_vis={"xaxis": "phase", "yaxis": "amplitude",
                         "iter-axis": "corr", "canvas-width": 1080,
                         "canvas-height": 720})
@@ -204,7 +204,7 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["amp_uvwave"] = dict(
             plotms={"xaxis": "uvwave", "yaxis": "amp",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems={"xaxis": "uv", "yaxis": "a"},
+            shadems={"xaxis": "UV", "yaxis": "amp"},
             ragavi_vis={"xaxis": "uvwave", "yaxis": "amplitude",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
@@ -212,7 +212,7 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["phase_uvwave"] = dict(
             plotms={"xaxis": "uvwave", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems={"xaxis": "uv", "yaxis": "p"},
+            shadems={"xaxis": "UV", "yaxis": "phase"},
             ragavi_vis={"xaxis": "uvwave", "yaxis": "phase",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
@@ -226,14 +226,14 @@ def worker(pipeline, recipe, config):
 
         diagnostic_plots["amp_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "amp"},
-            shadems={"xaxis": "c", "yaxis": "a"},
+            shadems={"xaxis": "chan", "yaxis": "amp"},
             ragavi_vis={"xaxis": "channel", "yaxis": "amplitude",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
 
         diagnostic_plots["phase_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "phase"},
-            shadems={"xaxis": "c", "yaxis": "p"},
+            shadems={"xaxis": "chan", "yaxis": "phase"},
             ragavi_vis={"xaxis": "channel", "yaxis": "phase",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})

@@ -62,7 +62,7 @@ mapping:
       standard_plotter:
         type: str
         desc: Application to use for making "standard" plots. Use "none" to disable.
-        enum: [shadems, ragavi_vis, none]
+        enum: [plotms, shadems, ragavi_vis, none]
         example: ragavi_vis
         required: false
       correlation: 

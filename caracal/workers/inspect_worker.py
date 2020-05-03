@@ -260,7 +260,7 @@ def worker(pipeline, recipe, config):
                     corr = ",".join(corr)
                     # for each corr
                     for co in corr.split(","):
-                        opts["corr"] = int(co)
+                        opts["corr"] = co
                         for fields_ in specific_fields(plotname) or fields:
                             for field in getattr(pipeline, fields_)[iobs]:
                                 fid = utils.get_field_id(msinfo, field)[0]

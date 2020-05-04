@@ -39,7 +39,8 @@ CUBICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
     "GainDiagPhase": 'phase-diag',
-    "ComplexDiag": 'complex-diag'
+    "ComplexDiag": 'complex-diag',
+    "Fslope" : 'f-slope',
 }
 
 SOL_TERMS_INDEX = {
@@ -1214,6 +1215,9 @@ def worker(pipeline, recipe, config):
             gupdate = 'diag'
         elif matrix_type == 'Gain2x2':
             gupdate = 'full'
+	elif matrix_type == 'Fslope':
+            gupdate == 'phase-diag'
+
         else:
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
 

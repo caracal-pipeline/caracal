@@ -1216,7 +1216,7 @@ def worker(pipeline, recipe, config):
         elif matrix_type == 'Gain2x2':
             gupdate = 'full'
 	elif matrix_type == 'Fslope':
-            gupdate == 'phase-diag'
+            gupdate = 'phase-diag'
 
         else:
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )

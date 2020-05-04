@@ -212,14 +212,15 @@ def worker(pipeline, recipe, config):
         diagnostic_plots["amp_phase"] = dict(
             plotms={"xaxis": "amp", "yaxis": "phase",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems={"xaxis": "real", "yaxis": "imag"},
+            shadems={"xaxis": "amp", "yaxis": "phase"},
             ragavi_vis={"xaxis": "phase", "yaxis": "amplitude",
                         "iter-axis": "corr", "canvas-width": 1080,
                         "canvas-height": 720})
+
         diagnostic_plots["amp_ant"] = dict(
             plotms={"xaxis": "antenna", "yaxis": "amp",
                     "colouraxis": "baseline", "iteraxis": "corr"},
-            shadems=None,
+            shadems={"xaxis": "ANTENNA1", "yaxis": "amp"},
             ragavi_vis=None)
 
         diagnostic_plots["amp_uvwave"] = dict(
@@ -240,21 +241,21 @@ def worker(pipeline, recipe, config):
 
         diagnostic_plots["amp_scan"] = dict(
             plotms={"xaxis": "scan", "yaxis": "amp"},
-            shadems=None,
+            shadems={"xaxis": "SCAN_NUMBER", "yaxis": "amp"},
             ragavi_vis={"xaxis": "scan", "yaxis": "amplitude",
                         "iter-axis": None,
                         "canvas-width": 1080, "canvas-height": 720})
 
         diagnostic_plots["amp_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "amp"},
-            shadems={"xaxis": "chan", "yaxis": "amp"},
+            shadems={"xaxis": "CHAN", "yaxis": "amp"},
             ragavi_vis={"xaxis": "channel", "yaxis": "amplitude",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
 
         diagnostic_plots["phase_chan"] = dict(
             plotms={"xaxis": "chan", "yaxis": "phase"},
-            shadems={"xaxis": "chan", "yaxis": "phase"},
+            shadems={"xaxis": "CHAN", "yaxis": "phase"},
             ragavi_vis={"xaxis": "channel", "yaxis": "phase",
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})

@@ -236,7 +236,7 @@ mapping:
            example: '100'
          madmax_enable:
            type: bool
-           desc: Enable madmax flagging in Cubical.
+           desc: Enable madmax flagging in Cubical. NOT USED, PLACEHOLDER PARAMETER. TRUE FOR ALL MADMAX PARAMETERS.
            required: false
            example: 'true'
          madmax_threshold:

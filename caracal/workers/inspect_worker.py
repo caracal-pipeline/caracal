@@ -267,7 +267,7 @@ def worker(pipeline, recipe, config):
                                 globals()[plotter](pipeline, recipe, config,
                                                    plotname, msname, field,
                                                    iobs, label, prefix, opts,
-                                                   ftype=fields_, fid=fid,
+                                                   ftype=fields_, fid=fid, output_dir=output_dir,
                                                    corr_label=corrs[int(co)])
 
                 elif plotter == "ragavi_vis" and not opts["iter-axis"] == "corr":
@@ -300,4 +300,4 @@ def worker(pipeline, recipe, config):
                             globals()[plotter](pipeline, recipe, config,
                                                plotname, msname, field, iobs, label,
                                                prefix, opts, ftype=fields_,
-                                               fid=fid)
+                                               fid=fid, output_dir=output_dir)

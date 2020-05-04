@@ -238,7 +238,7 @@ def worker(pipeline, recipe, config):
                         "iter-axis": "scan", "canvas-width": 300,
                         "canvas-height": 300})
 
-        if plotter is not "none":
+        if plotter.lower() != "none":
             for plotname in diagnostic_plots:
                 if not pipeline.enable_task(config, plotname):
                     continue

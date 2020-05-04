@@ -5,8 +5,8 @@ import numpy as np
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.dispatch_crew import utils
 
-NAME = "Prepare data for calibration"
-LABEL = 'prepare_data'
+NAME = "Prepare Data for Processing"
+LABEL = 'prep'
 
 def worker(pipeline, recipe, config):
     label = config['label_in']
@@ -83,39 +83,8 @@ def worker(pipeline, recipe, config):
                         caracal.log.error('The flag version {0:s} you asked to restore does not exist for {1:s}.'.format(version, msname))
                         if version == "caracal_legacy":
                             caracal.log.error('You may actually want to create that "caracal legacy" flag version with:')
-                            caracal.log.error('    prepare_data: manage_flags: mode: save_legacy')
+                            caracal.log.error('    prepare_data: manage_flags: mode: save_legacy_flags')
                         raise RuntimeError('Flag version conflicts')
-
-                #elif mode == "unflag_and_reset":
-                #    step = "reset_flags_{0:s}_{1:d}".format(wname, i)
-                #    manflags.delete_cflags(pipeline, recipe, "all", msname, cab_name=step)
-                #    # Unflag data
-                #    step = "unflag_all_{0:s}_{1:d}".format(wname, i)
-                #    recipe.add("cab/casa_flagdata", step,
-                #            {
-                #                "vis" : msname,
-                #                "mode" : "unflag",
-                #                "flagbackup" : False,
-                #            },
-                #            input=pipeline.input,
-                #            output=pipeline.output,
-                #            label="{0:s}:: Save current flags".format(step))
-
-                #elif mode == "save":
-                #    step = "save_flags_{0:s}_{1:d}".format(wname, i)
-                #    manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
-
-                #elif mode == "list":
-                #    step = "list_flags_{0:s}_{1:d}".format(wname, i)
-                #    recipe.add("cab/casa_flagmanager", step,
-                #            {
-                #                "vis" : msname,
-                #                "mode" : "list",
-                #            },
-                #            input=pipeline.input,
-                #            output=pipeline.output,
-                #            label="{0:s}:: List flag versions".format(step))
-                #    caracal.log.warning("manage_flags mode is 'list'. Listing flag versions only!")
 
             if config["clear_cal"]:
                 step = 'clear_cal-ms{:d}'.format(i)
@@ -150,10 +119,10 @@ def worker(pipeline, recipe, config):
                                {
                                    "msname": msname,
                                    "command": 'estimate_weights',
-                                   "stats_data": _config['estimate'].get('stats_data'),
-                                   "weight_columns": _config['estimate'].get('weight_columns'),
-                                   "noise_columns": _config['estimate'].get('noise_columns'),
-                                   "write_to_ms": _config['estimate'].get('write_to_ms'),
+                                   "stats_data": _config['estimate']['stats_data'],
+                                   "weight_columns": _config['estimate']['weight_columns'],
+                                   "noise_columns": _config['estimate']['noise_columns'],
+                                   "write_to_ms": _config['estimate']['write_to_ms'],
                                    "plot_stats": prefix + '-noise_weights.png',
                                },
                                input=pipeline.input,

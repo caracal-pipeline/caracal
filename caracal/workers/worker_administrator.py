@@ -73,7 +73,7 @@ class worker_administrator(object):
         sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
-        # general, get_data and observation config are all mendatory. 
+        # general, getdata and obsconf are all mendatory. 
         # That's why the lowest starting index is 2 (third element)
         start_idx = last_mandatory
         end_idx = len(self.config.keys())
@@ -129,7 +129,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline"):
+        if config["general"]["init_pipeline"]:
             self.init_pipeline()
 
         # save configuration file
@@ -262,18 +262,27 @@ class worker_administrator(object):
 
     def run_workers(self):
         """ Runs the  workers """
+
+        active_workers = []
+        # first, check that workers import, and check their configs
         for _name, _worker, i in self.workers:
+            config = self.config[_name]
+            if 'enable' in config and not config['enable']:
+                self.skip.append(_worker)
+                continue
+            log.info("configuring worker {}".format(_name))
             try:
                 worker = __import__(_worker)
             except ImportError:
-                traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
-                    _worker, self.workers_directory))
+                log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
+                raise
+            if hasattr(worker, 'check_config'):
+                worker.check_config(config)
+            active_workers.append((_name, worker, config))
 
-            config = self.config[_name]
-            if config.get('enable') is False:
-                self.skip.append(_worker)
-                continue
+        # now run the actual pipeline
+        #for _name, _worker, i in self.workers:
+        for _name, worker, config in active_workers:
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             label = getattr(worker, 'LABEL', None)
@@ -302,30 +311,10 @@ class worker_administrator(object):
             # Save worker recipes for later execution
             # execute each worker after adding its steps
 
-            if self.add_all_first:
-                log.info("{0:s}: adding before running".format(_worker))
-                self.recipes[_worker] = recipe
-            else:
-                log.info("{0:s}: running".format(label))
-                recipe.run()
-                log.info("{0:s}: finished".format(label))
-                casa_last = glob.glob(self.output + '/*.last')
-                for file_ in casa_last:
-                    os.remove(file_)
+            log.info("{0:s}: running".format(label))
+            recipe.run()
+            log.info("{0:s}: finished".format(label))
+            casa_last = glob.glob(self.output + '/*.last')
+            for file_ in casa_last:
+                os.remove(file_)
 
-        # Execute all workers if they saved for later execution
-        try:
-            if self.add_all_first:
-                for worker in self.workers:
-                    if worker not in self.skip:
-                       log.info("Running worker next in queue")
-                       self.recipes[worker[1]].run()
-                       log.info("Finished worker next in queue")
-        finally:  # write reports even if the pipeline only runs partially
-            ## this is no longer needed -- the log is opened directly in the correct location
-            # os.remove(caracal.BASE_CARACAL_LOG)
-            # pipeline_logs = sorted(glob.glob(self.logs + '/*caracal.txt'))
-            # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-caracal.txt'.format(self.output))
-            if REPORTS and self.generate_reports:
-                reporter = mrr(self)
-                reporter.generate_reports()

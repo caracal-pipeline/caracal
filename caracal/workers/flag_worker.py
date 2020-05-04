@@ -11,9 +11,8 @@ import sys
 import glob
 import numpy as np
 
-
-NAME = 'Flagging'
-LABEL = 'flagging'
+NAME = 'Flag'
+LABEL = 'flag'
 
 def worker(pipeline, recipe, config):
     label = config['label_in']
@@ -139,12 +138,12 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "field": fields,
                                "cal_field": fields,
-                               "scan_to_scan_threshold": config["flag_autopowerspec"].get("scan_to_scan_threshold"),
-                               "antenna_to_group_threshold": config["flag_autopowerspec"].get("antenna_to_group_threshold"),
+                               "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_to_scan_threshold"],
+                               "antenna_to_group_threshold": config["flag_autopowerspec"]["antenna_to_group_threshold"],
                                "dpi": 300,
                                "plot_size": 6,
-                               "nproc_threads": config['flag_autopowerspec'].get('threads'),
-                               "data_column": config['flag_autopowerspec'].get('column')
+                               "nproc_threads": config['flag_autopowerspec']['threads'],
+                               "data_column": config['flag_autopowerspec']['column']
                            },
                            input=pipeline.input, output=pipeline.output,
                            label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step,msname))
@@ -169,8 +168,8 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'quack',
-                               "quackinterval": config['flag_quack'].get('quackinterval'),
-                               "quackmode": config['flag_quack'].get('quackmode'),
+                               "quackinterval": config['flag_quack']['quackinterval'],
+                               "quackmode": config['flag_quack']['quackmode'],
                                "field": fields,
                                "flagbackup": False,
                            },
@@ -184,8 +183,8 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'elevation',
-                               "lowerlimit": config['flag_elevation'].get('low'),
-                               "upperlimit": config['flag_elevation'].get('high'),
+                               "lowerlimit": config['flag_elevation']['low'],
+                               "upperlimit": config['flag_elevation']['high'],
                                "field": fields,
                                "flagbackup": False,
                            },
@@ -194,7 +193,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flag_shadow'):
-                if config['flag_shadow'].get('include_full_mk64'):
+                if config['flag_shadow']['include_full_mk64']:
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
                     with open(msinfo, 'r') as stdr:
                         subarray = yaml.load(stdr)['ANT']['NAME']
@@ -216,7 +215,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'shadow',
-                               "tolerance": config['flag_shadow'].get('tolerance'),
+                               "tolerance": config['flag_shadow']['tolerance'],
                                "addantenna": addantennafile,
                                "flagbackup": False,
                                "field": fields,
@@ -229,7 +228,7 @@ def worker(pipeline, recipe, config):
                 step = '{0:s}-spw-ms{1:d}'.format(wname, msiter)
                 flagspwselection = config['flag_spw']['channels']
                 found_valid_data = 0
-                if config['flag_spw'].get('ensure_valid_selection'):
+                if config['flag_spw']['ensure_valid_selection']:
                     scalefactor, scalefactor_dict = 1, {
                         'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3}
                     for ff in flagspwselection.split(','):
@@ -259,7 +258,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.warn(
                             'The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, flagspwselection, step))
 
-                if found_valid_data or not config['flag_spw'].get('ensure_valid_selection'):
+                if found_valid_data or not config['flag_spw']['ensure_valid_selection']:
                     recipe.add('cab/casa_flagdata', step,
                                {
                                    "vis": msname,
@@ -275,7 +274,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_time'):
                 step = '{0:s}-time-ms{1:d}'.format(wname, msiter)
                 found_valid_data = 0
-                if config['flag_time'].get('ensure_valid_selection'):
+                if config['flag_time']['ensure_valid_selection']:
                     if pipeline.startdate[i]:
                         start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
                         flag_start = float(''.join(re.split('/|:', start_flagrange)))
@@ -287,7 +286,7 @@ def worker(pipeline, recipe, config):
                     if not found_valid_data:
                         caracal.log.warn(
                             'The following time selection has been made in the flag_time module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_time']['timerange'], step))
-                if found_valid_data or not config['flag_time'].get('ensure_valid_selection'):
+                if found_valid_data or not config['flag_time']['ensure_valid_selection']:
                     recipe.add('cab/casa_flagdata', step,
                                {
                                     "vis": msname,
@@ -317,9 +316,9 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_antennas'):
                 # step = '{0:s}-antennas-ms{1:d}'.format(wname, msiter)
                 antennas = [config['flag_antennas']['antennas']]
-                times = [config['flag_antennas'].get('timerange')]
+                times = [config['flag_antennas']['timerange']]
                 found_valid_data = [0]
-                ensure = config['flag_antennas'].get('ensure_valid_selection')
+                ensure = config['flag_antennas']['ensure_valid_selection']
                 if times[0] == '':
                     ensure = False
                 if ensure:
@@ -364,7 +363,7 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "mask": config['flag_mask']['mask'],
                                "accumulation_mode": 'or',
-                               "uvrange": sdm.dismissable(config['flag_mask'].get('uvrange')),
+                               "uvrange": sdm.dismissable(config['flag_mask']['uvrange']),
                                "memory": 4096,
                            },
                            input=pipeline.input,
@@ -396,7 +395,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,
-                                   "column": config['flag_rfi'].get('column'),
+                                   "column": config['flag_rfi']['column'],
                                    "fields": ",".join(map(str, field_ids)),
                                    "strategy": config['flag_rfi']['aoflagger']['strategy'],
                                },
@@ -419,8 +418,8 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,
-                                   "data-column": config['flag_rfi'].get('column'),
-                                   "window-backend": config['flag_rfi']['tricolour'].get('window_backend'),
+                                   "data-column": config['flag_rfi']['column'],
+                                   "window-backend": config['flag_rfi']['tricolour']['window_backend'],
                                    "field-names": fields,
                                    "flagging-strategy": 'polarisation',
                                    "config" : tricolour_strat,
@@ -430,7 +429,7 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['flag_rfi']["flagger"] == "tfcrop":
-                    column = config['flag_rfi'].get('column').split("_DATA")[0].lower()
+                    column = config['flag_rfi']['column'].split("_DATA")[0].lower()
                     recipe.add('cab/casa_flagdata', step,
                                {
                                    "vis" : msname,
@@ -459,7 +458,7 @@ def worker(pipeline, recipe, config):
                     field = '0'
                 else:
                     field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
-                        pipeline, i, config['inspect'].get('field')).split(","))))
+                        pipeline, i, config['inspect']['field']).split(","))))
                 for f in field.split(','):
                     outlabel = '_{0:d}'.format(i) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(i,f)
                     recipe.add('cab/rfinder', step,
@@ -469,22 +468,22 @@ def worker(pipeline, recipe, config):
                                    "plot_noise": "noise",
                                    "RFInder_mode": "use_flags",
                                    "outlabel": outlabel,  # The output will be rfi_<pol>_<outlabel>
-                                   "polarization": config['inspect'].get('polarization'),
-                                   "spw_width": config['inspect'].get('spw_width'),
-                                   "time_step": config['inspect'].get('time_step'),
-                                   "time_enable": config['inspect'].get('time_enable'),
-                                   "spw_enable": config['inspect'].get('spw_enable'),
-                                   "1d_gif": config['inspect'].get('time_enable'),
-                                   "2d_gif": config['inspect'].get('time_enable'),
-                                   "altaz_gif": config['inspect'].get('spw_enable'),
-                                   "movies_in_report": config['inspect'].get('time_enable') or config.get('spw_enable')
+                                   "polarization": config['inspect']['polarization'],
+                                   "spw_width": config['inspect']['spw_width'],
+                                   "time_step": config['inspect']['time_step'],
+                                   "time_enable": config['inspect']['time_enable'],
+                                   "spw_enable": config['inspect']['spw_enable'],
+                                   "1d_gif": config['inspect']['time_enable'],
+                                   "2d_gif": config['inspect']['time_enable'],
+                                   "altaz_gif": config['inspect']['spw_enable'],
+                                   "movies_in_report": config['inspect']['time_enable'] or config['spw_enable']
                                },
                                input=pipeline.input,
                                output=pipeline.output,
                                label='{0:s}:: Investigate presence of rfi in ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'summary'):
-                __label = config.get('label_in', False)
+                __label = config['label_in']
                 step = '{0:s}-summary-ms{1:d}'.format(wname,msiter)
                 recipe.add('cab/casa_flagdata', step,
                            {

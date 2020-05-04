@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  cross_cal:
+  crosscal:
     type: map
     desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration)
     mapping:
@@ -130,7 +130,7 @@ mapping:
             required: false
           flag:
             type: map
-            desc: Apply existing gains and flag corrected data
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
             mapping:
               column:
                 type: str
@@ -219,7 +219,7 @@ mapping:
             required: false
           flag:
             type: map
-            desc: Apply existing gains and flag corrected data
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
             mapping:
               column:
                 type: str

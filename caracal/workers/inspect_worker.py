@@ -169,12 +169,33 @@ def worker(pipeline, recipe, config):
                         plotspec.append("--iter-field")
                         plot_args.append(" ".join(plotspec))
 
-            step = 'plot-shadems-ms{2:d}'.format(iplot, field_type, iobs)
-            recipe.add("cab/shadems_direct", step,
-                       dict(ms=msname, args=plot_args,
-                            ignore_errors=config["shadems"]["ignore_errors"]),
-                       input=pipeline.input, output=output_dir,
-                       label="{0:s}:: Plotting".format(step))
+            args = OrderedDict(
+                # shadems uses its own "{}" codes in output name, so put it together like this
+                png="{}-{}-{}".format(prefix, label,
+                                      "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
+                title="'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
+                col=config['shadems']['default_column'],
+                corr=corr.replace(' ', ''))
+            for iplot, plotspec in enumerate(config['shadems']['plots_by_corr']):
+                if plotspec:
+                    plotspec = plotspec.split()
+                    for arg, value in args.items():
+                        arg = "--" + arg
+                        if arg not in plotspec:
+                            plotspec += [arg, value]
+                    plotspec.append("--iter-corr")
+                    plot_args.append(" ".join(plotspec))
+
+
+            if plot_args:
+                step = 'plot-shadems-ms{2:d}'.format(iplot, field_type, iobs)
+                recipe.add("cab/shadems_direct", step,
+                           dict(ms=msname, args=plot_args,
+                                ignore_errors=config["shadems"]["ignore_errors"]),
+                           input=pipeline.input, output=output_dir,
+                           label="{0:s}:: Plotting".format(step))
+            else:
+                log.warning("The shadems section is enabled, but doesn't specify any plot_by_field or plot_by_corr")
 
         # old-school plots
 

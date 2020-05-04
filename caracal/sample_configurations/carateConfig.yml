@@ -121,6 +121,8 @@ inspect__2:
       - "-x U     -y V      -c phase --cnum 64 --cmin -5 --cmax 5"
       - "-x BASELINE -y FREQ -c amp"
       - "-x BASELINE -y FREQ -c CORRECTED_DATA-MODEL_DATA:amp"
+    plots_by_corr:
+      - "-x real  -y imag   -c FIELD_ID"
     ignore_errors: true
   standard_plotter: ragavi_vis
 

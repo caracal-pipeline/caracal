@@ -577,7 +577,8 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
             summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
-                                    "flagging_summary-1gc1-{2:d}-*"
-                                    ".txt".format(pipeline.output, wname, i))[0]
+                                    "flagging_summary-{2:s}-{3:d}-*"
+                                    ".txt".format(pipeline.output, wname,
+                                                  label, i))[0]
             json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
             manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)

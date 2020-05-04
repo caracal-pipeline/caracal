@@ -498,7 +498,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob("{0:s}/logs/log-flagging-"
+                summary_log = glob.glob("{0:s}/logs/log-flag-"
                                         "{1:s}-summary-ms{2:d}-*"
                                         ".txt".format(pipeline.output, wname, i))[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,

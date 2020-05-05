@@ -187,26 +187,26 @@ mapping:
           order:
             type: str
             required: false
-            desc: Order of the calibration/flagging/imaging steps for the secondary calibrator. E.g, if order is set to 'KGB' then we solve for delays, then gains and finally bandpass. The full options are 1) K - delay calibration, 2) G - gain calibration (set whether to solve for amplitude, phase or both with 'calmode' below), 3) B - bandpass calibration, 4) A - automatic flagging with CASA tfcrop (existing gains will be applied first), 5) I - imaging with WSClean using the settings in 'image' below, which fills the MODEL column of  the .MS file(s) with a sky model and, therefore, enables self-calibration with a subsequent G step.
-            example: G
+            desc: Order of the calibration/flagging/imaging steps for the secondary calibrator. E.g, if order is set to 'KGAF', we solve for delays, then for gains, after that the existing gains (KG) are applied before flagging the calibrated data, and finally, we solve for gains and transfer the flux scale from the primary_cal step. The full options are 1) K - delay calibration; 2) G - gain calibration (set whether to solve for amplitude, phase or both with 'calmode' below); 3) F - same as G, but imedietly followed by a fluxscale. Note that a G table must exist from the primary_cal step for this work; 4) B - bandpass calibration; 5) A - automatic flagging with CASA tfcrop (existing gains will be applied first); 6) I - imaging with WSClean using the settings in 'image' below, which fills the MODEL column of  the .MS file(s) with a sky model and, therefore, enables self-calibration with a subsequent G step.
+            example: KGAF
           calmode:
             desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
             seq:
               - type: str
             required: false
-            example: "a, ap, ap"
+            example: "a, ap, None, ap"
           solint:
             desc: For each step in 'order' above, set the solution interval. Set to 'inf' to obtain a single solution (see also 'combine' below). Include time units, e.g., '120s' or '2min'.
             seq:
               - type: str
             required: false
-            example: "120s, 120s, inf"
+            example: "120s, inf, None 120s"
           combine:
             desc: For each step in 'order' above, set along what axis the data should be combined before solving. Options are '' (i.e., no data combination; solutions break at obs, scan, field, and spw boundarie), 'obs', 'scan', 'spw', 'field'. To combine along multiple axes use comma-separated axis names in a single string, e.g., 'obs,scan'. This setting is only relevant for the steps of type K, G and B included in 'order' above. For A steps this setting is ignored and an empty string may be used.
             seq:
               - type: str
             required: false
-            example: "'', '', scan"
+            example: "'', '', None, ''"
           B_solnorm:
             type: bool
             required: false
@@ -277,7 +277,7 @@ mapping:
                 type: float
                 desc: Image CLEANing gain
                 required: false
-                example: '0.80'
+                example: '0.85'
               cell:
                 type: float
                 desc: Image pixel size (arcsec)
@@ -323,7 +323,7 @@ mapping:
                 type: int
                 desc: Number of channesls in output image
                 required: false
-                example: '9'
+                example: '7'
               fit_spectral_pol:
                 type: int
                 desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.

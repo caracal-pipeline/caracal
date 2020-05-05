@@ -61,7 +61,7 @@ SS="/dev/null"
 IA=5
 endimessage=""
 ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
-SHORT_TEST_DATA_IDS=( "1477074305.subset" )
+SHORT_TEST_DATA_IDS=( "1532022061_subset" )
 
 # current working directory
 cwd=`pwd`
@@ -1587,6 +1587,7 @@ then
 	    }
 
     isalternative=0
+    
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final ALTERNATIVE_TEST_DATA_IDS && isin ALTERNATIVE_TEST_DATA_IDS dataid_final
     then
@@ -1596,7 +1597,7 @@ then
     # Warn if these are unusual data sets
     if [[ -n ${DA} ]] || [[ -n ${SA} ]]
     then
-	if [[ isalternative != 1 ]]
+	if [[ ${isalternative} != 1 ]]
 	then
 	    echo "You intend to use unusual data sets for switches"
 	    echo "--docker-alternative, -da, --singularity-alternative, or -sa"
@@ -1620,7 +1621,7 @@ then
     # Warn if these are unusual data sets
     if [[ -n ${DM} ]] || [[ -n ${SM} ]]
     then
-	if [[ isshort != 1 ]]
+	if [[ ${isshort} != 1 ]]
 	then
 	    echo "You intend to use unusual data sets for switches"
 	    echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
@@ -2291,9 +2292,9 @@ testingoutput () {
     # Check here
     allogs=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/ || echo ""`
 #    allogs=`ls -t ${1}/${2}/output/logs/` || true
-    caracallog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-caracal-*.txt | head -1 || echo ""`
+    caracallog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-caracal*.txt | head -1 || echo ""`
     [[ ${caracallog} == "" ]] && unset caracallog
-#    caracallog=`ls -t ${1}/${2}/output/logs/log-caracal-*.txt.txt | head -1 || true`
+#    caracallog=`ls -t ${1}/${2}/output/logs/log-caracal*.txt.txt | head -1 || true`
     [[ -z ${caracallog} ]] || { reporting+="This CARACal run is logged in ${caracallog}"; reporting+=$'\n'; }
     [[ -z ${caracallog} ]] || { caracallogsh=`echo ${caracallog} | sed '{s=.*/==;}'`; }
     total=0
@@ -2586,7 +2587,7 @@ runtest () {
     echo "" >> ${SYA_RUNTEST}
     
     # Make a copy of the logfile
-    caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
+    caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal*.txt | head -1 || echo ""`
     [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}-log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0

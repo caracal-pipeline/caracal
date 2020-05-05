@@ -42,6 +42,38 @@ flag:
   flag_spw:
     enable: true
 
+inspect:
+  label_in: 'cal'
+  label_out: 'pre1gc'
+  enable: true
+  dirname: initial
+  shadems:
+    enable: true
+    default_column: DATA
+    plots_by_field:
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x BASELINE -y FREQ -c amp"
+    ignore_errors: true
+  standard_plotter: ragavi_vis
+  real_imag:
+    enable: false
+    column: data
+  amp_uvwave:
+    column: data
+  phase_uvwave:
+    column: data
+    enable: false
+  amp_chan:
+    column: data
+  phase_chan:
+    column: data
+    enable: false
+
 crosscal:
   enable: true
   uvrange: '>150'
@@ -68,10 +100,33 @@ crosscal:
 polcal:
   enable: false
 
-inspect:
+inspect__2:
   label_in: 'cal'
   label_out: '1gc'
   enable: true
+  dirname: crosscal
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA
+    plots_by_field:
+      - "-x real  -y imag   -c CORR"
+      - "-x real  -y imag   -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c SCAN_NUMBER"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y phase  -c SCAN_NUMBER"
+      - "-x FREQ  -y phase  -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x U     -y V      -c phase --cnum 64 --cmin -5 --cmax 5"
+      - "-x BASELINE -y FREQ -c amp"
+      - "-x BASELINE -y FREQ -c CORRECTED_DATA-MODEL_DATA:amp"
+    plots_by_corr:
+      - "-x real  -y imag   -c FIELD_ID"
+    ignore_errors: true
+  standard_plotter: ragavi_vis
 
 transform__2:
   enable: true

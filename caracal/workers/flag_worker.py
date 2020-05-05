@@ -8,6 +8,7 @@ import yaml
 import re
 import caracal
 import sys
+import glob
 import numpy as np
 
 NAME = 'Flag'
@@ -494,6 +495,16 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []
+                summary_log = glob.glob("{0:s}/logs/log-flag-"
+                                        "{1:s}-summary-ms{2:d}-*"
+                                        ".txt".format(pipeline.output, wname, i))[0]
+                json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
+                                                              prefix, wname)
+                manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
+
 
             substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, msiter)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])

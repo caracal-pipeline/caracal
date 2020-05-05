@@ -58,7 +58,7 @@ flag:
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: false
+    ensure_valid_selection: true
   flag_antennas:
     enable: false
     antennas: '0'
@@ -103,7 +103,6 @@ crosscal:
     calmode: [a, ap, null, a, ap] 
     plotgains: true
   apply_cal: 
-    enable: true
     applyto: 
       - gcal
       - bpcal

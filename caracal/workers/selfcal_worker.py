@@ -2270,6 +2270,16 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []
+                summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
+                                        "flagging_summary-"
+                                        "selfcal-ms{2:d}-*"
+                                        ".txt".format(pipeline.output, wname, i))[0]
+                json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname)
+                manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
+
 
         if pipeline.enable_task(config, 'transfer_model'):
             image_path = "{0:s}/image_{1:d}".format(pipeline.continuum,

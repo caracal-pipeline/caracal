@@ -62,13 +62,16 @@ inspect:
   standard_plotter: ragavi_vis
   real_imag:
     enable: false
+    column: data
   amp_uvwave:
     column: data
   phase_uvwave:
+    column: data
     enable: false
   amp_chan:
     column: data
   phase_chan:
+    column: data
     enable: false
 
 crosscal:

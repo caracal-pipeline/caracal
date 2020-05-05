@@ -28,8 +28,6 @@ def worker(pipeline, recipe, config):
         elif config['field'] == 'calibrators':
             mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
 
-        mslist = np.unique(np.array(mslist)).tolist()
-
         for m in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(

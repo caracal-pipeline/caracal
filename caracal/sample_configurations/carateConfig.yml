@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: 'm010'   
+  reference_antenna: 'm010'
 
 transform:
   enable: true
@@ -84,14 +84,14 @@ crosscal:
     order: KGBAKGBK
     combine: ["", "", "", null, "","", scan, scan]
     solint: [inf, inf, inf, null, inf, inf, inf, inf]
-    calmode: [a, ap, ap, null, a, ap, ap, a] 
+    calmode: [a, ap, ap, null, a, ap, ap, a]
     B_fillgaps: 70
   secondary_cal:
     order: GAG
     apply: KB
-    combine: ["", null, ""] 
+    combine: ["", null, ""]
     solint: [inf, null, inf]
-    calmode: [ap, null, ap] 
+    calmode: [ap, null, ap]
   apply_cal:
     enable: true
     applyto:
@@ -136,7 +136,7 @@ transform__2:
     otfcal:
       enable: true
       label_cal: '1gc1'
-  
+
 prep__2:
   enable: true
   label_in: corr
@@ -190,7 +190,9 @@ selfcal:
   img_nchans: 12
   img_robust: -1.0
   cal_niter: 3
-  cal_channel_chunk: 0
+  cal_cubical:
+    channel_chunk: 0
+    shared_memory: 250GB
   cal_timeslots_chunk: 360
   image:
     enable: true
@@ -202,7 +204,6 @@ selfcal:
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
     Gsols_channel: [0, 0, 0]
     Gsols_timeslots: [120, 60, 20]
-    shared_memory: 250GB
   transfer_apply_gains:
     enable: true
     interpolate:
@@ -239,7 +240,7 @@ line:
     cell: 3
     taper: 10
     robust: 0
-  mstransform: 
+  mstransform:
     enable: true
     doppler:
       enable: true
@@ -263,7 +264,7 @@ mosaic:
   enable: true
   mosaic_type: spectral
   name: cubemos
-  domontage: 
+  domontage:
     enable: true
   cutoff: 0.1
   use_MFS_images: false

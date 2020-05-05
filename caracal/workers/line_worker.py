@@ -347,6 +347,8 @@ def worker(pipeline, recipe, config):
                 flags_before_worker, flags_after_worker)
             if config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null':
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                 if available_flagversions[-1] != version:
@@ -465,6 +467,8 @@ def worker(pipeline, recipe, config):
                 flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
             if rewind_mst_ms:
                 version = config['rewind_flags']["mstransform_version"]
+                if version == 'auto':
+                    version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
                 substep = 'rewind_to_{0:s}_mst{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
                 if available_flagversions[-1] != version:

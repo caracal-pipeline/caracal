@@ -9,14 +9,17 @@ from bokeh.plotting import figure, output_file, save
 
 def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
     av_flagversions = get_flags(pipeline, ms)
+    req_version = config['rewind_flags'][read_version]
+    if req_version == 'auto':
+        req_version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
     if flags_bw in av_flagversions and not config['overwrite_flag_versions']:
-        if not config['rewind_flags']["enable"] or config['rewind_flags'][read_version] == 'null':
+        if not config['rewind_flags']["enable"] or req_version == 'null':
             log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname, ms, pipeline.prefix))
             ask_what_to_do = True
         else:
-            if av_flagversions.index(config['rewind_flags'][read_version]) > av_flagversions.index(flags_bw) and not config['overwrite_flag_versions']:
+            if av_flagversions.index(req_version) > av_flagversions.index(flags_bw) and not config['overwrite_flag_versions']:
                 log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname, ms, pipeline.prefix))
-                log.error('and you are rewinding to a later flag version: {0:s} .'.format(config['rewind_flags'][read_version]))
+                log.error('and you are rewinding to a later flag version: {0:s} .'.format(req_version))
                 ask_what_to_do = True
             else: ask_what_to_do = False
     else: ask_what_to_do  = False
@@ -29,7 +32,7 @@ def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_versi
                 log.error('       {0:s}        <-- (this worker)'.format(vv))
             elif vv == flags_aw:
                 log.error('       {0:s}         <-- (this worker)'.format(vv))
-            elif config['rewind_flags']["enable"] and vv == config['rewind_flags'][read_version]:
+            elif config['rewind_flags']["enable"] and vv == req_version:
                 log.error('       {0:s}        <-- (rewinding to this version)'.format(vv))
             else:
                 log.error('       {0:s}'.format(vv))

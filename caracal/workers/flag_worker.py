@@ -75,6 +75,8 @@ def worker(pipeline, recipe, config):
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, msiter)
                 manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                 if available_flagversions[-1] != version:

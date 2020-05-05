@@ -50,7 +50,6 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, "manage_flags"):
                 mode = config["manage_flags"]["mode"]
-                version = config["manage_flags"]["version"]
                 available_flagversions = manflags.get_flags(pipeline,msname)
 
                 if mode == "save_legacy_flags":
@@ -70,6 +69,9 @@ def worker(pipeline, recipe, config):
                         raise RuntimeError('Flag version conflicts')
 
                 elif mode == "restore":
+                    version = config["manage_flags"]["version"]
+                    if version == 'auto':
+                        version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
                     if version in available_flagversions:
                         step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
                         manflags.restore_cflags(pipeline, recipe, version,

@@ -1697,7 +1697,8 @@ def worker(pipeline, recipe, config):
             # Empty job que after execution
             recipe.jobs = []
 
-    def get_aimfast_data(filename='{0:s}/fidelity_results.json'.format(pipeline.output)):
+    def get_aimfast_data(filename='{0:s}/{1:s}_fidelity_results.json'.format(
+                            pipeline.output, prefix)):
         "Extracts data from the json data file"
         with open(filename) as f:
             data = json.load(f)
@@ -1848,19 +1849,22 @@ def worker(pipeline, recipe, config):
             "normality-test": config[step]['normality_model'],
             "area-factor": config[step]['area_factor'],
             "label": "{0:s}_{1:s}_{2:d}".format(prefix, field, num),
+            "outfile": "{0:s}_fidelity_results.json".format(prefix)
         }
 
         # if we run pybdsm we want to use the  model as well. Otherwise we want to use the image.
-
         if pipeline.enable_task(config, 'extract_sources'):
-            if config['cal_model_mode'] == 'vis_only':
-                aimfast_settings.update({"tigger-model": '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output'.format(img_dir,
-                                                                                                                      prefix, field, num, '')})
+            if config['calibrate'].get('output_data')[-1] == 'CORR_DATA':
+                aimfast_settings.update(
+                    {"tigger-model": '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
+                        img_dir, prefix, field, num)})
             else:
-                aimfast_settings.update({"tigger-model": '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output'.format(img_dir,
-                                                                                                                      prefix, field, num if num <= len(config['calibrate']['model'])
-                                                                                                                      else len(config['calibrate']['model']),
-                                                                                                                      '-combined' if len(model.split('+')) >= 2 else '')})
+                # In the case of RES_DATA we need the combined models to compute the dynamic range.
+                aimfast_settings.update(
+                    {"tigger-model": '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm{4:s}.lsm.html:output'.format(
+                        img_dir, prefix, field, num if num <= len(config['calibrate'].get('model'))
+                        else len(config['calibrate'].get('model')),
+                        '-combined' if len(model.split('+')) >= 2 else '')})
 
         else:
             # Use the image
@@ -1887,41 +1891,39 @@ def worker(pipeline, recipe, config):
         cont_dir = get_dir_path(pipeline.continuum, pipeline)
         # Get residuals to compare
         res_files = []
+        residuals_compare = []
         for ii in range(0, cal_niter + 1):
             res_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-MFS-residual.fits".format(
-                pipeline.continuum, ii+1, prefix, field))
-            res_files.append(res_file)
-
+                pipeline.continuum, ii, prefix, field))
+            if res_file:
+                res_files.append(res_file[0])
         res_files = sorted(res_files)
-        res_files = [res for res_files in res_files for res in res_files]
 
-        residuals = []
         for ii in range(0, len(res_files)-1):
-            residuals.append('{0:s}:{1:s}:output'.format(res_files[ii].split(
-                'output/')[-1], res_files[ii + 1].split('output/')[-1]))
+            residuals_compare.append('{0:s}:output'.format(res_files[ii].split('output/')[-1]))
+            residuals_compare.append('{0:s}:output'.format(res_files[ii + 1].split('output/')[-1]))
 
-        # Get models to compare - maybe this needs changing?
+        # Get models to compare
         model_files = []
+        models_compare = []
         for ii in range(0, cal_niter + 1):
             model_file = glob.glob(
-                "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii+1, prefix, field))
-            model_files.append(model_file)
-
+                "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii, prefix, field))
+            if model_file:
+                model_files.append(model_file[0])
         model_files = sorted(model_files)
-        model_files = [
-            mod for model_files in model_files for mod in model_files]
 
         models = []
         for ii in range(0, len(model_files)-1):
-            models.append('{0:s}:{1:s}:output'.format(model_files[ii].split(
-                'output/')[-1], model_files[ii + 1].split('output/')[-1]))
+            models_compare.append('{0:s}:output'.format(model_files[ii].split('output/')[-1]))
+            models_compare.append('{0:s}:output'.format(model_files[ii + 1].split('output/')[-1]))
 
         if len(model_files) > 1:
             step = "aimfast-compare-models"
 
             recipe.add('cab/aimfast', step,
                        {
-                           "compare-models": models,
+                           "compare-models": models_compare,
                            "tolerance": config['aimfast']['radius']
                        },
                        input=pipeline.input,
@@ -1933,7 +1935,7 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/aimfast', step,
                        {
-                           "compare-residuals": residuals,
+                           "compare-residuals": residuals_compare,
                            "area-factor": config['aimfast']['area_factor'],
                            "data-points": 100
                        },
@@ -1946,7 +1948,7 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/aimfast', step,
                        {
-                           "compare-residuals": residuals,
+                           "compare-residuals": residuals_compare,
                            "area-factor": config['aimfast']['area_factor'],
                            "tigger-model": '{:s}:output'.format(model_files[-1].split('output/')[-1])
                        },

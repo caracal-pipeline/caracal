@@ -86,7 +86,6 @@ crosscal:
     calmode: [a, ap, null, a, ap] 
     plotgains: true
   apply_cal: 
-    enable: true
     applyto: 
       - gcal
       - bpcal

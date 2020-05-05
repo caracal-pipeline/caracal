@@ -93,7 +93,6 @@ crosscal:
     solint: [inf, null, inf]
     calmode: [ap, null, ap]
   apply_cal:
-    enable: true
     applyto:
       - gcal
       - bpcal

@@ -59,18 +59,6 @@ def worker(pipeline, recipe, config):
             with open(os.path.join(pipeline.obsinfo, fname), "w") as stdw:
                 json.dump(d, stdw)
 
-    def get_gain_field(applyme, applyto=None):
-        if applyme == 'delay_cal':
-            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_delay_cal']['field'])
-        if applyme == 'bp_cal':
-            return manfields.get_field(pipeline, i, config['split_field']['otfcal']['apply_bp_cal']['field'])
-        if applyme == 'gain_cal_flux':
-            return manfields.get_field(pipeline, i, 'fcal')
-        if applyme == 'gain_cal_gain':
-            return manfields.get_field(pipeline, i, 'gcal')
-        if applyme == 'transfer_fluxscale':
-            return manfields.get_field(pipeline, i, 'gcal')
-
     label_in = config['label_in']
     label_out = config['label_out']
 
@@ -126,9 +114,7 @@ def worker(pipeline, recipe, config):
                                   config['split_field']['otfcal']['label_cal']))) as f:
                 callib_dict = json.load(f)
 
-            for applyme in 'delay_cal bp_cal gain_cal_flux gain_cal_gain transfer_fluxscale'.split():
-                if not pipeline.enable_task(config['split_field']['otfcal'], 'apply_'+applyme):
-                    continue
+            for applyme in callib_dict: 
                 caltablelist.append(callib_dict[applyme]['caltable'])
                 gainfieldlist.append(callib_dict[applyme]['fldmap'])
                 interplist.append(callib_dict[applyme]['interp'])

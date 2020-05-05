@@ -12,12 +12,19 @@ def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_versi
     req_version = config['rewind_flags'][read_version]
     if req_version == 'auto':
         req_version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
+    if config['rewind_flags']["enable"] and req_version != 'null' and not req_version in av_flagversions:
+        log.error('You have asked to rewind the flags of {0:s} to the version {1:s} but this version does not exist.'.format(ms, req_version))
+        log.error('The available flag versions for this .MS file are:')
+        for vv in  av_flagversions:
+            log.error('       {0:s}'.format(vv))
+        log.error('Note that if you are running Caracal on multiple input .MS files you should rewind to a flag version that exists for all of them.')
+        raise RuntimeError('Flag version conflicts.')
     if flags_bw in av_flagversions and not config['overwrite_flag_versions']:
         if not config['rewind_flags']["enable"] or req_version == 'null':
             log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname, ms, pipeline.prefix))
             ask_what_to_do = True
         else:
-            if av_flagversions.index(req_version) > av_flagversions.index(flags_bw) and not config['overwrite_flag_versions']:
+            if req_version in av_flagversions and av_flagversions.index(req_version) > av_flagversions.index(flags_bw) and not config['overwrite_flag_versions']:
                 log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname, ms, pipeline.prefix))
                 log.error('and you are rewinding to a later flag version: {0:s} .'.format(req_version))
                 ask_what_to_do = True

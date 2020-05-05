@@ -6,7 +6,7 @@ mapping:
 
   inspect:
     type: map
-    desc: Diagnostic plots of the first-pass cross-calibrated data.
+    desc: Diagnostic plots for data
     mapping:
       enable:
         type: bool
@@ -23,11 +23,47 @@ mapping:
         desc: Label for output products (plots etc.) for this step.
         required: false
         example: ''
-      plotter:
+      dirname:
         type: str
-        desc: Application to use for making plots
-        enum: [plotms, shadems, ragavi_vis]
-        example: shadems
+        desc: Subdirectory (under diagnostic plots) where the plots are to go.
+        required: false
+        example: ''
+      shadems:
+        type: map
+        desc: Direct list of shadems plots.
+        mapping:
+          enable:
+            type: bool
+            desc: Execute series of "extended" shadems plots.
+            required: false
+            example: "True"
+          default_column:
+            type: str
+            desc: Data column to plot.
+            required: false
+            example: 'CORRECTED_DATA'
+          plots_by_field:
+            seq:
+              - type: str
+            required: false
+            desc: Sequence of shadems plot specifications, made per field
+            example: ''
+          plots_by_corr:
+            seq:
+              - type: str
+            required: false
+            desc: Sequence of shadems plot specifications, made per correlation
+            example: ''
+          ignore_errors:
+            type: bool
+            desc: Don't halt the pipeline for shadems plotting errors.
+            required: false
+            example: "True"
+      standard_plotter:
+        type: str
+        desc: Application to use for making "standard" plots. Use "none" to disable.
+        enum: [plotms, shadems, ragavi_vis, none]
+        example: ragavi_vis
         required: false
       correlation: 
         type: str
@@ -45,6 +81,7 @@ mapping:
         required: false
         desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
         example: 'bpcal, gcal'
+
       real_imag:
         type: map
         desc: Plot real vs imaginary parts of data.
@@ -78,13 +115,13 @@ mapping:
 
       amp_phase:
         type: map
-        desc: Plot Amplitude vs Phase for  data.    
+        desc: Plot Amplitude vs Phase for  data.
         mapping:
           enable:
             type: bool
             desc: Executes the plotting of amplitude v/s phase for data.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -96,7 +133,7 @@ mapping:
             desc: Data column to plot.
             required: false
             example: 'corrected'
-          avgtime:    
+          avgtime:
             type: str
             desc: Time to average for plotting, in seconds.
             required: false
@@ -106,14 +143,14 @@ mapping:
             desc: Number of channels to average for plotting.
             required: false
             example: '10'
-      
+
       amp_uvwave:
         type: map
         desc: Plot data amplitude v/s  uvwave.
-        mapping: 
-          enable: 
+        mapping:
+          enable:
             type: bool
-            desc: Executes plotting data amplitude as a function of uvwave.  
+            desc: Executes plotting data amplitude as a function of uvwave.
             required: false
             example: 'True'
           fields:
@@ -141,12 +178,12 @@ mapping:
       amp_ant:
         type: map
         desc: Plot data amplitde v/s antenna.
-        mapping: 
+        mapping:
           enable:
             type: bool
             desc: Executes plotting data amplitude v/s antennas.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -199,7 +236,7 @@ mapping:
             desc: Number of channels to average for plotting.
             required: false
             example: '10'
-      
+
       amp_scan:
         type: map
         desc: Plot data amplitude v/s scan number.
@@ -208,7 +245,7 @@ mapping:
             type: bool
             desc: Executes plotting data amplitude v/s scan number.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -230,6 +267,7 @@ mapping:
             desc: Number of channels to average for plotting.
             required: false
             example: '10'
+
       amp_chan:
         type: map
         desc: Plot Amplitude vs Channel data.    
@@ -260,6 +298,7 @@ mapping:
             desc: Number of channels to average for plotting.
             required: false
             example: '10'
+
       phase_chan:
         type: map
         desc: Plot Phase vs Chan.    

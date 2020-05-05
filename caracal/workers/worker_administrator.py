@@ -60,6 +60,7 @@ class worker_administrator(object):
         self.caltables = self.config['general']['output'] + '/caltables'
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
+        self.crosscal_continuum = self.config['general']['output'] + '/continuum/crosscal'
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
@@ -233,13 +234,13 @@ class worker_administrator(object):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
         # NB (Oleg): placing this into output rather than output/logs to make the reporting notebooks easier
-        baselog = 'log-caracal-{0:s}.txt'.format(self.timeNow)
-        caracal.CARACAL_LOG = os.path.join(self.output, baselog)
+        CARACAL_LOG_BASENAME = 'log-caracal.txt'
+        caracal.CARACAL_LOG = os.path.join(self.logs, CARACAL_LOG_BASENAME)
         caracal.log_filehandler.setFilename(caracal.CARACAL_LOG, delay=False)
 
         # placing a symlink into logs to appease Josh
-        make_symlink(os.path.join(self.logs, baselog), os.path.join("..", baselog))
-        make_symlink(os.path.join(self.output, "log-caracal.txt"), baselog)
+        make_symlink(os.path.join(self.output, CARACAL_LOG_BASENAME),
+                     os.path.join(os.path.basename(self.logs), CARACAL_LOG_BASENAME))
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")

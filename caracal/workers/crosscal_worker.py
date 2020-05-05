@@ -12,8 +12,10 @@ import copy
 import re
 import json
 import glob
+
 import shutil
 import numpy
+
 
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
@@ -616,6 +618,7 @@ def worker(pipeline, recipe, config):
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
+
             summary_log = glob.glob("{0:s}/log-{1:s}-{2:s}-*"
                                     ".txt".format(pipeline.logs, wname, step))[0]
             json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )

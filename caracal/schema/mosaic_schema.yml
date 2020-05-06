@@ -5,7 +5,7 @@ mapping:
     required: true
 
   mosaic:
-    desc: Mosaic the 2D-images (or cubes) made with the selfcal (or line) worker. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.
+    desc: Mosaic the 2D-images (or cubes) made with the selfcal/crosscal (or line) worker. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.
     type: map
     mapping:
       enable:
@@ -37,7 +37,7 @@ mapping:
         required: false
         example: 'HI'
       use_MFS_images:
-        desc: Indicate that the images to be mosaicked were created using MFS.
+        desc: Continuum mode only -- Indicate that the images to be mosaicked were created using MFS in the selfcal or crosscal worker.
         type: bool
         required: false
         example: 'False'

@@ -335,7 +335,7 @@ mapping:
             required: false
             example: '0.5'
           wscl_make_cube:
-            desc: If set to true the output of WSClean is a data cube, if set to false the output is one .FITS image per spectral channel.
+            desc: If set to true, the output of WSClean is a data cube. If set to false, the output is one .FITS image per spectral channel.
             type: bool
             required: false
             example: 'True'
@@ -350,13 +350,13 @@ mapping:
             required: false
             example: 'False'
           wscl_multi_scale_scales:
-            desc: List of scales of WSClean multiscale in units of pixels. Only used is wscl_multi_scale is set to True.
+            desc: List of scales for WSClean multiscale, in units of pixels. Only used is wscl_multi_scale is set to True.
             seq:
               - type: int
             required: false
             example: '0, 10, 20, 30'
           wscl_multi_scale_bias:
-            desc: Parameter to set the bias during multi-scale cleaning, where a lower bias will give preference to larger angular scales.
+            desc: Parameter to set the bias during multiscale cleaning, where a lower bias will give preference to larger angular scales.
             type: float
             required: false
             example: '0.6'

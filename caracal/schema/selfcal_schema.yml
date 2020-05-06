@@ -146,7 +146,7 @@ mapping:
         example: '2'
       img_pol:
         type: str
-        desc: Stokes image to create
+        desc: Stokes image to create. 
         required: false
         example: 'I'
       img_multi_scale:

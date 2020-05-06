@@ -201,12 +201,12 @@ mapping:
             required: false
             example: 'False'
           uvmin:
-            desc: Minimum uvdistance to be analysed (in wavelengths).
+            desc: Minimum uvdistance to be analysed (in wavelengths, lambda).
             type: float
             required: false
             example: '0.'
           uvmax:
-            desc: Maximum uvdistance to be analysed (in wavelengths).
+            desc: Maximum uvdistance to be analysed (in wavelengths, lambda).
             type: float
             required: false
             example: '2000'

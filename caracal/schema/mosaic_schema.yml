@@ -13,6 +13,12 @@ mapping:
         type: bool
         required: true
         example: 'False'
+      mosaic_type:
+        desc: Type of mosaic to be made, either continuum (2D) or spectral (3D).
+        type: str
+        enum: ['continuum', 'spectral']
+        required: true
+        example: 'continuum'
       target_images:
         desc: List of images to be mosaicked, with suffix of image.fits being expected.
         type: seq
@@ -30,12 +36,6 @@ mapping:
         type: str
         required: false
         example: 'HI'
-      mosaic_type:
-        desc: Type of mosaic to be made, either continuum (2D) or spectral (3D).
-        type: str
-        enum: ['continuum', 'spectral']
-        required: true
-        example: 'continuum'
       use_MFS_images:
         desc: Indicate that the images to be mosaicked were created using MFS.
         type: bool

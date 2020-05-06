@@ -300,7 +300,7 @@ mapping:
             required: false
             example: '0.1'
           wscl_mgain:
-            desc: WSclean gain for major iterations, i.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+            desc: Gain value for major iterations in WSClean. I.e., the maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
             type: float
             required: false
             example: '1.0'

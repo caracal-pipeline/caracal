@@ -356,7 +356,7 @@ mapping:
             required: false
             example: '0, 10, 20, 30'
           wscl_multi_scale_bias:
-            desc: Parameter to set the bias towards larger scales during multi-scale cleaning. A lower bias will give preference to larger scales.
+            desc: Parameter to set the bias during multi-scale cleaning, where a lower bias will give preference to larger angular scales.
             type: float
             required: false
             example: '0.6'

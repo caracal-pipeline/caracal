@@ -1900,8 +1900,10 @@ def worker(pipeline, recipe, config):
         res_files = sorted(res_files)
 
         for ii in range(0, len(res_files)-1):
-            residuals_compare.append('{0:s}:output'.format(res_files[ii].split('output/')[-1]))
-            residuals_compare.append('{0:s}:output'.format(res_files[ii + 1].split('output/')[-1]))
+            residuals_compare.append('{0:s}:output'.format(
+                                         res_files[ii].split(pipeline.output)[-1]))
+            residuals_compare.append('{0:s}:output'.format(
+                                         res_files[ii + 1].split(pipeline.output)[-1]))
 
         # Get models to compare
         model_files = []
@@ -1915,8 +1917,10 @@ def worker(pipeline, recipe, config):
 
         models = []
         for ii in range(0, len(model_files)-1):
-            models_compare.append('{0:s}:output'.format(model_files[ii].split('output/')[-1]))
-            models_compare.append('{0:s}:output'.format(model_files[ii + 1].split('output/')[-1]))
+            models_compare.append('{0:s}:output'.format(
+                                      model_files[ii].split(pipeline.output)[-1]))
+            models_compare.append('{0:s}:output'.format(
+                                      model_files[ii + 1].split(pipeline.output)[-1]))
 
         if len(model_files) > 1:
             step = "aimfast-compare-models"
@@ -1950,7 +1954,8 @@ def worker(pipeline, recipe, config):
                        {
                            "compare-residuals": residuals_compare,
                            "area-factor": config['aimfast']['area_factor'],
-                           "tigger-model": '{:s}:output'.format(model_files[-1].split('output/')[-1])
+                           "tigger-model": '{:s}:output'.format(model_files[-1].split(
+                                                                    pipeline.output)[-1])
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -1982,7 +1987,7 @@ def worker(pipeline, recipe, config):
         if len(D_tables) > 1:
             step = 'plot_dtab'
 
-            gain_table_name = [table.split('output/')[-1] for table in D_tables]
+            gain_table_name = [table.split(pipeline.output)[-1] for table in D_tables]
             recipe.add('cab/ragavi', step,
                        {
                            "table": [tab+":output" for tab in gain_table_name],
@@ -2152,7 +2157,8 @@ def worker(pipeline, recipe, config):
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
                     shutil.move(
-                        plot, '{0:s}/{1:s}'.format(plot_path, plot.split('output/')[-1]))
+                        plot, '{0:s}/{1:s}'.format(plot_path,
+                                                   plot.split(pipeline.output)[-1]))
 
         if pipeline.enable_task(config, 'calibrate'):
             if config['cal_cubical']['ragavi_plot']['enable']:

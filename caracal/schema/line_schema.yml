@@ -9,12 +9,12 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute the image_line worker.
+        desc: Execute the line worker.
         type: bool
         required: true
         example: 'False'
       label:
-        desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the get_data worker, followed by the target ID (one file per target), followed by this label. This is the format used by Caracal whenever it writes an .MS file to disk (e.g., in the split_target worker).
+        desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the getdata worker, followed by the target ID (one file per target), followed by this label. This is the format used by CARACal whenever it writes an .MS file to disk (e.g., in the transform worker).
         type: str
         required: false
         example: 'corr'
@@ -35,7 +35,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: enable this segement
+            desc: Enable this segement
             example: 'False'
             required: false
           version:
@@ -49,7 +49,7 @@ mapping:
             example: 'null'
             required: false
       overwrite_flag_versions:
-        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
         required: false
@@ -104,19 +104,19 @@ mapping:
                 required: true
                 example: 'meerkat'
               mode:
-                desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT! Currently only frequency mode is supported. Other modes will throw an error.
+                desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT! Currently, only frequency mode is supported. Other modes will throw an error.
                 type: str
                 enum: ['frequency', ]
                 required: false
                 example: 'frequency'
               outframe:
-                desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, source.
+                desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, and source.
                 type: str
                 enum : ['', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source']
                 required: false
                 example: 'bary'
               veltype:
-                desc: Velocity used when regridding if mode = velocity. Current options are radio, optical.
+                      desc: Velocity used when regridding if mode = velocity. Current options are radio,and optical.
                 type: str
                 enum: ['radio', 'optical']
                 required: false

@@ -192,7 +192,7 @@ def worker(pipeline, recipe, config):
 
                 substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, target_iter)
                 manflags.add_cflags(pipeline, recipe, flags_after_worker, tms,
-                    cab_name=substep, overwrite=false)
+                    cab_name=substep, overwrite=False)
 
             obsinfo_msname = tms if pipeline.enable_task(
                 config, 'split_field') else fms

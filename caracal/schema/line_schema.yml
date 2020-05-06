@@ -320,7 +320,7 @@ mapping:
             required: false
             example: 'False'
           wscl_user_clean_mask:
-            desc: WSClean user clean mask for first WSClean + SoFiA iteration (give filename, to be located in the output/masking folder).
+            desc: User-provided WSClean clean-mask for first WSClean + SoFiA iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
             type: str
             required: false
             example: ''

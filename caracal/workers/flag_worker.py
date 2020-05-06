@@ -40,22 +40,17 @@ def worker(pipeline, recipe, config):
         mslist = []
         msn = pipeline.msnames[i][:-3]
 
-        if config['field'] == 'target':
+        if label == '':
+          mslist.append(pipeline.msnames[i])
+
+        elif config['field'] == 'target':
            target_ls = pipeline.target[i]
            for target in target_ls:
                 field = utils.filter_name(target)
-                mslist.append(pipeline.msnames[i] if label == \
-                   '' else '{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
+                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
 
         elif config['field'] == 'calibrators':
-            mslist.append(pipeline.msnames[i] if label == \
-                  '' else '{0:s}_{1:s}.ms'.format(msn, label))
-
-        else:
-            raise ValueError("Eligible values for 'field': 'target' or 'calibrators'. "\
-                                 "User selected: '{}'".format(config['field']))
-
-        mslist = np.unique(np.array(mslist)).tolist()
+            mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
 
         for m in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
@@ -65,13 +60,17 @@ def worker(pipeline, recipe, config):
         for j, msname in enumerate(mslist):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msname[:-3])
-
+           
             if not os.path.exists(msinfo):
                 raise IOError(
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
 
+            with open(msinfo, 'r') as stdr:
+                msdict = yaml.load(stdr)
+
             # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+            available_flagversions = manflags.handle_conflicts(pipeline, wname, 
+                    msname, config, flags_before_worker, flags_after_worker)
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
@@ -86,10 +85,12 @@ def worker(pipeline, recipe, config):
                         msname, cab_name=substep)
                 if  version != flags_before_worker:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker, 
+                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
                 substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                manflags.add_cflags(pipeline, recipe, flags_before_worker, 
+                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
             # Define fields and field_ids to be used to only flag the fields selected with
             # flagging:field (either 'target' or 'calibrators') and with
@@ -197,8 +198,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_shadow'):
                 if config['flag_shadow']['include_full_mk64']:
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
-                    with open(msinfo, 'r') as stdr:
-                        subarray = yaml.load(stdr)['ANT']['NAME']
+                    subarray = msdict['ANT']['NAME']
                     idleants = open(addantennafile, 'r').readlines()
                     for aa in subarray:
                         for kk in range(len(idleants)):
@@ -376,8 +376,7 @@ def worker(pipeline, recipe, config):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
                 if config['flag_rfi']["flagger"] == "aoflagger":
                     if config['flag_rfi']['aoflagger']['ensure_valid_strategy']:
-                        with open(msinfo, 'r') as stdr:
-                            ms_corr = yaml.load(stdr)['CORR']['CORR_TYPE']
+                        ms_corr = msdict['CORR']['CORR_TYPE']
                         flag_corr=[]
                         with open('{0:s}/{1:s}'.format(pipeline.input,config['flag_rfi']['aoflagger']['strategy'])) as stdr:
                             for ss in stdr.readlines():
@@ -408,15 +407,13 @@ def worker(pipeline, recipe, config):
                 elif config['flag_rfi']["flagger"] == "tricolour":
                     tricolour_strat=config['flag_rfi']['tricolour']['strategy']
                     if config['flag_rfi']['tricolour']['mode'] == 'auto':
-                        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
-                        with open(msinfo, 'r') as stdr:
-                                  bandwidth = yaml.load(stdr)['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
-                                  print("Total Bandwidth =", bandwidth, "MHz")
-                                  if bandwidth <= 20.0:
-                                      print("Narrowband data detected, selecting appropriate flagging strategy")
-                                      tricolour_strat = config['flag_rfi']['tricolour']['strategy_narrowband']
+                        bandwidth = msdict['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
+                        caracal.log.info("Total Bandwidth =", bandwidth, "MHz")
+                        if bandwidth <= 20.0:
+                            caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
+                            tricolour_strat = config['flag_rfi']['tricolour']['strategy_narrowband']
 
-                    print("Flagging strategy in use:", tricolour_strat)
+                    caracal.log.info("Flagging strategy in use:", tricolour_strat)
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,
@@ -500,9 +497,8 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob("{0:s}/logs/log-flag-"
-                                        "{1:s}-summary-ms{2:d}-*"
-                                        ".txt".format(pipeline.output, wname, i))[0]
+                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs, 
+                    step))[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
                                                               prefix, wname)
                 manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)

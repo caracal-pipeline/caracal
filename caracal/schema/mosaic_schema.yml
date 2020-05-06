@@ -27,7 +27,7 @@ mapping:
         required: false
         example: "directory/first_image.fits, directory/second_image.fits"
       label:
-        desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or label setting used for the line worker (when mosaicking cubes).
+        desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
         type: str
         required: false
         example: 'corr'

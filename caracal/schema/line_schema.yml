@@ -30,12 +30,12 @@ mapping:
         example: '1.420405752GHz'
 
       rewind_flags:
-        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to the .MS file(s) you might be running "transfer_apply_gains" on.
         type: map
         mapping:
           enable:
             type: bool
-            desc: Enable this segement
+            desc: Enable segment rewind_flags.
             example: 'False'
             required: false
           version:
@@ -59,7 +59,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute the segment subtractmodelcol.
+            desc: Execute segment subtractmodelcol.
             type: bool
             required: false
             example: 'True'  
@@ -69,7 +69,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute the segment addmodelcol.
+            desc: Execute segment addmodelcol.
             type: bool
             required: false
             example: 'False'
@@ -79,7 +79,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute the segment mstransform.
+            desc: Execute segment mstransform.
             type: bool
             required: false
             example: 'True'
@@ -122,7 +122,7 @@ mapping:
                 required: false
                 example: 'radio'
               outchangrid:
-                desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
+                desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' then it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
                 type: str
                 required: false
                 example: 'auto'
@@ -136,7 +136,7 @@ mapping:
                 required: false
                 example: 'True'
               fitspw:
-                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed.
+                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagged visibilities will be performed.
                 type: str
                 required: false
                 example: ''
@@ -146,7 +146,7 @@ mapping:
                 required: false
                 example: '1'
           obsinfo:
-            desc: Create obsinfo.txt and obsinfo.json of the .MS file(s) created by CASA mstransform.
+            desc: Create obsinfo.txt and obsinfo.json per .MS file created by CASA mstransform.
             type: bool
             required: false
             example: 'True'
@@ -161,7 +161,7 @@ mapping:
             required: false
             example: 'False'
           strategy:
-            desc: AOFlagger strategy file
+            desc: AOFlagger strategy file.
             type: str
             required: false
             example: 'postmst.rfis'
@@ -196,7 +196,7 @@ mapping:
             required: false
             example: '4.'
           vampirisms:
-            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells where to flag.
+            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells to flag.
             type: bool
             required: false
             example: 'False'

@@ -320,7 +320,7 @@ mapping:
             required: false
             example: 'False'
           wscl_user_clean_mask:
-            desc: User-provided WSClean clean-mask for first WSClean + SoFiA iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
+            desc: User-provided WSClean clean-mask for the first WSClean + SoFiA iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
             type: str
             required: false
             example: ''
@@ -406,7 +406,7 @@ mapping:
             required: false
             example: 'False'
           reverse:
-            desc: Perform the inverse transformation and change the cube 3rd axis from radio velocity to frequency.
+            desc: Perform the inverse transformation and change the cube's 3rd axis from radio velocity to frequency.
             type: bool
             required: false
             example: 'False'
@@ -437,7 +437,7 @@ mapping:
             required: false
             example: 'mad'
           threshold:
-            desc: SoFiA source-finding threshold.
+            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
             type: float
             required: false
             example: '4.0'

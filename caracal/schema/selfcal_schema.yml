@@ -45,7 +45,7 @@ mapping:
       calibrate_with:
         type: str
         enum: ["meqtrees", "cubical"]
-        desc: Tool to use for calibration
+        desc: Tool to use for calibration. Options are meqtrees and cubical.
         required: false
         example: 'cubical'
       spwid:

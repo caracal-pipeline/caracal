@@ -42,7 +42,7 @@ mapping:
         required: false
         example: 'HI'
       name:
-        desc: The prefix to be used for output files. Default is the pipeline prefix (pipeline.prefix).
+        desc: The prefix to be used for output files. Default is the pipeline prefix, as set for the general worker.
         type: str
         required: false
         example: ''

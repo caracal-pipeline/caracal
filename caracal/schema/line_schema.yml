@@ -264,7 +264,7 @@ mapping:
             required: false
             example: '900 , 900'
           cell:
-            desc: Pixel size. The default unit is arcsec, but other units can be specificied, e.g., 'scale 20asec'.
+            desc: Pixel size. The default unit is arcsec, but other units can be specified, e.g., 'scale 20asec'.
             type: float
             required: false
             example: '2'
@@ -274,7 +274,7 @@ mapping:
             required: false
             example: '1.2'
           weight:
-            desc: Weightmode can be natural, uniform, or briggs. When using Briggs weighting, the additional robust parameter has to be specified.
+            desc: Options for the type of weighting to be used are natural, uniform, or briggs. When using Briggs weighting, the additional robust parameter has to be specified.
             type: str
             enum: ['natural', 'uniform', 'briggs']
             required: false

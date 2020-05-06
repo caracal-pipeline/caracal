@@ -50,15 +50,6 @@ def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
 
-# TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
-    def fix_target_obsinfo(fname):
-        if pipeline.enable_task(config, 'split_field'):
-            with open(os.path.join(pipeline.obsinfo, fname), 'r') as stdr:
-                d = json.load(stdr)
-            d["FIELD"]["INTENTS"] = ['TARGET']
-            with open(os.path.join(pipeline.obsinfo, fname), "w") as stdw:
-                json.dump(d, stdw)
-
     label_in = config['label_in']
     label_out = config['label_out']
 
@@ -253,13 +244,5 @@ def worker(pipeline, recipe, config):
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
 
-            step = 'fix_target_obsinfo-ms{:d}'.format(i)  # set directories
-            recipe.add(fix_target_obsinfo, step,
-                       {
-                           'fname': listfile,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.obsinfo,
-                       label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))
 
             target_iter += 1

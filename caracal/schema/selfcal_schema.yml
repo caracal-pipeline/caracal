@@ -85,58 +85,58 @@ mapping:
         example: '0.90'
       img_cell:
         type: float
-        desc: Image pixel size (arcsec).
+        desc: Image pixel size (in units of arcsec).
         required: false
         example: '2.'
       img_weight:
         type: str
         enum: ["briggs", "uniform", "natural"]
-        desc: Image weighting type. If Briggs, set the img robust parameter
+        desc: Type of image weighting, where the options are briggs, uniform, and natural. If Briggs, set the img robust parameter.
         required: false
         example: 'briggs'
       img_robust:
         type: float
-        desc: Briggs robust value
+        desc: Briggs robust value.
         required: false
         example: '0.'
       img_taper:
         type: str
-        desc: Gaussian taper for imaging (arcsec)
+        desc: Gaussian taper for imaging (in units of arcsec).
         required: false
         example: '0.'
       img_maxuv_l:
         type: float
-        desc: Taper for imaging (lambda)
+        desc: Taper for imaging (in units of lambda).
         required: false
         example: '0.'
       img_transuv_l:
         type: float
-        desc: Transition length of tukey taper (taper-tukey in wsclean, in % of maxuv)
+        desc: Transition length of tukey taper (taper-tukey in WSClean, in % of maxuv).
         required: false
         example: '10.'
       img_niter:
         type: int
-        desc: Number of cleaning iterations
+        desc: Number of cleaning iterations.
         required: false
         example: '1000000'
       img_nmiter:
         type: int
-        desc: Number of major cycles
+        desc: Number of major cycles.
         required: False
         example: '0'
       img_cleanborder:
         type: float
-        desc: Clean border
+        desc: Clean border.
         required: false
         example: '1.3'
       img_nchans:
         type: int
-        desc: Number of channesls in output image
+        desc: Number of channels in output image.
         required: false
         example: '3'
       img_joinchannels:
         type: bool
-        desc: Join channels to create MFS image
+        desc: Join channels to create MFS image.
         required: false
         example: 'True'
       img_fit_spectral_pol:

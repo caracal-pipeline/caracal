@@ -11,7 +11,7 @@ mapping:
       enable: 
         type: bool
         required: true
-        desc: Execute this segment.
+        desc: Execute the polcol worker.
         example: 'False'
       label:
         type: str

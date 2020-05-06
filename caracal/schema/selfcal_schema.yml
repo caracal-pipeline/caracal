@@ -6,11 +6,11 @@ mapping:
 
   selfcal:
     type: map
-    desc: Perform Self calibration on the data.
+    desc: Perform self-calibration on the data.
     mapping:
       enable:
         type: bool
-        desc: Execute this segment
+        desc: Execute the selfcal worker.
         required: true
         example: 'False'
       label:

@@ -10,7 +10,7 @@ mapping:
     mapping:
      enable:
        type: bool
-       desc: Carry out DD-calibration
+       desc: Execute the ddcal worker (i.e. carry out DD-calibration).
        required: True
        example: 'False'
      label:

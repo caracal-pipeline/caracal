@@ -10,7 +10,7 @@ mapping:
     mapping:
       enable:
         type: bool
-        desc: Execute this segment
+        desc: Execute the mask worker.
         required: true
         example: 'False'
       label_in:

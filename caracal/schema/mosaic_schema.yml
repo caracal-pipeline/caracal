@@ -9,7 +9,7 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute mosaic segment.
+        desc: Execute the mosaic worker.
         type: bool
         required: true
         example: 'False'

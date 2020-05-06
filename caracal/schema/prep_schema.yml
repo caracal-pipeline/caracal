@@ -9,7 +9,7 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Executes the data preparation step.
+        desc: Execute the prep worker (i.e. the  data-preparation step).
         type: bool
         required: true
         example: 'False'

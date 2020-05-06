@@ -9,7 +9,7 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute this worker
+        desc: Execute the transform worker.
         type: bool
         required: true
         example: 'True'

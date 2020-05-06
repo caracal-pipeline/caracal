@@ -9,7 +9,7 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute the flagging worker.
+        desc: Execute the flag worker.
         type: bool
         required: True
         example: 'False'

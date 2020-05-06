@@ -5,7 +5,7 @@ mapping:
     required: true
 
   mosaic:
-    desc: Mosaic the images and cubes made with the self_cal and image_line workers. If not available on disc, the primary beam is built by this worker assuming a Gaussian shape with FWHM = 1.02 lambda/D.
+    desc: Mosaic the images and cubes made with the selfcal and line workers. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.
     type: map
     mapping:
       enable:
@@ -21,17 +21,17 @@ mapping:
         required: false
         example: "directory/first_image.fits, directory/second_image.fits"
       label:
-        desc: For autoselection of images, this needs to match the label setting used for the self_cal worker (when mosaicking continuum images) or the image_line worker (when mosaicking cubes).
+        desc: For autoselection of images, this needs to match the label setting used for the selfcal worker (when mosaicking continuum images) or the line worker (when mosaicking cubes).
         type: str
         required: false
         example: 'corr'
       line_name:
-        desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the image_line_worker.
+        desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
         type: str
         required: false
         example: 'HI'
       mosaic_type:
-        desc: Type of mosaic to be made, either continuum or spectral.
+        desc: Type of mosaic to be made, either continuum (2D) or spectral (3D).
         type: str
         enum: ['continuum', 'spectral']
         required: true
@@ -42,7 +42,7 @@ mapping:
         required: false
         example: 'False'
       name:
-        desc: The prefix to be used for output files. Default is the pipeline prefix(pipeline.prefix).
+        desc: The prefix to be used for output files. Default is the pipeline prefix (pipeline.prefix).
         type: str
         required: false
         example: ''
@@ -61,12 +61,12 @@ mapping:
          required: false
          example: '0.1'
       dish_diameter:
-        desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter(in units of m) so that rudimentary primary beams can be created.
+        desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter (in units of m) so that rudimentary primary beams can be created.
         type: float
         required: false
         example: '13.5'
       ref_frequency:
-        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency(in units of Hz) so that rudimentary primary beams can be created.
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that rudimentary primary beams can be created.
         type: float
         required: false
         example: '1383685546.875'

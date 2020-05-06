@@ -361,7 +361,7 @@ mapping:
             required: false
             example: '0.6'
           casa_threshold:
-            desc: Flux level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
+            desc: Flux-density level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
             type: str
             required: false
             example: '10mJy'

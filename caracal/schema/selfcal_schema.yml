@@ -38,7 +38,7 @@ mapping:
             example: 'null'
             required: false
       overwrite_flag_versions:
-        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
         required: false

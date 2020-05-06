@@ -51,7 +51,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute this domontage section.
+            desc: Execute this domontage (i.e. re-gridding) section.
             type: bool
             required: false
             example: 'True'

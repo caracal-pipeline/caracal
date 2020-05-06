@@ -412,11 +412,11 @@ mapping:
             example: 'False'
       
       sofia:
-        desc: Run SoFiA source finder to produce a detection mask, moment images and catalogues.
+        desc: Run SoFiA source-finder to produce a detection mask, moment images and catalogues.
         type: map
         mapping:
           enable:
-            desc: Execute segment sofia.
+            desc: Execute segment SoFiA.
             type: bool
             required: false
             example: 'True'
@@ -437,7 +437,7 @@ mapping:
             required: false
             example: 'mad'
           threshold:
-            desc: SoFiA source finding threshold.
+            desc: SoFiA source-finding threshold.
             type: float
             required: false
             example: '4.0'
@@ -502,7 +502,7 @@ mapping:
             required: false
             example: 'False'
           catalog:
-            desc: Type of catalog to use. Options are PYBDSF and NVSS.
+            desc: Type of catalogue to use. Options are PYBDSF and NVSS.
             type: str
             enum: ['NVSS', 'PYBDSF']
             required: false
@@ -513,12 +513,12 @@ mapping:
             required: false
             example: '50'
           thresh:
-            desc: Threshold to select sources in online catalogs (in units of mJy).
+            desc: Threshold to select sources in online catalogues (in units of mJy).
             type: float
             required: false
             example: '20'
           width:
-            desc: Field of view of output catalog (in units of degrees).
+            desc: Field-of-view of output catalogue (in units of degrees).
             type: str
             required: false
             example: '1.0d'

@@ -513,12 +513,12 @@ mapping:
             required: false
             example: '50'
           thresh:
-            desc: Threshold to select sources in online catalogs (mJy).
+            desc: Threshold to select sources in online catalogs (in units of mJy).
             type: float
             required: false
             example: '20'
           width:
-            desc: Field of view of output catalog (degrees).
+            desc: Field of view of output catalog (in units of degrees).
             type: str
             required: false
             example: '1.0d'

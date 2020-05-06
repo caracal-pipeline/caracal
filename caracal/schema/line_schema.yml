@@ -382,7 +382,7 @@ mapping:
             example: 'False'
 
       pb_cube:
-        desc: Make a primary beam cube.
+        desc: Make a primary-beam cube.
         type: map
         mapping:
           enable:
@@ -391,7 +391,7 @@ mapping:
             required: false
             example: 'False'
           apply_pb: 
-            desc: Whether to apply the primary beam correction to the image cube.
+            desc: Whether or not to apply the primary-beam correction to the image cube.
             type: bool
             required: false
             example: 'False'
@@ -513,7 +513,7 @@ mapping:
             required: false
             example: '50'
           thresh:
-            desc: Threshold to select sources in online catalogues (in units of mJy).
+            desc: Threshold to select sources in online catalogue (in units of mJy).
             type: float
             required: false
             example: '20'

@@ -325,12 +325,12 @@ mapping:
             required: false
             example: ''
           wscl_auto_mask:
-            desc: Used only during the first WSClean iteration. Clean blindly down to a threshold given by this parameter (in  units of the noise), then clean again the already cleaned pixels down to the parameter wscl_auto_threshold.
+            desc: Cleaning threshold used only during the first iteration of WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the standard deviation of the noise (calculated in the residual image). WSClean will clean blindly down to this threshold (wscl_auto_mask), before switching to the auto-threshold set via wscl_auto_threshold.
             type: float
             required: false
             example: '10'
           wscl_auto_threshold:
-            desc: Cleaning threshold for WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the standard deviation of the noise (calculated in the residual image).
+            desc: Cleaning threshold used for subsequent iterations of WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the standard deviation of the noise (calculated in the residual image).
             type: float
             required: false
             example: '0.5'

@@ -330,7 +330,7 @@ mapping:
             required: false
             example: '10'
           wscl_auto_threshold:
-            desc: WSClean cleaning threshold in units of the noise.
+            desc: Cleaning threshold for WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the standard deviation of the noise (calculated in the residual image).
             type: float
             required: false
             example: '0.5'

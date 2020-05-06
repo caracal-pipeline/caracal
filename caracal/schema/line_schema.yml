@@ -502,13 +502,13 @@ mapping:
             required: false
             example: 'False'
           catalog:
-            desc: Type of catalog to use (PYBDSF/NVSS).
+            desc: Type of catalog to use. Options are PYBDSF and NVSS.
             type: str
             enum: ['NVSS', 'PYBDSF']
             required: false
             example: 'PYBDSF'
           channels_per_plot:
-            desc: Number of channels to plot per detail plot.
+            desc: Number of channels to plot per detailed plot.
             type: int
             required: false
             example: '50'

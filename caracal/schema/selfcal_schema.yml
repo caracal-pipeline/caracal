@@ -24,7 +24,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: enable this segement
+            desc: Enable segment rewind_flags.
             example: 'False'
             required: false
           version:
@@ -334,7 +334,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment aimfast.
             required: false
             example: 'False'
           tolerance:
@@ -375,7 +375,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment image.
             required: false
             example: 'True'
           column:
@@ -421,7 +421,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment extract_sources.
             required: false
             example: 'False'
           sourcefinder:
@@ -431,7 +431,7 @@ mapping:
             example: 'pybdsm'
           local_rms:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment local_rms.
             required: false
             example: 'False'
           spi:
@@ -463,7 +463,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment calibrate.
             required: false
             example: 'True'
           model:
@@ -527,7 +527,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment restore_model.
             required: false
             example: 'False'
           model:
@@ -547,7 +547,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment flagging_summary.
             required: false
             example: 'False'
 
@@ -557,7 +557,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment
+            desc: Execute segment transfer_apply_gains.
             required: false
             example: 'False'
           transfer_to_label:
@@ -601,7 +601,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute this segment (default False)
+            desc: Execute segment transfer_model (default False).
             required: false
             example: 'True'
           transfer_to_label:

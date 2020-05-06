@@ -269,7 +269,7 @@ mapping:
             required: false
             example: '2'
           padding:
-            desc: Images have initial size padding*npix, and are later trimmed to npix.
+            desc: Images have initial size padding*npix, and are later trimmed to the image size set via the 'npix' parameter.
             type: float
             required: false
             example: '1.2'

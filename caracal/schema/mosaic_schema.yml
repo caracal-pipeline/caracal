@@ -5,7 +5,7 @@ mapping:
     required: true
 
   mosaic:
-    desc: Mosaic the images and cubes made with the selfcal and line workers. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.
+    desc: Mosaic the 2D-images (or cubes) made with the selfcal (or line) worker. If not available on disc, the primary beam is built by the mosaic worker, assuming a Gaussian shape with FWHM = 1.02 lambda/D.
     type: map
     mapping:
       enable:

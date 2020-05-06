@@ -309,7 +309,7 @@ def worker(pipeline, recipe, config):
             if rewind_main_ms:
                 version = config['rewind_flags']["version"]
                 if version == 'auto':
-                    version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 if available_flagversions[-1] != version:
@@ -342,7 +342,7 @@ def worker(pipeline, recipe, config):
             if rewind_transf_ms:
                 version = config['rewind_flags']["transfer_apply_gains_version"]
                 if version == 'auto':
-                    version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 if available_flagversions[-1] != version:

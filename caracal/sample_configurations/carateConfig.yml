@@ -192,6 +192,7 @@ selfcal:
   cal_cubical:
     channel_chunk: 0
     shared_memory: 250GB
+    max_post_error: 0.25
   cal_timeslots_chunk: 360
   image:
     enable: true

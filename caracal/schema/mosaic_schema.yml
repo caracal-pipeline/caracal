@@ -31,16 +31,16 @@ mapping:
         type: str
         required: false
         example: 'corr'
-      line_name:
-        desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
-        type: str
-        required: false
-        example: 'HI'
       use_MFS_images:
         desc: Continuum mode only -- Indicate that the images to be mosaicked were created using MFS in the selfcal or crosscal worker.
         type: bool
         required: false
         example: 'False'
+      line_name:
+        desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
+        type: str
+        required: false
+        example: 'HI'
       name:
         desc: The prefix to be used for output files. Default is the pipeline prefix (pipeline.prefix).
         type: str

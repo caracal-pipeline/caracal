@@ -315,7 +315,7 @@ mapping:
             required: false
             example: '1.1'
           wscl_keep_final_products_only:
-            desc: If set to true it deletes WSClean + SoFiA intermediate cubes from the output directory, if set to false it keeps all the cubes of the WSClean + SoFiA iterations.
+            desc: If set to true, WSClean + SoFiA intermediate-cubes are deleted from the output directory. If set to false, WSClean + SoFiA intermediate-cubes are retained in the output directory.
             type: bool
             required: false
             example: 'False'

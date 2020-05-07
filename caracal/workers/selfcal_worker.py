@@ -1277,11 +1277,11 @@ def worker(pipeline, recipe, config):
                 take_diag_terms = False
             #End temp fix
             step = 'calibrate-cubical-field{0:d}-iter{1:d}'.format(trg, num, i)
-            if gupdate == 'phase-diag':
-                g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+            elif gupdate == 'phase-diag':
+                g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msname.split('.ms')[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,

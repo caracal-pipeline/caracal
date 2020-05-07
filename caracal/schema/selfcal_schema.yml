@@ -270,16 +270,16 @@ mapping:
             example: 'WEIGHT'
           shared_memory:
             type: str
-            desc: Set the amount of shared memory for CubiCal. Default '100Gb'
+            desc: Set the amount of shared memory for CubiCal.
             required: false
             example: '100Gb'
           madmax_flagging:
-            desc: Flags based on maximum of mad in CubiCal
+            desc: Flags based on maximum of mad in CubiCal.
             type: bool
             required: false
             example: 'True'
           madmax_flag_thresh:
-            desc: Threshold for madmax flagging in CubiCal the provided list works exactly as described in CubiCal readthedocs for the parameter --madmax-threshold
+            desc: Threshold for madmax flagging in CubiCal, where the provided list works exactly as described in CubiCal readthedocs for the parameter --madmax-threshold.
             seq:
               - type: int
             required: false
@@ -291,28 +291,28 @@ mapping:
             required: false
             example: '50, 50, 50'
           overwrite:
-            desc: Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self calibration that were produced in a previous run of the selfcal worker with the same prefix.
+            desc: Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self-calibration that were produced in a previous run of the selfcal worker with the same prefix.
             type: bool
             required: false
             example: 'True'
           dist_max_chunks:
-            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If 0, then as many as possible will be loaded.
+            desc: Maximum number of time/freq data-chunks to load into memory simultaneously. If set to 0, then as many data-chunks as possible will be loaded.
             type: int
             required: false
             example: '4'
           ragavi_plot:
             type: map
-            desc: Plotting dignostics plots for self-calibration.
+            desc: Use ragavi to plot diagnostic plots for self-calibration.
             mapping:
               enable:
                 type: bool
-                desc: Enables plotting dignostics
+                desc: Enables plotting of diagnostics, using ragavi.
                 required: false
                 example: 'False'
               gaintype:
                 seq:
                 - type: str
-                desc: "List of gain solution types"
+                desc: List of gain solution types.
                 required: false
                 example: 'G'
               field:

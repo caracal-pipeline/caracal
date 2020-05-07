@@ -505,13 +505,13 @@ mapping:
           Bsols_timeslots:
             seq:
               - type: int
-            desc: B-Jones solutions for individual calibration steps.
+            desc: B-Jones solutions for individual calibration steps in time.
             required: false
             example: '0'
           Bsols_channel:
             seq:
               - type: int
-            desc: B-Jones solutions for individual calibration steps.
+            desc: B-Jones solutions for individual calibration steps in frequency.
             required: false
             example: '2'
           GAsols_timeslots:

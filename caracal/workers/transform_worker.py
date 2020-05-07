@@ -49,7 +49,8 @@ def filter_name(string):
 def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
-
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label_in = config['label_in']
     label_out = config['label_out']
 
@@ -147,6 +148,8 @@ def worker(pipeline, recipe, config):
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
                 manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
                 available_flagversions = manflags.get_flags(pipeline, fms)
@@ -186,6 +189,10 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
+
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, flags_after_worker, tms,
+                    cab_name=substep, overwrite=False)
 
             obsinfo_msname = tms if pipeline.enable_task(
                 config, 'split_field') else fms
@@ -243,6 +250,5 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
-
 
             target_iter += 1

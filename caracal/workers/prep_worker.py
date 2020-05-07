@@ -48,26 +48,29 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, "manage_flags"):
                 mode = config["manage_flags"]["mode"]
-                version = config["manage_flags"]["version"]
                 available_flagversions = manflags.get_flags(pipeline,msname)
 
-                if mode == "save_legacy_flags":
-                    if "caracal_legacy" not in available_flagversions:
+                if mode == "legacy":
+                    version = "caracal_legacy"
+                    if version not in available_flagversions:
+                        caracal.log.info('The file {0:s} does not yet have a flag version called "caracal_legacy". Saving the current FLAG column to "caracal_legacy".'.format(msname))
                         step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)
-                        manflags.add_cflags(pipeline, recipe, "caracal_legacy", msname, cab_name=step)
-                    elif config['manage_flags']['overwrite_legacy_flags']:
-                        step = "save-legacy-{0:s}-ms{1:d}".format(wname, i)
-                        manflags.add_cflags(pipeline, recipe, "caracal_legacy", msname,
-                            cab_name=step, overwrite=config['manage_flags']['overwrite_legacy_flags'])
+                        manflags.add_cflags(pipeline, recipe, version, msname, cab_name=step)
                     else:
-                        caracal.log.error('You asked to save the current FLAG column to a legacy flag version called "caracal_legacy"')
-                        caracal.log.error('but that already exists. Caracal will not overwrite it unless you explicitely request that')
-                        caracal.log.error('by setting in the configuration file:')
-                        caracal.log.error('    prepare_data: manage_flags: overwrite_legacy_flags: true')
-                        caracal.log.error('Think twice whether you really need to do this.')
-                        raise RuntimeError('Flag version conflicts')
-
+                        caracal.log.info('The file {0:s} already has a flag version called "caracal_legacy". Restoring it.'.format(msname))
+                        version = "caracal_legacy"
+                        step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
+                        manflags.restore_cflags(pipeline, recipe, version,
+                                msname, cab_name=step)
+                        if available_flagversions[-1] != version:
+                            step = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
+                            manflags.delete_cflags(pipeline, recipe,
+                                available_flagversions[available_flagversions.index(version)+1],
+                                msname, cab_name=step)
                 elif mode == "restore":
+                    version = config["manage_flags"]["version"]
+                    if version == 'auto':
+                        version = '{0:s}_{1:s}_before'.format(pipeline.prefix,wname)
                     if version in available_flagversions:
                         step = "restore-flags-{0:s}-ms{1:d}".format(wname, i)
                         manflags.restore_cflags(pipeline, recipe, version,

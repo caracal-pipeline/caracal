@@ -22,9 +22,17 @@ caracal_tests=$TEST_OUTPUT_DIR
 export caracal_tests
 caracal_version=$WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/
 export caracal_version
-pull_request_data=$TEST_OUTPUT_DIR/pull_request_data
+pull_request_data=$TEST_OUTPUT_DIR/pull_request_data/1532022061_subset.ms
 export pull_request_data
 pull_request_name=$(cd $PULLFOLDER; git rev-parse HEAD)
 export pull_request_name
 mkdir -p $pull_request_name
-source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/pull_test.sh
+source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
+                                                         -td ${pull_request_data} \
+                                                         -lc ${caracal_version} \
+                                                         -ct ${pull_request_name} \
+                                                         -sm \
+                                                         -sd \
+                                                         -or \
+                                                         -f \
+                                                         -op

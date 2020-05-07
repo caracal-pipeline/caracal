@@ -436,7 +436,7 @@ mapping:
             example: 'pybdsm'
           local_rms:
             type: bool
-            desc: Execute segment local_rms.
+            desc: Use a local-rms estimate when applying the source-finding detection threshold.
             required: false
             example: 'False'
           spi:

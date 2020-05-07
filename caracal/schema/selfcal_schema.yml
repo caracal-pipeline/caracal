@@ -245,7 +245,7 @@ mapping:
         required: false
         example: 'False'
       cal_cubical:
-        desc: Parameters that only apply when using Cubical for the calibration.
+        desc: Parameters that only apply when using CubiCal for the calibration.
         type: map
         mapping:
           max_prior_error:
@@ -264,34 +264,34 @@ mapping:
             required: false
             example: '-1'
           weight_column:
-            desc: Column with weights for use in Cubical.
+            desc: Column with weights for use in CubiCal.
             type: str
             required: false
             example: 'WEIGHT'
           shared_memory:
             type: str
-            desc: Set the amount of shared memory for Cubical. Default '100Gb'
+            desc: Set the amount of shared memory for CubiCal. Default '100Gb'
             required: false
             example: '100Gb'
           madmax_flagging:
-            desc: Flags based on maximum of mad in Cubical
+            desc: Flags based on maximum of mad in CubiCal
             type: bool
             required: false
             example: 'True'
           madmax_flag_thresh:
-            desc: Threshold for madmax flagging in Cubical the provided list works exactly as described in Cubical readthedocs for the parameter --madmax-threshold
+            desc: Threshold for madmax flagging in CubiCal the provided list works exactly as described in CubiCal readthedocs for the parameter --madmax-threshold
             seq:
               - type: int
             required: false
             example: '0, 10'
           sol_term_iters:
-            desc: Number of iterations per Jones term for cubical. Always a 3 digit array with iterations for 'G,B,GA' even when B or GA are not used.
+            desc: Number of iterations per Jones term for CubiCal. Always a 3 digit array with iterations for 'G,B,GA' even when B or GA are not used.
             seq:
               - type: int
             required: false
             example: '50, 50, 50'
           overwrite:
-            desc: Allow cubical to overwrite the existing gain_tables and other CubiCal output for self calibration that were produced in a previous run of the selfcal worker with the same prefix.
+            desc: Allow CubiCal to overwrite the existing gain_tables and other CubiCal output for self calibration that were produced in a previous run of the selfcal worker with the same prefix.
             type: bool
             required: false
             example: 'True'
@@ -389,13 +389,13 @@ mapping:
           clean_threshold:
             seq:
               - type: float
-            desc: WSclean clean threshold in units of the (local) noise.
+            desc: WSClean clean threshold in units of the (local) noise.
             required: false
             example: '0.5, 0.5'
           clean_mask_method:
             seq:
               - type: str
-            desc: Method used to create the clean mask. The possible values are 1) "wsclean" to use WSclean's auto-masking (threshold set by clean_mask_threshold below); 2) "sofia" to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+            desc: Method used to create the clean mask. The possible values are 1) "wsclean" to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) "sofia" to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
             required: false
             example: 'wsclean, wsclean'
           clean_mask_threshold:
@@ -419,7 +419,7 @@ mapping:
 
       extract_sources:
         type: map
-        desc: Source finding parameters
+        desc: Source-finding parameters
         mapping:
           enable:
             type: bool
@@ -428,7 +428,8 @@ mapping:
             example: 'False'
           sourcefinder:
             type: str
-            desc: choose your favorite sourcefinder pybdsm, (pybdsf), sofia
+            enum: ["pybdsm", "sofia"]
+            desc: Set the source finder to be used. Options are pybdsm (i.e. pybdsf) and sofia.
             required: false
             example: 'pybdsm'
           local_rms:
@@ -511,13 +512,13 @@ mapping:
             required: false
             example: '2'
           GAsols_timeslots:
-            desc: Time intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
+            desc: Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
             seq:
               - type: int
             required: false
             example: '-1'
           GAsols_channel:
-            desc: Channel intervals for amplitude calibration in Cubical. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
+            desc: Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
             seq:
               - type: int
             required: false
@@ -588,18 +589,18 @@ mapping:
                  example: '-1'
               timeslots_chunk:
                  type: int
-                 desc: Time chunk in units of timeslots for transferring gains with Cubical. -1 uses the solution interval from the calibration that is applied.
+                 desc: Time chunk in units of timeslots for transferring gains with CubiCal. -1 uses the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
               channel_chunk:
                  type: int
-                 desc: Frequency chunk in units of channels for transferring gains with Cubical. '0' means the whole spw. -1 uses the solution interval from the calibration that is applied.
+                 desc: Frequency chunk in units of channels for transferring gains with CubiCal. '0' means the whole spw. -1 uses the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
 
       transfer_model:
         type: map
-        desc: Transfer model from last WSclean imaging run to the MODEL_DATA column of another .MS
+        desc: Transfer model from last WSClean imaging run to the MODEL_DATA column of another .MS
         mapping:
           enable:
             type: bool
@@ -613,7 +614,7 @@ mapping:
             example: 'corr'
           model:
             type: str
-            desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+            desc: Name of the sky model file (currently the only supported format is that of WSClean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
             required: false
             example: 'auto'
           row_chunks:

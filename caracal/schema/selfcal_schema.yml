@@ -350,16 +350,16 @@ mapping:
               - type: str
             enum: ["DR", "MEAN", "STDDev", "SKEW", "KURT"]
             required: false
-            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', including 'DR' is no longer an option.
+            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option.
             example: 'DR'
           area_factor:
             type: int
-            desc: Peak flux source area multiplying factor i.e tot_area = psf-size*af
+            desc: A multiplicative factor that sets the total area over which the metrics are calculated, where total_area = psf_size*area_factor. This area is centred on the position of peak flux-density in the image.
             required: false
             example: '6'
           radius:
             type: float
-            desc: Radius to cross-match sources in arcsec
+            desc: Cross-matching radius (in units of arcsec), for comparing source properties in a catalogue before and after an iteration of self-calibration. 
             required: false
             example: '0.6'
           normality_model:

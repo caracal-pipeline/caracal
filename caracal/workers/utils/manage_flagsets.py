@@ -7,6 +7,76 @@ from caracal import log
 from bokeh.layouts import row, column
 from bokeh.plotting import figure, output_file, save
 
+def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
+    av_flagversions = get_flags(pipeline, ms)
+    req_version = config['rewind_flags'][read_version]
+    if conflict_type == 'would_overwrite_bw' or conflict_type == 'rewind_too_little':
+        log.error('Flag version conflicts for {0:s} . If you are running Caracal on multiple targets'.format(ms))
+        log.error('and/or .MS files please read the warning at the end of this message.')
+        log.error('---------------------------------------------------------------------------------------------------')
+        log.error('A worker named "{0:s}" was already run on the .MS file {1:s} with pipeline prefix "{2:s}".'.format(wname, ms, pipeline.prefix))
+        if conflict_type == 'rewind_too_little':
+            log.error('and you are rewinding to a later flag version: {0:s} .'.format(req_version))
+        log.error('Running "{0:s}" again will attempt to overwrite existing flag versions, it might get messy.'.format(wname))
+        log.error('Caracal will not overwrite the "{0:s}" flag versions unless you explicitely request that.'.format(wname))
+        log.error('The current flag versions of this MS are (from the oldest to the most recent):')
+        for vv in  av_flagversions:
+            if vv == flags_bw:
+                log.error('       {0:s}        <-- (this worker)'.format(vv))
+            elif vv == flags_aw:
+                log.error('       {0:s}         <-- (this worker)'.format(vv))
+            elif config['rewind_flags']["enable"] and vv == req_version:
+                log.error('       {0:s}        <-- (rewinding to this version)'.format(vv))
+            else:
+                log.error('       {0:s}'.format(vv))
+        log.error('You have the following options:')
+        log.error('    1) If you are happy with the flags currently stored in the FLAG column of this MS and')
+        log.error('       want to append new flags to them, change the name of this worker in the configuration')
+        log.error('       file by appending "__n" to it (where n is an integer not already taken in the list')
+        log.error('       above). The new flags will be appended to the FLAG column, and new flag versions will')
+        log.error('       be added to the list above.')
+        log.error('    2) If you want to discard the flags obtained during the previous run of "{0:s}" (and,'.format(wname))
+        log.error('       necessarily, all flags obtained thereafter; see list above) reset the "{0:s}" worker'.format(wname))
+        log.error('       to its starting flag version by setting in the configuration file:'.format(flags_bw))
+        log.error('           {0:s}:'.format(wname))
+        log.error('             rewind_flags:')
+        log.error('               enable: true')
+        log.error('               mode: reset_worker')
+        log.error('       This will rewind to the flag version {0:s}. You will loose all flags'.format(flags_bw))
+        log.error('       appended to the FLAG column after that version, and take it from there.')
+        log.error('    3) If you want to discard the flags obtained during the previous run of "{0:s}" and'.format(wname))
+        log.error('       rewind to an even earlier flag version from the list above set:')
+        log.error('           {0:s}:'.format(wname))
+        log.error('             rewind_flags:')
+        log.error('               enable: true')
+        log.error('               mode: rewind_to_version')
+        log.error('               {0:s}: <version_name>'.format(read_version))
+        log.error('       This will rewind to the requested flag version. You will loose all flags appended')
+        log.error('       to the FLAG column after that version, and take it from there.')
+        log.error('    4) If you really know what you are doing, allow Caracal to overwrite flag versions by setting:')
+        log.error('           {0:s}:'.format(wname))
+        log.error('             overwrite_flag_versions: true')
+        log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
+        log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag version')
+        log.error('       "{0:s}" will be overwritten and appended to the list above (or to'.format(flags_bw))
+        log.error('       that list truncated to the flag version you are rewinding to).')
+        log.error('---------------------------------------------------------------------------------------------------')
+        log.error('Warning - Your choice will be applied to all .MS files being processed by the worker "{0:s}".'.format(wname))
+        log.error('If using the rewind_flags mode "rewind_to_version", make sure to rewind to a flag version that')
+        log.error('exists for all .MS files. If using the rewind_flags mode "reset_worker" each .MS file is taken')
+        log.error('care of automatically and you do not need to worry about it.')
+
+    elif conflict_type == 'rewind_to_non_existing':
+        log.error('You have asked to rewind the flags of {0:s} to the version "{1:s}" but this version'.format(ms, req_version))
+        log.error('does not exist. The available flag versions for this .MS file are:')
+        for vv in  av_flagversions:
+            log.error('       {0:s}'.format(vv))
+        log.error('Note that if you are running Caracal on multiple targets and/or .MS files you should rewind to a flag')
+        log.error('version that exists for all of them.')
+
+    raise RuntimeError('Flag version conflicts.')
+
+
 def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
     av_flagversions = get_flags(pipeline, ms)
     req_version = config['rewind_flags'][read_version]

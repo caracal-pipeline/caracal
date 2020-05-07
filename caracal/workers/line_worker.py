@@ -180,8 +180,8 @@ def worker(pipeline, recipe, config):
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     flag_main_ms = pipeline.enable_task(config, 'sunblocker') and not config['sunblocker']['use_mstransform']
     flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
-    rewind_main_ms = config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null'
-    rewind_mst_ms = config['rewind_flags']["enable"] and config['rewind_flags']["mstransform_version"] != 'null'
+    rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
+    rewind_mst_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["mstransform_version"] != 'null')
     label = config['label']
     line_name = config['line_name']
     if label != '':
@@ -339,31 +339,42 @@ def worker(pipeline, recipe, config):
 
     for i, msname in enumerate(all_msfiles):
 
-        # Write and manage flag versions only if flagging tasks are being
+        # Write/rewind flag versions only if flagging tasks are being
         # executed on these .MS files, or if the user asks to rewind flags
         if flag_main_ms or rewind_main_ms:
-            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config,
-                flags_before_worker, flags_after_worker)
-            if config['rewind_flags']["enable"] and config['rewind_flags']["version"] != 'null':
-                version = config['rewind_flags']["version"]
-                if version == 'auto':
+            available_flagversions = manflags.get_flags(pipeline, msname)
+            if rewind_main_ms:
+                if config['rewind_flags']['mode'] == 'reset_worker':
                     version = flags_before_worker
-                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
-                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
-                if available_flagversions[-1] != version:
-                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=substep)
-                if  version != flags_before_worker:
-                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname,
-                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    substep = 'version_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            msname, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
             else:
-                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname,
-                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub-ms{:d}'.format(i)
@@ -459,31 +470,42 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-        # Write and manage flag versions of the mst .MS files only if they have just
+        # Write/rewind flag versions of the mst .MS files only if they have just
         # been created, their FLAG is being changed, or the user asks to rewind flags
         if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
-            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname_mst, config,
-                flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
+            available_flagversions = manflags.get_flags(pipeline, msname_mst)
             if rewind_mst_ms:
-                version = config['rewind_flags']["mstransform_version"]
-                if version == 'auto':
+                if config['rewind_flags']['mode'] == 'reset_worker':
                     version = flags_before_worker
-                substep = 'rewind_to_{0:s}_mst{1:d}'.format(version, i)
-                manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
-                if available_flagversions[-1] != version:
-                    substep = 'delete_flag_versions_after_{0:s}_mst{1:d}'.format(version, i)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        msname_mst, cab_name=substep)
-                if  version != flags_before_worker:
-                    substep = 'save_{0:s}_mst{1:d}'.format(flags_before_worker, i)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname_mst,
-                        cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['mstransform_version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
+                    substep = 'version_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            msname_mst, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                            msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
             else:
-                substep = 'save_{0:s}_mst{1:d}'.format(flags_before_worker, i)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname_mst,
-                    cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                        msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         if pipeline.enable_task(config, 'flag_mst_errors'):
             step = 'flag_mst_errors-ms{0:d}'.format(i)

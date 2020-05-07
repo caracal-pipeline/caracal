@@ -24,15 +24,21 @@ mapping:
         required: false
         example: '1gc1'
       rewind_flags:
-        desc: Rewind flags to version specified by "version" below, and delete all flag versions that had been saved after it.
+        desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:
-            desc: Execute the rewind_flags segement.
+            desc: Enable the rewind_flags segement.
             type: bool
+            required: False
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' below.
+            type: str
+            enum: ['reset_worker', 'rewind_to_version']
             required: false
-            example: 'False'
-          version: 
+            example: 'reset_worker'
+          version:
             desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
             type: str
             required: false

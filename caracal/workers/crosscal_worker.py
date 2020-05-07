@@ -440,26 +440,40 @@ def worker(pipeline, recipe, config):
         prefix = '{0:s}-{1:s}'.format(prefix, label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
-
-            if config['rewind_flags']["enable"]:
-                version = config['rewind_flags']["version"]
-                if version == 'auto':
+            # Write/rewind flag versions
+            available_flagversions = manflags.get_flags(pipeline, msname)
+            if config['rewind_flags']['enable']:
+                if config['rewind_flags']['mode'] == 'reset_worker':
                     version = flags_before_worker
-                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
-                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
-                if available_flagversions[-1] != version:
-                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=substep)
-                if  version != flags_before_worker:
-                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    substep = 'version_{0:s}_ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            msname, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
             else:
-                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])

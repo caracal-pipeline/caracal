@@ -365,12 +365,12 @@ mapping:
           normality_model:
             type: str
             enum: ["normaltest", "shapiro"]
-            desc: normality test model to use. Note that normaltest is the D'Agostino
+            desc: The type of normality test, to use for testing how well the residual image is modelled by a normal distribution. Options are 'normaltest' (i.e. D'Agostino) and 'shapiro'.
             required: false
             example: 'normaltest'
           plot:
             type: bool
-            desc: Generate html plots for comparing catalogs and residuals
+            desc: Generate html plots for comparing catalogues and residuals.
             required: false
             example: 'True'
       image:

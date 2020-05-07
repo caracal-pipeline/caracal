@@ -2056,7 +2056,8 @@ then
     then
 	echo "CARACal release: ${CR}" >> ${SYA}
     else
-	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || { \
+	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
+	[[ -n ${CARATE_LOCAL_CARACAL} ]] || { \
 	    echo "CARACal build from master at https://github.com/ska-sa/caracal" >> ${SYA};\
 	}
     fi

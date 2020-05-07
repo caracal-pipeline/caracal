@@ -215,17 +215,17 @@ mapping:
         example: '2'
       start_at_iter:
               type: int
-              desc: Start selfcal iteration loop at this start value, 1-based.
+              desc: Start selfcal iteration loop at this start value (1-indexed).
               required: false
               example: '1'
       cal_gain_amplitude_clip_low:
         type: float
-        desc: Lower gain amplitude clipping
+        desc: Lower threshold for clipping on gain amplitude.
         required: false
         example: '0.5'
       cal_gain_amplitude_clip_high:
         type: float
-        desc: Higher gain amplitude clipping
+        desc: Upper threshold for clipping on gain amplitude.
         required: false
         example: '2.'
       cal_timeslots_chunk:

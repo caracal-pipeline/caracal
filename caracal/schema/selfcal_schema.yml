@@ -515,13 +515,13 @@ mapping:
             required: false
             example: '2'
           GAsols_timeslots:
-            desc: Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots a second matrix is used and applied.
+            desc: Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots, a second matrix is used and applied.
             seq:
               - type: int
             required: false
             example: '-1'
           GAsols_channel:
-            desc: Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels a second matrix is used and applied.
+            desc: Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels, a second matrix is used and applied.
             seq:
               - type: int
             required: false
@@ -529,7 +529,7 @@ mapping:
 
       restore_model:
         type: map
-        desc: Restore modelled to final calibrated residual image
+        desc: Take the modelled source(s) and restore it(/them) to the final, calibrated residual image.
         mapping:
           enable:
             type: bool
@@ -538,12 +538,12 @@ mapping:
             example: 'False'
           model:
             type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            desc: Model number to use, or a combination of models. E.g. '1+2' to use the first and second models.
             required: false
             example: '1+2'
           clean_model:
             type: str
-            desc: Clean model number to use [or combination e.g. '1+2' to use first and second models]
+            desc: Clean model number to use, or combination of clean models. E.g. '1+2' to use the first and second clean models.
             required: false
             example: '3'
 

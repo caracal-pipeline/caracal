@@ -522,8 +522,7 @@ class config_parser:
         args = cls.__ARGS if not args else args
         parser = cls._parser
         with open(args.config, 'r') as f:
-            tmp = ruamel.yaml.load(
-                f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+            tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
             schema_version = tmp["schema_version"]
 
         groups = OrderedDict()

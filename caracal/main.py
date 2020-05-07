@@ -327,7 +327,8 @@ def main(argv):
         log.info(cdb)
         return
 
-    if args.config is caracal.DEFAULT_CONFIG:
+    if args.config == caracal.DEFAULT_CONFIG:
         config_parser.primary_parser().print_help()
         sys.exit(1)
+
     execute_pipeline(args, arg_groups, block=True)

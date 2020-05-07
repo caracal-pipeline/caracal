@@ -375,7 +375,7 @@ mapping:
             example: 'True'
       image:
         type: map
-        desc: Imaging parameter
+        desc: Imaging parameters.
         mapping:
           enable:
             type: bool
@@ -385,13 +385,13 @@ mapping:
           column:
             seq:
               - type: str
-            desc: Column to image
+            desc: Column(s) to image.
             required: false
             example: 'DATA, CORRECTED_DATA'
           clean_threshold:
             seq:
               - type: float
-            desc: WSClean clean threshold in units of the (local) noise.
+            desc: Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
             required: false
             example: '0.5, 0.5'
           clean_mask_method:

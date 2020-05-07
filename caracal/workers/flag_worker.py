@@ -95,6 +95,10 @@ def worker(pipeline, recipe, config):
                             msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
                 if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)

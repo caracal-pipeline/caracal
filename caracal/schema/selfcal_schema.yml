@@ -312,7 +312,8 @@ mapping:
               gaintype:
                 seq:
                 - type: str
-                desc: List of gain solution types.
+                enum: ["F", "B", "K", "G", "D"]
+                desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
                 required: false
                 example: 'G'
               field:

@@ -319,21 +319,21 @@ mapping:
               field:
                 seq:
                 - type: int
-                desc: "Fields to plot. Specify by field id, index."
+                desc: Fields to plot. Specify by field ID.
                 required: false
                 example: '0'
       cal_meqtrees:
-        desc: Parameters that only apply when using MeqTrees for the calibration
+        desc: Parameters that only apply when using MeqTrees for the calibration.
         type: map
         mapping:
           two_step:
             type: bool
-            desc: Trigger a two step calibration process in MeqTrees where the phase only calibration is applied before continuing with amplitude + phase cal. Aimfast is turned on to determine the solution sizes automatically.
+            desc: Trigger a two-step calibration process in MeqTrees where the phase-only calibration is applied before continuing with amplitude + phase-calibration. Aimfast is turned on to determine the solution sizes automatically.
             required: false
             example: 'False'
       aimfast:
         type: map
-        desc: Quality assessment parameter
+        desc: Quality assessment parameter.
         mapping:
           enable:
             type: bool
@@ -342,14 +342,15 @@ mapping:
             example: 'False'
           tolerance:
             type: float
-            desc: Relative change in weighted mean of several indicators from aimfast.
+            desc: Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.
             required: false
             example: '0.02'
           convergence_criteria:
             seq:
               - type: str
+            enum: ["DR", "MEAN", "STDDev", "SKEW", "KURT"]
             required: false
-            desc: The residual statistic to check convergence against. Every criterium listed will be combined into a weighted mean. Options ["DR","SKEW","KURT","STDDev","MEAN"]. Note that when calibrate model_mode = 'vis_only' DR is not an option.
+            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', including 'DR' is no longer an option.
             example: 'DR'
           area_factor:
             type: int

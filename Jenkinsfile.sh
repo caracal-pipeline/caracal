@@ -1,5 +1,4 @@
 set -e
-set -u
 
 WKS_ROOT="$WORKSPACE/$BUILD_NUMBER"
 TEST_OUTPUT_DIR="$WKS_ROOT/test-output"

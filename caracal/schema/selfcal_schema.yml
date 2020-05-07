@@ -236,7 +236,7 @@ mapping:
       cal_model_mode:
         type: str
         enum: ["vis_only", "pybdsm_only", "pybdsm_vis"]
-        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA.
+        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_type set to 'CORR_RES' (below) and is very tricky. Therefore, user discretion is advised. 
         required: false
         example: 'vis_only'
       cal_Bjones:

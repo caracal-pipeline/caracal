@@ -603,26 +603,26 @@ mapping:
 
       transfer_model:
         type: map
-        desc: Transfer model from last WSClean imaging run to the MODEL_DATA column of another .MS
+        desc: Transfer the model from the last WSClean imaging run to the MODEL_DATA column of another .MS .
         mapping:
           enable:
             type: bool
-            desc: Execute segment transfer_model (default False).
+            desc: Execute segment transfer_model.
             required: false
             example: 'True'
           transfer_to_label:
             type: str
-            desc: label of .ms file to which to transfer the model
+            desc: Label of the .MS file to which to transfer the model.
             required: false
             example: 'corr'
           model:
             type: str
-            desc: Name of the sky model file (currently the only supported format is that of WSClean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+            desc: Name of the sky model file. (Currently the only supported format is that of WSClean component lists.) When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
             required: false
             example: 'auto'
           row_chunks:
             type: int
-            desc: Number of rows of input .MS that are processed in a single chunk.
+            desc: Number of rows of the input .MS that are processed in a single chunk.
             required: false
             example: '0'
           model_chunks:
@@ -632,17 +632,17 @@ mapping:
             example: '0'
           within:
             type: str
-            desc: Give JS9 region file. Only sources within those regions will be included.
+            desc: Give the JS9 region file. Only sources within those regions will be included.
             required: false
             example: ''
           points_only:
             type: bool
-            desc: Select only point-only sources. Default is False.
+            desc: Select only 'point' sources.
             required: false
             example: 'False'
           num_sources:
             type: int
-            desc: Select only N brightest sources. Default is 0
+            desc: Select only N brightest sources.
             required: false
             example: "0"
           num_workers:

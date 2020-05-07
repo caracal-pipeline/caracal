@@ -408,12 +408,12 @@ def worker(pipeline, recipe, config):
                     tricolour_strat=config['flag_rfi']['tricolour']['strategy']
                     if config['flag_rfi']['tricolour']['mode'] == 'auto':
                         bandwidth = msdict['SPW']['TOTAL_BANDWIDTH'][0]/10.0**6
-                        caracal.log.info("Total Bandwidth =", bandwidth, "MHz")
+                        caracal.log.info("Total Bandwidth = {0:} MHz".format(bandwidth))
                         if bandwidth <= 20.0:
                             caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
                             tricolour_strat = config['flag_rfi']['tricolour']['strategy_narrowband']
 
-                    caracal.log.info("Flagging strategy in use:", tricolour_strat)
+                    caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,

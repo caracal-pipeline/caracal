@@ -464,7 +464,7 @@ mapping:
 
       calibrate:
         type: map
-        desc: Calibration parameters
+        desc: Calibration parameters.
         mapping:
           enable:
             type: bool
@@ -474,43 +474,44 @@ mapping:
           model:
             seq:
               - type: str
-            desc: Model number to use [or combination e.g. '1+2' to use first and second models]
+            desc: Model number to use, or a combination of models. E.g. '1+2' to use the first and second models for calibration.
             required: false
             example: '1,2'
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA' where CORR_DATA and CORRECTED_DATA are synonyms.
+            enum: ["CORR_DATA", "CORR_RES", "CORRECTED_DATA"]
+            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:
             seq:
               - type: str
-            desc: Gain matrix type. GainDiagPhase = phase only calibration, GainDiagAmp = amplitude only, GainDiag = Amplitude + Phase, Gain2x2 = Amplitude + Phase taken non-diagonal terms into account, Fslope does delay selfcal, please set solution intervals at least twice as big as what you would for GainDiagPhase. Fslope does not work with MeqTrees.
+            desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, Fslope does delay selfcal, please set solution intervals at least twice as big as what you would for GainDiagPhase. Fslope does not work with MeqTrees.
             required: false
             example: 'GainDiagPhase, GainDiag'
           Gsols_timeslots:
             seq:
               - type: int
-            desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should a multiple of Gsols_time. 0 means a single solution for the full time of the observations.
+            desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should be a multiple of Gsols_time. 0 entails using a single solution for the full time of the observations.
             required: false
             example: '1'
           Gsols_channel:
             seq:
               - type: int
-            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 means a single solution for the full frequency range in a channel.
+            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 entails using a single solution for the full frequency-range in a channel.
             required: false
             example: '0'
           Bsols_timeslots:
             seq:
               - type: int
-            desc: Bsols for individual calibration steps.
+            desc: B-Jones solutions for individual calibration steps.
             required: false
             example: '0'
           Bsols_channel:
             seq:
               - type: int
-            desc: Bsols for individual calibration steps.
+            desc: B-Jones solutions for individual calibration steps.
             required: false
             example: '2'
           GAsols_timeslots:

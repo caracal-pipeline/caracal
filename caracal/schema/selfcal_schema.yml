@@ -413,7 +413,7 @@ mapping:
             required: false
             example: 'False, False'
           clean_mask_local_rms_window:
-            desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = sofia, in PSF for clean_mask_method = wsclean.
+            desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = 'sofia', and in PSFs for clean_mask_method = 'wsclean'.
             seq:
               - type: int
             required: false
@@ -421,7 +421,7 @@ mapping:
 
       extract_sources:
         type: map
-        desc: Source-finding parameters
+        desc: Source-finding parameters.
         mapping:
           enable:
             type: bool
@@ -431,7 +431,7 @@ mapping:
           sourcefinder:
             type: str
             enum: ["pybdsm", "sofia"]
-            desc: Set the source finder to be used. Options are pybdsm (i.e. pybdsf) and sofia.
+            desc: Set the source finder to be used. Options are 'pybdsm' (i.e. pybdsf) and 'sofia'.
             required: false
             example: 'pybdsm'
           local_rms:
@@ -441,24 +441,24 @@ mapping:
             example: 'False'
           spi:
             type: bool
-            desc: Extract source spectral index
+            desc: Extract the spectral index for the fitted sources.
             required: false
             example: 'False'           # if not specified no spi will be determined
           thresh_pix:
             seq:
               - type: int
-            desc: Source finder pixel threshold
+            desc: Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a 'source'.
             required: false
             example: '5'
           thresh_isl:
             seq:
               - type: int
-            desc: Source finder island threshold
+            desc: Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.
             required: false
             example: '3'
           detection_image:
             type: bool
-            desc: Constrain the pybdsm source finding to only find sources included in the clean model.
+            desc: Constrain the PyBDSM source-finding to only find sources included in the clean model.
             required: false
             example: 'False'
 

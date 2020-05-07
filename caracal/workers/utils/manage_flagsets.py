@@ -17,15 +17,22 @@ def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_versi
         log.error('The available flag versions for this .MS file are:')
         for vv in  av_flagversions:
             log.error('       {0:s}'.format(vv))
-        log.error('Note that if you are running Caracal on multiple input .MS files you should rewind to a flag version that exists for all of them.')
+        log.error('Note that if you are running Caracal on multiple targets and/or .MS files you should rewind to a flag')
+        log.error('version that exists for all of them.')
         raise RuntimeError('Flag version conflicts.')
     if flags_bw in av_flagversions and not config['overwrite_flag_versions']:
         if not config['rewind_flags']["enable"] or req_version == 'null':
-            log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}".'.format(wname, ms, pipeline.prefix))
+            log.error('Flag version conflicts for {0:s} . If you are running Caracal on multiple targets'.format(ms))
+            log.error('and/or .MS files please read the warning at the end of this message.')
+            log.error('---------------------------------------------------------------------------------------------------')
+            log.error('A worker named "{0:s}" was already run on the .MS file {1:s} with pipeline prefix "{2:s}".'.format(wname, ms, pipeline.prefix))
             ask_what_to_do = True
         else:
             if req_version in av_flagversions and av_flagversions.index(req_version) > av_flagversions.index(flags_bw) and not config['overwrite_flag_versions']:
-                log.error('A worker named "{0:s}" was already run on the MS file "{1:s}" with pipeline prefix "{2:s}"'.format(wname, ms, pipeline.prefix))
+                log.error('Flag version conflicts for {0:s} . If you are running Caracal on multiple targets'.format(ms))
+                log.error('and/or .MS files please read the warning at the end of this message.')
+                log.error('---------------------------------------------------------------------------------------------------')
+                log.error('A worker named "{0:s}" was already run on the .MS file {1:s} with pipeline prefix "{2:s}"'.format(wname, ms, pipeline.prefix))
                 log.error('and you are rewinding to a later flag version: {0:s} .'.format(req_version))
                 ask_what_to_do = True
             else: ask_what_to_do = False
@@ -66,7 +73,9 @@ def handle_conflicts(pipeline, wname, ms, config, flags_bw, flags_aw, read_versi
         log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag versions from')
         log.error('       the previous run of "{0:s}" will be overwritten and appended to the list above (or'.format(wname))
         log.error('       to that list truncated to the flag version you are rewinding to).')
-        log.error('Your choice will be applied to all MS files being processed together in this run of Caracal.')
+        log.error('---------------------------------------------------------------------------------------------------')
+        log.error('Warning - Your choice will be applied to all .MS files being processed by the worker "{0:s}".'.format(wname))
+        log.error('Make sure to rewind to a flag version that exists for all of them.')
         raise RuntimeError('Flag version conflicts.')
     else:
         return av_flagversions

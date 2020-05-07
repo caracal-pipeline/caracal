@@ -241,16 +241,16 @@ mapping:
         example: 'vis_only'
       cal_Bjones:
         type: bool
-        desc: Enable Bjones
+        desc: Enable calculation of the B-Jones matrix, for bandpass calibration.
         required: false
         example: 'False'
       cal_cubical:
-        desc: Parameters that only apply when using Cubical for the calibration
+        desc: Parameters that only apply when using Cubical for the calibration.
         type: map
         mapping:
           max_prior_error:
             type: float
-            desc: Flag solution intervals where the prior variance estimate is above this value in.
+            desc: Flag solution intervals where the prior variance estimate is above this value.
             required: false
             example: '0.1'
           max_post_error:
@@ -259,7 +259,7 @@ mapping:
             required: false
             example: '0.1'
           channel_chunk:
-            desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means use full frequency axis but does not cross SPW boundaries. -1 Uses largest solution interval
+            desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means 'use the full frequency-axis' but does not cross SPW boundaries. -1 means 'use the largest solution interval'.
             type: int
             required: false
             example: '-1'
@@ -270,7 +270,7 @@ mapping:
             example: 'WEIGHT'
           shared_memory:
             type: str
-            desc: Set the amount of shared memory for cubical. Default '100Gb'
+            desc: Set the amount of shared memory for Cubical. Default '100Gb'
             required: false
             example: '100Gb'
           madmax_flagging:

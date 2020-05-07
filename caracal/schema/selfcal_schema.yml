@@ -549,7 +549,7 @@ mapping:
 
       flagging_summary:
         type: map
-        desc: Output the flagging summary
+        desc: Output the flagging summary.
         mapping:
           enable:
             type: bool
@@ -559,7 +559,7 @@ mapping:
 
       transfer_apply_gains:
         type: map
-        desc: Interpolate gains over the high frequency resolution data
+        desc: Interpolate gains over the high frequency-resolution data.
         mapping:
           enable:
             type: bool
@@ -568,7 +568,7 @@ mapping:
             example: 'False'
           transfer_to_label:
             type: str
-            desc: label of cross-calibrated .ms file to which to transfer and apply the selfcal gains
+            desc: Label of cross-calibrated .MS file to which to transfer and apply the selfcal gains.
             required: false
             example: 'corr'
           interpolate:
@@ -582,22 +582,22 @@ mapping:
                  example: 'True'
               timeslots_int:
                  type: int
-                 desc: Solution interval in time (units of timeslots/intergration time) to transfer gains. -1 uses the solution interval from the calibration that is applied.
+                 desc: Solution interval in time (units of timeslots/integration time) for transferring gains. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
               channel_int:
                  type: int
-                 desc: Solution interval in frequency (units of channels) to transfer gains. -1 uses the solution interval from the calibration that is applied.
+                 desc: Solution interval in frequency (units of channels) for transferring gains. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
               timeslots_chunk:
                  type: int
-                 desc: Time chunk in units of timeslots for transferring gains with CubiCal. -1 uses the solution interval from the calibration that is applied.
+                 desc: Time chunk in units of timeslots for transferring gains with CubiCal. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
               channel_chunk:
                  type: int
-                 desc: Frequency chunk in units of channels for transferring gains with CubiCal. '0' means the whole spw. -1 uses the solution interval from the calibration that is applied.
+                 desc: Frequency chunk in units of channels for transferring gains with CubiCal. '0' means the whole spw. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
 

@@ -189,28 +189,28 @@ mapping:
             example: ''
           inputmask:
             type: str
-            desc: input mask over which add Sofia's
+            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
             required: false
             example: ''
           fornax_special:
-            desc: Activates masking of Fornax A using Sofia
+            desc: Activate masking of Fornax A using SoFiA.
             type: bool
             required: false
             example: 'False'
           fornax_thresh:
-            desc: SoFiA source finding threshold. Default is 4.0.
+            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
             seq:
               - type: float
             required: false
             example: '4.0'
           fornax_use_sofia:
             type: bool
-            desc: use sofia for mask of Fornax A instead of Fomalont mask
+            desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
             required: false
             example: 'False'
       cal_niter:
         type: int
-        desc: Number of self-calibration iterations to perform
+        desc: Number of self-calibration iterations to perform.
         required: false
         example: '2'
       start_at_iter:

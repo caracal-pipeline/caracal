@@ -403,7 +403,7 @@ mapping:
           clean_mask_threshold:
             seq:
               - type: float
-            desc: Threshold used to create the clean mask when clean_mask_method = wsclean or sofia, in units of the (local) noise.
+            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean' or 'sofia'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
             required: false
             example: '10.0, 6.0'
           clean_mask_local_rms:

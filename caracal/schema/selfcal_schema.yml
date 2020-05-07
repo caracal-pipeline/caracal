@@ -60,7 +60,7 @@ mapping:
         example: '5'
       minuvw_m:
         type: int
-        desc: Exclude baselines shorter than this value (given in metres) from the imaging and selfcalibration loop.
+        desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
         required: false
         example: '0'
       img_npix:
@@ -215,7 +215,7 @@ mapping:
         example: '2'
       start_at_iter:
               type: int
-              desc: Start self-cal iteration loop at this start value, 1-based.
+              desc: Start selfcal iteration loop at this start value, 1-based.
               required: false
               example: '1'
       cal_gain_amplitude_clip_low:
@@ -301,7 +301,7 @@ mapping:
             example: '4'
           ragavi_plot:
             type: map
-            desc: Plotting dignostics plots for selfcal calibration.
+            desc: Plotting dignostics plots for self-calibration.
             mapping:
               enable:
                 type: bool

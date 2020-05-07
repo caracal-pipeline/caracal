@@ -229,13 +229,14 @@ mapping:
         required: false
         example: '2.'
       cal_timeslots_chunk:
-        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means use full time axis but does not cross scan boundaries. -1 Uses largest solution interval
+        desc: Chunk data up by this number of timeslots. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the time solution intervals that may be employed. 0 means 'use the full time-axis' but does not cross scan boundaries. -1 means 'use the largest solution interval'.
         type: int
         required: false
         example: '-1'
       cal_model_mode:
         type: str
-        desc: pybdsm_vis, pybdsm_only,  vis_only are the possible options
+        enum: ["vis_only", "pybdsm_only", "pybdsm_vis"]
+        desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA.
         required: false
         example: 'vis_only'
       cal_Bjones:

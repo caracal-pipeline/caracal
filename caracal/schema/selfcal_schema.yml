@@ -487,7 +487,7 @@ mapping:
           gain_matrix_type:
             seq:
               - type: str
-            desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, Fslope does delay selfcal, please set solution intervals at least twice as big as what you would for GainDiagPhase. Fslope does not work with MeqTrees.
+            desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, 'Fslope' = delay selfcal (for which solution intervals should be set to at least twice the values you would use for GainDiagPhase). Note that Fslope does not work with MeqTrees.
             required: false
             example: 'GainDiagPhase, GainDiag'
           Gsols_timeslots:

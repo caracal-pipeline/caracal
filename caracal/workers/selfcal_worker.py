@@ -1892,7 +1892,7 @@ def worker(pipeline, recipe, config):
         # Get residuals to compare
         res_files = []
         residuals_compare = []
-        for ii in range(0, cal_niter + 1):
+        for ii in range(1, cal_niter + 2):
             res_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-MFS-residual.fits".format(
                 pipeline.continuum, ii, prefix, field))
             if res_file:
@@ -1908,7 +1908,7 @@ def worker(pipeline, recipe, config):
         # Get models to compare
         model_files = []
         models_compare = []
-        for ii in range(0, cal_niter + 1):
+        for ii in range(1, cal_niter + 2):
             model_file = glob.glob(
                 "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii, prefix, field))
             if model_file:
@@ -2148,7 +2148,7 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []
 
-            #  Move the aimfast html plots
+                # Move the aimfast html plots
                 plot_path = "{0:s}/{1:s}".format(
                     pipeline.diagnostic_plots, 'selfcal')
                 if not os.path.exists(plot_path):
@@ -2156,9 +2156,7 @@ def worker(pipeline, recipe, config):
                 aimfast_plots = glob.glob(
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
-                    shutil.move(
-                        plot, '{0:s}/{1:s}'.format(plot_path,
-                                                   plot.split(pipeline.output)[-1]))
+                    shutil.move(plot, plot_path)
 
         if pipeline.enable_task(config, 'calibrate'):
             if config['cal_cubical']['ragavi_plot']['enable']:

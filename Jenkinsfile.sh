@@ -31,7 +31,7 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -lc ${caracal_version} \
                                                          -ct ${pull_request_name} \
                                                          -sm \
-                                                         -sd \
+                                                         -dm \
                                                          -or \
                                                          -f \
                                                          -op

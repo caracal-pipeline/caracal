@@ -63,12 +63,12 @@ mapping:
             required: false
             example: '1'
           column:
-            desc: Column to be split, default is 'corrected'. 
+            desc: Column to be split, where the default is 'corrected'. 
             type: str
             required: false
             example: 'corrected'
           correlation:
-            desc: Select correlations.
+            desc: Select the correlations, e.g. 'XX', 'YY'. Setting this to '' means that all correlations are selected. 
             type: str
             required: false
             example: ''

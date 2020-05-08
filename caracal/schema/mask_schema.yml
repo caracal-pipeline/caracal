@@ -48,27 +48,27 @@ mapping:
 
       query_catalog:
         type: map
-        desc: Query catalog to select field/sources from which extract the mask
+        desc: Query catalog to select field/sources for constructing the mask.
         mapping:
           enable:
             type: bool
-            desc: Execute this worker
+            desc: Execute segment 'query_catalog'.
             required: false
             example: 'true'
           catalog:
             type: str
             required: false
-            desc: Name of catalog to query [NVSS/SUMSS]
-            enum: ['NVSS', 'SUMSS']
+            desc: Name of catalog to query. Options are 'NVSS' and 'SUMSS'.
+            enum: ["NVSS", "SUMSS"]
             example: 'SUMSS'
           width_image:
             type: str
-            desc: Width of the region of sky we want to mask (keep larger than dirty image)
+            desc: Angular size of the region of sky that we want to mask (e.g. '1.2d', where 'd' indicates degrees). This should be kept larger than the dirty image.
             required: false
             example: '1.2d'
           thresh_nvss:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            desc: Flux-density threshold for selecting sources in the radio map, corrected for the primary beam. Value given is in units of Jy, or is the minimum signal-to-noise ratio (i.e. number of sigma_rms), used for SoFiA source-finding. 
             required: false
             example: '10e-3'
 

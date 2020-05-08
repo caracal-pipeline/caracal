@@ -6,7 +6,7 @@ mapping:
 
   mask:
     type: map
-    desc: Create .FITS mask from a catalogue and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
+    desc: Create .FITS mask from a catalog and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
     mapping:
       enable:
         type: bool
@@ -27,22 +27,22 @@ mapping:
         seq:
           - type: str
         required: false
-        desc: Coordinates of the centre of the field of view read from reference_dir by default
+        desc: Coordinates of the centre of the field-of-view (read from reference_dir by default).
         example: 'HH:MM:SS , DD:MM:SS'
       mask_size:
         type: int
-        desc: Number of pixels in the mask (must be the same as img_npix in selfcal worker)
+        desc: Number of pixels in the mask. This must be the same as img_npix in the selfcal worker.
         required: false
         example: '1800'
       cell_size:
         type: float
-        desc: Size of pixel in the mask (arcsec, must be the same as img_cell in selfcal worker)
+        desc: Size of pixels in the mask, in units of arcsec. This must be the same as img_cell in the selfcal worker.
         required: false
         example: '2.'
       extended_source_input:
         type: str
         required: false
-        desc: Name of the input mask for particularly extended sources in the field
+        desc: Name of the input mask for particularly-extended sources in the field.
         example: 'Fornaxa_vla.FITS'
 
 

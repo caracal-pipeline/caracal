@@ -10,6 +10,8 @@ from bokeh.plotting import figure, output_file, save
 def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
     av_flagversions = get_flags(pipeline, ms)
     req_version = config['rewind_flags'][read_version]
+    if req_version == 'auto':
+      req_version = flags_bw
     if conflict_type == 'would_overwrite_bw' or conflict_type == 'rewind_too_little':
         log.error('Flag version conflicts for {0:s} . If you are running Caracal on multiple targets'.format(ms))
         log.error('and/or .MS files please read the warning at the end of this message.')

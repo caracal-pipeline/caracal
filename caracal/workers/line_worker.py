@@ -489,7 +489,7 @@ def worker(pipeline, recipe, config):
                     stop_if_missing = True
                 if version in available_flagversions:
                     if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
-                        manflags.conflict('rewind_too_little', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                     substep = 'version_{0:s}_ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
                     if version != available_flagversions[-1]:
@@ -502,14 +502,14 @@ def worker(pipeline, recipe, config):
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
                             msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
                 elif stop_if_missing:
-                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                 else:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
                 if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
-                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker)
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                 else:
                     substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,

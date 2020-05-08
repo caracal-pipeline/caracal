@@ -5,48 +5,48 @@ mapping:
     required: true
 
   general:
-    desc: General pipeline information, data IDs, prefixes for output
+    desc: General pipeline information, including data IDs, and prefixes for output files.
     type: map
     mapping:
       title:
         type: str
         required: false
-        desc: an optional, descriptive, project title
+        desc: Execute the 'general' worker.
         example: ''
       data_path:
         type: str
         required: false
-        desc: where CARACal (over-) writes HDF5 files and JSON info files downloaded by get_data below
+        desc: Location where CARACal (over-)writes HDF5 files and JSON info files downloaded by the getdata worker.
         example: ''     
       msdir:
         type: str
         required: false
-        desc: where CARACal will write and expect to find measurement set (MS) files
+        desc: Location where CARACal will write and expect to find measurement set (.MS) files.
         example: 'msdir'
       input:
         type: str
         required: false
-        desc: where CARACal expects to find various input files (e.g., RFI flagging strategy files).
+        desc: Location where CARACal expects to find various input files (e.g., RFI flagging strategy files).
         example: 'input'
       output:
         type: str
         required: false
-        desc: where CARACal writes output products
+        desc: Location where CARACal writes output products.
         example: 'output'
       prefix:
         type: str
         required: false
-        desc: Prefix for CARACal output products
+        desc: Prefix for CARACal output products.
         example: 'caracal'
       init_pipeline:
-        desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
+        desc: Initialise the pipeline by copying input files (i.e. those that are MeerKAT specific, flagging strategies, beam model, etc.).
         required: false
         type: bool
         example: 'True'
       init_notebooks:
-        desc: Install standard radiopadre notebooks, given by list of basenames
+        desc: Install standard radiopadre notebooks, given by list of basenames.
         seq:
           - type: str
         required: false
-        example: std-progress-report
+        example: 'std-progress-report'
 

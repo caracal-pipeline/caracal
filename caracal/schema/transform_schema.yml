@@ -78,7 +78,7 @@ mapping:
             required: false
             example: 'True'
           spw:
-            desc: Select spectral windows and channels.
+            desc: Select spectral windows and channels, following the same syntax as for the 'mstransform' task in CASA. Setting this to '' means that all spectral windows and channels are selected.
             type: str
             required: false
             example: ''

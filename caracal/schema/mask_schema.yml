@@ -115,28 +115,28 @@ mapping:
             example: '5'
           scale_noise_window:
             type: int
-            desc: window size where SoFiA measures the local rms, units of pixels
+            desc: Size of the window over which SoFiA measures the local rms, in units of pixels.
             required: false
             example: '101'
 
       merge_with_extended:
         type: map
-        desc: Merge with mask of extended source
+        desc: Merge newly-determined mask components with the existing mask for the extended source.
         mapping:
           enable:
             type: bool
             required: false
-            desc: Execute this worker
+            desc: Execute segment 'merge_with_extended'.
             example: 'False'
           extended_source_input:
             type: str
-            desc: name of image of extended source to merge with current image
+            desc: Name of the mask-image of the extended source to merge with the current mask-image.
             required: false
             example: 'extended_mask.fits'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
-            desc: Tool to use for masking
+            desc: The tool to use for masking. Options are 'thresh' and 'sofia'.
             required: false
             example: 'thresh'
           thresh_lev:

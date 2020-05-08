@@ -6,38 +6,38 @@ mapping:
 
   obsconf:
     type: map
-    desc: Setup some basic observation information
+    desc: Set up some basic information about the observation(s).
     mapping:
       obsinfo:
-        desc: Get observation information
+        desc: Get observation information.
         type: map
         mapping:
           enable:
-            desc: Execute this section 
+            desc: Execute the obsconf worker. 
             type: bool
             required: true
             example: 'True'
           listobs:
-            desc: Run CASA listobs task to get observation information
+            desc: Run the CASA 'listobs' task to get observation information.
             type: bool
             required: false
             example: 'True'
           summary_json:
-            desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
+            desc: Run the MSUtils summary function to get observation information written as a JSON file, which can then be used to automatically configure pipeline.
             type: bool
             required: false
             example: 'True'
           vampirisms:
-            desc: Returns sun free time range
+            desc: Return the time range over which the observation does not contain the sun.
             type: bool
             required: false
             example: 'False'            
           plot_elevation_tracks:
-            desc: Make Elevation vs Hour angle plots for observed fields
+            desc: Make Elevation vs Hour-angle plots for observed fields.
             type: map
             mapping:
               enable:
-                desc: Enable this segment
+                desc: Enable segment plot_elevation_tracks.
                 type: bool
                 example: "True"
                 required: false

@@ -48,7 +48,7 @@ mapping:
             required: false
             example: 'True'
           field:
-            desc: Fields to be split off from the input MS. Can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+            desc: Fields to be split off from the input MS. Options are (separately) 'target', 'calibrators', 'bpcal', 'gcal' and 'fcal'. Also valid is any combination of 'bpcal', 'gcal' and 'fcal' in a comma-separated string (e.g. 'bpcal, fcal').
             type: str
             required: false
             example: 'target'

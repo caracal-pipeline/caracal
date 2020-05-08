@@ -53,22 +53,22 @@ mapping:
             required: false
             example: 'target'
           time_average:
-            desc: Time averaging
+            desc: Apply time averaging to the data.
             type: str
             required: false
             example: ''
           freq_average:
-            desc: Frequency averaging
+            desc: Apply frequency averaging to the data.
             type: int
             required: false
             example: '1'
           column:
-            desc: Column to split, default is 'corrected'. 
+            desc: Column to be split, default is 'corrected'. 
             type: str
             required: false
             example: 'corrected'
           correlation:
-            desc: Select correlations
+            desc: Select correlations.
             type: str
             required: false
             example: ''
@@ -78,67 +78,67 @@ mapping:
             required: false
             example: 'True'
           spw:
-            desc: Select spectral windows and channels
+            desc: Select spectral windows and channels.
             type: str
             required: false
             example: ''
 
           otfcal:
-            desc: Apply OTF calibration
+            desc: Apply on-the-fly (OTF) calibration.
             type: map
             mapping:
               enable:
-                desc: Execute this section
+                desc: Execute segment 'otfcal'.
                 type: bool
                 required: false
                 example: 'False'
               callib:
-                desc: Name of callib file to be used, if user has their own
+                desc: Name of the callib file to be used, if user has their own.
                 type: str
                 required: false
                 example: ''
               label_cal:
-                desc: Label of calibration tables to be used
+                desc: Label of calibration tables to be used.
                 type: str
                 required: false
                 example: '1gc1'
 
       changecentre:
-        desc: changes the phase centre
+        desc: Change the phase centre.
         type: map
         mapping:
           enable:
-            desc: Execute this section
+            desc: Execute segment 'changecentre'.
             type: bool
             required: false
             example: 'False'
           ra:
-            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            desc: J2000 RA of the new phase centre, in the format XXhXXmXX.XXs .
             type: str
             required: false
             example: '0h0m0.0s'
           dec:
-            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            desc: J2000 Dec of the new phase centre, in the format XXdXXmXX.XXs .
             type: str
             required: false
             example: '0d0m0.0s'
 
       obsinfo:
-        desc: Get observation information
+        desc: Get observation information.
         type: map
         mapping:
           enable:
-            desc: Execute this section
+            desc: Execute segment 'obsinfo'.
             type: bool
             required: false
             example: 'True'
           listobs:
-            desc: Run CASA listobs
+            desc: Run the CASA 'listobs' task to get observation information.
             type: bool
             required: false
             example: 'True'
           summary_json:
-            desc: Run MSUtils function
+            desc: Run the MSUtils summary function to get observation information written as a JSON file.
             type: bool
             required: false
             example: 'True'

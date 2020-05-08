@@ -1893,7 +1893,7 @@ def worker(pipeline, recipe, config):
         # Get residuals to compare
         res_files = []
         residuals_compare = []
-        for ii in range(0, cal_niter + 1):
+        for ii in range(1, cal_niter + 2):
             res_file = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_?-MFS-residual.fits".format(
                 pipeline.continuum, ii, prefix, field))
             if res_file:
@@ -1901,13 +1901,15 @@ def worker(pipeline, recipe, config):
         res_files = sorted(res_files)
 
         for ii in range(0, len(res_files)-1):
-            residuals_compare.append('{0:s}:output'.format(res_files[ii].split('output/')[-1]))
-            residuals_compare.append('{0:s}:output'.format(res_files[ii + 1].split('output/')[-1]))
+            residuals_compare.append('{0:s}:output'.format(
+                                         res_files[ii].split(pipeline.output)[-1]))
+            residuals_compare.append('{0:s}:output'.format(
+                                         res_files[ii + 1].split(pipeline.output)[-1]))
 
         # Get models to compare
         model_files = []
         models_compare = []
-        for ii in range(0, cal_niter + 1):
+        for ii in range(1, cal_niter + 2):
             model_file = glob.glob(
                 "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(pipeline.continuum, ii, prefix, field))
             if model_file:
@@ -1916,8 +1918,10 @@ def worker(pipeline, recipe, config):
 
         models = []
         for ii in range(0, len(model_files)-1):
-            models_compare.append('{0:s}:output'.format(model_files[ii].split('output/')[-1]))
-            models_compare.append('{0:s}:output'.format(model_files[ii + 1].split('output/')[-1]))
+            models_compare.append('{0:s}:output'.format(
+                                      model_files[ii].split(pipeline.output)[-1]))
+            models_compare.append('{0:s}:output'.format(
+                                      model_files[ii + 1].split(pipeline.output)[-1]))
 
         if len(model_files) > 1:
             step = "aimfast-compare-models"
@@ -1951,7 +1955,8 @@ def worker(pipeline, recipe, config):
                        {
                            "compare-residuals": residuals_compare,
                            "area-factor": config['aimfast']['area_factor'],
-                           "tigger-model": '{:s}:output'.format(model_files[-1].split('output/')[-1])
+                           "tigger-model": '{:s}:output'.format(model_files[-1].split(
+                                                                    pipeline.output)[-1])
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -1983,7 +1988,7 @@ def worker(pipeline, recipe, config):
         if len(D_tables) > 1:
             step = 'plot_dtab'
 
-            gain_table_name = [table.split('output/')[-1] for table in D_tables]
+            gain_table_name = [table.split(pipeline.output)[-1] for table in D_tables]
             recipe.add('cab/ragavi', step,
                        {
                            "table": [tab+":output" for tab in gain_table_name],
@@ -2143,7 +2148,7 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []
 
-            #  Move the aimfast html plots
+                # Move the aimfast html plots
                 plot_path = "{0:s}/{1:s}".format(
                     pipeline.diagnostic_plots, 'selfcal')
                 if not os.path.exists(plot_path):
@@ -2151,8 +2156,7 @@ def worker(pipeline, recipe, config):
                 aimfast_plots = glob.glob(
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
-                    shutil.move(
-                        plot, '{0:s}/{1:s}'.format(plot_path, plot.split('output/')[-1]))
+                    shutil.move(plot, plot_path)
 
         if pipeline.enable_task(config, 'calibrate'):
             if config['cal_cubical']['ragavi_plot']['enable']:

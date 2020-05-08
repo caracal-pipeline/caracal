@@ -39,7 +39,8 @@ CUBICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
     "GainDiagPhase": 'phase-diag',
-    "ComplexDiag": 'complex-diag'
+    "ComplexDiag": 'complex-diag',
+    "Fslope" : 'f-slope',
 }
 
 SOL_TERMS_INDEX = {
@@ -62,7 +63,9 @@ def check_config(config):
             raise caracal.UserInputError(
                 "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         if int(config['cal_cubical']['channel_chunk']) != -1:
-                caracal.log.info("The channel chunk has no effect on MeqTrees.")
+            caracal.log.info("The channel chunk has no effect on MeqTrees.")
+        if 'Fslope' in config['calibrate']['gain_matrix_type']:
+            caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
     else:
         if int(config['start_at_iter']) != 1:
             raise caracal.UserInputError(
@@ -305,6 +308,8 @@ def worker(pipeline, recipe, config):
                 flags_before_worker, flags_after_worker)
             if rewind_main_ms:
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 if available_flagversions[-1] != version:
@@ -336,6 +341,8 @@ def worker(pipeline, recipe, config):
                 flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
             if rewind_transf_ms:
                 version = config['rewind_flags']["transfer_apply_gains_version"]
+                if version == 'auto':
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
                 if available_flagversions[-1] != version:
@@ -1214,6 +1221,9 @@ def worker(pipeline, recipe, config):
             gupdate = 'diag'
         elif matrix_type == 'Gain2x2':
             gupdate = 'full'
+        elif matrix_type == 'Fslope':
+            gupdate = 'phase-diag'
+
         else:
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
 
@@ -1267,7 +1277,10 @@ def worker(pipeline, recipe, config):
                 take_diag_terms = False
             #End temp fix
             step = 'calibrate-cubical-field{0:d}-iter{1:d}'.format(trg, num, i)
-            if gupdate == 'phase-diag':
+            if gupdate == 'phase-diag' and matrix_type == 'Fslope':
+                g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+            elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msname.split('.ms')[0],prefix)
             elif gupdate == 'amp-diag':
@@ -1398,6 +1411,8 @@ def worker(pipeline, recipe, config):
             gupdate = 'diag'
         elif matrix_type == 'Gain2x2':
             gupdate = 'full'
+        elif matrix_type == 'Fslope':
+            gupdate = 'phase-diag'
         else:
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
 
@@ -1563,6 +1578,9 @@ def worker(pipeline, recipe, config):
             #Set the table name
             if gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
+                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+            if gupdate == 'phase-diag' and matrix_type == 'Fslope':
+                g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                    pipeline), num, fromname.split('.ms')[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,

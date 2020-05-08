@@ -49,16 +49,8 @@ def filter_name(string):
 def worker(pipeline, recipe, config):
 
     wname = pipeline.CURRENT_WORKER
-
-# TODO(sphe) msutils incorrectly copies all intents from ms if there's just one field in the splitted dataset
-    def fix_target_obsinfo(fname):
-        if pipeline.enable_task(config, 'split_field'):
-            with open(os.path.join(pipeline.obsinfo, fname), 'r') as stdr:
-                d = json.load(stdr)
-            d["FIELD"]["INTENTS"] = ['TARGET']
-            with open(os.path.join(pipeline.obsinfo, fname), "w") as stdw:
-                json.dump(d, stdw)
-
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label_in = config['label_in']
     label_out = config['label_out']
 
@@ -156,6 +148,8 @@ def worker(pipeline, recipe, config):
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
                 manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
                 available_flagversions = manflags.get_flags(pipeline, fms)
@@ -195,6 +189,10 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
+
+                substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, flags_after_worker, tms,
+                    cab_name=substep, overwrite=False)
 
             obsinfo_msname = tms if pipeline.enable_task(
                 config, 'split_field') else fms
@@ -252,14 +250,5 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
-
-            step = 'fix_target_obsinfo-ms{:d}'.format(i)  # set directories
-            recipe.add(fix_target_obsinfo, step,
-                       {
-                           'fname': listfile,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.obsinfo,
-                       label='Correct previously outputted obsinfo json: {0:s}'.format(listfile))
 
             target_iter += 1

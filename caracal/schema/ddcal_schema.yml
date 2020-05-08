@@ -236,21 +236,21 @@ mapping:
            example: '100'
          madmax_enable:
            type: bool
-           desc: Enable madmax flagging in Cubical.
+           desc: Enable madmax flagging in Cubical. 
            required: false
            example: 'true'
          madmax_threshold:
            seq:
-              - type: float
+              - type: int
            desc: Threshold for MAD flagging per baseline (specified in sigmas). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iteratins later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually decreasing values may be sensible.
            required: false
-           example: '0'
+           example: '0, 10'
          madmax_global_threshold:
            seq:
-              - type: float
+              - type: int
            desc: Threshold for global median MAD (MMAD) flagging. MMAD is computed as the median of the per-baseline MADs. Residuals exceeding S*MMAD/1.428 will be flagged.
            required: false
-           example: '10.0'
+           example: '0, 12'
          madmax_estimate:
            type: str
            desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.

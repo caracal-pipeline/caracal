@@ -53,12 +53,12 @@ mapping:
             required: false
             example: 'target'
           time_average:
-            desc: Time averaging to apply to the data, in units of seconds. If, instead, this parameter is set to '' or '0s' then no time averaging is applied. 
+            desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied. 
             type: str
             required: false
             example: ''
           freq_average:
-            desc: Apply frequency averaging to the data. 
+            desc: Frequency averaging to apply to the data, given as the number of channels per frequency bin. If this parameter is set to '', '0', or '1', then no frequency averaging is applied.
             type: int
             required: false
             example: '1'

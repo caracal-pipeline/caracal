@@ -64,18 +64,18 @@ mapping:
             required: false
             example: 'False'
       spectral_weights: 
-        desc: How to initialize spectral weights
+        desc: How to initialize spectral weights.
         type: map
         mapping: 
           enable: 
-            desc: Enable this segment
+            desc: Enable segment 'spectral_weights'.
             type: bool
             required: false
             example: 'False'
           mode:
-            desc: "uniform: Set all weights to unity. estimate: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, Also see 'estimate' segment of this section. delete: Delete WEIGHT_SPECTRUM column if it exists."
+            desc: Mode for spectral weights. Options are 'uniform' (set all weights to unity), 'estimate' (estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, and see 'estimate' segment of this section), and 'delete' (delete WEIGHT_SPECTRUM column if it exists).
             type: str
-            enum: [uniform, estimate, delete]
+            enum: ["uniform", "estimate", "delete"]
             required: false
             example: 'uniform'
           estimate:

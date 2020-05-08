@@ -68,7 +68,7 @@ mapping:
             required: false
             example: 'True'
           caracal_model:
-            desc: Use sky models available in CARACal. At the moment this includes PKS1934-638 and 0408-6545 MeerKAT sky models.
+            desc: Use the MeerkAT local sky model (lsm) of the calibrator field instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
             type: bool
             required: false
             example: 'False'

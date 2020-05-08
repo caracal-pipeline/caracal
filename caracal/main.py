@@ -160,8 +160,9 @@ def log_logo():
 
     log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
 
-def execute_pipeline(args, arg_groups, block):
+def execute_pipeline(options, config, block):
     # setup piping infractructure to send messages to the parent
+    workers_directory = os.path.join(caracal.pckgdir, "workers")
     def __run(debug=False):
         """ Executes pipeline """
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
@@ -169,17 +170,17 @@ def execute_pipeline(args, arg_groups, block):
         try:
             log_logo()
             # Very good idea to print user options into the log before running:
-            config_parser.config_parser().log_options(args.config)
+            config_parser.config_parser().log_options(config)
 
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()
 
-            pipeline = mwa(arg_groups,
-                           args.workers_directory, stimela_build=args.stimela_build,
-                           add_all_first=False,  prefix=args.general_prefix,
-                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                           container_tech=args.container_tech, start_worker=args.start_worker,
-                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+            pipeline = mwa(config,
+                           workers_directory, stimela_build=options.stimela_build,
+                           add_all_first=False, prefix=options.general_prefix,
+                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
+                           container_tech=options.container_tech, start_worker=options.start_worker,
+                           end_worker=options.end_worker, generate_reports=not options.no_reports)
 
             pipeline.run_workers()
         except SystemExit as e:
@@ -206,7 +207,7 @@ def execute_pipeline(args, arg_groups, block):
             log.info("exiting with error code 1")
             sys.exit(1)  # indicate failure
 
-    return __run(debug=args.debug)
+    return __run(debug=options.debug)
 
 ############################################################################
 # Driver entrypoint
@@ -223,7 +224,7 @@ def main(argv):
 
     # user requests worker help
     if options.worker_help:
-        if not print_worker_help(options):
+        if not print_worker_help(options.worker_help):
             parser.error("unknown worker '{}'".format(options.worker_help))
         return
 
@@ -232,15 +233,15 @@ def main(argv):
         sample_config = SAMPLE_CONFIGS.get(options.get_default_template)
         if sample_config is None:
             parser.error("unknown default template '{}'".format(options.get_default_template))
-        sample_config = os.path.join(pckgdir, "sample_configurations", sample_config)
-        if not os.path.exists(sample_config):
+        sample_config_path = os.path.join(pckgdir, "sample_configurations", sample_config)
+        if not os.path.exists(sample_config_path):
             raise RuntimeError("Missing sample config file {}. This is a bug, please report".format(sample_config))
         # validate the file
         try:
             parser = config_parser.config_parser()
-            _, version = parser.validate_config(sample_config)
+            _, version = parser.validate_config(sample_config_path)
             if version != SCHEMA_VERSION:
-                log.warning("Sample config file {} schema version is {}. Current CARACal version is {}.".format(sample_config,
+                log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
                                                                                                          version,
                                                                                                          SCHEMA_VERSION))
                 log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
@@ -251,8 +252,9 @@ def main(argv):
                 for err in errors:
                     print("    - {}".format(err))
             sys.exit(1)  # indicate failure
-        log.info("Copying default configuration to {0:s}.".format(options.get_default))
-        shutil.copy2(sample_config, options.get_default)
+        log.info("Initializing {1} from config template '{0}' (schema version {2})".format(options.get_default_template,
+                                                                                           options.get_default, version))
+        shutil.copy2(sample_config_path, options.get_default)
         return
 
     if options.print_calibrator_standard:
@@ -271,12 +273,13 @@ def main(argv):
         parser = config_parser.config_parser()
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
-            log.warning("Config file {} schema version is {}. Current CARACal version is {}.".format(config_file,
+            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
                                     version, SCHEMA_VERSION))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
+        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version
     except config_parser.ConfigErrors as exc:

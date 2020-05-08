@@ -167,9 +167,9 @@ class config_parser(object):
             _worker = worker.split("__")[0]
 
             if worker in self._schemas:
-                schema_fn, schema = self._schemas[worker]
+                schema_fn, _ = self._schemas[worker]
             elif _worker in self._schemas:
-                schema_fn, schema = self._schemas[worker] = self._schemas[_worker]
+                schema_fn, _ = self._schemas[worker] = self._schemas[_worker]
             else:
                 schema_fn = os.path.join(caracal.pckgdir,"schema", "{0:s}_schema.yml".format(_worker))
 
@@ -185,7 +185,7 @@ class config_parser(object):
             # validate worker config
             core = Core(source_data={_worker: variables}, schema_files=[schema_fn])
 
-            validated_content[worker] = core.validate(raise_exception=False)
+            validated_content[worker] = core.validate(raise_exception=False)[_worker]
 
             # check for errors
             if core.validation_errors:
@@ -263,9 +263,9 @@ class config_parser(object):
             def typecast(typ, val, string=False):
                 if isinstance(val, list):
                     return val
-                if typ.__name__ == "bool" and string:
+                if typ is bool  and string:
                     return str(val).lower()
-                elif typ.__name__ == "bool":
+                elif typ is bool and type(val) is str:
                     return val in "true yes 1".split()
                 else:
                     return typ(val)
@@ -285,8 +285,8 @@ class config_parser(object):
             elif "seq" in subVars:
                 # for lists
                 dtype = __builtins__[subVars['seq'][0]['type']]
-                subVars["example"] = str.split(
-                    subVars['example'].replace(' ', ''), ',')
+                if type(subVars["example"]) is not list:
+                    subVars["example"] = list(str.split(subVars['example'].replace(' ', ''), ','))
                 if subVars['seq'][0]['type'] == 'bool':
                     default_value=[]
                     for i in range(0,len(subVars['example'])):
@@ -304,8 +304,10 @@ class config_parser(object):
                 default_value = cfgVars[key]
 
             if options is not None:
-                option_value = getattr(options, attr_name, default_value)
-                groups[key] = typecast(dtype, option_value)
+                option_value = typecast(dtype, getattr(options, attr_name, default_value))
+                if option_value != typecast(dtype, default_value):
+                    caracal.log.info("  command line sets --{} = {}".format(option_name, option_value))
+                groups[key] = option_value
             else:
                 default_value = typecast(dtype, default_value, string=True)
                 if dtype.__name__ == "bool":
@@ -330,9 +332,8 @@ class config_parser(object):
         with open(filename, 'w') as f:
             f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))
 
-    def log_options(self, config_file, config):
+    def log_options(self, config):
         """ Prints argument tree to the logger for posterity to behold """
-        caracal.log.info("Loaded pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
 
         #caracal.log.info(
         #   "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))

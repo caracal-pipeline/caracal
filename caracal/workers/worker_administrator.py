@@ -31,7 +31,7 @@ assert ruamel.yaml.version_info >= (0, 12, 14)
 REPORTS = False
 
 class worker_administrator(object):
-    def __init__(self, config, workers_directory,
+    def __init__(self, config, workers_directory=None,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
@@ -71,7 +71,8 @@ class worker_administrator(object):
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
-        sys.path.append(self.workers_directory)
+        if workers_directory:
+            sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
         # general, getdata and obsconf are all mendatory. 

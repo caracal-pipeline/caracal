@@ -2238,34 +2238,33 @@ then
 		exit 1
 	    fi
         fi
-	ii=1
-        until (( ${ii} > ${IA} ))
-        do
-            echo "Running stimela build"
-            ss_docker+="stimela build${stimela_ns}"; ss_docker+=$'\n'
-            if [[ -z ${FS} ]]
-#            if [[ -n ${FS} ]]
-	    then
-		stimela build${stimela_ns} && break || {
-			echo "stimela build failed ${ii}" ; \
-			(( ii++ )) ; \
-		    }
-	    else
-		break
-	    fi
-        done
-	if (( ${ii} > ${IA} ))
-	then
-	    echo "Maximum number of build attempts for Stimela reached."
-	    echo "${ss_docker}" >> ${SS}
-	    echo "${sya_docker}" >> ${SYA}
-	    exit 1
-	fi
-    echo ""
-    fi
-fi
+#	ii=1
+#        until (( ${ii} > ${IA} ))
+#        do
+#            echo "Running stimela build"
+#            ss_docker+="stimela build${stimela_ns}"; ss_docker+=$'\n'
+#            if [[ -z ${FS} ]]
+#	    then
+#		stimela build${stimela_ns} && break || {
+#			echo "stimela build failed ${ii}" ; \
+#			(( ii++ )) ; \
+#		    }
+#	    else
+#		break
+#	    fi
+#        done
+#	if (( ${ii} > ${IA} ))
+#	then
+#	    echo "Maximum number of build attempts for Stimela reached."
+#	    echo "${ss_docker}" >> ${SS}
+#	    echo "${sya_docker}" >> ${SYA}
+#	    exit 1
+#	fi
+#    echo ""
+#    fi
+#fi
 
-echo ""
+#echo ""
 
 testingoutput () {
 

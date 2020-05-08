@@ -74,32 +74,32 @@ mapping:
 
       pb_correction:
         type: map
-        desc: Correct input image for primary beam before exctracting mask
+        desc: Apply a primary-beam correction to the input image before extracting the mask.
         mapping:
           enable:
             type: bool
-            desc: Execute this worker
+            desc: Execute segment 'pb_correction'.
             required: false
             example: 'true'
           frequency:
             type: float
-            desc: Primary beam size changes with frequency, provide central frequency of considered dataset
+            desc: Since the primary-beam size changes with frequency, provide the central frequency of the considered dataset.
             required: false
             example: '1.420405752'
 
       make_mask:
         type: map
-        desc: Build mask from existing image using SoFiA and/or threshold cutoff
+        desc: Build mask from an existing image using SoFiA and/or a threshold cutoff.
         mapping:
           enable:
             type: bool
-            desc: Execute this worker
+            desc: Execute segment 'make_mask'.
             required: false
             example: 'true'
           mask_with:
             type: str
             enum: ["thresh", "sofia"]
-            desc: Tool to use for masking
+            desc: The tool to use for masking. Options are 'thresh' and 'sofia'.
             required: false
             example: 'sofia'
           input_image:
@@ -110,7 +110,7 @@ mapping:
             example: 'pbcorr'
           thresh_lev:
             type: int
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder 
+            desc: Flux-density threshold for selecting sources in the SUMSS map, corrected for the primary beam. Value given is in units of Jy, or is the minimum signal-to-noise ratio (i.e. number of sigma_rms), used for SoFiA source-finding. 
             required: false
             example: '5'
           scale_noise_window:

@@ -6,7 +6,7 @@ mapping:
 
   mask:
     type: map
-    desc: Create .FITS mask from catalog and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
+    desc: Create .FITS mask from a catalogue and (optionally) merge with an existing .FITS mask provided by the user. WARNING - At the moment this worker can only be executed on a single target at a time. Iterating over N targets is not done automatically.
     mapping:
       enable:
         type: bool
@@ -15,13 +15,13 @@ mapping:
         example: 'False'
       label_in:
         type: str
-        desc: Label of the .MS file where to find information about the target.
+        desc: Label of the .MS file that contains information about the target.
         required: false
         example: 'corr'
       label_out:
         type: str
         required: false
-        desc: Prefix used for the name of the .FITS mask created by this worker. The full name consists of this prefix followed by the target name extracted by the observation_config worker. To use this output .FITS mask as a clean mask in the self_cal worker users should set relevant entry of clean_mask_method to label_out.
+        desc: Prefix used for the name of the .FITS mask created by this worker. The full name consists of this prefix followed by the target name extracted by the obsconf worker. To use this output .FITS mask as a clean mask in the selfcal worker, users should set the relevant entry of clean_mask_method to label_out.
         example: 'catalog_mask'
       centre_coord:
         seq:

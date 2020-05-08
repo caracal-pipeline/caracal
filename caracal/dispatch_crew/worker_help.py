@@ -27,7 +27,7 @@ class worker_options(object):
                 if lineage is None:
                     _lineage = name
                 else:
-                    _lineage = "{0:s}-{1:s}".format(lineage, name)
+                    _lineage = "{0:s}-{1:s}".format(lineage, name.replace("-", "_"))
                 # send back if its a mapping
                 if segment.get("type", False) == "map":
                     self.traverse_worker(segment, _lineage)

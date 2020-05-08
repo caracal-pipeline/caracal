@@ -176,7 +176,7 @@ def execute_pipeline(options, config, block):
             cdb = mkct.calibrator_database()
 
             pipeline = mwa(config,
-                           workers_directory, stimela_build=options.stimela_build,
+                           workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
                            configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
                            container_tech=options.container_tech, start_worker=options.start_worker,

@@ -31,8 +31,8 @@ assert ruamel.yaml.version_info >= (0, 12, 14)
 REPORTS = False
 
 class worker_administrator(object):
-    def __init__(self, config, workers_directory=None,
-                 stimela_build=None, prefix=None, configFileName=None,
+    def __init__(self, config, workers_directory,
+                 prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
                  container_tech='docker', generate_reports=False):
@@ -110,7 +110,6 @@ class worker_administrator(object):
             self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
 
         self.prefix = prefix or self.config['general']['prefix']
-        self.stimela_build = stimela_build
 
         # Get possible flagsets for reduction
         self.flags = {"legacy": ["legacy"]}
@@ -294,7 +293,6 @@ class worker_administrator(object):
 
             recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,
-                                    build_label=self.stimela_build,
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
                                     logfile=False, # no logfiles for recipes

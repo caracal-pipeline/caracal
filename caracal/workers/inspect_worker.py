@@ -92,6 +92,8 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         "canvas-height": opts['canvas-height'],
         "canvas-width": opts['canvas-width'],
         "corr": opts["corr"],
+        "mem-limit" : opts['mem-limit'],
+        "num-cores" : opts['num-cores'],
         # "cbin": int(config[plotname]['avgchannel']),
         # "colour-axis": opts.get("colour-axis", None),
         "data-column": column,
@@ -293,6 +295,8 @@ def worker(pipeline, recipe, config):
                                                    corr_label=corrs[int(co)])
 
                 elif plotter == "ragavi_vis" and not opts["iter-axis"] == "corr":
+                    opts["num-cores"] = config["num_cores"]
+                    opts["mem-limit"] = config["mem_limit"]
                     # change the labels to indices
                     with open(msinfo, 'r') as stdr:
                         corrs = yaml.load(stdr)['CORR']['CORR_TYPE']

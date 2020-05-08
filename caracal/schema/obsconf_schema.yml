@@ -37,7 +37,7 @@ mapping:
             type: map
             mapping:
               enable:
-                desc: Enable segment plot_elevation_tracks.
+                desc: Enable segment 'plot_elevation_tracks'.
                 type: bool
                 example: "True"
                 required: false
@@ -72,13 +72,13 @@ mapping:
         required: false
         example: 'longest'
       xcal:
-        desc: The field name(s) of the crosshand phase-angle calibrator field(s). This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation in order to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
+        desc: The field name(s) of the crosshand phase-angle calibrator field(s). Or set 'all' to select all of the xcal fields, 'longest' to select the xcal field observed for the longest time, or 'nearest' to select the xcal field closest to the target. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation in order to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
         seq:
           - type: str
         required: false
         example: 'longest'
       reference_antenna:
-        desc: Reference antenna, which can be identified by an antenna name or number.
+        desc: The reference antenna, which can be identified by an antenna name or number.
         type: str
         required: true
         example: '0'

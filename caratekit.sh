@@ -2173,6 +2173,8 @@ then
 	echo "Removing \${HOME}/.stimela/*" ; \
 	echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
     }
+    # Consider using stimela clean -ac here before running a docker prune
+    # and not doing this:
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
 fi
 
@@ -2211,6 +2213,7 @@ then
 	[[ -z ${OR} ]] || pruneforce='-f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
+	
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
         if [[ -z ${NP} ]]
         then

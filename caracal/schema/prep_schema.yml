@@ -79,28 +79,28 @@ mapping:
             required: false
             example: 'uniform'
           estimate:
-            desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values
+            desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values.
             type: map
             mapping:
               stats_data: 
-                desc: "File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data."
+                desc: File with SEFD/Tsys/Noise data. If data is from the MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
                 type: str
                 example: 'use_package_meerkat_spec'
                 required: false
               weight_columns:
                 seq:
                   - type: str
-                desc: column names
+                desc: Column names for spectral weights.
                 required: false
                 example: 'WEIGHT, WEIGHT_SPECTRUM'
               noise_columns:
                 seq:
                   - type: str
-                desc: column names for noise
+                desc: Column names for noise values.
                 required: false
                 example: 'SIGMA, SIGMA_SPECTRUM'
               write_to_ms:
-                desc: write columns to file
+                desc: Write columns to file.
                 type: bool
                 required: false
                 example: 'True'

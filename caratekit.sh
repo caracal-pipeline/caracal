@@ -2261,8 +2261,8 @@ then
 #	    exit 1
 #	fi
 #    echo ""
-#    fi
-#fi
+    fi
+fi
 
 #echo ""
 

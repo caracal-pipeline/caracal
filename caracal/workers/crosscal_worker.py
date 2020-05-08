@@ -445,6 +445,8 @@ def worker(pipeline, recipe, config):
 
             if config['rewind_flags']["enable"]:
                 version = config['rewind_flags']["version"]
+                if version == 'auto':
+                    version = flags_before_worker
                 substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, i)
                 manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                 if available_flagversions[-1] != version:

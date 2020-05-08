@@ -39,10 +39,10 @@ mapping:
             required: False
             example: 'False'
           version:
-            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
             type: str
-            required: False
-            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            required: false
+            example: 'auto'
       overwrite_flag_versions:
         desc: Allow Caracal to ovewrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool

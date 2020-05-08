@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os
 import glob
 import sys
@@ -9,7 +10,7 @@ from astropy.io import fits
 from astropy import wcs
 from caracal.dispatch_crew import utils
 
-NAME = "Mosaic images"
+NAME = "Mosaic Images and Cubes"
 LABEL = 'mosaic'
 
 
@@ -315,7 +316,7 @@ def worker(pipeline, recipe, config):
                    {
                        "mosaic-type": specified_mosaictype,
                        "domontage": True,
-                       "cutoff": config.get('cutoff'),
+                       "cutoff": config['cutoff'],
                        "name": mosaic_prefix,
                        "target-images": image_filenames,
                    },
@@ -328,7 +329,7 @@ def worker(pipeline, recipe, config):
                    {
                        "mosaic-type": specified_mosaictype,
                        "domontage": False,
-                       "cutoff": config.get('cutoff'),
+                       "cutoff": config['cutoff'],
                        "name": mosaic_prefix,
                        "target-images": image_filenames,
                    },

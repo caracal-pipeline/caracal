@@ -4,7 +4,7 @@ mapping:
     type: str
     required: True
 
-  flagging:
+  flag:
     desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
     mapping:
@@ -14,7 +14,7 @@ mapping:
         required: True
         example: 'False'
       field:
-        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging steps flag_time, flag_scan and static_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
+        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step flag_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
         type: str
         enum: ['target', 'calibrators']
         required: False
@@ -39,10 +39,10 @@ mapping:
             required: False
             example: 'False'
           version:
-            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
             type: str
-            required: False
-            example: 'INSERT_FLAG_VERSION_TO_BE_RESTORED'
+            required: false
+            example: 'auto'
       overwrite_flag_versions:
         desc: Allow Caracal to ovewrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
@@ -171,7 +171,7 @@ mapping:
             desc: Check whether the channel selection returns any data. If it does not FLAGDATA is not executed preventing the pipeline from crashing. This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
             type: bool
             required: False
-            example: 'False'
+            example: 'True'
       flag_time:
         desc: Flag timerange in the data using CASA FLAGDATA task.
         type: map

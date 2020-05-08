@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  prepare_data:
+  prep:
     desc: Prepare the data for calibration and imaging.
     type: map
     mapping:
@@ -13,6 +13,17 @@ mapping:
         type: bool
         required: true
         example: 'False'
+      label_in:
+        type: str
+        required: true
+        desc: If this label is an empty string this worker operates on the input .MS file(s) given in the getdata worker. If the label is not an empty string it is added to the input .MS file(s) name given in the getdata worker to define the name of the .MS file(s) to work on. These are <input>_<label>.ms if 'field' (see below) is set to 'calibrators', or <input>-<target>_<label>.ms if 'field' is set to 'target' (one .MS file for each target in the input .MS).
+        example: ''
+      field:
+        desc: In combination with a non-empty 'label_in' (see above), 'field' defines which .MS file(s) to work on. This parameter is ignored if 'label_in' is empty.
+        type: str
+        enum: ['target', 'calibrators']
+        required: False
+        example: 'calibrators'
       fixvis:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map
@@ -37,21 +48,16 @@ mapping:
             required: false
             example: 'True'
           mode: 
-            desc: Manage flag mode. If "save_legacy_flags" save the current FLAG column as a "caracal_legacy" flag version (if that already exists, "overwrite_legacy_flags" below allows you to overwrite it, but think twice). If "restore" restore flags from the flag version specified by "version" below, and delete all flag versions created after that version.
+            desc: Manage flag mode. With mode = 'legacy', if the 'caracal_legacy' flag version does not yet exist, save the current FLAG column as the 'caracal_legacy flag version; else restore the 'caracal_legacy' flag version and delete all flag versions created after it. With mode = 'restore', restore flags from the flag version specified by 'version' below, and delete all flag versions created after that version.
             type: str
             required: false
-            example: 'save_legacy_flags'
-            enum: [save_legacy_flags, restore]
+            example: 'legacy'
+            enum: [legacy, restore]
           version:
-            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
+            desc: Flag version to restore. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             type: str
             required: false
-            example: 'caracal_legacy'
-          overwrite_legacy_flags:
-            desc: If "mode" above is "save_legacy_flags" but the "caracal_legacy" flag version already exists, allow Caracal to overwrite it. Think twice!
-            type: bool
-            required: false
-            example: 'False'
+            example: 'auto'
       spectral_weights: 
         desc: How to initialize spectral weights
         type: map

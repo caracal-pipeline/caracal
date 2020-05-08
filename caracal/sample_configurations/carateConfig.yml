@@ -2,27 +2,30 @@ schema_version: 0.3.0
 
 general:
   prefix: mypipelinerun
-get_data:
+
+getdata:
   dataid: ['']
 
-observation_config:
-  reference_antenna: 'm010'   
+obsconf:
+  reference_antenna: 'm010'
 
-prepare_data:
+transform:
   enable: true
+  label_out: cal
+  split_field:
+    enable: true
+    field: calibrators
+    column: 'data'
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
   spectral_weights:
     enable: true
     mode: uniform
 
-transform_data:
-  enable: true
-  label_out: 'cal'
-  split_field:
-    enable: true
-    field: 'calibrators'
-    column: 'data'
-
-flagging:
+flag:
   enable: true
   field: calibrators
   label_in: cal
@@ -39,28 +42,57 @@ flagging:
   flag_spw:
     enable: true
 
-cross_cal:
+inspect:
+  label_in: 'cal'
+  label_out: 'pre1gc'
+  enable: true
+  dirname: initial
+  shadems:
+    enable: true
+    default_column: DATA
+    plots_by_field:
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x BASELINE -y FREQ -c amp"
+    ignore_errors: true
+  standard_plotter: ragavi_vis
+  real_imag:
+    enable: false
+    column: data
+  amp_uvwave:
+    column: data
+  phase_uvwave:
+    column: data
+    enable: false
+  amp_chan:
+    column: data
+  phase_chan:
+    column: data
+    enable: false
+
+crosscal:
   enable: true
   uvrange: '>150'
   label_in: 'cal'
   set_model:
     enable: true
   primary_cal:
-    enable: true
     order: KGBAKGBK
     combine: ["", "", "", null, "","", scan, scan]
     solint: [inf, inf, inf, null, inf, inf, inf, inf]
-    calmode: [a, ap, ap, null, a, ap, ap, a] 
+    calmode: [a, ap, ap, null, a, ap, ap, a]
     B_fillgaps: 70
   secondary_cal:
-    enable: true
     order: GAG
     apply: KB
-    combine: ["", null, ""] 
+    combine: ["", null, ""]
     solint: [inf, null, inf]
-    calmode: [ap, null, ap] 
+    calmode: [ap, null, ap]
   apply_cal:
-    enable: true
     applyto:
       - gcal
       - bpcal
@@ -68,20 +100,51 @@ cross_cal:
 polcal:
   enable: false
 
-inspect_data:
+inspect__2:
   label_in: 'cal'
   label_out: '1gc'
   enable: true
+  dirname: crosscal
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA
+    plots_by_field:
+      - "-x real  -y imag   -c CORR"
+      - "-x real  -y imag   -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c SCAN_NUMBER"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y phase  -c SCAN_NUMBER"
+      - "-x FREQ  -y phase  -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x U     -y V      -c phase --cnum 64 --cmin -5 --cmax 5"
+      - "-x BASELINE -y FREQ -c amp"
+      - "-x BASELINE -y FREQ -c CORRECTED_DATA-MODEL_DATA:amp"
+    plots_by_corr:
+      - "-x real  -y imag   -c FIELD_ID"
+    ignore_errors: true
+  standard_plotter: ragavi_vis
 
-transform_data__2:
+transform__2:
   enable: true
   split_field:
     enable: true
     otfcal:
       enable: true
       label_cal: '1gc1'
-  
-flagging__2:
+
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  spectral_weights:
+    enable: true
+    mode: uniform
+
+flag__2:
   enable: true
   field: target
   label_in: corr
@@ -96,7 +159,7 @@ flagging__2:
     enable: true
     flagger: aoflagger
 
-transform_data__3:
+transform__3:
   enable: true
   label_in: corr
   label_out: cont
@@ -105,10 +168,10 @@ transform_data__3:
     freq_average: 4
     column: data
 
-masking:
+mask:
   enable: false
 
-flagging__3:
+flag__3:
   enable: false
   field: target
   label_in: cont
@@ -116,7 +179,7 @@ flagging__3:
     enable: true
     channels: '*:1417.2~1421.0MHz'
 
-self_cal:
+selfcal:
   enable: true
   label: cont
   ncpu: 12
@@ -126,7 +189,10 @@ self_cal:
   img_nchans: 12
   img_robust: -1.0
   cal_niter: 3
-  cal_channel_chunk: 0
+  cal_cubical:
+    channel_chunk: 0
+    shared_memory: 250GB
+    max_post_error: 0.25
   cal_timeslots_chunk: 360
   image:
     enable: true
@@ -138,7 +204,6 @@ self_cal:
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
     Gsols_channel: [0, 0, 0]
     Gsols_timeslots: [120, 60, 20]
-    shared_memory: 250GB
   transfer_apply_gains:
     enable: true
     interpolate:
@@ -153,7 +218,7 @@ self_cal:
     memory_fraction: 0.45
     transfer_to_label: corr
 
-transform_data__4:
+transform__4:
   enable: true
   label_in: 'corr'
   label_out: 'l'
@@ -163,7 +228,7 @@ transform_data__4:
     otfcal:
       enable: false
 
-image_line:
+line:
   enable: true
   label: 'l'
   restfreq: '1.420405752GHz'
@@ -175,7 +240,7 @@ image_line:
     cell: 3
     taper: 10
     robust: 0
-  mstransform: 
+  mstransform:
     enable: true
     doppler:
       enable: true
@@ -199,7 +264,7 @@ mosaic:
   enable: true
   mosaic_type: spectral
   name: cubemos
-  domontage: 
+  domontage:
     enable: true
   cutoff: 0.1
   use_MFS_images: false

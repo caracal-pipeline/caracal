@@ -8,37 +8,26 @@ general:
   init_pipeline: true
 
 
-get_data:
+getdata:
   dataid: []
 
-observation_config:
+obsconf:
   target:
-    - 'all'
+    - all
   fcal:
-    - 'longest'
+    - longest
   bpcal:
-    - 'longest'
+    - longest
   gcal:
-    - 'all'
+    - all
   xcal:
-    - 'longest'
+    - longest
   reference_antenna: '0'
   
-prepare_data: 
-  enable: true
-  fixvis: 
-    enable: false
-  manage_flags: 
-    enable: true
-  clear_cal: true
-  spectral_weights:
-    enable: true
-    mode: uniform
-
-transform_data:
+transform:
   enable: true
   label_in: ''
-  label_out: 'cal'
+  label_out: cal
   split_field:
     enable: true
     field: 'calibrators'
@@ -47,13 +36,20 @@ transform_data:
     column: data
     correlation: ''
     spw: ''
-    otfcal:
-      enable: false
-  obsinfo:
-    enable: true
-    listobs: true
 
-flagging:
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+  fixvis:
+    enable: false
+  manage_flags:
+    enable: true
+  spectral_weights:
+    enable: true
+    mode: uniform
+
+flag:
   enable: true
   field: calibrators
   label_in: cal
@@ -62,7 +58,7 @@ flagging:
   flag_spw:
     enable: true
     channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: false
+    ensure_valid_selection: true
   flag_antennas:
     enable: false
     antennas: '0'
@@ -79,11 +75,11 @@ flagging:
     aoflagger:
       strategy: firstpass_QUV.rfis
   inspect:
-    enable: true
+    enable: false
     telescope: MeerKAT
     field: 'bpcal,gcal'
 
-cross_cal:
+crosscal:
   enable: true
   uvrange: '>150'
   label_cal: 1gc1
@@ -91,7 +87,6 @@ cross_cal:
   set_model:
     enable: true
   primary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
@@ -100,7 +95,6 @@ cross_cal:
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
-    enable: true
     reuse_existing_gains: true
     order: KGAKG
     apply: B
@@ -109,7 +103,6 @@ cross_cal:
     calmode: [a, ap, null, a, ap] 
     plotgains: true
   apply_cal: 
-    enable: true
     applyto: 
       - gcal
       - bpcal
@@ -117,8 +110,8 @@ cross_cal:
 polcal: 
   enable: false
 
-inspect_data: 
-  enable: false
+inspect:
+  enable: true
   label_in: 'cal'
   label_out: '1gc'
   fields:
@@ -143,7 +136,7 @@ inspect_data:
     enable: true
     avgtime: '60'
 
-transform_data__2:
+transform__2:
   enable: true
   label_in: ''
   label_out: corr
@@ -163,7 +156,19 @@ transform_data__2:
     enable: true
     listobs: true
 
-flagging__2: 
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  fixvis:
+    enable: false
+  manage_flags:
+    enable: true
+  spectral_weights:
+    enable: true
+    mode: uniform
+
+flag__2: 
   enable: true
   field: target
   label_in: corr
@@ -177,15 +182,15 @@ flagging__2:
     enable: true
     field: target
 
-masking: 
+mask:
   enable: false
   centre_coord:
     - HH:MM:SS
     - DD:MM:SS
   label_in: corr
 
-self_cal:
-  enable: false
+selfcal:
+  enable: true
   img_npix: 4096
   img_cell: 1.3
   image:
@@ -194,8 +199,8 @@ self_cal:
     enable: true
     Gsols_timeslots: [120]
 
-image_line:
-  enable: false
+line:
+  enable: true
   restfreq: '1.420405752GHz'
   make_cube:
     enable: true

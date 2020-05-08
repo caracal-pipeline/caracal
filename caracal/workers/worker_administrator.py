@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import caracal
 from caracal import log, pckgdir, notebooks
 import subprocess
@@ -27,24 +28,9 @@ import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
-# GIGJ commenting lines initiating a report
-# try:
-#    import caracal.scripts as scripts
-#    from caracal.scripts import reporter as mrr
-#    REPORTS = True
-# except ImportError:
-#    log.warning(
-#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
-#    REPORTS = False
 REPORTS = False
 
 class worker_administrator(object):
-# GIGJ commenting lines initiating a report
-#    def __init__(self, config, workers_directory,
-#                 stimela_build=None, prefix=None, configFileName=None,
-#                 add_all_first=False, singularity_image_dir=None,
-#                 start_worker=None, end_worker=None,
-#                 container_tech='docker', generate_reports=True):
     def __init__(self, config, workers_directory,
                  stimela_build=None, prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
@@ -58,6 +44,7 @@ class worker_administrator(object):
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
+        self.obsinfo = self.config['general']['output'] + '/obsinfo'
         self.reports = self.config['general']['output'] + '/reports'
         self.diagnostic_plots = self.config['general']['output'] + \
             '/diagnostic_plots'
@@ -65,6 +52,7 @@ class worker_administrator(object):
         self.caltables = self.config['general']['output'] + '/caltables'
         self.masking = self.config['general']['output'] + '/masking'
         self.continuum = self.config['general']['output'] + '/continuum'
+        self.crosscal_continuum = self.config['general']['output'] + '/continuum/crosscal'
         self.cubes = self.config['general']['output'] + '/cubes'
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
@@ -86,7 +74,7 @@ class worker_administrator(object):
         sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
-        # general, get_data and observation config are all mendatory. 
+        # general, getdata and obsconf are all mendatory. 
         # That's why the lowest starting index is 2 (third element)
         start_idx = last_mandatory
         end_idx = len(self.config.keys())
@@ -142,7 +130,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"].get("init_pipeline"):
+        if config["general"]["init_pipeline"]:
             self.init_pipeline()
 
         # save configuration file
@@ -238,13 +226,13 @@ class worker_administrator(object):
             os.mkdir(self.cubes)
         # create proper logfile and start flushing
         # NB (Oleg): placing this into output rather than output/logs to make the reporting notebooks easier
-        baselog = 'log-caracal-{0:s}.txt'.format(self.timeNow)
-        caracal.CARACAL_LOG = os.path.join(self.output, baselog)
+        CARACAL_LOG_BASENAME = 'log-caracal.txt'
+        caracal.CARACAL_LOG = os.path.join(self.logs, CARACAL_LOG_BASENAME)
         caracal.log_filehandler.setFilename(caracal.CARACAL_LOG, delay=False)
 
         # placing a symlink into logs to appease Josh
-        make_symlink(os.path.join(self.logs, baselog), os.path.join("..", baselog))
-        make_symlink(os.path.join(self.output, "log-caracal.txt"), baselog)
+        make_symlink(os.path.join(self.output, CARACAL_LOG_BASENAME),
+                     os.path.join(os.path.basename(self.logs), CARACAL_LOG_BASENAME))
 
         # Copy input data files into pipeline input folder
         log.info("Copying meerkat input files into input folder")
@@ -275,18 +263,27 @@ class worker_administrator(object):
 
     def run_workers(self):
         """ Runs the  workers """
+
+        active_workers = []
+        # first, check that workers import, and check their configs
         for _name, _worker, i in self.workers:
+            config = self.config[_name]
+            if 'enable' in config and not config['enable']:
+                self.skip.append(_worker)
+                continue
+            log.info("configuring worker {}".format(_name))
             try:
                 worker = __import__(_worker)
             except ImportError:
-                traceback.print_exc()
-                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
-                    _worker, self.workers_directory))
+                log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
+                raise
+            if hasattr(worker, 'check_config'):
+                worker.check_config(config)
+            active_workers.append((_name, worker, config))
 
-            config = self.config[_name]
-            if config.get('enable') is False:
-                self.skip.append(_worker)
-                continue
+        # now run the actual pipeline
+        #for _name, _worker, i in self.workers:
+        for _name, worker, config in active_workers:
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             label = getattr(worker, 'LABEL', None)
@@ -315,30 +312,10 @@ class worker_administrator(object):
             # Save worker recipes for later execution
             # execute each worker after adding its steps
 
-            if self.add_all_first:
-                log.info("{0:s}: adding before running".format(_worker))
-                self.recipes[_worker] = recipe
-            else:
-                log.info("{0:s}: running".format(label))
-                recipe.run()
-                log.info("{0:s}: finished".format(label))
-                casa_last = glob.glob(self.output + '/*.last')
-                for file_ in casa_last:
-                    os.remove(file_)
+            log.info("{0:s}: running".format(label))
+            recipe.run()
+            log.info("{0:s}: finished".format(label))
+            casa_last = glob.glob(self.output + '/*.last')
+            for file_ in casa_last:
+                os.remove(file_)
 
-        # Execute all workers if they saved for later execution
-        try:
-            if self.add_all_first:
-                for worker in self.workers:
-                    if worker not in self.skip:
-                       log.info("Running worker next in queue")
-                       self.recipes[worker[1]].run()
-                       log.info("Finished worker next in queue")
-        finally:  # write reports even if the pipeline only runs partially
-            ## this is no longer needed -- the log is opened directly in the correct location
-            # os.remove(caracal.BASE_CARACAL_LOG)
-            # pipeline_logs = sorted(glob.glob(self.logs + '/*caracal.txt'))
-            # shutil.copyfile(pipeline_logs[-1], '{0:s}/log-caracal.txt'.format(self.output))
-            if REPORTS and self.generate_reports:
-                reporter = mrr(self)
-                reporter.generate_reports()

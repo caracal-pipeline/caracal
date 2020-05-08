@@ -4,7 +4,7 @@ mapping:
     type: str
     required: true
 
-  observation_config:
+  obsconf:
     type: map
     desc: Setup some basic observation information
     mapping:
@@ -39,7 +39,7 @@ mapping:
               enable:
                 desc: Enable this segment
                 type: bool
-                example: "False"
+                example: "True"
                 required: false
               plotter:
                 desc: Application to use for making plots
@@ -78,7 +78,7 @@ mapping:
         required: false
         example: 'longest'
       reference_antenna:
-        desc: Reference antenna. 
+        desc: Reference antenna, which can be identified by an antenna name or number.
         type: str
         required: true
         example: '0'

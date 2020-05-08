@@ -1,3 +1,4 @@
+# -*- coding: future_fstrings -*-
 import os, shutil, glob, copy
 import numpy as np
 import sys
@@ -5,25 +6,26 @@ import caracal
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from astropy.coordinates import Angle, SkyCoord
-from astropy import units as u 
-from astropy.wcs import WCS 
+from astropy import units as u
+from astropy.wcs import WCS
 from regions import PixCoord, write_ds9, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
 NAME = 'Direction-dependent Calibration'
+LABEL = "ddcal"
 
 
 def worker(pipeline, recipe, config):
-    npix = config['image_dd'].get('npix')
-    cell = config['image_dd'].get('cell')
-    colname = config['image_dd'].get('column')
-    use_mask = config['image_dd'].get('use_mask')
-    fit_spectral_pol = config['image_dd'].get('fit_spectral_pol')
-    ddsols_t = config['calibrate_dd'].get('dd_dd_timeslots_int')
-    ddsols_f = config['calibrate_dd'].get('dd_dd_channel_int')
-    dist_ncpu = config['calibrate_dd'].get('dist_ncpu')
-    label = config.get('label')
-    USEPB = config.get('use_pb')
+    npix = config['image_dd']['npix']
+    cell = config['image_dd']['cell']
+    colname = config['image_dd']['column']
+    use_mask = config['image_dd']['use_mask']
+    fit_spectral_pol = config['image_dd']['fit_spectral_pol']
+    ddsols_t = config['calibrate_dd']['dd_dd_timeslots_int']
+    ddsols_f = config['calibrate_dd']['dd_dd_channel_int']
+    dist_ncpu = config['calibrate_dd']['dist_ncpu']
+    label = config['label']
+    USEPB = config['use_pb']
     pipeline.set_cal_msnames(label)
     mslist = pipeline.cal_msnames
     hires_mslist = pipeline.hires_msnames
@@ -39,47 +41,46 @@ def worker(pipeline, recipe, config):
     #print("ms_dict",ms_dict)
     if not os.path.exists(OUTPUT):
        os.mkdir(OUTPUT)
-    de_sources_mode = config['calibrate_dd'].get('de_sources_mode')
+    de_sources_mode = config['calibrate_dd']['de_sources_mode']
     if de_sources_mode == 'manual' :
-        de_targets =  config['calibrate_dd'].get('de_target_manual')
-        de_sources =  config['calibrate_dd'].get('de_sources_manual')
+        de_targets =  config['calibrate_dd']['de_target_manual']
+        de_sources =  config['calibrate_dd']['de_sources_manual']
         if len(de_targets)!=len(de_sources):
             caracal.log.error("The number of targets for de calibration does not match sources, please recheck.")
             sys.exit(1)
         de_dict = dict(zip(de_targets, de_sources))
-    else: 
+    else:
         de_targets = all_targets
-    
     print(de_targets)
-    
+
     dd_image_opts = {
         "Data-MS"        : mslist,
-        "Data-ColName"   : config['image_dd'].get('data_colname'),
-        "Data-ChunkHours"       : config['image_dd'].get('data_chunkhours'),
-        "Output-Mode"           : config['image_dd'].get('output_mode'),
+        "Data-ColName"   : config['image_dd']['data_colname'],
+        "Data-ChunkHours"       : config['image_dd']['data_chunkhours'],
+        "Output-Mode"           : config['image_dd']['output_mode'],
         "Output-Name"    : prefix+"-DD-precal",
         "Output-Images"  : 'dmcrioekzp',
         "Image-NPix"     : npix,
         "Image-Cell"     : cell,
-        "Facets-NFacets" : config['image_dd'].get('facets_nfacets'),
-        "Weight-ColName" : config['image_dd'].get('weight_column'),
-        "Weight-Mode"    : config['image_dd'].get('weight_mode'),
-        "Weight-Robust"  : config['image_dd'].get('weight_robust'),
-        "Freq-NBand"     : config['image_dd'].get('freq_nband'),
-        "Freq-NDegridBand" : config['image_dd'].get('freq_ndegridband'),
-        "Deconv-RMSFactor"      : config['image_dd'].get('deconv_rmsfactor'),
-        "Deconv-PeakFactor"     : config['image_dd'].get('deconv_peakfactor'),
-        "Deconv-Mode"       : config['image_dd'].get('deconv_mode'),
-        "Deconv-MaxMinorIter"   :  config['image_dd'].get('deconv_maxminoriter'),
-        "Deconv-Gain"          : config['image_dd'].get('deconv_gain'),
-        "Deconv-FluxThreshold" : config['image_dd'].get('deconv_fluxthreshold'),
-        "Deconv-AllowNegative": config['image_dd'].get('deconv_allownegative'),
-        "Hogbom-PolyFitOrder": config['image_dd'].get('hogbom_polyfitorder'),
-        "Parallel-NCPU" : config['image_dd'].get('parallel_ncpu'),
-        "Predict-ColName"       : config['image_dd'].get("predict_colname"), 
-        "Log-Memory"            : config['image_dd'].get("log_memory"),
-        "Cache-Reset"           : config['image_dd'].get("cache_reset"),
-        "Log-Boring"            : config["image_dd"].get("log_boring"),}
+        "Facets-NFacets" : config['image_dd']['facets_nfacets'],
+        "Weight-ColName" : config['image_dd']['weight_column'],
+        "Weight-Mode"    : config['image_dd']['weight_mode'],
+        "Weight-Robust"  : config['image_dd']['weight_robust'],
+        "Freq-NBand"     : config['image_dd']['freq_nband'],
+        "Freq-NDegridBand" : config['image_dd']['freq_ndegridband'],
+        "Deconv-RMSFactor"      : config['image_dd']['deconv_rmsfactor'],
+        "Deconv-PeakFactor"     : config['image_dd']['deconv_peakfactor'],
+        "Deconv-Mode"       : config['image_dd']['deconv_mode'],
+        "Deconv-MaxMinorIter"   :  config['image_dd']['deconv_maxminoriter'],
+        "Deconv-Gain"          : config['image_dd']['deconv_gain'],
+        "Deconv-FluxThreshold" : config['image_dd']['deconv_fluxthreshold'],
+        "Deconv-AllowNegative": config['image_dd']['deconv_allownegative'],
+        "Hogbom-PolyFitOrder": config['image_dd']['hogbom_polyfitorder'],
+        "Parallel-NCPU" : config['image_dd']['parallel_ncpu'],
+        "Predict-ColName"       : config['image_dd']["predict_colname"],
+        "Log-Memory"            : config['image_dd']["log_memory"],
+        "Cache-Reset"           : config['image_dd']["cache_reset"],
+        "Log-Boring"            : config["image_dd"]["log_boring"],}
 
     def make_primary_beam():
         eidos_opts = {
@@ -116,12 +117,12 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/cleanmask", "mask_ddf-precal-{0:s}".format(field),{
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits'.format(output_folder,field),
-                 'sigma' : config['image_dd'].get('mask_sigma'),
-                 'boxes' : config['image_dd'].get('mask_boxes'),
-                 'iters' : config['image_dd'].get('mask_iters'),
-                 'overlap': config['image_dd'].get('mask_overlap'),
+                 'sigma' : config['image_dd']['mask_sigma'],
+                 'boxes' : config['image_dd']['mask_boxes'],
+                 'iters' : config['image_dd']['mask_iters'],
+                 'overlap': config['image_dd']['mask_overlap'],
                  'no-negative': True,
-                 'tolerance': config['image_dd'].get('mask_tolerance'),
+                 'tolerance': config['image_dd']['mask_tolerance'],
                  }, input=INPUT, output = OUTPUT, label='mask_ddf-precal-{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []
@@ -160,17 +161,17 @@ def worker(pipeline, recipe, config):
                  #'image' : '{0:s}:output'.format(imagename),
                  'image' : '{0:s}:output'.format(imname),
                  'output' : '{0:s}mask_ddf_precal_{1:s}.fits:output'.format(output_folder,field),
-                 'sigma' : config['image_dd'].get('mask_sigma'),
-                 'boxes' : config['image_dd'].get('mask_boxes'),
-                 'iters' : config['image_dd'].get('mask_iters'),
-                 'overlap': config['image_dd'].get('mask_overlap'),
+                 'sigma' : config['image_dd']['mask_sigma'],
+                 'boxes' : config['image_dd']['mask_boxes'],
+                 'iters' : config['image_dd']['mask_iters'],
+                 'overlap': config['image_dd']['mask_overlap'],
                  'no-negative': True,
-                 'tolerance': config['image_dd'].get('mask_tolerance'),
+                 'tolerance': config['image_dd']['mask_tolerance'],
                  }, input=INPUT, output = OUTPUT, label='mask_ddf-postcal-{0:s}:: Make a mask for the initial ddf image'.format(field))
             recipe.run()
             recipe.jobs = []
 
-        if use_mask:  
+        if use_mask:
             dd_maskopt = {"Mask-External" : "mask_ddf_postcal_{0:s}.fits:output".format(field)}
             dd_image_opts_postcal.update(dd_maskopt)
 
@@ -218,11 +219,11 @@ def worker(pipeline, recipe, config):
         key = 'calibrate_dd'
         #make a skymodel with only dE taggable sources.
         #de_only_model = 'de-only-model.txt'
-        de_sources_mode = config[key].get('de_sources_mode')
+        de_sources_mode = config[key]['de_sources_mode']
         print("de_sources_mode:", de_sources_mode)
        # if usepb:
        #    model_cube = prefix+"-DD-precal.cube.int.model.fits"
-       # else: 
+       # else:
        #    model_cube = prefix+"-DD-precal.cube.app.model.fits"
         outdir = field+"_ddcal"
         if de_sources_mode == 'auto':
@@ -233,8 +234,8 @@ def worker(pipeline, recipe, config):
             "ds9-reg-file": "de-{0:s}.reg:output".format(field),
             "ds9-tag-reg-file" : "de-clusterleads-{0:s}.reg:output".format(field),
             "noise-map" : prefix+"_"+field+"-DD-precal.app.residual.fits",
-            "sigma" : config[key].get('sigma'),
-            "min-distance-from-tracking-centre" : config[key].get('min_dist_from_phcentre'),
+            "sigma" : config[key]['sigma'],
+            "min-distance-from-tracking-centre" : config[key]['min_dist_from_phcentre'],
            }
 
            recipe.add('cab/catdagger', 'tag_sources-auto_mode', catdagger_opts,input=INPUT,
@@ -246,23 +247,23 @@ def worker(pipeline, recipe, config):
            #print("Imagefile",imagefile)
            #print("Pipeline output", pipeline.output)
            w = WCS(imagefile)
-           #coords =  config[key].get('de_sources_manual')
+           #coords =  config[key]['de_sources_manual']
            print(de_dict)
            sources_to_tag = de_dict[field.replace("_","-")]
            reg = []
            for j in range(len(sources_to_tag.split(";"))):
                coords = sources_to_tag.split(";")[j]
                size = coords.split(",")[2]
-               coords_str = coords.split(",")[0]+" "+coords.split(",")[1] 
+               coords_str = coords.split(",")[0]+" "+coords.split(",")[1]
                #print("Coordinate String", coords_str)
-               centre = SkyCoord(coords_str, unit='deg') 
-               separation = int(size) * u.arcsec 
+               centre = SkyCoord(coords_str, unit='deg')
+               separation = int(size) * u.arcsec
                #print("Size",separation)
                xlist = []
                ylist = []
                for i in range(5):
                  ang_sep = (306/5)*i*u.deg
-                 p = centre.directional_offset_by(ang_sep,separation) 
+                 p = centre.directional_offset_by(ang_sep,separation)
                  pix = PixCoord.from_sky(p,w)
                  xlist.append(pix.x)
                  ylist.append(pix.y)
@@ -271,7 +272,7 @@ def worker(pipeline, recipe, config):
                reg.append(region_dd)
            regfile = "de-{0:s}.reg".format(field)
            ds9_file = os.path.join(OUTPUT,outdir,regfile)
-           write_ds9(reg,ds9_file,coordsys='physical') 
+           write_ds9(reg,ds9_file,coordsys='physical')
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'
@@ -288,27 +289,27 @@ def worker(pipeline, recipe, config):
            step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/cubical', step, {
               "data-ms"           : ms,
-              "data-column"       : config[key].get('dd_data_column'),
-              "out-column"        : config[key].get('dd_out_data_column'),
-              "weight-column"     : config[key].get('dd_weight_column'),
+              "data-column"       : config[key]['dd_data_column'],
+              "out-column"        : config[key]['dd_out_data_column'],
+              "weight-column"     : config[key]['dd_weight_column'],
               "sol-jones"         : "G,DD",  # Jones terms to solve
-              "sol-min-bl"        : config[key].get('sol_min_bl'),  # only solve for |uv| > 300 m
-              "sol-stall-quorum"  : config[key].get('dd_sol_stall_quorum'),
-              "g-type"            : config[key].get('dd_g_type'),
-              "g-clip-high"       : config[key].get('dd_g_clip_high'),
-              "g-clip-low"        : config[key].get('dd_g_clip_low'),
+              "sol-min-bl"        : config[key]['sol_min_bl'],  # only solve for |uv| > 300 m
+              "sol-stall-quorum"  : config[key]['dd_sol_stall_quorum'],
+              "g-type"            : config[key]['dd_g_type'],
+              "g-clip-high"       : config[key]['dd_g_clip_high'],
+              "g-clip-low"        : config[key]['dd_g_clip_low'],
               "g-solvable"        : True,
-              "g-update-type"     : config[key].get('dd_g_update_type'),
-              "g-max-prior-error" : config[key].get('dd_g_max_prior_error'),
-              "dd-max-prior-error" : config[key].get('dd_dd_max_prior_error'),
-              "g-max-post-error"  : config[key].get('dd_g_max_post_error'),
-              "dd-max-post-error"  : config[key].get('dd_dd_max_post_error'),
-              "g-time-int"        : config[key].get('dd_g_timeslots_int'),
-              "g-freq-int"        : config[key].get('dd_g_channel_int'),
+              "g-update-type"     : config[key]['dd_g_update_type'],
+              "g-max-prior-error" : config[key]['dd_g_max_prior_error'],
+              "dd-max-prior-error" : config[key]['dd_dd_max_prior_error'],
+              "g-max-post-error"  : config[key]['dd_g_max_post_error'],
+              "dd-max-post-error"  : config[key]['dd_dd_max_post_error'],
+              "g-time-int"        : config[key]['dd_g_timeslots_int'],
+              "g-freq-int"        : config[key]['dd_g_channel_int'],
               "dist-ncpu"         :  0,
-              "dist-nworker"      : config[key].get('dist_nworker'),
-              "dist-max-chunks"   : config[key].get('dist_nworker'),
-              "dist-max-chunks"   : config[key].get('dist_nworker'),
+              "dist-nworker"      : config[key]['dist_nworker'],
+              "dist-max-chunks"   : config[key]['dist_nworker'],
+              "dist-max-chunks"   : config[key]['dist_nworker'],
             #  "model-beam-pattern": prefix+"'_$(corr)_$(reim).fits':output",
             #  "montblanc-feed-type": "linear",
             #  "model-beam-l-axis" : "px",
@@ -330,18 +331,18 @@ def worker(pipeline, recipe, config):
               "out-mode"          : 'sr',
               "out-model-column"  : "MODEL_OUT",
               #"data-freq-chunk"   : 1*ddsols_f,
-              #"data-time-chunk"   : 1*ddsols_t,              
-              "data-time-chunk"   : ddsols_t*int(min(1,config[key].get('dist_nworker'))) if (ddsols_f==0 or config[key].get('dd_g_channel_int')== 0) else ddsols_t*int(min(1,np.sqrt(config[key].get('dist_nworker')))),
-              "data-freq-chunk"   : 0 if (ddsols_f==0 or config[key].get('dd_g_channel_int')== 0) else ddsols_f*int(min(1, np.sqrt(config[key].get('dist_nworker')))),
+              #"data-time-chunk"   : 1*ddsols_t,
+              "data-time-chunk"   : ddsols_t*int(min(1,config[key]['dist_nworker'])) if (ddsols_f==0 or config[key]['dd_g_channel_int']== 0) else ddsols_t*int(min(1,np.sqrt(config[key]['dist_nworker']))),
+              "data-freq-chunk"   : 0 if (ddsols_f==0 or config[key]['dd_g_channel_int']== 0) else ddsols_f*int(min(1, np.sqrt(config[key]['dist_nworker']))),
               "sol-term-iters"    : "[50,90,50,90]",
               "madmax-plot"       : False,
               "out-plots"          : True,
-              #"madmax-enable"     : config[key].get('madmax_enable'),
-              #"madmax-threshold"  : config[key].get('madmax_threshold'),
-              #"madmax-global-threshold": config[key].get('madmax_global_threshold'),
-              #"madmax-estimate"   : "corr",
+              "madmax-enable"     : config[key]['madmax_enable'],
+              "madmax-threshold"  : config[key]['madmax_threshold'],
+              "madmax-global-threshold": config[key]['madmax_global_threshold'],
+              "madmax-estimate"   : "corr",
               #"out-casa-gaintables" : True,
-              "degridding-NDegridBand": config['image_dd'].get('freq_ndegridband'),
+              "degridding-NDegridBand": config['image_dd']['freq_ndegridband'],
               'degridding-MaxFacetSize': 0.15,
                },
                input=INPUT,
@@ -364,36 +365,36 @@ def worker(pipeline, recipe, config):
                input=INPUT,
                output=OUTPUT+"/"+outdir,
                label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field))
-      
+
     def img_wsclean(mslist,field):
         key='image_wsclean'
         outdir = field+"_ddcal"
-        imweight = config[key].get('img_ws_weight')
+        imweight = config[key]['img_ws_weight']
         pref = "DD_wsclean"
         mspref = mslist[0].split('.ms')[0].replace('-','_')
         step = 'img_wsclean-{0:s}-{1:s}'.format(mspref,field)
         recipe.add('cab/wsclean', step, {
             "msname": mslist,
-            "column": config[key].get('img_ws_column'),
-            "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key].get('img_ws_robust')),
-            "nmiter": sdm.dismissable(config[key].get('img_ws_nmiter')),
-            "npix": config[key].get('img_ws_npix'),
-            "padding": config[key].get('img_ws_padding'),
-            "scale": config[key].get('img_ws_cell', cell),
+            "column": config[key]['img_ws_column'],
+            "weight": imweight if not imweight == 'briggs' else 'briggs {}'.format(config[key]['img_ws_robust']),
+            "nmiter": sdm.dismissable(config[key]['img_ws_nmiter']),
+            "npix": config[key]['img_ws_npix'],
+            "padding": config[key]['img_ws_padding'],
+            "scale": config[key]['img_ws_cell', cell],
             "prefix": '{0:s}_{1:s}'.format(pref, field),
-            "niter": config[key].get('img_ws_niter'),
-            "mgain": config[key].get('img_ws_mgain'),
-            "pol": config[key].get('img_ws_pol'),
-            "taper-gaussian": sdm.dismissable(config[key].get('img_ws_uvtaper')),
-            "channelsout": config[key].get('img_ws_nchans'),
-            "joinchannels": config[key].get('img_ws_joinchannels'),
-            "local-rms": config[key].get('img_ws_local_rms'),
-            "fit-spectral-pol": config[key].get('img_ws_fit_spectral_pol'),
-            "auto-threshold": config[key].get('img_ws_auto_threshold'),
-            "auto-mask": config[key].get('img_ws_auto_mask'),
-            "multiscale": config[key].get('img_ws_multi_scale'),
-            "multiscale-scales": sdm.dismissable(config[key].get('img_ws_multi_scale_scales')),
-            "savesourcelist": True if config[key].get('img_ws_niter')>0 else False,
+            "niter": config[key]['img_ws_niter'],
+            "mgain": config[key]['img_ws_mgain'],
+            "pol": config[key]['img_ws_pol'],
+            "taper-gaussian": sdm.dismissable(config[key]['img_ws_uvtaper']),
+            "channelsout": config[key]['img_ws_nchans'],
+            "joinchannels": config[key]['img_ws_joinchannels'],
+            "local-rms": config[key]['img_ws_local_rms'],
+            "fit-spectral-pol": config[key]['img_ws_fit_spectral_pol'],
+            "auto-threshold": config[key]['img_ws_auto_threshold'],
+            "auto-mask": config[key]['img_ws_auto_mask'],
+            "multiscale": config[key]['img_ws_multi_scale'],
+            "multiscale-scales": sdm.dismissable(config[key]['img_ws_multi_scale_scales']),
+            "savesourcelist": True if config[key]['img_ws_niter']>0 else False,
         },
         input=INPUT,
         output=OUTPUT+"/"+outdir,
@@ -410,15 +411,15 @@ def worker(pipeline, recipe, config):
            recipe.add('cab/crystalball', step, {
                "ms": ms,
                "sky-model": crystalball_model+':output',
-               "spectra": config[key].get('dd_spectra'),
-               "row-chunks": config[key].get('dd_row_chunks'),
-               "model-chunks": config[key].get('dd_model_chunks'),
-               "exp-sign-convention": config[key].get('dd_exp_sign_convention'),
-               "within": sdm.dismissable(config[key].get('dd_within') or None),
-               "points-only": config[key].get('dd_points_only'),
-               "num-sources": sdm.dismissable(config[key].get('dd_num_sources')),
-               "num-workers": sdm.dismissable(config[key].get('dd_num_workers')),
-               "memory-fraction": config[key].get('dd_memory_fraction'),
+               "spectra": config[key]['dd_spectra'],
+               "row-chunks": config[key]['dd_row_chunks'],
+               "model-chunks": config[key]['dd_model_chunks'],
+               "exp-sign-convention": config[key]['dd_exp_sign_convention'],
+               "within": sdm.dismissable(config[key]['dd_within'] or None),
+               "points-only": config[key]['dd_points_only'],
+               "num-sources": sdm.dismissable(config[key]['dd_num_sources']),
+               "num-workers": sdm.dismissable(config[key]['dd_num_workers']),
+               "memory-fraction": config[key]['dd_memory_fraction'],
              },
                input=INPUT,
                output=OUTPUT+"/"+outdir,

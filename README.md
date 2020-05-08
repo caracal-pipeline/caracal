@@ -28,6 +28,7 @@ pip install -U pip setuptools wheel
 pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
 # pip install -U caracal # available soon, once Caracal's first release is out
 ```
+**Ignore any error messages concerning pyregion**
 
 If using [Docker](https://www.docker.com):
 ```

@@ -1,0 +1,356 @@
+type: map
+mapping: 
+  schema_version:
+    type: str
+    required: true
+
+  crosscal:
+    type: map
+    desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration).
+    mapping:
+      enable: 
+        desc: Execute the crosscal worker.
+        type: bool
+        required: true
+        example: 'True'
+      label_in:
+        desc: Label of the .MS file(s) to work on.
+        type: str
+        required: true
+        example: 'cal'
+      label_cal:
+        desc: Label for output files (calibration tables, images).
+        type: str
+        required: false
+        example: '1gc1'
+      rewind_flags:
+        desc: Rewind flags to version specified by "version" below, and delete all flag versions that had been saved after it.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the rewind_flags segement.
+            type: bool
+            required: false
+            example: 'False'
+          version: 
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+            type: str
+            required: false
+            example: 'auto'
+      overwrite_flag_versions:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        required: false
+        example: 'False'
+      uvrange: 
+        desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
+        type: str
+        required: false
+        example: '>50'
+      casa_version: 
+        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
+        type: str
+        required: false
+        example: '47'
+      set_model:
+        desc: Fill in the MODEL column of the .MS file(s) for the field selected by "field" below in preparation for crosscalibration. This can use CASA setjy for point-source models, or MeqTrees for available local sky models.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the set_model segment.
+            type: bool
+            required: false
+            example: 'True'
+          caracal_model:
+            desc: Use sky models available in CARACal. At the moment this includes PKS1934-638 and 0408-6545 MeerKAT sky models.
+            type: bool
+            required: false
+            example: 'False'
+          no_verify:
+            desc: Enables setting standard manually [???].
+            type: bool
+            required: false
+            example: 'False'
+          field:
+            desc: Set the field to execute the set_model segment on. Specify either the field number, field name or field specification as per obsconf worker (e.g., "fcal").
+            type: str 
+            required: false
+            example: 'fcal'
+          threads:
+            type: int
+            desc: Number of threads used by MeqTrees if caracal_model above is enabled.
+            required: false
+            example: '8'
+      primary_cal:
+        type: map
+        desc: Calibrating on the bandpass/flux calibrator field.
+        mapping:
+          reuse_existing_gains:
+            desc: Reuse gain tables if they exist. Note that this does not check whether the existing tables were obtained with the same Caracal settings. Use with caution.
+            type: bool
+            required: false
+            example: "False"
+          order:
+            desc: Order in which to solve for gains for this field. E.g, if order is set to 'KGB', then we solve for delays, then gains and finally bandpass. The full options are 1) K - delay calibration, 2) G - gain calibration (decide whether to solve for amplitude, phase or  both with 'calmode' below), 3) B - bandpass calibration, 4) A - automatic flagging with CASA tfcrop (existing gains will be applied first).
+            type: str
+            required: false
+            example: KGB
+          B_solnorm:
+            type: bool
+            required: false
+            desc: Normalise average solution amplitude to 1.0
+            example: "False"
+          calmode:
+            desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
+            seq:
+              - type: str
+            required: false
+            example: "a, ap, ap"
+          solint:
+            desc: For each step in 'order' above, set the solution interval. Set to 'inf' to obtain a single solution (see also 'combine' below). Include time units, e.g., '120s' or '2min'.
+            seq:
+              - type: str
+            required: false
+            example: "120s, 120s, inf"
+          combine:
+            desc: For each step in 'order' above, set along what axis the data should be combined before solving. Options are '' (i.e., no data combination; solutions break at obs, scan, field, and spw boundarie), 'obs', 'scan', 'spw', 'field'. To combine along multiple axes use comma-separated axis names in a single string, e.g., 'obs,scan'. This setting is only relevant for the steps of type K, G and B included in 'order' above. For A steps this setting is ignored and an empty string may be used.
+            seq:
+              - type: str
+            required: false
+            example: "'', '', scan"
+          B_fillgaps:
+            desc: Fill flagged solution channels by interpolation.
+            type: int
+            required: false
+            example: "70"
+          plotgains:
+            desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
+            type: bool
+            required: false
+            example: "True"
+          flag:
+            type: map
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
+            mapping:
+              column:
+                type: str
+                desc: Data column to flag on
+                example: "corrected"
+                required: false
+                enum: [corrected, residual]
+              usewindowstats:
+                type: str
+                desc: Calculate additional flags using sliding window statistics
+                enum: ["none", "sum", "std", "both"]
+                example: "std"
+                required: false
+              combinescans:
+                type: bool
+                desc: Accumulate data across scans depending on the value of ntime
+                example: "False"
+                required: false
+              flagdimension:
+                type: str
+                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
+                enum: [freq, time, freqtime, timefreq]
+                example: freqtime
+                required: false
+              timecutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "4.0"
+                required: false
+              freqcutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "3.0"
+                required: false
+              correlation:
+                type: str
+                desc: Correlation
+                example: ""
+                required: false
+      secondary_cal:
+        type: map
+        desc: Calibrating on the gain calibrator field.
+        mapping:
+          reuse_existing_gains:
+            desc: Reuse gain tables if they exist. Note that this does not check whether the existing tables were obtained with the same Caracal settings. Use with caution.
+            type: bool
+            required: false
+            example: "False"
+          apply:
+            type: str
+            desc: Calibration terms solved for in the primary_cal segment that should be applied to the secondary calibrator before solving for the terms in 'order' below.
+            required: false
+            example: B
+          order:
+            type: str
+            required: false
+            desc: Order of the calibration/flagging/imaging steps for the secondary calibrator. E.g, if order is set to 'KGAF', we solve for delays, then for gains, after that the existing gains (KG) are applied before flagging the calibrated data, and finally, we solve for gains and transfer the flux scale from the primary_cal step. The full options are 1) K - delay calibration; 2) G - gain calibration (set whether to solve for amplitude, phase or both with 'calmode' below); 3) F - same as G, but imedietly followed by a fluxscale. Note that a G table must exist from the primary_cal step for this work; 4) B - bandpass calibration; 5) A - automatic flagging with CASA tfcrop (existing gains will be applied first); 6) I - imaging with WSClean using the settings in 'image' below, which fills the MODEL column of  the .MS file(s) with a sky model and, therefore, enables self-calibration with a subsequent G step.
+            example: KGAF
+          calmode:
+            desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
+            seq:
+              - type: str
+            required: false
+            example: "a, ap, None, ap"
+          solint:
+            desc: For each step in 'order' above, set the solution interval. Set to 'inf' to obtain a single solution (see also 'combine' below). Include time units, e.g., '120s' or '2min'.
+            seq:
+              - type: str
+            required: false
+            example: "120s, inf, None 120s"
+          combine:
+            desc: For each step in 'order' above, set along what axis the data should be combined before solving. Options are '' (i.e., no data combination; solutions break at obs, scan, field, and spw boundarie), 'obs', 'scan', 'spw', 'field'. To combine along multiple axes use comma-separated axis names in a single string, e.g., 'obs,scan'. This setting is only relevant for the steps of type K, G and B included in 'order' above. For A steps this setting is ignored and an empty string may be used.
+            seq:
+              - type: str
+            required: false
+            example: "'', '', None, ''"
+          B_solnorm:
+            type: bool
+            required: false
+            desc: Normalise average solution amplitude to 1.0
+            example: "False"
+          plotgains:
+            desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
+            type: bool
+            required: false
+            example: "True"
+          flag:
+            type: map
+            desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
+            mapping:
+              column:
+                type: str
+                desc: Data column to flag on
+                example: "corrected"
+                required: false
+                enum: [corrected, residual]
+              usewindowstats:
+                type: str
+                desc: Calculate additional flags using sliding window statistics
+                enum: ["none", "sum", "std", "both"]
+                example: "std"
+                required: false
+              combinescans:
+                type: bool
+                desc: Accumulate data across scans depending on the value of ntime
+                example: "False"
+                required: false
+              flagdimension:
+                type: str
+                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq)
+                enum: [freq, time, freqtime, timefreq]
+                example: freqtime
+                required: false
+              timecutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "4.0"
+                required: false
+              freqcutoff:
+                type: float
+                desc: Flagging thresholds in units of deviation from the fit
+                example: "3.0"
+                required: false
+              correlation:
+                type: str
+                desc: Correlation
+                example: ""
+                required: false
+          image:
+            desc: Image settings for imaging secondary calibrator
+            type: map
+            mapping:
+              npix:
+                type: int
+                desc: Number of pixels in output image
+                required: false
+                example: '4096'
+              padding:
+                type: float
+                desc: Padding in WSclean
+                required: false
+                example: '1.5'
+              mgain:
+                type: float
+                desc: Image CLEANing gain
+                required: false
+                example: '0.85'
+              cell:
+                type: float
+                desc: Image pixel size (arcsec)
+                required: false
+                example: '0.5'
+              weight:
+                type: str
+                enum: ["briggs", "uniform", "natural"]
+                desc: Image weighting type. If Briggs, set the img robust parameter
+                required: false
+                example: 'briggs -1.0'
+              auto_mask:
+                type: float 
+                desc: Auto masking threshold
+                required: false
+                example: '10'
+              auto_threshold:
+                type: float
+                desc: Auto clean threshold
+                required: false
+                example: '1.5'
+              column:
+                type: str
+                desc: Column to image
+                required: false
+                example: 'CORRECTED_DATA'
+              local_rms:
+                type: bool
+                desc: switch on local rms measurement for cleaning
+                required: false
+                example: 'True'
+              rms_window:
+                type: int
+                desc: switch on local rms measurement for cleaning
+                required: false
+                example: '150'
+              niter:
+                type: int
+                desc: Number of cleaning iterations
+                required: false
+                example: '120000'
+              nchans:
+                type: int
+                desc: Number of channesls in output image
+                required: false
+                example: '7'
+              fit_spectral_pol:
+                type: int
+                desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
+                required: false
+                example: '2'
+      apply_cal:
+        type: map
+        desc: Apply calibration
+        mapping:
+          applyto:
+            seq:
+              - type: str
+            desc: Fields to apply calibration to
+            required: false
+            example: "bpcal, gcal, target"
+          calmode:
+            type: str
+            desc: Calibration mode, the default being "calflag" - calibrates and applies flags from solutions. See CASA documentation for info on other modes.
+            enum: ["=", "calflag", "calflagstrict", "trial", "flagonly", "flagonlystrict"]
+            required: false
+            example: 'calflag'
+      flagging_summary:
+        type: map
+        desc: Prints out the buther's bill, i.e. data flagging summary at the end of cross calibration process. 
+        mapping:
+          enable: 
+            type: bool
+            desc: Execute printing flagging summary.            
+            required: false
+            example: 'True'

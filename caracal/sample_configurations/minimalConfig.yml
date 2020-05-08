@@ -3,34 +3,36 @@ schema_version: 0.3.0
 general:
   prefix: mypipelinerun
 
-get_data:
+getdata:
   dataid: ['']
 
-observation_config:
+obsconf:
   target: 
-    - 'all'
+    - all
   fcal: 
-    - 'longest'
+    - longest
   bpcal: 
-    - 'longest'
+    - longest
   gcal: 
-    - 'all'
+    - all
   xcal: 
-    - 'longest'
+    - longest
   reference_antenna: '0'
 
-prepare_data:
+transform:
   enable: true
-
-transform_data:
-  enable: true
-  label_out: 'cal'
+  label_out: cal
   split_field:
     enable: true
-    field: 'calibrators'
-    column: 'data'
+    field: calibrators
+    column: data
 
-flagging:
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+
+flag:
   enable: true
   field: calibrators 
   label_in: cal
@@ -42,11 +44,10 @@ flagging:
   flag_shadow:
     enable: true
     
-cross_cal:
+crosscal:
   enable: true
-  label_in: 'cal'
+  label_in: cal
   apply_cal:
-    enable: true
     applyto:
       - gcal
       - bpcal
@@ -54,20 +55,25 @@ cross_cal:
 polcal:
   enable: false
 
-inspect_data:
-  label_in: 'cal'
-  label_out: '1gc'
+inspect:
+  label_in: cal
+  label_out: 1gc
   enable: true
 
-transform_data__2:
+transform__2:
   enable: true
   split_field:
     enable: true
     otfcal:
       enable: true
-      label_cal: '1gc1'
+      label_cal: 1gc1
   
-flagging__2:
+prep__2:
+  enable: true
+  label_in: corr 
+  field: target
+
+flag__2:
   enable: true
   field: target 
   label_in: corr
@@ -75,10 +81,10 @@ flagging__2:
     enable: true
     flagger: aoflagger
     
-masking:
+mask:
   enable: false
 
-self_cal:
+selfcal:
   enable: true
   img_npix: 1800
   img_cell: 2
@@ -89,7 +95,7 @@ self_cal:
     enable: true
     Gsols_timeslots: [120]
 
-image_line:
+line:
   enable: true
   restfreq: '1.420405752GHz'
   make_cube:

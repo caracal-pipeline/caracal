@@ -61,7 +61,7 @@ SS="/dev/null"
 IA=5
 endimessage=""
 ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
-SHORT_TEST_DATA_IDS=( "1477074305.subset" )
+SHORT_TEST_DATA_IDS=( "1532022061_subset" )
 
 # current working directory
 cwd=`pwd`
@@ -1587,6 +1587,7 @@ then
 	    }
 
     isalternative=0
+    
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final ALTERNATIVE_TEST_DATA_IDS && isin ALTERNATIVE_TEST_DATA_IDS dataid_final
     then
@@ -1596,7 +1597,7 @@ then
     # Warn if these are unusual data sets
     if [[ -n ${DA} ]] || [[ -n ${SA} ]]
     then
-	if [[ isalternative != 1 ]]
+	if [[ ${isalternative} != 1 ]]
 	then
 	    echo "You intend to use unusual data sets for switches"
 	    echo "--docker-alternative, -da, --singularity-alternative, or -sa"
@@ -1605,8 +1606,8 @@ then
 	    if [[ -z ${OR} ]]
 	    then
 		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+		echo ""
 	    fi
-	    echo ""
 	fi
     fi
     
@@ -1620,7 +1621,7 @@ then
     # Warn if these are unusual data sets
     if [[ -n ${DM} ]] || [[ -n ${SM} ]]
     then
-	if [[ isshort != 1 ]]
+	if [[ ${isshort} != 1 ]]
 	then
 	    echo "You intend to use unusual data sets for switches"
 	    echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
@@ -1874,7 +1875,6 @@ then
 	echo ""
     else
 	echo "Fetching CARACal from local source ${local_caracal}"
-	echo
         echo "cp -r \${local_caracal} \${workspace_root}/" >> ${SS}
 	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL} ${WORKSPACE_ROOT}/
     fi
@@ -2056,7 +2056,8 @@ then
     then
 	echo "CARACal release: ${CR}" >> ${SYA}
     else
-	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || { \
+	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
+	[[ -n ${CARATE_LOCAL_CARACAL} ]] || { \
 	    echo "CARACal build from master at https://github.com/ska-sa/caracal" >> ${SYA};\
 	}
     fi
@@ -2207,10 +2208,10 @@ then
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-	[[ -z ${OR} ]] || pruneforce=' -f'
+	[[ -z ${OR} ]] || pruneforce='-f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
-        [[ -n ${OP} ]] || { ss_docker+="docker system prune"; ss_docker+=$'\n'; }
-        [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker ${pruneforce} system prune
+        [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
+        [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
         if [[ -n $PD ]]
         then
 	    ii=1
@@ -2264,6 +2265,8 @@ then
     fi
 fi
 
+echo ""
+
 testingoutput () {
 
     # Function to test output after running a pipeline
@@ -2290,9 +2293,9 @@ testingoutput () {
     # Check here
     allogs=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/ || echo ""`
 #    allogs=`ls -t ${1}/${2}/output/logs/` || true
-    caracallog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-caracal-*.txt | head -1 || echo ""`
+    caracallog=`[[ -e ${1}/${2}/output/logs ]] && ls -t ${1}/${2}/output/logs/log-caracal*.txt | head -1 || echo ""`
     [[ ${caracallog} == "" ]] && unset caracallog
-#    caracallog=`ls -t ${1}/${2}/output/logs/log-caracal-*.txt.txt | head -1 || true`
+#    caracallog=`ls -t ${1}/${2}/output/logs/log-caracal*.txt.txt | head -1 || true`
     [[ -z ${caracallog} ]] || { reporting+="This CARACal run is logged in ${caracallog}"; reporting+=$'\n'; }
     [[ -z ${caracallog} ]] || { caracallogsh=`echo ${caracallog} | sed '{s=.*/==;}'`; }
     total=0
@@ -2542,7 +2545,7 @@ runtest () {
 	    } || { \
 		echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
 		[[ -n ${FS} ]] || \
-		    cp -r ${stringcopytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		    cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	    } \
 	}
 	
@@ -2585,7 +2588,7 @@ runtest () {
     echo "" >> ${SYA_RUNTEST}
     
     # Make a copy of the logfile
-    caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal-*.txt | head -1 || echo ""`
+    caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal*.txt | head -1 || echo ""`
     [[ ! -f ${caracallog} ]] || cp ${caracallog} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}-log-caracal.txt
     echo "Checking output of ${configfilename} ${contarch} test"
     failedoutput=0
@@ -2760,7 +2763,6 @@ runtestsample () {
 
     echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
     echo "${WORKSPACE_ROOT}/${trname}"
-
     echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS}
     mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
     if [[ -d ${CARATE_INPUT_DIR} ]]
@@ -2772,7 +2774,6 @@ runtestsample () {
 	    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 	    }
     fi
-
     # Check if source msdir is identical to the target msdir. If yes, don't copy
     d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
     e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
@@ -2787,7 +2788,7 @@ runtestsample () {
 		cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
 	} \
     }
-	
+
     #We need to take the config file from the meerkat input to our test directoru, always
     cp ${inputconfiglocation} ${configlocation}
 

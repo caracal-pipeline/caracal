@@ -267,13 +267,13 @@ def worker(pipeline, recipe, config):
                 if not pipeline.enable_task(config, plotname):
                     continue
                 opts = diagnostic_plots[plotname][plotter]
-                if plotter == "ragavi_vis":
-                    opts["num-cores"] = config["num_cores"]
-                    opts["mem-limit"] = config["mem_limit"]
                 if opts is None:
                     log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(
                         plotter, plotname))
                     continue
+                elif plotter == "ragavi_vis":
+                        opts["num-cores"] = config["num_cores"]
+                        opts["mem-limit"] = config["mem_limit"]
 
                 if plotter == "shadems":
                     # change the labels to indices

@@ -141,6 +141,6 @@ mapping:
             example: 'thresh'
           thresh_lev:
             type: float
-            desc: Cutoff to select sources in the SUMSS map, corrected for the primary beam (Jy) or cutoff in sigmas for sofia source finder
+            desc: Flux-density threshold for selecting sources in the SUMSS map, corrected for the primary beam. Value given is in units of Jy, or is the minimum signal-to-noise ratio (i.e. number of sigma_rms), used for SoFiA source-finding.
             required: false
             example: '8e-2'

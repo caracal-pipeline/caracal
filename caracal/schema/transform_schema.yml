@@ -53,7 +53,7 @@ mapping:
             required: false
             example: 'target'
           time_average:
-            desc: Apply time averaging to the data.
+            desc: Apply time averaging to the data. If left as an empty string, '', then no time averaging is applied.
             type: str
             required: false
             example: ''
@@ -98,7 +98,7 @@ mapping:
                 required: false
                 example: ''
               label_cal:
-                desc: Label of calibration tables to be used.
+                desc: Label of the calibration tables to be used.
                 type: str
                 required: false
                 example: '1gc1'

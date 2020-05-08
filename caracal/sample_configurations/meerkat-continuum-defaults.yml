@@ -33,8 +33,7 @@ prep:
     enable: false
   manage_flags: 
     enable: true
-    mode: save_legacy_flags
-    version: caracal_legacy
+    mode: legacy
   spectral_weights:
     enable: true
     mode: uniform

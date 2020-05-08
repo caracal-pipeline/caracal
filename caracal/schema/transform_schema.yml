@@ -53,12 +53,12 @@ mapping:
             required: false
             example: 'target'
           time_average:
-            desc: Apply time averaging to the data. If left as an empty string, '', then no time averaging is applied.
+            desc: Apply time averaging to the data. If set to '' or '0s', then no time averaging is applied. Otherwise, the time bin should be given in units of seconds. 
             type: str
             required: false
             example: ''
           freq_average:
-            desc: Apply frequency averaging to the data.
+            desc: Apply frequency averaging to the data. 
             type: int
             required: false
             example: '1'

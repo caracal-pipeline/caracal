@@ -44,7 +44,7 @@ from caracal import log
 ####################################################################
 
 
-def print_worker_help(args, schema_version=None):
+def print_worker_help(args):
     """
     worker help
     """
@@ -307,9 +307,9 @@ def main(argv):
     else:
         args.schema = {}
 
-    with open(args.config, 'r') as f:
-        tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
-        arg_groups["schema_version"] = schema_version = tmp["schema_version"]
+    # with open(args.config, 'r') as f:
+    #     tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+    #     arg_groups["schema_version"] = schema_version = tmp["schema_version"]
 
     if args.worker_help:
         print_worker_help(args)

@@ -289,7 +289,7 @@ class config_parser:
         cls = self.__class__
         if cls.__GLOBAL_SCHEMA is None:
             raise ValueError("No schemas were parsed. "
-                             "Please call store_global_schama first.")
+                             "Please call store_global_schema first.")
         return copy.deepcopy(cls.__GLOBAL_SCHEMA)
 
     __HAS_BEEN_INIT = False
@@ -334,7 +334,6 @@ class config_parser:
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(
                 f, ruamel.yaml.RoundTripLoader, version=(1, 1))
-            self.schema_version = schema_version = tmp["schema_version"]
 
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
@@ -359,7 +358,6 @@ class config_parser:
             # SCHEMA VALIDATION automatically check if variables of cfg file are given with appropriate syntax
             source_data = {
                 _worker: variables,
-                "schema_version": schema_version,
             }
             c = Core(source_data=source_data, schema_files=[schema_fn])
 
@@ -376,8 +374,7 @@ class config_parser:
                 continue
 
             with open(schema_fn, 'r') as f:
-                schema = ruamel.yaml.load(
-                    f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+                schema = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
 
             groups[worker] = cls._subparser_tree(variables,
                                                  schema["mapping"][_worker],
@@ -392,8 +389,7 @@ class config_parser:
 
         args, remainder = parser.parse_known_args(args_bak)
         if len(remainder) > 0:
-            raise RuntimeError(
-                "The following arguments were not parsed: %s" ",".join(remainder))
+            raise RuntimeError("The following arguments were not parsed: %s" ",".join(remainder))
 
         # store keywords as ordereddDict and namespace
         #cls.__store_args(args, groups)
@@ -523,7 +519,6 @@ class config_parser:
         parser = cls._parser
         with open(args.config, 'r') as f:
             tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
-            schema_version = tmp["schema_version"]
 
         groups = OrderedDict()
         global_schema = OrderedDict()
@@ -541,11 +536,9 @@ class config_parser:
             if update_mode == "defaults and args":  # new parset, re-validate
                 source_data = {
                     _key: worker,
-                    "schema_version": schema_version,
                 }
                 c = Core(source_data=source_data, schema_files=[schema_fn])
-                cls.__validated_schema[key] = c.validate(
-                    raise_exception=True)[_key]
+                cls.__validated_schema[key] = c.validate(raise_exception=True)[_key]
 
             with open(schema_fn, 'r') as f:
                 schema = ruamel.yaml.load(
@@ -567,7 +560,6 @@ class config_parser:
             raise RuntimeError(
                 "Singleton must be initialized before this method is called")
         dictovals = copy.deepcopy(cls.__GROUPS)
-        dictovals["schema_version"] = self.schema_version
 
         with open(filename, 'w') as f:
             f.write(yaml.dump(dictovals, Dumper=ruamel.yaml.RoundTripDumper))

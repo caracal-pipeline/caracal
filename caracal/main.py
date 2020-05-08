@@ -232,7 +232,7 @@ def execute_pipeline(args, arg_groups, block):
             cdb = mkct.calibrator_database()
 
             pipeline = mwa(arg_groups,
-                           args.workers_directory, stimela_build=args.stimela_build,
+                           args.workers_directory,
                            add_all_first=False,  prefix=args.general_prefix,
                            configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
                            container_tech=args.container_tech, start_worker=args.start_worker,

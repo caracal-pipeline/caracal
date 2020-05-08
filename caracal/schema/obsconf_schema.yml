@@ -28,7 +28,7 @@ mapping:
             required: false
             example: 'True'
           vampirisms:
-            desc: Return the time range over which the observation does not contain the sun.
+            desc: Return the time range over which observations were taken at night.
             type: bool
             required: false
             example: 'False'            

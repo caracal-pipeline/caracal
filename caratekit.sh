@@ -161,9 +161,9 @@ do
     then
         KP=1
     fi
-    if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
+    if [[ "$arg" == "--no-pull-docker" ]] || [[ "$arg" == "-np" ]]
     then
-        PD=1
+        NP=1
     fi
     if [[ "$arg" == "--workspace" ]] || [[ "$arg" == "-ws" ]]
     then
@@ -421,7 +421,7 @@ then
     echo "                                      CARATE_WORKSPACE"
     echo ""
     echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
-    echo "                                      to re-invoke pip, to run stimela build,"
+    echo "                                      to re-invoke pip, to run stimela pull,"
     echo "                                      etc."
     echo ""
     echo "  --virtualenv ARG -ve ARG            Use ARG instead of internal virtualenv"
@@ -462,7 +462,7 @@ then
     echo "  --docker-installation -di           Test Docker installation/install Docker"
     echo "                                      Stimela (no installation if -os is set)"
     echo ""
-    echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
+    echo "  --no-pull-docker -np                Do not run stimela pull -d (only Docker)"
     echo "                                      omit the step when switch is not set"
     echo ""
     echo "  --omit-docker-prune -op             Do not prune system during docker install"
@@ -656,8 +656,8 @@ echo "    system prune is invoked, and docker stimela is installed (stimela"
 echo "    build). If switches --omit-stimela-reinstall or -os are set, this is"
 echo "    not done"
 echo ""
-echo "  - when switches --pull-docker, -pd are set, stimela pull -d is"
-echo "    invoked before running stimela build for Docker installation, omit"
+echo "  - when switches --no-pull-docker, -np are set, stimela pull -d is"
+echo "    invoked for a Stimela Docker installation, omit this"
 echo "    step otherwise. If switches --omit-stimela-reinstall or -os are"
 echo "    set, this is not done"
 echo ""
@@ -2212,7 +2212,7 @@ then
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
-        if [[ -n $PD ]]
+        if [[ -z ${NP} ]]
         then
 	    ii=1
 	    until (( ${ii} > ${IA} ))
@@ -2260,7 +2260,7 @@ then
 #	    echo "${sya_docker}" >> ${SYA}
 #	    exit 1
 #	fi
-#    echo ""
+    echo ""
     fi
 fi
 

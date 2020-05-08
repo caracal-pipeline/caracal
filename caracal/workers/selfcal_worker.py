@@ -1078,7 +1078,7 @@ def worker(pipeline, recipe, config):
                                     no_ant/(flux**2*2.)/int_time)
                     gsols_[0] = int(solvetime/num)
                 elif solvetime >= prev_solvetime and matrix_type == 'GainDiag':
-                    gsols_[0] = int(prev_solvetime/num)
+                    gsols_[0] = int(prev_solvetime/num-1)
                     reset_cal = 2
                 else:
                     gsols_[0] = int(solvetime/num)
@@ -1715,6 +1715,7 @@ def worker(pipeline, recipe, config):
         "Examine the aimfast results to see if they meet specified conditions"
         # If total number of iterations is reached stop
         global reset_cal
+
         if enable:
             # The recipe has to be executed at this point to get the image fidelity results
 
@@ -1727,7 +1728,7 @@ def worker(pipeline, recipe, config):
             tolerance = config[key]['tolerance']
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if n >= 2:
+            if n >= 2 and not config['cal_meqtrees']['two_step']:
                 conv_crit = config[key]['convergence_criteria']
                 conv_crit = [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
@@ -2091,27 +2092,26 @@ def worker(pipeline, recipe, config):
                     os.mkdir(selfcal_products)
                 calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
-            if reset_cal < 2:
-                mask_key=config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image']['clean_mask_method']) > self_cal_iter_counter else -1]
-                if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
-                    sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
-                    recipe.run()
-                    recipe.jobs = []
-                self_cal_iter_counter += 1
-                image_path = "{0:s}/image_{1:d}".format(
-                     pipeline.continuum, self_cal_iter_counter)
-                if not os.path.exists(image_path):
-                    os.mkdir(image_path)
-                if pipeline.enable_task(config, 'image'):
-                    image(target_iter, self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), mslist, field)
-                if pipeline.enable_task(config, 'extract_sources'):
-                    extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
-                        image_path, pipeline), field)
-                if pipeline.enable_task(config, 'aimfast'):
-                    image_quality_assessment(
-                        self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
+            mask_key=config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image']['clean_mask_method']) > self_cal_iter_counter else -1]
+            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+                sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
+                    image_path, pipeline), field)
+                recipe.run()
+                recipe.jobs = []
+            self_cal_iter_counter += 1
+            image_path = "{0:s}/image_{1:d}".format(
+                 pipeline.continuum, self_cal_iter_counter)
+            if not os.path.exists(image_path):
+                os.mkdir(image_path)
+            if pipeline.enable_task(config, 'image'):
+                image(target_iter, self_cal_iter_counter, get_dir_path(
+                    image_path, pipeline), mslist, field)
+            if pipeline.enable_task(config, 'extract_sources'):
+                extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
+                    image_path, pipeline), field)
+            if pipeline.enable_task(config, 'aimfast'):
+                image_quality_assessment(
+                    self_cal_iter_counter, get_dir_path(image_path, pipeline), field)
 
         # Copy plots from the selfcal_products to the diagnotic plots IF calibrate OR transfer_gains is enabled
         if pipeline.enable_task(config, 'calibrate') or pipeline.enable_task(config, 'transfer_apply_gains'):
@@ -2270,16 +2270,6 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
-                recipe.run()
-                # Empty job que after execution
-                recipe.jobs = []
-                summary_log = glob.glob("{0:s}/logs/log-{1:s}-"
-                                        "flagging_summary-"
-                                        "selfcal-ms{2:d}-*"
-                                        ".txt".format(pipeline.output, wname, i))[0]
-                json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname)
-                manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
-
 
         if pipeline.enable_task(config, 'transfer_model'):
             image_path = "{0:s}/image_{1:d}".format(pipeline.continuum,

@@ -33,12 +33,12 @@ mapping:
            type: int
            desc: Number of pixels in the image. Note that DDFacet has its own super-special scheme to decide the actual number of pixels, so this is only an approximation.
            required: False
-           example: "8000"
+           example: '8000'
          use_mask: 
            type: bool
            desc: Enable clean mask for DDFacet initial imaging. Note that this doubles the imaging time since it runs DDFacet twice -- once to get a preliminary image to make a mask with (mask is made by the cleanmask tool), and once to get the final image with masking. Previous WSClean masks cannot be used because pixel numbers might be different.
            required: False
-           example: "True"
+           example: 'True'
          mask_sigma: 
            type: float
            desc: The number of standard deviations (i.e. sigma_rms) to use when clipping the initial image for masking.
@@ -68,7 +68,7 @@ mapping:
            type: float
            desc: Pixel size in arcsec.
            required: False
-           example: "1.3"
+           example: '1.3'
          facets_nfacets: 
            type: int
            desc: Number of facets to use, and is the same as the Facets-NFacets parameter of DDFacet.
@@ -79,18 +79,18 @@ mapping:
           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
           desc: Read data weights from the specified column. Options are WEIGHT_SPECTRUM, WEIGHT, and (for rarer occasions) IMAGING_WEIGHT.
           required: false
-          example: "WEIGHT"
+          example: 'WEIGHT'
          weight_mode:
           type: str
           desc: UV weighting mode. Options are 'Natural', 'Uniform', 'Robust', and 'Briggs'.
           enum: ["Natural", "Uniform", "Robust", "Briggs"]
           required: false
-          example: "Briggs"
+          example: 'Briggs'
          weight_robust:
           type: float
           desc: Briggs robustness parameter, from -2 (more uniform) to 2 (more natural).
           required: false
-          example: "-0.4"
+          example: '-0.4'
          deconv_maxminoriter:
            type: int
            desc: Number of clean iterations.
@@ -98,28 +98,28 @@ mapping:
            example: '100000'
          freq_nband:
            type: int
-           desc: Number of image bands for gridding.
+           desc: Number of frequency bands for gridding.
            required: false
            example: '10'
          freq_ndegridband:
            type: int
-           desc: Number of image bands for degridding. 0 means degrid each channel.
+           desc: Number of frequency bands for degridding. 0 means degrid each channel.
            required: false
            example: '15'
          deconv_rmsfactor:
            type: float
-           desc:  Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom), where X is this parameter value.
+           desc:  Set the minor-cycle stopping-threshold to X*{residual RMS}, where X is this parameter value.
            required: false
            example: '0.0'
          deconv_peakfactor:
            type: float
-           desc: Sets minor cycle stopping threshold to X*{peak residual} (HMP, Hogbom), where X is this parameter value.
+           desc: Set the minor-cycle stopping-threshold to X*{peak residual}, where X is this parameter value.
            required: false
            example: '0.25'
          deconv_mode:
            type: str
-           enum: ["HMP","Hogbom","SSD", "GAClean"]
-           desc: Deconvolution algorithm. Direct your queries to DDFacet Developers for more details on this.
+           enum: ["HMP", "Hogbom", "SSD", "GAClean"]
+           desc: The deconvolution algorithm to use. Options are 'HMP' (Hybrid Matching Pursuit, aka multiscale/multifrequency), 'Hogbom' (Hogbom's CLEAN algorithm), 'SSD' (SubSpace Deconvolution algorithm), and 'GAClean' (Genetic Algorithm Clean). Direct your queries to DDFacet Developers for more details on this.
            required: false
            example: "Hogbom"
          deconv_gain:

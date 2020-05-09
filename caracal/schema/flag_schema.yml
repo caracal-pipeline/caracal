@@ -34,7 +34,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable segment 'rewind_flags'.
+            desc: Enable the 'rewind_flags' segment.
             type: bool
             required: False
             example: 'False'
@@ -53,7 +53,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the unflag segment.
+            desc: Enable the 'unflag' segment.
             type: bool
             required: False
             example: 'False'
@@ -62,7 +62,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_autopowerspec segment.
+            desc: Enable the 'flag_autopowerspec' segment.
             type: bool
             required: False
             example: 'False'
@@ -91,7 +91,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_autocorr segment.
+            desc: Enable the 'flag_autocorr' segment.
             type: bool
             required: False
             example: 'False'
@@ -100,7 +100,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_quack segment.
+            desc: Enable the 'flag_quack' segment.
             type: bool
             required: False
             example: 'False'
@@ -120,7 +120,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_elevation segment.
+            desc: Enable the 'flag_elevation' segment.
             type: bool
             required: False
             example: 'False'
@@ -139,7 +139,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enables the flag_shadow segment.
+            desc: Enable the 'flag_shadow' segment.
             type: bool
             required: False
             example: 'False'
@@ -158,7 +158,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_spw segment.
+            desc: Enable the 'flag_spw' segment.
             type: bool
             required: False
             example: 'False'
@@ -177,7 +177,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_time segment.
+            desc: Enable the 'flag_time' segment.
             type: bool
             required: False
             example: 'False'
@@ -196,7 +196,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_scan segment.
+            desc: Enable the 'flag_scan' segment.
             type: bool
             required: False
             example: 'False'
@@ -210,7 +210,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_antennas segment.
+            desc: Enable the 'flag_antennas' segment.
             type: bool
             required: False
             example: 'False'
@@ -234,7 +234,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_mask segment.
+            desc: Enable the 'flag_mask' segment.
             type: bool
             required: False
             example: 'False'
@@ -253,7 +253,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the flag_rfi segment.
+            desc: Enable the 'flag_rfi' segment.
             type: bool
             required: False
             example: 'False'
@@ -346,7 +346,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the inspect segment.
+            desc: Enable the 'inspect' segment.
             type: bool
             required: False
             example: 'False'
@@ -396,7 +396,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the summary segment.
+            desc: Enable the 'summary' segment.
             type: bool
             required: False
             example: 'True'

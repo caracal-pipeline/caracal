@@ -1016,7 +1016,7 @@ def worker(pipeline, recipe, config):
                 model = int(model)
                 calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
                     img_dir, prefix, field, model)
-                fits_model = '{0:s}/{1:s}_{2:s}_{2:d}-pybdsm.fits'.format(
+                fits_model = '{0:s}/{1:s}_{2:s}_{2:s}-pybdsm.fits'.format(
                     img_dir, prefix, field, model)
 
             modelcolumn = ''
@@ -1127,9 +1127,13 @@ def worker(pipeline, recipe, config):
             outdata = config[key]['output_data'][num-1 if len(config[key]['output_data']) >= num else -1]
             if outdata == 'CORRECTED_DATA':
                 outdata = 'CORR_DATA'
+            model_cal = calmodel.split("/")[-1]
+            model_cal = model_cal.strip(":output")
+            inp_dir = pipeline.output+"/"+img_dir+"/"
+            op_dir = pipeline.continuum+"/selfcal_products/"
             recipe.add('cab/calibrator', step,
                        {
-                           "skymodel": calmodel,
+                           "skymodel" : model_cal,
                            "add-vis-model": vismodel,
                            "model-column": modelcolumn,
                            "msname": msname,
@@ -1137,8 +1141,9 @@ def worker(pipeline, recipe, config):
                            "column": incolumn,
                            "output-data": outdata,
                            "output-column": outcolumn,
-                           "prefix": '{0:s}/{1:s}_{2:s}_{3:d}_meqtrees'.format(get_dir_path(prod_path, pipeline),
-                                                                               pipeline.dataid[i], msname[:-3], num),
+
+                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(pipeline.dataid[i], msname[:-3], num),
+                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(pipeline.dataid[i], msname[:-3], num),
                            "label": 'cal{0:d}'.format(num),
                            "read-flags-from-ms": True,
                            "read-flagsets": "-stefcal",
@@ -1158,8 +1163,8 @@ def worker(pipeline, recipe, config):
                            "make-plots": False,
                            "tile-size": time_chunk,
                        },
-                       input=pipeline.input,
-                       output=pipeline.output,
+                       input=inp_dir,
+                       output=op_dir,
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     def calibrate_cubical(trg, num, prod_path, img_dir, mslist, field):
@@ -2174,6 +2179,8 @@ def worker(pipeline, recipe, config):
                 aimfast_plots = glob.glob(
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
+                    if os.path.isfile(plot):
+                        os.remove(plot)
                     shutil.move(plot, plot_path)
 
         if pipeline.enable_task(config, 'calibrate'):

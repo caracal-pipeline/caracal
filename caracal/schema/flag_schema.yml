@@ -215,7 +215,7 @@ mapping:
             required: False
             example: 'False'
           antennas:
-            desc: Antennas to flag. Follows the CASA Flagdata syntax.
+            desc: Use CASA FLAGDATA syntax for selecting antennas to flag.
             type: str
             required: False
             example: '0'
@@ -225,12 +225,12 @@ mapping:
             required: False
             example: ''
           ensure_valid_selection:
-            desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
+            desc: Check whether the timerange is in the MS being considered. This stops the pipeline from crashing when multiple datasets are being processed.
             type: bool
             required: False
             example: 'False'
       flag_mask:
-        desc: Apply static mask to flag out known RFI, Meerkat specific.
+        desc: Apply a static mask to flag known RFI.
         type: map
         mapping:
           enable:
@@ -239,7 +239,7 @@ mapping:
             required: False
             example: 'False'
           mask:
-            desc: The mask to apply.
+            desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
             type: str
             required: False
             example: 'labelled_rfimask.pickle.npy'

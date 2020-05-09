@@ -146,18 +146,21 @@ def worker(pipeline, recipe, config):
                 tms = '{0:s}_{1:s}.ms'.format(
                        msname, label_out)
 
-            if config['rewind_flags']["enable"]:
-                version = config['rewind_flags']["version"]
-                if version == 'auto':
-                    version = flags_before_worker
-                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
-                manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
-                available_flagversions = manflags.get_flags(pipeline, fms)
-                if available_flagversions[-1] != version:
-                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        fms, cab_name=substep)
+            # Rewind flags
+            available_flagversions = manflags.get_flags(pipeline, fms)
+            if config['rewind_flags']['enable']:
+                version = config['rewind_flags']['version']
+                if version in available_flagversions:
+                    substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
+                    manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
+                    if available_flagversions[-1] != version:
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, target_iter)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            fms, cab_name=substep)
+                else:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, fms,
+                        config, flags_before_worker, flags_after_worker)
 
             flagv = tms+'.flagversions'
 
@@ -190,8 +193,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
 
-                substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, target_iter)
-                manflags.add_cflags(pipeline, recipe, flags_after_worker, tms,
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', tms,
                     cab_name=substep, overwrite=False)
 
             obsinfo_msname = tms if pipeline.enable_task(

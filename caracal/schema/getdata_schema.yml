@@ -21,7 +21,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment mvftoms.
+            desc: Enable the 'mvftoms' segment.
             required: false
             example: 'False'
           tar: 
@@ -46,7 +46,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment untar.
+            desc: Enable the 'untar' segment.
             required: false
             example: 'False'
           tar_options: 
@@ -61,7 +61,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment combine.
+            desc: Enable the 'combine' segment.
             required: false
             example: 'False'
           reset:
@@ -74,7 +74,7 @@ mapping:
             type: map
             mapping:
               enable: 
-                desc: Execute section tar.
+                desc: Enable the 'tar' segment.
                 type: bool
                 required: false
                 example: 'False'
@@ -88,7 +88,7 @@ mapping:
             type: map
             mapping:
               enable: 
-                desc: Execute section untar.
+                desc: Enable the 'untar' segment.
                 type: bool
                 required: false
                 example: 'False'

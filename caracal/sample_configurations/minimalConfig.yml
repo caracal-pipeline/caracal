@@ -1,4 +1,4 @@
-schema_version: 0.3.0
+schema_version: 1.0.0
 
 general:
   prefix: mypipelinerun
@@ -33,6 +33,7 @@ flag:
     enable: true
   flag_shadow:
     enable: true
+  report: true
     
 crosscal:
   enable: true
@@ -41,6 +42,7 @@ crosscal:
     applyto:
       - gcal
       - bpcal
+  report: true
 
 polcal:
   enable: false
@@ -48,6 +50,7 @@ polcal:
 inspect:
   label_in: cal
   label_out: 1gc
+  dirname: crosscal
   enable: true
 
 transform__2:
@@ -70,6 +73,7 @@ flag__2:
   flag_rfi:
     enable: true
     flagger: aoflagger
+  report: true
     
 mask:
   enable: false
@@ -84,6 +88,7 @@ selfcal:
   calibrate:
     enable: true
     Gsols_timeslots: [120]
+  report: true
 
 line:
   enable: true
@@ -97,3 +102,4 @@ line:
     doppler:
       enable: true
       telescope: meerkat
+  report: true

@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   line:
     desc: Process visibilities for spectral line work and create line cubes and images.
     type: map
@@ -46,12 +42,12 @@ mapping:
             example: 'reset_worker'
           version:
             type: str
-            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above. Set to "null" to skip this rewinding step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             example: 'auto'
             required: false
           mstransform_version:
             type: str
-            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above plus the "_mst" suffix. Set to "null" to skip this rewind step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above plus the "_mst" suffix. Set to "null" to skip this rewind step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             example: 'auto'
             required: false
       overwrite_flag_versions:
@@ -533,3 +529,8 @@ mapping:
             type: str
             required: false
             example: ''
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

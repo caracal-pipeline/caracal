@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: True
-
   flag:
     desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
@@ -45,7 +41,7 @@ mapping:
             required: false
             example: 'reset_worker'
           version:
-            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
             type: str
             required: false
             example: 'auto'
@@ -406,3 +402,8 @@ mapping:
             type: bool
             required: False
             example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

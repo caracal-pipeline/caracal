@@ -28,17 +28,25 @@ import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
-REPORTS = False
+# GIGJ commenting lines initiating a report
+# try:
+#    import caracal.scripts as scripts
+#    from caracal.scripts import reporter as mrr
+#    REPORTS = True
+# except ImportError:
+#    log.warning(
+#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
+#    REPORTS = False
+REPORTS = True
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
                  prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
-                 container_tech='docker', generate_reports=False):
+                 container_tech='docker', generate_reports=True):
 
         self.config = config
-        self.add_all_first = add_all_first
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
         self.msdir = self.config['general']['msdir']
@@ -71,7 +79,8 @@ class worker_administrator(object):
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
-        sys.path.append(self.workers_directory)
+        if workers_directory:
+            sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
         # general, getdata and obsconf are all mendatory. 
@@ -248,20 +257,26 @@ class worker_administrator(object):
                 subprocess.check_call(["cp", "-r", f, self.input])
 
         # Copy standard notebooks
-        if self.config['general']['init_notebooks']:
-            notebooks.setup_default_notebooks(self.config['general']['init_notebooks'],
-                                              output_dir=self.output, prefix=self.prefix,
-                                              config=self.config)
+        self._init_notebooks = self.config['general']['init_notebooks']
+        self._report_notebooks = self.config['general']['report_notebooks']
+        all_nbs = set(self._init_notebooks) | set(self._report_notebooks)
+        if all_nbs:
+            notebooks.setup_default_notebooks(all_nbs, output_dir=self.output, prefix=self.prefix, config=self.config)
 
     def enable_task(self, config, task):
-        a = config.get(task)
-        if a:
-            return a['enable']
-        else:
-            False
+        return task in config and config[task].get("enable")
 
     def run_workers(self):
         """ Runs the  workers """
+        report_updated = False
+
+        for _name, _worker, i in self.workers:
+            try:
+                worker = __import__(_worker)
+            except ImportError:
+                traceback.print_exc()
+                raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
+                    _worker, self.workers_directory))
 
         active_workers = []
         # first, check that workers import, and check their configs
@@ -307,13 +322,27 @@ class worker_administrator(object):
             # 1st get correct section of config file
             log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-            # Save worker recipes for later execution
-            # execute each worker after adding its steps
 
             log.info("{0:s}: running".format(label))
             recipe.run()
             log.info("{0:s}: finished".format(label))
+
+            # this should be in the cab cleanup code, no?
+
             casa_last = glob.glob(self.output + '/*.last')
             for file_ in casa_last:
                 os.remove(file_)
 
+            # update report at end of worker if so configured
+            if self.generate_reports and config["report"]:
+                self.regenerate_reports()
+                report_updated = True
+            else:
+                report_updated = False
+
+        # generate final report
+        if self.generate_reports and not report_updated:
+            self.regenerate_reports()
+
+    def regenerate_reports(self):
+        notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)

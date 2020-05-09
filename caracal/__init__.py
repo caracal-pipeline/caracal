@@ -81,8 +81,8 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
     """A DelayedFileHandler is a variation on the MemoryHandler. It will buffer up log
     entries until told to stop delaying, then dumps everything into the target file
     and from then on logs continuously. This allows the log file to be switched at startup."""
-    def __init__(self, filename, delay=True):
-        logging.handlers.MemoryHandler.__init__(self, 100000, target=logging.FileHandler(filename, delay=True))
+    def __init__(self, filename=None, delay=True):
+        logging.handlers.MemoryHandler.__init__(self, 100000, target=filename and logging.FileHandler(filename, delay=True))
         self._delay = delay
 
     def shouldFlush(self, record):
@@ -102,6 +102,7 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
 
 LOGGER_NAME = "CARACal"
 STIMELA_LOGGER_NAME = "CARACal.Stimela"
+DEBUG = 0
 
 log = logging.getLogger(LOGGER_NAME)
 
@@ -118,7 +119,7 @@ def create_logger():
     # init stimela logger as a sublogger
     stimela.logger(STIMELA_LOGGER_NAME, propagate=True, console=False)
 
-    log_filehandler = DelayedFileHandler(CARACAL_LOG)
+    log_filehandler = DelayedFileHandler()
 
     log_filehandler.setFormatter(stimela.log_boring_formatter)
     log_filehandler.setLevel(logging.DEBUG)
@@ -128,7 +129,9 @@ def create_logger():
 
 def init_console_logging(boring=False, debug=False):
     """Sets up console logging"""
-    global log_console_handler, log_console_formatter
+    global log_console_handler, log_console_formatter, DEBUG
+
+    DEBUG = debug
 
     log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 

@@ -242,7 +242,7 @@ mapping:
             desc: The mask to apply.
             type: str
             required: False
-            example: 'labelled_rfimask.pickle.npy'
+            example: ''
           uvrange:
             desc: UV range to select (CASA style range, e.g. lower~upper) for flagging. Leave blank for entire array.
             type: str

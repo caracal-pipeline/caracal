@@ -2163,6 +2163,18 @@ then
     kill "$PPID"; exit 1
 fi
 
+if [[ -e ${HOME}/.stimela ]]
+then
+    [[ -n ${FS} ]] || [[ -n ${ORSR} ]] || { \
+	echo "#######################" ; \
+	echo " Running stimela clean " ; \
+	echo "#######################" ; \
+	echo "" ; \
+	echo "stimela clean -ac" >> ${SS} ; \
+	stimela clean -ac ; \
+    }
+fi
+
 if [[ -z ${ORSR} ]]
 then
     checkex ${HOME}/.stimela || { \
@@ -2910,7 +2922,8 @@ then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
     ###### export SINGULARITY_CACHEDIR=$CARATE_WORKSPACE/.singularity
-    if [[ -n "$SR" ]]
+    
+    if [[ -n ${SR} ]]
     then
 	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity
 	singularity_locstring="\${workspace}/stimela-singularity"
@@ -2918,6 +2931,7 @@ then
 	singularity_loc=${WORKSPACE_ROOT}/stimela-singularity
 	singularity_locstring="\${workspace_root}/stimela-singularity"
     fi
+    
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]]
     then
         if [[ -e ${singularity_loc} ]]
@@ -2981,11 +2995,14 @@ then
 	    exit 1
 	fi
     fi
-
+    echo got here
+    echo "\${singularity_loc} ${singularity_loc}"
     # Size of images
     outsize=`du -ms ${singularity_loc} | awk '{print $1}'`
     sya_sing+="Singularity image folder size: ${outsize} MB"; sya_sing+=$'\n'
     sya_sing+=$'\n'
+    echo ${sya_sing}
+    echo got here 2
 fi
 
 if [[ -n ${SM} ]]

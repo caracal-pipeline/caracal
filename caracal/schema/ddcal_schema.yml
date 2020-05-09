@@ -15,9 +15,9 @@ mapping:
        example: 'False'
      label:
         type: str
-        desc: Label of the .MS files to process.
+        desc: Label of the .MS files to process. By default uses the 'corr' label for self-calibrated dataset.
         required: False
-        example: 'DD'
+        example: 'corr'
      use_pb:
         type: bool
         desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
@@ -26,7 +26,7 @@ mapping:
 
      image_dd:
        type: map
-       desc: Imaging parameters for DD calibration loop with DDFacet
+       desc: Imaging parameters for DD calibration with DDFacet. 
        mapping:
          enable:
            type: bool
@@ -35,12 +35,12 @@ mapping:
            example: 'True'
          npix:
            type: int
-           desc: Number of pixels in the image. 
+           desc: Number of pixels in the image. Note that DDFacet has its own super-special scheme to decide the actual number of pixels, so this is only an approximation.
            required: False
            example: "8000"
          use_mask: 
            type: bool
-           desc: Enable masks for DDfacet initial imaging.
+           desc: Enable clean mask for DDfacet initial imaging. Doubles the imaging time since it runs DDFacet twice, once to get a preliminary image to make a mask with (mask is made by the cleanmask tool) and once the final image with masking. Previous wsclean masks can't be used because pixel numbers might be different.
            required: False
            example: "True"
          mask_sigma: 
@@ -60,7 +60,7 @@ mapping:
            example: '20'
          mask_overlap: 
            type: float
-           desc: Overlap region for the boxes. As a fraction of -nb/--boxes
+           desc: Overlap region for the boxes. As a fraction of number of boxes.
            required: False
            example: '0.3' 
          mask_tolerance:
@@ -75,7 +75,7 @@ mapping:
            example: "1.3"
          facets_nfacets: 
            type: int
-           desc: Number of facets to use, same as Facets-NFacets.
+           desc: Number of facets to use, same as Facets-NFacets parameter of DDFacet.
            required: false
            example: '24'
          weight_column: 
@@ -86,89 +86,89 @@ mapping:
           example: "WEIGHT"
          weight_mode:
           type: str
-          desc: "UV weighting mode"
+          desc: UV weighting mode.
           enum: ["Natural", "Uniform", "Robust", "Briggs"]
           required: false
           example: "Briggs"
          weight_robust:
           type: float
-          desc: "Briggs robustness parameter, from -2 (more uniform) to 2 (more natural)"
+          desc: Briggs robustness parameter, from -2 (more uniform) to 2 (more natural).
           required: false
           example: "-0.4"
          deconv_maxminoriter:
            type: int
-           desc: Number of clean iterations
+           desc: Number of clean iterations.
            required: False
            example: '100000'
          freq_nband:
            type: int
-           desc: "N Number of image bands for gridding."
+           desc: Number of image bands for gridding.
            required: false
            example: '10'
          freq_ndegridband:
            type: int
-           desc: "N Number of image bands for degridding. 0 means degrid each channel."
+           desc: Number of image bands for degridding. 0 means degrid each channel.
            required: false
            example: '15'
          deconv_rmsfactor:
            type: float
-           desc: "X Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom)."
+           desc:  Set minor cycle stopping threshold to X*{residual RMS} (HMP, Hogbom), where X is this parameter value.
            required: false
            example: '0.0'
          deconv_peakfactor:
            type: float
-           desc: "X Set minor cycle stopping threshold to X*{peak residual} (HMP, Hogbom)."
+           desc: Sets minor cycle stopping threshold to X*{peak residual} (HMP, Hogbom), where X is this parameter value.
            required: false
            example: '0.25'
          deconv_mode:
            type: str
            enum: ["HMP","Hogbom","SSD", "GAClean"]
-           desc: "Deconvolution algorithm."
+           desc: Deconvolution algorithm. Direct your queries to DDFacet Developers for more details on this.
            required: false
            example: "Hogbom"
          deconv_gain:
            type: float
-           desc: "GAIN Loop gain (HMP, Hogbom)."
+           desc: GAIN Loop gain (HMP, Hogbom).
            required: false
            example: "0.1"
          deconv_fluxthreshold:  
            type: float
-           desc: "Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom)."
+           desc: Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom).
            required: false
            example: '1.0e-6'
          deconv_allownegative:
            type: bool
-           desc: "Allow negative components (HMP, Hogbom)."
+           desc: Allow negative components for cleaning (valid for HMP, Hogbom modes).
            required: false
            example: "True"
          hogbom_polyfitorder:
            type: int
-           desc: "HOGBOM_POLYFITORDER polynomial order for frequency fitting"
+           desc: Polynomial order for frequency fitting.
            required: false
            example: "6"
          parallel_ncpu:
            type: int
-           desc: "Number of processes / threads to use in parallel mode. 0 - all available. 1 - disable parallelism"
+           desc: Number of processes / threads to use in parallel mode. 0 - all available. 1 - disable parallelism.
            required: false
            example: "0" 
          predict_colname:
            type: str
-           desc: "MS column to write predict to. Can be left empty to disable"
+           desc: MS column to write predict to. Can be left empty to disable.
            required: false
            example: "MODEL_DATA"
          log_memory:
            type: bool
-           desc: "log memory use"
+           desc: log memory use
            required: false
            example: "True"
          cache_reset:
            type: bool
-           desc: "Reset all caches (including PSF and dirty image). Change from default at your own risk."
+           desc: Reset all caches (including PSF and dirty image). Change from default at your own risk. 
            required: false
            example: "True"
          log_boring: 
            type: bool
-           desc: "Enable progress bars and other pretty console output. Doesn't seem to work."
+           desc: Enable progress bars and other pretty console output. Doesn't seem to work. But who knows, try it out.
            required: false
            example: "True"
          data_colname:
@@ -178,18 +178,18 @@ mapping:
            example: 'CORRECTED_DATA'
          data_chunkhours: 
            type: float
-           desc: "Chunk data into time bins of x hours to conserve memory"
+           desc: Chunk data into time bins of X hours to conserve memory, where X is this parameter.
            required: false
            example: '0.05'
          output_mode:
            type: str 
            enum: ["Dirty","Clean", "Predict","PSF"]
-           desc: "Output mode"
+           desc: Output mode. Defaults to cleaning, since that's what we want to do in this worker.
            required: false
            example: "Clean"
      calibrate_dd:
        type: map
-       desc: Direction dependent calibration parameters
+       desc: Direction dependent calibration parameters.
        mapping:
          enable:
            type: bool
@@ -198,7 +198,7 @@ mapping:
            example: 'True'
          sigma:
            type: float
-           desc: Threshold to use in detecting outlier regions in images by using CatDagger. 4.5 is a good value (also default), but may need a lower value for some images.
+           desc: Threshold to use in detecting outlier regions in images by using CatDagger, which is enabled by auto mode for de_sources_mode. 4.5 is a good value (also default), but may need a lower value for some images.
            required: false
            example: '4.5'
          min_dist_from_phcentre:
@@ -258,22 +258,22 @@ mapping:
            example: 'corr'
          dd_data_column:
            type: str
-           desc: Column to calibrate
+           desc: Column to calibrate. Assumption being that you have already run the selfcal worker.
            required: false
            example: 'CORRECTED_DATA'
          dd_out_data_column:
            type: str
-           desc: Output data column
+           desc: Output data column.
            required: false
            example: 'SUBDD_DATA'
          dd_weight_column:
            type: str
-           desc: Column to read weights from. Weights are applied by default. Specify an\nempty string to disable.
+           desc: Column to read weights from. Weights are applied by default. Specify an empty string to disable.
            required: false
            example: "WEIGHT"
          dd_sol_stall_quorum: 
            type: float
-           desc: Minimum percentage of solutions which must have stalled before terminating\nthe solver.
+           desc: Minimum percentage of solutions which must have stalled before terminating the solver.
            required: false
            example: "0.95"
          dd_g_type: 
@@ -282,12 +282,12 @@ mapping:
            required: false
            example: 'complex-2x2'
          dd_g_clip_high: 
-           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones
+           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones.
            type: float
            required: false
            example: "1.5"
          dd_g_clip_low: 
-           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones
+           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones.
            type: float
            required: false
            example: "0.5"
@@ -345,17 +345,17 @@ mapping:
 
      copy_data:
        type: map
-       desc: Copy DD-calibrated data to CORRECTED_DATA column
+       desc: Copy DD-calibrated data to CORRECTED_DATA column. THIS IS DANGEROUS - only if you want to go ahead with line imaging. 
        mapping:
          enable:  
            type: bool
-           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column
+           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column.
            required: false
            example: 'True'
 
      image_wsclean:
        type: map
-       desc: Wsclean imaging paramaters for DD worker
+       desc: Wsclean imaging paramaters for DD worker.
        mapping:
          enable:
            type: bool
@@ -516,7 +516,7 @@ mapping:
            example: 'False'
          dd_num_sources:
            type: int
-           desc: Select only N brightest sources. Default is 0
+           desc: Select only N brightest sources. Default is 0.
            required: false
            example: "0"
          dd_num_workers:

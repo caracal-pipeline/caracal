@@ -92,6 +92,8 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         "canvas-height": opts['canvas-height'],
         "canvas-width": opts['canvas-width'],
         "corr": opts["corr"],
+        "mem-limit" : opts['mem-limit'],
+        "num-cores" : opts['num-cores'],
         # "cbin": int(config[plotname]['avgchannel']),
         # "colour-axis": opts.get("colour-axis", None),
         "data-column": column,
@@ -269,6 +271,9 @@ def worker(pipeline, recipe, config):
                     log.warn("The plotter '{0:s}' cannot make the plot '{1:s}'".format(
                         plotter, plotname))
                     continue
+                elif plotter == "ragavi_vis":
+                        opts["num-cores"] = config["num_cores"]
+                        opts["mem-limit"] = config["mem_limit"]
 
                 if plotter == "shadems":
                     # change the labels to indices

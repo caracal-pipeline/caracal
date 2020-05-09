@@ -29,7 +29,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable execution of 'fixvis'.
+            desc: Enable the 'fixvis' segment.
             type: bool
             required: false
             example: 'False'            
@@ -43,7 +43,7 @@ mapping:
         type: map
         mapping:
           enable: 
-            desc: Enable segment 'manage_flags'.
+            desc: Enable the 'manage_flags' segment.
             type: bool
             required: false
             example: 'True'
@@ -52,7 +52,7 @@ mapping:
             type: str
             required: false
             example: 'legacy'
-            enum: [legacy, restore]
+            enum: ["legacy", "restore"]
           version:
             desc: Name of the flag version to restore. If set to 'auto', rewind to the version <prefix>_<workername>_before, where <prefix> is set in the 'general' worker, and <workername> is the name of this worker. Note that all flag versions saved after this version will be deleted.
             type: str
@@ -63,7 +63,7 @@ mapping:
         type: map
         mapping: 
           enable: 
-            desc: Enable segment 'spectral_weights'.
+            desc: Enable the 'spectral_weights' segment.
             type: bool
             required: false
             example: 'False'

@@ -87,7 +87,7 @@ crosscal:
     calmode: [a, ap, ap, null, a, ap, ap, a]
     B_fillgaps: 70
   secondary_cal:
-    order: FAG
+    order: GAF
     apply: KB
     combine: ["", null, ""]
     solint: [inf, null, inf]

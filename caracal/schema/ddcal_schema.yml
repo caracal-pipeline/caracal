@@ -199,18 +199,18 @@ mapping:
            example: '4.5'
          min_dist_from_phcentre:
            type: int
-           desc: The radius (in number of pixels), from the centre of the image, out to which sources will not be tagged. The default is kept at 1300 (which roughly corresponds to 30').
+           desc: The radius (in number of pixels), from the centre of the image, out to which sources will not be tagged for DD-calibration. (This is because sources close to the phase centre may not have been cleaned deeply enough.) The default is kept at 1300 (which roughly corresponds to 30').
            required: false
            example: '1300'
          dist_ncpu:
            type: int
-           desc: The number of cpus.
+           desc: The number of cpus for distributed computing.
            required: false
            example: '1'
 
          de_sources_mode:
            type: str
-           desc: Mode in which dE sources are tagged. 'auto' uses catdagger, while in 'manual' mode, one needs to give a list of sources. Use 'auto' with caution and at your own risk.
+           desc: Mode in which sources are tagged for DD-calibration. Options are 'auto' (which uses catdagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
            required: false
            example: 'manual'
          de_target_manual: 

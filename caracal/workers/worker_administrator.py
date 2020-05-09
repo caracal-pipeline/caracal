@@ -79,7 +79,8 @@ class worker_administrator(object):
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
-        sys.path.append(self.workers_directory)
+        if workers_directory:
+            sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
         # general, getdata and obsconf are all mendatory. 

@@ -81,8 +81,8 @@ class DelayedFileHandler(logging.handlers.MemoryHandler):
     """A DelayedFileHandler is a variation on the MemoryHandler. It will buffer up log
     entries until told to stop delaying, then dumps everything into the target file
     and from then on logs continuously. This allows the log file to be switched at startup."""
-    def __init__(self, filename, delay=True):
-        logging.handlers.MemoryHandler.__init__(self, 100000, target=logging.FileHandler(filename, delay=True))
+    def __init__(self, filename=None, delay=True):
+        logging.handlers.MemoryHandler.__init__(self, 100000, target=filename and logging.FileHandler(filename, delay=True))
         self._delay = delay
 
     def shouldFlush(self, record):
@@ -119,7 +119,7 @@ def create_logger():
     # init stimela logger as a sublogger
     stimela.logger(STIMELA_LOGGER_NAME, propagate=True, console=False)
 
-    log_filehandler = DelayedFileHandler(CARACAL_LOG)
+    log_filehandler = DelayedFileHandler()
 
     log_filehandler.setFormatter(stimela.log_boring_formatter)
     log_filehandler.setLevel(logging.DEBUG)

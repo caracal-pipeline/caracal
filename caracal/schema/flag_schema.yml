@@ -289,20 +289,20 @@ mapping:
                 type: str
                 enum: ["numpy", "zarr-disk"]
                 required: False
-                example: 'numpy
+                example: 'numpy'
               mode:
-                desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
+                desc: If mode is set to 'manual', Tricolour uses the flagging strategy set via 'strategy' below. If mode is set to 'auto', it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
                 type: str
-                enum: ['auto', 'manual']
+                enum: ["auto", "manual"]
                 required: False
                 example: 'auto'
               strategy:
-                desc: Tricolour strategy file.
+                desc: Name of the Tricolour strategy file.
                 type: str
                 required: False
                 example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
               strategy_narrowband:
-                desc: Tricolour strategy file to be used for an MS with narrow bandwidth if mode = auto (see above).
+                desc: Name of the Tricolour strategy file to be used for an MS with narrow bandwidth, if mode = 'auto' (see above).
                 type: str
                 required: False
                 example: 'calibrator_mild_flagging.yaml'
@@ -310,13 +310,13 @@ mapping:
             type: map
             mapping:
               usewindowstats:
-                desc: Calculate additional flags using sliding window statistics.
+                desc: Calculate additional flags using sliding-window statistics. Options are 'none', 'sum', 'std', and 'both'. See usewindowstats, within documentation for CASA FLAGDATA, for further details. 
                 type: str
                 enum: ["none", "sum", "std", "both"]
                 required: False
-                example: "std"
+                example: 'std'
               combinescans:
-                desc: Accumulate data across scans depending on the value of ntime.
+                desc: Accumulate data across scans, depending on the value set for the 'ntime' parameter.
                 type: bool
                 required: False
                 example: "False"

@@ -249,7 +249,7 @@ mapping:
             required: False
             example: ''
       flag_rfi:
-        desc: Flag RFI using AOFlagger, Tricolour or CASA flagdata with tfcrop.
+        desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.
         type: map
         mapping:
           enable:
@@ -258,7 +258,7 @@ mapping:
             required: False
             example: 'False'
           flagger:
-            desc: Choose flagger for automatic flagging. Possible choices are 'aoflagger', 'tricolour' and 'tfcrop'.
+            desc: Choose flagger for automatic flagging. Options are 'aoflagger', 'tricolour' and 'tfcrop'.
             type: str
             enum: ["aoflagger", "tricolour", "tfcrop"]
             required: False
@@ -277,7 +277,7 @@ mapping:
                 required: False
                 example: 'firstpass_Q.rfis'
               ensure_valid_strategy:
-                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit CARACal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
+                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V for an .MS with XX and YY only will result in an error and CARACal exiting. The rules are 1. XY,YX must be present in order to flag on Stokes V,U (or on XY,YX), and 2. XX,YY must be present in order to flag on Stokes I,Q (or on XX,YY). Disable this parameter only if you know what you are doing.
                 type: bool
                 required: False
                 example: 'True'
@@ -285,11 +285,11 @@ mapping:
             type: map
             mapping:
               window_backend:
-                desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline.
+                desc: Visibility and flag data is re-ordered from an MS-row ordering into time-frequency windows ordered by baseline. Options are 'numpy' (if only a few scans worth of visibility data need to be re-ordered) and 'zarr-disk' (for larger data sizes, where re-ordering on disk, rather than in memory, is necessary).
                 type: str
                 enum: ["numpy", "zarr-disk"]
                 required: False
-                example: "numpy"
+                example: 'numpy
               mode:
                 desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
                 type: str

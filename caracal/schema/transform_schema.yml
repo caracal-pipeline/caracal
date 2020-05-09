@@ -29,7 +29,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Enable segment 'rewind_flags'.
+            desc: Enable the 'rewind_flags' segment.
             example: 'False'
             required: false
           version: 
@@ -43,7 +43,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment 'split_field'.
+            desc: Enable the 'split_field' segment.
             type: bool
             required: false
             example: 'True'
@@ -88,7 +88,7 @@ mapping:
             type: map
             mapping:
               enable:
-                desc: Execute segment 'otfcal'.
+                desc: Enable the 'otfcal' segment.
                 type: bool
                 required: false
                 example: 'False'
@@ -108,7 +108,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment 'changecentre'.
+            desc: Enable the 'changecentre' segment.
             type: bool
             required: false
             example: 'False'
@@ -128,7 +128,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute segment 'obsinfo'.
+            desc: Enable the 'obsinfo' segment.
             type: bool
             required: false
             example: 'True'

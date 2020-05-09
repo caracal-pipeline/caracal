@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   general:
     desc: General pipeline information, including data IDs, and prefixes for output files.
     type: map
@@ -48,5 +44,15 @@ mapping:
         seq:
           - type: str
         required: false
-        example: 'std-progress-report'
-
+        example: std-progress-report, project-logs
+      report_notebooks:
+        desc: Like init_notebooks, but will also be automatically rendered to HTML when report=True in a worker
+        seq:
+          - type: str
+        required: false
+        example: detailed-final-report
+      final_report:
+        desc: Render report_notebooks to HTML at the end of each pipeline run
+        required: false
+        type: bool
+        example: 'True'

@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: True
-
   flag:
     desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
@@ -37,9 +33,15 @@ mapping:
             desc: Enable the 'rewind_flags' segment.
             type: bool
             required: False
-            example: 'False'
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' below.
+            type: str
+            enum: ['reset_worker', 'rewind_to_version']
+            required: false
+            example: 'reset_worker'
           version:
-            desc: Flag version to rewind to. If set to 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+            desc: Flag version to rewind to. If set to 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
             type: str
             required: false
             example: 'auto'
@@ -242,7 +244,7 @@ mapping:
             desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
             type: str
             required: False
-            example: 'labelled_rfimask.pickle.npy'
+            example: ''
           uvrange:
             desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in default units of metres but, e.g., '0~1000km' and '0-500klambda' can also be specified. Leaving this parameter blank will select the entire range in UV-distance.
             type: str
@@ -401,3 +403,8 @@ mapping:
             type: bool
             required: False
             example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

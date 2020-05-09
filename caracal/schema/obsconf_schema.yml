@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   obsconf:
     type: map
     desc: Set up some basic information about the observation(s).
@@ -82,3 +78,8 @@ mapping:
         type: str
         required: true
         example: '0'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

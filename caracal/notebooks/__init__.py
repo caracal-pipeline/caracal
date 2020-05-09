@@ -29,18 +29,8 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
         # overwrite destination only if source is newer
         dest_mtime = os.path.getmtime(nbdest) if os.path.exists(nbdest) else 0
 
-        # if source exists as is, copy
-        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile)
-        if os.path.exists(nbsrc):
-            if os.path.getmtime(nbsrc) > dest_mtime:
-                log.info("Creating standard notebook {}".format(nbdest))
-                shutil.copyfile(nbsrc, nbdest)
-            else:
-                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
-            continue
-
         # if source is a template, invoke jinja
-        nbsrc = nbsrc + ".j2"
+        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile+".j2")
         if os.path.exists(nbsrc):
             if os.path.getmtime(nbsrc) > dest_mtime:
                 global _j2env
@@ -63,6 +53,17 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
             else:
                 log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
             continue
+
+        # if source exists as is, copy
+        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile)
+        if os.path.exists(nbsrc):
+            if os.path.getmtime(nbsrc) > dest_mtime:
+                log.info("Creating standard notebook {}".format(nbdest))
+                shutil.copyfile(nbsrc, nbdest)
+            else:
+                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+            continue
+
 
         log.error("Standard notebook {} does not exist".format(nbsrc))
 

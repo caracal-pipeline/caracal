@@ -43,6 +43,7 @@ flag:
     enable: true
   flag_shadow:
     enable: true
+  report: true
     
 crosscal:
   enable: true
@@ -51,6 +52,7 @@ crosscal:
     applyto:
       - gcal
       - bpcal
+  report: true
 
 polcal:
   enable: false
@@ -81,6 +83,7 @@ flag__2:
   flag_rfi:
     enable: true
     flagger: aoflagger
+  report: true
     
 mask:
   enable: false
@@ -95,6 +98,7 @@ selfcal:
   calibrate:
     enable: true
     Gsols_timeslots: [120]
+  report: true
 
 line:
   enable: true
@@ -108,3 +112,4 @@ line:
     doppler:
       enable: true
       telescope: meerkat
+  report: true

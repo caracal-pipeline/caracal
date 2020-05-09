@@ -52,7 +52,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment 'query_catalog'.
+            desc: Enable the 'query_catalog' segment.
             required: false
             example: 'true'
           catalog:
@@ -78,7 +78,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment 'pb_correction'.
+            desc: Enable the 'pb_correction' segment.
             required: false
             example: 'true'
           frequency:
@@ -93,7 +93,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment 'make_mask'.
+            desc: Enable the 'make_mask' segment.
             required: false
             example: 'true'
           mask_with:

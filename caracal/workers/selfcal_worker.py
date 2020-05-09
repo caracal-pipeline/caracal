@@ -996,7 +996,7 @@ def worker(pipeline, recipe, config):
                 model = int(model)
                 calmodel = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.lsm.html:output'.format(
                     img_dir, prefix, field, model)
-                fits_model = '{0:s}/{1:s}_{2:s}_{3:s}-pybdsm.fits'.format(
+                fits_model = '{0:s}/{1:s}_{2:s}_{3:d}-pybdsm.fits'.format(
                     img_dir, prefix, field, model)
         # If the mode is pybdsm_only, don't use any clean components. So, the same as above, but with
         #vismodel =False
@@ -2179,8 +2179,6 @@ def worker(pipeline, recipe, config):
                 aimfast_plots = glob.glob(
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
-                    if os.path.isfile(plot):
-                        os.remove(plot)
                     shutil.move(plot, plot_path)
 
         if pipeline.enable_task(config, 'calibrate'):

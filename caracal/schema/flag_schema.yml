@@ -173,7 +173,7 @@ mapping:
             required: False
             example: 'True'
       flag_time:
-        desc: Flag timerange in the data using CASA FLAGDATA task.
+        desc: Use CASA FLAGDATA to flag a specified timerange in the data.
         type: map
         mapping:
           enable:
@@ -187,12 +187,12 @@ mapping:
             required: False
             example: ''
           ensure_valid_selection:
-            desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
+            desc: Check whether the timerange is in the MS being considered. This stops the pipeline from crashing when multiple datasets are being processed.
             type: bool
             required: False
             example: 'False'
       flag_scan:
-        desc: Flag bad scans. Uses CASA Flagdata task.
+        desc: Use CASA FLAGDATA to flag bad scans.
         type: map
         mapping:
           enable:
@@ -201,7 +201,7 @@ mapping:
             required: False
             example: 'False'
           scans:
-            desc: Scans to flag. CASA flagdata syntax.
+            desc: Use CASA FLAGDATA syntax for selecting scans to flag.
             type: str
             required: False
             example: '0'

@@ -161,9 +161,9 @@ do
     then
         KP=1
     fi
-    if [[ "$arg" == "--pull-docker" ]] || [[ "$arg" == "-pd" ]]
+    if [[ "$arg" == "--no-pull-docker" ]] || [[ "$arg" == "-np" ]]
     then
-        PD=1
+        NP=1
     fi
     if [[ "$arg" == "--workspace" ]] || [[ "$arg" == "-ws" ]]
     then
@@ -421,7 +421,7 @@ then
     echo "                                      CARATE_WORKSPACE"
     echo ""
     echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
-    echo "                                      to re-invoke pip, to run stimela build,"
+    echo "                                      to re-invoke pip, to run stimela pull,"
     echo "                                      etc."
     echo ""
     echo "  --virtualenv ARG -ve ARG            Use ARG instead of internal virtualenv"
@@ -462,7 +462,7 @@ then
     echo "  --docker-installation -di           Test Docker installation/install Docker"
     echo "                                      Stimela (no installation if -os is set)"
     echo ""
-    echo "  --pull-docker -pd                   run stimela pull -d before stimela build"
+    echo "  --no-pull-docker -np                Do not run stimela pull -d (only Docker)"
     echo "                                      omit the step when switch is not set"
     echo ""
     echo "  --omit-docker-prune -op             Do not prune system during docker install"
@@ -656,8 +656,8 @@ echo "    system prune is invoked, and docker stimela is installed (stimela"
 echo "    build). If switches --omit-stimela-reinstall or -os are set, this is"
 echo "    not done"
 echo ""
-echo "  - when switches --pull-docker, -pd are set, stimela pull -d is"
-echo "    invoked before running stimela build for Docker installation, omit"
+echo "  - when switches --no-pull-docker, -np are set, stimela pull -d is"
+echo "    invoked for a Stimela Docker installation, omit this"
 echo "    step otherwise. If switches --omit-stimela-reinstall or -os are"
 echo "    set, this is not done"
 echo ""
@@ -2163,6 +2163,18 @@ then
     kill "$PPID"; exit 1
 fi
 
+if [[ -e ${HOME}/.stimela ]]
+then
+    [[ -n ${FS} ]] || [[ -n ${ORSR} ]] || { \
+	echo "#######################" ; \
+	echo " Running stimela clean " ; \
+	echo "#######################" ; \
+	echo "" ; \
+	echo "stimela clean -ac" >> ${SS} ; \
+	stimela clean -ac ; \
+    }
+fi
+
 if [[ -z ${ORSR} ]]
 then
     checkex ${HOME}/.stimela || { \
@@ -2173,6 +2185,8 @@ then
 	echo "Removing \${HOME}/.stimela/*" ; \
 	echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
     }
+    # Consider using stimela clean -ac here before running a docker prune
+    # and not doing this:
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
 fi
 
@@ -2211,8 +2225,9 @@ then
 	[[ -z ${OR} ]] || pruneforce='-f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
+	
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
-        if [[ -n $PD ]]
+        if [[ -z ${NP} ]]
         then
 	    ii=1
 	    until (( ${ii} > ${IA} ))
@@ -2238,34 +2253,33 @@ then
 		exit 1
 	    fi
         fi
-	ii=1
-        until (( ${ii} > ${IA} ))
-        do
-            echo "Running stimela build"
-            ss_docker+="stimela build${stimela_ns}"; ss_docker+=$'\n'
-            if [[ -z ${FS} ]]
-#            if [[ -n ${FS} ]]
-	    then
-		stimela build${stimela_ns} && break || {
-			echo "stimela build failed ${ii}" ; \
-			(( ii++ )) ; \
-		    }
-	    else
-		break
-	    fi
-        done
-	if (( ${ii} > ${IA} ))
-	then
-	    echo "Maximum number of build attempts for Stimela reached."
-	    echo "${ss_docker}" >> ${SS}
-	    echo "${sya_docker}" >> ${SYA}
-	    exit 1
-	fi
+#	ii=1
+#        until (( ${ii} > ${IA} ))
+#        do
+#            echo "Running stimela build"
+#            ss_docker+="stimela build${stimela_ns}"; ss_docker+=$'\n'
+#            if [[ -z ${FS} ]]
+#	    then
+#		stimela build${stimela_ns} && break || {
+#			echo "stimela build failed ${ii}" ; \
+#			(( ii++ )) ; \
+#		    }
+#	    else
+#		break
+#	    fi
+#        done
+#	if (( ${ii} > ${IA} ))
+#	then
+#	    echo "Maximum number of build attempts for Stimela reached."
+#	    echo "${ss_docker}" >> ${SS}
+#	    echo "${sya_docker}" >> ${SYA}
+#	    exit 1
+#	fi
     echo ""
     fi
 fi
 
-echo ""
+#echo ""
 
 testingoutput () {
 
@@ -2908,7 +2922,8 @@ then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
     ###### export SINGULARITY_CACHEDIR=$CARATE_WORKSPACE/.singularity
-    if [[ -n "$SR" ]]
+    
+    if [[ -n ${SR} ]]
     then
 	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity
 	singularity_locstring="\${workspace}/stimela-singularity"
@@ -2916,6 +2931,7 @@ then
 	singularity_loc=${WORKSPACE_ROOT}/stimela-singularity
 	singularity_locstring="\${workspace_root}/stimela-singularity"
     fi
+    
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]]
     then
         if [[ -e ${singularity_loc} ]]
@@ -2979,11 +2995,14 @@ then
 	    exit 1
 	fi
     fi
-
+    echo got here
+    echo "\${singularity_loc} ${singularity_loc}"
     # Size of images
     outsize=`du -ms ${singularity_loc} | awk '{print $1}'`
     sya_sing+="Singularity image folder size: ${outsize} MB"; sya_sing+=$'\n'
     sya_sing+=$'\n'
+    echo ${sya_sing}
+    echo got here 2
 fi
 
 if [[ -n ${SM} ]]

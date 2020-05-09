@@ -105,6 +105,6 @@ def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
             if os.path.exists(nbhtml) and os.path.getmtime(nbhtml) >= start_time:
                 log.info("Rendered report {}".format(nbhtml))
             else:
-                log.warning("Report {} failed to render {} {}".format(nbhtml, os.path.getmtime(nbhtml), start_time))
+                log.warning("Report {} failed to render".format(nbhtml))
         else:
             log.warning("Report notebook {} not found, skipping report rendering".format(nbdest))

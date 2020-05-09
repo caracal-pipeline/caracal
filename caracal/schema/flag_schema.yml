@@ -154,7 +154,7 @@ mapping:
             required: False
             example: 'False'
       flag_spw:
-        desc: Flag spectral windows/channels. Of course, through FLAGDATA.
+        desc: Use CASA FLAGDATA to flag spectral windows/channels.
         type: map
         mapping:
           enable:
@@ -163,12 +163,12 @@ mapping:
             required: False
             example: 'False'
           channels:
-            desc: Channels to flag. Given as "spectral window index:start channel ~ end channel" e.g. "*:856~880MHz". End channel not inclusive.
+            desc: Channels to flag. Given as "spectral window index:start channel ~ end channel" e.g. "*:856~880MHz". End channels are not inclusive.
             type: str
             required: False
             example: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
           ensure_valid_selection:
-            desc: Check whether the channel selection returns any data. If it does not FLAGDATA is not executed preventing the pipeline from crashing. This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
+            desc: Check whether the channel selection returns any data. If it does not, FLAGDATA is not executed (preventing the pipeline from crashing). This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
             type: bool
             required: False
             example: 'True'

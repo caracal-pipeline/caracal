@@ -2,7 +2,7 @@ type: map
 mapping:
   ddcal:
     type: map
-    desc: Perform direction dependent calibration on the data
+    desc: Perform direction-dependent calibration on the data.
     mapping:
      enable:
        type: bool
@@ -16,7 +16,7 @@ mapping:
         example: 'corr'
      use_pb:
         type: bool
-        desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
+        desc: Enable primary beam usage in making the DD-corrected ddfacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.
         required: False
         example: 'False' 
 
@@ -26,7 +26,7 @@ mapping:
        mapping:
          enable:
            type: bool
-           desc: Execute this section.
+           desc: Enable the 'image_dd' segment.
            required: False
            example: 'True'
          npix:
@@ -36,32 +36,32 @@ mapping:
            example: "8000"
          use_mask: 
            type: bool
-           desc: Enable clean mask for DDfacet initial imaging. Doubles the imaging time since it runs DDFacet twice, once to get a preliminary image to make a mask with (mask is made by the cleanmask tool) and once the final image with masking. Previous wsclean masks can't be used because pixel numbers might be different.
+           desc: Enable clean mask for DDFacet initial imaging. Note that this doubles the imaging time since it runs DDFacet twice -- once to get a preliminary image to make a mask with (mask is made by the cleanmask tool), and once to get the final image with masking. Previous WSClean masks cannot be used because pixel numbers might be different.
            required: False
            example: "True"
          mask_sigma: 
            type: float
-           desc: The number of standard deviations to use when clipping the initial image for masking.
+           desc: The number of standard deviations (i.e. sigma_rms) to use when clipping the initial image for masking.
            required: False
            example: '10.0'
          mask_boxes:
            type: int
-           desc: Will divide initial image (for making the mask) into this number of boxes, then perform sigma clipping in each of these boxes.
+           desc: Divide the initial image (for making the mask) into this number of boxes, then perform sigma clipping in each of these boxes.
            required: False
            example: '9'
          mask_iters:
            type: int
-           desc: The number of iterations to perform sigma clipping on the image for masking, or 0 to clip until convergence is achieved.
+           desc: The number of sigma-clipping iterations to perform on the image, for masking, or set to 0 to clip until convergence is achieved.
            required: False
            example: '20'
          mask_overlap: 
            type: float
-           desc: Overlap region for the boxes. As a fraction of number of boxes.
+           desc: Overlap region for the boxes, given as a fraction of the number of boxes.
            required: False
            example: '0.3' 
          mask_tolerance:
            type: float
-           desc: Tolerance for dilating the mask. Will stop dilating if percentage difference between dilations is smaller than this value.
+           desc: Tolerance for dilating the mask. Dilation will stop when the percentage difference between dilations is smaller than this value.
            required: False
            example: '0.75'     
          cell:
@@ -71,18 +71,18 @@ mapping:
            example: "1.3"
          facets_nfacets: 
            type: int
-           desc: Number of facets to use, same as Facets-NFacets parameter of DDFacet.
+           desc: Number of facets to use, and is the same as the Facets-NFacets parameter of DDFacet.
            required: false
            example: '24'
          weight_column: 
           type: str
           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
-          desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
+          desc: Read data weights from the specified column. Options are WEIGHT_SPECTRUM, WEIGHT, and (for rarer occasions) IMAGING_WEIGHT.
           required: false
           example: "WEIGHT"
          weight_mode:
           type: str
-          desc: UV weighting mode.
+          desc: UV weighting mode. Options are 'Natural', 'Uniform', 'Robust', and 'Briggs'.
           enum: ["Natural", "Uniform", "Robust", "Briggs"]
           required: false
           example: "Briggs"

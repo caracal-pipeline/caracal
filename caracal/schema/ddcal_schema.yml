@@ -433,53 +433,53 @@ mapping:
            example: 'I'
          img_ws_auto_mask:
            type: float
-           desc: Auto masking threshold
+           desc: Auto-masking threshold, given as the number of sigma_rms.
            required: false
            example: '7'
          img_ws_auto_threshold:
            type: float
-           desc: Auto clean threshold
+           desc: Auto-clean threshold, given as the number of sigma_rms.
            required: false
            example: '0.5'
          img_ws_column:
            type: str
-           desc: Column to image
+           desc: Column to image.
            required: false
            example: 'CORRECTED_DATA'
          img_ws_fits_mask:
             type: str
-            desc: filename of fits mask (in output/masking folder)
+            desc: Filename of fits mask (in output/masking folder).
             required: false
             example: 'catalog_mask.fits'
          img_ws_multi_scale:
             type: bool
-            desc: switch on multiscale cleaning
+            desc: Switch on multiscale cleaning.
             required: false
             example: 'False'
          img_ws_multi_scale_scales:
             seq:
               - type: int
-            desc: scales of multiscale [0,10,20,etc, etc] in pixels
+            desc: Scales for multiscale cleaning, in pixels.
             required: false
             example: '10, 20, 30'
          img_ws_local_rms:
             type: bool
-            desc: switch on local rms measurement for cleaning
+            desc: Switch on local-rms measurement for cleaning.
             required: false
             example: 'False'
 
      transfer_model_dd:
        type: map
-       desc: Repredict wsclean model to the highest channel resolution
+       desc: Repredict WSClean model to the highest channel resolution.
        mapping:
          enable:
            type: bool
-           desc: Execute this segment (default False)
+           desc: Enable the 'transfer_model_dd' segment.
            required: false
            example: 'False'
          dd_model:
            type: str
-           desc: Name of the sky model file (currently the only supported format is that of WSclean component lists). When 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
+           desc: Name of the sky-model file. (Currently the only supported format is that of WSClean component lists.) When set to 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
            required: false
            example: 'auto'
          dd_spectra:
@@ -494,12 +494,12 @@ mapping:
            example: '0'
          dd_model_chunks:
            type: int
-           desc: Number of sky model components that are processed in a single chunk.
+           desc: Number of sky-model components that are processed in a single chunk.
            required: false
            example: '0'
          dd_exp-sign-convention:
            type: str
-           desc: Sign convention to use for the complex exponential. 'casa' specifies the e^(2.pi.I) convention while 'thompson' specifies the e^(-2.pi.I) convention in the white book and Fourier analysis literature. Defaults to 'casa'.
+           desc: Sign convention to use for the complex exponential. The default, 'casa', specifies the e^(2.pi.I) convention, while 'thompson' specifies the e^(-2.pi.I) convention in The White Book and Fourier analysis literature.
            required: false
            example: 'casa'
          dd_within:
@@ -509,14 +509,14 @@ mapping:
            example: ''
          dd_points_only:
            type: bool
-           desc: Select only point-only sources. Default is False.
+           desc: Select only 'point' sources.
            required: false
            example: 'False'
          dd_num_sources:
            type: int
-           desc: Select only N brightest sources. Default is 0.
+           desc: Select only N brightest sources.
            required: false
-           example: "0"
+           example: '0'
          dd_num_workers:
            type: int
            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.

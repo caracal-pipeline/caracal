@@ -244,7 +244,7 @@ mapping:
             required: False
             example: 'labelled_rfimask.pickle.npy'
           uvrange:
-            desc: UV range to select (CASA style range, e.g. lower~upper) for flagging. Leave blank for entire array.
+            desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in default units of metres but, e.g., '0~1000km' and '0-500klambda' can also be specified. Leaving this parameter blank will select the entire range in UV-distance.
             type: str
             required: False
             example: ''

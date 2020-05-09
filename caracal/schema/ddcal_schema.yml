@@ -15,17 +15,10 @@ mapping:
         required: False
         example: 'corr'
      use_pb:
-<<<<<<< HEAD
         type: bool
-        desc: Enable primary beam usage in making the DD-corrected ddfacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.
+        desc: Enable primary beam usage in making the DD-corrected DDFacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.
         required: False
         example: 'False' 
-=======
-       type: bool
-       desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
-       required: False
-       example: 'False'
->>>>>>> 396f2f59442c058e72d7c0a8c9bad36f49114f08
 
      image_dd:
        type: map
@@ -82,19 +75,11 @@ mapping:
            required: false
            example: '24'
          weight_column: 
-<<<<<<< HEAD
           type: str
           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
           desc: Read data weights from the specified column. Options are WEIGHT_SPECTRUM, WEIGHT, and (for rarer occasions) IMAGING_WEIGHT.
           required: false
           example: 'WEIGHT'
-=======
-           type: str
-           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
-           desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
-           required: false
-           example: "WEIGHT"
->>>>>>> 396f2f59442c058e72d7c0a8c9bad36f49114f08
          weight_mode:
           type: str
           desc: UV weighting mode. Options are 'Natural', 'Uniform', 'Robust', and 'Briggs'.
@@ -239,11 +224,7 @@ mapping:
              - type: str
            desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target_manual' list. Use ';' to separate different sources per target.           
            required: false
-<<<<<<< HEAD
            example: ' '
-=======
-           example: ""
->>>>>>> 396f2f59442c058e72d7c0a8c9bad36f49114f08
          sol_min_bl:
            type: float
            desc: The minimum baseline length to solve for.
@@ -466,24 +447,16 @@ mapping:
            required: false
            example: 'CORRECTED_DATA'
          img_ws_fits_mask:
-<<<<<<< HEAD
             type: str
             desc: Filename of fits mask (in output/masking folder).
             required: false
             example: 'catalog_mask.fits'
-=======
-           type: str
-           desc: filename of fits mask (in output/masking folder)
-           required: false
-           example: 'catalog_mask.fits'
->>>>>>> 396f2f59442c058e72d7c0a8c9bad36f49114f08
          img_ws_multi_scale:
             type: bool
             desc: Switch on multiscale cleaning.
             required: false
             example: 'False'
          img_ws_multi_scale_scales:
-<<<<<<< HEAD
             seq:
               - type: int
             desc: Scales for multiscale cleaning, in pixels.
@@ -494,18 +467,6 @@ mapping:
             desc: Switch on local-rms measurement for cleaning.
             required: false
             example: 'False'
-=======
-           seq:
-             - type: int
-           desc: scales of multiscale [0,10,20,etc, etc] in pixels
-           required: false
-           example: '10, 20, 30'
-         img_ws_local_rms:
-           type: bool
-           desc: switch on local rms measurement for cleaning
-           required: false
-           example: 'False'
->>>>>>> 396f2f59442c058e72d7c0a8c9bad36f49114f08
 
      transfer_model_dd:
        type: map

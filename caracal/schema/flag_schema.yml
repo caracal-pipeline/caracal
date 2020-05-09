@@ -321,9 +321,9 @@ mapping:
                 required: False
                 example: "False"
               flagdimension:
-                desc: Dimensions along which to calculate fits (freq/time/freqtime/timefreq).
+                desc: Dimension(s) along which to calculate a fit(/fits) to the data. Options are 'freq', 'time', 'freqtime', and 'timefreq'. Note that the differences between 'freqtime' and 'timefreq' are only apparent if RFI in one dimension is signifcantly stronger than in the other.
                 type: str
-                enum: [freq, time, freqtime, timefreq]
+                enum: ["freq", "time", "freqtime", "timefreq"]
                 required: False
                 example: "freqtime"
               timecutoff:

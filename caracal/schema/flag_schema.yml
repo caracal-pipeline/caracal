@@ -58,7 +58,7 @@ mapping:
             required: False
             example: 'False'
       flag_autopowerspec:
-        desc: Flags antennas based on drifts in the scan average of the auto correlation spectra per field. This doesn't strictly require any calibration. It is also not field structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
+        desc: Flags antennas based on drifts in the scan average of the auto-correlation spectra per field. This doesn't strictly require any calibration. It is also not field-structure dependent, since it is just based on the DC of the field. Compares scan to median power of scans per field per channel. Also compares antenna to median of the array per scan per field per channel. This should catch any antenna with severe temperature problems.
         type: map
         mapping:
           enable:
@@ -67,12 +67,12 @@ mapping:
             required: False
             example: 'False'
           scan_to_scan_threshold:
-            desc: Threshold for flagging in sigma above the rest of the scans per field per channel.
+            desc: Threshold for flagging (in sigma) above the rest of the scans per field per channel.
             type: int
             required: False
             example: '3'
           antenna_to_group_threshold:
-            desc: Threshold for flagging in sigma above array median power spectra per scan per field per channel.
+            desc: Threshold for flagging (in sigma) above array median-power spectra per scan per field per channel.
             type: int
             required: False
             example: '5'
@@ -87,7 +87,7 @@ mapping:
             required: False
             example: '8'
       flag_autocorr:
-        desc: Flag autocorrelations. Through CASA flagdata task.
+        desc: Flag auto-correlations, through the FLAGDATA task in CASA.
         type: map
         mapping:
           enable:
@@ -96,7 +96,7 @@ mapping:
             required: False
             example: 'False'
       flag_quack:
-        desc: Do quack flagging, i.e. flag the begining and/or end chunks of each scan. Again, through FLAGDATA.
+        desc: Do quack flagging, i.e. flag the beginning and/or end chunks of each scan. Again, this is done through FLAGDATA.
         type: map
         mapping:
           enable:
@@ -110,7 +110,7 @@ mapping:
             required: False
             example: '8.'
           quackmode:
-            desc: Quack flagging mode. Either 'beg', which flags scan begining, 'endb', which flags end of the scan, 'end', which flags everything but the first specified seconds of the scan and 'tail' which flags all but the last specified seconds of the scan.
+            desc: Quack flagging mode. Options are 'beg' (which flags the beginning of the scan), 'endb' (which flags the end of the scan), 'end' (which flags everything but the first specified seconds of the scan), and 'tail' (which flags all but the last specified seconds of the scan).
             type: str
             enum: ["beg", "endb", "end", "tail"]
             required: False

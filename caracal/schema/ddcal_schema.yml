@@ -279,12 +279,12 @@ mapping:
            required: false
            example: 'complex-2x2'
          dd_g_clip_high: 
-           desc: Amplitude clipping -- flag solutions with any amplitudes above this value for the G-Jones matrix.
+           desc: Amplitude clipping -- flag solutions with any amplitudes above this value for G-Jones matrix.
            type: float
            required: false
            example: "1.5"
          dd_g_clip_low: 
-           desc: Amplitude clipping -- flag solutions with any amplitudes below this value for the G-Jones matrix.
+           desc: Amplitude clipping -- flag solutions with any amplitudes below this value for G-Jones matrix.
            type: float
            required: false
            example: "0.5"
@@ -296,12 +296,12 @@ mapping:
          dd_g_max_prior_error: 
            type: float
            required: false
-           desc: Flag solution intervals where the prior error estimate is above this value for G-jones.
+           desc: Flag solution intervals where the prior error estimate is above this value for G-Jones matrix.
            example: "0.35"
          dd_g_max_post_error: 
            type: float
            required: false
-           desc: Flag solution intervals where the posterior variance estimate is above this value for G-jones.
+           desc: Flag solution intervals where the posterior variance estimate is above this value for G-Jones matrix.
            example: "0.35"
          dd_dd_max_prior_error: 
            type: float
@@ -315,27 +315,27 @@ mapping:
            example: "0.35"
          dd_g_timeslots_int: 
            type: int
-           desc: Time solution interval in timeslot units for G-Jones.
+           desc: Time solution interval in timeslot units for G-Jones matrix.
            required: false
            example: "10"
          dd_g_channel_int:
            type: int
-           desc: Frequency solution interval in channel units for G-Jones.
+           desc: Frequency solution interval in channel units for G-Jones matrix.
            example: "0"
            required: false
          dd_dd_timeslots_int: 
            type: int
-           desc: Time solution interval in timeslot units for DE-Jones.
+           desc: Time solution interval in timeslot units for DE-Jones matrix.
            required: false
            example: "100"
          dd_dd_channel_int:
            type: int
-           desc: Frequency solution interval in channel units for DE-Jones.
+           desc: Frequency solution interval in channel units for DE-Jones matrix.
            example: "100"
            required: false
          dist_nworker:
            type: int
-           desc: Number of processes
+           desc: Number of processes.
            example: "25"
            required: false  
 
@@ -352,72 +352,72 @@ mapping:
 
      image_wsclean:
        type: map
-       desc: Wsclean imaging paramaters for DD worker.
+       desc: WSClean imaging paramaters for ddcal worker.
        mapping:
          enable:
            type: bool
-           desc: Enable wsclean imaging of the DD-calibrated data.
+           desc: Enable WSClean imaging of the DD-calibrated data.
            required: false
            example: 'True'
          img_ws_npix:
            type: int
-           desc: Number of pixels in output image
+           desc: Number of pixels in output image.
            required: false
            example: '1800'
          img_ws_padding:
            type: float
-           desc: Padding in WSclean
+           desc: Padding in WSClean.
            required: false
            example: '1.3'
          img_ws_mgain:
            type: float
-           desc: Image CLEANing gain
+           desc: Gain for the major cycle during image CLEANing.
            required: false
            example: '0.90'
          img_ws_cell:
            type: float
-           desc: Image pixel size (arcsec)
+           desc: Image pixel size (in arcsec).
            required: false
            example: '2.'
          img_ws_weight:
            type: str
            enum: ["briggs", "uniform", "natural"]
-           desc: Image weighting type. If Briggs, set the img robust parameter
+           desc: Image weighting type. Options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the img_ws_robust parameter below.
            required: false
            example: 'briggs'
          img_ws_robust:
            type: float
-           desc: Briggs robust value
+           desc: Briggs robust value.
            required: false
            example: '0.'
          img_ws_uvtaper:
            type: str
-           desc: Taper for imaging (arcsec)
+           desc: Taper for imaging (in arcsec).
            required: false
            example: '0'
          img_ws_niter:
            type: int
-           desc: Number of cleaning iterations
+           desc: Number of cleaning iterations.
            required: false
            example: '1000000'
          img_ws_nmiter:
            type: int
-           desc: Number of major cycles
+           desc: Number of major cycles.
            required: False
            example: '0'
          img_ws_cleanborder:
            type: float
-           desc: Clean border
+           desc: Clean border.
            required: false
            example: '1.3'
          img_ws_nchans:
            type: int
-           desc: Number of channesls in output image
+           desc: Number of channels in output image.
            required: false
            example: '3'
          img_ws_joinchannels:
            type: bool
-           desc: Join channels to create MFS image
+           desc: Join channels to create MFS image.
            required: false
            example: 'True'
          img_ws_fit_spectral_pol:
@@ -427,7 +427,8 @@ mapping:
            example: '2'
          img_ws_pol:
            type: str
-           desc: Stokes image to create
+           enum: ["I"]
+           desc: Stokes image to create. For this first release of CARACal, the only option is 'I'.
            required: false
            example: 'I'
          img_ws_auto_mask:

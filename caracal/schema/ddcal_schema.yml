@@ -119,37 +119,37 @@ mapping:
          deconv_mode:
            type: str
            enum: ["HMP", "Hogbom", "SSD", "GAClean"]
-           desc: The deconvolution algorithm to use. Options are 'HMP' (Hybrid Matching Pursuit, aka multiscale/multifrequency), 'Hogbom' (Hogbom's CLEAN algorithm), 'SSD' (SubSpace Deconvolution algorithm), and 'GAClean' (Genetic Algorithm Clean). Direct your queries to DDFacet Developers for more details on this.
+           desc: The deconvolution algorithm to use. Options are 'HMP' (Hybrid Matching Pursuit, aka multiscale/multifrequency), 'Hogbom' (Hogbom's CLEAN algorithm), 'SSD' (SubSpace Deconvolution algorithm), and 'GAClean' (Genetic Algorithm Clean). Please direct queries to DDFacet Developers for further details.
            required: false
-           example: "Hogbom"
+           example: 'Hogbom'
          deconv_gain:
            type: float
-           desc: GAIN Loop gain (HMP, Hogbom).
+           desc: Gain setting for the deconvolution loops.
            required: false
-           example: "0.1"
+           example: '0.1'
          deconv_fluxthreshold:  
            type: float
-           desc: Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom).
+           desc: Absolute flux-density threshold at which deconvolution is stopped, in units of Jy. Relevant for HMP and Hogbom modes.
            required: false
            example: '1.0e-6'
          deconv_allownegative:
            type: bool
-           desc: Allow negative components for cleaning (valid for HMP, Hogbom modes).
+           desc: Allow negative components for cleaning (valid for HMP and Hogbom modes).
            required: false
-           example: "True"
+           example: 'True'
          hogbom_polyfitorder:
            type: int
-           desc: Polynomial order for frequency fitting.
+           desc: Order of the polynomial to be used for frequency fitting.
            required: false
-           example: "6"
+           example: '6'
          parallel_ncpu:
            type: int
-           desc: Number of processes / threads to use in parallel mode. 0 - all available. 1 - disable parallelism.
+           desc: Number of processes / threads to use in parallel mode. 0 = use all of those available. 1 = disable parallelism.
            required: false
            example: "0" 
          predict_colname:
            type: str
-           desc: MS column to write predict to. Can be left empty to disable.
+           desc: MS column to write the predicted visibilities corresponding to the model. Setting '' will disable this parameter.
            required: false
            example: "MODEL_DATA"
          log_memory:

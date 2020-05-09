@@ -1,9 +1,5 @@
 type: map
 mapping: 
-  schema_version:
-    type: str
-    required: true
-
   crosscal:
     type: map
     desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration).

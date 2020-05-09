@@ -57,7 +57,7 @@ then edit the file to suit your needs.
     add('-sid', '--singularity-image-dir', metavar="DIR",
         help='directory where stimela singularity images are stored')
 
-    add('-gdt', '--get-default-template', # metavar="TEMPLATE",
+    add('-gdt', '--get-default-template',
             choices=caracal.SAMPLE_CONFIGS.keys(),
             default="minimal",
             help='init a configuration file from a default template')
@@ -71,13 +71,6 @@ then edit the file to suit your needs.
     add('-ew', '--end-worker', metavar="WORKER",
         help='stop pipeline after this worker')
 
-    # add('-aaf', '--add-all-first', action='store_true',
-    #     help='add steps from all workers to pipeline before executing (default is execute in turn)')
-
-    add('-bl', '--stimela-build',
-        help='label of custom stimela build to use',
-        default=None)
-
     add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
         default="docker",
         help='Container technology to use')
@@ -89,10 +82,6 @@ then edit the file to suit your needs.
         help='prints list of auxiliary calibrator standards, then exits',
         action='store_true')
 
-    # add('--no-interactive',
-    #     help='Disable interactivity',
-    #     action='store_true')
-
     add('-debug',
         help='enable debugging mode',
         action='store_true')
@@ -103,6 +92,7 @@ then edit the file to suit your needs.
 
     add('-wd', '--workers-directory', default='{:s}/workers'.format(caracal.pckgdir),
         help='(ninja option) directory where custom pipeline workers can be found')
+
     add('-s', '--schema', action='append', metavar='[WORKER_NAME,PATH_TO_SCHEMA]',
         help='(ninja option) path to custom schema for worker(s), can be specified multiple times')
 

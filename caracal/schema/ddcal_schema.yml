@@ -210,35 +210,35 @@ mapping:
 
          de_sources_mode:
            type: str
-           desc: Mode in which sources are tagged for DD-calibration. Options are 'auto' (which uses CATDagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
+           desc: Mode in which sources are tagged for DD calibration. Options are 'auto' (which uses CATDagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
            required: false
            example: 'manual'
          de_target_manual: 
            seq:
              - type: str 
-           desc: List of targets fieldnames for carrying out de calibration, the rest of the fields will not undergo direction-dependent calibration
+           desc: List of target fieldnames for carrying out DD calibration. The remaining fields will not undergo DD calibration.
            required: false
-           example: ""
+           example: ''
          de_sources_manual:
            seq:
              - type: str
-           desc: List of sources per target to tag for DD calibration, in the same order as the de_target_manual list. Separate different sources per target by using ";".           
+           desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target_manual' list. Use ';' to separate different sources per target.           
            required: false
-           example: " "
+           example: ' '
          sol_min_bl:
            type: float
-           desc: Min baseline length to solve for.
+           desc: The minimum baseline length to solve for.
            required: false
            example: '100'
          madmax_enable:
            type: bool
-           desc: Enable madmax flagging in Cubical. 
+           desc: Enable madmax flagging in CubiCal. 
            required: false
            example: 'true'
          madmax_threshold:
            seq:
               - type: int
-           desc: Threshold for MAD flagging per baseline (specified in sigmas). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iteratins later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually decreasing values may be sensible.
+           desc: Threshold for MAD flagging per baseline (specified in number of standard deviations). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iterations later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually-decreasing values may be sensible.
            required: false
            example: '0, 10'
          madmax_global_threshold:
@@ -249,41 +249,42 @@ mapping:
            example: '0, 12'
          madmax_estimate:
            type: str
-           desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
+           enum: ["corr", "all", "diag", "offdiag"]
+           desc: MAD estimation mode. Use 'corr' for a separate estimate per baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
            required: false
            example: 'corr'
          dd_data_column:
            type: str
-           desc: Column to calibrate. Assumption being that you have already run the selfcal worker.
+           desc: Column to calibrate, with the assumption that you have already run the selfcal worker.
            required: false
            example: 'CORRECTED_DATA'
          dd_out_data_column:
            type: str
-           desc: Output data column.
+           desc: Output data column. Note that the ddcal worker is currently hardcoded for this being set to 'SUBDD_DATA'. 
            required: false
            example: 'SUBDD_DATA'
          dd_weight_column:
            type: str
-           desc: Column to read weights from. Weights are applied by default. Specify an empty string to disable.
+           desc: Column to read weights from, and apply them by default. Specify an empty string to disable this parameter.
            required: false
            example: "WEIGHT"
          dd_sol_stall_quorum: 
            type: float
-           desc: Minimum percentage of solutions which must have stalled before terminating the solver.
+           desc: Minimum percentage of solutions that must have stalled before terminating the solver.
            required: false
            example: "0.95"
          dd_g_type: 
            type: str
-           desc: Gain matrix type for g. Keep complex-2x2, because dd-cal fails otherwise.
+           desc: Gain matrix type for the G-Jones matrix. Keep this set to 'complex-2x2', because DD-calibration fails otherwise.
            required: false
            example: 'complex-2x2'
          dd_g_clip_high: 
-           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones.
+           desc: Amplitude clipping -- flag solutions with any amplitudes above this value for the G-Jones matrix.
            type: float
            required: false
            example: "1.5"
          dd_g_clip_low: 
-           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones.
+           desc: Amplitude clipping -- flag solutions with any amplitudes below this value for the G-Jones matrix.
            type: float
            required: false
            example: "0.5"

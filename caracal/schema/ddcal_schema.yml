@@ -154,7 +154,7 @@ mapping:
            example: "MODEL_DATA"
          log_memory:
            type: bool
-           desc: log memory use
+           desc: Log the memory usage by DDFacet.
            required: false
            example: "True"
          cache_reset:
@@ -179,32 +179,32 @@ mapping:
            example: '0.05'
          output_mode:
            type: str 
-           enum: ["Dirty","Clean", "Predict","PSF"]
-           desc: Output mode. Defaults to cleaning, since that's what we want to do in this worker.
+           enum: ["Dirty", "Clean", "Predict", "PSF"]
+           desc: Output mode of DDFacet. Options are 'Dirty', 'Clean', 'Predict', and 'PSF'. This setting defaults to 'Clean', since that is what we want to do in this worker.
            required: false
-           example: "Clean"
+           example: 'Clean'
      calibrate_dd:
        type: map
-       desc: Direction dependent calibration parameters.
+       desc: Direction-dependent calibration parameters.
        mapping:
          enable:
            type: bool
-           desc: Execute this section.
+           desc: Enable the 'calibrate_dd' segment.
            required: False
            example: 'True'
          sigma:
            type: float
-           desc: Threshold to use in detecting outlier regions in images by using CatDagger, which is enabled by auto mode for de_sources_mode. 4.5 is a good value (also default), but may need a lower value for some images.
+           desc: Sigma threshold to use in detecting outlier regions in images, via CatDagger (which is enabled by setting 'de_sources_mode', below, to 'auto'). The default value of 4.5 works well, but a lower value may be needed for some images.
            required: false
            example: '4.5'
          min_dist_from_phcentre:
            type: int
-           desc: Number of pixels (radius) around the centre of the image in which sources will not be tagged. Default kept at 1300 (roughly 30').
+           desc: The radius (in number of pixels), from the centre of the image, out to which sources will not be tagged. The default is kept at 1300 (which roughly corresponds to 30').
            required: false
            example: '1300'
          dist_ncpu:
            type: int
-           desc: Number of cpus
+           desc: The number of cpus.
            required: false
            example: '1'
 

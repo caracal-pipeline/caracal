@@ -15,9 +15,9 @@ mapping:
        example: 'False'
      label:
         type: str
-        desc: Label of the .MS files to process.
+        desc: Label of the .MS files to process. By default uses the 'corr' label for self-calibrated dataset.
         required: False
-        example: 'DD'
+        example: 'corr'
      use_pb:
         type: bool
         desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.

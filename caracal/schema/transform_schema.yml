@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   transform:
     desc: Split, avg and/or calibrate data
     type: map

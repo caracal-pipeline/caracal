@@ -1,24 +1,20 @@
 # -*- coding: future_fstrings -*-
 
 import caracal
-import pkg_resources
 import os
 import sys
-import pdb
 import ruamel.yaml
-from http.server import SimpleHTTPRequestHandler
-from http.server import HTTPServer
-import webbrowser
-import subprocess
+import pdb
 import traceback
 import pdb
 import logging
-import io
+import shutil
 from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
 from caracal.workers.worker_administrator import worker_administrator as mwa
 import stimela
+from caracal.schema import SCHEMA_VERSION
 
 __version__ = caracal.__version__
 pckgdir = caracal.pckgdir
@@ -44,19 +40,20 @@ from caracal import log
 ####################################################################
 
 
-def print_worker_help(args, schema_version=None):
+def print_worker_help(worker):
     """
     worker help
     """
-    schema = os.path.join(pckgdir, "schema",
-                          "{0:s}_schema.yml".format(args.worker_help))
-    with open(schema, "r") as f:
-        worker_dict = cfg_txt = ruamel.yaml.load(
-            f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+    schema = os.path.join(pckgdir, "schema", "{0:s}_schema.yml".format(worker))
+    if not os.path.exists(schema):
+        return None
 
-    helper = worker_help.worker_options(
-        args.worker_help, worker_dict["mapping"][args.worker_help])
+    with open(schema, "r") as f:
+        worker_dict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
+
+    helper = worker_help.worker_options(worker, worker_dict["mapping"][worker])
     helper.print_worker()
+    return True
 
 
 def get_default(sample, to):
@@ -68,60 +65,6 @@ def get_default(sample, to):
     sample_config = os.path.join(pckgdir, "sample_configurations",
             SAMPLE_CONFIGS[sample])
     os.system('cp {0:s} {1:s}'.format(sample_config, to))
-
-
-def start_viewer(args, timeout=None, open_webbrowser=True):
-    """
-    Starts HTTP service and opens default system webpager
-    for report viewing
-    """
-    port = args.interactive_port
-    web_dir = os.path.abspath(os.path.join(args.general_output, 'reports'))
-
-    log.info("Entering interactive mode as requested: CARACal report viewer")
-    log.info("Starting HTTP web server, listening on port {} and hosting directory {}".format(
-        port, web_dir))
-    log.info("Press Ctrl-C to exit")
-
-    def __host():
-        with open(os.devnull, "w") as the_void:
-            stdout_bak = sys.stdout
-            stderr_bak = sys.stderr
-            sys.stdout = the_void
-            sys.stderr = the_void
-            httpd = HTTPServer(("", port), hndl)
-            os.chdir(web_dir)
-            try:
-                httpd.serve_forever()
-            except KeyboardInterrupt as SystemExit:
-                httpd.shutdown()
-            finally:
-                sys.stdout = stdout_bak
-                sys.stderr = stderr_bak
-
-    if not os.path.exists(web_dir):
-        raise RuntimeError(
-            "Reports directory {} does not yet exist. Has the pipeline been run here?".format(web_dir))
-
-    hndl = SimpleHTTPRequestHandler
-
-    wt = interruptable_process(target=__host)
-    try:
-        wt.start()
-        if open_webbrowser:
-            # suppress webbrowser output
-            savout = os.dup(1)
-            os.close(1)
-            os.open(os.devnull, os.O_RDWR)
-            try:
-                webbrowser.open('http://localhost:{}'.format(port))
-            finally:
-                os.dup2(savout, 1)
-
-        wt.join(timeout=timeout)
-    except KeyboardInterrupt as SystemExit:
-        log.info("Interrupt received - shutting down web server. Goodbye!")
-    return wt
 
 
 def log_logo():
@@ -217,8 +160,9 @@ def log_logo():
 
     log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
 
-def execute_pipeline(args, arg_groups, block):
+def execute_pipeline(options, config, block):
     # setup piping infractructure to send messages to the parent
+    workers_directory = os.path.join(caracal.pckgdir, "workers")
     def __run(debug=False):
         """ Executes pipeline """
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
@@ -226,17 +170,17 @@ def execute_pipeline(args, arg_groups, block):
         try:
             log_logo()
             # Very good idea to print user options into the log before running:
-            config_parser.config_parser().log_options(args.config)
+            config_parser.config_parser().log_options(config)
 
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()
 
-            pipeline = mwa(arg_groups,
-                           args.workers_directory,
-                           add_all_first=False,  prefix=args.general_prefix,
-                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                           container_tech=args.container_tech, start_worker=args.start_worker,
-                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+            pipeline = mwa(config,
+                           workers_directory,
+                           add_all_first=False, prefix=options.general_prefix,
+                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
+                           container_tech=options.container_tech, start_worker=options.start_worker,
+                           end_worker=options.end_worker, generate_reports=not options.no_reports)
 
             pipeline.run_workers()
         except SystemExit as e:
@@ -263,7 +207,7 @@ def execute_pipeline(args, arg_groups, block):
             log.info("exiting with error code 1")
             sys.exit(1)  # indicate failure
 
-    return __run(debug=args.debug)
+    return __run(debug=options.debug)
 
 ############################################################################
 # Driver entrypoint
@@ -271,15 +215,73 @@ def execute_pipeline(args, arg_groups, block):
 
 
 def main(argv):
-    # parse initial arguments to init basic switches
-    parser = config_parser.primary_parser(argv)
-    args, _ = parser.parse_known_args(argv)
+    # parse initial arguments to init basic switches and modes
+    parser = config_parser.basic_parser(argv)
+    options, _ = parser.parse_known_args(argv)
 
-    caracal.init_console_logging(boring=args.boring, debug=args.debug)
-    stimela.logger().setLevel(logging.DEBUG if args.debug else logging.INFO)
+    caracal.init_console_logging(boring=options.boring, debug=options.debug)
+    stimela.logger().setLevel(logging.DEBUG if options.debug else logging.INFO)
+
+    # user requests worker help
+    if options.worker_help:
+        if not print_worker_help(options.worker_help):
+            parser.error("unknown worker '{}'".format(options.worker_help))
+        return
+
+    # User requests default config => dump and exit
+    if options.get_default:
+        sample_config = SAMPLE_CONFIGS.get(options.get_default_template)
+        if sample_config is None:
+            parser.error("unknown default template '{}'".format(options.get_default_template))
+        sample_config_path = os.path.join(pckgdir, "sample_configurations", sample_config)
+        if not os.path.exists(sample_config_path):
+            raise RuntimeError("Missing sample config file {}. This is a bug, please report".format(sample_config))
+        # validate the file
+        try:
+            parser = config_parser.config_parser()
+            _, version = parser.validate_config(sample_config_path)
+            if version != SCHEMA_VERSION:
+                log.warning("Sample config file {} version is {}, current CARACal version is {}.".format(sample_config,
+                                                                                                         version,
+                                                                                                         SCHEMA_VERSION))
+                log.warning("Proceeding anyway, but please notify the CARACal team to ship a newer sample config!")
+        except config_parser.ConfigErrors as exc:
+            log.error("{}, list of errors follows:".format(exc))
+            for section, errors in exc.errors.items():
+                print("  {}:".format(section))
+                for err in errors:
+                    print("    - {}".format(err))
+            sys.exit(1)  # indicate failure
+        log.info("Initializing {1} from config template '{0}' (schema version {2})".format(options.get_default_template,
+                                                                                           options.get_default, version))
+        shutil.copy2(sample_config_path, options.get_default)
+        return
+
+    if options.print_calibrator_standard:
+        cdb = mkct.calibrator_database()
+        log.info("Found the following reference calibrators (in CASA format):")
+        log.info(cdb)
+        return
+
+    # if config was not specified (i.e. stayed default), print help and exit
+    config_file = options.config
+    if config_file == caracal.DEFAULT_CONFIG:
+        parser.print_help()
+        sys.exit(1)
 
     try:
-        parser = config_parser.config_parser(argv)
+        parser = config_parser.config_parser()
+        config, version = parser.validate_config(config_file)
+        if version != SCHEMA_VERSION:
+            log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
+                                    version, SCHEMA_VERSION))
+            log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
+        # populate parser with items from config
+        parser.populate_parser(config)
+        # reparse arguments
+        caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
+        options, config = parser.update_config_from_args(config, argv)
+        # raise warning on schema version
     except config_parser.ConfigErrors as exc:
         log.error("{}, list of errors follows:".format(exc))
         for section, errors in exc.errors.items():
@@ -290,44 +292,9 @@ def main(argv):
     except Exception as exc:
         traceback.print_exc()
         log.error("Error parsing arguments or configuration: {}".format(exc))
-        if args.debug:
+        if options.debug:
             log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
             pdb.post_mortem(sys.exc_info()[2])
         sys.exit(1)  # indicate failure
 
-    args = parser.args
-    arg_groups = parser.arg_groups
-
-    if args.schema:
-        schema = {}
-        for item in args.schema:
-            _name, _schema = item.split(",")
-            schema[_name] = _schema
-        args.schema = schema
-    else:
-        args.schema = {}
-
-    with open(args.config, 'r') as f:
-        tmp = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
-        arg_groups["schema_version"] = schema_version = tmp["schema_version"]
-
-    if args.worker_help:
-        print_worker_help(args)
-        return
-
-    # User requests default config => dump and exit
-    if args.get_default:
-        log_logo()
-        get_default(args.get_default_template, args.get_default)
-        return
-
-    if args.print_calibrator_standard:
-        cdb = mkct.calibrator_database()
-        log.info("Found the following reference calibrators (in CASA format):")
-        log.info(cdb)
-        return
-
-    if args.config is caracal.DEFAULT_CONFIG:
-        config_parser.primary_parser().print_help()
-        sys.exit(1)
-    execute_pipeline(args, arg_groups, block=True)
+    execute_pipeline(options, config, block=True)

@@ -189,7 +189,7 @@ mapping:
            example: "Clean"
      calibrate_dd:
        type: map
-       desc: Direction dependent calibration parameters
+       desc: Direction dependent calibration parameters.
        mapping:
          enable:
            type: bool
@@ -198,7 +198,7 @@ mapping:
            example: 'True'
          sigma:
            type: float
-           desc: Threshold to use in detecting outlier regions in images by using CatDagger. 4.5 is a good value (also default), but may need a lower value for some images.
+           desc: Threshold to use in detecting outlier regions in images by using CatDagger, which is enabled by auto mode for de_sources_mode. 4.5 is a good value (also default), but may need a lower value for some images.
            required: false
            example: '4.5'
          min_dist_from_phcentre:
@@ -258,22 +258,22 @@ mapping:
            example: 'corr'
          dd_data_column:
            type: str
-           desc: Column to calibrate
+           desc: Column to calibrate. Assumption being that you have already run the selfcal worker.
            required: false
            example: 'CORRECTED_DATA'
          dd_out_data_column:
            type: str
-           desc: Output data column
+           desc: Output data column.
            required: false
            example: 'SUBDD_DATA'
          dd_weight_column:
            type: str
-           desc: Column to read weights from. Weights are applied by default. Specify an\nempty string to disable.
+           desc: Column to read weights from. Weights are applied by default. Specify an empty string to disable.
            required: false
            example: "WEIGHT"
          dd_sol_stall_quorum: 
            type: float
-           desc: Minimum percentage of solutions which must have stalled before terminating\nthe solver.
+           desc: Minimum percentage of solutions which must have stalled before terminating the solver.
            required: false
            example: "0.95"
          dd_g_type: 
@@ -282,12 +282,12 @@ mapping:
            required: false
            example: 'complex-2x2'
          dd_g_clip_high: 
-           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones
+           desc: Amplitude clipping - flag solutions with any amplitudes above this value for g Jones.
            type: float
            required: false
            example: "1.5"
          dd_g_clip_low: 
-           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones
+           desc: Amplitude clipping - flag solutions with any amplitudes below this value for g Jones.
            type: float
            required: false
            example: "0.5"
@@ -345,17 +345,17 @@ mapping:
 
      copy_data:
        type: map
-       desc: Copy DD-calibrated data to CORRECTED_DATA column
+       desc: Copy DD-calibrated data to CORRECTED_DATA column. THIS IS DANGEROUS - only if you want to go ahead with line imaging. 
        mapping:
          enable:  
            type: bool
-           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column
+           desc: Enable copying of DD-calibrated data to CORRECTED_DATA column.
            required: false
            example: 'True'
 
      image_wsclean:
        type: map
-       desc: Wsclean imaging paramaters for DD worker
+       desc: Wsclean imaging paramaters for DD worker.
        mapping:
          enable:
            type: bool
@@ -516,7 +516,7 @@ mapping:
            example: 'False'
          dd_num_sources:
            type: int
-           desc: Select only N brightest sources. Default is 0
+           desc: Select only N brightest sources. Default is 0.
            required: false
            example: "0"
          dd_num_workers:

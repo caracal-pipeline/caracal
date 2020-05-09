@@ -335,3 +335,8 @@ mapping:
             desc: Number of channels to average for plotting.
             required: false
             example: '10'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

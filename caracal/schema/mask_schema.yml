@@ -140,3 +140,8 @@ mapping:
             desc: Flux-density threshold for selecting sources in the SUMSS map, corrected for the primary beam. Value given is in units of Jy, or is the minimum signal-to-noise ratio (i.e. number of sigma_rms), used for SoFiA source-finding.
             required: false
             example: '8e-2'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

@@ -60,7 +60,7 @@ def worker(pipeline, recipe, config):
         for j, msname in enumerate(mslist):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msname[:-3])
-           
+
             if not os.path.exists(msinfo):
                 raise IOError(
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
@@ -68,28 +68,43 @@ def worker(pipeline, recipe, config):
             with open(msinfo, 'r') as stdr:
                 msdict = yaml.load(stdr)
 
-            # Proceed only if there are no conflicting flag versions or if conflicts are being dealt with
-            available_flagversions = manflags.handle_conflicts(pipeline, wname, 
-                    msname, config, flags_before_worker, flags_after_worker)
-
-            if config['rewind_flags']["enable"]:
-                version = config['rewind_flags']["version"]
-                if version == 'auto':
+            # Write/rewind flag versions
+            available_flagversions = manflags.get_flags(pipeline, msname)
+            if config['rewind_flags']['enable']:
+                if config['rewind_flags']['mode'] == 'reset_worker':
                     version = flags_before_worker
-                substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, msiter)
-                manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
-                if available_flagversions[-1] != version:
-                    substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, msiter)
-                    manflags.delete_cflags(pipeline, recipe,
-                        available_flagversions[available_flagversions.index(version)+1],
-                        msname, cab_name=substep)
-                if  version != flags_before_worker:
-                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
-                    manflags.add_cflags(pipeline, recipe, flags_before_worker, 
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    substep = 'version-{0:s}-ms{1:d}'.format(version, msiter)
+                    manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, msiter)
+                        manflags.delete_cflags(pipeline, recipe,
+                            available_flagversions[available_flagversions.index(version)+1],
+                            msname, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
                             msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
-                substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, msiter)
-                manflags.add_cflags(pipeline, recipe, flags_before_worker, 
+                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
             # Define fields and field_ids to be used to only flag the fields selected with
@@ -504,6 +519,6 @@ def worker(pipeline, recipe, config):
                 manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
 
 
-            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, msiter)
+            substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, msiter)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             msiter+=1

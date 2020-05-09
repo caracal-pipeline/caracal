@@ -83,12 +83,19 @@ then edit the file to suit your needs.
         help='prints list of auxiliary calibrator standards, then exits',
         action='store_true')
 
+    add('-report',
+        help='(re)generates a final HTML report, if configured, then exits',
+        action='store_true')
+
+
     add('-debug',
         help='enable debugging mode',
         action='store_true')
 
+
+
     add('-nr','--no-reports',
-        help='disable generation of report about the pipeline run',
+        help='disable generation of HTML reports throughout the pipeline',
         action='store_true')
 
     # add('-rv', '--report-viewer', action='store_true',

@@ -12,7 +12,7 @@ import shutil
 from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import worker_administrator as mwa
+from caracal.workers.worker_administrator import worker_administrator
 import stimela
 from caracal.schema import SCHEMA_VERSION
 
@@ -168,21 +168,20 @@ def execute_pipeline(options, config, block):
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            log_logo()
-            # Very good idea to print user options into the log before running:
-            config_parser.config_parser().log_options(config)
-
             # Obtain some divine knowledge
             cdb = mkct.calibrator_database()
 
-            pipeline = mwa(config,
+            pipeline = worker_administrator(config,
                            workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
                            configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
                            container_tech=options.container_tech, start_worker=options.start_worker,
                            end_worker=options.end_worker, generate_reports=not options.no_reports)
 
-            pipeline.run_workers()
+            if options.report:
+                pipeline.regenerate_reports()
+            else:
+                pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:
             log.error("A pipeline worker initiated sys.exit({0:}). This is likely a bug, please report.".format(e.code))
@@ -296,5 +295,13 @@ def main(argv):
             log.warning("you are running with -debug enabled, dropping you into pdb. Use Ctrl+D to exit.")
             pdb.post_mortem(sys.exc_info()[2])
         sys.exit(1)  # indicate failure
+
+    if options.report and options.no_reports:
+        log.error("-report contradicts --no-reports")
+        sys.exit(1)
+
+    log_logo()
+    # Very good idea to print user options into the log before running:
+    parser.log_options(config)
 
     execute_pipeline(options, config, block=True)

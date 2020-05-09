@@ -50,7 +50,7 @@ mapping:
             example: 'legacy'
             enum: ["legacy", "restore"]
           version:
-            desc: Name of the flag version to restore. If set to 'auto', rewind to the version <prefix>_<workername>_before, where <prefix> is set in the 'general' worker, and <workername> is the name of this worker. Note that all flag versions saved after this version will be deleted.
+            desc: Name of the flag version to restore. If set to 'auto', rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             type: str
             required: false
             example: 'auto'
@@ -95,3 +95,8 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

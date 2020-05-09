@@ -422,7 +422,7 @@ def worker(pipeline, recipe, config):
     
         if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.output, msfileName)
+                pipeline.obsinfo, msfileName)
             with open(msinfo, 'r') as stdr:
                 tinfo = yaml.safe_load(stdr)['FIELD']
                 targetpos = tinfo['REFERENCE_DIR']

@@ -306,7 +306,7 @@ mapping:
             mapping:
               enable:
                 type: bool
-                desc: Enables plotting of diagnostics, using ragavi.
+                desc: Enable the plotting of diagnostics, using ragavi.
                 required: false
                 example: 'False'
               gaintype:
@@ -337,7 +337,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment aimfast.
+            desc: Enable the 'aimfast' segment.
             required: false
             example: 'False'
           tolerance:
@@ -379,7 +379,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment image.
+            desc: Enable the 'image' segment.
             required: false
             example: 'True'
           column:
@@ -425,7 +425,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment extract_sources.
+            desc: Enable the 'extract_sources' segment.
             required: false
             example: 'False'
           sourcefinder:
@@ -468,7 +468,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment calibrate.
+            desc: Enable the 'calibrate' segment.
             required: false
             example: 'True'
           model:
@@ -533,7 +533,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment restore_model.
+            desc: Enable the 'restore_model' segment.
             required: false
             example: 'False'
           model:
@@ -553,7 +553,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment flagging_summary.
+            desc: Enable the 'flagging_summary' segment.
             required: false
             example: 'False'
 
@@ -563,7 +563,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment transfer_apply_gains.
+            desc: Enable the 'transfer_apply_gains' segment.
             required: false
             example: 'False'
           transfer_to_label:
@@ -607,7 +607,7 @@ mapping:
         mapping:
           enable:
             type: bool
-            desc: Execute segment transfer_model.
+            desc: Enable the 'transfer_model' segment.
             required: false
             example: 'True'
           transfer_to_label:

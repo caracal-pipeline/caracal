@@ -110,9 +110,9 @@ mapping:
             required: False
             example: '8.'
           quackmode:
-            desc: Quack flagging mode. Options are 'beg' (which flags the beginning of the scan), 'endb' (which flags the end of the scan), 'end' (which flags everything but the first specified seconds of the scan), and 'tail' (which flags all but the last specified seconds of the scan).
+            desc: Quack flagging mode. Options are 'beg' (which flags the beginning of the scan), 'endb' (which flags the end of the scan), 'tail' (which flags everything but the first specified seconds of the scan), and 'end' (which flags all but the last specified seconds of the scan).
             type: str
-            enum: ["beg", "endb", "end", "tail"]
+            enum: ["beg", "endb", "tail", "end"]
             required: False
             example: 'beg'
       flag_elevation:

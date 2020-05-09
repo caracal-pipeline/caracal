@@ -4,15 +4,9 @@ getdata:
   dataid: ['']
 
 obsconf:
-  target:
-    - all
   reference_antenna: '0'
 
 general:
-  data_path: input/data
-  msdir: msdir
-  input: input
-  output: output
   prefix: mymosaic
   init_pipeline: true
 

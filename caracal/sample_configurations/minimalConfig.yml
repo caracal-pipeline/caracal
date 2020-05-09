@@ -7,16 +7,6 @@ getdata:
   dataid: ['']
 
 obsconf:
-  target: 
-    - all
-  fcal: 
-    - longest
-  bpcal: 
-    - longest
-  gcal: 
-    - all
-  xcal: 
-    - longest
   reference_antenna: '0'
 
 transform:

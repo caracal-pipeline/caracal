@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   transform:
     desc: Split, avg and/or calibrate data
     type: map
@@ -28,16 +24,15 @@ mapping:
         type: map
         mapping:
           enable:
-            type: bool
             desc: enable this segement
+            type: bool
+            required: false
             example: 'False'
-            required: false
           version: 
+            desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
             type: str
-            desc: Flag version to restore. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__N' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
-            example: 'auto'
             required: false
-
+            example: ''
       split_field:
         desc: Make new ms of targets or calibrators
         type: map
@@ -142,3 +137,8 @@ mapping:
             type: bool
             required: false
             example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this segment.
+        example: 'False'

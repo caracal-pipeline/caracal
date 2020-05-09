@@ -27,7 +27,8 @@ requirements = [
     'pandas',
     'nbconvert',
     'regions',
-    'jinja2'
+    'radiopadre-client',
+    'jinja2',
 ]
 
 PACKAGE_NAME = 'caracal'

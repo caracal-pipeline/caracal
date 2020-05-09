@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   ddcal:
     type: map
     desc: Perform direction dependent calibration on the data
@@ -19,10 +15,10 @@ mapping:
         required: False
         example: 'corr'
      use_pb:
-        type: bool
-        desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
-        required: False
-        example: 'False' 
+       type: bool
+       desc: Enable primary beam usage in making the dd-corrected ddfacet image (only MeerKAT for the moment). EXPERIMENTAL.
+       required: False
+       example: 'False'
 
      image_dd:
        type: map
@@ -79,11 +75,11 @@ mapping:
            required: false
            example: '24'
          weight_column: 
-          type: str
-          enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
-          desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
-          required: false
-          example: "WEIGHT"
+           type: str
+           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
+           desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
+           required: false
+           example: "WEIGHT"
          weight_mode:
           type: str
           desc: UV weighting mode.
@@ -228,7 +224,7 @@ mapping:
              - type: str
            desc: List of sources per target to tag for DD calibration, in the same order as the de_target_manual list. Separate different sources per target by using ";".           
            required: false
-           example: " "
+           example: ""
          sol_min_bl:
            type: float
            desc: Min baseline length to solve for.
@@ -449,26 +445,26 @@ mapping:
            required: false
            example: 'CORRECTED_DATA'
          img_ws_fits_mask:
-            type: str
-            desc: filename of fits mask (in output/masking folder)
-            required: false
-            example: 'catalog_mask.fits'
+           type: str
+           desc: filename of fits mask (in output/masking folder)
+           required: false
+           example: 'catalog_mask.fits'
          img_ws_multi_scale:
             type: bool
             desc: switch on multiscale cleaning
             required: false
             example: 'False'
          img_ws_multi_scale_scales:
-            seq:
-              - type: int
-            desc: scales of multiscale [0,10,20,etc, etc] in pixels
-            required: false
-            example: '10, 20, 30'
+           seq:
+             - type: int
+           desc: scales of multiscale [0,10,20,etc, etc] in pixels
+           required: false
+           example: '10, 20, 30'
          img_ws_local_rms:
-            type: bool
-            desc: switch on local rms measurement for cleaning
-            required: false
-            example: 'False'
+           type: bool
+           desc: switch on local rms measurement for cleaning
+           required: false
+           example: 'False'
 
      transfer_model_dd:
        type: map
@@ -529,3 +525,8 @@ mapping:
            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
            required: false
            example: '0.5'
+     report:
+       type: bool
+       required: false
+       desc: (Re)generate a full HTML report at the end of this segment.
+       example: 'False'

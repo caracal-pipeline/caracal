@@ -3,17 +3,18 @@ import glob
 import shutil
 import jinja2
 import traceback
+import time
 
 import caracal
 from caracal import log
+
+from stimela.utils import xrun, StimelaCabRuntimeError
 
 _j2env = None
 
 SOURCE_NOTEBOOK_DIR = os.path.dirname(__file__)
 
-
 def setup_default_notebooks(notebooks, output_dir, prefix, config):
-
     # setup logos
     logodir = os.path.join(output_dir, ".logo")
     if not os.path.exists(logodir):
@@ -28,18 +29,8 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
         # overwrite destination only if source is newer
         dest_mtime = os.path.getmtime(nbdest) if os.path.exists(nbdest) else 0
 
-        # if source exists as is, copy
-        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile)
-        if os.path.exists(nbsrc):
-            if os.path.getmtime(nbsrc) > dest_mtime:
-                log.info("Creating standard notebook {}".format(nbdest))
-                shutil.copyfile(nbsrc, nbdest)
-            else:
-                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
-            continue
-
         # if source is a template, invoke jinja
-        nbsrc = nbsrc + ".j2"
+        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile+".j2")
         if os.path.exists(nbsrc):
             if os.path.getmtime(nbsrc) > dest_mtime:
                 global _j2env
@@ -63,4 +54,57 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
                 log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
             continue
 
+        # if source exists as is, copy
+        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile)
+        if os.path.exists(nbsrc):
+            if os.path.getmtime(nbsrc) > dest_mtime:
+                log.info("Creating standard notebook {}".format(nbdest))
+                shutil.copyfile(nbsrc, nbdest)
+            else:
+                log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
+            continue
+
+
         log.error("Standard notebook {} does not exist".format(nbsrc))
+
+_radiopadre_updated = False
+
+def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
+    opts = ["--non-interactive"]
+
+    if container_tech == "docker":
+        opts.append("--docker")
+    elif container_tech == "singularity":
+        opts.append("--singularity")
+    else:
+        log.warning("Container technology '{}' not supported by radiopadre, skipping report rendering")
+        return
+
+    if caracal.DEBUG:
+        opts += ['-v', '2', '--container-debug']
+
+    # first time run with -u
+    global _radiopadre_updated
+    if not _radiopadre_updated:
+        opts.append('--update')
+        _radiopadre_updated = True
+    start_time = time.time()
+
+    log.info("Rendering report(s)")
+    for notebook in notebooks:
+        if prefix:
+            notebook = "{}-{}".format(prefix, notebook)
+        nbdest = os.path.join(output_dir, notebook + ".ipynb")
+        nbhtml = os.path.join(output_dir, notebook + ".html")
+        if os.path.exists(nbdest):
+            try:
+                xrun("run-radiopadre", opts + ["--nbconvert", nbdest], log=log)
+            except StimelaCabRuntimeError as exc:
+                log.warning("Report {} failed to render ({}). HTML report will not be available.".format(nbhtml, exc))
+            # check that HTML file actually showed up (sometimes the container doesn't report an error)
+            if os.path.exists(nbhtml) and os.path.getmtime(nbhtml) >= start_time:
+                log.info("Rendered report {}".format(nbhtml))
+            else:
+                log.warning("Report {} failed to render".format(nbhtml))
+        else:
+            log.warning("Report notebook {} not found, skipping report rendering".format(nbdest))

@@ -151,10 +151,10 @@ def worker(pipeline, recipe, config):
             if config['rewind_flags']['enable']:
                 version = config['rewind_flags']['version']
                 if version in available_flagversions:
-                    substep = 'rewind_to_{0:s}_ms{1:d}'.format(version, target_iter)
+                    substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
                     manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
                     if available_flagversions[-1] != version:
-                        substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, target_iter)
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, target_iter)
                         manflags.delete_cflags(pipeline, recipe,
                             available_flagversions[available_flagversions.index(version)+1],
                             fms, cab_name=substep)
@@ -193,7 +193,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
 
-                substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, target_iter)
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', tms,
                     cab_name=substep, overwrite=False)
 

@@ -171,7 +171,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         can_reuse = False
         if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, caltable):
             # check if field is in gain table
-            substep = "check_fields_%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
+            substep = "check_fields-%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
             fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, substep)
             if set(fields_in_tab["field_id"]).issubset(field_id):
                 can_reuse = True
@@ -454,28 +454,28 @@ def worker(pipeline, recipe, config):
                 if version in available_flagversions:
                     if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
-                    substep = 'version_{0:s}_ms{1:d}'.format(version, i)
+                    substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                     if version != available_flagversions[-1]:
-                        substep = 'delete_flag_versions_after_{0:s}_ms{1:d}'.format(version, i)
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                         manflags.delete_cflags(pipeline, recipe,
                             available_flagversions[available_flagversions.index(version)+1],
                             msname, cab_name=substep)
                     if version != flags_before_worker:
-                        substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
                             msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
-                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
             else:
                 if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
-                    substep = 'save_{0:s}_ms{1:d}'.format(flags_before_worker, i)
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
 
@@ -594,7 +594,7 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
-            substep = 'save_{0:s}_ms{1:d}'.format(flags_after_worker, i)
+            substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
         
         gt_final, itp_final, fd_final = get_caltab_final(primary_order if no_secondary else secondary_order,

@@ -368,32 +368,32 @@ mapping:
             required: False
             example: 'q'
           spw_enable:
-            desc: Enable spw for rebinning.
+            desc: Enable averaging/rebinning in frequency.
             type: bool
             required: False
             example: 'True'
           spw_width:
-            desc: Channel width of rebinned output table (MHz).
+            desc: Frequency width of rebinned output table (in units of MHz).
             type: int
             required: False
             example: '10'
           time_enable:
-            desc: Enable time chunking.
+            desc: Enable averaging/rebinning in time.
             type: bool
             required: False
             example: 'True'
           time_step:
-            desc: Time chunks in minutes.
+            desc: Time steps (in units of minutes).
             type: int
             required: False
             example: '5'
           movies_in_report:
-            desc: Generate movies in a repo.
+            desc: Generate movies in a report.
             type: bool
             required: False
             example: 'True'
       summary:
-        desc: Write flagging summary at the end of the pre-calibration flagging. Uses CASA FLAGDATA in "summary" mode.
+        desc: Use CASA FLAGDATA in 'summary' mode to write flagging summary at the end of the pre-calibration flagging.
         type: map
         mapping:
           enable:

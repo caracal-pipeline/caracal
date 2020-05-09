@@ -319,30 +319,30 @@ mapping:
                 desc: Accumulate data across scans, depending on the value set for the 'ntime' parameter.
                 type: bool
                 required: False
-                example: "False"
+                example: 'False'
               flagdimension:
                 desc: Dimension(s) along which to calculate a fit(/fits) to the data. Options are 'freq', 'time', 'freqtime', and 'timefreq'. Note that the differences between 'freqtime' and 'timefreq' are only apparent if RFI in one dimension is signifcantly stronger than in the other.
                 type: str
                 enum: ["freq", "time", "freqtime", "timefreq"]
                 required: False
-                example: "freqtime"
+                example: 'freqtime'
               timecutoff:
-                desc: Flagging thresholds in units of deviation from the fit.
+                desc: Flagging threshold, in units of standard deviation (i.e. sigma) from the fit along the time axis.
                 type: float
                 required: False
-                example: "4.0"
+                example: '4.0'
               freqcutoff:
-                desc: Flagging thresholds in units of deviation from the fit.
+                desc: Flagging threshold, in units of standard deviation (i.e. sigma) from the fit along the frequency axis.
                 type: float
                 required: False
-                example: "3.0"
+                example: '3.0'
               correlation:
-                desc: Correlation.
+                desc: Specify the correlation(s) to be considered for flagging with 'tfcrop'. E.g. 'XX,YY', or leave as '' to select all correlations.
                 type: str
                 required: False
-                example: ""
+                example: ''
       inspect:
-        desc: Inspect the presence of RFI using the diagnostic products of RFInder.
+        desc: Use the diagnostic products of RFInder to inspect the presence of RFI.
         type: map
         mapping:
           enable:
@@ -351,19 +351,20 @@ mapping:
             required: False
             example: 'False'
           telescope:
-            desc: Name of telescope.
+            desc: Name of the telescope. Options are 'meerkat', 'apertif', and 'wsrt'.
             type: str
+            enum: ["meerkat", "apertif", "wsrt"]
             required: False
-            example: 'MeerKAT'
+            example: 'meerkat'
           field:
-            desc: Field to get flag stats. Given as a key (key in [gcal, bpcal, target]).
+            desc: Field over which to determine flag statistics. Options are 'gcal', 'bpcal', and 'target'.
             type: str
             required: False
             example: 'target'
           polarization:
-            desc: Select polarisation e.g. xx, yy, xy, yx, q (also in CAPS).
+            desc: Select the polarization, e.g. 'xx', 'yy', 'xy', 'yx', 'q' (and also each of these in upper case).
             type: str
-            enum: ['xx', 'XX', 'yy', 'YY', 'xy', 'XY', 'yx', 'YX', 'q', 'Q']
+            enum: ["xx", "XX", "yy", "YY", "xy", "XY", "yx", "YX", "q", "Q"]
             required: False
             example: 'q'
           spw_enable:

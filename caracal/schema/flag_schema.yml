@@ -116,7 +116,7 @@ mapping:
             required: False
             example: 'beg'
       flag_elevation:
-        desc: Flag antennas with pointing elevation outisde the selected range through CASA FLAGDATA.
+        desc: Use CASA FLAGDATA to flag antennas with pointing elevation outside the selected range.
         type: map
         mapping:
           enable:
@@ -125,17 +125,17 @@ mapping:
             required: False
             example: 'False'
           low:
-            desc: Lower elevation limit. Antennas pointing at elevation below this value are flagged.
+            desc: Lower elevation limit. Antennas pointing at an elevation below this value are flagged.
             type: float
             required: False
             example: '0'
           high:
-            desc: Upper elevation limit. Antennas pointing at elevation above this value are flagged.
+            desc: Upper elevation limit. Antennas pointing at an elevation above this value are flagged.
             type: float
             required: False
             example: '90'
       flag_shadow:
-        desc: Flag shadowed antennas through the CASA task FLAGDATA.
+        desc: Use CASA FLAGDATA to flag shadowed antennas.
         type: map
         mapping:
           enable:
@@ -144,12 +144,12 @@ mapping:
             required: False
             example: 'False'
           tolerance:
-            desc: Amounts of shadow allowed (in metres). Default is 0. A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
+            desc: Amount of shadow allowed (in metres). A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
             type: float
             required: False
             example: '0.'
           include_full_mk64:
-            desc: Consider all MeerKAT-64 antennas in the shadowing calculation even if only a subarray is used. Default is False.
+            desc: Consider all MeerKAT-64 antennas in the shadowing calculation, even if only a subarray is used.
             type: bool
             required: False
             example: 'False'

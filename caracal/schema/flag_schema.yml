@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: True
-
   flag:
     desc: Flagging of the data. The selected flagging steps are executed in the same order in which they are given below.
     type: map
@@ -242,7 +238,7 @@ mapping:
             desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
             type: str
             required: False
-            example: 'labelled_rfimask.pickle.npy'
+            example: ''
           uvrange:
             desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in default units of metres but, e.g., '0~1000km' and '0-500klambda' can also be specified. Leaving this parameter blank will select the entire range in UV-distance.
             type: str

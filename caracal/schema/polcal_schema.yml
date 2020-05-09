@@ -1,9 +1,5 @@
 type: map
 mapping:
-  schema_version:
-    type: str
-    required: true
-
   polcal:
     type: map
     desc: Carry out crosshand calibration of the data (X and D) on boresight, after parallel hand calibration has been performed

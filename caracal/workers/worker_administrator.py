@@ -32,7 +32,7 @@ REPORTS = False
 
 class worker_administrator(object):
     def __init__(self, config, workers_directory,
-                 stimela_build=None, prefix=None, configFileName=None,
+                 prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
                  start_worker=None, end_worker=None,
                  container_tech='docker', generate_reports=False):
@@ -71,7 +71,8 @@ class worker_administrator(object):
         self.virtconcat = False
         self.workers_directory = workers_directory
         # Add workers to packages
-        sys.path.append(self.workers_directory)
+        if workers_directory:
+            sys.path.append(self.workers_directory)
         self.workers = []
         last_mandatory = 2 # index of last mendatory worker
         # general, getdata and obsconf are all mendatory. 
@@ -109,7 +110,6 @@ class worker_administrator(object):
             self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
 
         self.prefix = prefix or self.config['general']['prefix']
-        self.stimela_build = stimela_build
 
         # Get possible flagsets for reduction
         self.flags = {"legacy": ["legacy"]}
@@ -293,7 +293,6 @@ class worker_administrator(object):
 
             recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,
-                                    build_label=self.stimela_build,
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
                                     logfile=False, # no logfiles for recipes

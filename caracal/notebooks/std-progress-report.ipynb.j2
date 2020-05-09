@@ -19,7 +19,7 @@
     "from radiopadre import ls                                       # everyone needs an ls function \n",
     "from radiopadre.layouts import Title, Section                  \n",
     "Title(\"Live progress report for {{ title }}{{ suffix }}\",            # edit the title as you like\n",
-    "  \"Logs | Reports | Initial Plots | Plots 1GC | Obsinfo | Images | Caltables\", \n",
+    "  \"Logs | Plots: top level | Plots: raw data | Plots: 1GC | Obsinfo | Images I | Images II | Reports\", \n",
     "  logo=\".logo/caracal-logo-200px.png\", logo_width=100, logo_padding=8, \n",
     "  icon=\".logo/caracal-square-logo-32px.png\", icon_width=16,\n",
     "  ) # sets up sections "
@@ -34,17 +34,8 @@
    "outputs": [],
    "source": [
     "logs = ls(\"logs/log*txt -rt\", section=\"*Logs\").filter(bool)\n",
-    "logs.title = \"MeerKATHI logs (most recent first)\"\n",
+    "logs.title = \"CARACAl logs (most recent first)\"\n",
     "logs.thumbs(head=0, tail=10)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "ls(\"reports/*html -rt\", section=\"*Reports\").thumbs"
    ]
   },
   {
@@ -84,7 +75,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "ls(\"continuum/image*/*MFS*fits\", section=\"*Images\").thumbs(vmin=-0.0001, vmax=0.001, zoom=8)"
+    "ls(\"continuum/image*/*MFS*fits\", section=\"*Images I\").thumbs(vmin=-0.0001, vmax=0.01, zoom=8)"
    ]
   },
   {
@@ -93,7 +84,16 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "ls(\"caltables/*-*-*.*\", section=\"*Caltables\").thumbs"
+    "ls(\"continuum/crosscal*/*MFS*fits\", section=\"*Images II\").thumbs(vmin=-0.0001, vmax=0.1, zoom=8)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ls(\"reports/*html -rt\", section=\"*Reports\").thumbs"
    ]
   }
  ],

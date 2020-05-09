@@ -70,6 +70,16 @@ mapping:
         desc: Label specifying the correlations.
         required: false
         example: 'XX, YY'
+      num_cores:
+        type: int
+        required: false
+        example: '8'
+        desc: number of CPUs to use
+      mem_limit:
+        type: str
+        required: false
+        example: '8GB'
+        desc: Amount of memory (RAM) to use
       uvrange: 
         type: str
         required: false

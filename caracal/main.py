@@ -232,11 +232,12 @@ def execute_pipeline(args, arg_groups, block):
             cdb = mkct.calibrator_database()
 
             pipeline = worker_administrator(arg_groups,
-                                            args.workers_directory, stimela_build=args.stimela_build,
-                                            add_all_first=False, prefix=args.general_prefix,
-                                            configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
-                                            container_tech=args.container_tech, start_worker=args.start_worker,
-                                            end_worker=args.end_worker, generate_reports=not args.no_reports)
+                           args.workers_directory,
+                           add_all_first=False,  prefix=args.general_prefix,
+                           configFileName=args.config, singularity_image_dir=args.singularity_image_dir,
+                           container_tech=args.container_tech, start_worker=args.start_worker,
+                           end_worker=args.end_worker, generate_reports=not args.no_reports)
+
             if args.report:
                 pipeline.regenerate_reports()
             else:

@@ -8,7 +8,7 @@ def get_fields(pipeline, recipe, indir, caltable,
         cab_name="get_field_info", label=""):
 
     _recipe = stimela.Recipe("get field info", ms_dir=recipe.ms_dir, 
-            JOB_TYPE=recipe.JOB_TYPE, build_label=recipe.build_label, 
+            JOB_TYPE=recipe.JOB_TYPE, 
             singularity_image_dir=recipe.singularity_image_dir, log_dir=pipeline.logs)
 
     tfile = tempfile.NamedTemporaryFile(suffix=".json", dir=pipeline.output)

@@ -194,7 +194,7 @@ mapping:
            example: 'True'
          sigma:
            type: float
-           desc: Sigma threshold to use in detecting outlier regions in images, via CatDagger (which is enabled by setting 'de_sources_mode', below, to 'auto'). The default value of 4.5 works well, but a lower value may be needed for some images.
+           desc: Sigma threshold to use in detecting outlier regions in images, via CATDagger (which is enabled by setting 'de_sources_mode', below, to 'auto'). The default value of 4.5 works well, but a lower value may be needed for some images.
            required: false
            example: '4.5'
          min_dist_from_phcentre:
@@ -210,7 +210,7 @@ mapping:
 
          de_sources_mode:
            type: str
-           desc: Mode in which sources are tagged for DD-calibration. Options are 'auto' (which uses catdagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
+           desc: Mode in which sources are tagged for DD-calibration. Options are 'auto' (which uses CATDagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
            required: false
            example: 'manual'
          de_target_manual: 

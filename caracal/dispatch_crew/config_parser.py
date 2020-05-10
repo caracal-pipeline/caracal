@@ -138,7 +138,11 @@ class config_parser(object):
         Else raises ConfigErrors.
         """
         with open(config_file, 'r') as file:
-            config_content = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+            try:
+                config_content = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+            except BaseException as exc:
+                raise ConfigErrors(config_file, {'at top level': [str(exc)]})
+
 
         version = None
         # Validate each worker section against the schema and

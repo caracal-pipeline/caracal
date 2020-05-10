@@ -548,7 +548,7 @@ def worker(pipeline, recipe, config):
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':
             image_opts.update({
-                "auto-mask": config[key]['cleanmask_threshold'][num-1 if len(config[key]['cleanmask_threshold']) >= num else -1],
+                "auto-mask": config[key]['cleanmask_thr'][num-1 if len(config[key]['cleanmask_thr']) >= num else -1],
                 "local-rms": config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1],
                 "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
               })
@@ -652,7 +652,7 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key]['kernels']],
-            "SCfind.threshold": config['image']['cleanmask_threshold'][num-1 if len(config['image']['cleanmask_threshold']) >= num else -1],
+            "SCfind.threshold": config['image']['cleanmask_thr'][num-1 if len(config['image']['cleanmask_thr']) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
@@ -2127,17 +2127,6 @@ def worker(pipeline, recipe, config):
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), mslist, field)
-                #if config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1]=='sofia':
-                #    config['image']['cleanmask_threshold'][0]=config['image']['cleanmask_threshold'][1]
-                #    sofia_mask(self_cal_iter_counter, get_dir_path(
-                #        image_path, pipeline), field)
-                #sofia_mask(self_cal_iter_counter, get_dir_path(
-                #image_path, pipeline), field)
-        ### to enable eventually if one wants only to run caracal to produce sofia mask
-        #if pipeline.enable_task(config, 'image') == False and mask_key =='sofia':
-        #    sofia_mask(0, get_dir_path(
-        #        image_path, pipeline), field)
-        #        config['image']['cleanmask_method'].insert(1,config['image']['cleanmask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)

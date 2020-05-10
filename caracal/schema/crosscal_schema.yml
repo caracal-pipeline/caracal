@@ -97,7 +97,7 @@ mapping:
             type: str
             required: false
             example: KGB
-          B_solnorm:
+          b_solnorm:
             type: bool
             required: false
             desc: Normalise average solution amplitude to 1.0

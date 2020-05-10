@@ -141,7 +141,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         if term == "B":
             params["bandtype"] = term
-            params["solnorm"] = config[ftype]["B_solnorm"]
+            params["solnorm"] = config[ftype]["b_solnorm"]
             params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
         elif term == "K":

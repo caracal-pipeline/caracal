@@ -61,7 +61,7 @@ flag:
       strategy: firstpass_QUV.rfis
   inspect:
     enable: false
-    telescope: MeerKAT
+    telescope: meerkat
     field: 'bpcal,gcal'
 
 crosscal:
@@ -97,7 +97,7 @@ polcal:
 inspect:
   enable: true
   label_in: 'cal'
-  label_out: '1gc'
+  label_cal: '1gc1'
   fields:
     - bpcal
     - gcal

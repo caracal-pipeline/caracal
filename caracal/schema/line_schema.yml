@@ -5,12 +5,12 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Execute the line worker.
+        desc: Execute the image_line worker.
         type: bool
         required: true
         example: 'False'
       label:
-        desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the getdata worker, followed by the target ID (one file per target), followed by this label. This is the format used by CARACal whenever it writes an .MS file to disk (e.g., in the transform worker).
+        desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the get_data worker, followed by the target ID (one file per target), followed by this label. This is the format used by Caracal whenever it writes an .MS file to disk (e.g., in the split_target worker).
         type: str
         required: false
         example: 'corr'
@@ -26,16 +26,16 @@ mapping:
         example: '1.420405752GHz'
 
       rewind_flags:
-        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to the .MS file(s) you might be running "transfer_apply_gains" on.
+        desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to .MS file(s) you might be running "transfer_apply_gains" on.
         type: map
         mapping:
           enable:
-            desc: Enable the 'rewind_flags' segment.
+            desc: enable this segement
             type: bool
             required: false
             example: 'True'
           mode:
-            desc: If set to 'reset_worker', rewind to the flag version before this worker if it exists, or continue if it does not exist; if set to 'rewind_to_version', rewind to the flag version given by 'version' and 'mstransform_version' below.
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' and 'mstransform_version' below.
             type: str
             enum: ['reset_worker', 'rewind_to_version']
             required: false
@@ -51,7 +51,7 @@ mapping:
             example: 'auto'
             required: false
       overwrite_flag_versions:
-        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
         required: false
@@ -61,7 +61,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'subtractmodelcol' segment.
+            desc: Execute the segment subtractmodelcol.
             type: bool
             required: false
             example: 'True'  
@@ -71,7 +71,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'addmodelcol' segment.
+            desc: Execute the segment addmodelcol.
             type: bool
             required: false
             example: 'False'
@@ -81,7 +81,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'mstransform' segment.
+            desc: Execute the segment mstransform.
             type: bool
             required: false
             example: 'True'
@@ -95,7 +95,7 @@ mapping:
             type: map
             mapping:
               enable:
-                desc: Enable the 'doppler' (i.e. Doppler correction) segment.
+                desc: Enable the Doppler correction section.
                 type: bool
                 required: false
                 example: 'True'
@@ -106,25 +106,25 @@ mapping:
                 required: true
                 example: 'meerkat'
               mode:
-                desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT! Currently, only frequency mode is supported. Other modes will throw an error.
+                desc: Regridding mode (channel/velocity/frequency/channel_b). IMPORTANT! Currently only frequency mode is supported. Other modes will throw an error.
                 type: str
                 enum: ['frequency', ]
                 required: false
                 example: 'frequency'
               outframe:
-                desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, and source.
+                desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, source.
                 type: str
                 enum : ['', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source']
                 required: false
                 example: 'bary'
               veltype:
-                      desc: Velocity used when regridding if mode = velocity. Current options are radio,and optical.
+                desc: Velocity used when regridding if mode = velocity. Current options are radio, optical.
                 type: str
                 enum: ['radio', 'optical']
                 required: false
                 example: 'radio'
               outchangrid:
-                desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' then it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
+                desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
                 type: str
                 required: false
                 example: 'auto'
@@ -133,12 +133,12 @@ mapping:
             type: map
             mapping:
               enable:
-                desc: Enable the 'UVLIN' segment.
+                desc: Enable the UVLIN section.
                 type: bool
                 required: false
                 example: 'True'
               fitspw:
-                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagged visibilities will be performed.
+                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagges visibilities will be performed.
                 type: str
                 required: false
                 example: ''
@@ -148,7 +148,7 @@ mapping:
                 required: false
                 example: '1'
           obsinfo:
-            desc: Create obsinfo.txt and obsinfo.json per .MS file created by CASA mstransform.
+            desc: Create obsinfo.txt and obsinfo.json of the .MS file(s) created by CASA mstransform.
             type: bool
             required: false
             example: 'True'
@@ -158,12 +158,12 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'flag_mst_errors' segment.
+            desc: Execute segment flag_mst_errors.
             type: bool
             required: false
             example: 'False'
           strategy:
-            desc: AOFlagger strategy file.
+            desc: AOFlagger strategy file
             type: str
             required: false
             example: 'postmst.rfis'
@@ -173,7 +173,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'sunblocker' segment.
+            desc: Execute segment sunblocker.
             type: bool
             required: false
             example: 'False'
@@ -198,32 +198,32 @@ mapping:
             required: false
             example: '4.'
           vampirisms:
-            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells to flag.
+            desc: Apply the flags to data taken during day time only. Note that all data are used when calculating which UV cells where to flag.
             type: bool
             required: false
             example: 'False'
           uvmin:
-            desc: Minimum uvdistance to be analysed (in wavelengths, lambda).
+            desc: Minimum uvdistance to be analysed (in wavelengths).
             type: float
             required: false
             example: '0.'
           uvmax:
-            desc: Maximum uvdistance to be analysed (in wavelengths, lambda).
+            desc: Maximum uvdistance to be analysed (in wavelengths).
             type: float
             required: false
             example: '2000'
 
       make_cube:
-        desc: Make a line cube using either WSClean + SoFiA (optional for clean masks) or CASA Clean.
+        desc: Make a line cube using either WSclean + SoFiA (optional for clean masks) or CASA Clean.
         type: map
         mapping:
           enable:
-            desc: Enable the 'make_cube' segment.
+            desc: Execute segment make_cube.
             type: bool
             required: false
             example: 'True'
           image_with:
-            desc: Choose whether to image with WSClean + SoFiA ('wsclean') or with CASA Clean ('casa').
+            desc: Choose whether to image with WSclean + SoFiA ('wsclean') or with CASA Clean ('casa').
             type: str
             enum: ['wsclean', 'casa']
             required: false
@@ -244,7 +244,7 @@ mapping:
             required: false
             example: '0'
           nchans:
-            desc: Number of channels of the line cube, where 0 means all channels.
+            desc: Number of channels of the line cube, 0 means all channels.
             type: int
             required: false
             example: '0'
@@ -266,17 +266,17 @@ mapping:
             required: false
             example: '900 , 900'
           cell:
-            desc: Pixel size. The default unit is arcsec, but other units can be specified, e.g., 'scale 20asec'.
+            desc: Pixel size. The default unit is arcsec, but other units can be specificied, e.g., 'scale 20asec'.
             type: float
             required: false
             example: '2'
           padding:
-            desc: Images have initial size padding*npix, and are later trimmed to the image size set via the 'npix' parameter.
+            desc: Images have initial size padding*npix, and are later trimmed to npix.
             type: float
             required: false
             example: '1.2'
           weight:
-            desc: Options for the type of weighting to be used are natural, uniform, or briggs. When using Briggs weighting, the additional robust parameter has to be specified.
+            desc: Weightmode can be natural, uniform, briggs. When using Briggs weighting, the additional robust parameter has to be specified.
             type: str
             enum: ['natural', 'uniform', 'briggs']
             required: false
@@ -302,68 +302,68 @@ mapping:
             required: false
             example: '0.1'
           wscl_mgain:
-            desc: Gain value for major iterations in WSClean. I.e., the maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
+            desc: WSclean gain for major iterations, i.e., maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
             type: float
             required: false
             example: '1.0'
           wscl_sofia_niter:
-            desc: Maximum number of WSClean + SoFiA iterations. The initial cleaning is done with WSClean automasking or with a user-provided clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSClean is only executed once and SoFiA is not used.
+            desc: Maximum number of WSclean + SoFiA iterations. The initial cleaning is done with WSclean automasking or with a user clean mask. Subsequent iterations use a SoFiA clean mask. A value of 1 means that WSclean is only executed once and SoFiA is not used.
             type: int
             required: false
             example: '2'
           wscl_sofia_converge:
-            desc: Stop the WSClean + SoFiA iterations if the cube RMS has dropped by a factor < wscl_sofia_converge when comparing the last two iterations (considering only channels that were cleaned). If set to 0 then the maximum number of iterations is performed regardless of the change in RMS.
+            desc: Stop the WSclean + SoFiA iterations if the cube RMS has dropped by a factor < wscl_sofia_converge when comparing the last two iterations (considering only channels that were cleaned). If set to 0 then the maximum number of iterations is performed regardless of the noise change.
             type: float
             required: false
             example: '1.1'
           wscl_keep_final_products_only:
-            desc: If set to true, WSClean + SoFiA intermediate-cubes are deleted from the output directory. If set to false, WSClean + SoFiA intermediate-cubes are retained in the output directory.
+            desc: If set to true it deletes WSclean + Sofia intermediate cubes from the output directory, if set to false it keeps all the cubes of the WSclean + SoFiA iterations.
             type: bool
             required: false
             example: 'False'
           wscl_user_clean_mask:
-            desc: User-provided WSClean clean-mask for the first WSClean + SoFiA iteration (i.e. give the filename of the clean-mask, which is to be located in the output/masking folder).
+            desc: WSclean user clean mask for first WSclean + SoFiA iteration (give filename, to be located in the output/masking folder).
             type: str
             required: false
             example: ''
           wscl_auto_mask:
-            desc: Cleaning threshold used only during the first iteration of WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration. WSClean will clean blindly down to this threshold (wscl_auto_mask), before switching to the auto-threshold set via wscl_auto_threshold.
+            desc: Used only during the first WSclean iteration. Clean blindly down to a threshold given by this parameter (in  units of the noise), then clean again the already cleaned pixels down to the parameter wscl_auto_threshold.
             type: float
             required: false
             example: '10'
           wscl_auto_threshold:
-            desc: Cleaning threshold used for subsequent iterations of WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
+            desc: WSclean cleaning threshold in units of the noise.
             type: float
             required: false
             example: '0.5'
           wscl_make_cube:
-            desc: If set to true, the output of WSClean is a data cube. If set to false, the output is one .FITS image per spectral channel.
+            desc: If set to true the output of WSclean is a data cube, if set to false the output is one .FITS image per spectral channel.
             type: bool
             required: false
             example: 'True'
           wscl_no_update_mod:
-            desc: If set to true, WSClean will not store the line clean model in MODEL_DATA.
+            desc: If set to true, WSclean will not store the line clean model in MODEL_DATA.
             type: bool
             required: false
             example: 'True'
           wscl_multi_scale:
-            desc: Switch on WSClean multiscale cleaning.
+            desc: Switch on WSclean multiscale cleaning.
             type: bool
             required: false
             example: 'False'
           wscl_multi_scale_scales:
-            desc: List of scales for WSClean multiscale, in units of pixels. Only used is wscl_multi_scale is set to True.
+            desc: List of scales of WSclean multiscale in units of pixels. Only used is wscl_multi_scale is set to True.
             seq:
               - type: int
             required: false
             example: '0, 10, 20, 30'
           wscl_multi_scale_bias:
-            desc: Parameter to set the bias during multiscale cleaning, where a lower bias will give preference to larger angular scales.
+            desc: Parameter to set the bias towards larger scales during multi-scale cleaning. A lower bias will give preference to larger scales.
             type: float
             required: false
             example: '0.6'
           casa_threshold:
-            desc: Flux-density level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
+            desc: Flux level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
             type: str
             required: false
             example: '10mJy'
@@ -378,22 +378,22 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'remove_stokes_axis' segment.
+            desc: Execute segment remove_stokes_axis.
             type: bool
             required: false
             example: 'False'
 
       pb_cube:
-        desc: Make a primary-beam cube.
+        desc: Make a primary beam cube.
         type: map
         mapping:
           enable:
-            desc: Enable the 'pb_cube' segment.
+            desc: Execute segment pb_cube.
             type: bool
             required: false
             example: 'False'
           apply_pb: 
-            desc: Whether or not to apply the primary-beam correction to the image cube.
+            desc: Whether to apply the primary beam correction to the image cube.
             type: bool
             required: false
             example: 'False'
@@ -403,22 +403,22 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'freq_to_vel' segment.
+            desc: Execute segment freq_to_vel.
             type: bool
             required: false
             example: 'False'
           reverse:
-            desc: Perform the inverse transformation and change the cube's 3rd axis from radio velocity to frequency.
+            desc: Perform the inverse transformation and change the cube 3rd axis from radio velocity to frequency.
             type: bool
             required: false
             example: 'False'
       
       sofia:
-        desc: Run SoFiA source-finder to produce a detection mask, moment images and catalogues.
+        desc: Run SoFiA source finder to produce a detection mask, moment images and catalogues.
         type: map
         mapping:
           enable:
-            desc: Enable the 'sofia' segment.
+            desc: Execute segment sofia.
             type: bool
             required: false
             example: 'True'
@@ -439,12 +439,12 @@ mapping:
             required: false
             example: 'mad'
           threshold:
-            desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
+            desc: SoFiA source finding threshold.
             type: float
             required: false
             example: '4.0'
           merge:
-            desc: Merge pixels detected by any of the SoFiA source-finding algorithms into objects. If enabled, pixels with a separation of less than mergeX pixels in the X direction, mergeY pixels in the Y direction, and mergeZ channels in the Z direction will be merged and identified as a single object in the mask. Objects whose extent is smaller than minSizeX, minSizeY or minSizeZ will be removed from the mask.
+            desc: Merge pixels detected by any of SoFiA source finding algorithms into objects. If turned on, pixels with a separation of less than mergeX pixels in the X direction, mergeY pixels in Y direction, and mergeZ channels in Z direction will be merged and identified as a single object in the mask. Objects whose extent is smaller than minSizeX, minSizeY or minSizeZ will be removed from the mask.
             type: bool
             required: false
             example: 'False'
@@ -469,7 +469,7 @@ mapping:
             required: false
             example: '3'
           minSizeY:
-            desc: Minimum size (in pixels) in the Y direction (Dec axis).
+            desc: Minimum size (in pixels) in  the Y direction (Dec axis).
             type: int
             required: false
             example: '3'
@@ -499,28 +499,28 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable the 'sharpener' segment.
+            desc: Execute segment sharpener.
             type: bool
             required: false
             example: 'False'
           catalog:
-            desc: Type of catalogue to use. Options are PYBDSF and NVSS.
+            desc: Type of catalog to use (PYBDSF/NVSS).
             type: str
             enum: ['NVSS', 'PYBDSF']
             required: false
             example: 'PYBDSF'
           channels_per_plot:
-            desc: Number of channels to plot per detailed plot.
+            desc: Number of channels to plot per detail plot.
             type: int
             required: false
             example: '50'
           thresh:
-            desc: Threshold to select sources in online catalogue (in units of mJy).
+            desc: Threshold to select sources in online catalogs (mJy).
             type: float
             required: false
             example: '20'
           width:
-            desc: Field-of-view of output catalogue (in units of degrees).
+            desc: Field of view of output catalog (degrees).
             type: str
             required: false
             example: '1.0d'

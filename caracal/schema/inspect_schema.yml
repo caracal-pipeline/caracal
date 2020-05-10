@@ -6,7 +6,7 @@ mapping:
     mapping:
       enable:
         type: bool
-        desc: Execute the inspect worker (i.e. diagnostic plotting of the first-pass cross-calibrated data).
+        desc: Executes dignostic plotting of the first-pass cross-calibrated data.
         required: true
         example: 'False'
       label_in:

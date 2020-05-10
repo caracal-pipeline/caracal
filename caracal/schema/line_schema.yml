@@ -118,7 +118,7 @@ mapping:
                 required: false
                 example: 'bary'
               veltype:
-                      desc: Velocity used when regridding if mode = velocity. Current options are radio,and optical.
+                desc: Velocity used when regridding if mode = velocity. Current options are radio,and optical.
                 type: str
                 enum: ['radio', 'optical']
                 required: false

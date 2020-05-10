@@ -314,7 +314,6 @@ mapping:
               gaintype:
                 seq:
                 - type: str
-                enum: ["F", "B", "K", "G", "D"]
                 desc: List of gain solution types. Options are 'F' (flux-calibration solutions), 'B' (bandpass-calibration solutions), 'K' (delay-calibration solutions), 'G' (gain-calibration solutions), and 'D' (D-Jones leakage-calibration solutions).
                 required: false
                 example: 'G'
@@ -350,7 +349,6 @@ mapping:
           convergence_criteria:
             seq:
               - type: str
-            enum: ["DR", "MEAN", "STDDev", "SKEW", "KURT"]
             required: false
             desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option.
             example: 'DR'
@@ -482,7 +480,6 @@ mapping:
           output_data:
             seq:
               - type: str
-            enum: ["CORR_DATA", "CORR_RES", "CORRECTED_DATA"]
             desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
             required: false
             example: 'CORR_DATA'

@@ -230,7 +230,7 @@ transform__4:
 
 line:
   enable: true
-  label: 'l'
+  label_in: 'l'
   restfreq: '1.420405752GHz'
   subtractmodelcol:
     enable: true
@@ -267,7 +267,7 @@ mosaic:
   domontage:
     enable: true
   cutoff: 0.1
-  use_MFS_images: false
+  use_mfs: false
 
 mosaic__2:
   enable: true
@@ -276,4 +276,4 @@ mosaic__2:
   domontage:
     enable: true
   cutoff: 0.1
-  use_MFS_images: true
+  use_mfs: true

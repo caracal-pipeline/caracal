@@ -32,12 +32,6 @@ mapping:
         type: str
         required: false
         example: 'HI'
-      mosaic_type:
-        desc: Type of mosaic to be made, either continuum or spectral.
-        type: str
-        enum: ['continuum', 'spectral']
-        required: true
-        example: 'continuum'
       use_mfs:
         desc: Continuum mode only -- If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.
         type: bool

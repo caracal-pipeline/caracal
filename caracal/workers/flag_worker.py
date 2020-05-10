@@ -490,7 +490,7 @@ def worker(pipeline, recipe, config):
                                    "1d_gif": config['inspect']['time_enable'],
                                    "2d_gif": config['inspect']['time_enable'],
                                    "altaz_gif": config['inspect']['spw_enable'],
-                                   "movies": config['inspect']['time_enable'] or config['spw_enable']
+                                   "movies_in_report": config['inspect']['time_enable'] or config['spw_enable']
                                },
                                input=pipeline.input,
                                output=pipeline.output,

@@ -224,7 +224,7 @@ mapping:
              - type: str
            desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target_manual' list. Use ';' to separate different sources per target.           
            required: false
-           example: ' '
+           example: ''
          sol_min_bl:
            type: float
            desc: The minimum baseline length to solve for.

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # The following ensures the script to stop on errors
 set -e
 
@@ -520,9 +519,6 @@ then
     echo ""
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_COPY_DATA_ID"
-    ####
-    ####
-    ####
     echo ""
     echo "  --copy-config-data -cc              Copy test data as specified in the"
     echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
@@ -534,21 +530,18 @@ then
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_COPY_DATA_ID. Note that this over-"
     echo "                                      rides --copy-config-data or -cc"
-    ####
-    ####
-    ####
     echo ""
     echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_INPUT_DIR"
     echo ""
     echo "  --docker-minimal -dm                Test Docker installation and test run with"
-    echo "                                      minimal configuration"
+    echo "                                      minimal test configuration"
     echo ""
     echo "  --docker-alternative -da            Test Docker installation and test run with"
     echo "                                      alternative configuration carateConfig.yml"
     echo ""
     echo "  --singularity-minimal -sm           Test Singularity installation and test run"
-    echo "                                      with minimal configuration"
+    echo "                                      with minimal test configuration"
     echo ""
     echo "  --singularity-alternative -sa       Test Singularity installation and test run"
     echo "                                      alternative configuration carateConfig.yml"
@@ -674,12 +667,12 @@ echo ""
 echo "  - when switch --singularity-minimal or -sm is set, a directory"
 echo "    minimal_singularity is created (if not existing or if -f is set),"
 echo "    the configuration file"
-echo "    caracal/caracal/sample_configurations/minimalConfig.yml is copied"
+echo "    caracal/caracal/sample_configurations/minitestConfig.yml is copied"
 echo "    to that directory, all .ms files from \$CARATE_TEST_DATA_DIR are"
 echo "    copied into the msdir directory in the minimal_singularity"
-echo "    directory and minimalConfig.yml is edited to point to those .ms"
+echo "    directory and minitestConfig.yml is edited to point to those .ms"
 echo "    files in the variable dataid, then caracal is run with"
-echo "    minimalConfig.yml and declared successful if certain expected"
+echo "    minitestConfig.yml and declared successful if certain expected"
 echo "    files are created (see exceptions below)."
 echo ""
 echo "  - when switch --singularity_extended or -se is set, a directory"
@@ -698,11 +691,11 @@ echo ""
 echo "  - when switch --docker-minimal or -dm is set, a directory \-"
 echo "    minimal_docker is created (if not existing or if -f is set), the"
 echo "    configuration file"
-echo "    caracal/caracal/sample_configurations/minimalConfig.yml is copied"
+echo "    caracal/caracal/sample_configurations/minitestConfig.yml is copied"
 echo "    to that directory, all .ms files from \$CARATE_TEST_DATA_DIR are"
 echo "    copied into the msdir directory in the minimal_docker directory"
-echo "    and minimalConfig.yml is edited to point to those .ms files in the"
-echo "    variable dataid, then caracal is run with minimalConfig.yml and"
+echo "    and minitestConfig.yml is edited to point to those .ms files in the"
+echo "    variable dataid, then caracal is run with minitestConfig.yml and"
 echo "    declared successful if certain expected files are created (see"
 echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
 echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
@@ -946,7 +939,7 @@ then
     echo "   - The location \${configfile}.yml of a CARACal configuration"
     echo "     file. Templates can be found in the directory"
     echo "     \${workspace}/\${caracal_testdir}/caracal/caracal/sample_configurations. A"
-    echo "     choice to start with is the file minimalConfig.yml."
+    echo "     choice to start with is the file minitestConfig.yml."
     echo ""
     echo "   - The name \${rawdata} of a directory containing the measurement"
     echo "     sets (which have to have the suffix .ms) that are supposed to be"
@@ -2849,8 +2842,8 @@ testrunnumber=0
 if [[ -n ${DM} ]]
 then
     (( testrunnumber+=1 ))
-    greetings_line="Docker: minimalConfig"
-    confilename="minimalConfig"
+    greetings_line="Docker: minitestConfig"
+    confilename="minitestConfig"
     contarch="docker"
     caracalswitches="${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\{workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
@@ -3008,8 +3001,8 @@ fi
 if [[ -n ${SM} ]]
 then
     (( testrunnumber+=1 ))
-    greetings_line="Singularity: minimalConfig-singularity"
-    confilename="minimalConfig"
+    greetings_line="Singularity: minitestConfig-singularity"
+    confilename="minitestConfig"
     contarch="singularity"
     caracalswitches="--container-tech singularity -sid ${singularity_loc}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_sing}" "${ss_sing}" "${caracalswitches}"

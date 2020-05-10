@@ -2,95 +2,95 @@ type: map
 mapping:
   getdata:
     type: map
-    desc: Download and/or convert/unarchive data so that it is in the measurement set (MS) format for further processing.
+    desc: Download and/or convert/unarchive data so that its in the MS format for further processing
     mapping:
       dataid:
         seq:
           - type: str
         required: true
-        desc: Basename of MS. For MeerKAT data to be downloaded by CARACal, this should be the data ID of the observation.
+        desc: Basename of MS. For MeerKAT data to be downloaded by CARACal, this should be the data ID of the observation
         example: mydata
 
       mvftoms:
         type: map
-        desc: For MeerKAT HDFS files only -- Convert HDF5/MVF files in data_path (specified for the general worker) to MS files. The latter are written to msdir (also as specified for the general worker), and an MS.TAR file is created.
+        desc: Convert HDF5/MVF files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file. (This only works for MeerKAT HDF5 files)
         mapping:
           enable:
             type: bool
-            desc: Enable the 'mvftoms' segment.
+            desc: Execute this segment
             required: false
             example: 'False'
           tar: 
             type: bool
-            desc: Create a tarball of the converted MS.
+            desc: Create a tarbal of the converted MS.
             required: false
             example: 'False'
           channel_range:
             type: str
-            desc: Only extract channels in this range (0-based, inclusive; comma-separated string). It is also possible to specify 'all'.
+            desc: Only exctract channels in this range (0-based, inclusive; comma seperated string)
             required: false
             example: all
           full_poll:
             type: bool
-            desc: Extract all four correlations instead of only the XX and YY correlations.
+            desc: Extract all four correlations instead of only the XX,YY
             required: false
             example: 'False'
 
       untar:
         type: map
-        desc: Unarchive MS from an archive file.
+        desc: Unarchive from MS from a archive file.
         mapping:
           enable:
             type: bool
-            desc: Enable the 'untar' segment.
+            desc: Execute this segment
             required: false
             example: 'False'
           tar_options: 
             type: str
-            desc: The tar options to pass to the 'tar' command.
+            desc: Options to parse to 'tar' command
             required: false
             example: '-xvf'
 
       combine:
-        desc: Virtually concatenate MSs and proceed with the combined MS.
+        desc: Virtually concatenate MSs and proceed with the combined MS
         type: map
         mapping:
           enable:
             type: bool
-            desc: Enable the 'combine' segment.
+            desc: Execute this section
             required: false
             example: 'False'
           reset:
             type: bool
-            desc: Delete concatenated MS if it exists. Otherwise, proceed with the existing MS.
+            desc: Delete concatenated MS if it exists. Else, proceed with existing MS
             required: false
             example: 'False'
           tar:
-            desc: Create a tarball of the concatenated MS.
+            desc: Create a tarbal of the converted MS
             type: map
             mapping:
               enable: 
-                desc: Enable the 'tar' segment.
+                desc: Execute this section
                 type: bool
                 required: false
                 example: 'False'
               tar_options:
                 type: str
-                desc: The tar options to pass to the 'tar' command.
+                desc: Options to parse to the tar command
                 required: false 
                 example: '-cvf'
           untar:
-            desc: Unarchive MS from an archive file.
+            desc: Unarchive from MS from a archive file.
             type: map
             mapping:
               enable: 
-                desc: Enable the 'untar' segment.
+                desc: Execute this section
                 type: bool
                 required: false
                 example: 'False'
               tar_options:
                 type: str
-                desc: The tar options to pass to the 'tar' command.
+                desc: Options to parse to the tar command
                 required: false
                 example: '-xvf'
       report:

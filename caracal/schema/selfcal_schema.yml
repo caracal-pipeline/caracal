@@ -498,7 +498,7 @@ mapping:
           gsols_chan:
             seq:
               - type: int
-            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.
+            desc: G-Jones frequency solution interval. The parameter chan_chunk in calibrate section should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.
             required: false
             example: '0'
           bsols_timeslots:

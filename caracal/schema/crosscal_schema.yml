@@ -49,11 +49,6 @@ mapping:
         type: str
         required: false
         example: '>50'
-      casa_version: 
-        desc: Casa version to carry out cross-calibration. '47' means use CASA 4.7, which is recommended, unless you enjoy your data extra flag-gy. Leave empty to use the latest CASA.
-        type: str
-        required: false
-        example: '47'
       set_model:
         desc: Fill in the MODEL column of the .MS file(s) for the field selected by "field" below in preparation for crosscalibration. This can use CASA setjy for point-source models, or MeqTrees for available local sky models.
         type: map

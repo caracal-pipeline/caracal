@@ -119,7 +119,7 @@ def worker(pipeline, recipe, config):
     # Prioritise parameters specified in the config file, under the 'mosaic' worker
     # i.e. 'continuum' or 'spectral'
     specified_mosaictype = config['mosaic_type']
-    use_mfs_images = config['use_mfs_images']
+    use_mfs_images = config['use_mfs']
     specified_images = config['target_images']
     label = config['label_in']
     line_name = config['line_name']

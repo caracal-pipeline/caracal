@@ -123,7 +123,7 @@ mapping:
                 enum: ['radio', 'optical']
                 required: false
                 example: 'radio'
-              outgrid:
+              changrid:
                 desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' then it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
                 type: str
                 required: false

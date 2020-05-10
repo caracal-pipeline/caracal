@@ -93,7 +93,7 @@ mapping:
       img_weight:
         type: str
         enum: ["briggs", "uniform", "natural"]
-        desc: Type of image weighting, where the options are briggs, uniform, and natural. If Briggs, set the img robust parameter.
+        desc: Type of image weighting, where the options are 'briggs', 'uniform', and 'natural'. If 'briggs', set the 'img_robust' parameter.
         required: false
         example: 'briggs'
       img_robust:

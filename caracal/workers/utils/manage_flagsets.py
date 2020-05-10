@@ -57,7 +57,7 @@ def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, rea
         log.error('       to the FLAG column after that version, and take it from there.')
         log.error('    4) If you really know what you are doing, allow Caracal to overwrite flag versions by setting:')
         log.error('           {0:s}:'.format(wname))
-        log.error('             overwrite_flag_versions: true')
+        log.error('             overwrite_flagvers: true')
         log.error('       The worker "{0:s}" will be run again; the new flags will be appended to the current'.format(wname))
         log.error('       FLAG column (or to whatever flag version you are rewinding to); the flag version')
         log.error('       "{0:s}" will be overwritten and appended to the list above (or to'.format(flags_bw))

@@ -438,19 +438,19 @@ def worker(pipeline, recipe, config):
         mask_imsize = config['mask_size']
 
         final_mask = mask_dir+str(config['label_out'])+'_'+str(target)+'.fits'
-        catalog_name = config['query_catalog']['catalog']
+        catalog_name = config['catalog_query']['catalog']
 
         catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
         if catalog_name == 'SUMSS':
 
-            if pipeline.enable_task(config, 'query_catalog'):
-                key = 'query_catalog'
+            if pipeline.enable_task(config, 'catalog_query'):
+                key = 'catalog_query'
 
                 recipe.add(query_catalog_sumss, 'query_source_catalog',
                            {
                                'centre': centre,
-                               'width_im': config[key]['width_image'],
+                               'width_im': config[key]['image_width'],
                                'cat_name': catalog_name,
                                'catalog_table': catalog_tab,
                            },
@@ -494,20 +494,20 @@ def worker(pipeline, recipe, config):
 
         elif catalog_name == 'NVSS':
 
-            if pipeline.enable_task(config, 'query_catalog'):
-                key = 'query_catalog'
+            if pipeline.enable_task(config, 'catalog_query'):
+                key = 'catalog_query'
 
                 catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
 
                 recipe.add(query_catalog_nvss, 'query-nvss',
                            {
                                'centre': centre,
-                               'width_im': config[key]['width_image'],
+                               'width_im': config[key]['image_width'],
                                'cat_name': catalog_name,
-                               'thresh': config[key]['thresh_nvss'],
+                               'thresh': config[key]['nvss_thr'],
                                'cell': mask_cell,
                                'imsize': mask_imsize,
-                               'obs_freq': config['pb_correction']['frequency'],
+                               'obs_freq': config['pbcorr']['frequency'],
                                'catalog_table': catalog_tab,
                            },
                            input=pipeline.input,
@@ -535,11 +535,11 @@ def worker(pipeline, recipe, config):
                            label='Mask from catalog')
 
         if pipeline.enable_task(config, 'make_mask') and catalog_name == 'SUMSS':
-            if pipeline.enable_task(config, 'pb_correction'):
+            if pipeline.enable_task(config, 'pbcorr'):
 
                 recipe.add(build_beam, 'make_pb',
                            {
-                               'obs_freq': config['pb_correction']['frequency'],
+                               'obs_freq': config['pbcorr']['frequency'],
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
@@ -618,7 +618,7 @@ def worker(pipeline, recipe, config):
             else:
                 in_image = 'masking/' + config['make_mask']['input_image']
 
-            if config['make_mask']['mask_with'] == 'thresh':
+            if config['make_mask']['mask_method'] == 'thresh':
 
                 if pipeline.enable_task(config, 'merge_with_extended') == False:
                     cat_mask = final_mask
@@ -629,13 +629,13 @@ def worker(pipeline, recipe, config):
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+in_image,
                                "mask": cat_mask,
-                               "contour": config['make_mask']['thresh_lev'],
+                               "contour": config['make_mask']['thr_lev'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Mask done')
 
-            elif config['make_mask']['mask_with'] == 'sofia':
+            elif config['make_mask']['mask_method'] == 'sofia':
 
                 imagename = in_image
                 def_kernels = [[3, 3, 0, 'b'], [6, 6, 0, 'b'], [15, 15, 0, 'b']]
@@ -653,7 +653,7 @@ def worker(pipeline, recipe, config):
                     "steps.doWriteCat": False,
                     "SCfind.kernelUnit": 'pixel',
                     "SCfind.kernels": def_kernels,
-                    "SCfind.threshold": config['make_mask']['thresh_lev'],
+                    "SCfind.threshold": config['make_mask']['thr_lev'],
                     "SCfind.rmsMode": 'mad',
                     "SCfind.edgeMode": 'constant',
                     "SCfind.fluxRange": 'all',
@@ -688,7 +688,7 @@ def worker(pipeline, recipe, config):
 
             key = 'merge_with_extended'
 
-            ext_name = config[key]['extended_source_input']
+            ext_name = config[key]['extended_source_map']
             extended = 'fields/'+ext_name
             extended_casa = 'masking/extended.image'
 
@@ -700,7 +700,7 @@ def worker(pipeline, recipe, config):
             if os.path.exists(pipeline.output+'/'+beam) == False:
                 recipe.add(build_beam, 'build_pb',
                            {
-                               'obs_freq': config['pb_correction']['frequency'],
+                               'obs_freq': config['pbcorr']['frequency'],
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
@@ -767,19 +767,19 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Correcting mask for primary beam')
 
-            if config['merge_with_extended']['mask_with'] == 'thresh':
+            if config['merge_with_extended']['mask_method'] == 'thresh':
 
                 recipe.add(make_mask, 'make_mask-extend',
                            {
                                "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
                                "mask": pipeline.output+extended_mask,
-                               "contour": config['merge_with_extended']['thresh_lev'],
+                               "contour": config['merge_with_extended']['thr_lev'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Mask done')
 
-            cat_mask = config['mask_prefix']['mask_with']
+            cat_mask = config['mask_prefix']['mask_method']
             recipe.add(merge_masks, 'make_mask-merge', # 'Merging VLA Fornax into catalog mask',
                        {
                            "extended_mask": pipeline.output+extended_mask,

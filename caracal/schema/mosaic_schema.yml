@@ -16,7 +16,7 @@ mapping:
           - type: str
         required: false
         example: "directory/first_image.fits, directory/second_image.fits"
-      label:
+      label_in:
         desc: For autoselection of images, this needs to match the label setting used for the self_cal worker (when mosaicking continuum images) or the image_line worker (when mosaicking cubes).
         type: str
         required: false
@@ -32,7 +32,7 @@ mapping:
         enum: ['continuum', 'spectral']
         required: true
         example: 'continuum'
-      use_MFS_images:
+      use_mfs_images:
         desc: Indicate that the images to be mosaicked were created using MFS.
         type: bool
         required: false

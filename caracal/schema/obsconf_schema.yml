@@ -28,7 +28,7 @@ mapping:
             type: bool
             required: false
             example: 'False'            
-          plot_elevation_tracks:
+          plotelev:
             desc: Make Elevation vs Hour angle plots for observed fields
             type: map
             mapping:
@@ -73,7 +73,7 @@ mapping:
           - type: str
         required: false
         example: 'longest'
-      reference_antenna:
+      refant:
         desc: Reference antenna, which can be identified by an antenna name or number.
         type: str
         required: true

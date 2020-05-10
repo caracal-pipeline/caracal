@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: '0'
+  refant: '0'
 
 transform:
   enable: true
@@ -15,13 +15,13 @@ transform:
   split_field:
     enable: true
     field: calibrators
-    column: data
+    col: data
 
 prep:
   enable: true
   label_in: cal
   field: calibrators
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -33,8 +33,8 @@ flag:
     enable: true
   flag_spw:
     enable: true
-    channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: false
+    chans: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
+    ensure_valid: false
   flag_antennas:
     enable: false
     antennas: '0'
@@ -54,16 +54,16 @@ crosscal:
   label_in: 'cal'
   set_model:
     enable: true
-    caracal_model: true
-  primary_cal:
+    meerkat_skymodel: true
+  primary:
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
     solint: [inf, inf, inf, null, 60s, 60s, inf]
     calmode: [a, ap, ap, null, a, ap, ap] 
-    B_fillgaps: 70
+    b_fillgaps: 70
     plotgains: true
-  secondary_cal:
+  secondary:
     order: KGAKG
     apply: B
     combine: ["", "", null, "", ""] 
@@ -80,7 +80,7 @@ polcal:
 
 inspect:
   enable: true
-  label_out: '1gc'
+  label_cal: '1gc'
   fields:
     - bpcal
     - gcal
@@ -115,7 +115,7 @@ prep__2:
   enable: true
   label_in: corr
   field: target
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -125,7 +125,7 @@ flag__2:
   label_in: corr
   flag_rfi: 
     enable: true
-    column: DATA
+    col: DATA
     flagger: aoflagger
     aoflagger:
       strategy: firstpass_QUV.rfis
@@ -146,11 +146,11 @@ selfcal:
     enable: true
   calibrate:
     enable: true
-    Gsols_timeslots: [120]
+    gsols_timeslots: [120]
 
 ddcal:
   enable: false
-  label: 'corr'
+  label_in: 'corr'
   use_pb: true
   calibrate_dd:
     enable: True

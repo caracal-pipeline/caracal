@@ -70,9 +70,9 @@ def worker(pipeline, recipe, config):
                        output=pipeline.obsinfo,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
-            if pipeline.enable_task(config['obsinfo'], 'plot_elevation_tracks'):
+            if pipeline.enable_task(config['obsinfo'], 'plotelev'):
                 step = "elevation_plots-ms{:d}".format(i)
-                if config['obsinfo']["plot_elevation_tracks"]["plotter"] in ["plotms"]:
+                if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
                     recipe.add("cab/casa_plotms", step, {
                                "vis" : msname,
                                "xaxis" : "hourangle",
@@ -84,7 +84,7 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label="{:s}:: Plotting elevation tracks".format(step))
-                elif config['obsinfo']["plot_elevation_tracks"]["plotter"] in ["owlcat"]:
+                elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                     recipe.add("cab/owlcat_plotelev", step, {
                                "msname" : msname,
                                "output-name" : "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
@@ -97,7 +97,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # initialse things
-    for item in 'xcal fcal bpcal gcal target reference_antenna'.split():
+    for item in 'xcal fcal bpcal gcal target refant'.split():
         val = config[item]
         for attr in ["", "_ra", "_dec", "_id"]:
             setattr(pipeline, item+attr, repeat_val(val, pipeline.nobs))
@@ -143,8 +143,8 @@ def worker(pipeline, recipe, config):
 
         # get reference antenna LEAVING THIS LINE HERE
         # FOR WHEN WE COME UP WITH A WAY TO AUTOSELECT
-        #if config.get('reference_antenna') == 'auto':
-        #    pipeline.reference_antenna[i] = '0'
+        #if config.get('refant') == 'auto':
+        #    pipeline.refant[i] = '0'
 
         # Get channels in MS
         with open(msinfo, 'r') as stdr:

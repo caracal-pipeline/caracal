@@ -9,9 +9,9 @@ mapping:
        desc: Carry out DD-calibration
        required: True
        example: 'False'
-     label:
+     label_in:
         type: str
-        desc: Label of the .MS files to process. By default uses the 'corr' label for self-calibrated dataset.
+        desc: Label of the .MS files to process. By default uses the 'corr' label_in for self-calibrated dataset.
         required: False
         example: 'corr'
      use_pb:
@@ -49,7 +49,7 @@ mapping:
            desc: Will divide initial image (for making the mask) into this number of boxes, then perform sigma clipping in each of these boxes.
            required: False
            example: '9'
-         mask_iters:
+         mask_niter:
            type: int
            desc: The number of iterations to perform sigma clipping on the image for masking, or 0 to clip until convergence is achieved.
            required: False
@@ -59,7 +59,7 @@ mapping:
            desc: Overlap region for the boxes. As a fraction of number of boxes.
            required: False
            example: '0.3' 
-         mask_tolerance:
+         mask_tol:
            type: float
            desc: Tolerance for dilating the mask. Will stop dilating if percentage difference between dilations is smaller than this value.
            required: False
@@ -74,7 +74,7 @@ mapping:
            desc: Number of facets to use, same as Facets-NFacets parameter of DDFacet.
            required: false
            example: '24'
-         weight_column: 
+         weight_col: 
            type: str
            enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
            desc: Read data weights from specified column. Use WEIGHT_SPECTRUM or WEIGHT, more rarely IMAGING_WEIGHT.
@@ -127,7 +127,7 @@ mapping:
            desc: GAIN Loop gain (HMP, Hogbom).
            required: false
            example: "0.1"
-         deconv_fluxthreshold:  
+         deconv_fluxthr:  
            type: float
            desc: Jy Absolute flux threshold at which deconvolution is stopped (HMP, Hogbom).
            required: false
@@ -235,13 +235,13 @@ mapping:
            desc: Enable madmax flagging in Cubical. 
            required: false
            example: 'true'
-         madmax_threshold:
+         madmax_thr:
            seq:
               - type: int
            desc: Threshold for MAD flagging per baseline (specified in sigmas). Residuals exceeding mad-thr*MAD/1.428 will be flagged. MAD is computed per baseline. This can be specified as a list e.g. N1,N2,N3,... The first value is used to flag residuals before a solution starts (use 0 to disable), the next value is used when the residuals are first recomputed during the solution several iteratins later (see -chi-int), etc. A final pass may be done at the end of the solution. The last value in the list is reused if necessary. Using a list with gradually decreasing values may be sensible.
            required: false
            example: '0, 10'
-         madmax_global_threshold:
+         madmax_global_thr:
            seq:
               - type: int
            desc: Threshold for global median MAD (MMAD) flagging. MMAD is computed as the median of the per-baseline MADs. Residuals exceeding S*MMAD/1.428 will be flagged.
@@ -252,17 +252,17 @@ mapping:
            desc: MAD estimation mode. Use 'corr' for a separate estimate per each baseline and correlation. Otherwise, a single estimate per baseline is computed using 'all' correlations, or only the 'diag' or 'offdiag' correlations.
            required: false
            example: 'corr'
-         dd_data_column:
+         dd_data_col:
            type: str
            desc: Column to calibrate. Assumption being that you have already run the selfcal worker.
            required: false
            example: 'CORRECTED_DATA'
-         dd_out_data_column:
+         dd_out_data_col:
            type: str
            desc: Output data column.
            required: false
            example: 'SUBDD_DATA'
-         dd_weight_column:
+         dd_weight_col:
            type: str
            desc: Column to read weights from. Weights are applied by default. Specify an empty string to disable.
            required: false
@@ -317,7 +317,7 @@ mapping:
            desc: Time solution interval in timeslot units for G-Jones.
            required: false
            example: "10"
-         dd_g_channel_int:
+         dd_g_chan_int:
            type: int
            desc: Frequency solution interval in channel units for G-Jones.
            example: "0"
@@ -327,7 +327,7 @@ mapping:
            desc: Time solution interval in timeslot units for DE-Jones.
            required: false
            example: "100"
-         dd_dd_channel_int:
+         dd_dd_chan_int:
            type: int
            desc: Frequency solution interval in channel units for DE-Jones.
            example: "100"
@@ -414,17 +414,17 @@ mapping:
            desc: Number of channesls in output image
            required: false
            example: '3'
-         img_ws_joinchannels:
+         img_ws_joinchans:
            type: bool
            desc: Join channels to create MFS image
            required: false
            example: 'True'
-         img_ws_fit_spectral_pol:
+         img_ws_specfit_nrcoeff:
            type: int
            desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
            required: false
            example: '2'
-         img_ws_pol:
+         img_ws_stokes:
            type: str
            desc: Stokes image to create
            required: false
@@ -434,12 +434,12 @@ mapping:
            desc: Auto masking threshold
            required: false
            example: '7'
-         img_ws_auto_threshold:
+         img_ws_auto_thr:
            type: float
            desc: Auto clean threshold
            required: false
            example: '0.5'
-         img_ws_column:
+         img_ws_col:
            type: str
            desc: Column to image
            required: false
@@ -520,7 +520,7 @@ mapping:
            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
            required: false
            example: '0'
-         dd_memory_fraction:
+         dd_mem_frac:
            type: float
            desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
            required: false

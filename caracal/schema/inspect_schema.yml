@@ -14,7 +14,7 @@ mapping:
         type: str
         required: false
         example: ''
-      label_out: 
+      label_cal: 
         type: str
         desc: Label for output products (plots etc.) for this step.
         required: false
@@ -103,7 +103,7 @@ mapping:
             desc: Fields to plot. Specify by field id, index or keys like, gcal, bpcal.
             required: false
             example: ''
-          column: 
+          col: 
             type: str
             desc: Data column to plot.
             required: false
@@ -113,7 +113,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel: 
+          avgchan: 
             type: str
             desc: Number of channels to average for plotting.       
             required: false
@@ -134,7 +134,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -144,7 +144,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -165,7 +165,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -175,7 +175,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -196,7 +196,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -206,7 +206,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -227,7 +227,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -237,7 +237,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -258,7 +258,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -268,7 +268,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -289,7 +289,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -299,7 +299,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false
@@ -320,7 +320,7 @@ mapping:
             desc: "Fields to plot. Specify by field id, index or keys like: gcal, bpcal."
             required: false
             example: ''
-          column:
+          col:
             type: str
             desc: Data column to plot.
             required: false
@@ -330,7 +330,7 @@ mapping:
             desc: Time to average for plotting, in seconds.
             required: false
             example: '10'
-          avgchannel:
+          avgchan:
             type: str
             desc: Number of channels to average for plotting.
             required: false

@@ -10,7 +10,7 @@ mapping:
         required: True
         example: 'False'
       field:
-        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step flag_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
+        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step flag_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calfields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
         type: str
         enum: ['target', 'calibrators']
         required: False
@@ -20,7 +20,7 @@ mapping:
         type: str
         required: False
         example: ''
-      calibrator_fields:
+      calfields:
         desc: If 'field' above is set to 'calibrators', users can specify here what subset of calibrators to process. This should be a comma-separated list of 'xcal' ,'bpcal', 'gcal' and/or 'fcal', which were all set by the observation_config worker. Alternatively, 'auto' selects all calibrators.
         type: str
         required: False
@@ -45,7 +45,7 @@ mapping:
             type: str
             required: false
             example: 'auto'
-      overwrite_flag_versions:
+      overwrite_flagvers:
         desc: Allow Caracal to ovewrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         required: False
@@ -68,17 +68,17 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          scan_to_scan_threshold:
+          scan_thr:
             desc: Threshold for flagging in sigma above the rest of the scans per field per channel.
             type: int
             required: False
             example: '3'
-          antenna_to_group_threshold:
+          ant_group_thr:
             desc: Threshold for flagging in sigma above array median power spectra per scan per field per channel.
             type: int
             required: False
             example: '5'
-          column:
+          col:
             desc: Data column to flag.
             type: str
             required: False
@@ -106,12 +106,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          quackinterval:
+          interval:
             desc: Time interval (in seconds) to flag.
             type: float
             required: False
             example: '8.'
-          quackmode:
+          mode:
             desc: Quack flagging mode. Either 'beg', which flags scan begining, 'endb', which flags end of the scan, 'end', which flags everything but the first specified seconds of the scan and 'tail' which flags all but the last specified seconds of the scan.
             type: str
             enum: ["beg", "endb", "end", "tail"]
@@ -145,12 +145,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          tolerance:
+          tol:
             desc: Amounts of shadow allowed (in metres). Default is 0. A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
             type: float
             required: False
             example: '0.'
-          include_full_mk64:
+          full_mk64:
             desc: Consider all MeerKAT-64 antennas in the shadowing calculation even if only a subarray is used. Default is False.
             type: bool
             required: False
@@ -164,12 +164,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          channels:
+          chans:
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel" e.g. "*:856~880MHz". End channel not inclusive.
             type: str
             required: False
             example: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the channel selection returns any data. If it does not FLAGDATA is not executed preventing the pipeline from crashing. This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
             type: bool
             required: False
@@ -188,7 +188,7 @@ mapping:
             type: str
             required: False
             example: ''
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
             type: bool
             required: False
@@ -226,7 +226,7 @@ mapping:
             type: str
             required: False
             example: ''
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the timerange is in the ms being considered. This stops the pipeline from crashing when multiple dataset are being processed.
             type: bool
             required: False
@@ -265,7 +265,7 @@ mapping:
             enum: ["aoflagger", "tricolour", "tfcrop"]
             required: False
             example: "aoflagger"
-          column:
+          col:
             desc: Specify which column to flag.
             type: str
             required: False
@@ -278,7 +278,7 @@ mapping:
                 type: str
                 required: False
                 example: 'firstpass_Q.rfis'
-              ensure_valid_strategy:
+              ensure_valid:
                 desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit Caracal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
                 type: bool
                 required: False
@@ -286,14 +286,14 @@ mapping:
           tricolour:
             type: map
             mapping:
-              window_backend:
+              backend:
                 desc: Visibility and flag data is re-ordered from a MS row ordering into time-frequency windows ordered by baseline.
                 type: str
                 enum: ["numpy", "zarr-disk"]
                 required: False
                 example: "numpy"
               mode:
-                desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strategy_narrowband' in case of small bandwidth of the .MS file(s).
+                desc: If set to 'manual' it uses the flagging strategy in 'strategy' below. If set to 'auto' it uses the strategy in 'strat_narrow' in case of small bandwidth of the .MS file(s).
                 type: str
                 enum: ['auto', 'manual']
                 required: False
@@ -303,7 +303,7 @@ mapping:
                 type: str
                 required: False
                 example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
-              strategy_narrowband:
+              strat_narrow:
                 desc: Tricolour strategy file to be used for an MS with narrow bandwidth if mode = auto (see above).
                 type: str
                 required: False
@@ -388,7 +388,7 @@ mapping:
             type: int
             required: False
             example: '5'
-          movies_in_report:
+          movies:
             desc: Generate movies in a repo.
             type: bool
             required: False

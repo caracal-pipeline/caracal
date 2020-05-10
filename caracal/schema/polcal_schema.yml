@@ -63,7 +63,7 @@ mapping:
             required: false
             desc: Execute this segment.
             example: 'True'
-          caracal_model: 
+          meerkat_skymodel: 
             type: bool
             required: false
             desc: Use model, if available full-sky model, built into southern calibrators database, instead of any NRAO model

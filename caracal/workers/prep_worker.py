@@ -34,8 +34,8 @@ def worker(pipeline, recipe, config):
                     "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
 
         for msname in mslist:
-            if pipeline.enable_task(config, 'fixvis'):
-                step = 'fixvis-ms{:d}'.format(i)
+            if pipeline.enable_task(config, 'fixuvw'):
+                step = 'fixuvw-ms{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "vis": msname,
@@ -87,8 +87,8 @@ def worker(pipeline, recipe, config):
                             caracal.log.error('    prepare_data: manage_flags: mode: save_legacy_flags')
                         raise RuntimeError('Flag version conflicts')
 
-            if config["clear_cal"]:
-                step = 'clear_cal-ms{:d}'.format(i)
+            if config["clearcal"]:
+                step = 'clearcal-ms{:d}'.format(i)
                 fields = set(pipeline.fcal[i] + pipeline.bpcal[i])
                 recipe.add('cab/casa_clearcal', step,
                            {
@@ -99,8 +99,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Reset MODEL_DATA ms={1:s}'.format(step, msname))
 
-            if pipeline.enable_task(config, "spectral_weights"):
-                specwts = config['spectral_weights']["mode"]
+            if pipeline.enable_task(config, "specweights"):
+                specwts = config['specweights']["mode"]
                 if specwts == "uniform":
                     step = 'init_ws-ms{:d}'.format(i)
                     recipe.add('cab/casa_script', step,
@@ -113,17 +113,17 @@ def worker(pipeline, recipe, config):
                                output=pipeline.output,
                                label='{0:s}:: Adding Spectral weights using MeerKAT noise specs ms={1:s}'.format(step, msname))
 
-                elif specwts == "estimate":
-                    _config = config["spectral_weights"]
-                    step = 'estimate_ws-ms{:d}'.format(i)
+                elif specwts == "calculate":
+                    _config = config["specweights"]
+                    step = 'calculate_ws-ms{:d}'.format(i)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": msname,
                                    "command": 'estimate_weights',
-                                   "stats_data": _config['estimate']['stats_data'],
-                                   "weight_columns": _config['estimate']['weight_columns'],
-                                   "noise_columns": _config['estimate']['noise_columns'],
-                                   "write_to_ms": _config['estimate']['write_to_ms'],
+                                   "stats_data": _config['calculate']['statsfile'],
+                                   "weight_columns": _config['calculate']['weightcols'],
+                                   "noise_columns": _config['calculate']['noisecols'],
+                                   "write_to_ms": _config['calculate']['apply'],
                                    "plot_stats": prefix + '-noise_weights.png',
                                },
                                input=pipeline.input,
@@ -150,4 +150,4 @@ def worker(pipeline, recipe, config):
                                output=pipeline.output,
                                label='{0:s}:: deleting WEIGHT_SPECTRUM if it exists ms={1:s}'.format(step, msname))
                 else:
-                    raise RuntimeError("Specified spectral_weights [{0:s}] mode is unknown".format(specwts))
+                    raise RuntimeError("Specified specweights [{0:s}] mode is unknown".format(specwts))

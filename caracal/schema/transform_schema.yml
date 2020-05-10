@@ -47,17 +47,17 @@ mapping:
             type: str
             required: false
             example: 'target'
-          time_average:
+          time_avg:
             desc: Time averaging
             type: str
             required: false
             example: ''
-          freq_average:
+          chan_avg:
             desc: Frequency averaging
             type: int
             required: false
             example: '1'
-          column:
+          col:
             desc: Column to split, default is 'corrected'. 
             type: str
             required: false
@@ -67,7 +67,7 @@ mapping:
             type: str
             required: false
             example: ''
-          usewtspectrum:
+          create_specweights:
             desc: Create a WEIGHT_SPECTRUM column in the output MS.
             type: bool
             required: false

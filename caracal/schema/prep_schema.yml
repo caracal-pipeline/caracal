@@ -20,16 +20,16 @@ mapping:
         enum: ['target', 'calibrators']
         required: False
         example: 'calibrators'
-      fixvis:
+      fixuvw:
         desc: Fixes the UVW coordinates through the CASA task fixvis.
         type: map
         mapping:
           enable:
-            desc: Enable execution of fixvis.
+            desc: Enable execution of fixuvw.
             type: bool
             required: false
             example: 'False'            
-      clear_cal:
+      clearcal:
         desc: Clears out calibrated data and resets previous predicted model
         type: bool
         required: false
@@ -54,7 +54,7 @@ mapping:
             type: str
             required: false
             example: 'auto'
-      spectral_weights: 
+      specweights: 
         desc: How to initialize spectral weights
         type: map
         mapping: 
@@ -64,33 +64,33 @@ mapping:
             required: false
             example: 'False'
           mode:
-            desc: "uniform: Set all weights to unity. estimate: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, Also see 'estimate' segment of this section. delete: Delete WEIGHT_SPECTRUM column if it exists."
+            desc: "uniform: Set all weights to unity. calculate: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values, Also see 'calculate' segment of this section. delete: Delete WEIGHT_SPECTRUM column if it exists."
             type: str
-            enum: [uniform, estimate, delete]
+            enum: [uniform, calculate, delete]
             required: false
             example: 'uniform'
-          estimate:
-            desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values
+          calculate:
+            desc: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values
             type: map
             mapping:
-              stats_data: 
+              statsfile: 
                 desc: "File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data."
                 type: str
                 example: 'use_package_meerkat_spec'
                 required: false
-              weight_columns:
+              weightcols:
                 seq:
                   - type: str
                 desc: column names
                 required: false
                 example: 'WEIGHT, WEIGHT_SPECTRUM'
-              noise_columns:
+              noisecols:
                 seq:
                   - type: str
                 desc: column names for noise
                 required: false
                 example: 'SIGMA, SIGMA_SPECTRUM'
-              write_to_ms:
+              apply:
                 desc: write columns to file
                 type: bool
                 required: false

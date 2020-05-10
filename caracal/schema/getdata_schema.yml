@@ -13,7 +13,7 @@ mapping:
 
       mvftoms:
         type: map
-        desc: Convert HDF5/MVF files in data_path to MS files; the latter are written to msdir; also creates a MS.TAR file. (This only works for MeerKAT HDF5 files)
+        desc: Convert HDF5/MVF files in rawdatadir to MS files; the latter are written to msdir; also creates a MS.TAR file. (This only works for MeerKAT HDF5 files)
         mapping:
           enable:
             type: bool
@@ -25,12 +25,12 @@ mapping:
             desc: Create a tarbal of the converted MS.
             required: false
             example: 'False'
-          channel_range:
+          chanrange:
             type: str
             desc: Only exctract channels in this range (0-based, inclusive; comma seperated string)
             required: false
             example: all
-          full_poll:
+          fullpol:
             type: bool
             desc: Extract all four correlations instead of only the XX,YY
             required: false

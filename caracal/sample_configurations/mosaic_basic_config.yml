@@ -4,11 +4,11 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: '0'
+  refant: '0'
 
 general:
   prefix: mymosaic
-  init_pipeline: true
+  prep_workspace: true
 
 mosaic:
   enable: true

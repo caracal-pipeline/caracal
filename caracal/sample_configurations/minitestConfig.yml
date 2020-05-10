@@ -4,10 +4,10 @@ general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['']
+  dataid: ['1532022061_subset']
 
 obsconf:
-  reference_antenna: '0'
+  refant: '0'
 
 transform:
   enable: true
@@ -15,7 +15,7 @@ transform:
   split_field:
     enable: true
     field: calibrators
-    column: data
+    col: data
 
 prep:
   enable: true
@@ -38,10 +38,10 @@ flag:
 crosscal:
   enable: true
   label_in: cal
-  primary_cal:
-  plotgains: false
-  secondary_cal:
-  plotgains: false
+  primary:
+    plotgains: false
+  secondary:
+    plotgains: false
   apply_cal:
     applyto:
       - gcal
@@ -53,7 +53,7 @@ polcal:
 
 inspect:
   label_in: cal
-  label_out: 1gc
+  label_cal: 1gc
   dirname: crosscal
   enable: true
   standard_plotter: none
@@ -95,7 +95,7 @@ selfcal:
     enable: true
   calibrate:
     enable: true
-    Gsols_timeslots: [120]
+    gsols_timeslots: [120]
   report: true
 
 line:

@@ -9,7 +9,7 @@ mapping:
         required: false
         desc: an optional, descriptive, project title
         example: ''
-      data_path:
+      rawdatadir:
         type: str
         required: false
         desc: where CARACal (over-) writes HDF5 files and JSON info files downloaded by get_data below
@@ -34,7 +34,7 @@ mapping:
         required: false
         desc: Prefix for CARACal output products
         example: 'caracal'
-      init_pipeline:
+      prep_workspace:
         desc: Initialise pipeline by copying input files (meerkat specific; flagging strategies, beam model, etc.)
         required: false
         type: bool

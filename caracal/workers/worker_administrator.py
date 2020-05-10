@@ -70,11 +70,11 @@ class worker_administrator(object):
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
 
-        if not self.config['general']['data_path']:
-            self.config['general']['data_path'] = os.getcwd()
-            self.data_path = self.config['general']['data_path']
+        if not self.config['general']['rawdatadir']:
+            self.config['general']['rawdatadir'] = os.getcwd()
+            self.rawdatadir = self.config['general']['rawdatadir']
         else:
-            self.data_path = self.config['general']['data_path']
+            self.rawdatadir = self.config['general']['rawdatadir']
 
         self.virtconcat = False
         self.workers_directory = workers_directory
@@ -138,7 +138,7 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"]["init_pipeline"]:
+        if config["general"]["prep_workspace"]:
             self.init_pipeline()
 
         # save configuration file
@@ -173,7 +173,7 @@ class worker_administrator(object):
             if value:
                 setattr(self, item, value)
 
-        for item in 'data_path reference_antenna fcal bpcal gcal target xcal'.split():
+        for item in 'rawdatadir refant fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
             if value and len(value) == 1:
                 value = value*nobs
@@ -212,8 +212,8 @@ class worker_administrator(object):
             os.mkdir(self.input)
         if not os.path.exists(self.output):
             os.mkdir(self.output)
-        if not os.path.exists(self.data_path):
-            os.mkdir(self.data_path)
+        if not os.path.exists(self.rawdatadir):
+            os.mkdir(self.rawdatadir)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
         log.info("output directory for logs is {}".format(self.logs))

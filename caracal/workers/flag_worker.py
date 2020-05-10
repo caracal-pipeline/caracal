@@ -80,7 +80,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, msiter)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
@@ -92,29 +92,29 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, msiter)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
             # Define fields and field_ids to be used to only flag the fields selected with
             # flagging:field (either 'target' or 'calibrators') and with
-            # flagging:calibrator_fields (for further selection among the calibrators)
+            # flagging:calfields (for further selection among the calibrators)
             if config['field'] == 'target':
                 fields = [target_ls[j]]
             else:
                 fields = []
-                fld_string = config['calibrator_fields']
+                fld_string = config['calfields']
                 if fld_string == "auto":
                     iter_fields = "gcal bpcal xcal fcal".split()
                 else:
@@ -156,12 +156,12 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "field": fields,
                                "cal_field": fields,
-                               "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_to_scan_threshold"],
-                               "antenna_to_group_threshold": config["flag_autopowerspec"]["antenna_to_group_threshold"],
+                               "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
+                               "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
                                "dpi": 300,
                                "plot_size": 6,
                                "nproc_threads": config['flag_autopowerspec']['threads'],
-                               "data_column": config['flag_autopowerspec']['column']
+                               "data_column": config['flag_autopowerspec']['col']
                            },
                            input=pipeline.input, output=pipeline.output,
                            label="{0:s}:: Flag out antennas with drifts in autocorrelation powerspectra ms={1:s}".format(step,msname))
@@ -186,8 +186,8 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'quack',
-                               "quackinterval": config['flag_quack']['quackinterval'],
-                               "quackmode": config['flag_quack']['quackmode'],
+                               "quackinterval": config['flag_quack']['interval'],
+                               "quackmode": config['flag_quack']['mode'],
                                "field": fields,
                                "flagbackup": False,
                            },
@@ -211,7 +211,7 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Flag elevation ms={1:s}'.format(step, msname))
 
             if pipeline.enable_task(config, 'flag_shadow'):
-                if config['flag_shadow']['include_full_mk64']:
+                if config['flag_shadow']['full_mk64']:
                     addantennafile = '{0:s}/mk64.txt'.format(pipeline.input)
                     subarray = msdict['ANT']['NAME']
                     idleants = open(addantennafile, 'r').readlines()
@@ -232,7 +232,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "mode": 'shadow',
-                               "tolerance": config['flag_shadow']['tolerance'],
+                               "tolerance": config['flag_shadow']['tol'],
                                "addantenna": addantennafile,
                                "flagbackup": False,
                                "field": fields,
@@ -243,9 +243,9 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'flag_spw'):
                 step = '{0:s}-spw-ms{1:d}'.format(wname, msiter)
-                flagspwselection = config['flag_spw']['channels']
+                flagspwselection = config['flag_spw']['chans']
                 found_valid_data = 0
-                if config['flag_spw']['ensure_valid_selection']:
+                if config['flag_spw']['ensure_valid']:
                     scalefactor, scalefactor_dict = 1, {
                         'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3}
                     for ff in flagspwselection.split(','):
@@ -275,7 +275,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.warn(
                             'The following channel selection has been made in the flag_spw module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error "No valid SPW & Chan combination found" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, flagspwselection, step))
 
-                if found_valid_data or not config['flag_spw']['ensure_valid_selection']:
+                if found_valid_data or not config['flag_spw']['ensure_valid']:
                     recipe.add('cab/casa_flagdata', step,
                                {
                                    "vis": msname,
@@ -291,7 +291,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_time'):
                 step = '{0:s}-time-ms{1:d}'.format(wname, msiter)
                 found_valid_data = 0
-                if config['flag_time']['ensure_valid_selection']:
+                if config['flag_time']['ensure_valid']:
                     if pipeline.startdate[i]:
                         start_flagrange,end_flagrange=config['flag_time']['timerange'].split('~')
                         flag_start = float(''.join(re.split('/|:', start_flagrange)))
@@ -303,7 +303,7 @@ def worker(pipeline, recipe, config):
                     if not found_valid_data:
                         caracal.log.warn(
                             'The following time selection has been made in the flag_time module of the flagging worker: "{1:s}". This selection would result in no valid data in {0:s}. This would lead to the FATAL error " The selected table has zero rows" in CASA/FLAGDATA. To avoid this error the corresponding cab {2:s} will not be added to the Stimela recipe of the flagging worker.'.format(msname, config['flag_time']['timerange'], step))
-                if found_valid_data or not config['flag_time']['ensure_valid_selection']:
+                if found_valid_data or not config['flag_time']['ensure_valid']:
                     recipe.add('cab/casa_flagdata', step,
                                {
                                     "vis": msname,
@@ -335,7 +335,7 @@ def worker(pipeline, recipe, config):
                 antennas = [config['flag_antennas']['antennas']]
                 times = [config['flag_antennas']['timerange']]
                 found_valid_data = [0]
-                ensure = config['flag_antennas']['ensure_valid_selection']
+                ensure = config['flag_antennas']['ensure_valid']
                 if times[0] == '':
                     ensure = False
                 if ensure:
@@ -390,7 +390,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
                 if config['flag_rfi']["flagger"] == "aoflagger":
-                    if config['flag_rfi']['aoflagger']['ensure_valid_strategy']:
+                    if config['flag_rfi']['aoflagger']['ensure_valid']:
                         ms_corr = msdict['CORR']['CORR_TYPE']
                         flag_corr=[]
                         with open('{0:s}/{1:s}'.format(pipeline.input,config['flag_rfi']['aoflagger']['strategy'])) as stdr:
@@ -405,13 +405,13 @@ def worker(pipeline, recipe, config):
                              ('yy' in flag_corr and 'YY' not in ms_corr):
                             raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"\
                                              " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"\
-                                             " strategy or, if you know what you are doing, disable aoflagger: ensure_valid_strategy.".format(
+                                             " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
                                              pipeline.input,config['flag_rfi']['aoflagger']['strategy'],flag_corr,ms_corr,msname))
 
                     recipe.add('cab/autoflagger', step,
                                {
                                    "msname": msname,
-                                   "column": config['flag_rfi']['column'],
+                                   "column": config['flag_rfi']['col'],
                                    "fields": ",".join(map(str, field_ids)),
                                    "strategy": config['flag_rfi']['aoflagger']['strategy'],
                                },
@@ -426,14 +426,14 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("Total Bandwidth = {0:} MHz".format(bandwidth))
                         if bandwidth <= 20.0:
                             caracal.log.info("Narrowband data detected, selecting appropriate flagging strategy")
-                            tricolour_strat = config['flag_rfi']['tricolour']['strategy_narrowband']
+                            tricolour_strat = config['flag_rfi']['tricolour']['strat_narrow']
 
                     caracal.log.info("Flagging strategy in use: {0:}".format(tricolour_strat))
                     recipe.add('cab/tricolour', step,
                                {
                                    "ms": msname,
-                                   "data-column": config['flag_rfi']['column'],
-                                   "window-backend": config['flag_rfi']['tricolour']['window_backend'],
+                                   "data-column": config['flag_rfi']['col'],
+                                   "window-backend": config['flag_rfi']['tricolour']['backend'],
                                    "field-names": fields,
                                    "flagging-strategy": 'polarisation',
                                    "config" : tricolour_strat,
@@ -443,11 +443,11 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Tricolour auto-flagging flagging pass ms={1:s} fields={2:s}'.format(step, msname, fields))
 
                 elif config['flag_rfi']["flagger"] == "tfcrop":
-                    column = config['flag_rfi']['column'].split("_DATA")[0].lower()
+                    col = config['flag_rfi']['col'].split("_DATA")[0].lower()
                     recipe.add('cab/casa_flagdata', step,
                                {
                                    "vis" : msname,
-                                   "datacolumn" : column,
+                                   "datacolumn" : col,
                                    "mode" : "tfcrop",
                                    "field" : fields,
                                    "usewindowstats" : config["flag_rfi"]["tfcrop"]["usewindowstats"],
@@ -520,5 +520,5 @@ def worker(pipeline, recipe, config):
 
 
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, msiter)
-            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
             msiter+=1

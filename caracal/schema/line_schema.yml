@@ -9,7 +9,7 @@ mapping:
         type: bool
         required: true
         example: 'False'
-      label:
+      label_in:
         desc: Label defining the name of the .MS files to be processed. The .MS file names are composed using the .MS names set by dataid in the getdata worker, followed by the target ID (one file per target), followed by this label. This is the format used by CARACal whenever it writes an .MS file to disk (e.g., in the transform worker).
         type: str
         required: false
@@ -50,7 +50,7 @@ mapping:
             desc: Flag version to restore. This is applied to the .MS file(s) identified by "label" above plus the "_mst" suffix. Set to "null" to skip this rewind step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             example: 'auto'
             required: false
-      overwrite_flag_versions:
+      overwrite_flagvers:
         desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
@@ -85,7 +85,7 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          column:
+          col:
             desc: Which column of the .MS file(s) to process.
             type: str
             required: false
@@ -111,7 +111,7 @@ mapping:
                 enum: ['frequency', ]
                 required: false
                 example: 'frequency'
-              outframe:
+              frame:
                 desc: Output reference frame. Current options are '', topo, geo, lsrk, lsrd, bary, galacto, lgroup, cmb, and source.
                 type: str
                 enum : ['', 'topo', 'geo', 'lsrk', 'lsrd', 'bary', 'galacto', 'lgroup', 'cmb', 'source']
@@ -123,7 +123,7 @@ mapping:
                 enum: ['radio', 'optical']
                 required: false
                 example: 'radio'
-              outchangrid:
+              changrid:
                 desc: Output channel grid for Doppler correction. Default is 'auto', and the pipeline will calculate the appropriate channel grid. If not 'auto' then it must be in the format 'nchan,chan0,chanw' where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mode (see parameter 'mode' above).
                 type: str
                 required: false
@@ -192,7 +192,7 @@ mapping:
             type: float
             required: false
             example: '2.'
-          threshold:
+          thr:
             desc: Flag UV cells whose visibility deviates by more than this threshold from the average visibility on the UV plane. The threshold is in units of the rms dispersion of all visibilities.
             type: float
             required: false
@@ -233,7 +233,7 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          pol:
+          stokes:
             desc: Polarizations in output cube (I,Q,U,V,XX,YY,XY,YX,RR,LL,RL,LR and combinations).
             type: str
             required: false
@@ -316,7 +316,7 @@ mapping:
             type: float
             required: false
             example: '1.1'
-          wscl_keep_final_products_only:
+          wscl_removeintermediate:
             desc: If set to true, WSClean + SoFiA intermediate-cubes are deleted from the output directory. If set to false, WSClean + SoFiA intermediate-cubes are retained in the output directory.
             type: bool
             required: false
@@ -331,7 +331,7 @@ mapping:
             type: float
             required: false
             example: '10'
-          wscl_auto_threshold:
+          wscl_auto_thr:
             desc: Cleaning threshold used for subsequent iterations of WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
             type: float
             required: false
@@ -341,28 +341,28 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          wscl_no_update_mod:
+          wscl_noupdatemod:
             desc: If set to true, WSClean will not store the line clean model in MODEL_DATA.
             type: bool
             required: false
             example: 'True'
-          wscl_multi_scale:
+          wscl_multiscale:
             desc: Switch on WSClean multiscale cleaning.
             type: bool
             required: false
             example: 'False'
-          wscl_multi_scale_scales:
+          wscl_multiscale_scales:
             desc: List of scales for WSClean multiscale, in units of pixels. Only used is wscl_multi_scale is set to True.
             seq:
               - type: int
             required: false
             example: '0, 10, 20, 30'
-          wscl_multi_scale_bias:
+          wscl_multiscale_bias:
             desc: Parameter to set the bias during multiscale cleaning, where a lower bias will give preference to larger angular scales.
             type: float
             required: false
             example: '0.6'
-          casa_threshold:
+          casa_thr:
             desc: Flux-density level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
             type: str
             required: false
@@ -438,7 +438,7 @@ mapping:
             type: str
             required: false
             example: 'mad'
-          threshold:
+          thr:
             desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
             type: float
             required: false
@@ -478,17 +478,17 @@ mapping:
             type: int
             required: false
             example: '3'
-          do_cubelets:
+          cubelets:
             desc: Create a cubelet for each detected emission-line object.
             type: bool
             required: false
             example: 'True'
-          do_mom0:
+          mom0:
             desc: Create a moment-0 image of the field.
             type: bool
             required: false
             example: 'True'
-          do_mom1:
+          mom1:
             desc: Create a moment-1 image of the field.
             type: bool
             required: false
@@ -509,12 +509,12 @@ mapping:
             enum: ['NVSS', 'PYBDSF']
             required: false
             example: 'PYBDSF'
-          channels_per_plot:
+          chans_per_plot:
             desc: Number of channels to plot per detailed plot.
             type: int
             required: false
             example: '50'
-          thresh:
+          thr:
             desc: Threshold to select sources in online catalogue (in units of mJy).
             type: float
             required: false

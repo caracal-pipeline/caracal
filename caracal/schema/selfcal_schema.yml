@@ -9,7 +9,7 @@ mapping:
         desc: Execute the selfcal worker.
         required: true
         example: 'False'
-      label:
+      label_in:
         type: str
         desc: Label of the .MS files to process.
         required: false
@@ -39,7 +39,7 @@ mapping:
             desc: Flag version to restore. This is applied to the .MS file(s) identified by "transfer_to_label" in the "transfer_apply_gains" section below. Set to "null" to skip this rewind step. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             example: 'auto'
             required: false
-      overwrite_flag_versions:
+      overwrite_flagvers:
         desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         example: 'False'
@@ -136,35 +136,35 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
-      img_joinchannels:
+      img_joinchans:
         type: bool
         desc: Join channels to create MFS image.
         required: false
         example: 'True'
-      img_fit_spectral_pol:
+      img_specfit_nrcoeff:
         type: int
         desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1.
         required: false
         example: '2'
-      img_pol:
+      img_stokes:
         type: str
         enum: ["I"]
         desc: Stokes image to create. For this first release of CARACal, the only option is 'I'.  
         required: false
         example: 'I'
-      img_multi_scale:
+      img_multiscale:
           type: bool
           desc: Switch on multiscale cleaning.
           required: false
           example: 'False'
-      img_multi_scale_scales:
+      img_multiscale_scales:
           seq:
             - type: int
           desc: Scales of multiscale [0,10,20,etc.] in pixels.
           required: false
           example: '10, 20, 30'
       img_sofia_settings:
-        desc: SoFiA source-finder settings used for the imaging iterations whose entry in 'image/clean_mask_method' below is 'sofia'. The resulting clean-mask is located in <output>/masking.
+        desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map
         mapping:
           kernels:
@@ -173,7 +173,7 @@ mapping:
             desc: FWHM of spatial Gaussian kernels in pixels.
             required: false
             example: '0., 3., 6., 9.'
-          only_positive_pix:
+          pospix:
             type: bool
             desc: Merges only positive pixels of sources in mask.
             required: false
@@ -199,13 +199,13 @@ mapping:
             type: bool
             required: false
             example: 'False'
-          fornax_thresh:
+          fornax_thr:
             desc: SoFiA source-finding threshold, in terms of the number of sigma_rms to go down to (i.e. the minimum signal-to-noise ratio).
             seq:
               - type: float
             required: false
             example: '4.0'
-          fornax_use_sofia:
+          fornax_sofia:
             type: bool
             desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
             required: false
@@ -215,17 +215,17 @@ mapping:
         desc: Number of self-calibration iterations to perform.
         required: false
         example: '2'
-      start_at_iter:
+      start_iter:
               type: int
               desc: Start selfcal iteration loop at this start value (1-indexed).
               required: false
               example: '1'
-      cal_gain_amplitude_clip_low:
+      cal_gain_cliplow:
         type: float
         desc: Lower threshold for clipping on gain amplitude.
         required: false
         example: '0.5'
-      cal_gain_amplitude_clip_high:
+      cal_gain_cliphigh:
         type: float
         desc: Upper threshold for clipping on gain amplitude.
         required: false
@@ -241,7 +241,7 @@ mapping:
         desc: Mode for using a calibration model, based on visibilities and/or PyBDSM source-finding. Options are vis_only, pybdsm_only, and pybdsm_vis. 'vis_only' means that only MODEL_DATA will be used to to calibrate. 'pybdsm_only' means that PyBDSM-generated, tigger-format local sky models will be used. 'pybdsm_vis' is the same as the 'pybdsm_only' mode except for the last iteration of selfcal, where the PyBDSM-based model is complemented by MODEL_DATA. This third mode is only to be used with output_data set to 'CORR_RES' (below) and is very tricky. Therefore, user discretion is advised. 
         required: false
         example: 'vis_only'
-      cal_Bjones:
+      cal_bjones:
         type: bool
         desc: Enable calculation of the B-Jones matrix, for bandpass calibration.
         required: false
@@ -260,33 +260,33 @@ mapping:
             desc: Flag solution intervals where the posterior variance estimate is above this value.
             required: false
             example: '0.3'
-          channel_chunk:
+          chan_chunk:
             desc: Chunk data up by this number of channels. This limits the amount of data processed at once. Smaller chunks allow for a smaller RAM footprint and greater parallelism but sets an upper limit on the frequency solution intervals that may be employed. 0 means 'use the full frequency-axis' but does not cross SPW boundaries. -1 means 'use the largest solution interval'.
             type: int
             required: false
             example: '-1'
-          weight_column:
+          weight_col:
             desc: Column with weights for use in CubiCal.
             type: str
             required: false
             example: 'WEIGHT'
-          shared_memory:
+          shared_mem:
             type: str
             desc: Set the amount of shared memory for CubiCal.
             required: false
             example: '100Gb'
-          madmax_flagging:
+          flag_madmax:
             desc: Flags based on maximum of mad in CubiCal.
             type: bool
             required: false
             example: 'True'
-          madmax_flag_thresh:
+          madmax_flag_thr:
             desc: Threshold for madmax flagging in CubiCal, where the provided list works exactly as described in CubiCal readthedocs for the parameter --madmax-threshold.
             seq:
               - type: int
             required: false
             example: '0, 10'
-          sol_term_iters:
+          solterm_niter:
             desc: Number of iterations per Jones term for CubiCal. Always a 3 digit array with iterations for 'G,B,GA' even when B or GA are not used.
             seq:
               - type: int
@@ -341,7 +341,7 @@ mapping:
             desc: Enable the 'aimfast' segment.
             required: false
             example: 'False'
-          tolerance:
+          tol:
             type: float
             desc: Relative change in weighted mean of metrics (specified via convergence_criteria below) from aimfast.
             required: false
@@ -382,37 +382,37 @@ mapping:
             desc: Enable the 'image' segment.
             required: false
             example: 'True'
-          column:
+          col:
             seq:
               - type: str
             desc: Column(s) to image.
             required: false
             example: 'DATA, CORRECTED_DATA'
-          clean_threshold:
+          clean_cutoff:
             seq:
               - type: float
             desc: Cleaning threshold to be used by WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the noise level estimated by WSClean from the residual image before the start of every major deconvolution iteration.
             required: false
             example: '0.5, 0.5'
-          clean_mask_method:
+          cleanmask_method:
             seq:
               - type: str
             desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
             required: false
             example: 'wsclean, wsclean'
-          clean_mask_threshold:
+          cleanmask_thr:
             seq:
               - type: float
             desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean' or 'sofia'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
             required: false
             example: '10.0, 6.0'
-          clean_mask_local_rms:
+          cleanmask_localrms:
             seq:
               - type: bool
             desc: Use a local-rms measurement when creating a clean mask with clean_mask_method = 'wsclean' or 'sofia'. If clean_mask_method = 'wsclean', this local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).
             required: false
             example: 'False, False'
-          clean_mask_local_rms_window:
+          cleanmask_localrms_window:
             desc: Width of the window used to measure the local rms when creating the clean mask. The window width is in pixels for clean_mask_method = 'sofia', and in PSFs for clean_mask_method = 'wsclean'.
             seq:
               - type: int
@@ -444,13 +444,13 @@ mapping:
             desc: Extract the spectral index for the fitted sources.
             required: false
             example: 'False'           # if not specified no spi will be determined
-          thresh_pix:
+          thr_pix:
             seq:
               - type: int
             desc: Pixel threshold to be used for the source finder. I.e. the minimum number of contiguous pixels for emission to be classed as a 'source'.
             required: false
             example: '5'
-          thresh_isl:
+          thr_isl:
             seq:
               - type: int
             desc: Threshold to be used by the source finder to set the island boundary, given in the number of sigma above the mean. This determines the extent of the island used for fitting.
@@ -489,37 +489,37 @@ mapping:
             desc: Gain matrix type. 'GainDiagPhase' = phase-only calibration, 'GainDiagAmp' = amplitude only, 'GainDiag' = Amplitude + Phase, 'Gain2x2' = Amplitude + Phase taking non-diagonal terms into account, 'Fslope' = delay selfcal (for which solution intervals should be set to at least twice the values you would use for GainDiagPhase). Note that Fslope does not work with MeqTrees.
             required: false
             example: 'GainDiagPhase, GainDiag'
-          Gsols_timeslots:
+          gsols_timeslots:
             seq:
               - type: int
             desc: G-Jones time solution interval. The parameter cal_timeslots_chunk above should be a multiple of Gsols_time. 0 entails using a single solution for the full time of the observations.
             required: false
             example: '1'
-          Gsols_channel:
+          gsols_chan:
             seq:
               - type: int
-            desc: G-Jones frequency solution interval. The parameter cal_channel_chunk above should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.
+            desc: G-Jones frequency solution interval. The parameter chan_chunk in calibrate section should a multiple of Gsols_channel. 0 entails using a single solution for the full bandwidth.
             required: false
             example: '0'
-          Bsols_timeslots:
+          bsols_timeslots:
             seq:
               - type: int
             desc: B-Jones solutions for individual calibration steps in time.
             required: false
             example: '0'
-          Bsols_channel:
+          bsols_chan:
             seq:
               - type: int
             desc: B-Jones solutions for individual calibration steps in frequency.
             required: false
             example: '2'
-          GAsols_timeslots:
+          gasols_timeslots:
             desc: Time intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_timeslots. If different from Gsols_timeslots, a second matrix is used and applied.
             seq:
               - type: int
             required: false
             example: '-1'
-          GAsols_channel:
+          gasols_chan:
             desc: Channel intervals for amplitude calibration in CubiCal. 0 indicates average all. -1 defaults to Gsols_channel. If different from Gsols_channels, a second matrix is used and applied.
             seq:
               - type: int
@@ -584,7 +584,7 @@ mapping:
                  desc: Solution interval in time (units of timeslots/integration time) for transferring gains. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
-              channel_int:
+              chan_int:
                  type: int
                  desc: Solution interval in frequency (units of channels) for transferring gains. -1 means use the solution interval from the calibration that is applied.
                  required: false
@@ -594,7 +594,7 @@ mapping:
                  desc: Time chunk in units of timeslots for transferring gains with CubiCal. -1 means use the solution interval from the calibration that is applied.
                  required: false
                  example: '-1'
-              channel_chunk:
+              chan_chunk:
                  type: int
                  desc: Frequency chunk in units of channels for transferring gains with CubiCal. '0' means the whole spw. -1 means use the solution interval from the calibration that is applied.
                  required: false
@@ -649,7 +649,7 @@ mapping:
             desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
             required: false
             example: '0'
-          memory_fraction:
+          mem_frac:
             type: float
             desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
             required: false

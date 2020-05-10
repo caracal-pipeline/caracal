@@ -25,12 +25,12 @@ mapping:
             desc: Create a tarball of the converted MS.
             required: false
             example: 'False'
-          channel_range:
+          chanrange:
             type: str
             desc: Only extract channels in this range (0-based, inclusive; comma-separated string). It is also possible to specify 'all'.
             required: false
             example: all
-          full_poll:
+          fullpol:
             type: bool
             desc: Extract all four correlations instead of only the XX and YY correlations.
             required: false

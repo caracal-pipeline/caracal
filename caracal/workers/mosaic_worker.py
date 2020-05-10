@@ -119,9 +119,9 @@ def worker(pipeline, recipe, config):
     # Prioritise parameters specified in the config file, under the 'mosaic' worker
     # i.e. 'continuum' or 'spectral'
     specified_mosaictype = config['mosaic_type']
-    use_MFS_images = config['use_MFS_images']
+    use_mfs_images = config['use_mfs']
     specified_images = config['target_images']
-    label = config['label']
+    label = config['label_in']
     line_name = config['line_name']
 
     # Parameters that depend on the mosaictype
@@ -139,12 +139,12 @@ def worker(pipeline, recipe, config):
             specified_mosaictype = 'continuum'
 
     # To ease finding the appropriate files, and to keep this worker self-contained
-    if use_MFS_images == True:
+    if use_mfs_images == True:
         mfsprefix = '-MFS'
     else:
         mfsprefix = ''
 
-    #pipeline.prefixes = ['{0:s}-{1:s}-{2:s}'.format(pipeline.prefix,did,config['label']) for did in pipeline.dataid]
+    #pipeline.prefixes = ['{0:s}-{1:s}-{2:s}'.format(pipeline.prefix,did,config['label_in']) for did in pipeline.dataid]
     # In case there are different pipeline prefixes
     # for i in range(len(pipeline.prefixes)): ### I may need to put this loop back in later
 

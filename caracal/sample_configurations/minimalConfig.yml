@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: '0'
+  refant: '0'
 
 transform:
   enable: true
@@ -15,7 +15,7 @@ transform:
   split_field:
     enable: true
     field: calibrators
-    column: data
+    col: data
 
 prep:
   enable: true
@@ -49,7 +49,7 @@ polcal:
 
 inspect:
   label_in: cal
-  label_out: 1gc
+  label_cal: 1gc
   dirname: crosscal
   enable: true
 
@@ -87,7 +87,7 @@ selfcal:
     enable: true
   calibrate:
     enable: true
-    Gsols_timeslots: [120]
+    gsols_timeslots: [120]
   report: true
 
 line:

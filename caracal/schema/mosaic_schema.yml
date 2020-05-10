@@ -22,21 +22,21 @@ mapping:
           - type: str
         required: false
         example: "directory/first_image.fits, directory/second_image.fits"
-      label:
+      label_in:
         desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
         type: str
         required: false
         example: 'corr'
-      use_MFS_images:
-        desc: Continuum mode only -- If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.
-        type: bool
-        required: false
-        example: 'False'
       line_name:
         desc: Spectral mode only -- If autoselection is used to find the final cubes, this needs to match the line_name parameter used for the line worker.
         type: str
         required: false
         example: 'HI'
+      use_mfs:
+        desc: Continuum mode only -- If the images to be mosaicked were created using MFS, in the selfcal or crosscal worker, then this needs to be indicated via this parameter.
+        type: bool
+        required: false
+        example: 'False'
       name:
         desc: The prefix to be used for output files. Default is the pipeline prefix, as set for the general worker.
         type: str

@@ -182,7 +182,7 @@ def worker(pipeline, recipe, config):
     flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     rewind_mst_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["mstransform_version"] != 'null')
-    label = config['label']
+    label = config['label_in']
     line_name = config['line_name']
     if label != '':
         flabel = label
@@ -193,7 +193,7 @@ def worker(pipeline, recipe, config):
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
     pipeline.prefixes = [
-        '{2:s}-{0:s}-{1:s}'.format(did, config['label'],
+        '{2:s}-{0:s}-{1:s}'.format(did, config['label_in'],
             pipeline.prefix) for did in pipeline.dataid]
     prefixes = pipeline.prefixes
     restfreq = config['restfreq']
@@ -237,7 +237,7 @@ def worker(pipeline, recipe, config):
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
     if pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'],
-            'doppler') and config['mstransform']['doppler']['outchangrid'] == 'auto':
+            'doppler') and config['mstransform']['doppler']['changrid'] == 'auto':
         firstchanfreq = list(itertools.chain.from_iterable(firstchanfreq_all))
         chanw = list(itertools.chain.from_iterable(chanw_all))
         lastchanfreq = list(itertools.chain.from_iterable(lastchanfreq_all))
@@ -317,17 +317,17 @@ def worker(pipeline, recipe, config):
             caracal.log.error('(all increasing or all decreasing). Use casa_image if this is not the case.')
             raise caracal.BadDataError("inconsistent frequency axis ordering across MSs")
 
-    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler']['outchangrid'] != 'auto':
-        if len(config['mstransform']['doppler']['outchangrid'].split(',')) != 3:
+    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler']['changrid'] != 'auto':
+        if len(config['mstransform']['doppler']['changrid'].split(',')) != 3:
             caracal.log.error(
-                'Incorrect format for mstransform:outchangrid in the .yml config file.')
+                'Incorrect format for mstransform:doppler:changrid in the .yml config file.')
             caracal.log.error(
-                'Current setting is mstransform:outchangrid:"{0:s}"'.format(
-                    config['mstransform']['doppler']['outchangrid']))
+                'Current setting is mstransform:doppler:changrid:"{0:s}"'.format(
+                    config['mstransform']['doppler']['changrid']))
             caracal.log.error(
                 'Expected "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
-            raise caracal.ConfigurationError("can't parse mstransform:outchangrid setting")
-        nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['outchangrid'].split(
+            raise caracal.ConfigurationError("can't parse mstransform:doppler:changrid setting")
+        nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['changrid'].split(
             ',')
         nchan_dopp = int(nchan_dopp)
         caracal.log.info(
@@ -353,7 +353,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
@@ -365,20 +365,20 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
             step = 'modelsub-ms{:d}'.format(i)
@@ -418,7 +418,7 @@ def worker(pipeline, recipe, config):
                 os.system(
                     'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
 
-            col = config['mstransform']['column']
+            col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)
             recipe.add('cab/casa_mstransform',
                        step,
@@ -432,7 +432,7 @@ def worker(pipeline, recipe, config):
                         "interpolation": 'nearest',
                         "datacolumn": col,
                         "restfreq": restfreq,
-                        "outframe": config['mstransform']['doppler']['outframe'],
+                        "outframe": config['mstransform']['doppler']['frame'],
                         "veltype": config['mstransform']['doppler']['veltype'],
                         "douvcontsub": pipeline.enable_task(config['mstransform'], 'uvlin'),
                         "fitspw": sdm.dismissable(config['mstransform']['uvlin']['fitspw']),
@@ -488,7 +488,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                     substep = 'version_{0:s}_ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname_mst, cab_name=substep)
@@ -500,20 +500,20 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname_mst, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if pipeline.enable_task(config, 'flag_mst_errors'):
             step = 'flag_mst_errors-ms{0:d}'.format(i)
@@ -543,7 +543,7 @@ def worker(pipeline, recipe, config):
                            "cell": config['sunblocker']['cell'],
                            "pol": 'i',
                            "threshmode": 'fit',
-                           "threshold": config['sunblocker']['threshold'],
+                           "threshold": config['sunblocker']['thr'],
                            "mode": 'all',
                            "radrange": 0,
                            "angle": 0,
@@ -561,12 +561,12 @@ def worker(pipeline, recipe, config):
         if flag_main_ms or rewind_main_ms:
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname,
-                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms:
             substep = 'save-{0:s}-mst{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname_mst,
-                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         recipe.run()
         recipe.jobs = []
@@ -580,7 +580,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='wsclean':
         nchans_all, specframe_all = [], []
-        label = config['label']
+        label = config['label_in']
         if label != '':
             flabel = label
         else:
@@ -627,7 +627,7 @@ def worker(pipeline, recipe, config):
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all.append([nchan_dopp for kk in chanw_all[i]])
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
 
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
@@ -672,7 +672,7 @@ def worker(pipeline, recipe, config):
         line_image_opts = {
             "weight": weight,
             "taper-gaussian": str(config['make_cube']['taper']),
-            "pol": config['make_cube']['pol'],
+            "pol": config['make_cube']['stokes'],
             "npix": npix,
             "padding": config['make_cube']['padding'],
             "scale": config['make_cube']['cell'],
@@ -681,11 +681,11 @@ def worker(pipeline, recipe, config):
             "niter": config['make_cube']['niter'],
             "gain": config['make_cube']['gain'],
             "mgain": config['make_cube']['wscl_mgain'],
-            "auto-threshold": config['make_cube']['wscl_auto_threshold'],
-            "multiscale": config['make_cube']['wscl_multi_scale'],
-            "multiscale-scales": config['make_cube']['wscl_multi_scale_scales'],
-            "multiscale-scale-bias": config['make_cube']['wscl_multi_scale_bias'],
-            "no-update-model-required": config['make_cube']['wscl_no_update_mod']
+            "auto-threshold": config['make_cube']['wscl_auto_thr'],
+            "multiscale": config['make_cube']['wscl_multiscale'],
+            "multiscale-scales": config['make_cube']['wscl_multiscale_scales'],
+            "multiscale-scale-bias": config['make_cube']['wscl_multiscale_bias'],
+            "no-update-model-required": config['make_cube']['wscl_noupdatemod']
         }
 
         for tt, target in enumerate(all_targets):
@@ -900,7 +900,7 @@ def worker(pipeline, recipe, config):
                     os.rename(MFScubename, finalMFScubename)
 
             for j in range(1, wscl_niter):
-                if config['make_cube']['wscl_keep_final_products_only']:
+                if config['make_cube']['wscl_removeintermediate']:
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             pipeline.cubes, pipeline.prefix, field, line_name, j, ss)
@@ -918,7 +918,7 @@ def worker(pipeline, recipe, config):
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='casa':
         cube_dir = get_dir_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
-        label = config['label']
+        label = config['label_in']
         if label != '':
             flabel = '_' + label
         else:
@@ -957,7 +957,7 @@ def worker(pipeline, recipe, config):
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler']['outframe']] for kk in chanw_all[i]])
+                                         config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
         else:
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msfile[:-3])
@@ -1010,12 +1010,12 @@ def worker(pipeline, recipe, config):
                 "niter": config['make_cube']['niter'],
                 "gain": config['make_cube']['gain'],
                 "psfmode": 'hogbom',
-                "threshold": config['make_cube']['casa_threshold'],
+                "threshold": config['make_cube']['casa_thr'],
                 "npix": config['make_cube']['npix'],
                 "cellsize": config['make_cube']['cell'],
                 "weight": config['make_cube']['weight'],
                 "robust": config['make_cube']['robust'],
-                "stokes": config['make_cube']['pol'],
+                "stokes": config['make_cube']['stokes'],
                 "port2fits": config['make_cube']['casa_port2fits'],
                 "restfreq": restfreq,
             }
@@ -1100,13 +1100,13 @@ def worker(pipeline, recipe, config):
                         "steps.doReliability": False,
                         "steps.doParameterise": False,
                         "steps.doWriteMask": True,
-                        "steps.doMom0": config['sofia']['do_mom0'],
-                        "steps.doMom1": config['sofia']['do_mom1'],
-                        "steps.doCubelets": config['sofia']['do_cubelets'],
+                        "steps.doMom0": config['sofia']['mom0'],
+                        "steps.doMom1": config['sofia']['mom1'],
+                        "steps.doCubelets": config['sofia']['cubelets'],
                         "steps.doWriteCat": False,
                         "flag.regions": config['sofia']['flagregion'],
                         "scaleNoise.statistic": config['sofia']['rmsMode'],
-                        "SCfind.threshold": config['sofia']['threshold'],
+                        "SCfind.threshold": config['sofia']['thr'],
                         "SCfind.rmsMode": config['sofia']['rmsMode'],
                         "merge.radiusX": config['sofia']['mergeX'],
                         "merge.radiusY": config['sofia']['mergeY'],
@@ -1128,7 +1128,7 @@ def worker(pipeline, recipe, config):
                           "enable_abs_plot": True,
                           "enable_source_finder": False,
                           "cubename": image_cube_list[uu]+':output',
-                          "channels_per_plot": config['sharpener']['channels_per_plot'],
+                          "channels_per_plot": config['sharpener']['chans_per_plot'],
                           "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
                           "label": config['sharpener']['label'],
                           }
@@ -1166,7 +1166,7 @@ def worker(pipeline, recipe, config):
 
                 elif config['sharpener']['catalog'] == 'NVSS':
                     runsharp = True
-                    params["thresh"] = config['sharpener']['thresh']
+                    params["thr"] = config['sharpener']['thr']
                     params["width"] = config['sharpener']['width']
                     params["catalog"] = "NVSS"
                     recipe.add('cab/sharpener',

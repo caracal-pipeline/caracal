@@ -10,7 +10,7 @@ mapping:
         required: True
         example: 'False'
       field:
-        desc: Fields that should be flagged. It can be set to either 'target' or 'calibrators' (i.e., all calibrators) as defined in the obsconf worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step 'flag_mask' (see below). If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
+        desc: Fields that should be flagged. It can either be 'target' or 'calibrators'  (i.e., all calibrators) as defined in the observation_config worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step flag_mask. If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calfields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
         type: str
         enum: ["target", "calibrators"]
         required: False
@@ -20,7 +20,7 @@ mapping:
         type: str
         required: False
         example: ''
-      calibrator_fields:
+      calfields:
         desc: If 'field' above is set to 'calibrators', users can specify here what subset of calibrators to process. This should be a comma-separated list of 'xcal' ,'bpcal', 'gcal' and/or 'fcal', which were all set by the obsconf worker. Alternatively, 'auto' selects all calibrators.
         type: str
         required: False
@@ -45,8 +45,8 @@ mapping:
             type: str
             required: false
             example: 'auto'
-      overwrite_flag_versions:
-        desc: Allow CARACal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+      overwrite_flagvers:
+        desc: Allow Caracal to ovewrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
         type: bool
         required: False
         example: 'False'
@@ -68,17 +68,17 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          scan_to_scan_threshold:
+          scan_thr:
             desc: Threshold for flagging (in sigma) above the rest of the scans per field per channel.
             type: int
             required: False
             example: '3'
-          antenna_to_group_threshold:
+          ant_group_thr:
             desc: Threshold for flagging (in sigma) above array median-power spectra per scan per field per channel.
             type: int
             required: False
             example: '5'
-          column:
+          col:
             desc: Data column to flag.
             type: str
             required: False
@@ -106,12 +106,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          quackinterval:
+          interval:
             desc: Time interval (in seconds) to flag.
             type: float
             required: False
             example: '8.'
-          quackmode:
+          mode:
             desc: Quack flagging mode. Options are 'beg' (which flags the beginning of the scan), 'endb' (which flags the end of the scan), 'tail' (which flags everything but the first specified seconds of the scan), and 'end' (which flags all but the last specified seconds of the scan).
             type: str
             enum: ["beg", "endb", "tail", "end"]
@@ -145,12 +145,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          tolerance:
+          tol:
             desc: Amount of shadow allowed (in metres). A positive number allows antennas to overlap in projection. A negative number forces antennas apart in projection.
             type: float
             required: False
             example: '0.'
-          include_full_mk64:
+          full_mk64:
             desc: Consider all MeerKAT-64 antennas in the shadowing calculation, even if only a subarray is used.
             type: bool
             required: False
@@ -164,12 +164,12 @@ mapping:
             type: bool
             required: False
             example: 'False'
-          channels:
+          chans:
             desc: Channels to flag. Given as "spectral window index:start channel ~ end channel" e.g. "*:856~880MHz". End channels are not inclusive.
             type: str
             required: False
             example: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the channel selection returns any data. If it does not, FLAGDATA is not executed (preventing the pipeline from crashing). This check only works with the following spw formats (multiple, comma-separated selections allowed), "*:firstchan~lastchan"; "firstspw~lastspw:firstchan~lastchan"; "spw:firstchan~lastchan"; "firstchan~lastchan". Channels are assumed to be in frequency (Hz, kHz, MHz, GHz allowed; if no units are given it assumes Hz).
             type: bool
             required: False
@@ -188,7 +188,7 @@ mapping:
             type: str
             required: False
             example: ''
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the timerange is in the MS being considered. This stops the pipeline from crashing when multiple datasets are being processed.
             type: bool
             required: False
@@ -226,7 +226,7 @@ mapping:
             type: str
             required: False
             example: ''
-          ensure_valid_selection:
+          ensure_valid:
             desc: Check whether the timerange is in the MS being considered. This stops the pipeline from crashing when multiple datasets are being processed.
             type: bool
             required: False
@@ -265,7 +265,7 @@ mapping:
             enum: ["aoflagger", "tricolour", "tfcrop"]
             required: False
             example: "aoflagger"
-          column:
+          col:
             desc: Specify which column to flag.
             type: str
             required: False
@@ -278,7 +278,7 @@ mapping:
                 type: str
                 required: False
                 example: 'firstpass_Q.rfis'
-              ensure_valid_strategy:
+              ensure_valid:
                 desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V for an .MS with XX and YY only will result in an error and CARACal exiting. The rules are 1. XY,YX must be present in order to flag on Stokes V,U (or on XY,YX), and 2. XX,YY must be present in order to flag on Stokes I,Q (or on XX,YY). Disable this parameter only if you know what you are doing.
                 type: bool
                 required: False
@@ -286,7 +286,7 @@ mapping:
           tricolour:
             type: map
             mapping:
-              window_backend:
+              backend:
                 desc: Visibility and flag data is re-ordered from an MS-row ordering into time-frequency windows ordered by baseline. Options are 'numpy' (if only a few scans worth of visibility data need to be re-ordered) and 'zarr-disk' (for larger data sizes, where re-ordering on disk, rather than in memory, is necessary).
                 type: str
                 enum: ["numpy", "zarr-disk"]
@@ -303,7 +303,7 @@ mapping:
                 type: str
                 required: False
                 example: 'mk_rfi_flagging_calibrator_fields_firstpass.yaml'
-              strategy_narrowband:
+              strat_narrow:
                 desc: Name of the Tricolour strategy file to be used for an MS with narrow bandwidth, if mode = 'auto' (see above).
                 type: str
                 required: False
@@ -389,11 +389,6 @@ mapping:
             type: int
             required: False
             example: '5'
-          movies_in_report:
-            desc: Generate movies in a report.
-            type: bool
-            required: False
-            example: 'True'
       summary:
         desc: Use CASA FLAGDATA in 'summary' mode to write flagging summary at the end of the pre-calibration flagging.
         type: map

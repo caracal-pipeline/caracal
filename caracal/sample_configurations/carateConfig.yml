@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: 'm010'
+  refant: 'm010'
 
 transform:
   enable: true
@@ -15,13 +15,13 @@ transform:
   split_field:
     enable: true
     field: calibrators
-    column: data
+    col: data
 
 prep:
   enable: true
   label_in: cal
   field: calibrators
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -38,13 +38,13 @@ flag:
     enable: true
   flag_shadow:
     enable: true
-    include_full_mk64: true
+    full_mk64: true
   flag_spw:
     enable: true
 
 inspect:
   label_in: 'cal'
-  label_out: 'pre1gc'
+  label_cal: 'pre1gc'
   enable: true
   dirname: initial
   shadems:
@@ -62,16 +62,16 @@ inspect:
   standard_plotter: ragavi_vis
   real_imag:
     enable: false
-    column: data
+    col: data
   amp_uvwave:
-    column: data
+    col: data
   phase_uvwave:
-    column: data
+    col: data
     enable: false
   amp_chan:
-    column: data
+    col: data
   phase_chan:
-    column: data
+    col: data
     enable: false
 
 crosscal:
@@ -80,13 +80,13 @@ crosscal:
   label_in: 'cal'
   set_model:
     enable: true
-  primary_cal:
+  primary:
     order: KGBAKGBK
     combine: ["", "", "", null, "","", scan, scan]
     solint: [inf, inf, inf, null, inf, inf, inf, inf]
     calmode: [a, ap, ap, null, a, ap, ap, a]
-    B_fillgaps: 70
-  secondary_cal:
+    b_fillgaps: 70
+  secondary:
     order: GAF
     apply: KB
     combine: ["", null, ""]
@@ -102,7 +102,7 @@ polcal:
 
 inspect__2:
   label_in: 'cal'
-  label_out: '1gc'
+  label_cal: '1gc'
   enable: true
   dirname: crosscal
   shadems:
@@ -140,7 +140,7 @@ prep__2:
   enable: true
   label_in: corr
   field: target
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -152,7 +152,7 @@ flag__2:
     enable: true
   flag_shadow:
     enable: true
-    include_full_mk64: true
+    full_mk64: true
   flag_spw:
     enable: true
   flag_rfi:
@@ -165,8 +165,8 @@ transform__3:
   label_out: cont
   split_field:
     enable: true
-    freq_average: 4
-    column: data
+    chan_avg: 4
+    col: data
 
 mask:
   enable: false
@@ -177,11 +177,11 @@ flag__3:
   label_in: cont
   flag_spw:
     enable: true
-    channels: '*:1417.2~1421.0MHz'
+    chans: '*:1417.2~1421.0MHz'
 
 selfcal:
   enable: true
-  label: cont
+  label_in: cont
   ncpu: 12
   img_npix: 3600
   img_cell: 2
@@ -190,32 +190,32 @@ selfcal:
   img_robust: -1.0
   cal_niter: 3
   cal_cubical:
-    channel_chunk: 0
-    shared_memory: 250GB
+    chan_chunk: 0
+    shared_mem: 250GB
     max_post_error: 0.25
   cal_timeslots_chunk: 360
   image:
     enable: true
-    clean_mask_threshold: [20,10,5,5]
-    clean_threshold: [0.5,0.5,0.5,0.5]
+    cleanmask_threshold: [20,10,5,5]
+    clean_cutoff: [0.5,0.5,0.5,0.5]
   calibrate:
     enable: true
     model: ['1','2','3']
     gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
-    Gsols_channel: [0, 0, 0]
-    Gsols_timeslots: [120, 60, 20]
+    gsols_chan: [0, 0, 0]
+    gsols_timeslots: [120, 60, 20]
   transfer_apply_gains:
     enable: true
     interpolate:
       timeslots_int: 20
       timeslots_chunk: 360
-      channel_int: 0
-      channel_chunk: 0
+      chan_int: 0
+      chan_chunk: 0
     transfer_to_label: corr
   transfer_model:
     enable: true
     num_workers: 12
-    memory_fraction: 0.45
+    mem_frac: 0.45
     transfer_to_label: corr
 
 transform__4:
@@ -224,13 +224,13 @@ transform__4:
   label_out: 'l'
   split_field:
     enable: true
-    column: 'all'
+    col: 'all'
     otfcal:
       enable: false
 
 line:
   enable: true
-  label: 'l'
+  label_in: 'l'
   restfreq: '1.420405752GHz'
   subtractmodelcol:
     enable: true
@@ -267,7 +267,7 @@ mosaic:
   domontage:
     enable: true
   cutoff: 0.1
-  use_MFS_images: false
+  use_mfs: false
 
 mosaic__2:
   enable: true
@@ -276,4 +276,4 @@ mosaic__2:
   domontage:
     enable: true
   cutoff: 0.1
-  use_MFS_images: true
+  use_mfs: true

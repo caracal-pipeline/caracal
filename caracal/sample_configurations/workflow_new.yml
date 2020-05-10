@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  reference_antenna: '0'
+  refant: '0'
   
 transform:
   enable: true
@@ -16,9 +16,9 @@ transform:
   split_field:
     enable: true
     field: 'calibrators'
-    time_average: ''
-    freq_average: 1
-    column: data
+    time_avg: ''
+    chan_avg: 1
+    col: data
     correlation: ''
     spw: ''
 
@@ -26,11 +26,11 @@ prep:
   enable: true
   label_in: cal
   field: calibrators
-  fixvis:
+  fixuvw:
     enable: false
   manage_flags:
     enable: true
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -42,8 +42,8 @@ flag:
     enable: true
   flag_spw:
     enable: true
-    channels: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid_selection: true
+    chans: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
+    ensure_valid: true
   flag_antennas:
     enable: false
     antennas: '0'
@@ -61,7 +61,7 @@ flag:
       strategy: firstpass_QUV.rfis
   inspect:
     enable: false
-    telescope: MeerKAT
+    telescope: meerkat
     field: 'bpcal,gcal'
 
 crosscal:
@@ -70,15 +70,15 @@ crosscal:
   label_in: 'cal'
   set_model:
     enable: true
-  primary_cal:
+  primary:
     reuse_existing_gains: true
     order: KGBAKGB
     combine: ["", "", "", null, "","", scan]
     solint: [inf, inf, inf, null, 60s, 60s, inf]
     calmode: [a, ap, ap, null, a, ap, ap] 
-    B_fillgaps: 70
+    b_fillgaps: 70
     plotgains: true
-  secondary_cal:
+  secondary:
     reuse_existing_gains: true
     order: KGAKG
     apply: B
@@ -97,7 +97,7 @@ polcal:
 inspect:
   enable: true
   label_in: 'cal'
-  label_out: '1gc'
+  label_cal: '1gc1'
   fields:
     - bpcal
     - gcal
@@ -132,7 +132,7 @@ prep__2:
   enable: true
   label_in: corr
   field: target
-  spectral_weights:
+  specweights:
     enable: true
     mode: uniform
 
@@ -143,7 +143,7 @@ flag__2:
   flag_rfi: 
     enable: true
     flagger: aoflagger
-    column: DATA
+    col: DATA
     aoflagger:
       strategy: firstpass_QUV.rfis
   inspect: 
@@ -161,7 +161,7 @@ selfcal:
     enable: true
   calibrate:
     enable: true
-    Gsols_timeslots: [120]
+    gsols_timeslots: [120]
 
 line:
   enable: true

@@ -59,15 +59,15 @@ def check_config(config):
         if config['transfer_apply_gains']['enable']:
             raise caracal.UserInputError(
                 'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
-        if int(config['start_at_iter']) != 1:
+        if int(config['start_iter']) != 1:
             raise caracal.UserInputError(
                 "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
-        if int(config['cal_cubical']['channel_chunk']) != -1:
+        if int(config['cal_cubical']['chan_chunk']) != -1:
             caracal.log.info("The channel chunk has no effect on MeqTrees.")
         if 'Fslope' in config['calibrate']['gain_matrix_type']:
             caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
     else:
-        if int(config['start_at_iter']) != 1:
+        if int(config['start_iter']) != 1:
             raise caracal.UserInputError(
                 "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
     # First check we are actually running a calibrate
@@ -85,19 +85,19 @@ def check_config(config):
         #Then let's check that the solutions are reasonable and fit in our time chunks
         #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
         #  we check there are enough solution
-        if len(config['calibrate']['Gsols_timeslots']) < int(config['cal_niter']):
-            amount_sols = len(config['calibrate']['Gsols_timeslots'])
+        if len(config['calibrate']['gsols_timeslots']) < int(config['cal_niter']):
+            amount_sols = len(config['calibrate']['gsols_timeslots'])
         else:
             amount_sols = int(config['cal_niter'])
         #  we collect all time solutions
-        solutions = config['calibrate']['Gsols_timeslots'][:amount_sols]
+        solutions = config['calibrate']['gsols_timeslots'][:amount_sols]
         # if we do Bjones we add those
-        if config['cal_Bjones']:
-            if len(config['calibrate']['Bsols_timeslots']) < int(config['cal_niter']):
-                amount_sols = len(config['calibrate']['Bsols_timeslots'])
+        if config['cal_bjones']:
+            if len(config['calibrate']['bsols_timeslots']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['bsols_timeslots'])
             else:
                 amount_sols = int(config['cal_niter'])
-            solutions.append(config['calibrate']['Bsols_timeslots'][:amount_sols])
+            solutions.append(config['calibrate']['bsols_timeslots'][:amount_sols])
         # Same for GA solutions
         if len(config['calibrate']['gain_matrix_type']) < int(config['cal_niter']):
             amount_matrix = len(config['calibrate']['gain_matrix_type'])
@@ -105,11 +105,11 @@ def check_config(config):
             amount_matrix = int(config['cal_niter'])
         if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
             'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
-            if len(config['calibrate']['GAsols_timeslots']) < int(config['cal_niter']):
-                amount_sols = len(config['calibrate']['GAsols_timeslots'])
+            if len(config['calibrate']['gasols_timeslots']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['gasols_timeslots'])
             else:
                 amount_sols = int(config['cal_niter'])
-            for i,val in enumerate(config['calibrate']['GAsols_timeslots'][:amount_sols]):
+            for i,val in enumerate(config['calibrate']['gasols_timeslots'][:amount_sols]):
                 if val >= 0:
                     solutions.append(val)
         # then we assign the timechunk
@@ -138,50 +138,50 @@ def check_config(config):
         # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
         # This is not an option for meqtrees
         if config['calibrate_with'].lower() == 'cubical':
-            if len(config['calibrate']['Gsols_channel']) < int(config['cal_niter']):
-                amount_sols = len(config['calibrate']['Gsols_channel'])
+            if len(config['calibrate']['gsols_chan']) < int(config['cal_niter']):
+                amount_sols = len(config['calibrate']['gsols_chan'])
             else:
                 amount_sols = int(config['cal_niter'])
             #  we collect all time solutions
-            solutions = config['calibrate']['Gsols_channel'][:amount_sols]
-            # if we do Bjones we add those
-            if config['cal_Bjones']:
-                if len(config['calibrate']['Bsols_channel']) < int(config['cal_niter']):
-                    amount_sols = len(config['calibrate']['Bsols_channel'])
+            solutions = config['calibrate']['gsols_chan'][:amount_sols]
+            # if we do bjones we add those
+            if config['cal_bjones']:
+                if len(config['calibrate']['bsols_chan']) < int(config['cal_niter']):
+                    amount_sols = len(config['calibrate']['bsols_chan'])
                 else:
                     amount_sols = int(config['cal_niter'])
-                solutions.append(config['calibrate']['Bsols_channel'][:amount_sols])
+                solutions.append(config['calibrate']['bsols_chan'][:amount_sols])
             # Same for GA solutions
             if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
                 'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
-                if len(config['calibrate']['GAsols_channel']) < int(config['cal_niter']):
-                    amount_sols = len(config['calibrate']['GAsols_channel'])
+                if len(config['calibrate']['gasols_chan']) < int(config['cal_niter']):
+                    amount_sols = len(config['calibrate']['gasols_chan'])
                 else:
                     amount_sols = int(config['cal_niter'])
-                for i,val in enumerate(config['calibrate']['GAsols_channel'][:amount_sols]):
+                for i,val in enumerate(config['calibrate']['gasols_chan'][:amount_sols]):
                     if val >= 0:
                         solutions.append(val)
             # then we assign the timechunk
-            if config['cal_cubical']['channel_chunk'] == -1:
+            if config['cal_cubical']['chan_chunk'] == -1:
                 if np.min(solutions) != 0.:
-                    channel_chunk = max(solutions)
+                    chan_chunk = max(solutions)
                 else:
-                    channel_chunk = 0
+                    chan_chunk = 0
             else:
-                channel_chunk = config['cal_cubical']['channel_chunk']
-            # if channel_chunk is not 0 all solutions should fit in there.
+                chan_chunk = config['cal_cubical']['chan_chunk']
+            # if chan_chunk is not 0 all solutions should fit in there.
             # if it is 0 then it does not matter as we are not checking remainder intervals
-            if channel_chunk != 0:
+            if chan_chunk != 0:
                 if 0. in solutions:
-                    caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set cal_channel_chunk, please set it to 0 for using all channels.")
-                    caracal.log.error("Your channel chunk = {} \n".format(channel_chunk))
+                    caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set chan_chunk, please set it to 0 for using all channels.")
+                    caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                     caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                     raise caracal.UserInputError("Inconsistent selfcal chunking")
-                sol_int_array = float(channel_chunk)/np.array(solutions,dtype=float)
+                sol_int_array = float(chan_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
-                        caracal.log.error("Not all applied channel solutions fit in the channel_chunk.")
-                        caracal.log.error("Your channel chunk = {} \n".format(channel_chunk))
+                        caracal.log.error("Not all applied channel solutions fit in the chan_chunk.")
+                        caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                         caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
                         raise caracal.UserInputError("Inconsistent selfcal chunking")
     # Check some imaging stuff
@@ -199,7 +199,7 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    flag_main_ms = pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_at_iter']
+    flag_main_ms = pipeline.enable_task(config, 'calibrate') and config['cal_niter'] >= config['start_iter']
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     rewind_transf_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["transfer_apply_gains_version"] != 'null')
     spwid = str(config['spwid'])
@@ -209,13 +209,13 @@ def worker(pipeline, recipe, config):
     taper = config['img_taper']
     maxuvl = config['img_maxuv_l']
     transuvl = maxuvl*config['img_transuv_l']/100.
-    multiscale = config['img_multi_scale']
+    multiscale = config['img_multiscale']
     if multiscale == True:
-        multiscale_scales = sdm.dismissable(config['img_multi_scale_scales'])
+        multiscale_scales = sdm.dismissable(config['img_multiscale_scales'])
     if taper == '':
         taper = None
 
-    label = config['label']
+    label = config['label_in']
     cal_niter = config['cal_niter']
     time_chunk = config['cal_timeslots_chunk']
     #If user sets value that is not -1 use  that
@@ -225,25 +225,25 @@ def worker(pipeline, recipe, config):
         amount_matrix = int(cal_niter)
     if int(time_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
-        if len(config['calibrate']['Gsols_timeslots']) < cal_niter:
-            g_amount_sols = len(config['calibrate']['Gsols_timeslots'])
+        if len(config['calibrate']['gsols_timeslots']) < cal_niter:
+            g_amount_sols = len(config['calibrate']['gsols_timeslots'])
         else:
             g_amount_sols = cal_niter
-        all_time_solution = config['calibrate']['Gsols_timeslots'][:g_amount_sols]
+        all_time_solution = config['calibrate']['gsols_timeslots'][:g_amount_sols]
         # add the various sections
-        if config['cal_Bjones']:
-            if len(config['calibrate']['Bsols_timeslots']) < cal_niter:
-                b_amount_sols = len(config['calibrate']['Bsols_timeslots'])
+        if config['cal_bjones']:
+            if len(config['calibrate']['bsols_timeslots']) < cal_niter:
+                b_amount_sols = len(config['calibrate']['bsols_timeslots'])
             else:
                 b_amount_sols = cal_niter
-            all_time_solution.append(config['calibrate']['Bsols_timeslots'][:b_amount_sols])
+            all_time_solution.append(config['calibrate']['bsols_timeslots'][:b_amount_sols])
         if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
             'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
-            if len(config['calibrate']['GAsols_timeslots']) < cal_niter:
-                amount_sols = len(config['calibrate']['GAsols_timeslots'])
+            if len(config['calibrate']['gasols_timeslots']) < cal_niter:
+                amount_sols = len(config['calibrate']['gasols_timeslots'])
             else:
                 amount_sols = int(cal_niter)
-            for val in config['calibrate']['GAsols_timeslots'][:amount_sols]:
+            for val in config['calibrate']['gasols_timeslots'][:amount_sols]:
                 if int(val) >= 0:
                     all_time_solution.append(val)
         if min(all_time_solution) == 0:
@@ -251,29 +251,29 @@ def worker(pipeline, recipe, config):
         else:
             time_chunk = max(all_time_solution)
     # And for the frequencies
-    freq_chunk = config['cal_cubical']['channel_chunk']
+    freq_chunk = config['cal_cubical']['chan_chunk']
     #If user sets value that is not -1 then use that
     if int(freq_chunk) < 0 and  pipeline.enable_task(config, 'calibrate'):
         # We're always doing gains
-        if len(config['calibrate']['Gsols_channel']) < cal_niter:
-            g_amount_sols = len(config['calibrate']['Gsols_channel'])
+        if len(config['calibrate']['gsols_chan']) < cal_niter:
+            g_amount_sols = len(config['calibrate']['gsols_chan'])
         else:
             g_amount_sols = cal_niter
-        all_freq_solution = config['calibrate']['Gsols_channel'][:g_amount_sols]
+        all_freq_solution = config['calibrate']['gsols_chan'][:g_amount_sols]
         # add the various sections
-        if config['cal_Bjones']:
-            if len(config['calibrate']['Bsols_channel']) < cal_niter:
-                b_amount_sols = len(config['calibrate']['Bsols_channel'])
+        if config['cal_bjones']:
+            if len(config['calibrate']['bsols_chan']) < cal_niter:
+                b_amount_sols = len(config['calibrate']['bsols_chan'])
             else:
                 b_amount_sols = cal_niter
-            all_freq_solution.append(config['calibrate']['Bsols_channel'][:b_amount_sols])
+            all_freq_solution.append(config['calibrate']['bsols_chan'][:b_amount_sols])
         if 'GainDiag' in config['calibrate']['gain_matrix_type'][:amount_matrix] or \
             'Gain2x2' in config['calibrate']['gain_matrix_type'][:amount_matrix]:
-            if len(config['calibrate']['GAsols_channel']) < cal_niter:
-                amount_sols = len(config['calibrate']['GAsols_channel'])
+            if len(config['calibrate']['gasols_chan']) < cal_niter:
+                amount_sols = len(config['calibrate']['gasols_chan'])
             else:
                 amount_sols = int(cal_niter)
-            for val in config['calibrate']['GAsols_channel'][:amount_sols]:
+            for val in config['calibrate']['gasols_chan'][:amount_sols]:
                 if int(val) >= 0:
                     all_freq_solution.append(val)
         if min(all_freq_solution) == 0:
@@ -314,7 +314,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
@@ -326,20 +326,20 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            m, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
     i += 1
     if pipeline.enable_task(config, 'transfer_apply_gains'):
@@ -363,7 +363,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
                     substep = 'version_{0:s}_ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
@@ -375,20 +375,20 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i+j)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            m, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, m, config, flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i+j)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, m, config, flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i+j)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        m, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
     if pipeline.enable_task(config, 'transfer_model'):
         t, all_msfile_tmodel, ms_dict_tmodel = utils.target_to_msfiles(
@@ -456,13 +456,13 @@ def worker(pipeline, recipe, config):
             "niter": config['img_niter'],
             "gain": config["img_gain"],
             "mgain": config['img_mgain'],
-            "pol": config['img_pol'],
+            "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
-            "joinchannels": config['img_joinchannels'],
-            "fit-spectral-pol":  config['img_fit_spectral_pol'],
+            "joinchannels": config['img_joinchans'],
+            "fit-spectral-pol":  config['img_specfit_nrcoeff'],
             "local-rms": True,
             "auto-mask": 6,
-            "auto-threshold": config[key]['clean_threshold'][0],
+            "auto-threshold": config[key]['clean_cutoff'][0],
             "savesourcelist": False,
             "fitbeam": False,
         }
@@ -508,7 +508,7 @@ def worker(pipeline, recipe, config):
                 raise RuntimeError("Something has gone wrong in the two step processing")
         else:
             imcolumn = config[key][
-                'column'][num - 1 if len(config[key]['column']) >= num else -1]
+                'col'][num - 1 if len(config[key]['col']) >= num else -1]
 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         image_opts = {
@@ -523,12 +523,12 @@ def worker(pipeline, recipe, config):
             "niter": config['img_niter'],
             "gain": config["img_gain"],
             "mgain": config['img_mgain'],
-            "pol": config['img_pol'],
+            "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
-            "joinchannels": config['img_joinchannels'],
-            "fit-spectral-pol": config['img_fit_spectral_pol'],
+            "joinchannels": config['img_joinchans'],
+            "fit-spectral-pol": config['img_specfit_nrcoeff'],
             "savesourcelist": True if config['img_niter']>0 else False,
-            "auto-threshold": config[key]['clean_threshold'][num-1 if len(config[key]['clean_threshold']) >= num else -1],
+            "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
         }
         if maxuvl > 0.:
             image_opts.update({
@@ -545,12 +545,12 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
 
-        mask_key = config[key]['clean_mask_method'][num-1 if len(config[key]['clean_mask_method']) >= num else -1]
+        mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':
             image_opts.update({
-                "auto-mask": config[key]['clean_mask_threshold'][num-1 if len(config[key]['clean_mask_threshold']) >= num else -1],
-                "local-rms": config[key]['clean_mask_local_rms'][num-1 if len(config[key]['clean_mask_local_rms']) >= num else -1],
-                "local-rms-window": config[key]['clean_mask_local_rms_window'][num-1 if len(config[key]['clean_mask_local_rms_window']) >= num else -1],
+                "auto-mask": config[key]['cleanmask_thr'][num-1 if len(config[key]['cleanmask_thr']) >= num else -1],
+                "local-rms": config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1],
+                "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
               })
         elif mask_key == 'sofia':
             fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
@@ -567,7 +567,7 @@ def worker(pipeline, recipe, config):
                 mask_key, field)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
                 raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"\
-                    " in clean_mask_method, and that the mask exists.".format(pipeline.output, fits_mask))
+                    " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
             image_opts.update({
                 "fitsmask": '{0:s}:output'.format(fits_mask),
                 "local-rms": False,
@@ -583,17 +583,17 @@ def worker(pipeline, recipe, config):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)
         key = 'img_sofia_settings'
 
-        if config['img_joinchannels'] == True:
+        if config['img_joinchans'] == True:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
                 img_dir, prefix, field, num)
         else:
             imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
                 img_dir, prefix, field, num)
 
-        if config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == True:
+        if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
             forn_kernels = [[80, 80, 0, 'b']]
-            forn_thresh = config[key]['fornax_thresh'][
-                num-1 if len(config[key]['fornax_thresh']) >= num else -1]
+            forn_thresh = config[key]['fornax_thr'][
+                num-1 if len(config[key]['fornax_thr']) >= num else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -634,7 +634,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image']['clean_mask_local_rms'][num-1 if len(config['image']['clean_mask_local_rms']) >= num else -1],
+            "steps.doScaleNoise": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -652,26 +652,26 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key]['kernels']],
-            "SCfind.threshold": config['image']['clean_mask_threshold'][num-1 if len(config['image']['clean_mask_threshold']) >= num else -1],
+            "SCfind.threshold": config['image']['cleanmask_thr'][num-1 if len(config['image']['cleanmask_thr']) >= num else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image']['clean_mask_local_rms_window'][num-1 if len(config['image']['clean_mask_local_rms_window']) >= num else -1],
+            "scaleNoise.windowSpatial": config['image']['cleanmask_localrms_window'][num-1 if len(config['image']['cleanmask_localrms_window']) >= num else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": config['image']['clean_mask_local_rms'][num-1 if len(config['image']['clean_mask_local_rms']) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
+            "scaleNoise.perSCkernel": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
             "merge.minSizeX": 3,
             "merge.minSizeY": 3,
             "merge.minSizeZ": 1,
-            "merge.positivity": config[key]['only_positive_pix'],
+            "merge.positivity": config[key]['pospix'],
         }
         if config[key]['flag']:
             flags_sof = config[key]['flagregion']
@@ -743,7 +743,7 @@ def worker(pipeline, recipe, config):
             image_opts.update({"import.maskFile": mask_name})
             image_opts.update({"import.inFile": imagename})
 
-        if config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == True:
+        if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
 
             recipe.add('cab/sofia', step+"-fornax_special",
                        image_opts_forn,
@@ -754,7 +754,7 @@ def worker(pipeline, recipe, config):
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
             image_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config[key]['fornax_special'] == True and config[key]['fornax_use_sofia'] == False:
+        elif config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == False:
 
             # this mask should be regridded to correct f.o.v.
 
@@ -897,8 +897,8 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/pybdsm', step,
                        {
                            "image": im,
-                           "thresh_pix": config[key]['thresh_pix'][num-1 if len(config[key]['thresh_pix']) >= num else -1],
-                           "thresh_isl": config[key]['thresh_isl'][num-1 if len(config[key]['thresh_isl']) >= num else -1],
+                           "thresh_pix": config[key]['thr_pix'][num-1 if len(config[key]['thr_pix']) >= num else -1],
+                           "thresh_isl": config[key]['thr_isl'][num-1 if len(config[key]['thr_isl']) >= num else -1],
                            "outfile": '{:s}.gaul:output'.format(calmodel),
                            "blank_limit": sdm.dismissable(blank_limit),
                            "adaptive_rms_box": config[key]['local_rms'],
@@ -1072,8 +1072,8 @@ def worker(pipeline, recipe, config):
         for i, msname in enumerate(mslist):
              # Let's see the matrix type we are dealing with
 
-            gsols_ = [config[key]['Gsols_timeslots'][num-1 if num <= len(config[key]['Gsols_timeslots']) else -1],
-                      config[key]['Gsols_channel'][num-1 if num <= len(config[key]['Gsols_channel']) else -1]]
+            gsols_ = [config[key]['gsols_timeslots'][num-1 if num <= len(config[key]['gsols_timeslots']) else -1],
+                      config[key]['gsols_chan'][num-1 if num <= len(config[key]['gsols_chan']) else -1]]
             # If we have a two_step selfcal  we will calculate the intervals
             matrix_type = config[key]['gain_matrix_type'][
                 num - 1 if len(config[key]['gain_matrix_type']) >= num else -1]
@@ -1139,10 +1139,10 @@ def worker(pipeline, recipe, config):
 
             elif config['cal_meqtrees']['two_step']:
                 #This mode is actually not accesible for now as aimfast is swithed on automatically
-                gasols_ = [config[key]['GAsols_timeslots'][
-                              num - 1 if num <= len(config[key]['GAsols_timeslots']) else -1],
-                          config[key]['GAsols_channel'][
-                              num - 1 if num <= len(config[key]['GAsols_channel']) else -1]]
+                gasols_ = [config[key]['gasols_timeslots'][
+                              num - 1 if num <= len(config[key]['gasols_timeslots']) else -1],
+                          config[key]['gasols_chan'][
+                              num - 1 if num <= len(config[key]['gasols_chan']) else -1]]
                 if gasols_[0] == -1:
                     outcolumn = "CORRECTED_DATA_PHASE"
                     incolumn = "DATA"
@@ -1152,8 +1152,8 @@ def worker(pipeline, recipe, config):
                     matrix_type = 'GainDiag'
                     gsols_ = gasols_
 
-            bsols_ = [config[key]['Bsols_timeslots'][num-1 if num <= len(config[key]['Bsols_timeslots']) else -1],
-                      config[key]['Bsols_channel'][num-1 if num <= len(config[key]['Bsols_channel']) else -1]]
+            bsols_ = [config[key]['bsols_timeslots'][num-1 if num <= len(config[key]['bsols_timeslots']) else -1],
+                      config[key]['bsols_chan'][num-1 if num <= len(config[key]['bsols_chan']) else -1]]
             step = 'calibrate-field{0:d}-iter{1:d}-ms{2:d}'.format(trg, num, i)
             outdata = config[key]['output_data'][num-1 if len(config[key]['output_data']) >= num else -1]
             if outdata == 'CORRECTED_DATA':
@@ -1184,13 +1184,13 @@ def worker(pipeline, recipe, config):
                            "Gjones-solution-intervals": sdm.dismissable(gsols_ or None),
                            "Gjones-matrix-type": matrix_type,
                            "Gjones-ampl-clipping": True,
-                           "Gjones-ampl-clipping-low": config['cal_gain_amplitude_clip_low'],
-                           "Gjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
-                           "Bjones": config['cal_Bjones'],
+                           "Gjones-ampl-clipping-low": config['cal_gain_cliplow'],
+                           "Gjones-ampl-clipping-high": config['cal_gain_cliphigh'],
+                           "Bjones": config['cal_bjones'],
                            "Bjones-solution-intervals": sdm.dismissable(bsols_ or None),
-                           "Bjones-ampl-clipping": config['cal_Bjones'],
-                           "Bjones-ampl-clipping-low": config['cal_gain_amplitude_clip_low'],
-                           "Bjones-ampl-clipping-high": config['cal_gain_amplitude_clip_high'],
+                           "Bjones-ampl-clipping": config['cal_bjones'],
+                           "Bjones-ampl-clipping-low": config['cal_gain_cliplow'],
+                           "Bjones-ampl-clipping-high": config['cal_gain_cliphigh'],
                            "make-plots": False,
                            "tile-size": time_chunk,
                        },
@@ -1263,18 +1263,18 @@ def worker(pipeline, recipe, config):
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type) )
 
         jones_chain = 'G'
-        gsols_ = [config[key]['Gsols_timeslots'][num - 1 if num <= len(config[key]['Gsols_timeslots']) else -1],
-                  config[key]['Gsols_channel'][
-                      num - 1 if num <= len(config[key]['Gsols_channel']) else -1]]
-        bsols_ = [config[key]['Bsols_timeslots'][num - 1 if num <= len(config[key]['Bsols_timeslots']) else -1],
-                  config[key]['Bsols_channel'][
-                      num - 1 if num <= len(config[key]['Bsols_channel']) else -1]]
+        gsols_ = [config[key]['gsols_timeslots'][num - 1 if num <= len(config[key]['gsols_timeslots']) else -1],
+                  config[key]['gsols_chan'][
+                      num - 1 if num <= len(config[key]['gsols_chan']) else -1]]
+        bsols_ = [config[key]['bsols_timeslots'][num - 1 if num <= len(config[key]['bsols_timeslots']) else -1],
+                  config[key]['bsols_chan'][
+                      num - 1 if num <= len(config[key]['bsols_chan']) else -1]]
         gasols_ = [
-            config[key]['GAsols_timeslots'][num - 1 if num <=
-                                           len(config[key]['GAsols_timeslots']) else -1],
-            config[key]['GAsols_channel'][num - 1 if num <=
-                                              len(config[key]['GAsols_channel']) else -1]]
-        if config['cal_Bjones']:
+            config[key]['gasols_timeslots'][num - 1 if num <=
+                                           len(config[key]['gasols_timeslots']) else -1],
+            config[key]['gasols_chan'][num - 1 if num <=
+                                              len(config[key]['gasols_chan']) else -1]]
+        if config['cal_bjones']:
             jones_chain += ',B'
             bupdate = gupdate
 
@@ -1296,10 +1296,10 @@ def worker(pipeline, recipe, config):
         if len(jones_chain.split(",")) > 1:
             matrix_type = 'Gain2x2'
         # Need to ad the solution term iterations
-        sol_term_iters = config['cal_cubical']['sol_term_iters']
+        solterm_niter = config['cal_cubical']['solterm_niter']
         sol_terms_add = []
         for term in jones_chain.split(","):
-            sol_terms_add.append(str(sol_term_iters[SOL_TERMS_INDEX[term]]))
+            sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
         flags = "-cubical"
 
         for i,msname in enumerate(mslist):
@@ -1345,7 +1345,7 @@ def worker(pipeline, recipe, config):
                 "out-plots": True,
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
                 "out-casa-gaintables": True,
-                "weight-column": config['cal_cubical']['weight_column'],
+                "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msname.split('.ms')[0]),
@@ -1356,13 +1356,13 @@ def worker(pipeline, recipe, config):
                 "g-freq-int": int(gsols_[1]),
                 "out-overwrite": config['cal_cubical']['overwrite'],
                 "g-save-to": g_table_name,
-                "g-clip-low": config['cal_gain_amplitude_clip_low'],
-                "g-clip-high": config['cal_gain_amplitude_clip_high'],
+                "g-clip-low": config['cal_gain_cliplow'],
+                "g-clip-high": config['cal_gain_cliphigh'],
                 "g-max-prior-error": config['cal_cubical']['max_prior_error'],
                 "g-max-post-error": config['cal_cubical']['max_post_error'],
-                "madmax-enable": config['cal_cubical']['madmax_flagging'],
-                "madmax-plot": True if (config['cal_cubical']['madmax_flagging']) else False,
-                "madmax-threshold": config['cal_cubical']['madmax_flag_thresh'],
+                "madmax-enable": config['cal_cubical']['flag_madmax'],
+                "madmax-plot": True if (config['cal_cubical']['flag_madmax']) else False,
+                "madmax-threshold": config['cal_cubical']['madmax_flag_thr'],
                 "madmax-estimate": 'corr',
                 "log-boring": True,
                 "dd-dd-term": False,
@@ -1383,12 +1383,12 @@ def worker(pipeline, recipe, config):
                     "dd-freq-int": int(gasols_[1]),
                     "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                     pipeline), num, msname.split('.ms')[0],prefix),
-                    "dd-clip-low": config['cal_gain_amplitude_clip_low'],
-                    "dd-clip-high": config['cal_gain_amplitude_clip_high'],
+                    "dd-clip-low": config['cal_gain_cliplow'],
+                    "dd-clip-high": config['cal_gain_cliphigh'],
                     "dd-max-prior-error": config['cal_cubical']['max_prior_error'],
                     "dd-max-post-error": config['cal_cubical']['max_post_error'],
                 })
-            if config['cal_Bjones']:
+            if config['cal_bjones']:
                 if bupdate == 'phase-diag':
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                    pipeline), num, msname.split('.ms')[0],prefix)
@@ -1409,9 +1409,9 @@ def worker(pipeline, recipe, config):
                     "b-time-int": int(bsols_[0]),
                     "b-freq-int": int(bsols_[1]),
                     "b-type": CUBICAL_MT[matrix_type],
-                    "b-clip-low": config['cal_gain_amplitude_clip_low'],
+                    "b-clip-low": config['cal_gain_cliplow'],
                     "b-save-to": b_table_name,
-                    "b-clip-high": config['cal_gain_amplitude_clip_high'],
+                    "b-clip-high": config['cal_gain_cliphigh'],
                     "b-max-prior-error": config['cal_cubical']['max_prior_error'],
                     "b-max-post-error": config['cal_cubical']['max_post_error'],}
                 )
@@ -1423,7 +1423,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/cubical', step, cubical_opts,
                        input=pipeline.input,
                        output=pipeline.output,
-                       shared_memory= config['cal_cubical']['shared_memory'],
+                       shared_memory= config['cal_cubical']['shared_mem'],
                        label="{0:s}:: Calibrate step {1:d} ms={2:s}".format(step, num, msname))
 
     def restore(num,  prod_path,mslist_out,enable_inter=True):
@@ -1452,17 +1452,17 @@ def worker(pipeline, recipe, config):
             raise ValueError('{} is not a viable matrix_type'.format(matrix_type))
 
         jones_chain = 'G'
-        gsols_ = [config[key]['Gsols_timeslots'][num - 1 if num <= len(config[key]['Gsols_timeslots']) else -1],
-                  config[key]['Gsols_channel'][
-                      num - 1 if num <= len(config[key]['Gsols_channel']) else -1]]
-        bsols_ = [config[key]['Bsols_timeslots'][num - 1 if num <= len(config[key]['Bsols_timeslots']) else -1],
-                  config[key]['Bsols_channel'][
-                      num - 1 if num <= len(config[key]['Bsols_channel']) else -1]]
+        gsols_ = [config[key]['gsols_timeslots'][num - 1 if num <= len(config[key]['gsols_timeslots']) else -1],
+                  config[key]['gsols_chan'][
+                      num - 1 if num <= len(config[key]['gsols_chan']) else -1]]
+        bsols_ = [config[key]['bsols_timeslots'][num - 1 if num <= len(config[key]['bsols_timeslots']) else -1],
+                  config[key]['bsols_chan'][
+                      num - 1 if num <= len(config[key]['bsols_chan']) else -1]]
         gasols_ = [
-            config[key]['GAsols_timeslots'][num - 1 if num <=
-                                                      len(config[key]['GAsols_timeslots']) else -1],
-            config[key]['GAsols_channel'][num - 1 if num <=
-                                                         len(config[key]['GAsols_channel']) else -1]]
+            config[key]['gasols_timeslots'][num - 1 if num <=
+                                                      len(config[key]['gasols_timeslots']) else -1],
+            config[key]['gasols_chan'][num - 1 if num <=
+                                                         len(config[key]['gasols_chan']) else -1]]
         # If we are doing a calibration of phases and amplitudes on different timescale G is always phase
         # This cannot be combined with the earlier statement as bupdate needs to be equal to the original matrix.
         second_matrix_invoked = False
@@ -1478,7 +1478,7 @@ def worker(pipeline, recipe, config):
                         gasols_[1] = gsols_[1]
         # If we want to interpolate our we get the interpolation interval
 
-        if config['cal_Bjones']:
+        if config['cal_bjones']:
             jones_chain += ',B'
             bupdate = gupdate
 
@@ -1498,11 +1498,11 @@ def worker(pipeline, recipe, config):
         # Cubical does not at the moment apply the gains when the matrix is not complex2x2 (https://github.com/ratt-ru/CubiCal/issues/324).
         # Hence the following fix. This should be removed once the fix makes it into stimela.
         matrix_type = 'Gain2x2'
-        # Does sol_term_iters  matter for applying?????
-        sol_term_iters = config['cal_cubical']['sol_term_iters']
+        # Does solterm_niter  matter for applying?????
+        solterm_niter = config['cal_cubical']['solterm_niter']
         sol_terms_add = []
         for term in jones_chain.split(","):
-            sol_terms_add.append(str(sol_term_iters[SOL_TERMS_INDEX[term]]))
+            sol_terms_add.append(str(solterm_niter[SOL_TERMS_INDEX[term]]))
         # loop through measurement sets
         for i, msname_out in enumerate(mslist_out):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
@@ -1519,7 +1519,7 @@ def worker(pipeline, recipe, config):
             gasols_apply = copy.deepcopy(gasols_)
             if enable_inter and config['transfer_apply_gains']['interpolate']['enable']:
                 time_chunk_apply = config['transfer_apply_gains']['interpolate']['timeslots_chunk']
-                freq_chunk_apply = config['transfer_apply_gains']['interpolate']['channel_chunk']
+                freq_chunk_apply = config['transfer_apply_gains']['interpolate']['chan_chunk']
             else:
                 time_chunk_apply = copy.deepcopy(time_chunk)
                 freq_chunk_apply = copy.deepcopy(freq_chunk)
@@ -1552,10 +1552,10 @@ def worker(pipeline, recipe, config):
                         gsols_apply[0] = int(ratio_timeslot * gsols_[0])
                     else:
                         gsols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
-                    if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                    if config['transfer_apply_gains']['interpolate']['chan_int'] < 0:
                         gsols_apply[1] = int(ratio_timeslot * gsols_[1])
                     else:
-                        gsols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                        gsols_apply[1] = config['transfer_apply_gains']['interpolate']['chan_int']
                     time_chunk_apply = int(max(int(ratio_timeslot*gsols_[0]), time_chunk_apply)) if not (
                                 int(gsols_[0]) == 0 or time_chunk_apply == 0) else 0
                     freq_chunk_apply = int(max(int(ratio_channelsize * gsols_[1]), freq_chunk_apply)) if not (
@@ -1595,16 +1595,16 @@ def worker(pipeline, recipe, config):
                 "out-mode": apmode,
                 #"out-overwrite": config[key]['overwrite'],
                 "out-overwrite": True,
-                "weight-column": config['cal_cubical']['weight_column'],
+                "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "g-solvable": True,
                 "g-update-type": gupdate,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-time-int": int(gsols_apply[0]),
                 "g-freq-int": int(gsols_apply[1]),
-                "madmax-enable": config['cal_cubical']['madmax_flagging'],
+                "madmax-enable": config['cal_cubical']['flag_madmax'],
                 "madmax-plot": False,
-                "madmax-threshold": config['cal_cubical']['madmax_flag_thresh'],
+                "madmax-threshold": config['cal_cubical']['madmax_flag_thr'],
                 "madmax-estimate": 'corr',
                 "madmax-offdiag": False,
                 "dd-dd-term": False,
@@ -1638,7 +1638,7 @@ def worker(pipeline, recipe, config):
                 })
 
             # expand
-            if config['cal_Bjones']:
+            if config['cal_bjones']:
                 if enable_inter:
                     if not config['transfer_apply_gains']['interpolate']['enable']:
                         bsols_apply[0] = int(ratio_timeslot * bsols_[0])
@@ -1652,10 +1652,10 @@ def worker(pipeline, recipe, config):
                             bsols_apply[0] = int(ratio_timeslot * bsols_[0])
                         else:
                             bsols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
-                        if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                        if config['transfer_apply_gains']['interpolate']['chan_int'] < 0:
                             bsols_apply[1] = int(ratio_timeslot * bsols_[1])
                         else:
-                            bsols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                            bsols_apply[1] = config['transfer_apply_gains']['interpolate']['chan_int']
                         time_chunk_apply = int(max(int(ratio_timeslot*bsols_[0]), time_chunk_apply)) if not (
                                     int(bsols_[0]) == 0 or time_chunk_apply == 0) else 0
                         freq_chunk_apply = int(max(int(ratio_channelsize * bsols_[1]), freq_chunk_apply)) if not (
@@ -1705,10 +1705,10 @@ def worker(pipeline, recipe, config):
                         gasols_apply[0] = int(ratio_timeslot * gasols_[0])
                     else:
                         gasols_apply[0] = config['transfer_apply_gains']['interpolate']['timeslots_int']
-                    if config['transfer_apply_gains']['interpolate']['channel_int'] < 0:
+                    if config['transfer_apply_gains']['interpolate']['chan_int'] < 0:
                         gasols_apply[1] = int(ratio_timeslot * gasols_[1])
                     else:
-                        gasols_apply[1] = config['transfer_apply_gains']['interpolate']['channel_int']
+                        gasols_apply[1] = config['transfer_apply_gains']['interpolate']['chan_int']
                     time_chunk_apply = int(max(int(ratio_timeslot*gasols_[0]), time_chunk_apply)) if not (
                                 int(gasols_[0]) == 0 or time_chunk_apply == 0) else 0
                     freq_chunk_apply = int(max(int(ratio_channelsize * gasols_[1]), freq_chunk_apply)) if not (
@@ -1745,7 +1745,7 @@ def worker(pipeline, recipe, config):
             recipe.add('cab/cubical', step, cubical_gain_interp_opts,
                        input=pipeline.input,
                        output=pipeline.output,
-                       shared_memory=config['cal_cubical']['shared_memory'],
+                       shared_memory=config['cal_cubical']['shared_mem'],
                        label=stim_label)
             recipe.run()
             # Empty job que after execution
@@ -1779,7 +1779,7 @@ def worker(pipeline, recipe, config):
             if reset_cal >= 2:
                 return False
             key = 'aimfast'
-            tolerance = config[key]['tolerance']
+            tol = config[key]['tol']
             fidelity_data = get_aimfast_data()
             # Ensure atleast one iteration is ran to compare previous and subsequent images
             if n >= 2 and not config['cal_meqtrees']['two_step']:
@@ -1845,13 +1845,13 @@ def worker(pipeline, recipe, config):
 
                 # These weights could be integrated with the ratios however while testing I
                 #  kept them separately such that the idea behind them is easy to interpret.
-                # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tolerance)
+                # This  combines to total weigth of 1.2+0.+0.5+0.+0. so our total should be LT 1.7*(1-tol)
                 # it needs to be slightly lower to avoid keeping fitting without improvement
-                # Ok that is the wrong philosophy. Their weighted mean should be less than 1-tolerance that means improvement.
+                # Ok that is the wrong philosophy. Their weighted mean should be less than 1-tol that means improvement.
                 # And the weights control how important each parameter is.
                 HolisticCheck = (drratio*drweight+skewratio*skewweight+kurtratio*kurtweight+meanratio*meanweight+noiseratio*noiseweight) \
                     / (drweight+skewweight+kurtweight+meanweight+noiseweight)
-                if (1 - tolerance) < HolisticCheck:
+                if (1 - tol) < HolisticCheck:
                     caracal.log.info(
                         'Stopping criterion: '+' '.join([cc for cc in conv_crit]))
                     caracal.log.info('The calculated ratios DR={:f}, Skew={:f}, Kurt={:f}, Mean={:f}, Noise={:f} '.format(
@@ -1859,7 +1859,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.info('The weights used DR={:f}, Skew={:f}, Kurt={:f}, Mean={:f}, Noise={:f} '.format(
                         drweight, skewweight, kurtweight, meanweight, noiseweight))
                     caracal.log.info('{:f} < {:f}'.format(
-                        1-tolerance, HolisticCheck))
+                        1-tol, HolisticCheck))
                 #   If we stop we want change the final output model to the previous iteration
                     global self_cal_iter_counter
                     reset_cal += 1
@@ -2082,7 +2082,7 @@ def worker(pipeline, recipe, config):
         field = utils.filter_name(target)
 
         global self_cal_iter_counter
-        self_cal_iter_counter = config['start_at_iter']
+        self_cal_iter_counter = config['start_iter']
         global reset_cal
         reset_cal = 0
         global trace_SN
@@ -2106,7 +2106,7 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
-        mask_key = config['image']['clean_mask_method'][0]
+        mask_key = config['image']['cleanmask_method'][0]
         if pipeline.enable_task(config, 'image'):
             if mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(
@@ -2119,7 +2119,7 @@ def worker(pipeline, recipe, config):
                     image_path, pipeline), field)
                 recipe.run()
                 recipe.jobs = []
-                config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image']['clean_mask_method']) > self_cal_iter_counter else -1])
+                config['image']['cleanmask_method'].insert(1,config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)
                 image(target_iter, self_cal_iter_counter, get_dir_path(
@@ -2127,17 +2127,6 @@ def worker(pipeline, recipe, config):
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), mslist, field)
-                #if config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image']['clean_mask_method']) > self_cal_iter_counter else -1]=='sofia':
-                #    config['image']['clean_mask_threshold'][0]=config['image']['clean_mask_threshold'][1]
-                #    sofia_mask(self_cal_iter_counter, get_dir_path(
-                #        image_path, pipeline), field)
-                #sofia_mask(self_cal_iter_counter, get_dir_path(
-                #image_path, pipeline), field)
-        ### to enable eventually if one wants only to run caracal to produce sofia mask
-        #if pipeline.enable_task(config, 'image') == False and mask_key =='sofia':
-        #    sofia_mask(0, get_dir_path(
-        #        image_path, pipeline), field)
-        #        config['image']['clean_mask_method'].insert(1,config['image']['clean_mask_method'][1])
         if pipeline.enable_task(config, 'extract_sources'):
             extract_sources(target_iter, self_cal_iter_counter, get_dir_path(
                 image_path, pipeline), field)
@@ -2151,7 +2140,7 @@ def worker(pipeline, recipe, config):
                     os.mkdir(selfcal_products)
                 calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
-            mask_key=config['image']['clean_mask_method'][self_cal_iter_counter if len(config['image']['clean_mask_method']) > self_cal_iter_counter else -1]
+            mask_key=config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1]
             if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
@@ -2225,7 +2214,7 @@ def worker(pipeline, recipe, config):
                     if int(mm[-1]) > self_cal_iter_counter:
                         num = str(self_cal_iter_counter)
             else:
-                extract_sources = len(config['extract_sources']['thresh_isl'])
+                extract_sources = len(config['extract_sources']['thr_isl'])
                 if extract_sources > 1:
                     num = '{:d}+{:d}'.format(self_cal_iter_counter -
                                              1, self_cal_iter_counter)
@@ -2350,7 +2339,7 @@ def worker(pipeline, recipe, config):
                                "points-only": config['transfer_model']['points_only'],
                                "num-sources": sdm.dismissable(config['transfer_model']['num_sources']),
                                "num-workers": sdm.dismissable(config['transfer_model']['num_workers']),
-                               "memory-fraction": config['transfer_model']['memory_fraction'],
+                               "memory-fraction": config['transfer_model']['mem_frac'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -2365,11 +2354,11 @@ def worker(pipeline, recipe, config):
         for i, m in enumerate(all_msfile):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, m,
-                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                cab_name=substep, overwrite=config['overwrite_flagvers'])
 
     i += 1
     if pipeline.enable_task(config, 'transfer_apply_gains'):
         for j, m in enumerate(all_msfile_tgain):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i+j)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, m,
-                cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                cab_name=substep, overwrite=config['overwrite_flagvers'])

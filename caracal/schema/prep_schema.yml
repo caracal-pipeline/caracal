@@ -20,7 +20,7 @@ mapping:
         enum: ["target", "calibrators"]
         required: False
         example: 'calibrators'
-      fixvis:
+      fixuvw:
         desc: Fix the UVW coordinates through the CASA task 'fixvis'.
         type: map
         mapping:
@@ -29,7 +29,7 @@ mapping:
             type: bool
             required: false
             example: 'False'            
-      clear_cal:
+      clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.
         type: bool
         required: false
@@ -54,7 +54,7 @@ mapping:
             type: str
             required: false
             example: 'auto'
-      spectral_weights: 
+      specweights: 
         desc: How to initialize spectral weights.
         type: map
         mapping: 
@@ -69,28 +69,28 @@ mapping:
             enum: ["uniform", "estimate", "delete"]
             required: false
             example: 'uniform'
-          estimate:
-            desc: Estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values.
+          calculate:
+            desc: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values.
             type: map
             mapping:
-              stats_data: 
+              statsfile: 
                 desc: File with SEFD/Tsys/Noise data. If data is from the MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
                 type: str
                 example: 'use_package_meerkat_spec'
                 required: false
-              weight_columns:
+              weightcols:
                 seq:
                   - type: str
                 desc: Column names for spectral weights.
                 required: false
                 example: 'WEIGHT, WEIGHT_SPECTRUM'
-              noise_columns:
+              noisecols:
                 seq:
                   - type: str
                 desc: Column names for noise values.
                 required: false
                 example: 'SIGMA, SIGMA_SPECTRUM'
-              write_to_ms:
+              apply:
                 desc: Write columns to file.
                 type: bool
                 required: false

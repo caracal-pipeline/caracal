@@ -28,11 +28,11 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         "timerange": '',
         "antenna": '',
         "xaxis": opts['xaxis'],
-        "xdatacolumn": config[plotname]['column'],
+        "xdatacolumn": config[plotname]['col'],
         "yaxis": opts['yaxis'],
-        "ydatacolumn": config[plotname]['column'],
+        "ydatacolumn": config[plotname]['col'],
         "avgtime": config[plotname]['avgtime'],
-        "avgchannel": config[plotname]['avgchannel'],
+        "avgchannel": config[plotname]['avgchan'],
         "coloraxis": sdm(colouraxis),
         "iteraxis": sdm(opts.get('iteraxis', None)),
         "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}.png'.format(prefix, label, field, plotname, ftype),
@@ -49,11 +49,11 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
 
 def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, output_dir, corr_label=None):
     step = 'plot-{0:s}-{1:d}-{2:d}'.format(plotname, iobs, fid)
-    column = config[plotname]['column']
-    if column == "corrected":
-        column = "CORRECTED_DATA"
-    elif column == "data":
-        column = "DATA"
+    col = config[plotname]['col']
+    if col == "corrected":
+        col = "CORRECTED_DATA"
+    elif col == "data":
+        col = "DATA"
     if corr_label:
         corr_label = "_Corr_" + corr_label
     else:
@@ -65,7 +65,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
         "corr": opts['corr'],
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
-        "col": column,
+        "col": col,
         "png": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}.png'.format(prefix, label, field, plotname, ftype, corr_label),
     },
         input=pipeline.input,
@@ -75,11 +75,11 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
 
 def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, prefix, opts, ftype, fid, output_dir, corr_label=None):
     step = 'plot-{0:s}-{1:d}-{2:d}'.format(plotname, iobs, fid)
-    column = config[plotname]['column']
-    if column == "corrected":
-        column = "CORRECTED_DATA"
-    elif column == "data":
-        column = "DATA"
+    col = config[plotname]['col']
+    if col == "corrected":
+        col = "CORRECTED_DATA"
+    elif col == "data":
+        col = "DATA"
     if corr_label:
         corr_label = "_Corr_" + corr_label
     else:
@@ -94,9 +94,9 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         "corr": opts["corr"],
         "mem-limit" : opts['mem-limit'],
         "num-cores" : opts['num-cores'],
-        # "cbin": int(config[plotname]['avgchannel']),
+        # "cbin": int(config[plotname]['avgchan']),
         # "colour-axis": opts.get("colour-axis", None),
-        "data-column": column,
+        "data-column": col,
         "field": str(fid),
         "htmlname": "{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
         "iter-axis": sdm(opts.get('iter-axis', None)),
@@ -135,7 +135,7 @@ def worker(pipeline, recipe, config):
         msname = msnames[iobs] if not config['label_in'] else '{0:s}_{1:s}.ms'.format(
             msnames[iobs][:-3], config['label_in'])
         prefix = prefixes[iobs]
-        label = config['label_out']
+        label = config['label_cal']
 
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
 

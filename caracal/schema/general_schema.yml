@@ -9,7 +9,7 @@ mapping:
         required: false
         desc: Execute the 'general' worker.
         example: ''
-      data_path:
+      rawdatadir:
         type: str
         required: false
         desc: Location where CARACal (over-)writes HDF5 files and JSON info files downloaded by the getdata worker.
@@ -34,7 +34,7 @@ mapping:
         required: false
         desc: Prefix for CARACal output products.
         example: 'caracal'
-      init_pipeline:
+      prep_workspace:
         desc: Initialise the pipeline by copying input files (i.e. those that are MeerKAT specific, flagging strategies, beam model, etc.).
         required: false
         type: bool

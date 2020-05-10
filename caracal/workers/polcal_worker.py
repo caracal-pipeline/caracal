@@ -23,7 +23,7 @@ def worker(pipeline, recipe, config):
 
     for i in range(nobs):
         msname = msnames[i]
-        REFANT = refant = pipeline.reference_antenna[i] or '0'
+        REFANT = refant = pipeline.refant[i] or '0'
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
         PREFIX = prefix = '{0:s}-{1:s}'.format(prefix, config.get('label'))
@@ -205,9 +205,9 @@ def worker(pipeline, recipe, config):
             model = utils.find_in_native_calibrators(msinfo, field)
             standard = utils.find_in_casa_calibrators(msinfo, field)
             # Prefer our standard over the NRAO standard
-            caracal_model = isinstance(model, str)
+            meerkat_skymodel = isinstance(model, str)
 
-            if config['set_model'].get('caracal_model') and caracal_model:
+            if config['set_model'].get('meerkat_skymodel') and meerkat_skymodel:
                 # use local sky model of calibrator field if exists
                 opts = {
                     "skymodel": model,

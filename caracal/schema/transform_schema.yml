@@ -47,17 +47,17 @@ mapping:
             type: str
             required: false
             example: 'target'
-          time_average:
+          time_avg:
             desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied. 
             type: str
             required: false
             example: ''
-          freq_average:
+          chan_avg:
             desc: Frequency averaging to apply to the data, given as the number of channels per frequency bin. If this parameter is set to '', '0', or '1', then no frequency averaging is applied.
             type: int
             required: false
             example: '1'
-          column:
+          col:
             desc: Column to be split, where the default is 'corrected'. 
             type: str
             required: false
@@ -67,7 +67,7 @@ mapping:
             type: str
             required: false
             example: ''
-          usewtspectrum:
+          create_specweights:
             desc: Create a WEIGHT_SPECTRUM column in the output MS.
             type: bool
             required: false

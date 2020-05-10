@@ -77,8 +77,8 @@ RULES = {
         }
 
 CALS = {
-        "primary_cal": "fcal",
-        "secondary_cal": "gcal",
+        "primary": "fcal",
+        "secondary": "gcal",
         "bandpass_cal": "bpcal",
         }
 
@@ -129,7 +129,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         gtable_ = None
         ftable_ = None
         interp = RULES[term]["interp"]
-        params["refant"] = pipeline.reference_antenna[iobs]
+        params["refant"] = pipeline.refant[iobs]
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)
@@ -141,8 +141,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         if term == "B":
             params["bandtype"] = term
-            params["solnorm"] = config[ftype]["B_solnorm"]
-            params["fillgaps"] = config[ftype]["B_fillgaps"]
+            params["solnorm"] = config[ftype]["b_solnorm"]
+            params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
         elif term == "K":
             params["gaintype"] = term
@@ -208,7 +208,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         if i==0:
             raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed."\
                     "an I only makes sense after a G or K (usually both)."
-                    "Please review your 'order' option in the self_cal:secondary_cal section")
+                    "Please review your 'order' option in the self_cal:secondary section")
 
         if not applied:
             applycal(latest_KGBF_group, msname, recipe, gaintables,
@@ -223,7 +223,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
             params["mode"] = RULES[term]["mode"]
             params["field"] = ",".join(field)
-            params["datacolumn"] = config[ftype]["flag"]["column"]
+            params["datacolumn"] = config[ftype]["flag"]["col"]
             params["usewindowstats"] = config[ftype]["flag"]["usewindowstats"]
             params["combinescans"] = config[ftype]["flag"]["combinescans"]
             params["flagdimension"] = config[ftype]["flag"]["flagdimension"]
@@ -434,7 +434,7 @@ def worker(pipeline, recipe, config):
             msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
         else: msname = msnames[i]
 
-        refant = pipeline.reference_antenna[i] or '0'
+        refant = pipeline.refant[i] or '0'
         prefix = prefixes[i]
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
         prefix = '{0:s}-{1:s}'.format(prefix, label)
@@ -452,7 +452,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flag_versions']:
+                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
@@ -464,20 +464,20 @@ def worker(pipeline, recipe, config):
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
-                if flags_before_worker in available_flagversions and not config['overwrite_flag_versions']:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
                     manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
@@ -502,7 +502,7 @@ def worker(pipeline, recipe, config):
                 modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
                 modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
                 standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
-                if config['set_model']['caracal_model'] and modelsky:
+                if config['set_model']['meerkat_skymodel'] and modelsky:
 
                     # use local sky model of calibrator field if exists
                     opts = {
@@ -549,13 +549,13 @@ def worker(pipeline, recipe, config):
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
-        primary_order = config["primary_cal"]["order"]
-        secondary_order = config["secondary_cal"]["order"]
+        primary_order = config["primary"]["order"]
+        secondary_order = config["secondary"]["order"]
         no_secondary = gcal_set == set() or len(gcal_set - fcal_set) == 0 
         if no_secondary:
-            primary_order = config["primary_cal"]["order"]
+            primary_order = config["primary"]["order"]
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary_cal")
+                    prefix, label=label, ftype="primary")
             caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
@@ -569,11 +569,11 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary_cal")
+                    prefix, label=label, ftype="primary")
 
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary_cal", 
-                    prev=primary, prev_name="primary_cal", smodel=True)
+                    prefix, label=label, ftype="secondary", 
+                    prev=primary, prev_name="primary", smodel=True)
 
             interps = primary["interps"]
             gaintables = primary["gaintables"]
@@ -595,7 +595,7 @@ def worker(pipeline, recipe, config):
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
-            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flag_versions'])
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
         
         gt_final, itp_final, fd_final = get_caltab_final(primary_order if no_secondary else secondary_order,
                        copy.deepcopy(gaintables), interps, "nearest", "target")
@@ -624,8 +624,8 @@ def worker(pipeline, recipe, config):
         with open(os.path.join(callib_dir, 'callib_{}.json'.format(prefix)), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
-        if pipeline.enable_task(config, 'flagging_summary'):
-            step = 'flagging_summary-{0:s}-{1:d}'.format(label, i)
+        if pipeline.enable_task(config, 'summary'):
+            step = 'summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {
                            "vis" : msname,

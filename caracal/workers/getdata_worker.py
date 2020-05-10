@@ -21,10 +21,10 @@ def worker(pipeline, recipe, config):
         h5file = pipeline.h5files[i]
         basename = os.path.splitext(os.path.basename(h5file))[0]
         prefix = pipeline.prefixes[i]
-        if isinstance(pipeline.data_path, list):
-            data_path = pipeline.data_path[i]
+        if isinstance(pipeline.rawdatadir, list):
+            rawdatadir = pipeline.rawdatadir[i]
         else:
-            data_path = pipeline.data_path
+            rawdatadir = pipeline.rawdatadir
 
         if pipeline.enable_task(config, 'mvftoms'):
             step = 'mvftoms-{:d}'.format(i)
@@ -40,10 +40,10 @@ def worker(pipeline, recipe, config):
                            "tar": True,
                            "model-data": True,
                            "verbose": False,
-                           "channel-range": sdm.dismissable(config['mvftoms']['channel_range']),
-                           "full-pol": config['mvftoms']['full_pol'],
+                           "channel-range": sdm.dismissable(config['mvftoms']['chanrange']),
+                           "full-pol": config['mvftoms']['fullpol'],
                        },
-                       input=data_path,
+                       input=rawdatadir,
                        output=pipeline.output,
                        label='{0:s}:: Convert hd5file to MS. ms={1:s}'.format(step, msname))
 

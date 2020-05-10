@@ -89,9 +89,9 @@ def worker(pipeline, recipe, config):
 
             docallib = True
 
-            if config['split_field']['column'] != 'corrected':
+            if config['split_field']['col'] != 'corrected':
                 caracal.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['column']))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['col']))
             dcol = 'corrected'
 
         # write calibration library file for OTF cal
@@ -122,14 +122,14 @@ def worker(pipeline, recipe, config):
                     stdw.write(' spwmap=0\n')
 
             docallib = True
-            if config['split_field']['column'] != 'corrected':
+            if config['split_field']['col'] != 'corrected':
                 caracal.log.info("Datacolumn was set to '{}'. by the user." \
-                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['column']))
+                                   "Will be changed to 'corrected' for OTF calibration to work.".format(config['split_field']['col']))
             dcol = 'corrected'
 
         else:
             docallib = False
-            dcol = config['split_field']['column']
+            dcol = config['split_field']['col']
 
         target_iter=0
         for target in target_ls:
@@ -176,14 +176,14 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": fms,
                                "outputvis": tms,
-                               "timeaverage": True if (config['split_field']['time_average'] != '' and config['split_field']['time_average'] != '0s') else False,
-                               "timebin": config['split_field']['time_average'],
-                               "chanaverage": True if config['split_field']['freq_average'] > 1 else False,
-                               "chanbin": config['split_field']['freq_average'],
+                               "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
+                               "timebin": config['split_field']['time_avg'],
+                               "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
+                               "chanbin": config['split_field']['chan_avg'],
                                "spw": config['split_field']['spw'],
                                "datacolumn": dcol,
                                "correlation": config['split_field']['correlation'],
-                               "usewtspectrum": config['split_field']['usewtspectrum'],
+                               "usewtspectrum": config['split_field']['create_specweights'],
                                "field": target,
                                "keepflags": True,
                                "docallib": docallib,

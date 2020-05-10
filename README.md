@@ -22,30 +22,40 @@ Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ```
 python3 -m venv ${caracal-venv}
-# virtualenv -p python3 ${caracal-venv} # if the command above does not work
+# OR, if the command above does not work
+#virtualenv -p python3 ${caracal-venv}
+
 source ${caracal-venv}/bin/activate
 pip install -U pip setuptools wheel
-pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
-# pip install -U caracal # available soon, once Caracal's first release is out
-```
-**Ignore any error messages concerning pyregion**
 
-In case you are *not* carrying out a fresh installation, please remove earlier Stimela images with:
+# Caracal stable release
+pip install -U caracal
+# OR Caracal developer version
+#pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
+```
+*(Ignore any error messages concerning pyregion.)*
+
+In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 
 ```
 stimela clean -ac
 ```
 
-If using [Docker](https://www.docker.com):
+Then, if using [Docker](https://www.docker.com):
 
 ```
 stimela pull
 ```
 
-If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored:
+If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc) :
 
-```  
-stimela pull --singularity --pull-folder ${singularity_pull_folder}
+```
+export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
+```
+and run:
+
+``` 
+stimela pull -s
 ```
 
 If using [Podman](https://podman.io) (currently not fully supported):
@@ -86,12 +96,6 @@ Run CARACal with:
 
 ```
 caracal - c ${your-configuration-file}
-
 ```
-For singularity installations, run CARACal as:
 
-```
-caracal -c ${your-configuration-file} -ct singularity -sid ${singularity_pull_folder}
-
-```
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

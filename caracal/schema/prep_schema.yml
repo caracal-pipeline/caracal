@@ -73,7 +73,7 @@ mapping:
             desc: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values.
             type: map
             mapping:
-              stats_data: 
+              stats_file: 
                 desc: File with SEFD/Tsys/Noise data. If data is from the MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
                 type: str
                 example: 'use_package_meerkat_spec'

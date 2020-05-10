@@ -22,21 +22,26 @@ Choose the name of the virtual environment `${caracal-venv}`. Then:
 
 ```
 python3 -m venv ${caracal-venv}
-# virtualenv -p python3 ${caracal-venv} # if the command above does not work
+# OR, if the command above does not work
+#virtualenv -p python3 ${caracal-venv}
+
 source ${caracal-venv}/bin/activate
 pip install -U pip setuptools wheel
-pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
-# pip install -U caracal # available soon, once Caracal's first release is out
-```
-**Ignore any error messages concerning pyregion**
 
-In case you are *not* carrying out a fresh installation, please remove earlier Stimela images with:
+# Caracal stable release
+pip install -U caracal
+# OR Caracal developer version
+#pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
+```
+*(Ignore any error messages concerning pyregion.)*
+
+In case you are *not* carrying out a fresh installation, remove earlier Stimela images with:
 
 ```
 stimela clean -ac
 ```
 
-If using [Docker](https://www.docker.com):
+Then, if using [Docker](https://www.docker.com):
 
 ```
 stimela pull

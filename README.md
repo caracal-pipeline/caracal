@@ -86,6 +86,12 @@ Run Caracal with:
 
 ```
 caracal - c ${your-configuration-file}
-```
 
+```
+For singularity installations, run Caracal as:
+
+```
+caracal -c ${your-configuration-file} -ct singularity -sid ${singularity_pull_folder}
+
+```
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

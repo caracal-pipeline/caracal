@@ -2,79 +2,79 @@ type: map
 mapping:
   obsconf:
     type: map
-    desc: Setup some basic observation information
+    desc: Set up some basic information about the observation(s).
     mapping:
       obsinfo:
-        desc: Get observation information
+        desc: Get observation information.
         type: map
         mapping:
           enable:
-            desc: Execute this section 
+            desc: Execute the obsconf worker. 
             type: bool
             required: true
             example: 'True'
           listobs:
-            desc: Run CASA listobs task to get observation information
+            desc: Run the CASA 'listobs' task to get observation information.
             type: bool
             required: false
             example: 'True'
           summary_json:
-            desc: Run MSUtils summary function to get observation information as JSON file which can be used to automatically configure pipeline
+            desc: Run the MSUtils summary function to get observation information written as a JSON file, which can then be used to automatically configure pipeline.
             type: bool
             required: false
             example: 'True'
           vampirisms:
-            desc: Returns sun free time range
+            desc: Return the time range over which observations were taken at night.
             type: bool
             required: false
             example: 'False'            
           plotelev:
-            desc: Make Elevation vs Hour angle plots for observed fields
+            desc: Make Elevation vs Hour-angle plots for observed fields.
             type: map
             mapping:
               enable:
-                desc: Enable this segment
+                desc: Enable segment 'plot_elevation_tracks'.
                 type: bool
                 example: "True"
                 required: false
               plotter:
-                desc: Application to use for making plots
+                desc: The application to be used for making plots. Options are 'plotms' and 'owlcat'.
                 type: str
-                enum: [plotms, owlcat]
-                example: owlcat
+                enum: ["plotms", "owlcat"]
+                example: 'owlcat'
                 required: false
       target:
-        desc: Field name of target field. Or 'all' for all the target fields. 
+        desc: The field name(s) of the target field(s), separated by commas if there are multiple target fields. Or set this parameter to 'all' to select all of the target fields.
         seq:
           - type: str
         required: false
         example: 'all'
       gcal:
-        desc: Field name of gain (amplitude/phase) calibrator field. Or set as 'all' for all the gcal fields, 'longest' to setlect the gcal field observed for the longest time, 'nearest' to select the gcal field closest to the target. Note that if multiple targets and gcals are present, then 'all' (for both) means each target will be paired with the closest gcal.
+        desc: The field name(s) of the gain (amplitude/phase) calibrator field(s). Or set 'all' to select all of the gcal fields, 'longest' to select the gcal field observed for the longest time, or 'nearest' to select the gcal field closest to the target. Note that if multiple targets and gcals are present, then 'all' (for both the 'target' and 'gcal' parameters) means that each target will be paired with the closest gcal.
         seq:
           - type: str
         required: false
         example: 'all'
       bpcal:
-        desc: Field name of bandpass calibrator field. Or set as 'all' for all the bpcal fields, 'longest' to setlect the bpcal field observed for the longest time, 'nearest' to select the bpcal field closest to the target.
+        desc: The field name(s) of the bandpass calibrator field(s). Or set 'all' to select all of the bpcal fields, 'longest' to select the bpcal field observed for the longest time, or 'nearest' to select the bpcal field closest to the target.
         seq:
           - type: str
         required: false
         example: 'longest'
       fcal:
-        desc: Field name of fluxscale calibrator field. Or set as 'all' for all the fcal fields, 'longest' to setlect the fcal field observed for the longest time, 'nearest' to select the fcal field closest   to the target.
+        desc: The field name(s) of the fluxscale calibrator field(s). Or set 'all' to select all of the fcal fields, 'longest' to select the fcal field observed for the longest time, or 'nearest' to select the fcal field closest to the target.
         seq:
           - type: str
         required: false
         example: 'longest'
       xcal:
-        desc: Crosshand phase angle calibrator. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
+        desc: The field name(s) of the crosshand phase-angle calibrator field(s). Or set 'all' to select all of the xcal fields, 'longest' to select the xcal field observed for the longest time, or 'nearest' to select the xcal field closest to the target. This calibrator must be linearly polarized and have a non-zero parallactic angle coverage at the time of observation in order to solve for the X-Y offsets in digitizers and the absolute polarization angle of the system. Successful calibration derotates U from V.
         seq:
           - type: str
         required: false
         example: 'longest'
       refant:
-        desc: Reference antenna, which can be identified by an antenna name or number.
+        desc: The reference antenna, which can be identified by an antenna name or number.
         type: str
         required: true
         example: '0'

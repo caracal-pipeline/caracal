@@ -30,9 +30,16 @@ pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
 ```
 **Ignore any error messages concerning pyregion**
 
-If using [Docker](https://www.docker.com):
+In case you are *not* carrying out a fresh installation, please remove earlier Stimela images with:
+
 ```
-stimela build
+stimela clean -ac
+```
+
+If using [Docker](https://www.docker.com):
+
+```
+stimela pull
 ```
 
 If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored:
@@ -42,13 +49,14 @@ stimela pull --singularity --pull-folder ${singularity_pull_folder}
 ```
 
 If using [Podman](https://podman.io) (currently not fully supported):
+
 ```
 stimela pull -p
 ``` 
 
 ## Installation with the caratekit.sh script
 
-Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the Caracal directory `${caracal_dir}`.
+Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`.
 
 If using [Docker](https://www.docker.com):
 
@@ -64,20 +72,26 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 ## Run
 
-If you installed Caracal manually, activate the virtual environment with:
+If you installed CARACal manually, activate the virtual environment with:
 ```
 source ${caracal-venv}/bin/activate
 ```
 
-If you installed Caracal with the caratekit.sh script, activate the virtual environment with:
+If you installed CARACal with the caratekit.sh script, activate the virtual environment with:
 ```
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```
 
-Run Caracal with:
+Run CARACal with:
 
 ```
 caracal - c ${your-configuration-file}
-```
 
+```
+For singularity installations, run CARACal as:
+
+```
+caracal -c ${your-configuration-file} -ct singularity -sid ${singularity_pull_folder}
+
+```
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

@@ -1,30 +1,30 @@
 type: map
 mapping:
   transform:
-    desc: Split, avg and/or calibrate data
+    desc: Split, average and/or calibrate the data.
     type: map
     mapping:
       enable:
-        desc: Execute this worker
+        desc: Execute the transform worker.
         type: bool
         required: true
         example: 'True'
       label_in:
-        desc: Label of the input dataset
+        desc: Label of the input dataset.
         type: str
         required: false
         example: ''
       label_out:
-        desc: Label of the output dataset
+        desc: Label of the output dataset.
         type: str
         required: false
-        example: corr 
+        example: 'corr' 
       rewind_flags:
         desc: Rewind flags to specified version.
         type: map
         mapping:
           enable:
-            desc: enable this segement
+            desc: Enable the 'rewind_flags' segment.
             type: bool
             required: false
             example: 'False'
@@ -34,36 +34,36 @@ mapping:
             required: false
             example: ''
       split_field:
-        desc: Make new ms of targets or calibrators
+        desc: Make new MS of targets or calibrators.
         type: map
         mapping:
           enable:
-            desc: Execute this section
+            desc: Enable the 'split_field' segment.
             type: bool
             required: false
             example: 'True'
           field:
-            desc: Fields selected to be splitted - can be target, calibrators or bpcal, gcal, fcal in a comma separated string
+            desc: Fields to be split off from the input MS. Options are (separately) 'target', 'calibrators', 'bpcal', 'gcal' and 'fcal'. Also valid is any combination of 'bpcal', 'gcal' and 'fcal' in a comma-separated string (e.g. 'bpcal, fcal').
             type: str
             required: false
             example: 'target'
           time_avg:
-            desc: Time averaging
+            desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied. 
             type: str
             required: false
             example: ''
           chan_avg:
-            desc: Frequency averaging
+            desc: Frequency averaging to apply to the data, given as the number of channels per frequency bin. If this parameter is set to '', '0', or '1', then no frequency averaging is applied.
             type: int
             required: false
             example: '1'
           col:
-            desc: Column to split, default is 'corrected'. 
+            desc: Column to be split, where the default is 'corrected'. 
             type: str
             required: false
             example: 'corrected'
           correlation:
-            desc: Select correlations
+            desc: Select the correlations, e.g. 'XX', 'YY'. Setting this to '' means that all correlations are selected. 
             type: str
             required: false
             example: ''
@@ -73,67 +73,67 @@ mapping:
             required: false
             example: 'True'
           spw:
-            desc: Select spectral windows and channels
+            desc: Select spectral windows and channels, following the same syntax as for the 'mstransform' task in CASA. Setting this to '' means that all spectral windows and channels are selected.
             type: str
             required: false
             example: ''
 
           otfcal:
-            desc: Apply OTF calibration
+            desc: Apply on-the-fly (OTF) calibration.
             type: map
             mapping:
               enable:
-                desc: Execute this section
+                desc: Enable the 'otfcal' segment.
                 type: bool
                 required: false
                 example: 'False'
               callib:
-                desc: Name of callib file to be used, if user has their own
+                desc: Name of the callib file to be used, if user has their own.
                 type: str
                 required: false
                 example: ''
               label_cal:
-                desc: Label of calibration tables to be used
+                desc: Label of the calibration tables to be used.
                 type: str
                 required: false
                 example: '1gc1'
 
       changecentre:
-        desc: changes the phase centre
+        desc: Change the phase centre.
         type: map
         mapping:
           enable:
-            desc: Execute this section
+            desc: Enable the 'changecentre' segment.
             type: bool
             required: false
             example: 'False'
           ra:
-            desc: J2000 RA of new phase centre, format XXhXXmXX.XXs, default is empty string
+            desc: J2000 RA of the new phase centre, in the format XXhXXmXX.XXs .
             type: str
             required: false
             example: '0h0m0.0s'
           dec:
-            desc: J2000 Dec of new phase centre, format XXdXXmXX.XXs, default is empty string
+            desc: J2000 Dec of the new phase centre, in the format XXdXXmXX.XXs .
             type: str
             required: false
             example: '0d0m0.0s'
 
       obsinfo:
-        desc: Get observation information
+        desc: Get observation information.
         type: map
         mapping:
           enable:
-            desc: Execute this section
+            desc: Enable the 'obsinfo' segment.
             type: bool
             required: false
             example: 'True'
           listobs:
-            desc: Run CASA listobs
+            desc: Run the CASA 'listobs' task to get observation information.
             type: bool
             required: false
             example: 'True'
           summary_json:
-            desc: Run MSUtils function
+            desc: Run the MSUtils summary function to get observation information written as a JSON file.
             type: bool
             required: false
             example: 'True'

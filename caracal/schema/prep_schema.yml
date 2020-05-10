@@ -5,93 +5,93 @@ mapping:
     type: map
     mapping:
       enable:
-        desc: Executes the data preparation step.
+        desc: Execute the prep worker (i.e. the  data-preparation step).
         type: bool
         required: true
         example: 'False'
       label_in:
         type: str
         required: true
-        desc: If this label is an empty string this worker operates on the input .MS file(s) given in the getdata worker. If the label is not an empty string it is added to the input .MS file(s) name given in the getdata worker to define the name of the .MS file(s) to work on. These are <input>_<label>.ms if 'field' (see below) is set to 'calibrators', or <input>-<target>_<label>.ms if 'field' is set to 'target' (one .MS file for each target in the input .MS).
+        desc: If this label is an empty string this worker operates on the input .MS file(s) given in the getdata worker. If the label is not an empty string then it is added to the input .MS file(s) name (specified for the getdata worker) to define the name of the .MS file(s) to work on. These are named <input>_<label>.ms if 'field' (see below) is set to 'calibrators', or <input>-<target>_<label>.ms if 'field' is set to 'target' (with one .MS file for each target in the input .MS).
         example: ''
       field:
-        desc: In combination with a non-empty 'label_in' (see above), 'field' defines which .MS file(s) to work on. This parameter is ignored if 'label_in' is empty.
+        desc: In combination with a non-empty 'label_in' (see above), 'field' defines which .MS file(s) to work on. This parameter is ignored if 'label_in' is empty. Options are 'target' and 'calibrators'.
         type: str
-        enum: ['target', 'calibrators']
+        enum: ["target", "calibrators"]
         required: False
         example: 'calibrators'
       fixuvw:
-        desc: Fixes the UVW coordinates through the CASA task fixvis.
+        desc: Fix the UVW coordinates through the CASA task 'fixvis'.
         type: map
         mapping:
           enable:
-            desc: Enable execution of fixuvw.
+            desc: Enable the 'fixvis' segment.
             type: bool
             required: false
             example: 'False'            
       clearcal:
-        desc: Clears out calibrated data and resets previous predicted model
+        desc: Clear out calibrated data and reset the previous predicted model.
         type: bool
         required: false
         example: 'False'            
       manage_flags:
-        desc: Manage flags
+        desc: Manage flags.
         type: map
         mapping:
           enable: 
-            desc: Enable this segment
+            desc: Enable the 'manage_flags' segment.
             type: bool
             required: false
             example: 'True'
           mode: 
-            desc: Manage flag mode. With mode = 'legacy', if the 'caracal_legacy' flag version does not yet exist, save the current FLAG column as the 'caracal_legacy flag version; else restore the 'caracal_legacy' flag version and delete all flag versions created after it. With mode = 'restore', restore flags from the flag version specified by 'version' below, and delete all flag versions created after that version.
+            desc: Mode for managing flags. If set to 'legacy', save the current FLAG column as a 'caracal_legacy' flag version if a flag version with that name does not exisy yet; else restore the 'caracal_legacy' flag version and delete all flag versions created after it. If set to 'restore', restore flags from the flag version specified by 'version' below, and delete all flag versions created after that version.
             type: str
             required: false
             example: 'legacy'
-            enum: [legacy, restore]
+            enum: ["legacy", "restore"]
           version:
-            desc: Flag version to restore. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
+            desc: Name of the flag version to restore. If set to 'auto', rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions saved after this version will be deleted.
             type: str
             required: false
             example: 'auto'
       specweights: 
-        desc: How to initialize spectral weights
+        desc: How to initialize spectral weights.
         type: map
         mapping: 
           enable: 
-            desc: Enable this segment
+            desc: Enable the 'spectral_weights' segment.
             type: bool
             required: false
             example: 'False'
           mode:
-            desc: "uniform: Set all weights to unity. calculate: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values, Also see 'calculate' segment of this section. delete: Delete WEIGHT_SPECTRUM column if it exists."
+            desc: Mode for spectral weights. Options are 'uniform' (set all weights to unity), 'estimate' (estimate spectral weights from frequency-dependent SEFD/Tsys/Noise values, and see 'estimate' segment of this section), and 'delete' (delete WEIGHT_SPECTRUM column if it exists).
             type: str
-            enum: [uniform, calculate, delete]
+            enum: ["uniform", "estimate", "delete"]
             required: false
             example: 'uniform'
           calculate:
-            desc: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values
+            desc: Calculate spectral weights from frequency-dependent SEFD/Tsys/Noise values.
             type: map
             mapping:
-              statsfile: 
-                desc: "File with SEFD/Tsys/Noise data. If data is from MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data."
+              stats_data: 
+                desc: File with SEFD/Tsys/Noise data. If data is from the MeerKAT telescope, you can specify 'use_package_meerkat_spec' to use package data.
                 type: str
                 example: 'use_package_meerkat_spec'
                 required: false
               weightcols:
                 seq:
                   - type: str
-                desc: column names
+                desc: Column names for spectral weights.
                 required: false
                 example: 'WEIGHT, WEIGHT_SPECTRUM'
               noisecols:
                 seq:
                   - type: str
-                desc: column names for noise
+                desc: Column names for noise values.
                 required: false
                 example: 'SIGMA, SIGMA_SPECTRUM'
               apply:
-                desc: write columns to file
+                desc: Write columns to file.
                 type: bool
                 required: false
                 example: 'True'

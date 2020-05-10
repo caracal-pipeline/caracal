@@ -1,0 +1,115 @@
+schema_version: 1.0.0
+
+general:
+  prefix: mypipelinerun
+
+getdata:
+  dataid: ['']
+
+obsconf:
+  reference_antenna: '0'
+
+transform:
+  enable: true
+  label_out: cal
+  split_field:
+    enable: true
+    field: calibrators
+    column: data
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+
+flag:
+  enable: true
+  field: calibrators 
+  label_in: cal
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+  flag_autocorr:
+    enable: true
+  flag_shadow:
+    enable: true
+  report: true
+    
+crosscal:
+  enable: true
+  label_in: cal
+  primary_cal:
+  plotgains: false
+  secondary_cal:
+  plotgains: false
+  apply_cal:
+    applyto:
+      - gcal
+      - bpcal
+  report: true
+
+polcal:
+  enable: false
+
+inspect:
+  label_in: cal
+  label_out: 1gc
+  dirname: crosscal
+  enable: true
+  standard_plotter: none
+    
+transform__2:
+  enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: 1gc1
+  
+prep__2:
+  enable: true
+  label_in: corr 
+  field: target
+
+flag__2:
+  enable: true
+  field: target 
+  label_in: corr
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+  report: true
+    
+mask:
+  enable: false
+
+selfcal:
+  enable: true
+  img_npix: 1800
+  img_cell: 2
+  cal_timeslots_chunk: 240
+  cal_cubical:
+    ragavi_plot:
+      enable: false
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    Gsols_timeslots: [120]
+  report: true
+
+line:
+  enable: true
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+    nchans: 10
+    firstchan: 20
+  mstransform: 
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat
+  report: true

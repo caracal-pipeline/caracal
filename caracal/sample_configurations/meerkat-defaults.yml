@@ -1,40 +1,26 @@
 schema_version: 1.0.0
 
 general:
-  msdir: msdir
-  input: input
-  output: output
   prefix: mypipelinerun
-  init_pipeline: true
-
 
 getdata:
-  dataid: []
+  dataid: ['']
 
 obsconf:
-  obsinfo: 
-    enable: true
-  target:
-    - all
-  gcal: 
-    - all
-  bpcal:
-    - longest
-  fcal:
-    - longest
-  xcal:
-    - longest
   reference_antenna: '0'
+
+transform:
+  enable: true
+  label_out: cal
+  split_field:
+    enable: true
+    field: calibrators
+    column: data
 
 prep:
   enable: true
-  label_in: ''
-  fixvis: 
-    enable: false
-  manage_flags: 
-    enable: true
-    mode: legacy
-  clear_cal: true
+  label_in: cal
+  field: calibrators
   spectral_weights:
     enable: true
     mode: uniform
@@ -65,10 +51,7 @@ flag:
 crosscal:
   enable: true
   uvrange: '>150'
-  label_in: ''
-  label_cal: 1gc1
-  rewind_flags:
-    enable: false
+  label_in: 'cal'
   set_model:
     enable: true
     caracal_model: true
@@ -81,7 +64,6 @@ crosscal:
     B_fillgaps: 70
     plotgains: true
   secondary_cal:
-    reuse_existing_gains: true
     order: KGAKG
     apply: B
     combine: ["", "", null, "", ""] 
@@ -92,7 +74,6 @@ crosscal:
     applyto: 
       - gcal
       - bpcal
-      - target
 
 polcal:
   enable: false
@@ -122,22 +103,21 @@ inspect:
     enable: true
     avgtime: '60'
 
-transform:
+transform__2:
   enable: true
-  label_in: ''
-  label_out: corr
-  split_field: 
+  split_field:
     enable: true
-    time_average: ''
-    freq_average: 1
-    column: corrected
-    correlation: ''
-    spw: ''
-    otfcal: 
-      enable: false
-  obsinfo: 
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  spectral_weights:
     enable: true
-    listobs: true
+    mode: uniform
 
 flag__2:
   enable: true

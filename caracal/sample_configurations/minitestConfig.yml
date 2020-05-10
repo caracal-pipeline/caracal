@@ -38,6 +38,10 @@ flag:
 crosscal:
   enable: true
   label_in: cal
+  primary_cal:
+  plotgains: false
+  secondary_cal:
+  plotgains: false
   apply_cal:
     applyto:
       - gcal
@@ -52,7 +56,8 @@ inspect:
   label_out: 1gc
   dirname: crosscal
   enable: true
-
+  standard_plotter: none
+    
 transform__2:
   enable: true
   split_field:
@@ -83,6 +88,9 @@ selfcal:
   img_npix: 1800
   img_cell: 2
   cal_timeslots_chunk: 240
+  cal_cubical:
+    ragavi_plot:
+      enable: false
   image:
     enable: true
   calibrate:
@@ -97,6 +105,8 @@ line:
     enable: true
     npix: [1800]
     cell: 2
+    nchans: 10
+    firstchan: 20
   mstransform: 
     enable: true
     doppler:

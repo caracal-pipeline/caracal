@@ -1,27 +1,12 @@
 schema_version: 1.0.0
 
 general:
-  msdir: msdir
-  input: input
-  output: output
   prefix: workflow2
-  init_pipeline: true
-
 
 getdata:
-  dataid: []
+  dataid: ['']
 
 obsconf:
-  target:
-    - all
-  fcal:
-    - longest
-  bpcal:
-    - longest
-  gcal:
-    - all
-  xcal:
-    - longest
   reference_antenna: '0'
   
 transform:
@@ -82,7 +67,6 @@ flag:
 crosscal:
   enable: true
   uvrange: '>150'
-  label_cal: 1gc1
   label_in: 'cal'
   set_model:
     enable: true
@@ -138,32 +122,16 @@ inspect:
 
 transform__2:
   enable: true
-  label_in: ''
-  label_out: corr
-  split_field: 
+  split_field:
     enable: true
-    field: 'target'
-    time_average: ''
-    freq_average: 1
-    column: corrected
-    correlation: ''
-    spw: ''
-    otfcal: 
+    otfcal:
       enable: true
-#      callib: 'your_callib.txt'
       label_cal: '1gc1'
-  obsinfo: 
-    enable: true
-    listobs: true
 
 prep__2:
   enable: true
   label_in: corr
   field: target
-  fixvis:
-    enable: false
-  manage_flags:
-    enable: true
   spectral_weights:
     enable: true
     mode: uniform
@@ -184,10 +152,6 @@ flag__2:
 
 mask:
   enable: false
-  centre_coord:
-    - HH:MM:SS
-    - DD:MM:SS
-  label_in: corr
 
 selfcal:
   enable: true

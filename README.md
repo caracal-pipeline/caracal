@@ -56,7 +56,7 @@ stimela pull -p
 
 ## Installation with the caratekit.sh script
 
-Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the Caracal directory `${caracal_dir}`.
+Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`.
 
 If using [Docker](https://www.docker.com):
 
@@ -72,23 +72,23 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 ## Run
 
-If you installed Caracal manually, activate the virtual environment with:
+If you installed CARACal manually, activate the virtual environment with:
 ```
 source ${caracal-venv}/bin/activate
 ```
 
-If you installed Caracal with the caratekit.sh script, activate the virtual environment with:
+If you installed CARACal with the caratekit.sh script, activate the virtual environment with:
 ```
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```
 
-Run Caracal with:
+Run CARACal with:
 
 ```
 caracal - c ${your-configuration-file}
 
 ```
-For singularity installations, run Caracal as:
+For singularity installations, run CARACal as:
 
 ```
 caracal -c ${your-configuration-file} -ct singularity -sid ${singularity_pull_folder}

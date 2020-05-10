@@ -39,9 +39,9 @@ crosscal:
   enable: true
   label_in: cal
   primary_cal:
-  plotgains: false
+    plotgains: false
   secondary_cal:
-  plotgains: false
+    plotgains: false
   apply_cal:
     applyto:
       - gcal

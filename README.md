@@ -51,7 +51,6 @@ If using [Singularity](https://github.com/sylabs/singularity), choose a pull fol
 
 ```
 export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
-
 ```
 and run:
 
@@ -97,7 +96,6 @@ Run CARACal with:
 
 ```
 caracal - c ${your-configuration-file}
-
 ```
 
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.

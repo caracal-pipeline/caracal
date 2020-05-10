@@ -237,7 +237,7 @@ def worker(pipeline, recipe, config):
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
     if pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'],
-            'doppler') and config['mstransform']['doppler']['outgrid'] == 'auto':
+            'doppler') and config['mstransform']['doppler']['changrid'] == 'auto':
         firstchanfreq = list(itertools.chain.from_iterable(firstchanfreq_all))
         chanw = list(itertools.chain.from_iterable(chanw_all))
         lastchanfreq = list(itertools.chain.from_iterable(lastchanfreq_all))
@@ -317,17 +317,17 @@ def worker(pipeline, recipe, config):
             caracal.log.error('(all increasing or all decreasing). Use casa_image if this is not the case.')
             raise caracal.BadDataError("inconsistent frequency axis ordering across MSs")
 
-    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler']['outgrid'] != 'auto':
-        if len(config['mstransform']['doppler']['outgrid'].split(',')) != 3:
+    elif pipeline.enable_task(config, 'mstransform') and pipeline.enable_task(config['mstransform'], 'doppler') and config['mstransform']['doppler']['changrid'] != 'auto':
+        if len(config['mstransform']['doppler']['changrid'].split(',')) != 3:
             caracal.log.error(
-                'Incorrect format for mstransform:outgrid in the .yml config file.')
+                'Incorrect format for mstransform:doppler:changrid in the .yml config file.')
             caracal.log.error(
-                'Current setting is mstransform:outgrid:"{0:s}"'.format(
-                    config['mstransform']['doppler']['outgrid']))
+                'Current setting is mstransform:doppler:changrid:"{0:s}"'.format(
+                    config['mstransform']['doppler']['changrid']))
             caracal.log.error(
                 'Expected "nchan,chan0,chanw" (note the commas) where nchan is an integer, and chan0 and chanw must include units appropriate for the chosen mstransform:mode')
-            raise caracal.ConfigurationError("can't parse mstransform:outgrid setting")
-        nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['outgrid'].split(
+            raise caracal.ConfigurationError("can't parse mstransform:doppler:changrid setting")
+        nchan_dopp, comfreq0, comchanw = config['mstransform']['doppler']['changrid'].split(
             ',')
         nchan_dopp = int(nchan_dopp)
         caracal.log.info(

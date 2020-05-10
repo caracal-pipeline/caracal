@@ -1130,7 +1130,7 @@ def worker(pipeline, recipe, config):
                           "cubename": image_cube_list[uu]+':output',
                           "channels_per_plot": config['sharpener']['chans_per_plot'],
                           "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
-                          "label": config['sharpener']['label_in'],
+                          "label": config['sharpener']['label'],
                           }
 
                 runsharp = False

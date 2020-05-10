@@ -15,7 +15,7 @@ transform:
   split_field:
     enable: true
     field: calibrators
-    column: 'data'
+    column: data
 
 prep:
   enable: true

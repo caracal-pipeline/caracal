@@ -389,11 +389,6 @@ mapping:
             type: int
             required: False
             example: '5'
-          movies:
-            desc: Generate movies in a report.
-            type: bool
-            required: False
-            example: 'True'
       summary:
         desc: Use CASA FLAGDATA in 'summary' mode to write flagging summary at the end of the pre-calibration flagging.
         type: map

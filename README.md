@@ -29,11 +29,19 @@ pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
 # pip install -U caracal # available soon, once Caracal's first release is out
 ```
 **Ignore any error messages concerning pyregion**
+In case you are *not* carrying out a fresh installation, please remove earlier stimela images by:
+
+```
+stimela clean -ac
+
+```
 
 If using [Docker](https://www.docker.com):
 ```
-stimela build
+stimela pull
+#stimela pull -d works too.
 ```
+N.B.: `stimela build` command earlier used for the docker installation is now deprecated.
 
 If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored:
 

@@ -2,7 +2,7 @@ type: map
 mapping:
   ddcal:
     type: map
-    desc: Perform direction-dependent calibration on the data.
+    desc: Perform direction-dependent calibration on the data (SHARED-RISK DEVELOPMENT MODE).
     mapping:
      enable:
        type: bool

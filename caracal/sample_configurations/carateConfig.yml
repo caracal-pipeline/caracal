@@ -196,7 +196,7 @@ selfcal:
   cal_timeslots_chunk: 360
   image:
     enable: true
-    cleanmask_threshold: [20,10,5,5]
+    cleanmask_thr: [20,10,5,5]
     clean_cutoff: [0.5,0.5,0.5,0.5]
   calibrate:
     enable: true

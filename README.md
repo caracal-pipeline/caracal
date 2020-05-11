@@ -41,11 +41,12 @@ In case you are *not* carrying out a fresh installation, remove earlier Stimela 
 stimela clean -ac
 ```
 
-Then, if using [Docker](https://www.docker.com):
+<!-- Then, if using [Docker](https://www.docker.com):
 
 ```
 stimela pull
 ```
+-->
 
 If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc) :
 

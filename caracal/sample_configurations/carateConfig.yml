@@ -97,9 +97,6 @@ crosscal:
       - gcal
       - bpcal
 
-polcal:
-  enable: false
-
 inspect__2:
   label_in: 'cal'
   label_cal: '1gc'

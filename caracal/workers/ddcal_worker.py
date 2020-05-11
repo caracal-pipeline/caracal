@@ -287,7 +287,7 @@ def worker(pipeline, recipe, config):
         for ms in mslist:
            mspref = ms.split('.ms')[0].replace('-','_')
            step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
-           recipe.add('cab/cubical', step, {
+           recipe.add('cab/cubical_ddf', step, {
               "data-ms"           : ms,
               "data-column"       : config[key]['dd_data_col'],
               "out-column"        : config[key]['dd_out_data_col'],

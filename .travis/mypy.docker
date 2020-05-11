@@ -1,0 +1,6 @@
+FROM stimela/base:1.4.6
+RUN pip install mypy
+ADD . /code
+WORKDIR /code
+RUN pip install /code
+RUN mypy --ignore-missing-import caracal

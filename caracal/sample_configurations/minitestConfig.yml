@@ -48,9 +48,6 @@ crosscal:
       - bpcal
   report: true
 
-polcal:
-  enable: false
-
 inspect:
   label_in: cal
   label_cal: 1gc

@@ -332,7 +332,7 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
     if save:
         with codecs.open(msinfo, 'w', 'utf8') as yw:
             info['DTDF'] = dt_dfreq
-            yaml.dump(data, yw, default_flow_style=False)
+            yaml.dump(info, yw, default_flow_style=False)
 
     return dt_dfreq, dtime, dfreq
 
@@ -344,7 +344,7 @@ def imaging_params(msinfo, spwid=0):
     maxbl = info['MAXBL']
     dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])
     freq = info['SPW']["REF_FREQUENCY"][spwid]
-    wavelegnth = 2.998e8/freq
+    wavelength = 2.998e8/freq
 
     FoV = numpy.rad2deg(1.22 * wavelength / dish_size)
     max_res = numpy.rad2deg(wavelength / maxbl)

@@ -18,9 +18,9 @@ LABEL = "ddcal"
 def worker(pipeline, recipe, config):
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
-    colname = config['image_dd']['col']
+    #colname = config['image_dd']['col']
     use_mask = config['image_dd']['use_mask']
-    fit_spectral_pol = config['image_dd']['fit_spectral_pol']
+    #fit_spectral_pol = config['image_dd']['fit_spectral_pol']
     ddsols_t = config['calibrate_dd']['dd_dd_timeslots_int']
     ddsols_f = config['calibrate_dd']['dd_dd_chan_int']
     dist_ncpu = config['calibrate_dd']['dist_ncpu']

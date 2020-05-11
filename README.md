@@ -28,9 +28,9 @@ python3 -m venv ${caracal-venv}
 source ${caracal-venv}/bin/activate
 pip install -U pip setuptools wheel
 
-# Caracal stable release
+# CARACal stable release
 pip install -U caracal
-# OR Caracal developer version
+# OR CARACal developer version
 #pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
 ```
 *(Ignore any error messages concerning pyregion.)*

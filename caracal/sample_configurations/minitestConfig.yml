@@ -39,9 +39,9 @@ crosscal:
   enable: true
   label_in: cal
   primary:
-    plotgains: false
+    plotgains: true
   secondary:
-    plotgains: false
+    plotgains: true
   apply_cal:
     applyto:
       - gcal
@@ -56,7 +56,7 @@ inspect:
   label_cal: 1gc
   dirname: crosscal
   enable: true
-  standard_plotter: none
+  standard_plotter: ragavi_vis
     
 transform__2:
   enable: true

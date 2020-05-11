@@ -359,7 +359,7 @@ then
 
     echo "  CARATE_LOCAL_CARACAL:         Local CARACal copy to use. If not"
     echo "                               set, CARACal will be downloaded"
-    echo "                               from https://github.com/ska-sa/caracal"
+    echo "                               from https://github.com/caracal-pipeline/caracal"
     echo ""
 
     echo "  CARATE_CARACAL_BUILD_ID: Build number to test. If not set, master"
@@ -617,7 +617,7 @@ echo "    if switches --omit-stimela-reinstall (-os) or"
 echo "    --omit-virtualenv-reinstall (-ov) are set."
 echo ""
 echo "  - caracal is either downloaded to the root directory (if not"
-echo "    existing or if -f is set) from https://github.com/ska-sa/caracal"
+echo "    existing or if -f is set) from https://github.com/caracal-pipeline/caracal"
 echo "    or, if the CARATE_LOCAL_CARACAL environment variable is set,"
 echo "    \$CARATE_LOCAL_CARACAL is copied to the root directory if not"
 echo "    existing or if -f is set (notice that the directory tree should be"
@@ -899,7 +899,7 @@ then
     echo ""
     echo " It is possible to use caratekit.sh to perform a data reduction."
     echo " The advantage is that it is easy to report issues at"
-    echo " https://github.com/ska-sa/caracal/issues"
+    echo " https://github.com/caracal-pipeline/caracal/issues"
     echo ""
     echo " To create an installation the user chooses"
     echo "   - The location \${workspace} of a parent directory to a "
@@ -921,7 +921,7 @@ then
     echo " Data reduction using caratekit.sh"
     echo ""
     echo " Multiple variants are possible, here we present three. See"
-    echo " https://github.com/ska-sa/caracal/blob/master/README.md for more"
+    echo " https://github.com/caracal-pipeline/caracal/blob/master/README.md for more"
     echo " details."
     echo ""
     echo " The user uses the same"
@@ -965,7 +965,7 @@ then
     echo "                  \${project} -cs \${configfile}.yml -td \${rawdata}"
     echo ""
     echo " More detail can be found at:"
-    echo " https://github.com/ska-sa/caracal/blob/master/README.md"
+    echo " https://github.com/caracal-pipeline/caracal/blob/master/README.md"
     echo ""
 fi
 
@@ -1050,7 +1050,7 @@ then
     then
 	    [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
     else
-    [[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git ${mytmpdir}
+    [[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git ${mytmpdir}
 #    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
     fi
     
@@ -1060,7 +1060,7 @@ then
     # Upon pypi release this has to be updated
     #    [[ -z ${CR} ]] || { \
     #	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
-    #	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
+    #	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
     #    }
     
     [[ -z ${CR} ]] || { \
@@ -1070,7 +1070,7 @@ then
 	    exit 1; \
 	}
 	CR="0.1.0"; \
-	thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`; \
+	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
     }
     
     [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
@@ -1085,7 +1085,7 @@ then
 	echo "will be replaced by"; \
     }
     echo "caratekit.sh from"
-    echo "https://github.com/ska-sa/caracal"
+    echo "https://github.com/caracal-pipeline/caracal"
     [[ -z ${CR} ]] || echo "Release ${CR}"
     [[ -z ${thabuild} ]] || echo "Build ${thabuild}"
     echo "will be installed"
@@ -1298,7 +1298,7 @@ then
 else
     [[ -n ${OF} ]] || { \
 	echo "The variable CARATE_LOCAL_CARACAL is not set, meaning that CARACal"; \
-	echo "will be downloaded from https://github.com/ska-sa/caracal"; \
+	echo "will be downloaded from https://github.com/caracal-pipeline/caracal"; \
 	echo ""; \
     }
 fi
@@ -1881,7 +1881,7 @@ else
 	then
 	    echo "Not re-fetching CARACal, turn off -of if you want that."
         else
-	    echo "Fetching CARACal from https://github.com/ska-sa/caracal.git"
+	    echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
 	    checkex ${WORKSPACE_ROOT}/caracal || \
 		echo "rm -rf \${workspace_root}/caracal" >> ${SS}
 	    [[ -n ${FS} ]] || \
@@ -1889,15 +1889,15 @@ else
 		rm -rf ${WORKSPACE_ROOT}/caracal
 	    
             checkex ${WORKSPACE_ROOT}/caracal || \
-		echo "git clone https://github.com/ska-sa/caracal.git" >> ${SS}
+		echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
             [[ -n ${FS} ]] || \
 		checkex ${WORKSPACE_ROOT}/caracal || \
-		git clone https://github.com/ska-sa/caracal.git
+		git clone https://github.com/caracal-pipeline/caracal.git
         fi
     else
-	echo "Fetching CARACal from https://github.com/ska-sa/caracal.git"
-	echo "git clone https://github.com/ska-sa/caracal.git" >> ${SS}
-	[[ -n ${FS} ]] || git clone https://github.com/ska-sa/caracal.git
+	echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
+	echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
+	[[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git
     fi
 fi
 
@@ -1927,7 +1927,7 @@ then
 	echo "switches --caracal-release or -cr, caratekit is trying to install the";\
 	echo "latest release.";\
     }
-    thabuild=`git ls-remote --tags https://github.com/ska-sa/caracal | grep ${CR} | awk '{print $1}'`
+    thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`
     echo "git checkout ${thabuild}" >> ${SS}
     git checkout ${thabuild}
 fi
@@ -1971,7 +1971,7 @@ caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/c
     endimessage+="Consider updating your caratekit installation by typing:"; endimessage+=$'\n'; \
     endimessage+="  $ caratekit.sh --install"; endimessage+=$'\n'; \
     endimessage+=$'\n';
-    endimessage+="Details can be found at https://github.com/ska-sa/caracal"; endimessage+=$'\n'; \
+    endimessage+="Details can be found at https://github.com/caracal-pipeline/caracal"; endimessage+=$'\n'; \
     endimessage+=$'\n';
     endimessage+="########################################################"
     endimessage+=$'\n';
@@ -2051,7 +2051,7 @@ then
     else
 	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
 	[[ -n ${CARATE_LOCAL_CARACAL} ]] || { \
-	    echo "CARACal build from master at https://github.com/ska-sa/caracal" >> ${SYA};\
+	    echo "CARACal build from master at https://github.com/caracal-pipeline/caracal" >> ${SYA};\
 	}
     fi
     
@@ -2060,7 +2060,7 @@ then
 	echo "CARACal build: local" >> ${SYA}
     else
         sya="CARACal build: "; sya+=`git log -1 --format=%H`; sya+=$'\n';
-	sya+="from: https://github.com/ska-sa/caracal"
+	sya+="from: https://github.com/caracal-pipeline/caracal"
         echo "${sya}" >> ${SYA}
     fi
     [[ -z ${OC} ]] || echo "CARACal has not been re-build, so this is a guess" >> ${SYA}

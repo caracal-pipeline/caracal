@@ -10,7 +10,7 @@ mapping:
         required: True
         example: 'False'
       field:
-        desc: Fields that should be flagged. It can be set to either 'target' or 'calibrators' (i.e., all calibrators) as defined in the obsconf worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step 'flag_mask' (see below). If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as exaplined in 'label_in' below.
+        desc: Fields that should be flagged. It can be set to either 'target' or 'calibrators' (i.e., all calibrators) as defined in the obsconf worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step 'flag_mask' (see below). If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calibrator_fields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as explained in 'label_in' below.
         type: str
         enum: ["target", "calibrators"]
         required: False
@@ -30,7 +30,7 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Enable segment 'rewind_flags'.
+            desc: Enable the 'rewind_flags' segment.
             type: bool
             required: False
             example: 'True'
@@ -279,7 +279,7 @@ mapping:
                 required: False
                 example: 'firstpass_Q.rfis'
               ensure_valid:
-                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit CARACal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
+                desc: Ensure that the selected AOFlagger strategy is compatible with the type of correlations present in the input .MS file(s). E.g., attempts to flag on Stokes V an .MS with XX and YY only will result in an error and exit Caracal. The rules are 1) XY,YX present to flag on Stokes V,U or on XY,YX, 2) XX,YY present to flag on Stokes I,Q or on XX,YY. Disable only if you know what you are doing.
                 type: bool
                 required: False
                 example: 'True'

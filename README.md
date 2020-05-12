@@ -48,7 +48,7 @@ stimela pull
 ```
 -->
 
-If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc) :
+If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
 
 ```
 export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
@@ -67,7 +67,7 @@ stimela pull -p
 
 ## Installation with the caratekit.sh script
 
-Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`.
+Download the installation script [caratekit.sh](https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh) . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`.
 
 If using [Docker](https://www.docker.com):
 
@@ -99,10 +99,10 @@ Run CARACal with:
 caracal - c ${your-configuration-file}
 ```
 
-For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.
+For more detailed installation instructions, trouble-shooting tips and a full user manual please see [caracal.readthedocs.io](https://caracal.readthedocs.io).
 
 
 ## Known and new issues
 
 We encourage users who experience problems installing or running CARACal to check for known issues or open a new issue at
-https://github.com/caracal-pipeline/caracal/issues. When opening a new issue, please include your installation type (e.g., Docker, Singularity), software version (both CARACal and Stimela), CARACal configuration file, and CARACal log files.
+our [GitHub issues page](https://github.com/caracal-pipeline/caracal/issues). When opening a new issue, please include your installation type (e.g., Docker, Singularity), software version (both CARACal and Stimela), CARACal configuration file, and CARACal log files.

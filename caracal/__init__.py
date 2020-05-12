@@ -122,16 +122,17 @@ def create_logger():
     log_filehandler = DelayedFileHandler()
 
     log_filehandler.setFormatter(stimela.log_boring_formatter)
-    log_filehandler.setLevel(logging.DEBUG)
+    log_filehandler.setLevel(logging.INFO)
 
     log.addHandler(log_filehandler)
 
 
 def init_console_logging(boring=False, debug=False):
     """Sets up console logging"""
-    global log_console_handler, log_console_formatter, DEBUG
+    global log_console_handler, log_console_formatter, log_filehandler, DEBUG
 
     DEBUG = debug
+    log_filehandler.setLevel(logging.DEBUG if debug else logging.INFO)
 
     log_console_formatter = stimela.log_boring_formatter if boring else stimela.log_colourful_formatter
 

@@ -100,3 +100,9 @@ caracal - c ${your-configuration-file}
 ```
 
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.
+
+
+## Known and new issues
+
+We encourage users who experience problems installing or running CARACal to check for known issues or open a new issue at
+https://github.com/caracal-pipeline/caracal/issues. When opening a new issue, please include your installation type (e.g., Docker, Singularity), software version (both CARACal and Stimela), CARACal configuration file, and CARACal log files.

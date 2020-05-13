@@ -98,24 +98,33 @@ inspect:
   fields:
     - bpcal
     - gcal
-  real_imag: 
-    enable: true
-    avgtime: '60'
-  amp_phase: 
-    enable: true
-    avgtime: '60'
-  amp_uvwave: 
-    enable: true
-    avgtime: '60'
   amp_ant: 
-    enable: true
-    avgtime: '60'
-  phase_uvwave: 
     enable: true
     avgtime: '60'
   amp_scan: 
     enable: true
     avgtime: '60'
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA
+    plots_by_field:
+      - "-x real  -y imag   -c CORR"
+      - "-x real  -y imag   -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c SCAN_NUMBER"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y phase  -c SCAN_NUMBER"
+      - "-x FREQ  -y phase  -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x U     -y V      -c phase --cnum 64 --cmin -5 --cmax 5"
+      - "-x BASELINE -y FREQ -c amp"
+      - "-x BASELINE -y FREQ -c CORRECTED_DATA-MODEL_DATA:amp"
+    plots_by_corr:
+      - "-x real  -y imag   -c FIELD_ID"
+    ignore_errors: true
 
 transform__2:
   enable: true

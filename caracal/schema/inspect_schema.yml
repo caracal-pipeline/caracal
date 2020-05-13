@@ -96,7 +96,7 @@ mapping:
             type: bool 
             desc: Executed the real v/s imaginary data plotting.
             required: false
-            example: "True"
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -158,7 +158,7 @@ mapping:
             type: bool
             desc: Executes plotting data amplitude as a function of uvwave.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -220,7 +220,7 @@ mapping:
             type: bool
             desc: Executes plotting data phase v/s uvwave.
             required: false
-            example: "True"
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -282,7 +282,7 @@ mapping:
             type: bool
             desc: Executes the plotting of amplitude v/s phase for data.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str
@@ -313,7 +313,7 @@ mapping:
             type: bool
             desc: Executes the plotting of amplitude v/s phase for data.
             required: false
-            example: 'True'
+            example: 'False'
           fields:
             seq:
               - type: str

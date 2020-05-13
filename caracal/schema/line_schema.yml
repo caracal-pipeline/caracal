@@ -167,6 +167,12 @@ mapping:
             type: str
             required: false
             example: 'postmst.rfis'
+          readmode:
+            desc: AOflagger read mode. If set to 'indirect', AOflagger temporarily writes a reordered .MS file to disc, which results in fast flagging but requires free disc space. If set to 'memory', AOflagger reads the .MS file into memory, which is even faster than 'indirect' but is impossible for large files. If set to 'auto', AOflagger will decide between the 'memory' mode and the 'direct' mode -- the slowest mode -- in which AOFlagger reads baselines by scanning the entire file for the data relevant for the currently required baseline.
+            type: str
+            enum: ["indirect", "memory", "auto"]
+            required: False
+            example: 'auto'
 
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.

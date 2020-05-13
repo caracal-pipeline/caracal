@@ -2,6 +2,8 @@
 # The following ensures the script to stop on errors
 set -e
 
+#dummyline
+
 # Find out which caratekit this is, will be needed later
 caratekit_install=`which caratekit.sh` || caratekit_install=""
 [[ -n ${caratekit_install} ]] || unset caratekit_install

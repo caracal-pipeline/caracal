@@ -52,7 +52,7 @@ flag:
     scans: '0'
   flag_mask:
     enable: false
-    mask: labelled_rfimask.pickle.npy
+    mask: ''
     uvrange: '0~1000'
   flag_rfi:
     enable: true
@@ -160,7 +160,7 @@ flag__2:
     scans: '0'
   flag_mask:
     enable: false
-    mask: labelled_rfimask.pickle.npy
+    mask: ''
     uvrange: '0~1000'
   flag_rfi: 
     enable: true

@@ -93,10 +93,16 @@ If you installed CARACal with the caratekit.sh script, activate the virtual envi
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```
 
-Run CARACal with:
+If using [Docker](https://www.docker.com) run CARACal with:
 
 ```
-caracal - c ${your-configuration-file}
+caracal -c ${your-configuration-file}
+```
+
+If using [Singularity](https://github.com/sylabs/singularity) run CARACal with:
+
+```
+caracal -ct singularity -c ${your-configuration-file}
 ```
 
 For more detailed installation instructions, trouble-shooting tips and a full user manual please see [caracal.readthedocs.io](https://caracal.readthedocs.io).

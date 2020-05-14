@@ -1423,15 +1423,14 @@ then
     # Save them if they are present
     [[ -z ${SINGULARITY_CACHEDIR} ]] || { \
 	ss+="CARATE_SINGULARITY_CACHEDIR_OLD=\${SINGULARITY_CACHEDIR}" ; \
+	ss+=$'\n'
 	CARATE_SINGULARITY_CACHEDIR_OLD=${SINGULARITY_CACHEDIR} ; \
 	}
     [[ -z ${SINGULARITY_TMPDIR} ]] || { \
 	ss+="CARATE_SINGULARITY_TMPDIR_OLD=\${SINGULARITY_TMPDIR}" ; \
-	CARATE_SINGULARITY_TMPDIR_OLD=${SINGULARITY_TMPDIR} ; \
+	ss+=$'\n'
+        CARATE_SINGULARITY_TMPDIR_OLD=${SINGULARITY_TMPDIR} ; \
 	}
-    
-    [[ -n ${KSD} ]] || export SINGULARITY_CACHEDIR=${HOME}/.singularity_cache
-    [[ -n ${KSD} ]] || export SINGULARITY_TMPDIR=${HOME}/.singularity_tmp
 fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -2184,7 +2183,7 @@ then
     echo "from: https://github.com/ratt-ru/Stimela" >> ${SYA}
     [[ -z ${ORSR} ]] || echo "Stimela has not been re-build, so this is a guess" >> ${SYA}
     echo "" >> ${SYA}
-#    echo ""
+    echo ""
 fi
 
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]] && [[ -z $DSC ]] && [[ -z $SSC ]]
@@ -2960,7 +2959,22 @@ if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
 then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
- 
+     
+    [[ -n ${KSD} ]] || { \
+	ss_sing+="mkdir \${HOME}/.singularity_cache" ; \
+	ss_sing+=$'\n' ; \
+	ss_sing+="export SINGULARITY_CACHEDIR=\${HOME}/.singularity_cache" ; \
+	ss_sing+=$'\n' ; \
+	ss_sing+="mkdir \${HOME}/.singularity_tmp" ; \
+	ss_sing+=$'\n' ; \
+	ss_sing+="export SINGULARITY_TMPDIR=\${HOME}/.singularity_tmp" ; \
+	ss_sing+=$'\n' ; \
+	mkdir ${HOME}/.singularity_cache ; \
+	export SINGULARITY_CACHEDIR=${HOME}/.singularity_cache ; \
+	mkdir ${HOME}/.singularity_tmp ; \
+	export SINGULARITY_TMPDIR=${HOME}/.singularity_tmp ; \
+    }
+    
     if [[ -n ${SR} ]]
     then
 	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity

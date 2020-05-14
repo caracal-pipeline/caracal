@@ -122,6 +122,10 @@ do
     then
         SR=1
     fi
+    if [[ "$arg" == "--keep-singularity-directories" ]] || [[ "$arg" == "-ksd" ]]
+    then
+        KSD=1
+    fi
     if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
     then
         (( nextcount=argcount+1 ))
@@ -473,6 +477,12 @@ then
     echo "                                      global \$CARATE_WORKSPACE but in the"
     echo "                                      specific root directory"
     echo ""
+    echo "  --keep-singularity-directories -ksd Do noch change the location of the"
+    echo "                                      hidden singularity directories "
+    echo "                                      \${SINGULARITY_CACHEDIR} and"
+    echo "                                      \${SINGULARITY_TMPDIR} to the carate"
+    echo "                                      \${WORKSPACE_ROOT}/home directory"
+    echo ""
     echo "  --caracal-test-id ARG -ct ARG       Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_TEST_ID"
     echo ""
@@ -663,6 +673,14 @@ echo "    -sr are set, it is installed in rootfolder/stimela-singularity."
 echo "    The first variant allows to re-use the same stimela installation"
 echo "    In multiple tests. If switches --omit-stimela-reinstall or -os are"
 echo "    set, this is not done"
+echo ""
+echo "  - by default, before installing singularity images, variables de-"
+echo "    scribing the location of the hidden singularity directories"
+echo "    \${SINGULARITY_CACHEDIR} and \${SINGULARITY_TMPDIR} are set to"
+echo "    \${WORKSPACE_ROOT}/home/.singularity_cache and"
+echo "    \${WORKSPACE_ROOT}/home/.singularity_tmp respectively. This can"
+echo "    be prevented by setting the --keep-singularity-directories or"
+echo "    -ksd switches"
 echo ""
 echo "  - when switch --singularity-minimal or -sm is set, a directory"
 echo "    minimal_singularity is created (if not existing or if -f is set),"
@@ -1387,7 +1405,7 @@ else
 fi
 
 # Save home for later
-if [[ -n $HOME ]]
+if [[ -n ${HOME} ]]
 then
     [[ -n ${KH} ]] || ss+="HOME_OLD=\${HOME}"
     [[ -n ${KH} ]] || ss+=$'\n'
@@ -1398,6 +1416,22 @@ then
     ss+="PYTHONPATH_OLD=\${PYTHONPATH}"
     ss+=$'\n'
     PYTHONPATH_OLD=${PYTHONPATH}
+fi
+if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
+then
+    
+    # Save them if they are present
+    [[ -z ${SINGULARITY_CACHEDIR} ]] || { \
+	ss+="CARATE_SINGULARITY_CACHEDIR_OLD=\${SINGULARITY_CACHEDIR}" ; \
+	CARATE_SINGULARITY_CACHEDIR_OLD=${SINGULARITY_CACHEDIR} ; \
+	}
+    [[ -z ${SINGULARITY_TMPDIR} ]] || { \
+	ss+="CARATE_SINGULARITY_TMPDIR_OLD=\${SINGULARITY_TMPDIR}" ; \
+	CARATE_SINGULARITY_TMPDIR_OLD=${SINGULARITY_TMPDIR} ; \
+	}
+    
+    [[ -n ${KSD} ]] || export SINGULARITY_CACHEDIR=${HOME}/.singularity_cache
+    [[ -n ${KSD} ]] || export SINGULARITY_TMPDIR=${HOME}/.singularity_tmp
 fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -1739,6 +1773,18 @@ function cleanup {
     then
 	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
 	export PYTHONPATH=${PYTHONPATH_OLD}
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_CACHEDIR_OLD} ]]
+    then
+	echo "export SINGULARITY_CACHEDIR=\${CARATE_SINGULARITY_CACHEDIR_OLD}" >> ${SS}
+	export SINGULARITY_CACHEDIR=${CARATE_SINGULARITY_CACHEDIR_OLD}
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_TMPDIR_OLD} ]]
+    then
+	echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
+	export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
     fi
 
     # If the number of tests is 0 we create the report directory
@@ -2914,8 +2960,7 @@ if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
 then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
-    ###### export SINGULARITY_CACHEDIR=$CARATE_WORKSPACE/.singularity
-    
+ 
     if [[ -n ${SR} ]]
     then
 	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity

@@ -1057,7 +1057,7 @@ def worker(pipeline, recipe, config):
             vismodel = True
             modelcolumn = 'MODEL_DATA'
             calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
-            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+            with open(os.path.join(pipeline.output, img_dir, calmodel), 'w') as stdw:
                 stdw.write('#format: ra_d dec_d i\n')
                 stdw.write('0.0 -30.0 1e-99')
         # Let's see the matrix type we are dealing with
@@ -1159,7 +1159,7 @@ def worker(pipeline, recipe, config):
             if outdata == 'CORRECTED_DATA':
                 outdata = 'CORR_DATA'
             model_cal = calmodel.split("/")[-1]
-            model_cal = model_cal.strip(":output")
+            model_cal = model_cal.split(":output")[0]
             inp_dir = pipeline.output+"/"+img_dir+"/"
             op_dir = pipeline.continuum+"/selfcal_products/"
             recipe.add('cab/calibrator', step,

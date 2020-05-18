@@ -397,12 +397,14 @@ def worker(pipeline, recipe, config):
                             for ss in stdr.readlines():
                                 for pp in 'xx,xy,yx,yy,stokes-i,stokes-q,stokes-u,stokes-v'.split(','):
                                     if '<on-{0:s}>1</on-{0:s}>'.format(pp) in ss: flag_corr.append(pp)
-                        if (('stokes-u' in flag_corr or 'stokes-v' in flag_corr) and ('XY' not in ms_corr or 'YX' not in ms_corr)) or\
-                             ('xy' in flag_corr and 'XY' not in ms_corr) or\
-                             ('yx' in flag_corr and 'YX' not in ms_corr) or\
-                             (('stokes-i' in flag_corr or 'stokes-q' in flag_corr) and ('XX' not in ms_corr or 'YY' not in ms_corr)) or\
-                             ('xx' in flag_corr and 'XX' not in ms_corr) or\
-                             ('yy' in flag_corr and 'YY' not in ms_corr):
+                        if ('stokes-u' in flag_corr and (('XY' not in ms_corr and 'RL' not in ms_corr) or ('YX' not in ms_corr and 'LR' not in ms_corr))) or\
+                             ('stokes-v' in flag_corr and (('XY' not in ms_corr and 'RR' not in ms_corr) or ('YX' not in ms_corr and 'LL' not in ms_corr))) or\
+                             ('stokes-i' in flag_corr and (('XX' not in ms_corr and 'RR' not in ms_corr) or ('YY' not in ms_corr and 'LL' not in ms_corr))) or\
+                             ('stokes-q' in flag_corr and (('XX' not in ms_corr and 'RL' not in ms_corr) or ('YY' not in ms_corr and 'LR' not in ms_corr))) or\
+                             ('xy' in flag_corr and ('XY' not in ms_corr and 'RL' not in ms_corr )) or\
+                             ('yx' in flag_corr and ('YX' not in ms_corr and 'LR' not in ms_corr)) or\
+                             ('xx' in flag_corr and ('XX' not in ms_corr and 'RR' not in ms_corr)) or\
+                             ('yy' in flag_corr and ('YY' not in ms_corr and 'LL' not in ms_corr)):
                             raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"\
                                              " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"\
                                              " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
@@ -515,7 +517,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs, 
+                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs,
                     step))[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
                                                               prefix, wname)

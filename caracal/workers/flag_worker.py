@@ -244,15 +244,21 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_spw'):
                 step = '{0:s}-spw-ms{1:d}'.format(wname, msiter)
                 flagspwselection = config['flag_spw']['chans']
+                firsts = [min(ff) for ff in msdict['SPW']['CHAN_FREQ']]
+                lasts = [max(ff) for ff in msdict['SPW']['CHAN_FREQ']]
+                nrs = msdict['SPW']['NUM_CHAN']
+                nspws = len(nrs)
                 found_valid_data = 0
                 if config['flag_spw']['ensure_valid']:
                     scalefactor, scalefactor_dict = 1, {
-                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3}
+                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3, 'Hz': 1}
                     for ff in flagspwselection.split(','):
+                        found_scaling = False
                         for dd in scalefactor_dict:
                             if dd.lower() in ff.lower():
                                 ff, scalefactor = ff.lower().replace(
                                     dd.lower(), ''), scalefactor_dict[dd]
+                                found_scaling = True
                         ff = ff.lower().replace('hz', '').split(':')
                         if len(ff) > 1:
                             spws = ff[0]
@@ -261,7 +267,7 @@ def worker(pipeline, recipe, config):
                         edges = [
                             ii*scalefactor for ii in map(float, ff[-1].split('~'))]
                         if '*' in spws:
-                            spws = list(range(len(pipeline.firstchanfreq[i])))
+                            spws = list(range(nspws))
                         elif '~' in spws:
                             spws = list(
                                 range(int(spws.split('~')[0]), int(spws.split('~')[1])+1))
@@ -269,7 +275,9 @@ def worker(pipeline, recipe, config):
                             spws = [int(spws), ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
-                            if ss < len(pipeline.lastchanfreq[i]) and min(edges[ss][1], pipeline.lastchanfreq[i][ss])-max(edges[ss][0], pipeline.firstchanfreq[i][ss]) > 0:
+                            if found_scaling and ss < nspws and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0:
+                                found_valid_data = 1
+                            elif not found_scaling and ss < nspws and edges[ss][0]>=0 and edges[ss][1] < nrs[ss]:
                                 found_valid_data = 1
                     if not found_valid_data:
                         caracal.log.warn(

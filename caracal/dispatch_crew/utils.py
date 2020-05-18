@@ -209,8 +209,8 @@ def hetfield(info, field, db, tol=2.9E-3):
     # Get position of field in msinfo
     ind = info['FIELD']['NAME'].index(field)
     firade = info['FIELD']['DELAY_DIR'][ind][0]
-    if firade[0] < 0.:
-        firade[0] = 2*numpy.pi+firade[0]
+    firade[0] = numpy.mod(firade[0],2*numpy.pi)
+    
     dbcp = db.db
     for key in dbcp.keys():
         carade = [dbcp[key]['ra'],dbcp[key]['decl']]

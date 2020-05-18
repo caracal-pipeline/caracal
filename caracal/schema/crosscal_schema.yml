@@ -1,10 +1,10 @@
 type: map
-mapping: 
+mapping:
   crosscal:
     type: map
     desc: Carry out Cross calibration of the data (delay, bandpass and gain calibration).
     mapping:
-      enable: 
+      enable:
         desc: Execute the crosscal worker.
         type: bool
         required: true
@@ -44,7 +44,7 @@ mapping:
         type: bool
         required: false
         example: 'False'
-      uvrange: 
+      uvrange:
         desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
         type: str
         required: false
@@ -70,7 +70,7 @@ mapping:
             example: 'False'
           field:
             desc: Set the field to execute the set_model segment on. Specify either the field number, field name or field specification as per obsconf worker (e.g., "fcal").
-            type: str 
+            type: str
             required: false
             example: 'fcal'
           threads:
@@ -204,11 +204,16 @@ mapping:
               - type: str
             required: false
             example: "'', '', None, ''"
-          B_solnorm:
+          b_solnorm:
             type: bool
             required: false
             desc: Normalise average solution amplitude to 1.0
             example: "False"
+          b_fillgaps:
+            desc: Fill flagged solution channels by interpolation.
+            type: int
+            required: false
+            example: "70"
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool
@@ -287,7 +292,7 @@ mapping:
                 required: false
                 example: 'briggs -1.0'
               auto_mask:
-                type: float 
+                type: float
                 desc: Auto masking threshold
                 required: false
                 example: '10'
@@ -344,11 +349,11 @@ mapping:
             example: 'calflag'
       summary:
         type: map
-        desc: Prints out the buther's bill, i.e. data flagging summary at the end of cross calibration process. 
+        desc: Prints out the butcher's bill, i.e. data flagging summary at the end of cross calibration process.
         mapping:
-          enable: 
+          enable:
             type: bool
-            desc: Execute printing flagging summary.            
+            desc: Execute printing flagging summary.
             required: false
             example: 'True'
       report:

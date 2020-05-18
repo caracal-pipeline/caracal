@@ -80,7 +80,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, msiter)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)

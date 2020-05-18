@@ -209,6 +209,11 @@ mapping:
             required: false
             desc: Normalise average solution amplitude to 1.0
             example: "False"
+          b_fillgaps:
+            desc: Fill flagged solution channels by interpolation.
+            type: int
+            required: false
+            example: "70"
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool

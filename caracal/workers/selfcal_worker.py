@@ -593,7 +593,7 @@ def worker(pipeline, recipe, config):
         if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
             forn_kernels = [[80, 80, 0, 'b']]
             forn_thresh = config[key]['fornax_thr'][
-                num-1 if len(config[key]['fornax_thr']) >= num else -1]
+                num if len(config[key]['fornax_thr']) >= num+1 else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -634,7 +634,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1],
+            "steps.doScaleNoise": config['image']['cleanmask_localrms'][num if len(config['image']['cleanmask_localrms']) >= num+1 else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -652,19 +652,19 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key]['kernels']],
-            "SCfind.threshold": config['image']['cleanmask_thr'][num-1 if len(config['image']['cleanmask_thr']) >= num else -1],
+            "SCfind.threshold": config['image']['cleanmask_thr'][num if len(config['image']['cleanmask_thr']) >= num+1 else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image']['cleanmask_localrms_window'][num-1 if len(config['image']['cleanmask_localrms_window']) >= num else -1],
+            "scaleNoise.windowSpatial": config['image']['cleanmask_localrms_window'][num if len(config['image']['cleanmask_localrms_window']) >= num+1 else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
+            "scaleNoise.perSCkernel": config['image']['cleanmask_localrms'][num if len(config['image']['cleanmask_localrms']) >= num+1 else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,

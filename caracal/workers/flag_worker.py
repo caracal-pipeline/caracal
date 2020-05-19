@@ -251,15 +251,18 @@ def worker(pipeline, recipe, config):
                 found_valid_data = 0
                 if config['flag_spw']['ensure_valid']:
                     scalefactor, scalefactor_dict = 1, {
-                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3, 'Hz': 1}
+                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3 }
                     for ff in flagspwselection.split(','):
-                        found_scaling = False
+                        found_units = False
                         for dd in scalefactor_dict:
                             if dd.lower() in ff.lower():
                                 ff, scalefactor = ff.lower().replace(
                                     dd.lower(), ''), scalefactor_dict[dd]
-                                found_scaling = True
-                        ff = ff.lower().replace('hz', '').split(':')
+                                found_units = True
+                        if 'hz' in ff.lower():
+                          ff = ff.lower().replace('hz', '')
+                          found_units = True
+                        ff = ff.split(':')
                         if len(ff) > 1:
                             spws = ff[0]
                         else:
@@ -275,9 +278,9 @@ def worker(pipeline, recipe, config):
                             spws = [int(spws), ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
-                            if found_scaling and ss < nspws and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0:
+                            if found_units and ss < nspws and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0:
                                 found_valid_data = 1
-                            elif not found_scaling and ss < nspws and edges[ss][0]>=0 and edges[ss][1] < nrs[ss]:
+                            elif not found_units and ss < nspws and edges[ss][0]>=0 and edges[ss][1] < nrs[ss]:
                                 found_valid_data = 1
                     if not found_valid_data:
                         caracal.log.warn(

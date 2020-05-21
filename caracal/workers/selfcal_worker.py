@@ -314,7 +314,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
@@ -363,7 +363,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker, read_version = 'transfer_apply_gains_version')
                     substep = 'version_{0:s}_ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
@@ -593,7 +593,7 @@ def worker(pipeline, recipe, config):
         if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
             forn_kernels = [[80, 80, 0, 'b']]
             forn_thresh = config[key]['fornax_thr'][
-                num-1 if len(config[key]['fornax_thr']) >= num else -1]
+                num if len(config[key]['fornax_thr']) >= num+1 else -1]
 
             image_opts_forn = {
                 "import.inFile": imagename,
@@ -634,7 +634,7 @@ def worker(pipeline, recipe, config):
         image_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
-            "steps.doScaleNoise": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1],
+            "steps.doScaleNoise": config['image']['cleanmask_localrms'][num if len(config['image']['cleanmask_localrms']) >= num+1 else -1],
             "steps.doSCfind": True,
             "steps.doMerge": True,
             "steps.doReliability": False,
@@ -652,19 +652,19 @@ def worker(pipeline, recipe, config):
             "parameters.optimiseMask": False,
             "SCfind.kernelUnit": 'pixel',
             "SCfind.kernels": [[kk, kk, 0, 'b'] for kk in config[key]['kernels']],
-            "SCfind.threshold": config['image']['cleanmask_thr'][num-1 if len(config['image']['cleanmask_thr']) >= num else -1],
+            "SCfind.threshold": config['image']['cleanmask_thr'][num if len(config['image']['cleanmask_thr']) >= num+1 else -1],
             "SCfind.rmsMode": 'mad',
             "SCfind.edgeMode": 'constant',
             "SCfind.fluxRange": 'all',
             "scaleNoise.statistic": 'mad',
             "scaleNoise.method": 'local',
             "scaleNoise.interpolation": 'linear',
-            "scaleNoise.windowSpatial": config['image']['cleanmask_localrms_window'][num-1 if len(config['image']['cleanmask_localrms_window']) >= num else -1],
+            "scaleNoise.windowSpatial": config['image']['cleanmask_localrms_window'][num if len(config['image']['cleanmask_localrms_window']) >= num+1 else -1],
             "scaleNoise.windowSpectral": 1,
             "scaleNoise.scaleX": True,
             "scaleNoise.scaleY": True,
             "scaleNoise.scaleZ": False,
-            "scaleNoise.perSCkernel": config['image']['cleanmask_localrms'][num-1 if len(config['image']['cleanmask_localrms']) >= num else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
+            "scaleNoise.perSCkernel": config['image']['cleanmask_localrms'][num if len(config['image']['cleanmask_localrms']) >= num+1 else -1], # work-around for https://github.com/SoFiA-Admin/SoFiA/issues/172, to be replaced by "True" once the next SoFiA version is in Stimela
             "merge.radiusX": 3,
             "merge.radiusY": 3,
             "merge.radiusZ": 1,
@@ -1057,7 +1057,7 @@ def worker(pipeline, recipe, config):
             vismodel = True
             modelcolumn = 'MODEL_DATA'
             calmodel = '{0:s}_{1:d}-nullmodel.txt'.format(prefix, num)
-            with open(os.path.join(pipeline.input, calmodel), 'w') as stdw:
+            with open(os.path.join(pipeline.output, img_dir, calmodel), 'w') as stdw:
                 stdw.write('#format: ra_d dec_d i\n')
                 stdw.write('0.0 -30.0 1e-99')
         # Let's see the matrix type we are dealing with
@@ -1159,7 +1159,7 @@ def worker(pipeline, recipe, config):
             if outdata == 'CORRECTED_DATA':
                 outdata = 'CORR_DATA'
             model_cal = calmodel.split("/")[-1]
-            model_cal = model_cal.strip(":output")
+            model_cal = model_cal.split(":output")[0]
             inp_dir = pipeline.output+"/"+img_dir+"/"
             op_dir = pipeline.continuum+"/selfcal_products/"
             recipe.add('cab/calibrator', step,

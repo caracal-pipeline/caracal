@@ -80,7 +80,7 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, msiter)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
@@ -244,16 +244,25 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'flag_spw'):
                 step = '{0:s}-spw-ms{1:d}'.format(wname, msiter)
                 flagspwselection = config['flag_spw']['chans']
+                firsts = [min(ff) for ff in msdict['SPW']['CHAN_FREQ']]
+                lasts = [max(ff) for ff in msdict['SPW']['CHAN_FREQ']]
+                nrs = msdict['SPW']['NUM_CHAN']
+                nspws = len(nrs)
                 found_valid_data = 0
                 if config['flag_spw']['ensure_valid']:
                     scalefactor, scalefactor_dict = 1, {
-                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3}
+                        'GHz': 1e+9, 'MHz': 1e+6, 'kHz': 1e+3 }
                     for ff in flagspwselection.split(','):
+                        found_units = False
                         for dd in scalefactor_dict:
                             if dd.lower() in ff.lower():
                                 ff, scalefactor = ff.lower().replace(
                                     dd.lower(), ''), scalefactor_dict[dd]
-                        ff = ff.lower().replace('hz', '').split(':')
+                                found_units = True
+                        if 'hz' in ff.lower():
+                          ff = ff.lower().replace('hz', '')
+                          found_units = True
+                        ff = ff.split(':')
                         if len(ff) > 1:
                             spws = ff[0]
                         else:
@@ -261,7 +270,7 @@ def worker(pipeline, recipe, config):
                         edges = [
                             ii*scalefactor for ii in map(float, ff[-1].split('~'))]
                         if '*' in spws:
-                            spws = list(range(len(pipeline.firstchanfreq[i])))
+                            spws = list(range(nspws))
                         elif '~' in spws:
                             spws = list(
                                 range(int(spws.split('~')[0]), int(spws.split('~')[1])+1))
@@ -269,7 +278,9 @@ def worker(pipeline, recipe, config):
                             spws = [int(spws), ]
                         edges = [edges for uu in range(len(spws))]
                         for ss in spws:
-                            if ss < len(pipeline.lastchanfreq[i]) and min(edges[ss][1], pipeline.lastchanfreq[i][ss])-max(edges[ss][0], pipeline.firstchanfreq[i][ss]) > 0:
+                            if found_units and ss < nspws and min(edges[ss][1], lasts[ss]) - max(edges[ss][0], firsts[ss]) > 0:
+                                found_valid_data = 1
+                            elif not found_units and ss < nspws and edges[ss][0]>=0 and edges[ss][1] < nrs[ss]:
                                 found_valid_data = 1
                     if not found_valid_data:
                         caracal.log.warn(
@@ -397,12 +408,14 @@ def worker(pipeline, recipe, config):
                             for ss in stdr.readlines():
                                 for pp in 'xx,xy,yx,yy,stokes-i,stokes-q,stokes-u,stokes-v'.split(','):
                                     if '<on-{0:s}>1</on-{0:s}>'.format(pp) in ss: flag_corr.append(pp)
-                        if (('stokes-u' in flag_corr or 'stokes-v' in flag_corr) and ('XY' not in ms_corr or 'YX' not in ms_corr)) or\
-                             ('xy' in flag_corr and 'XY' not in ms_corr) or\
-                             ('yx' in flag_corr and 'YX' not in ms_corr) or\
-                             (('stokes-i' in flag_corr or 'stokes-q' in flag_corr) and ('XX' not in ms_corr or 'YY' not in ms_corr)) or\
-                             ('xx' in flag_corr and 'XX' not in ms_corr) or\
-                             ('yy' in flag_corr and 'YY' not in ms_corr):
+                        if ('stokes-u' in flag_corr and (('XY' not in ms_corr and 'RL' not in ms_corr) or ('YX' not in ms_corr and 'LR' not in ms_corr))) or\
+                             ('stokes-v' in flag_corr and (('XY' not in ms_corr and 'RR' not in ms_corr) or ('YX' not in ms_corr and 'LL' not in ms_corr))) or\
+                             ('stokes-i' in flag_corr and (('XX' not in ms_corr and 'RR' not in ms_corr) or ('YY' not in ms_corr and 'LL' not in ms_corr))) or\
+                             ('stokes-q' in flag_corr and (('XX' not in ms_corr and 'RL' not in ms_corr) or ('YY' not in ms_corr and 'LR' not in ms_corr))) or\
+                             ('xy' in flag_corr and ('XY' not in ms_corr and 'RL' not in ms_corr )) or\
+                             ('yx' in flag_corr and ('YX' not in ms_corr and 'LR' not in ms_corr)) or\
+                             ('xx' in flag_corr and ('XX' not in ms_corr and 'RR' not in ms_corr)) or\
+                             ('yy' in flag_corr and ('YY' not in ms_corr and 'LL' not in ms_corr)):
                             raise ValueError("The selected flagging strategy {0:s}/{1:s} will attempt to flag on {2:} but this is"\
                                              " not compatible with the {3:} correlations available in {4:s}. To proceed you can edit the flagging"\
                                              " strategy or, if you know what you are doing, disable aoflagger: ensure_valid.".format(
@@ -414,6 +427,9 @@ def worker(pipeline, recipe, config):
                                    "column": config['flag_rfi']['col'],
                                    "fields": ",".join(map(str, field_ids)),
                                    "strategy": config['flag_rfi']['aoflagger']['strategy'],
+                                   "indirect-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'indirect' else False,
+                                   "memory-read": True if config['flag_rfi']['aoflagger']['readmode'] == 'memory' else False,
+                                   "auto-read-mode": True if config['flag_rfi']['aoflagger']['readmode'] == 'auto' else False,
                                },
                                input=pipeline.input,
                                output=pipeline.output,
@@ -512,7 +528,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs, 
+                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs,
                     step))[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
                                                               prefix, wname)

@@ -119,8 +119,8 @@ def worker(pipeline, recipe, config):
         caracal.log.info('Extracting MS info from {0:s} '.format(msinfo))
         msname = msnames[i]
         # get the  actual date stamp for the start and end of the observations.
-        # This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file
-        with open(msinfo, 'r') as stdr:
+        # !!!!!!! This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file
+        with open('{0:s}/{1:s}-obsinfo.txt'.format(pipeline.obsinfo, pipeline.dataid[i]), 'r') as stdr:
             content = stdr.readlines()
         for line in content:
             info_on_line = [x for x in line.split() if x != '']

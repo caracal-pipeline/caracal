@@ -51,8 +51,8 @@ flag:
     enable: false
     scans: '0'
   flag_mask:
-    enable: true
-    mask: labelled_rfimask.pickle.npy
+    enable: false
+    mask: ''
     uvrange: '0~1000'
   flag_rfi:
     enable: true
@@ -94,28 +94,38 @@ crosscal:
 inspect:
   enable: true
   label_in: 'cal'
-  label_cal: '1gc1'
+  field: 'calibrators'
+  label_plot: '1gc1'
   fields:
     - bpcal
     - gcal
-  real_imag: 
-    enable: true
-    avgtime: '60'
-  amp_phase: 
-    enable: true
-    avgtime: '60'
-  amp_uvwave: 
-    enable: true
-    avgtime: '60'
   amp_ant: 
-    enable: true
-    avgtime: '60'
-  phase_uvwave: 
     enable: true
     avgtime: '60'
   amp_scan: 
     enable: true
     avgtime: '60'
+  shadems:
+    enable: true
+    default_column: CORRECTED_DATA
+    plots_by_field:
+      - "-x real  -y imag   -c CORR"
+      - "-x real  -y imag   -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c SCAN_NUMBER"
+      - "-x UV    -y amp    -c ANTENNA1 --cnum 64"
+      - "-x UV    -y phase  -c SCAN_NUMBER"
+      - "-x UV    -y phase  -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y amp    -c SCAN_NUMBER"
+      - "-x FREQ  -y amp    -c ANTENNA1 --cnum 64"
+      - "-x FREQ  -y phase  -c SCAN_NUMBER"
+      - "-x FREQ  -y phase  -c ANTENNA1 --cnum 64"
+      - "-x U     -y V      -c amp"
+      - "-x U     -y V      -c phase --cnum 64 --cmin -5 --cmax 5"
+      - "-x BASELINE -y FREQ -c amp"
+      - "-x BASELINE -y FREQ -c CORRECTED_DATA-MODEL_DATA:amp"
+    plots_by_corr:
+      - "-x real  -y imag   -c FIELD_ID"
+    ignore_errors: true
 
 transform__2:
   enable: true
@@ -137,6 +147,22 @@ flag__2:
   enable: true
   field: target
   label_in: corr
+  flag_autocorr:
+    enable: true
+  flag_spw:
+    enable: true
+    chans: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
+    ensure_valid: true
+  flag_antennas:
+    enable: false
+    antennas: '0'
+  flag_scan:
+    enable: false
+    scans: '0'
+  flag_mask:
+    enable: false
+    mask: ''
+    uvrange: '0~1000'
   flag_rfi: 
     enable: true
     flagger: aoflagger
@@ -144,7 +170,7 @@ flag__2:
     aoflagger:
       strategy: firstpass_QUV.rfis
   inspect: 
-    enable: true
+    enable: false
     field: target
 
 mask:

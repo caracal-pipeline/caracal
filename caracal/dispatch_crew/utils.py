@@ -189,16 +189,16 @@ def closeby(radec_1, radec_2, tol=2.9E-3):
             ) < numpy.power(tol,2):
         return True
     return False
-    
+
 
 def hetfield(info, field, db, tol=2.9E-3):
     """
     Find match of fields in info
-    
+
     Parameters:
     info (dict): dictionary of obsinfo as read by yaml
     field (str): field name
-    db (dict):   calibrator data base as returned by 
+    db (dict):   calibrator data base as returned by
                  calibrator_database()
 
     Go through all calibrators in db and return the first that matches
@@ -209,6 +209,8 @@ def hetfield(info, field, db, tol=2.9E-3):
     # Get position of field in msinfo
     ind = info['FIELD']['NAME'].index(field)
     firade = info['FIELD']['DELAY_DIR'][ind][0]
+    firade[0] = numpy.mod(firade[0],2*numpy.pi)
+    
     dbcp = db.db
     for key in dbcp.keys():
         carade = [dbcp[key]['ra'],dbcp[key]['decl']]
@@ -217,9 +219,9 @@ def hetfield(info, field, db, tol=2.9E-3):
     return False
 
 def find_in_native_calibrators(msinfo, field, mode = 'both'):
-    """Check if field is in the South Calibrators database. 
-       Return model if it is. Return lsm if an lsm is available. 
-       Otherwise, return False. 
+    """Check if field is in the South Calibrators database.
+       Return model if it is. Return lsm if an lsm is available.
+       Otherwise, return False.
     """
 
     returnsky = False
@@ -231,14 +233,14 @@ def find_in_native_calibrators(msinfo, field, mode = 'both'):
         returnsky = True
     if mode == 'mod':
         returnmod = True
-    
+
     db = mkct.calibrator_database()
 
     with open(msinfo, 'r') as stdr:
         info = yaml.safe_load(stdr)
-        
+
     fielddb = hetfield(info, field, db)
-    
+
     if fielddb == False:
         return False
 
@@ -264,8 +266,8 @@ def find_in_native_calibrators(msinfo, field, mode = 'both'):
         return False
 
 def find_in_casa_calibrators(msinfo, field):
-    """Check if field is in the CASA NRAO Calibrators database. 
-       Return model if it is. Else, return False. 
+    """Check if field is in the CASA NRAO Calibrators database.
+       Return model if it is. Else, return False.
     """
 
     with open(msinfo, 'r') as stdra:

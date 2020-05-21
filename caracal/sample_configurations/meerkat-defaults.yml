@@ -28,7 +28,7 @@ prep:
 flag:
   enable: true
   field: calibrators
-  label_in: ''
+  label_in: cal
   flag_autocorr:
     enable: true
   flag_spw:
@@ -77,7 +77,8 @@ crosscal:
 
 inspect:
   enable: true
-  label_cal: '1gc'
+  label_in: 'cal'
+  label_plot: '1gc'
   fields:
     - bpcal
     - gcal

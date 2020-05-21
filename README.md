@@ -16,7 +16,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 
 ## Manual installation
 
-We strongly recommend and describe an installation using a Python3 virtual environment. Only try outside a virtual environment if you know what you are doing.
+We strongly recommend and describe an installation using a Python3 virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
 
 Choose the name of the virtual environment `${caracal-venv}`. Then:
 
@@ -48,7 +48,7 @@ stimela pull
 ```
 -->
 
-If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc) :
+If using [Singularity](https://github.com/sylabs/singularity), choose a pull folder `${singularity_pull_folder}`, where the [Singularity](https://github.com/sylabs/singularity) images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
 
 ```
 export SINGULARITY_PULLFOLDER=${WORKSPACE_ROOT}/singularity_images
@@ -67,7 +67,7 @@ stimela pull -p
 
 ## Installation with the caratekit.sh script
 
-Download the installation script https://github.com/ska-sa/caracal/blob/master/caratekit.sh . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`.
+Download the installation script [caratekit.sh](https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh) . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
 
 If using [Docker](https://www.docker.com):
 
@@ -93,10 +93,22 @@ If you installed CARACal with the caratekit.sh script, activate the virtual envi
 source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 ```
 
-Run CARACal with:
+If using [Docker](https://www.docker.com) run CARACal with:
 
 ```
-caracal - c ${your-configuration-file}
+caracal -c ${your-configuration-file}
 ```
 
-For more detailed installation instructions, trouble-shooting tips and a full user manual please see https://caracal.readthedocs.io.
+If using [Singularity](https://github.com/sylabs/singularity) run CARACal with:
+
+```
+caracal -ct singularity -c ${your-configuration-file}
+```
+
+For more detailed installation instructions, trouble-shooting tips and a full user manual please see [caracal.readthedocs.io](https://caracal.readthedocs.io).
+
+
+## Known and new issues
+
+We encourage users who experience problems installing or running CARACal to check for known issues or open a new issue at
+our [GitHub issues page](https://github.com/caracal-pipeline/caracal/issues). When opening a new issue, please include your installation type (e.g., Docker, Singularity), software version (both CARACal and Stimela), CARACal configuration file, and CARACal log files.

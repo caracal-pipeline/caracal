@@ -127,18 +127,20 @@ def worker(pipeline, recipe, config):
     subdir = config['dirname']
     output_dir = os.path.join(pipeline.diagnostic_plots, subdir) if subdir else pipeline.diagnostic_plots
 
+    if config['field'] == 'calibrators':
+        fields = ['bpcal', 'gcal', 'fcal']
+    elif config['field'] == 'target':
+        fields = ['target']
+    else:
+        fields = config['field'].split(',')
+        if set(fields).difference(['fcal', 'bpcal', 'gcal']):
+            raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. " \
+                             "User selected {}".format(",".join(fields)))
+    log.info(f"plotting fields: {' '.join(fields)}")
+
     for iobs in range(nobs):
 
         prefix = prefixes[iobs]
-        fields = config['field'].split(',')
-
-        if 'calibrators' in fields:
-            fields = ['bpcal','gcal']
-
-        for fd in fields:
-            if fd not in ['target','fcal','bpcal','gcal']:
-                raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
-                                 "User selected: {}".format(fields))
 
         '''GET LIST OF INPUT MS'''
         mslist = []
@@ -155,18 +157,19 @@ def worker(pipeline, recipe, config):
         else:
             mslist.append('{0:s}_{1:s}.ms'.format(msn, label_in))
 
-        for m in mslist:
-            if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(
-                    "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
+        for msname in mslist:
+            if not os.path.exists(os.path.join(pipeline.msdir, msname)):
+                raise IOError("MS {0:s} does not exist. Please check that is where it should be.".format(msname))
 
         for msname in mslist:
+            log.info(f"plotting MS: {msname}")
 
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, os.path.splitext(msname)[0])
 
             corr = config['correlation']
             with open(msinfo, 'r') as stdr:
-                ms_corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+                ms_info_dict = yaml.load(stdr, Loader=yaml.FullLoader)
+            ms_corrs = ms_info_dict['CORR']['CORR_TYPE']
 
             if corr == 'auto' or corr == 'all':
                 corr = ','.join(ms_corrs)
@@ -175,24 +178,28 @@ def worker(pipeline, recipe, config):
             if not corr:
                 log.warning(f"No correlations found to plot for {msname}")
                 continue
+            log.info(f"plotting correlations: {corr}")
 
             # new-school plots
             if config['shadems']['enable']:
                 plot_args = []
-                # get field names
+                # make a map: {(fields): field_type}, so we can loop over fields below, but only include unique fields
+                field_map = OrderedDict()
+                all_fields = set()
                 for field_type in fields:
-
                     if (label_in != '') and (config['field'] == 'target'):
-                        with open(msinfo, 'r') as stdr:
-                            field_names = yaml.load(stdr,Loader=yaml.FullLoader)['FIELD']['NAME']
+                        field_names = tuple(ms_info_dict['FIELD']['NAME'])
                     else:
-                        field_names = getattr(pipeline, field_type)[iobs]
+                        field_names = tuple(getattr(pipeline, field_type)[iobs])
+                    field_map.setdefault(field_names, field_type)
+                    all_fields.update(field_names)
 
+                for field_names, field_type in field_map.items():
                     args = OrderedDict(
                                 # shadems uses its own "{}" codes in output name, so put it together like this
                                 png="{}-{}-{}-{}".format(prefix, label, field_type,
                                     "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
-                                title="'{ms} "+field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
+                                title="'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                                 col=config['shadems']['default_column'],
                                 corr=corr.replace(' ',''),
                                 field=",".join(field_names))
@@ -213,6 +220,7 @@ def worker(pipeline, recipe, config):
                                           "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
                     title="'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                     col=config['shadems']['default_column'],
+                    field=",".join(all_fields),
                     corr=corr.replace(' ', ''))
                 for iplot, plotspec in enumerate(config['shadems']['plots_by_corr']):
                     if plotspec:
@@ -225,7 +233,7 @@ def worker(pipeline, recipe, config):
                         plot_args.append(" ".join(plotspec))
 
                 if plot_args:
-                    step = 'plot-shadems-ms{2:d}'.format(iplot, field_type, iobs)
+                    step = 'plot-shadems-ms{0:d}'.format(iobs)
                     recipe.add("cab/shadems_direct", step,
                                dict(ms=msname, args=plot_args,
                                     ignore_errors=config["shadems"]["ignore_errors"]),
@@ -310,6 +318,16 @@ def worker(pipeline, recipe, config):
                             opts["num-cores"] = config["num_cores"]
                             opts["mem-limit"] = config["mem_limit"]
 
+                    # make map from field name to field_type, field_id
+                    field_map = OrderedDict()
+                    for field_type in fields:
+                        for field in getattr(pipeline, field_type)[iobs]:
+                            if label_in != '' and field_type == 'target':
+                                fid = 0
+                            else:
+                                fid = utils.get_field_id(msinfo, field)[0]
+                            field_map.setdefault(field, (field_type, fid))
+
                     if plotter == "shadems":
                         corr = corr.replace(" ", "").split(",")
                         for it, co in enumerate(corr):
@@ -319,18 +337,12 @@ def worker(pipeline, recipe, config):
                         # for each corr
                         for co in corr.split(","):
                             opts["corr"] = co
-                            for fields_ in fields:
-                                for field in getattr(pipeline, fields_)[iobs]:
-                                    if (label_in != '') and (config['field'] == 'target'):
-                                       fid = 0
-                                    else:
-                                        fid = utils.get_field_id(msinfo, field)[0]
-
-                                    globals()[plotter](pipeline, recipe, config,
-                                                       plotname, msname, field,
-                                                       iobs, label, prefix, opts,
-                                                       ftype=fields_, fid=fid, output_dir=output_dir,
-                                                       corr_label=ms_corrs[int(co)])
+                            for field, (field_type, fid) in field_map.items():
+                                globals()[plotter](pipeline, recipe, config,
+                                                   plotname, msname, field,
+                                                   iobs, label, prefix, opts,
+                                                   ftype=field_type, fid=fid, output_dir=output_dir,
+                                                   corr_label=ms_corrs[int(co)])
 
                     elif plotter == "ragavi_vis" and not opts["iter-axis"] == "corr":
                         # change the labels to indices
@@ -343,28 +355,16 @@ def worker(pipeline, recipe, config):
                         # for each corr
                         for co in corr.split(","):
                             opts["corr"] = co
-                            for fields_ in fields:
-                                for field in getattr(pipeline, fields_)[iobs]:
-                                    if (label_in != '') and (config['field'] == 'target'):
-                                        fid = 0
-                                    else:
-                                        fid = utils.get_field_id(msinfo, field)[0]
-
-                                    globals()[plotter](pipeline, recipe, config,
-                                                       plotname, msname, field,
-                                                       iobs, label, prefix, opts,
-                                                       ftype=fields_, fid=fid, output_dir=output_dir,
-                                                       corr_label=ms_corrs[int(co)])
+                            for field, (field_type, fid) in field_map.items():
+                                globals()[plotter](pipeline, recipe, config,
+                                                   plotname, msname, field,
+                                                   iobs, label, prefix, opts,
+                                                   ftype=field_type, fid=fid, output_dir=output_dir,
+                                                   corr_label=ms_corrs[int(co)])
                     else:
                         opts["corr"] = corr
-                        for fields_ in fields:
-                            for field in getattr(pipeline, fields_)[iobs]:
-                                if (label_in != '') and (config['field'] == 'target'):
-                                    fid = 0
-                                else:
-                                    fid = utils.get_field_id(msinfo, field)[0]
-
-                                globals()[plotter](pipeline, recipe, config,
-                                                   plotname, msname, field, iobs, label,
-                                                   prefix, opts, ftype=fields_,
-                                                   fid=fid, output_dir=output_dir)
+                        for field, (field_type, fid) in field_map.items():
+                            globals()[plotter](pipeline, recipe, config,
+                                               plotname, msname, field, iobs, label,
+                                               prefix, opts, ftype=field_type,
+                                               fid=fid, output_dir=output_dir)

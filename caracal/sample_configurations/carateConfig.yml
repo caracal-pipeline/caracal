@@ -44,7 +44,8 @@ flag:
 
 inspect:
   label_in: 'cal'
-  label_cal: 'pre1gc'
+  field: 'calibrators'
+  label_plot: 'pre1gc'
   enable: true
   dirname: initial
   shadems:
@@ -99,7 +100,8 @@ crosscal:
 
 inspect__2:
   label_in: 'cal'
-  label_cal: '1gc'
+  field: 'calibrators'
+  label_plot: '1gc'
   enable: true
   dirname: crosscal
   shadems:

@@ -76,7 +76,7 @@ crosscal:
 inspect: 
   enable: true
   label_in: 'cal'
-  label_cal: '1gc'
+  label_plot: '1gc'
   fields:
     - bpcal
     - gcal

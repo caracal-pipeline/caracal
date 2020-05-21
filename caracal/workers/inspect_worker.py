@@ -138,7 +138,7 @@ def worker(pipeline, recipe, config):
         for fd in fields:
             if fd not in ['target','fcal','bpcal','gcal']:
                 raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
-                                 "User selected: {}".format(field_to_split))
+                                 "User selected: {}".format(fields))
 
         '''GET LIST OF INPUT MS'''
         mslist = []

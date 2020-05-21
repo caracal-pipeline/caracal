@@ -140,15 +140,6 @@ def worker(pipeline, recipe, config):
                 raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
                                  "User selected: {}".format(field_to_split))
 
-#        if any(x in fields for x in ['fcal','bpcal','gcal']):
-#           calfields = []
-#           for fd in fields:
-#               for elem in getattr(pipeline, fd)[iobs]:
-#                   calfields.append(elem)
-#           field_names = [','.join(np.unique(np.array(calfields))),]
-#        else:
-#           field_names = pipeline.target[iobs]
-
         '''GET LIST OF INPUT MS'''
         mslist = []
         msn = pipeline.msnames[iobs][:-3]
@@ -330,7 +321,11 @@ def worker(pipeline, recipe, config):
                             opts["corr"] = co
                             for fields_ in fields:
                                 for field in getattr(pipeline, fields_)[iobs]:
-                                    fid = utils.get_field_id(msinfo, field)[0]
+                                    if (label_in != '') and (config['field'] == 'target'):
+                                       fid = 0
+                                    else:
+                                        fid = utils.get_field_id(msinfo, field)[0]
+
                                     globals()[plotter](pipeline, recipe, config,
                                                        plotname, msname, field,
                                                        iobs, label, prefix, opts,
@@ -353,7 +348,11 @@ def worker(pipeline, recipe, config):
                             opts["corr"] = co
                             for fields_ in fields:
                                 for field in getattr(pipeline, fields_)[iobs]:
-                                    fid = utils.get_field_id(msinfo, field)[0]
+                                    if (label_in != '') and (config['field'] == 'target'):
+                                        fid = 0
+                                    else:
+                                        fid = utils.get_field_id(msinfo, field)[0]
+
                                     globals()[plotter](pipeline, recipe, config,
                                                        plotname, msname, field,
                                                        iobs, label, prefix, opts,
@@ -363,7 +362,11 @@ def worker(pipeline, recipe, config):
                         opts["corr"] = corr
                         for fields_ in fields:
                             for field in getattr(pipeline, fields_)[iobs]:
-                                fid = utils.get_field_id(msinfo, field)[0]
+                                if (label_in != '') and (config['field'] == 'target'):
+                                    fid = 0
+                                else:
+                                    fid = utils.get_field_id(msinfo, field)[0]
+
                                 globals()[plotter](pipeline, recipe, config,
                                                    plotname, msname, field, iobs, label,
                                                    prefix, opts, ftype=fields_,

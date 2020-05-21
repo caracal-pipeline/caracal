@@ -94,7 +94,8 @@ crosscal:
 inspect:
   enable: true
   label_in: 'cal'
-  label_cal: '1gc1'
+  field: 'calibrators'
+  label_plot: '1gc1'
   fields:
     - bpcal
     - gcal

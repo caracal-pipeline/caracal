@@ -50,7 +50,7 @@ crosscal:
 
 inspect:
   label_in: cal
-  label_cal: 1gc
+  label_plot: 1gc
   dirname: crosscal
   enable: true
   standard_plotter: ragavi_vis

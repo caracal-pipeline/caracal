@@ -140,11 +140,16 @@ def worker(pipeline, recipe, config):
         msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
 
         corr = config['correlation']
-        if corr == 'auto':
-            with open(msinfo, 'r') as stdr:
-                corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
-            corrs = ','.join(corrs)
-            corr = corrs
+        with open(msinfo, 'r') as stdr:
+            ms_corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
+
+        if corr == 'auto' or corr == 'all':
+            corr = ','.join(ms_corrs)
+        elif corr == 'diag' or corr == 'parallel':
+            corr = ','.join([c for c in ms_corrs if len(c) == 2 and c[0] == c[1]])
+        if not corr:
+            log.warning(f"No correlations found to plot for {msname}")
+            continue
 
         # new-school plots
         if config['shadems']['enable']:
@@ -196,8 +201,8 @@ def worker(pipeline, recipe, config):
                                 ignore_errors=config["shadems"]["ignore_errors"]),
                            input=pipeline.input, output=output_dir,
                            label="{0:s}:: Plotting".format(step))
-            else:
-                log.warning("The shadems section is enabled, but doesn't specify any plot_by_field or plot_by_corr")
+            # else:
+            #     log.warning("The shadems section is enabled, but doesn't specify any plot_by_field or plot_by_corr")
 
         # old-school plots
 
@@ -277,13 +282,10 @@ def worker(pipeline, recipe, config):
 
                 if plotter == "shadems":
                     # change the labels to indices
-                    with open(msinfo, 'r') as stdr:
-                        corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
-
                     corr = corr.replace(" ", "").split(",")
                     for it, co in enumerate(corr):
-                        if co in corrs:
-                            corr[it] = str(corrs.index(co))
+                        if co in ms_corrs:
+                            corr[it] = str(ms_corrs.index(co))
                     corr = ",".join(corr)
                     # for each corr
                     for co in corr.split(","):
@@ -295,17 +297,14 @@ def worker(pipeline, recipe, config):
                                                    plotname, msname, field,
                                                    iobs, label, prefix, opts,
                                                    ftype=fields_, fid=fid, output_dir=output_dir,
-                                                   corr_label=corrs[int(co)])
+                                                   corr_label=ms_corrs[int(co)])
 
                 elif plotter == "ragavi_vis" and not opts["iter-axis"] == "corr":
                     # change the labels to indices
-                    with open(msinfo, 'r') as stdr:
-                        corrs = yaml.load(stdr)['CORR']['CORR_TYPE']
-
                     corr = corr.replace(" ", "").split(",")
                     for it, co in enumerate(corr):
-                        if co in corrs:
-                            corr[it] = str(corrs.index(co))
+                        if co in ms_corrs:
+                            corr[it] = str(ms_corrs.index(co))
                     corr = ",".join(corr)
 
                     # for each corr
@@ -318,7 +317,7 @@ def worker(pipeline, recipe, config):
                                                    plotname, msname, field,
                                                    iobs, label, prefix, opts,
                                                    ftype=fields_, fid=fid, output_dir=output_dir,
-                                                   corr_label=corrs[int(co)])
+                                                   corr_label=ms_corrs[int(co)])
                 else:
                     opts["corr"] = corr
                     for fields_ in specific_fields(plotname) or fields:

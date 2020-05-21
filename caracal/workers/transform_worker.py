@@ -63,7 +63,7 @@ def worker(pipeline, recipe, config):
         field_to_split = config['split_field']['field'].split(',')
 
         if 'calibrators' in field_to_split:
-            field_to_split = ['fcal','bpcal','gcal']
+            field_to_split = ['fcal','bpcal','gcal','xcal']
 
         for fd in field_to_split:
             if fd not in ['target','fcal','bpcal','gcal']:

@@ -28,7 +28,7 @@ prep:
 flag:
   enable: true
   field: calibrators
-  label_in: ''
+  label_in: cal
   flag_autocorr:
     enable: true
   flag_spw:

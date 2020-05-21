@@ -37,7 +37,7 @@ def plotms(pipeline, recipe, config, plotname, msname, field, iobs, label, prefi
         "avgchannel": config[plotname]['avgchan'],
         "coloraxis": sdm(colouraxis),
         "iteraxis": sdm(opts.get('iteraxis', None)),
-        "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}.png'.format(prefix, label, field, plotname, ftype),
+        "plotfile": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}.png'.format(prefix, label, ftype, field, plotname),
         "expformat": 'png',
         "exprange": 'all',
         "overwrite": True,
@@ -57,7 +57,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
     elif col == "data":
         col = "DATA"
     if corr_label:
-        corr_label = "_Corr_" + corr_label
+        corr_label = "Corr" + corr_label
     else:
         corr_label = ""
 
@@ -68,7 +68,7 @@ def shadems(pipeline, recipe, config, plotname, msname, field, iobs, label, pref
         "xaxis": opts['xaxis'],
         "yaxis": opts['yaxis'],
         "col": col,
-        "png": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}.png'.format(prefix, label, field, plotname, ftype, corr_label),
+        "png": '{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}.png'.format(prefix, label, ftype, field, plotname, corr_label),
     },
         input=pipeline.input,
         output=output_dir,
@@ -83,7 +83,7 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
     elif col == "data":
         col = "DATA"
     if corr_label:
-        corr_label = "_Corr_" + corr_label
+        corr_label = "Corr" + corr_label
     else:
         opts['corr'] = "0:"
         corr_label = ""
@@ -100,7 +100,7 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
         # "colour-axis": opts.get("colour-axis", None),
         "data-column": col,
         "field": str(fid),
-        "htmlname": "{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}".format(prefix, label, field, plotname, ftype, corr_label),
+        "htmlname": "{0:s}-{1:s}-{2:s}-{3:s}-{4:s}-{5:s}".format(prefix, label, ftype, field, plotname, corr_label),
         "iter-axis": sdm(opts.get('iter-axis', None)),
         # "tbin": float(config[plotname]['avgtime']),
 
@@ -133,7 +133,7 @@ def worker(pipeline, recipe, config):
         fields = config['field'].split(',')
 
         if 'calibrators' in fields:
-            fields = ['fcal','bpcal','gcal']
+            fields = ['bpcal','gcal']
 
         for fd in fields:
             if fd not in ['target','fcal','bpcal','gcal']:

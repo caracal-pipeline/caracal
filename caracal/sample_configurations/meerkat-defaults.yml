@@ -79,9 +79,7 @@ inspect:
   enable: true
   label_in: 'cal'
   label_plot: '1gc'
-  fields:
-    - bpcal
-    - gcal
+  field: 'calibrators'
   real_imag: 
     enable: true
     avgtime: '60'

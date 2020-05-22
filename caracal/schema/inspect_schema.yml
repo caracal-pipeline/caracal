@@ -68,9 +68,9 @@ mapping:
         required: false
       correlation: 
         type: str
-        desc: Label specifying the correlations.
+        desc: Label(s) specifying the correlations. Use the special values 'diag' and 'all' to select only diagonal (paralell hand) or all correlations.
         required: false
-        example: 'XX, YY'
+        example: 'diag'
       num_cores:
         type: int
         required: false

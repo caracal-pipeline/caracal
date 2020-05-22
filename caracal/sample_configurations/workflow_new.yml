@@ -96,9 +96,6 @@ inspect:
   label_in: 'cal'
   field: 'calibrators'
   label_plot: '1gc1'
-  fields:
-    - bpcal
-    - gcal
   amp_ant: 
     enable: true
     avgtime: '60'

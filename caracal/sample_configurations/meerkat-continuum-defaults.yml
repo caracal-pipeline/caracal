@@ -76,10 +76,8 @@ crosscal:
 inspect: 
   enable: true
   label_in: 'cal'
+  field: 'calibrators'
   label_plot: '1gc'
-  fields:
-    - bpcal
-    - gcal
   real_imag: 
     enable: true
     avgtime: '60'

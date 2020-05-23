@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy',
-    'stimela>=1.4.3',
+    'stimela>=1.6.0',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -32,11 +32,11 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
-      description="End-to-end data reduction pipeline for radio interferometry data",
+      description="Containerised data reduction pipeline for radio interferometry data",
       author="Caracal peeps",
       author_email="sphemakh@gmail.com",
       url="https://github.com/ska-sa/caracal",

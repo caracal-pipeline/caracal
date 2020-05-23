@@ -64,7 +64,7 @@ crosscal:
     b_fillgaps: 70
     plotgains: true
   secondary:
-    order: KGAKG
+    order: KGAKF
     apply: B
     combine: ["", "", null, "", ""] 
     solint: [inf, inf, null, inf, inf]

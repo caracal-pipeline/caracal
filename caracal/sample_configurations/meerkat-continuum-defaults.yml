@@ -62,7 +62,7 @@ crosscal:
     plotgains: true
   secondary:
     reuse_existing_gains: true
-    order: KGAKG
+    order: KGAKF
     apply: B
     combine: ["", "", null, "", ""] 
     solint: [inf, inf, null, inf, inf]

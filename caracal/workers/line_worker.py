@@ -695,6 +695,8 @@ def worker(pipeline, recipe, config):
             "multiscale-scale-bias": config['make_cube']['wscl_multiscale_bias'],
             "no-update-model-required": config['make_cube']['wscl_noupdatemod']
         }
+        
+        wsclean_version = "2.6" if config['make_cube']['wscl_multiscale'] else None
 
         for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))
@@ -792,8 +794,8 @@ def worker(pipeline, recipe, config):
                            step, line_image_opts,
                            input=pipeline.input,
                            output=pipeline.output,
-                           version='2.6' if line_image_opts.get('multiscale') else None,
-                           label='{0:s}:: Image Line'.format(step))
+                           label='{0:s}:: Image Line'.format(step),
+                           version=wsclean_version)
                 recipe.run()
                 recipe.jobs = []
 

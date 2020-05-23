@@ -792,6 +792,7 @@ def worker(pipeline, recipe, config):
                            step, line_image_opts,
                            input=pipeline.input,
                            output=pipeline.output,
+                           version='2.6' if line_image_opts.get('multiscale') else None,
                            label='{0:s}:: Image Line'.format(step))
                 recipe.run()
                 recipe.jobs = []

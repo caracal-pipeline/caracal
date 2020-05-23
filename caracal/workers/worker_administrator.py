@@ -207,14 +207,14 @@ class worker_administrator(object):
                 version, tag = speclist[0]
                 if version is None:
                     log.info(f"  {name}: forcing tag {tag} for all invocations")
-                    cabspecs[name] = dict(tag=tag)
+                    cabspecs[name] = dict(tag=tag, force=True)
                     continue
                 elif tag is None:
                     log.info(f"  {name}: forcing version {version} for all invocations")
                     cabspecs[name] = dict(version=version)
                     continue
             # else make dict of version: tag pairs
-            cabspecs[name] = dict(version={version: tag for version, tag in speclist})
+            cabspecs[name] = dict(version={version: tag for version, tag in speclist}, force=True)
             for version, tag in speclist:
                 log.info(f"  {name}: using tag {tag} for version {version}")
         return cabspecs

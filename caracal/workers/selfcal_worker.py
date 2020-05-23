@@ -541,9 +541,11 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
+        wsclean_version = None
         if multiscale ==True:
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
+            wsclean_version = "2.6"
 
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':
@@ -577,7 +579,8 @@ def worker(pipeline, recipe, config):
                    image_opts,
                    input=pipeline.input,
                    output=pipeline.output,
-                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num),
+                   version=wsclean_version)
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)

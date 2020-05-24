@@ -246,10 +246,10 @@ mapping:
             required: False
             example: ''
           uvrange:
-            desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in default units of metres but, e.g., '0~1000km' and '0-500klambda' can also be specified. Leaving this parameter blank will select the entire range in UV-distance.
+            desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in units of metres. Leaving this parameter blank will select the entire range in UV-distance.
             type: str
             required: False
-            example: ''
+            example: None
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.
         type: map

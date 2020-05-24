@@ -4,25 +4,25 @@ mapping:
     type: map
     desc: Perform direction-dependent calibration on the data (SHARED-RISK DEVELOPMENT MODE).
     mapping:
-     enable:
+      enable:
        type: bool
        desc: Execute the ddcal worker (i.e. carry out DD-calibration).
        required: True
        example: 'False'
-     label_in:
+      label_in:
         type: str
         desc: Label of the .MS files to process. By default uses the 'corr' label_in for self-calibrated dataset.
         required: False
         example: 'corr'
-     use_pb:
+      use_pb:
         type: bool
         desc: Enable primary beam usage in making the DD-corrected DDFacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.
         required: False
-        example: 'False' 
+        example: 'False'
 
-     image_dd:
+      image_dd:
        type: map
-       desc: Imaging parameters for DD calibration with DDFacet. 
+       desc: Imaging parameters for DD calibration with DDFacet.
        mapping:
          enable:
            type: bool
@@ -34,12 +34,12 @@ mapping:
            desc: Number of pixels in the image. Note that DDFacet has its own super-special scheme to decide the actual number of pixels, so this is only an approximation.
            required: False
            example: '8000'
-         use_mask: 
+         use_mask:
            type: bool
            desc: Enable clean mask for DDFacet initial imaging. Note that this doubles the imaging time since it runs DDFacet twice -- once to get a preliminary image to make a mask with (mask is made by the cleanmask tool), and once to get the final image with masking. Previous WSClean masks cannot be used because pixel numbers might be different.
            required: False
            example: 'True'
-         mask_sigma: 
+         mask_sigma:
            type: float
            desc: The number of standard deviations (i.e. sigma_rms) to use when clipping the initial image for masking.
            required: False
@@ -54,27 +54,27 @@ mapping:
            desc: The number of sigma-clipping iterations to perform on the image, for masking, or set to 0 to clip until convergence is achieved.
            required: False
            example: '20'
-         mask_overlap: 
+         mask_overlap:
            type: float
            desc: Overlap region for the boxes, given as a fraction of the number of boxes.
            required: False
-           example: '0.3' 
+           example: '0.3'
          mask_tol:
            type: float
            desc: Tolerance for dilating the mask. Dilation will stop when the percentage difference between dilations is smaller than this value.
            required: False
-           example: '0.75'     
+           example: '0.75'
          cell:
            type: float
            desc: Pixel size in arcsec.
            required: False
            example: '1.3'
-         facets_nfacets: 
+         facets_nfacets:
            type: int
            desc: Number of facets to use, and is the same as the Facets-NFacets parameter of DDFacet.
            required: false
            example: '24'
-         weight_col: 
+         weight_col:
           type: str
           enum: ["WEIGHT_SPECTRUM", "WEIGHT", "IMAGING_WEIGHT"]
           desc: Read data weights from the specified column. Options are WEIGHT_SPECTRUM, WEIGHT, and (for rarer occasions) IMAGING_WEIGHT.
@@ -127,7 +127,7 @@ mapping:
            desc: Gain setting for the deconvolution loops.
            required: false
            example: '0.1'
-         deconv_fluxthr:  
+         deconv_fluxthr:
            type: float
            desc: Absolute flux-density threshold at which deconvolution is stopped, in units of Jy. Relevant for HMP and Hogbom modes.
            required: false
@@ -146,7 +146,7 @@ mapping:
            type: int
            desc: Number of processes / threads to use in parallel mode. 0 = use all of those available. 1 = disable parallelism.
            required: false
-           example: "0" 
+           example: "0"
          predict_colname:
            type: str
            desc: MS column to write the predicted visibilities corresponding to the model. Setting '' will disable this parameter.
@@ -159,10 +159,10 @@ mapping:
            example: "True"
          cache_reset:
            type: bool
-           desc: Reset all caches (including PSF and dirty image). Change from default at your own risk. 
+           desc: Reset all caches (including PSF and dirty image). Change from default at your own risk.
            required: false
            example: "True"
-         log_boring: 
+         log_boring:
            type: bool
            desc: Enable progress bars and other pretty console output. Doesn't seem to work. But who knows, try it out.
            required: false
@@ -172,18 +172,18 @@ mapping:
            desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
            required: False
            example: 'CORRECTED_DATA'
-         data_chunkhours: 
+         data_chunkhours:
            type: float
            desc: Chunk data into time bins of X hours to conserve memory, where X is this parameter.
            required: false
            example: '0.05'
          output_mode:
-           type: str 
+           type: str
            enum: ["Dirty", "Clean", "Predict", "PSF"]
            desc: Output mode of DDFacet. Options are 'Dirty', 'Clean', 'Predict', and 'PSF'. This setting defaults to 'Clean', since that is what we want to do in this worker.
            required: false
            example: 'Clean'
-     calibrate_dd:
+      calibrate_dd:
        type: map
        desc: Direction-dependent calibration parameters.
        mapping:
@@ -213,16 +213,16 @@ mapping:
            desc: Mode in which sources are tagged for DD calibration. Options are 'auto' (which uses CATDagger), and 'manual' (for which one needs to provide a list of sources). Use 'auto' with caution and at your own risk.
            required: false
            example: 'manual'
-         de_target_manual: 
+         de_target_manual:
            seq:
-             - type: str 
+             - type: str
            desc: List of target fieldnames for carrying out DD calibration. The remaining fields will not undergo DD calibration.
            required: false
            example: ''
          de_sources_manual:
            seq:
              - type: str
-           desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target_manual' list. Use ';' to separate different sources per target.           
+           desc: List of sources per target to tag for DD calibration, in the same order as the 'de_target_manual' list. Use ';' to separate different sources per target.
            required: false
            example: ''
          sol_min_bl:
@@ -232,7 +232,7 @@ mapping:
            example: '100'
          madmax_enable:
            type: bool
-           desc: Enable madmax flagging in CubiCal. 
+           desc: Enable madmax flagging in CubiCal.
            required: false
            example: 'true'
          madmax_thr:
@@ -260,7 +260,7 @@ mapping:
            example: 'CORRECTED_DATA'
          dd_out_data_col:
            type: str
-           desc: Output data column. Note that the ddcal worker is currently hardcoded for this being set to 'SUBDD_DATA'. 
+           desc: Output data column. Note that the ddcal worker is currently hardcoded for this being set to 'SUBDD_DATA'.
            required: false
            example: 'SUBDD_DATA'
          dd_weight_col:
@@ -268,22 +268,22 @@ mapping:
            desc: Column to read weights from, and apply them by default. Specify an empty string to disable this parameter.
            required: false
            example: "WEIGHT"
-         dd_sol_stall_quorum: 
+         dd_sol_stall_quorum:
            type: float
            desc: Minimum percentage of solutions that must have stalled before terminating the solver.
            required: false
            example: "0.95"
-         dd_g_type: 
+         dd_g_type:
            type: str
            desc: Gain matrix type for the G-Jones matrix. Keep this set to 'complex-2x2', because DD-calibration fails otherwise.
            required: false
            example: 'complex-2x2'
-         dd_g_clip_high: 
+         dd_g_clip_high:
            desc: Amplitude clipping -- flag solutions with any amplitudes above this value for G-Jones matrix.
            type: float
            required: false
            example: "1.5"
-         dd_g_clip_low: 
+         dd_g_clip_low:
            desc: Amplitude clipping -- flag solutions with any amplitudes below this value for G-Jones matrix.
            type: float
            required: false
@@ -293,27 +293,27 @@ mapping:
            type: str
            required: false
            example: "phase-diag"
-         dd_g_max_prior_error: 
+         dd_g_max_prior_error:
            type: float
            required: false
            desc: Flag solution intervals where the prior error estimate is above this value for G-Jones matrix.
            example: "0.35"
-         dd_g_max_post_error: 
+         dd_g_max_post_error:
            type: float
            required: false
            desc: Flag solution intervals where the posterior variance estimate is above this value for G-Jones matrix.
            example: "0.35"
-         dd_dd_max_prior_error: 
+         dd_dd_max_prior_error:
            type: float
            required: false
            desc: Flag solution intervals where the prior error estimate is above this value for DE term.
            example: "0.35"
-         dd_dd_max_post_error: 
+         dd_dd_max_post_error:
            type: float
            required: false
            desc: Flag solution intervals where the posterior variance estimate is above this value for DE term.
            example: "0.35"
-         dd_g_timeslots_int: 
+         dd_g_timeslots_int:
            type: int
            desc: Time solution interval in timeslot units for G-Jones matrix.
            required: false
@@ -323,7 +323,7 @@ mapping:
            desc: Frequency solution interval in channel units for G-Jones matrix.
            example: "0"
            required: false
-         dd_dd_timeslots_int: 
+         dd_dd_timeslots_int:
            type: int
            desc: Time solution interval in timeslot units for DE-Jones matrix.
            required: false
@@ -337,20 +337,20 @@ mapping:
            type: int
            desc: Number of processes.
            example: "25"
-           required: false  
+           required: false
 
 
-     copy_data:
+      copy_data:
        type: map
-       desc: Copy DD-calibrated data to CORRECTED_DATA column. THIS IS DANGEROUS - only if you want to go ahead with line imaging. 
+       desc: Copy DD-calibrated data to CORRECTED_DATA column. THIS IS DANGEROUS - only if you want to go ahead with line imaging.
        mapping:
-         enable:  
+         enable:
            type: bool
            desc: Enable copying of DD-calibrated data to CORRECTED_DATA column.
            required: false
            example: 'True'
 
-     image_wsclean:
+      image_wsclean:
        type: map
        desc: WSClean imaging paramaters for ddcal worker.
        mapping:
@@ -468,7 +468,7 @@ mapping:
             required: false
             example: 'False'
 
-     transfer_model_dd:
+      transfer_model_dd:
        type: map
        desc: Repredict WSClean model to the highest channel resolution.
        mapping:
@@ -524,11 +524,30 @@ mapping:
            example: '0'
          dd_mem_frac:
            type: float
-           desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size. 
+           desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
            required: false
            example: '0.5'
-     report:
-       type: bool
-       required: false
-       desc: (Re)generate a full HTML report at the end of this segment.
-       example: 'False'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

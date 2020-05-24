@@ -2,7 +2,6 @@
 import caracal
 from caracal import log, pckgdir, notebooks
 import subprocess
-import json
 import sys
 import os
 import traceback
@@ -13,12 +12,6 @@ import shutil
 from caracal.dispatch_crew.config_parser import config_parser as cp
 import traceback
 import caracal.dispatch_crew.caltables as mkct
-from http.server import SimpleHTTPRequestHandler
-from http.server import HTTPServer
-from multiprocessing import Process
-import webbrowser
-import base64
-import collections
 try:
    from urllib.parse import urlencode
 except ImportError:
@@ -27,6 +20,8 @@ except ImportError:
 import ruamel.yaml
 from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
+
+from collections import OrderedDict
 
 # GIGJ commenting lines initiating a report
 # try:
@@ -195,6 +190,35 @@ class worker_administrator(object):
             self.hires_msnames = ['{0:s}{1:s}.ms'.format(
                 msname[:-3], "-"+label if label else "") for msname in self.msnames]
 
+    def parse_cabspec_dict(self, cabspec_seq):
+        """Turns sequence of cabspecs into a Stimela cabspec dict"""
+        cabspecs = OrderedDict()
+        speclists = OrderedDict()
+        # collect all specs encountered, sort them by cab
+        for spec in cabspec_seq:
+            name, version, tag = spec["name"], spec.get("version") or None, spec.get("tag") or None
+            if not version and not tag:
+                log.warning(f"Neither version nor tag specified for cabspec {name}, ignoring")
+                continue
+            speclists.setdefault(name, []).append((version, tag))
+        # now process each cab's list of specs.
+        for name, speclist in speclists.items():
+            if len(speclist) == 1:
+                version, tag = speclist[0]
+                if version is None:
+                    log.info(f"  {name}: forcing tag {tag} for all invocations")
+                    cabspecs[name] = dict(tag=tag, force=True)
+                    continue
+                elif tag is None:
+                    log.info(f"  {name}: forcing version {version} for all invocations")
+                    cabspecs[name] = dict(version=version)
+                    continue
+            # else make dict of version: tag pairs
+            cabspecs[name] = dict(version={version: tag for version, tag in speclist}, force=True)
+            for version, tag in speclist:
+                log.info(f"  {name}: using tag {tag} for version {version}")
+        return cabspecs
+
     def init_pipeline(self):
         def make_symlink(link, target):
             if os.path.lexists(link):
@@ -278,6 +302,12 @@ class worker_administrator(object):
                 raise ImportError('Worker "{0:s}" could not be found at {1:s}'.format(
                     _worker, self.workers_directory))
 
+        if self.config["general"]["cabs"]:
+            log.info("Configuring cab specification overrides")
+            cabspecs_general = self.parse_cabspec_dict(self.config["general"]["cabs"])
+        else:
+            cabspecs_general = {}
+
         active_workers = []
         # first, check that workers import, and check their configs
         for _name, _worker, i in self.workers:
@@ -285,7 +315,7 @@ class worker_administrator(object):
             if 'enable' in config and not config['enable']:
                 self.skip.append(_worker)
                 continue
-            log.info("configuring worker {}".format(_name))
+            log.info("Configuring worker {}".format(_name))
             try:
                 worker = __import__(_worker)
             except ImportError:
@@ -293,11 +323,16 @@ class worker_administrator(object):
                 raise
             if hasattr(worker, 'check_config'):
                 worker.check_config(config)
-            active_workers.append((_name, worker, config))
+            # check for cab specs
+            cabspecs = cabspecs_general
+            if config["cabs"]:
+                cabspecs = cabspecs.copy()
+                cabspecs.update(self.parse_cabspec_dict(config["cabs"]))
+            active_workers.append((_name, worker, config, cabspecs))
 
         # now run the actual pipeline
         #for _name, _worker, i in self.workers:
-        for _name, worker, config in active_workers:
+        for _name, worker, config, cabspecs in active_workers:
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             label = getattr(worker, 'LABEL', None)
@@ -309,9 +344,9 @@ class worker_administrator(object):
                                     ms_dir=self.msdir,
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
+                                    cabspecs=cabspecs,
                                     logfile=False, # no logfiles for recipes
-                                    logfile_task='{0}/log-{1}-{{task}}-{2}.txt'.format(
-                                        self.logs, label, self.timeNow))
+                                    logfile_task=f'{self.logs}/log-{label}-{{task}}-{self.timeNow}.txt')
 
             recipe.JOB_TYPE = self.container_tech
             self.CURRENT_WORKER = _name

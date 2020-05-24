@@ -398,6 +398,7 @@ def worker(pipeline, recipe, config):
         },
         input=INPUT,
         output=OUTPUT+"/"+outdir,
+        version='2.6' if config[key]['img_ws_multi_scale'] else None,
         label='img_wsclean-{0:s}-{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
 
     def run_crystalball(mslist,field):

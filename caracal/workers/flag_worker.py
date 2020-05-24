@@ -391,7 +391,7 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "mask": config['flag_mask']['mask'],
                                "accumulation_mode": 'or',
-                               "uvrange": sdm.dismissable(config['flag_mask']['uvrange']),
+                               "uvrange": sdm.dismissable(config['flag_mask']['uvrange'] or None),
                                "memory": 4096,
                            },
                            input=pipeline.input,

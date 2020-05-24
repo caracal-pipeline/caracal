@@ -7,7 +7,7 @@ mapping:
       title:
         type: str
         required: false
-        desc: Execute the 'general' worker.
+        desc: An optional project title.
         example: ''
       rawdatadir:
         type: str
@@ -55,4 +55,23 @@ mapping:
         desc: Render report_notebooks to HTML at the end of each pipeline run
         required: false
         type: bool
-        example: 'True'
+        example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

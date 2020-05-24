@@ -167,14 +167,15 @@ class config_parser(object):
             else:
                 schema_fn = os.path.join(caracal.pckgdir,"schema", "{0:s}_schema.yml".format(_worker))
 
-                if not os.path.exists(schema_fn):
+                if _worker == "worker" or not os.path.exists(schema_fn):
                     errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
                     continue
 
                 with open(schema_fn, 'r') as file:
-                    schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+                    full_schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
 
-                self._schemas[worker] = self._schemas[_worker] = schema_fn, schema["mapping"][_worker]
+                schema = full_schema["mapping"][_worker]
+                self._schemas[worker] = self._schemas[_worker] = schema_fn, schema
 
             # validate worker config
             core = Core(source_data={_worker: variables}, schema_files=[schema_fn])
@@ -281,10 +282,13 @@ class config_parser(object):
                 dtype = __builtins__[subVars['seq'][0]['type']]
                 if type(subVars["example"]) is not list:
                     subVars["example"] = list(str.split(subVars['example'].replace(' ', ''), ','))
-                if subVars['seq'][0]['type'] == 'bool':
+                if dtype is bool:
                     default_value=[]
                     for i in range(0,len(subVars['example'])):
                         default_value.append(typecast(dtype, subVars['example'][i],string=False))
+                elif dtype is map:
+                    dtype = dict
+                    default_value = []  # FIX THIS!
                 else:
                     default_value = list(map(dtype, subVars["example"]))
             else:

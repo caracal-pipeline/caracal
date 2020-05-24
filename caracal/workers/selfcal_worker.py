@@ -485,6 +485,7 @@ def worker(pipeline, recipe, config):
                    fake_image_opts,
                    input=pipeline.input,
                    output=pipeline.output,
+                   version='2.6' if fake_image_opts.get('multiscale') else None,
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def image(trg, num, img_dir, mslist, field):
@@ -542,7 +543,7 @@ def worker(pipeline, recipe, config):
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
         wsclean_version = None
-        if multiscale ==True:
+        if multiscale:
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
             wsclean_version = "2.6"

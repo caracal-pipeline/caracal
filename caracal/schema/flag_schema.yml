@@ -243,7 +243,7 @@ mapping:
           mask:
             desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
             type: str
-            required: False
+            required: True
             example: ''
           uvrange:
             desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in units of metres. Leaving this parameter blank will select the entire range in UV-distance.

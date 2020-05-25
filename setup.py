@@ -32,7 +32,7 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 setup(name=PACKAGE_NAME,
       version=__version__,

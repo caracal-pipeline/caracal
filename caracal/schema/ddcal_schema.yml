@@ -461,7 +461,7 @@ mapping:
               - type: int
             desc: Scales for multiscale cleaning, in pixels.
             required: false
-            example: '10, 20, 30'
+            example: '0, 5, 10, 20'
          img_ws_local_rms:
             type: bool
             desc: Switch on local-rms measurement for cleaning.

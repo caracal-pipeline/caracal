@@ -1593,7 +1593,7 @@ then
     PYTHONPATH_OLD=${PYTHONPATH}
 fi
 
-if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
+if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
 then
     
     # Save them if they are present
@@ -1645,13 +1645,16 @@ echo "The directory"
 echo "$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
 echo "and its content will be created/changed."
 
+if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
+then
 [[ -n ${SKP} ]] || { \
-       [[ -z ${SPW} ]] || echo "The content of the Singularity pull folder ${CARATE_WORKSPACE}/singularity_pullfolder" ; \
-    [[ -z ${SPT} ]] || echo "The content of the Singularity pull folder ${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}/singularity_pullfolder" ; \
-    [[ -z ${CARATE_SINGULARITY_PULLFOLDER} ]] || echo "The content of the Singularity pull folder ${CARATE_SINGULARITY_PULLFOLDER}" ; \
-    [[ -z ${SINGULARITY_PULLFOLDER} ]] || echo "The content of the Singularity pull folder ${SINGULARITY_PULLFOLDER}" ; \
-    echo " will be deleted and a reinstallation will be attempted." ; \
+       [[ -z ${SPW} ]] || echo "The Singularity pull folder ${CARATE_WORKSPACE}/singularity_pullfolder" ; \
+    [[ -z ${SPT} ]] || echo "The Singularity pull folder ${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}/singularity_pullfolder" ; \
+    [[ -z ${CARATE_SINGULARITY_PULLFOLDER} ]] || echo "The Singularity pull folder ${CARATE_SINGULARITY_PULLFOLDER}" ; \
+    [[ -z ${SINGULARITY_PULLFOLDER} ]] || echo "The Singularity pull folder ${SINGULARITY_PULLFOLDER}" ; \
+    echo "will be deleted and a reinstallation will be attempted." ; \
     }
+fi
 echo "Depending on the settings, other directories"
 echo "will also be changed."
 echo ""

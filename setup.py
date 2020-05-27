@@ -29,6 +29,7 @@ requirements = [
     'regions',
     'radiopadre-client>=1.0rc12',
     'jinja2',
+    'psutil',
 ]
 
 PACKAGE_NAME = 'caracal'

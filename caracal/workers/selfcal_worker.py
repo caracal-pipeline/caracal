@@ -15,6 +15,7 @@ from astropy.io import fits as fits
 from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
+import psutil
 
 NAME = 'Continuum Imaging and Self-calibration Loop'
 LABEL = 'selfcal'
@@ -282,7 +283,13 @@ def worker(pipeline, recipe, config):
             freq_chunk = int(max(all_freq_solution))
 
     min_uvw = config['minuvw_m']
+
     ncpu = config['ncpu']
+    if ncpu == 0:
+      ncpu = psutil.cpu_count()
+    else:
+      ncpu = min(ncpu, psutil.cpu_count())
+
     mfsprefix = ["", '-MFS'][int(config['img_nchans'] > 1)]
 
     # label of MS where we transform selfcal gaintables
@@ -457,6 +464,8 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config[key]['clean_cutoff'][0],
             "savesourcelist": False,
             "fitbeam": False,
+            "parallel-deconvolution": sdm.dismissable(config['img_paralldeconv']),
+            "threads": ncpu,
         }
         if maxuvl > 0.:
             fake_image_opts.update({
@@ -522,6 +531,8 @@ def worker(pipeline, recipe, config):
             "fit-spectral-pol": config['img_specfit_nrcoeff'],
             "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
+            "parallel-deconvolution": sdm.dismissable(config['img_paralldeconv']),
+            "threads": ncpu,
         }
         if maxuvl > 0.:
             image_opts.update({
@@ -591,7 +602,7 @@ def worker(pipeline, recipe, config):
             forn_thresh = config[key]['fornax_thr'][
                 num if len(config[key]['fornax_thr']) >= num+1 else -1]
 
-            image_opts_forn = {
+            sofia_opts_forn = {
                 "import.inFile": imagename,
                 "steps.doFlag": True,
                 "steps.doScaleNoise": False,
@@ -627,7 +638,7 @@ def worker(pipeline, recipe, config):
         outmask = pipeline.prefix+'_'+field+'_'+str(num+1)+'_clean'
         outmaskName = outmask+'_mask.fits'
 
-        image_opts = {
+        sofia_opts = {
             "import.inFile": imagename,
             "steps.doFlag": True,
             "steps.doScaleNoise": config['image']['cleanmask_localrms'][num if len(config['image']['cleanmask_localrms']) >= num+1 else -1],
@@ -671,7 +682,7 @@ def worker(pipeline, recipe, config):
         }
         if config[key]['flag']:
             flags_sof = config[key]['flagregion']
-            image_opts.update({"flag.regions": flags_sof})
+            sofia_opts.update({"flag.regions": flags_sof})
 
         if config[key]['inputmask']:
             mask_fits = 'masking/'+config[key]['inputmask']
@@ -731,19 +742,19 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Copy image header to mask')
 
-            image_opts.update({"import.maskFile": mask_regrid_fits})
-            image_opts.update({"import.inFile": imagename})
+            sofia_opts.update({"import.maskFile": mask_regrid_fits})
+            sofia_opts.update({"import.inFile": imagename})
 
         if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
 
             recipe.add('cab/sofia', step+"-fornax_special",
-                       image_opts_forn,
+                       sofia_opts_forn,
                        input=pipeline.output,
                        output=pipeline.output+'/masking/',
                        label='{0:s}:: Make SoFiA mask'.format(step))
 
             fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
-            image_opts.update({"import.maskFile": fornax_namemask})
+            sofia_opts.update({"import.maskFile": fornax_namemask})
 
         elif config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == False:
 
@@ -811,10 +822,10 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='Extracted regridded mosaic')
 
-            image_opts.update({"import.maskFile": fornax_namemask_regr})
+            sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
         recipe.add('cab/sofia', step,
-                   image_opts,
+                   sofia_opts,
                    input=pipeline.output,
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))

@@ -57,9 +57,9 @@ mapping:
         example: '0'
       ncpu:
         type: int
-        desc: Number of CPUs to use.
+        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
         required: false
-        example: '5'
+        example: '0'
       minuvw_m:
         type: int
         desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
@@ -153,16 +153,21 @@ mapping:
         required: false
         example: 'I'
       img_multiscale:
-          type: bool
-          desc: Switch on multiscale cleaning.
-          required: false
-          example: 'False'
+        type: bool
+        desc: Switch on multiscale cleaning.
+        required: false
+        example: 'False'
       img_multiscale_scales:
-          seq:
-            - type: int
-          desc: Scales of multiscale [0,10,20,etc.] in pixels.
-          required: false
-          example: '0, 5, 10, 20'
+        seq:
+          - type: int
+        desc: Scales of multiscale [0,10,20,etc.] in pixels.
+        required: false
+        example: '0, 5, 10, 20'
+      img_paralldeconv:
+        desc: Speed-up deconvolution by deconvolving subimages in parallel. Subimages will be at most of the size given by this parameter. If set to 0 no parallel deconvolution is performed.
+        type: int
+        required: false
+        example: '900'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map

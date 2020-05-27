@@ -162,7 +162,7 @@ mapping:
             - type: int
           desc: Scales of multiscale [0,10,20,etc.] in pixels.
           required: false
-          example: '10, 20, 30'
+          example: '0, 5, 10, 20'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map

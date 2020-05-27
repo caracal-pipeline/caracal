@@ -175,6 +175,22 @@ do
         (( $nextcount <= $# )) || { echo "Argument expected for --install-attempt or -ia switch, stopping."; kill "$PPID"; exit 1; }
         IA=${!nextcount}
     fi
+
+
+    if [[ "$arg" == "--singularity-all-workspace" ]] || [[ "$arg" == "-saw" ]]
+    then
+	SCW=1
+	STW=1
+	SPW=1
+    fi
+    
+    if [[ "$arg" == "--singularity-all-home" ]] || [[ "$arg" == "-sah" ]]
+    then
+	SCH=1
+	STH=1
+	SPT=1
+    fi
+
     ####
     ####
     ####   
@@ -574,6 +590,10 @@ then
     echo ""
     echo "  --singularity-keep-pullfolder -skp  Do not delete the content of"
     echo "                                      \$SINGULARITY_PULLFOLDER"
+    echo ""
+    echo "  --singularity-all-home -sah         Alias for -sch -sth -spt"
+    echo ""
+    echo "  --singularity-all-home -saw         Alias for -scw -stw -spw"
     echo ""
     echo "  --caracal-test-id ARG -ct ARG       Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_TEST_ID"

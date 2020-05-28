@@ -163,11 +163,11 @@ mapping:
         desc: Scales of multiscale [0,10,20,etc.] in pixels.
         required: false
         example: '0, 5, 10, 20'
-      img_paralldeconv:
-        desc: Speed-up deconvolution by deconvolving subimages in parallel. Subimages will be at most of the size given by this parameter. If set to 0 no parallel deconvolution is performed.
+      img_nrdeconvsubimg:
+        desc: Speed-up deconvolution by splitting the image into a number "img_nrdeconvsubimg" of subimages, which are deconvolved in parallel. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above).
         type: int
         required: false
-        example: '900'
+        example: '0'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map

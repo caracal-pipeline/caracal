@@ -1,7 +1,8 @@
-schema_version: 1.0.1
+schema_version: 1.0.2
 
 getdata:
   dataid: ['']
+  extension: ms
 
 obsconf:
   refant: '0'

@@ -153,20 +153,21 @@ class worker_administrator(object):
             if value:
                 setattr(self, item, value)
 
-        for item in 'refant fcal bpcal gcal target xcal'.split():
-            value = getattr(self, item, None)
-            if value and len(value) == 1:
-                value = value*nobs
-                setattr(self, item, value)
-
         if self.rawdatadir:
             for dataid in self.dataid:
                 pattern = os.path.join(self.rawdatadir, f"{dataid}.{ext}")
                 msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
                 self.msnames += msnames
                 self.prefixes += [ f"{self.prefix}-{x}" for x in map(noext, msnames)]
-
             self.nobs = len(self.msnames)
+
+        for item in 'refant fcal bpcal gcal target xcal'.split():
+            value = getattr(self, item, None)
+            if value and len(value) == 1:
+                value = value*self.nobs
+                setattr(self, item, value)
+
+
 
     def get_msnames(self, label, fields=[]):
         if label:

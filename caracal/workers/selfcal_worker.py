@@ -291,7 +291,7 @@ def worker(pipeline, recipe, config):
     label_tmodel = config['transfer_model']['transfer_to_label']
 
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, label)
+        pipeline.target, pipeline.msnames, label, pipeline.prefixes)
 
     i = 0
     for i, m in enumerate(all_msfile):
@@ -344,7 +344,7 @@ def worker(pipeline, recipe, config):
     i += 1
     if pipeline.enable_task(config, 'transfer_apply_gains'):
         t, all_msfile_tgain, ms_dict_tgain = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label_tgain)
+            pipeline.target, pipeline.msnames, label_tgain, pipeline.prefixes)
         for j, m in enumerate(all_msfile_tgain):
             # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
@@ -392,7 +392,7 @@ def worker(pipeline, recipe, config):
 
     if pipeline.enable_task(config, 'transfer_model'):
         t, all_msfile_tmodel, ms_dict_tmodel = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label_tmodel)
+            pipeline.target, pipeline.msnames, label_tmodel, pipeline.prefixes)
         for m in all_msfile_tmodel:  # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(

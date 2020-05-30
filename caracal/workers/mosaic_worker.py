@@ -162,7 +162,7 @@ def worker(pipeline, recipe, config):
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
         all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label)
+            pipeline.target, pipeline.msnames, label, pipeline.prefixes)
         n_targets = len(all_targets)
         caracal.log.info(
             'The number of targets to be mosaicked is {0:d}'.format(n_targets))

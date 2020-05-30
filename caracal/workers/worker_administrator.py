@@ -23,15 +23,6 @@ assert ruamel.yaml.version_info >= (0, 12, 14)
 
 from collections import OrderedDict
 
-# GIGJ commenting lines initiating a report
-# try:
-#    import caracal.scripts as scripts
-#    from caracal.scripts import reporter as mrr
-#    REPORTS = True
-# except ImportError:
-#    log.warning(
-#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
-#    REPORTS = False
 REPORTS = True
 
 class worker_administrator(object):
@@ -60,13 +51,13 @@ class worker_administrator(object):
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
+        self.getdata_ext = self.config["getdata"]["extension"]
 
         self.logs_symlink = self.config['general']['output'] + '/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
-
         if not self.config['general']['rawdatadir']:
-            self.config['general']['rawdatadir'] = os.getcwd()
+            self.config['general']['rawdatadir'] = self.msdir
             self.rawdatadir = self.config['general']['rawdatadir']
         else:
             self.rawdatadir = self.config['general']['rawdatadir']
@@ -149,47 +140,48 @@ class worker_administrator(object):
         """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
-        self.dataid = dataid
-        self.nobs = nobs = len(self.dataid)
-        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
-        self.msnames = ['{:s}.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.split_msnames = ['{:s}_split.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.cal_msnames = ['{:s}_cal.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.hires_msnames = ['{:s}_hires.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = [
-            '{0:s}-{1:s}'.format(self.prefix, os.path.basename(dataid)) for dataid in self.dataid]
 
-        for item in 'input msdir output'.split():
+        self.dataid = dataid
+        ext = self.getdata_ext
+        noext = lambda name: name.strip(f".{ext}")
+
+        self.msnames = []
+        self.prefixes = []
+
+        for item in 'rawdatadir input msdir output'.split():
             value = getattr(self, item, None)
             if value:
                 setattr(self, item, value)
 
-        for item in 'rawdatadir refant fcal bpcal gcal target xcal'.split():
+        for item in 'refant fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
             if value and len(value) == 1:
                 value = value*nobs
                 setattr(self, item, value)
 
-    def set_cal_msnames(self, label):
-        if self.virtconcat:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
-        else:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3], "-"+label if label else "") for msname in self.msnames]
+        if self.rawdatadir:
+            for dataid in self.dataid:
+                pattern = os.path.join(self.rawdatadir, f"{dataid}.{ext}")
+                msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
+                self.msnames += msnames
+                self.prefixes += [ f"{self.prefix}-{x}" for x in map(noext, msnames)]
 
-    def set_hires_msnames(self, label):
-        if self.virtconcat:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
-        else:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3], "-"+label if label else "") for msname in self.msnames]
+            self.nobs = len(self.msnames)
 
+    def get_msnames(self, label, fields=[]):
+        if label:
+            label = f"-{label}"
+        if fields:
+            msnames = []
+            for field in fields:
+                msnames += [f'{prefix}-{field}{label}.ms' for prefix in self.prefixes]
+            return msnames
+
+        else:
+            return [f'{prefix}{label}.ms' for prefix in self.prefixes]
+
+
+        
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""
         cabspecs = OrderedDict()
@@ -357,7 +349,6 @@ class worker_administrator(object):
             # 1st get correct section of config file
             log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-
             log.info("{0:s}: running".format(label))
             recipe.run()
             log.info("{0:s}: finished".format(label))
@@ -374,10 +365,3 @@ class worker_administrator(object):
                 report_updated = True
             else:
                 report_updated = False
-
-        # generate final report
-        if self.generate_reports and not report_updated:
-            self.regenerate_reports()
-
-    def regenerate_reports(self):
-        notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)

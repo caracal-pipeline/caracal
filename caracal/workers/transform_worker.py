@@ -52,32 +52,49 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label_in = config['label_in']
+    from_target = config['from_target']
     label_out = config['label_out']
+    split_field = config['split_field']['field']
+    target_fields = ['target']
+    cal_fields = ['fcal','bpcal','gcal','xcal']
 
-    pipeline.set_hires_msnames(label_in)
+    if label_in:
+        msins = pipeline.get_msnames(label_in)
+    else:
+        msins = pipeline.msnames
 
+
+    mslist = pipeline.get_msnames(label_out)
     for i in range(pipeline.nobs):
-
         prefix = pipeline.prefixes[i]
-        msname = pipeline.msnames[i][:-3]
-        field_to_split = config['split_field']['field'].split(',')
+        if from_target:
+           msins = pipeline.get_msnames(label_in, 
+                            fields=map(utils.filter_name, pipeline.target[i]))
+        else:
+            fms = msins[i]
+        field_to_split = split_field.split(',')
 
         if 'calibrators' in field_to_split:
-            field_to_split = ['fcal','bpcal','gcal','xcal']
+            field_to_split.remove('calibrators')
+            field_to_split += cal_fields 
 
         for fd in field_to_split:
-            if fd not in ['target','fcal','bpcal','gcal', 'xcal']:
-                raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. "\
+            if fd not in target_fields + cal_fields:
+                raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal', 'gcal' or 'xcal'. "\
                                  "User selected: {}".format(field_to_split))
 
-        if any(x in field_to_split for x in ['fcal','bpcal','gcal']):
+        if any(x in field_to_split for x in cal_fields):
            calfields = []
            for fd in field_to_split:
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
-           target_ls = [','.join(np.unique(np.array(calfields))),]
+           target_ls = [','.join(calfields)]
+           msouts = [mslist[i]]
         else:
            target_ls = pipeline.target[i]
+           msouts = pipeline.get_msnames(label_out, 
+                            fields=map(utils.filter_name, target_ls))
+          
 
         #use existing calibration library if user gives one
         if pipeline.enable_task(config['split_field'], 'otfcal') and config['split_field']['otfcal']['callib']:
@@ -131,24 +148,15 @@ def worker(pipeline, recipe, config):
             docallib = False
             dcol = config['split_field']['col']
 
-        target_iter=0
-        for target in target_ls:
-            field = utils.filter_name(target)
-
-            if config['split_field']['field'] == 'target':
-                fms = pipeline.hires_msnames[i] if label_in == \
-                       '' else '{0:s}-{1:s}_{2:s}.ms'.format(msname, field, label_in)
-                tms = '{0:s}-{1:s}_{2:s}.ms'.format(
-                       msname, field, label_out)
-            else:
-                fms = pipeline.hires_msnames[i] if label_in == \
-                       '' else '{0:s}_{1:s}.ms'.format(msname, label_in)
-                tms = '{0:s}_{1:s}.ms'.format(
-                       msname, label_out)
+        target_iter = 0
+        for fld, target in enumerate(target_ls):
+            tms = msouts[fld]
+            if from_target:
+                fms = msins[fld]
 
             # Rewind flags
             available_flagversions = manflags.get_flags(pipeline, fms)
-            if config['rewind_flags']['enable']:
+            if config['rewind_flags']['enable'] and label_in:
                 version = config['rewind_flags']['version']
                 if version in available_flagversions:
                     substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
@@ -162,7 +170,7 @@ def worker(pipeline, recipe, config):
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, fms,
                         config, flags_before_worker, flags_after_worker)
 
-            flagv = tms+'.flagversions'
+            flagv = tms + '.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
                 step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
@@ -174,7 +182,7 @@ def worker(pipeline, recipe, config):
 
                 recipe.add('cab/casa_mstransform', step,
                            {
-                               "vis": fms,
+                               "vis": fms if label_in else fms + ":input",
                                "outputvis": tms,
                                "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
                                "timebin": config['split_field']['time_avg'],
@@ -189,7 +197,7 @@ def worker(pipeline, recipe, config):
                                "docallib": docallib,
                                "callib": sdm.dismissable(callib+':output' if pipeline.enable_task(config['split_field'], 'otfcal') else None),
                            },
-                           input=pipeline.input,
+                           input=pipeline.input if label_in else pipeline.rawdatadir,
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
 

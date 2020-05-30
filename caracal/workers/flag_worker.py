@@ -19,14 +19,10 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        prefixes = [pipeline.prefix]
-        nobs = 1
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
+
+    msnames = pipeline.get_msnames(label)
+    prefixes = pipeline.prefixes
+    nobs = pipeline.nobs
 
     msiter=0
     for i in range(nobs):
@@ -36,31 +32,21 @@ def worker(pipeline, recipe, config):
 
         prefix = pipeline.prefixes[i]
 
-        '''GET LIST OF INPUT MS'''
-        mslist = []
-        msn = pipeline.msnames[i][:-3]
-
-        if label == '':
-          mslist.append(pipeline.msnames[i])
-
-        elif config['field'] == 'target':
+        if config['field'] == 'target':
            target_ls = pipeline.target[i]
-           for target in target_ls:
-                field = utils.filter_name(target)
-                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
-
-        elif config['field'] == 'calibrators':
-            mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
-
-        for m in mslist:
-            if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(
-                    "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
+           mslist = pipeline.get_msnames(label, 
+                                fields=map(utils.filter_name, target_ls))
+        else:
+            mslist = [msnames[i]]
 
         for j, msname in enumerate(mslist):
+            prefix = os.path.splitext(msname)[0]
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.obsinfo, msname[:-3])
+                pipeline.obsinfo, prefix)
 
+            if not os.path.exists(os.path.join(pipeline.msdir, msname)):
+                raise IOError(
+                    "MS file {0:s} does not exist. Please check that is where it should be.".format(msname))
             if not os.path.exists(msinfo):
                 raise IOError(
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))

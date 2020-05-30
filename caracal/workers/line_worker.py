@@ -189,13 +189,13 @@ def worker(pipeline, recipe, config):
     else:
         flabel = label
     all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, flabel)
+        pipeline.target, pipeline.msnames, flabel, pipeline.prefixes)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
-    pipeline.prefixes = [
+    prefixes = [
         '{2:s}-{0:s}-{1:s}'.format(did, config['label_in'],
             pipeline.prefix) for did in pipeline.dataid]
-    prefixes = pipeline.prefixes
+    #prefixes = pipeline.prefixes
     restfreq = config['restfreq']
 
     for i, msfile in enumerate(all_msfiles):
@@ -596,7 +596,7 @@ def worker(pipeline, recipe, config):
 
         if config['make_cube']['use_mstransform']:
             all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel)
+                pipeline.target, pipeline.msnames, flabel, pipeline.prefixes)
             for i, msfile in enumerate(all_msfiles):
                 # If channelisation changed during a previous pipeline run
                 # as stored in the obsinfo.json file
@@ -935,7 +935,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
         if config['make_cube']['use_mstransform']:
-            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel)
+            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel, pipeline.prefixes)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
                     msinfo = '{0:s}/{1:s}-obsinfo.json'.format(

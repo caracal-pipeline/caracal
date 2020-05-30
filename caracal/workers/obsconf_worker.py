@@ -4,7 +4,7 @@ import yaml
 import caracal
 import sys
 import numpy as np
-from os import path
+import os
 
 NAME = 'Automatically Categorize Observed Fields'
 LABEL = 'obsconf'
@@ -16,19 +16,15 @@ def repeat_val(val, n):
     return l
 
 def worker(pipeline, recipe, config):
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        prefixes = [pipeline.prefix]
-        nobs = 1
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
+    msnames = pipeline.msnames
+    prefixes = pipeline.prefixes
+    nobs = pipeline.nobs
+    recipe.msdir = pipeline.rawdatadir
 
     for i in range(nobs):
         prefix = prefixes[i]
         msname = msnames[i]
-        msroot = msname[:-3]
+        msroot = os.path.splitext(msname)[0]
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo']['listobs']:

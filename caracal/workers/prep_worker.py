@@ -11,29 +11,24 @@ LABEL = 'prep'
 def worker(pipeline, recipe, config):
     label = config['label_in']
     wname = pipeline.CURRENT_WORKER
+    field_name = config["field"]
 
+    msnames = pipeline.get_msnames(label)
+    msdir = pipeline.msdir
     for i in range(pipeline.nobs):
-        mslist = []
-        msn = pipeline.msnames[i][:-3]
         prefix = pipeline.prefixes[i]
 
-        if label=='':
-            mslist.append(pipeline.msnames[i])
-
-        elif config['field'] == 'target':
-           for target in pipeline.target[i]:
-                field = utils.filter_name(target)
-                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
-
-        elif config['field'] == 'calibrators':
-            mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
-
-        for m in mslist:
-            if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(
-                    "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
+        if field_name == 'target':
+           fields = map(utils.filter_name, pipeline.target[i])
+           mslist = pipeline.get_msnames(label, fields=fields)
+        else:
+            mslist = [msnames[i]]
 
         for msname in mslist:
+            if not os.path.exists(os.path.join(msdir, msname)):
+                caracal.log.error(f"MS file {msdir}/{msname} does not exist. Please check that is where it should be.")
+                raise IOError
+
             if pipeline.enable_task(config, 'fixuvw'):
                 step = 'fixuvw-ms{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,

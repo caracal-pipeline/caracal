@@ -115,14 +115,9 @@ def worker(pipeline, recipe, config):
     uvrange = config['uvrange']
     plotter = config['standard_plotter']
 
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        prefixes = [pipeline.prefix]
-        nobs = 1
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
+    label_in = config['label_in']
+    msnames = pipeline.get_msnames(label_in)
+    nobs = pipeline.nobs
 
     subdir = config['dirname']
     output_dir = os.path.join(pipeline.diagnostic_plots, subdir) if subdir else pipeline.diagnostic_plots
@@ -139,23 +134,14 @@ def worker(pipeline, recipe, config):
     log.info(f"plotting fields: {' '.join(fields)}")
 
     for iobs in range(nobs):
-
-        prefix = prefixes[iobs]
-
-        '''GET LIST OF INPUT MS'''
-        mslist = []
-        msn = pipeline.msnames[iobs][:-3]
+        
         label = config['label_plot']
-        label_in = config['label_in']
 
-        if not label_in:
-            mslist.append(pipeline.msnames[iobs])
-        elif config['field'] == 'target':
-            for target in pipeline.target[iobs]:
-                field = utils.filter_name(target)
-                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label_in))
+        if config['field'] == 'target':
+            fields = map(utils.filter_name, pipeline.target[iobs])
+            mslist = pipeline.get_msnames(label_in, fields=fields)
         else:
-            mslist.append('{0:s}_{1:s}.ms'.format(msn, label_in))
+            mslist = [msnames[iobs]]
 
         for msname in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, msname)):
@@ -163,8 +149,9 @@ def worker(pipeline, recipe, config):
 
         for msname in mslist:
             log.info(f"plotting MS: {msname}")
+            prefix = os.path.splitext(msname)[0]
 
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, os.path.splitext(msname)[0])
+            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, prefix)
 
             corr = config['correlation']
             with open(msinfo, 'r') as stdr:

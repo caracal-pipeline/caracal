@@ -7,7 +7,7 @@ import caracal.dispatch_crew.caltables as mkct
 import re
 import astropy.io.fits as fitsio
 import codecs
-
+import os
 
 def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -360,7 +360,7 @@ def filter_name(string):  # change field names into alphanumerical format for na
 
 
 # creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files
-def target_to_msfiles(targets, msnames, label):
+def target_to_msfiles(targets, msnames, label, prefixes):
     target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
 
     for t in targets:  # list all targets per input ms and make a unique list of all target fields
@@ -371,13 +371,14 @@ def target_to_msfiles(targets, msnames, label):
 
     # make a list of all input ms file names for each target field
     for i, ms in enumerate(msnames):
+        prefix = prefixes[i]
+        msprefx, ext = os.path.splitext(ms)
         for t in target_ls[i]:
             t = filter_name(t)
             if label:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}_{2:s}.ms'.format(ms[:-3], t, label))
+                target_ms_ls.append(f'{prefix}-{t}-{label}{ext}')
             else:
-                target_ms_ls.append('{0:s}-{1:s}.ms'.format(ms[:-3], t))
+                target_ms_ls.append(f'{prefix}-{t}{ext}')
 
     for t in all_target:  # group ms files by target field name
         tmp = []

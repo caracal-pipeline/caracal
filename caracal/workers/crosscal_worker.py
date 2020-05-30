@@ -418,26 +418,17 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
+    label_in = config["label_in"]
 
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        nobs = 1
-        prefixes = [pipeline.prefix]
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
+    msnames = pipeline.get_msnames(label_in)
+    nobs = pipeline.nobs
 
     for i in range(nobs):
-
-        if config["label_in"]:
-            msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
-        else: msname = msnames[i]
-
+        msname = msnames[i]
         refant = pipeline.refant[i] or '0'
-        prefix = prefixes[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
-        prefix = '{0:s}-{1:s}'.format(prefix, label)
+        prefix = f"{pipeline.prefixes[i]}-{label}"
+        msprefx = os.path.splitext(msname)[0]
+        msinfo = os.path.join(pipeline.obsinfo, f"{msprefx}-obsinfo.json")
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             # Write/rewind flag versions
@@ -621,7 +612,7 @@ def worker(pipeline, recipe, config):
 
         callib_dict = dict(zip(calmodes, applycal_recipes))
 
-        with open(os.path.join(callib_dir, 'callib_{}.json'.format(prefix)), 'w') as json_file:
+        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'summary'):

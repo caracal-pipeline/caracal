@@ -57,9 +57,9 @@ mapping:
         example: '0'
       ncpu:
         type: int
-        desc: Number of CPUs to use.
+        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
         required: false
-        example: '5'
+        example: '0'
       minuvw_m:
         type: int
         desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
@@ -153,16 +153,21 @@ mapping:
         required: false
         example: 'I'
       img_multiscale:
-          type: bool
-          desc: Switch on multiscale cleaning.
-          required: false
-          example: 'False'
+        type: bool
+        desc: Switch on multiscale cleaning.
+        required: false
+        example: 'False'
       img_multiscale_scales:
-          seq:
-            - type: int
-          desc: Scales of multiscale [0,10,20,etc.] in pixels.
-          required: false
-          example: '0, 5, 10, 20'
+        seq:
+          - type: int
+        desc: Scales of multiscale [0,10,20,etc.] in pixels.
+        required: false
+        example: '0, 5, 10, 20'
+      img_nrdeconvsubimg:
+        desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
+        type: int
+        required: false
+        example: '0'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map
@@ -653,7 +658,7 @@ mapping:
             type: float
             desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
             required: false
-            example: '0.5'
+            example: '0.05'
       report:
         type: bool
         required: false

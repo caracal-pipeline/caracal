@@ -214,7 +214,7 @@ selfcal:
   transfer_model:
     enable: true
     num_workers: 12
-    mem_frac: 0.45
+    mem_frac: 0.05
     transfer_to_label: corr
 
 transform__4:

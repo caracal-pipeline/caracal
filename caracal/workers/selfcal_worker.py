@@ -294,7 +294,7 @@ def worker(pipeline, recipe, config):
     if nrdeconvsubimg == 1:
         wscl_parallel_deconv = None
     else:
-        wscl_parallel_deconv = np.ceil(config['img_npix']/np.sqrt(nrdeconvsubimg)).astype(int)
+        wscl_parallel_deconv = int(np.ceil(config['img_npix']/np.sqrt(nrdeconvsubimg)))
 
     mfsprefix = ["", '-MFS'][int(config['img_nchans'] > 1)]
 

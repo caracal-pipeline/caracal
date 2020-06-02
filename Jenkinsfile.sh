@@ -31,7 +31,11 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -lc ${caracal_version} \
                                                          -ct ${pull_request_name} \
                                                          -dm \
+							 -sm \
                                                          -or \
                                                          -f \
                                                          -op \
+							 -saw \
+							 -um
+
 rm -rf $TEST_OUTPUT_DIR/$pull_request_name/stimela-singularity

@@ -205,13 +205,13 @@ def worker(pipeline, recipe, config):
             pipeline.obsinfo, msfile[:-3])
         caracal.log.info('Updating info from {0:s}'.format(msinfo))
         with open(msinfo, 'r') as stdr:
-            spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+            spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
         caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
             len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         with open(msinfo, 'r') as stdr:
-            chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+            chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
             # To be done: add user selected  spw
             firstchanfreq = [ss[0] for ss in chfr]
             lastchanfreq = [ss[-1] for ss in chfr]
@@ -608,7 +608,7 @@ def worker(pipeline, recipe, config):
 
                     # Get nr of channels
                     with open(msinfo, 'r') as stdr:
-                        spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+                        spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
                         nchans = spw
                         nchans_all.append(nchans)
                     caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
@@ -616,7 +616,7 @@ def worker(pipeline, recipe, config):
 
                     # Get first chan, last chan, chan width
                     with open(msinfo, 'r') as stdr:
-                        chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+                        chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
                         firstchanfreq = [ss[0] for ss in chfr]
                         lastchanfreq = [ss[-1] for ss in chfr]
                         chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
@@ -625,7 +625,7 @@ def worker(pipeline, recipe, config):
 
                     # Get spectral reference frame
                     with open(msinfo, 'r') as stdr:
-                        specframe = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+                        specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
                         specframe_all.append(specframe)
                     caracal.log.info(
                         'The spectral reference frame is {0:}'.format(specframe))
@@ -641,13 +641,13 @@ def worker(pipeline, recipe, config):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msfile[:-3])
             with open(msinfo, 'r') as stdr:
-                spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+                spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw
                 nchans_all.append(nchans)
             caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                 len(spw), ','.join(map(str, spw))))
             with open(msinfo, 'r') as stdr:
-                specframe = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+                specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
                 specframe_all.append(specframe)
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
@@ -943,7 +943,7 @@ def worker(pipeline, recipe, config):
                     caracal.log.info(
                         'Updating info from {0:s}'.format(msinfo))
                     with open(msinfo, 'r') as stdr:
-                        spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+                        spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
                         nchans = spw
                         nchans_all.append(nchans)
                     caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
@@ -951,7 +951,7 @@ def worker(pipeline, recipe, config):
 
                     # Get first chan, last chan, chan width
                     with open(msinfo, 'r') as stdr:
-                        chfr = yaml.load(stdr)['SPW']['CHAN_FREQ']
+                        chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
                         firstchanfreq = [ss[0] for ss in chfr]
                         lastchanfreq = [ss[-1] for ss in chfr]
                         chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
@@ -960,7 +960,7 @@ def worker(pipeline, recipe, config):
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
                     with open(msinfo, 'r') as stdr:
-                        specframe = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+                        specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
                         specframe_all.append(specframe)
                     caracal.log.info(
                         'The spectral reference frame is {0:}'.format(specframe))
@@ -973,13 +973,13 @@ def worker(pipeline, recipe, config):
             msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
                 pipeline.obsinfo, msfile[:-3])
             with open(msinfo, 'r') as stdr:
-                spw = yaml.load(stdr)['SPW']['NUM_CHAN']
+                spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
                 nchans = spw
                 nchans_all.append(nchans)
             caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                 len(spw), ','.join(map(str, spw))))
             with open(msinfo, 'r') as stdr:
-                specframe = yaml.load(stdr)['SPW']['MEAS_FREQ_REF']
+                specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
                 specframe_all.append(specframe)
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))

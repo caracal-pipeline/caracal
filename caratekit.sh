@@ -631,7 +631,7 @@ then
     echo "                                      \$home=your_test_directory/.home"
     echo ""
     echo "  --singularity-nocache -snc          Set \${SINGULARITY_DISABLE_CACHE}"
-    echo "                                      to 'True'"
+    echo "                                      to 'True' (otherwise unset)"
     echo ""
     echo "  --stimela-pull-test -spt            Use your_test_directory/stimela_pullfolder"
     echo "                                      as \${STIMELA_PULLFOLDER}"
@@ -900,7 +900,10 @@ echo "    STIMELA_PULLFOLDER=\$CARATE_WORKSPACE/stimela_pullfolder"
 echo "    If switches --singularity-nocache or -snc are set, the"
 echo "    environment variable \${SINGULARITY_DISABLE_CACHE} is set to"
 echo "    True for the time of the caratekit run (disabling caching)"
-echo "    and then reset to its original value (or unset)"
+echo "    and then reset to its original value (or unset). If"
+echo "    --singularity-nocache or -snc are not set, the environment variable"
+echo "    \${SINGULARITY_DISABLE_CACHE} is unset for the duration of the"
+echo "    caratekit run."
 echo ""
 echo "  - when switches --singularity-minimal, -sm,"
 echo "    --singularity-alternative, -se, --singularity-installation, -si"
@@ -3404,11 +3407,15 @@ then
 			 mkdir -p ${SINGULARITY_TMPDIR} ; \
 	}
     
-    [[ -z ${SNC} ]] || { \
-			 ss_sing+="export SINGULARITY_DISABLE_CACHE=\"True\"" ; \
-			 ss_sing+=$'\n' ; \
-			 export SINGULARITY_DISABLE_CACHE="True" ; \
-	}
+    if [[ -n ${SNC} ]]
+    then
+	ss_sing+="export SINGULARITY_DISABLE_CACHE=\"True\""
+	ss_sing+=$'\n'
+	export SINGULARITY_DISABLE_CACHE="True"
+    else
+	[[ -z ${SINGULARITY_DISABLE_CACHE} ]] || unset SINGULARITY_DISABLE_CACHE
+    fi
+    
 
     [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || { \
 					       ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \

@@ -11,7 +11,7 @@ When using CARACal please be aware of and adhere to the [CARACal publication pol
 - [Python](https://www.python.org) 3.5 or higher.
 - Container technology of your choice. It can be one of the following:
   - [Docker](https://www.docker.com);
-  - [Singularity](https://github.com/sylabs/singularity) > 2.6.0-dist;
+  - [Singularity](https://github.com/sylabs/singularity) > 3.5 (nearly all functionality available for > 2.6.0-dist)
   - [Podman](https://podman.io) **(currently not fully supported)**.
 
 ## Manual installation

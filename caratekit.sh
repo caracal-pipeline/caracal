@@ -180,6 +180,11 @@ do
         CARATE_SINGULARITY_TMPDIR=${!nextcount}
     fi
 
+    if [[ "$arg" == "--singularity-nocache" ]] || [[ "$arg" == "-snc" ]]
+    then
+	SNC=1
+    fi
+
     if [[ "$arg" == "--stimela-pullfolder" ]] || [[ "$arg" == "-spf" ]]
     then
         (( nextcount=argcount+1 ))
@@ -198,7 +203,6 @@ do
         (( $nextcount <= $# )) || { echo "Argument expected for --install-attempt or -ia switch, stopping."; kill "$PPID"; exit 1; }
         IA=${!nextcount}
     fi
-
 
     if [[ "$arg" == "--container-all-workspace" ]] || [[ "$arg" == "-caw" ]]
     then
@@ -626,6 +630,9 @@ then
     echo "                                      as \${SINGULARITY_TMPDIR}"
     echo "                                      \$home=your_test_directory/.home"
     echo ""
+    echo "  --singularity-nocache -snc          Set \${SINGULARITY_DISABLE_CACHE}"
+    echo "                                      to 'True'"
+    echo ""
     echo "  --stimela-pull-test -spt            Use your_test_directory/stimela_pullfolder"
     echo "                                      as \${STIMELA_PULLFOLDER}"
     echo ""
@@ -888,8 +895,12 @@ echo "    are used to directly define \$STIMELA_PULLFOLDER."
 echo "    The definition of the environment variables using the switches"
 echo "    above is mutually exclusive."
 echo "    If \${STIMELA_PULLFOLDER} is not defined by any switch and it"
-echo "     is not defined prior to invoking caratekit.sh, it defaults to"
+echo "    is not defined prior to invoking caratekit.sh, it defaults to"
 echo "    STIMELA_PULLFOLDER=\$CARATE_WORKSPACE/stimela_pullfolder"
+echo "    If switches --singularity-nocache or -snc are set, the"
+echo "    environment variable \${SINGULARITY_DISABLE_CACHE} is set to"
+echo "    True for the time of the caratekit run (disabling caching)"
+echo "    and then reset to its original value (or unset)"
 echo ""
 echo "  - when switches --singularity-minimal, -sm,"
 echo "    --singularity-alternative, -se, --singularity-installation, -si"
@@ -1696,6 +1707,11 @@ then
 	ss+=$'\n'
 	CARATE_SINGULARITY_CACHEDIR_OLD=${SINGULARITY_CACHEDIR} ; \
 	}
+    [[ -z ${SINGULARITY_DISABLE_CACHE} ]] && CARACAL_SINGULARITY_DISABLE_CACHE_del=1 || { \
+	ss+="CARATE_SINGULARITY_DISABLE_CACHE_OLD=\${SINGULARITY_DISABLE_CACHE}" ; \
+	ss+=$'\n'
+	CARATE_SINGULARITY_DISABLE_CACHE_OLD=${SINGULARITY_DISABLE_CACHE} ; \
+	}
     [[ -z ${SINGULARITY_LOCALCACHEDIR} ]] && CARACAL_SINGULARITY_LOCALCACHEDIR_del=1 || { \
 	ss+="CARATE_SINGULARITY_LOCALCACHEDIR_OLD=\${SINGULARITY_LOCALCACHEDIR}" ; \
 	ss+=$'\n'
@@ -2079,9 +2095,25 @@ function cleanup {
             echo "export SINGULARITY_CACHEDIR=\${CARATE_SINGULARITY_CACHEDIR_OLD}" >> ${SS}
             export SINGULARITY_CACHEDIR=${CARATE_SINGULARITY_CACHEDIR_OLD}
 	else
-	    [[ -z ${SINGULARITY_CACHEDIR} ]] || { \
-						  echo "unset SINGULARITY_CACHEDIR" >> ${SS} ; \
-						  unset SINGULARITY_CACHEDIR ; \
+	    [[ -z ${SINGULARITY_CACHEDIR} ]] || \
+		{ \
+		  echo "unset SINGULARITY_CACHEDIR" >> ${SS} ; \
+		  unset SINGULARITY_CACHEDIR ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_DISABLE_CACHE_OLD} ]]
+    then
+	if [[ -z ${CARACAL_SINGULARITY_DISABLE_CACHE_del} ]]
+	then
+            echo "export SINGULARITY_DISABLE_CACHE=\${CARATE_SINGULARITY_DISABLE_CACHE_OLD}" >> ${SS}
+            export SINGULARITY_DISABLE_CACHE=${CARATE_SINGULARITY_DISABLE_CACHE_OLD}
+	else
+	    [[ -z ${SINGULARITY_DISABLE_CACHE} ]] || \
+		{ \
+		  echo "unset SINGULARITY_DISABLE_CACHE" >> ${SS} ; \
+		  unset SINGULARITY_DISABLE_CACHE ; \
 		}
 	fi
     fi
@@ -3372,6 +3404,12 @@ then
 			 mkdir -p ${SINGULARITY_TMPDIR} ; \
 	}
     
+    [[ -z ${SNC} ]] || { \
+			 ss_sing+="export SINGULARITY_DISABLE_CACHE=\"True\"" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_DISABLE_CACHE="True" ; \
+	}
+
     [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || { \
 					       ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
 					       ss_sing+=$'\n' ; \

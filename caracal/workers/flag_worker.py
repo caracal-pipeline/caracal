@@ -66,7 +66,7 @@ def worker(pipeline, recipe, config):
                     "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
 
             with open(msinfo, 'r') as stdr:
-                msdict = yaml.load(stdr)
+                msdict = yaml.safe_load(stdr)
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, msname)

@@ -1911,24 +1911,24 @@ then
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final ALTERNATIVE_TEST_DATA_IDS && isin ALTERNATIVE_TEST_DATA_IDS dataid_final
     then
- isalternative=1
+	isalternative=1
     fi
 
     # Warn if these are unusual data sets
     if [[ -n ${DA} ]] || [[ -n ${SA} ]]
     then
- if [[ ${isalternative} != 1 ]]
- then
-     echo "You intend to use unusual data sets for switches"
-     echo "--docker-alternative, -da, --singularity-alternative, or -sa"
-     echo "The dataids are:"
-     echo ${dataid_final[@]}
-     if [[ -z ${OR} ]]
-     then
-  waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
-  echo ""
-     fi
- fi
+	if [[ ${isalternative} != 1 ]]
+	then
+	    echo "You intend to use unusual data sets for switches"
+	    echo "--docker-alternative, -da, --singularity-alternative, or -sa"
+	    echo "The dataids are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+		echo ""
+	    fi
+	fi
     fi
     
     isshort=0
@@ -3007,15 +3007,15 @@ runtest () {
  echo ${mes}
  echo ${mes} >> ${SYA_RUNTEST}
     else 
- mes="CARACal run ${trname} returned a faulty output."
- 
- echo ${mes}
- echo ${mes} >> ${SYA_RUNTEST}
- echo ${mes} >> ${SYA}
+	mes="CARACal run ${trname} returned a faulty output."
+	
+	echo ${mes}
+	echo ${mes} >> ${SYA_RUNTEST}
+	echo ${mes} >> ${SYA}
     fi
-#    echo ""
-#    echo "" >> ${SYA_RUNTEST}
-#    echo "" >> ${SYA}
+    #    echo ""
+    #    echo "" >> ${SYA_RUNTEST}
+    #    echo "" >> ${SYA}
     
     [[ ! -e ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs ]] || rm -r ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
 
@@ -3025,22 +3025,22 @@ runtest () {
         echo "############" >> ${SYA_RUNTEST}
         echo "" >> ${SYA_RUNTEST}
         echo "Test failed." >> ${SYA_RUNTEST}
-
- # Collect all files that indicate an error and dump them into the report directory
- [[ -d ${WORKSPACE_ROOT}/${trname}/output/logs/ ]] && faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` ) || faultylist=()
- if (( ${#faultylist[@]} > 0 ))
- then
-     mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
-     rm -f ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/*
-     for jj in "${faultylist[*]}"
-     do
-  cp ${jj} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/
-     done
-     echo "Logfiles indicating strange behaviour have been collected in the directory"
-     echo "${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/"
-     echo ""
- fi
- 
+	
+	# Collect all files that indicate an error and dump them into the report directory
+	[[ -d ${WORKSPACE_ROOT}/${trname}/output/logs/ ]] && faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` ) || faultylist=()
+	if (( ${#faultylist[@]} > 0 ))
+	then
+	    mkdir -p ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
+	    rm -f ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/*
+	    for jj in "${faultylist[*]}"
+	    do
+		cp ${jj} ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/
+	    done
+	    echo "Logfiles indicating strange behaviour have been collected in the directory"
+	    echo "${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs/"
+	    echo ""
+	fi
+	
         kill "$PPID"
         exit 1
     else
@@ -3049,20 +3049,20 @@ runtest () {
 	echo "" >> ${SYA_RUNTEST}
 	echo "Test succeeded." >> ${SYA_RUNTEST}
     fi
-
+    
     # Size of test
     echo "" >> ${SYA_RUNTEST}
     echo "###############" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
     outsize=`du -ms ${WORKSPACE_ROOT}/${trname} | awk '{print $1}'`
     echo "Final test folder size (${trname}): ${outsize} MB" >> ${SYA_RUNTEST}
-
+    
     echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
-     sya="End time for this test: "; sya+=`date -u`;
+    sya="End time for this test: "; sya+=`date -u`;
     echo "${sya}" >> ${SYA_RUNTEST}
-
+    
     echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
 
@@ -3070,9 +3070,9 @@ runtest () {
     [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS_RUNTEST}
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
- echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
     fi
-
+    
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
         kill "$PPID"
@@ -3378,6 +3378,7 @@ then
 					       STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
 					       export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
 	}
+    
     [[ -z ${SPT} ]] || \
 	{ \
 	  ss_sing+="export STIMELA_PULLFOLDER=\${workspace_root}/stimela_pullfolder" ; \
@@ -3385,13 +3386,14 @@ then
 	  STIMELA_PULLFOLDERstring="\${workspace_root}/stimela_pullfolder" ; \
 	  export STIMELA_PULLFOLDER=${WORKSPACE_ROOT}/stimela_pullfolder ; \
 	}
+    
     [[ -z ${SPW} ]] || { \
 			 ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
 			 ss_sing+=$'\n' ; \
 			 STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
 			 export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
 	}
-    
+
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]] || [[ -z ${SDP} ]]
     then
         if [[ -e ${STIMELA_PULLFOLDER} ]]
@@ -3401,8 +3403,8 @@ then
 	    sya_sing+=$'\n'
             sya_sing+="##########################################"; sya_sing+=$'\n'
 	    sya_sing+=$'\n'
-            sya_sing+="Will not re-create existing stimela-singularity and use old installation."; sya_sing+=$'\n'
-            sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags."; sya_sing+=$'\n'
+            sya_sing+="Will not re-create existing stimela pullfolder and potentially re-use its content."; sya_sing+=$'\n'
+            sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags or use -sdp."; sya_sing+=$'\n'
 	    sya_sing+=$'\n'
             sya_sing+="##########################################"; sya_sing+=$'\n'
         fi
@@ -3413,7 +3415,7 @@ then
 	    checkex ${STIMELA_PULLFOLDER} || \
 	    rm -rf ${STIMELA_PULLFOLDER}
     fi
-    
+
     if [[ ! -e "${STIMELA_PULLFOLDER}" ]]
     then
         echo
@@ -3426,7 +3428,7 @@ then
 	ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
 	mkdir -p ${STIMELA_PULLFOLDER}
     fi
-    
+
     sya_sing+=$'\n';
     sya_sing+="##########################################"; sya_sing+=$'\n'
     sya_sing+=$'\n'
@@ -3440,7 +3442,6 @@ then
         echo " Installing Stimela images (Singularity) "
         echo "#########################################"
         echo
-	
 	echo "Installing Stimela images in ${STIMELA_PULLFOLDERstring}"
 	ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
 	ii=1
@@ -3472,6 +3473,7 @@ then
     # Size of images
     outsize=`du -ms ${STIMELA_PULLFOLDER} | awk '{print $1}'`
     sya_sing+="Singularity image folder size: ${outsize} MB"; sya_sing+=$'\n'
+
 fi
 
 if [[ -n ${SM} ]]
@@ -3487,7 +3489,7 @@ fi
 if [[ -n ${SA} ]]
 then
     (( testrunnumber+=1 ))
-    greetings_line="Singularity: (alternative) carateConfig"
+    greetings_line='Singularity: (alternative) carateConfig'
     confilename="carateConfig"
     contarch="singularity"
     caracalswitches="-ct singularity"

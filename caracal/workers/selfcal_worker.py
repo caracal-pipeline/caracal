@@ -492,7 +492,6 @@ def worker(pipeline, recipe, config):
                    fake_image_opts,
                    input=pipeline.input,
                    output=pipeline.output,
-                   version='2.6' if fake_image_opts.get('multiscale') else None,
                    label='{:s}:: Make image after first round of calibration'.format(step))
 
     def image(trg, num, img_dir, mslist, field):
@@ -551,11 +550,9 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
-        wsclean_version = None
         if multiscale:
             image_opts.update({"multiscale": multiscale})
             image_opts.update({"multiscale-scales": multiscale_scales})
-            wsclean_version = "2.6"
 
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':
@@ -589,8 +586,7 @@ def worker(pipeline, recipe, config):
                    image_opts,
                    input=pipeline.input,
                    output=pipeline.output,
-                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num),
-                   version=wsclean_version)
+                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)

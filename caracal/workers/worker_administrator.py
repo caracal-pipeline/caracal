@@ -267,18 +267,16 @@ class worker_administrator(object):
                      os.path.join(os.path.basename(self.logs), CARACAL_LOG_BASENAME))
 
         # Copy input data files into pipeline input folder
-        log.info("Copying meerkat input files into input folder")
-        for _f in os.listdir("{0:s}/data/meerkat_files".format(pckgdir)):
-            f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
-            if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
-                subprocess.check_call(["cp", "-r", f, self.input])
-
-        # Copy fields for masking in input/fields/.
-        log.info("Copying fields for masking into input folder")
-        for _f in os.listdir("{0:s}/data/meerkat_files/".format(pckgdir)):
-            f = "{0:s}/data/meerkat_files/{1:s}".format(pckgdir, _f)
-            if not os.path.exists("{0:}/{1:s}".format(self.input, _f)):
-                subprocess.check_call(["cp", "-r", f, self.input])
+        log.info("Copying MeerKAT input files into input folder")
+        datadir = "{0:s}/data/meerkat_files".format(pckgdir)
+        for filename in os.listdir(datadir):
+            src = os.path.join(datadir, filename)
+            dest = os.path.join(self.input, filename)
+            if not os.path.exists(dest):
+                if os.path.isdir(src):
+                    shutil.copytree(src, dest)
+                else:
+                    shutil.copy2(src, dest, follow_symlinks=False)
 
         # Copy standard notebooks
         self._init_notebooks = self.config['general']['init_notebooks']

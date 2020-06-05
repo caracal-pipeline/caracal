@@ -241,7 +241,7 @@ mapping:
             required: False
             example: 'False'
           mask:
-            desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
+            desc: The mask to apply. This can be provided by the user, but CARACal also provides an existing static mask for MeerKAT, specify 'meerkat.rfimask.npy' to use it.
             type: str
             required: True
             example: ''

@@ -40,7 +40,7 @@ flag:
     antennas: '0'
   flag_mask:
     enable: true
-    mask: labelled_rfimask.pickle.npy
+    mask: meerkat.rfimask.npy
     uvrange: '0~1000'
   flag_rfi:
     enable: true

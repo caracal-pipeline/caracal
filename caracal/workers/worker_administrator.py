@@ -374,7 +374,7 @@ class worker_administrator(object):
                 report_updated = False
 
         # generate final report
-        if self.generate_reports and not report_updated:
+        if self.config["general"]["final_report"] and self.generate_reports and not report_updated:
             self.regenerate_reports()
 
     def regenerate_reports(self):

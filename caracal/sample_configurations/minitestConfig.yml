@@ -2,6 +2,7 @@ schema_version: 1.0.3
 
 general:
   prefix: mypipelinerun
+  final_report: false
 
 getdata:
   dataid: ['1532022061_subset']

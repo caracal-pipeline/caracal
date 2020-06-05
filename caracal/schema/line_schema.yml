@@ -358,11 +358,10 @@ mapping:
             required: false
             example: 'False'
           wscl_multiscale_scales:
-            desc: List of scales for WSClean multiscale, in units of pixels. Only used is wscl_multi_scale is set to True.
-            seq:
-              - type: int
+            desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+            type: str
             required: false
-            example: '0, 5, 10, 20'
+            example: ''
           wscl_multiscale_bias:
             desc: Parameter to set the bias during multiscale cleaning, where a lower bias will give preference to larger angular scales.
             type: float

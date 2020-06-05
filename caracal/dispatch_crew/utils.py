@@ -295,7 +295,7 @@ def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through CARACal"""
 
     with open(obsinfo) as stdr:
-        info = yaml.load(stdr)
+        info = yaml.safe_load(stdr)
     return info['RefAntenna']
 
 
@@ -311,7 +311,7 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
 
     # Get number of antennas
     with open(msinfo) as yr:
-        info = yaml.load(yr)
+        info = yaml.safe_load(yr)
     nant = len(info['ANT']['NAME'])
 
     # Get time and frequency resoltion of data
@@ -341,7 +341,7 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
 
 def imaging_params(msinfo, spwid=0):
     with open(msinfo) as yr:
-        info = yaml.load(yr)
+        info = yaml.safe_load(yr)
 
     maxbl = info['MAXBL']
     dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])

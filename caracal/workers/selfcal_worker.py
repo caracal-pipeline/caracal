@@ -211,8 +211,7 @@ def worker(pipeline, recipe, config):
     maxuvl = config['img_maxuv_l']
     transuvl = maxuvl*config['img_transuv_l']/100.
     multiscale = config['img_multiscale']
-    if multiscale == True:
-        multiscale_scales = sdm.dismissable(config['img_multiscale_scales'])
+    multiscale_scales = config['img_multiscale_scales']
     if taper == '':
         taper = None
 
@@ -484,9 +483,6 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             fake_image_opts.update({"minuvw-m": min_uvw})
-        #if multiscale==True:
-        #    fake_image_opts.update({"multiscale": multiscale})
-        #    fake_image_opts.update({"multiscale-scales": multiscale_scales})
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,
@@ -552,7 +548,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({"minuvw-m": min_uvw})
         if multiscale:
             image_opts.update({"multiscale": multiscale})
-            image_opts.update({"multiscale-scales": multiscale_scales})
+            if multiscale_scales:
+                image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
 
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':

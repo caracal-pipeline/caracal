@@ -377,5 +377,7 @@ class worker_administrator(object):
         if self.config["general"]["final_report"] and self.generate_reports and not report_updated:
             self.regenerate_reports()
 
+        log.info("pipeline run complete")
+
     def regenerate_reports(self):
         notebooks.generate_report_notebooks(self._report_notebooks, self.output, self.prefix, self.container_tech)

@@ -2394,7 +2394,7 @@ fi
 # Checking if caratekit has changed
 if [[ -z ${FS} ]]
 then
-    caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/caratekit.sh` || true
+    [[ -z ${caratekit_install} ]] || caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/caratekit.sh` || true
     [[ -z ${caratekit_install_changes} ]] || { \
 					       endimessage+="The installed caratekit.sh:"; endimessage+=$'\n'; \
 					       endimessage+="  ${caratekit_install}"; endimessage+=$'\n'; \

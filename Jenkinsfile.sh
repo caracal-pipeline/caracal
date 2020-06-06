@@ -35,4 +35,5 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -or \
                                                          -f \
                                                          -op \
-							 -spf $WORKSPACE/singularity_pullfolder
+							 -spf $WORKSPACE/singularity_pullfolder \
+							 -hf $WORKSPACE/home

@@ -94,6 +94,29 @@ do
     then
         IN=1
     fi
+    if [[ "$arg" == "--home-original" ]] || [[ "$arg" == "-ho" ]]
+    then
+        HO=1
+	# This cannot be deleted, double security
+	HN=1
+    fi
+    if [[ "$arg" == "--home-workspace" ]] || [[ "$arg" == "-hw" ]]
+    then
+        HW=1
+    fi
+    if [[ "$arg" == "--home-no-delete" ]] || [[ "$arg" == "-hn" ]]
+    then
+        HN=1
+    fi
+    if [[ "$arg" == "--home-folder" ]] || [[ "$arg" == "-hf" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --home-folder or -hf switch, stopping."; kill "$PPID"; exit 1; }
+
+	CARATE_HOME_FOLDER=${!nextcount}
+ 	firstletter=`echo ${CARATE_HOME_FOLDER} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_HOME_FOLDER="${cwd}/${CARATE_HOME_FOLDER}"
+    fi
     if [[ "$arg" == "--docker-minimal" ]] || [[ "$arg" == "-dm" ]]
     then
         DM=1
@@ -275,10 +298,6 @@ do
     if [[ "$arg" == "--override" ]] || [[ "$arg" == "-or" ]]
     then
         OR=1
-    fi
-    if [[ "$arg" == "--keep-home" ]] || [[ "$arg" == "-kh" ]]
-    then
-        KH=1
     fi
     if [[ "$arg" == "--keep-report-dir" ]] || [[ "$arg" == "-kr" ]]
     then
@@ -497,6 +516,8 @@ then
     echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
     echo ""
 
+    echo "  CARATE_HOME_FOLDER:          Location of \$HOME during test"
+
     echo "  CARATE_SINGULARITY_CACHE:      Location of \$SINGULARITY_CACHEDIR"
     echo "  CARATE_SINGULARITY_LOCALCACHE: Location of \$SINGULARITY_LOCALCACHEDIR"
     echo "  CARATE_SINGULARITY_TMPDIR:     Location of \$SINGULARITY_TMPDIR"
@@ -552,6 +573,19 @@ then
     echo ""
     echo "  --workspace ARG -ws ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_WORKSPACE"
+    echo ""
+    echo "  --home-original -ho                 Do not change the HOME environment"
+    echo "                                      variable during installation test"
+    echo ""
+    echo "  --home-workspace -hw                Use \$CARATE_WORKSPACE/home"
+    echo "                                      as home folder during caratekit test"
+    echo ""
+    echo "  --home-folder ARG -hf ARG           Use ARG as home folder during caratekit"
+    echo "                                      test"
+    echo ""
+    echo "  --home-no-delete -hn                Do not delete the home folder (automati-"
+    echo "                                      cally applied if --home-original or"
+    echo "                                      -ho are set)"
     echo ""
     echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
     echo "                                      to re-invoke pip, to run stimela pull,"
@@ -686,9 +720,6 @@ then
     echo "                                      stimela_parameter_files) prior to"
     echo "                                      starting a test"
     echo ""
-    echo "  --keep-home -kh                     Do not change the HOME environment"
-    echo "                                      variable during installation test"
-    echo ""
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
     echo ""
@@ -772,18 +803,28 @@ echo " rationale behind that is that the test directory is always linked to"
 echo " a git(hub) build number if that exists. Otherwise, if"
 echo " CARATE_CARACAL_BUILD_ID is not defined, the user can supply an"
 echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home directory called"
-echo " home, a virtual environment called caracal_virtualenv, a CARACal copy"
-echo " caracal, and up to six test directories are created, within which the"
-echo " tests are conducted. If the --force or -f switch is set, existing"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, by default a home directory"
+echo "  called home, a virtual environment called caracal_virtualenv, a CARACal"
+echo " copy caracal, and up to six test directories are created, within which"
+echo " the tests are conducted. If the --force or -f switch is set, existing"
 echo " directories and installations are deleted and replaced, if not, only"
 echo " those directories and files are created, which do not exist"
 echo " yet. Exceptions from that rule exist. If the --omit-stimela-reinstall"
 echo " or -os switch is set, a re-installation of stimela is preventedeven"
 echo " if -f is set. This includes the Re-installation of the virtual"
 echo " environment, the home directory, and the file .stimela in the home"
-echo " directory. If the option --keep-home or -kh is set, the directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre- served. If"
+echo " directory. "
+echo " The location of the home directory can be changed using environment variables"
+echo " and switches. The environment variable CARATE_HOME_FOLDER defines directly the"
+echo " home folder. It can be overridden by the switches --home-folder ARG or -hf ARG,"
+echo " where ARG is the location of the home folder. Switch -hw defines the home"
+echo " folder to be the directory home in the workspace folder. Switch --home-original"
+echo " or -ho leaves the home folder as it is. The default, as said above, is to"
+echo " define the home folder as \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home"
+echo " If the option --home-no-delete or -hn is set, the home folder"
+echo " is preserved. -hn is automatically set if switches --home-original or -ho are set."
+echo ""
+echo " If"
 echo " the option --keep-report or -kr is set, the directory"
 echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
 echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the"
@@ -1508,6 +1549,21 @@ fi
     } ; \
 }
 
+# Do not define more than one home
+counts=0
+[[ -z ${HW} ]] || (( counts+=1 ))
+[[ -z ${HO} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_HOME_FOLDER} ]] || (( counts+=1 ))
+(( ${counts} < 2 )) || { \
+    echo "Use maximally one of switches and variables defined with -hw -ho -hf."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+(( ${counts} > 0 )) || \
+    { \
+      HT=1 \
+    }
+
 [[ -z ${CR} ]] || { \
     # Upon pypi release this has to be updated
     # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
@@ -1688,18 +1744,22 @@ else
 fi
 
 # Save home for later
-if [[ -n ${HOME} ]]
+if [[ -z ${HO} ]]
 then
-    [[ -n ${KH} ]] || ss+="HOME_OLD=\${HOME}"
-    [[ -n ${KH} ]] || ss+=$'\n'
-    [[ -n ${KH} ]] || HOME_OLD=${HOME}
+    [[ -z ${HOME} ]] && HOME_del=1 || \
+	    { \
+	      ss+="HOME_OLD=\${HOME}" ; \
+	      ss+=$'\n' ; \
+	      HOME_OLD=${HOME} ; \
+	    }
 fi
-if [[ -n ${PYTHONPATH} ]]
-then
-    ss+="PYTHONPATH_OLD=\${PYTHONPATH}"
-    ss+=$'\n'
-    PYTHONPATH_OLD=${PYTHONPATH}
-fi
+
+[[ -z ${PYTHONPATH} ]] && PYTHONPATH_del=1 || \
+	{ \
+	  ss+="PYTHONPATH_OLD=\${PYTHONPATH}" ; \
+	  ss+=$'\n' ; \
+	  PYTHONPATH_OLD=${PYTHONPATH} ; \
+	}
 
 if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
 then
@@ -1756,7 +1816,6 @@ fi
 use_pull_force=""
 [[ -z ${PF} ]] || (( ${FORCE} == 0 )) || use_pull_force=" -f"
 
-# This ensures that when stopping, the $HOME environment variable is restored
 # Variable defininition ends here in script
 ss+=""
 ss+=$'\n'
@@ -2082,13 +2141,33 @@ function cleanup {
     echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
 
-    
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
-    [[ -n ${KH} ]] || export HOME=${OLD_HOME}
+    if [[ -z ${HO} ]]
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS}
+               export HOME=${HOME_OLD}
+	   else
+	       echo "unset HOME" >> ${SS}
+	       unset HOME
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
- echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
- export PYTHONPATH=${PYTHONPATH_OLD}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
+            export PYTHONPATH=${PYTHONPATH_OLD}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS} ; \
+		  unset PYTHONPATH ; \
+		}
+	fi
     fi
 
     if [[ -n ${CARATE_SINGULARITY_CACHEDIR_OLD} ]]
@@ -2178,30 +2257,61 @@ function cleanup {
 }
 trap cleanup EXIT
 
-[[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
-[[ -n ${KH} ]] || export HOME=${WORKSPACE_ROOT}/home
-if (( ${FORCE} != 0 ))
+if [[ -n ${HT} ]]
 then
-    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake, so tons of protection...
-[[ -n ${KH} ]] || \
- [[ -n ${ORSR} ]] || \
- false || { \
-   [[ ${WORKSPACE_ROOT}/home == ${OLD_HOME} ]] && \
-       echo "We do not delete ${OLD_HOME}"; \
- } || { \
-     [[ ${WORKSPACE_ROOT}/home == /home/${USER} ]] && \
-  echo "We do not delete /home/${USER}"; \
- } || { \
-     echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}; \
-     [[ -n ${FS} ]] || \
-  rm -rf \${WORKSPACE_ROOT}/home; \
- }
+    echo "export HOME=\${workspace_root}/home"
+    echo "export HOME=\${workspace_root}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}
+fi
+if [[ -n ${HW} ]]
+then
+    echo "export HOME=\${workspace}/home"
+    echo "export HOME=\${workspace}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/home
+fi
+if [[ -n ${CARATE_HOME_FOLDER} ]]
+then
+    echo "export HOME=${CARATE_HOME_FOLDER}"
+    echo "export HOME=${CARATE_HOME_FOLDER}" >> ${SS}
+    export HOME=${CARATE_HOME_FOLDER}
 fi
 
-[[ -n ${KH} ]] || echo "mkdir -p \${workspace_root}/home" >> ${SS}
+[[ -n ${HOME} ]] || \
+    { \
+      echo "No home directory defined. Cannot continue."; \
+      echo ""; \
+      kill "$PPID"; \
+      exit 1; \
+    }		      
 
-# Same here, don't do crazy stuff
-[[ -n ${KH} ]] || mkdir -p ${WORKSPACE_ROOT}/home
+if (( ${FORCE} != 0 ))
+then
+    # This is dangerous, use with great care, poison
+    [[ -n ${HN} ]] || \
+	[[ -n ${ORSR} ]] || \
+	{ \
+	  [[ ${HOME} == ${HOME_OLD} ]] && \
+	      echo "We do not delete ${HOME_OLD}"; \
+	} || \
+	{ \
+	  [[ ${HOME} == /home/${USER} ]] && \
+	      echo "We do not delete /home/${USER}"; \
+	} || \
+	{ \
+	  echo "rm -rf \${HOME}" >> ${SS}; \
+          [[ -n ${FS} ]] || \
+	      { \
+		rm -rf ${HOME}; \
+	      } \
+	}
+fi
+
+# Check if home exists, otherwise make it
+[[ -e ${HOME} ]] || \
+    { \
+      echo "mkdir -p \${HOME}" >> ${SS}; \
+      mkdir -p ${HOME} >> ${SS}; \
+    }
 
 # For some reason we have to be somewhere
 echo "cd \${HOME}" >> ${SS}
@@ -3102,10 +3212,30 @@ runtest () {
     echo "##########################################" >> ${SYA_RUNTEST}
 
     # This should be at the end of a script even if we don't do it now
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS_RUNTEST}
+    # notice that this is only added to the shell script output.
+    if [[ -z ${HO} ]]
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS_RUNTEST}
+	   else
+	       echo "unset HOME" >> ${SS_RUNTEST}
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
-	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS_RUNTEST} ; \
+		}
+	fi
     fi
     
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))

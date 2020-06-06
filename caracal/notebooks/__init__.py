@@ -83,11 +83,12 @@ def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
     if caracal.DEBUG:
         opts += ['-v', '2', '--container-debug']
 
-    # first time run with -u
-    global _radiopadre_updated
-    if not _radiopadre_updated:
-        opts.append('--update')
-        _radiopadre_updated = True
+    ## disabling as per https://github.com/caracal-pipeline/caracal/issues/1161
+    # # first time run with -u
+    # global _radiopadre_updated
+    # if not _radiopadre_updated:
+    #     opts.append('--update')
+    #     _radiopadre_updated = True
     start_time = time.time()
 
     log.info("Rendering report(s)")

@@ -256,10 +256,6 @@ do
 	SLH=1
 	STH=1
     fi
-
-    ####
-    ####
-    ####   
     if [[ "$arg" == "--use-stimela-stable" ]] || [[ "$arg" == "-us" ]]
     then
         US=1
@@ -1561,7 +1557,7 @@ counts=0
     }
 (( ${counts} > 0 )) || \
     { \
-      HT=1 \
+      HT=1; \
     }
 
 [[ -z ${CR} ]] || { \
@@ -2142,6 +2138,7 @@ function cleanup {
     echo "##########################################" >> ${SYA}
 
     if [[ -z ${HO} ]]
+       then
        if [[ -n ${HOME_OLD} ]]
        then
 	   if [[ -z ${HOME_del} ]]
@@ -3214,6 +3211,7 @@ runtest () {
     # This should be at the end of a script even if we don't do it now
     # notice that this is only added to the shell script output.
     if [[ -z ${HO} ]]
+       then
        if [[ -n ${HOME_OLD} ]]
        then
 	   if [[ -z ${HOME_del} ]]

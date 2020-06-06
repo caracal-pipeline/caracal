@@ -2256,7 +2256,6 @@ trap cleanup EXIT
 
 if [[ -n ${HT} ]]
 then
-    echo "export HOME=\${workspace_root}/home"
     echo "export HOME=\${workspace_root}/home" >> ${SS}
     export HOME=${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}
 fi

@@ -1834,7 +1834,6 @@ fi
 [[ -z ${use_pull_force} ]] || echo "The -f switch will be used if stimela pull is used"
 echo "Depending on the settings, other directories"
 echo "will also be changed."
-echo ""
 
 if [[ -z ${OR} ]]
 then
@@ -1847,7 +1846,6 @@ then
     if [[ -d $WORKSPACE_ROOT ]]
     then
         echo "Be aware that no existing file will be replaced, use -f to override"
-        echo ""
     fi
 fi
 
@@ -2314,10 +2312,11 @@ echo "cd \${HOME}" >> ${SS}
 cd $HOME
 
 # Create virtualenv and start
+echo ""
 echo "##########################################"
 echo " Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
-echo
+echo ""
 
 [[ ! -z ${CARATE_VIRTUALENV} ]] || CARATE_VIRTUALENV=${WORKSPACE_ROOT}/caracal_venv
 
@@ -2469,7 +2468,6 @@ then
 fi
 
 echo ""
-
 echo "###############################"
 echo " Installing/activating CARACal "
 echo "###############################"
@@ -2696,26 +2694,30 @@ fi
 
 if [[ -e ${HOME}/.stimela ]]
 then
-    [[ -n ${FS} ]] || [[ -n ${ORSR} ]] || { \
- echo "#######################" ; \
- echo " Running stimela clean " ; \
- echo "#######################" ; \
- echo "" ; \
- echo "stimela clean -ac" >> ${SS} ; \
- stimela clean -ac ; \
-    }
+    [[ -n ${FS} ]] || \
+	[[ -n ${ORSR} ]] || \
+	{ \
+	  echo "" ; \
+	  echo "#######################" ; \
+	  echo " Running stimela clean " ; \
+	  echo "#######################" ; \
+	  echo "" ; \
+	  echo "stimela clean -ac" >> ${SS} ; \
+	  stimela clean -ac ; \
+	}
 fi
 
 if [[ -z ${ORSR} ]]
 then
-    checkex ${HOME}/.stimela || { \
- echo "#############################" ; \
- echo " Removing Stimela directory " ; \
- echo "#############################" ; \
- echo "" ; \
- echo "Removing \${HOME}/.stimela/*" ; \
- echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
-    }
+    checkex ${HOME}/.stimela || \
+	{ \
+	  echo "#############################" ; \
+	  echo " Removing Stimela directory " ; \
+	  echo "#############################" ; \
+	  echo "" ; \
+	  echo "Removing \${HOME}/.stimela/*" ; \
+	  echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
+	}
     # Consider using stimela clean -ac here before running a docker prune
     # and not doing this:
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*

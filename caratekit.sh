@@ -70,6 +70,7 @@ IA=5
 endimessage=""
 ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
 SHORT_TEST_DATA_IDS=( "1532022061_subset" )
+SPHEVERSION="1.1.0"
 
 # current working directory
 cwd=`pwd`
@@ -330,7 +331,7 @@ do
     fi
     if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
     then
-        OD=1
+        CC=1
     fi
     if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]
     then
@@ -1264,6 +1265,29 @@ then
     echo ""
     kill "$PPID"; exit 1;
 fi
+
+function ahighereqb {
+
+    # supply two dot-separated lists of integers, returns 0 if first denotes higher or equal version than second, 1 otherwise
+    
+    local a
+    local b
+    
+    a=(`echo ${1} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+    b=(`echo ${2} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+
+    echo a ${a[@]}
+    echo b ${b[@]}
+
+    (( ${a[0]} > ${b[0]} )) && return 0
+    (( ${a[0]} < ${b[0]} )) && return 1
+    (( ${a[1]} > ${b[1]} )) && return 0
+    (( ${a[1]} < ${b[1]} )) && return 1
+    (( ${a[2]} > ${b[2]} )) && return 0
+    (( ${a[2]} < ${b[2]} )) && return 1
+    
+    return 0
+}
 
 function isin {
     
@@ -2692,6 +2716,15 @@ then
     kill "$PPID"; exit 1
 fi
 
+echo "#####"
+echo "#####"
+echo "#####"
+which stimela
+head `which stimela`
+echo "#####"
+echo "#####"
+echo "#####"
+
 if [[ -e ${HOME}/.stimela ]]
 then
     [[ -n ${FS} ]] || \
@@ -2971,22 +3004,22 @@ runtest () {
     
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
- (( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname="${CARATE_CARACAL_RUN_PREFIX}-${testruns}"
- if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
- then
-     (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname="${CARATE_CARACAL_FORMER_RUN}-${testruns}"
- fi
- reportprefy="-${configfilename}"
+	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname="${CARATE_CARACAL_RUN_PREFIX}-${testruns}"
+	if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
+	then
+	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname="${CARATE_CARACAL_FORMER_RUN}-${testruns}"
+	fi
+	reportprefy="-${configfilename}"
     else
- trname="${configfilename}-${contarch}"
- reportprefy=""
+	trname="${configfilename}-${contarch}"
+	reportprefy=""
     fi
-
+    
     reportname=${trname}
     listoftestreps+=( ${reportname} )
-
+    
     mkdir -p ${WORKSPACE_ROOT}/report/${reportname}
-
+    
     SS_RUNTEST=${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt
     [[ ! -e ${SS_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SS_RUNTEST} || rm -rf ${SS_RUNTEST}
     cat ${SS} >> ${SS_RUNTEST}
@@ -2996,75 +3029,81 @@ runtest () {
     [[ ! -e ${SYA_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SYA_RUNTEST} || rm -rf ${SYA_RUNTEST}
     cat ${SYA} >> ${SYA_RUNTEST}
     [[ -z ${syacontainer} ]] || echo "${syacontainer}" >> ${SYA_RUNTEST}
-
+    
     echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA_RUNTEST}
-
+    
     if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE} == 0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
         echo "and use old results. Use -f to override."
     else
- if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
- then
-     [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || { \
-  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
-  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname}
-  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
-     }
- else 
-     [[ -z ${OD} ]] || \
-  [[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
-      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
-  } || { \
-      CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
-  }
-     [[ -n ${CARATE_TEST_DATA_DIR} ]] || { \
-  echo "No test data to process"; \
-  echo "This likely means that you have set the -od switch"; \
-  echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
-  echo "Stopping."; \
-  }
-     
-     #Check if the test directory is a parent of any of the supplied directories
-     if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
-     then
-  # Go through the files and remove individually
-  # continue here
-  dirs=(input msdir output stimela_parameter_files)
-  for dire in ${dirs[@]}
-  do
-      checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-   echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS_RUNTEST}
-      [[ -n ${FS} ]] || \
-   checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-   rm -rf ${workspace_root}/${trname}/${dire}
-  done
-     else
-  [[ -n ${FS} ]] || \
-      [[ -n ${KP} ]] || { \
-   echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
-   rm -rf ${WORKSPACE_ROOT}/${trname}; \
-      }
-     fi 
- fi
+	if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
+	then
+	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || \
+		{ \
+		  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
+		  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname} ; \
+		  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
+		}
+	else 
+	    [[ -z ${OD} ]] || \
+		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && \
+		    { \
+		      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
+		    } || \
+			{ \
+			  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+			}
+	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || \
+		{ \
+		  echo "No test data to process"; \
+		  echo "This likely means that you have set the -od switch"; \
+		  echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
+		  echo "Stopping."; \
+		}
+	    
+	    #Check if the test directory is a parent of any of the supplied directories
+	    if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
+	    then
+		# Go through the files and remove individually
+		# continue here
+		dirs=(input msdir output stimela_parameter_files)
+		for dire in ${dirs[@]}
+		do
+		    checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+			echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS_RUNTEST}
+		    [[ -n ${FS} ]] || \
+			checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+			rm -rf ${workspace_root}/${trname}/${dire}
+		done
+	    else
+		[[ -n ${FS} ]] || \
+		    [[ -n ${KP} ]] || \
+		    { \
+		      echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
+		      rm -rf ${WORKSPACE_ROOT}/${trname}; \
+		    }
+	    fi 
+	fi
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
- echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
+	echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
         mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
- if [[ -d ${CARATE_INPUT_DIR} ]]
- then
-     echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
-     mkdir -p ${WORKSPACE_ROOT}/${trname}/input
-     checkex ${WORKSPACE_ROOT}/${trname}/input || \
-  [[ -n ${KP} ]] || { \
-      echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
-      cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
-  }
- fi
+	if [[ -d ${CARATE_INPUT_DIR} ]]
+	then
+	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
+	    mkdir -p ${WORKSPACE_ROOT}/${trname}/input
+	    checkex ${WORKSPACE_ROOT}/${trname}/input || \
+		[[ -n ${KP} ]] || \
+		{ \
+		  echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
+		  cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
+		}
+	fi
  # Check if user-supplied file is already the one that we are working with before working with it
  # This should in principle only affect the time stamps as if the dataid is not empty, the following
  # Would do nothing in the config file itself

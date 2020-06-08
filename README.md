@@ -5,7 +5,7 @@ https://caracal.readthedocs.io, which includes the Install & Run instructions co
 
 ## Usage and publication policy
 
-When using CARACal please be aware of and adhere to the [CARACal publication policy](https://docs.google.com/document/d/12LjHM_e1G4kWRfCLcz0GgM8rlXOny23vVdcriiA8ayU).
+When using CARACal please be aware of and adhere to the [CARACal publication policy](https://docs.google.com/document/d/e/2PACX-1vTqZoKhdewnWvxvEI4C9DxI-IHP1FTCoC5Iqz_MqlX63q8UnnpcqoZvVf-sSfqACu8sA_nufkXICUH6/pub).
 
 ## Requirements
 - [Python](https://www.python.org) 3.5 or higher.

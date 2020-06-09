@@ -149,6 +149,7 @@ def worker(pipeline, recipe, config):
             dcol = config['split_field']['col']
 
         target_iter = 0
+        import ipdb; ipdb.set_trace()
         for fld, target in enumerate(target_ls):
             tms = msouts[fld]
             if from_target:

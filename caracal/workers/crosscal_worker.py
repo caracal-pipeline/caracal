@@ -197,7 +197,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
-            plotgains(recipe, pipeline, field_id, caltable, iobs, term=term)
+            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
 
         fields.append(",".join(field))
         interps.append(interp)
@@ -327,7 +327,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
         {
         "table"         : f"{gtab}:msfile",
         "gaintype"     : term,
-        "field"        : ",".join(map(str,field_id)),
+        "field"        : None if field_id is None else ",".join(map(str,field_id)),
         "corr"         : '',
         "htmlname"     : gtab,
         },

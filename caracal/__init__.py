@@ -117,6 +117,9 @@ def create_logger():
     log.propagate = False
 
     # init stimela logger as a sublogger
+    if stimela.is_logger_initialized():
+        raise RuntimeError("Stimela logger already initialized. This is a bug: you must have an incompatible version of Stimela.")
+
     stimela.logger(STIMELA_LOGGER_NAME, propagate=True, console=False)
 
     log_filehandler = DelayedFileHandler()

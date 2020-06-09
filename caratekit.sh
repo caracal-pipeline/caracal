@@ -2326,6 +2326,17 @@ then
 	}
 fi
 
+echo "###"
+echo "###"
+echo "###"
+echo "got here 1"
+echo $HOME
+echo ${SS}
+echo ${SYA}
+echo "###"
+echo "###"
+echo "###"
+
 # Check if home exists, otherwise make it
 [[ -e ${HOME} ]] || \
     { \

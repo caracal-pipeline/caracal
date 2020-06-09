@@ -2,7 +2,15 @@
 # The following ensures the script to stop on errors
 set -e
 
-echo HOME $HOME
+virtualenv -p python3 /var/lib/jenkins/jobs/PR_meerkathi/workspace/test02_venv
+. /var/lib/jenkins/jobs/PR_meerkathi/workspace/test02_venv/bin/activate
+export PYTHONPATH=''
+pip install pip setuptools wheel -U
+pip install -U --force-reinstall caracal
+rm -f ${HOME}/.stimela/*
+export STIMELA_PULLFOLDER="/var/lib/jenkins/jobs/PR_meerkathi/workspace/singularity_pullfolder"
+stimela pull --singularity
+exit
 
 # Rule: Two newlines before ###, none at end except for the very end
 
@@ -2326,17 +2334,6 @@ then
 	}
 fi
 
-echo "###"
-echo "###"
-echo "###"
-echo "got here 1"
-echo $HOME
-echo ${SS}
-echo ${SYA}
-echo "###"
-echo "###"
-echo "###"
-
 # Check if home exists, otherwise make it
 [[ -e ${HOME} ]] || \
     { \
@@ -2728,15 +2725,6 @@ then
     echo "Use -h flag for more information"
     kill "$PPID"; exit 1
 fi
-
-echo "#####"
-echo "#####"
-echo "#####"
-which stimela
-head `which stimela`
-echo "#####"
-echo "#####"
-echo "#####"
 
 if [[ -e ${HOME}/.stimela ]]
 then

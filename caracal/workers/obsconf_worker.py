@@ -129,7 +129,7 @@ def worker(pipeline, recipe, config):
 
     for i, prefix in enumerate(prefixes):
         msinfo_file = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])
-        caracal.log.info('Extracting MS info from {0:s} '.format(msinfo))
+        caracal.log.info('Extracting MS info from {0:s} '.format(msinfo_file))
         msname = msnames[i]
         # get the  actual date stamp for the start and end of the observations.
         # !!!!!!! This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file

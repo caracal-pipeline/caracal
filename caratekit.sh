@@ -2,17 +2,23 @@
 # The following ensures the script to stop on errors
 set -e
 
-workspace=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/test-output
-test_data_dir=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/test-output/pull_request_data/
-caracal_test_id=801a7ad11d2e5634454194eb771b556bf586716e
-local_caracal=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/projects/caracal/
+workspace=/var/lib/jenkins/jobs/PR_meerkathi/workspace/114/test-output
+test_data_dir=/var/lib/jenkins/jobs/PR_meerkathi/workspace/114/test-output/pull_request_data/
+caracal_test_id=$pull_request_name
+local_caracal=/var/lib/jenkins/jobs/PR_meerkathi/workspace/114/projects/caracal/
 workspace_root=${workspace}/${caracal_test_id}
 cvirtualenv=${workspace_root}/caracal_venv
 CARATE_STIMELA_PULLFOLDER=${workspace}/singularity_pullfolder
 HOME_OLD=${HOME}
 
 mkdir -p ${workspace_root}
-export HOME=${workspace_root}/home
+HOME=${workspace_root}/home
+export HOME
+echo ${HOME}
+echo ${workspace_root}/home
+ls -a $HOME
+exit
+
 rm -rf ${HOME}
 mkdir -p ${HOME}
 cd ${HOME}
@@ -2268,30 +2274,32 @@ function cleanup {
 
     if [[ -n ${CARATE_SINGULARITY_TMPDIR_OLD} ]]
     then
- if [[ -z ${CARATE_SINGULARITY_TMPDIR_del} ]]
- then
-     echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
-     export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
- else
-     [[ -z ${SINGULARITY_TMPDIR} ]] || { \
-  echo "unset SINGULARITY_TMPDIR" >> ${SS} ; \
-  unset SINGULARITY_TMPDIR ; \
-  }
- fi
+	if [[ -z ${CARATE_SINGULARITY_TMPDIR_del} ]]
+	then
+	    echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
+	    export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
+	else
+	    [[ -z ${SINGULARITY_TMPDIR} ]] || \
+		{ \
+		  echo "unset SINGULARITY_TMPDIR" >> ${SS} ; \
+		  unset SINGULARITY_TMPDIR ; \
+		}
+	fi
     fi
 
     if [[ -n ${CARATE_STIMELA_PULLFOLDER_OLD} ]]
     then
- if [[ -z CARATE_STIMELA_PULLFOLDER_del ]]
- then
-     echo "export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER_OLD}" >> ${SS} 
-     export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER_OLD}
- else
-     [[ -z ${STIMELA_PULLFOLDER} ]] || { \
-                echo "unset STIMELA_PULLFOLDER" >> ${SS} ; \
-                unset STIMELA_PULLFOLDER ; \
-  }
- fi
+	if [[ -z CARATE_STIMELA_PULLFOLDER_del ]]
+	then
+	    echo "export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER_OLD}" >> ${SS} 
+	    export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER_OLD}
+	else
+	    [[ -z ${STIMELA_PULLFOLDER} ]] || \
+		{ \
+		  echo "unset STIMELA_PULLFOLDER" >> ${SS} ; \
+		  unset STIMELA_PULLFOLDER ; \
+		}
+	fi
     fi
 
     # If the number of tests is 0 we create the report directory
@@ -3609,11 +3617,12 @@ then
     fi
     
 
-    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || { \
-					       ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
-					       ss_sing+=$'\n' ; \
-					       STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
-					       export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
+    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
 	}
     
     [[ -z ${SPT} ]] || \
@@ -3624,11 +3633,12 @@ then
 	  export STIMELA_PULLFOLDER=${WORKSPACE_ROOT}/stimela_pullfolder ; \
 	}
     
-    [[ -z ${SPW} ]] || { \
-			 ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
-			 ss_sing+=$'\n' ; \
-			 STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
-			 export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
+    [[ -z ${SPW} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
 	}
 
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]] || [[ -z ${SDP} ]]

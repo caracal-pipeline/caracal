@@ -12,6 +12,7 @@ requirements = [
     'decorator',
     'numpy',
     'stimela>=1.6.1',
+    'python-casacore',
     'scipy',
     'pysolr',
     'progressbar2',

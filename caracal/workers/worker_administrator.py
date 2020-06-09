@@ -1,27 +1,24 @@
 # -*- coding: future_fstrings -*-
 import caracal
 from caracal import log, pckgdir, notebooks
-import subprocess
 import sys
 import os
-import traceback
 from datetime import datetime
 import stimela
 import glob
 import shutil
-from caracal.dispatch_crew.config_parser import config_parser as cp
 import traceback
-import caracal.dispatch_crew.caltables as mkct
+import itertools
 try:
    from urllib.parse import urlencode
 except ImportError:
    from urllib import urlencode
  
 import ruamel.yaml
-from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
 from collections import OrderedDict
+from caracal.dispatch_crew import utils
 
 REPORTS = True
 
@@ -51,7 +48,9 @@ class worker_administrator(object):
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
-        self.getdata_ext = self.config["getdata"]["extension"]
+        self.ms_extension = self.config["getdata"]["extension"]
+
+        self._msinfos = {}
 
         self.logs_symlink = self.config['general']['output'] + '/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
@@ -140,13 +139,14 @@ class worker_administrator(object):
         """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
-
         self.dataid = dataid
-        ext = self.getdata_ext
-        noext = lambda name: name.strip(f".{ext}")
 
+        # names of all MSs
         self.msnames = []
-        self.prefixes = []
+        # basenames of all MSs (sans extension)
+        self.msbasenames = []
+        # filename prefixes for outputs (formed up as prefix-msbase)
+        self.prefix_msbases = []
 
         for item in 'rawdatadir input msdir output'.split():
             value = getattr(self, item, None)
@@ -155,10 +155,12 @@ class worker_administrator(object):
 
         if self.rawdatadir:
             for dataid in self.dataid:
-                pattern = os.path.join(self.rawdatadir, f"{dataid}.{ext}")
+                pattern = os.path.join(self.rawdatadir, f"{dataid}.{self.ms_extension}")
                 msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
+                msbases = [os.path.splitext(ms)[0] for ms in msnames]
                 self.msnames += msnames
-                self.prefixes += [ f"{self.prefix}-{x}" for x in map(noext, msnames)]
+                self.msbasenames += msbases
+                self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
             self.nobs = len(self.msnames)
 
         for item in 'refant fcal bpcal gcal target xcal'.split():
@@ -167,22 +169,46 @@ class worker_administrator(object):
                 value = value*self.nobs
                 setattr(self, item, value)
 
-
-
     def get_msnames(self, label, fields=[]):
+        """Gets list of MS names corresponding to a label, and an optional list of fields"""
         if label:
             label = f"-{label}"
         if fields:
             msnames = []
             for field in fields:
-                msnames += [f'{prefix}-{field}{label}.ms' for prefix in self.prefixes]
+                msnames += [f'{msbase}-{field}{label}.{self.ms_extension}' for msbase in self.msbasenames]
             return msnames
-
         else:
-            return [f'{prefix}{label}.ms' for prefix in self.prefixes]
+            return [f'{msbase}{label}.{self.ms_extension}' for msbase in self.msbasenames]
 
+    def get_msinfo(self, msname):
+        """Returns info dict corresponding to an MS"""
+        if msname in self._msinfos:
+            return self._msinfos[msname]
+        msinfo = f"{os.path.splitext(msname)[0]}-summary.json"
+        with open(msinfo, 'r') as f:
+            msdict = self._msinfos[msname] = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+        return msdict
 
-        
+    def get_target_mss(self, label=None):
+        """
+        Given an MS label, returns a tuple of unique_targets, all_mss, mss_per_target
+        Where all_mss is a list of all MSs to be processed for all targets, and mss_per_target maps target field
+        to associated list of MSs
+        """
+        label = "" if not label else "-"+label
+        target_msfiles = OrderedDict()
+
+        # self.target is a list of lists of targets, per each MS
+        for msbase, targets in zip(self.msbasenames, self.target):
+            for targ in targets:
+                msname = f'{msbase}-{utils.filter_name(targ)}-{label}.{self.ms_extension}'
+                target_msfiles.setdefault(targ, []).append(msname)
+        # collect into flat list of MSs
+        target_ms_ls = list(itertools.chain(*target_msfiles.values()))
+
+        return list(target_msfiles.keys()), target_ms_ls, target_msfiles
+
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""
         cabspecs = OrderedDict()

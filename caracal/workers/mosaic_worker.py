@@ -144,6 +144,7 @@ def worker(pipeline, recipe, config):
     else:
         mfsprefix = ''
 
+    ## please forget pipeline.dataid: it is now pipeline.msbasenames
     #pipeline.prefixes = ['{0:s}-{1:s}-{2:s}'.format(pipeline.prefix,did,config['label_in']) for did in pipeline.dataid]
     # In case there are different pipeline prefixes
     # for i in range(len(pipeline.prefixes)): ### I may need to put this loop back in later
@@ -161,8 +162,7 @@ def worker(pipeline, recipe, config):
             "You should check the selected image names. If unhappy with the selection, please use a config file to specify the correct ones to use.")
 
         # Needed for working out the field names for the targets, so that the correct files can be selected
-        all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label, pipeline.prefixes)
+        all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
         n_targets = len(all_targets)
         caracal.log.info(
             'The number of targets to be mosaicked is {0:d}'.format(n_targets))

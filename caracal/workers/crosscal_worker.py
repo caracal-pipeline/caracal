@@ -3,10 +3,8 @@ import sys
 import os
 import caracal.dispatch_crew.utils as utils
 import caracal
-import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_caltabs as manGtabs
 import copy
 import re
@@ -15,6 +13,7 @@ import glob
 
 import shutil
 import numpy
+from casacore.tables import table
 
 
 NAME = "Cross-calibration"
@@ -129,7 +128,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         gtable_ = None
         ftable_ = None
         interp = RULES[term]["interp"]
-        params["refant"] = pipeline.refant[iobs]
+        params["refant"] = pipeline.refant[iobs] or '0'
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)
@@ -171,9 +170,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         can_reuse = False
         if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, caltable):
             # check if field is in gain table
-            substep = "check_fields-%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
-            fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, substep)
-            if set(fields_in_tab["field_id"]).issubset(field_id):
+            fields_in_tab = set(table(os.path.join(pipeline.caltables, caltable), ack=False).getcol("FIELD_ID"))
+            if fields_in_tab.issubset(field_id):
                 can_reuse = True
 
         if can_reuse:
@@ -420,15 +418,10 @@ def worker(pipeline, recipe, config):
     label = config["label_cal"]
     label_in = config["label_in"]
 
-    msnames = pipeline.get_msnames(label_in)
-    nobs = pipeline.nobs
-
-    for i in range(nobs):
-        msname = msnames[i]
-        refant = pipeline.refant[i] or '0'
-        prefix = f"{pipeline.prefixes[i]}-{label}"
-        msprefx = os.path.splitext(msname)[0]
-        msinfo = os.path.join(pipeline.obsinfo, f"{msprefx}-obsinfo.json")
+    # loop over all MSs for this label
+    for i, msname in enumerate(pipeline.get_msnames(label_in)):
+        msinfo = pipeline.get_msinfo(msname)
+        prefix = f"{pipeline.prefix_msbases[i]}-{label}"
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             # Write/rewind flag versions

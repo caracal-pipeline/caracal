@@ -34,8 +34,7 @@ def worker(pipeline, recipe, config):
     DD_DIR = "3GC"
     OUTPUT=pipeline.output+"/"+DD_DIR
     DDF_LSM = "DDF_lsm.lsm.html"
-    all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, label)
+    all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
     print("All_targets", all_targets)
     print("All_msfiles", all_msfile)
     #print("ms_dict",ms_dict)

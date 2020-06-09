@@ -16,7 +16,7 @@ def worker(pipeline, recipe, config):
     msnames = pipeline.get_msnames(label)
     msdir = pipeline.msdir
     for i in range(pipeline.nobs):
-        prefix = pipeline.prefixes[i]
+        prefix_msbase = pipeline.prefix_msbases[i]
 
         if field_name == 'target':
            fields = map(utils.filter_name, pipeline.target[i])
@@ -119,7 +119,7 @@ def worker(pipeline, recipe, config):
                                    "weight_columns": _config['calculate']['weightcols'],
                                    "noise_columns": _config['calculate']['noisecols'],
                                    "write_to_ms": _config['calculate']['apply'],
-                                   "plot_stats": prefix + '-noise_weights.png',
+                                   "plot_stats": prefix_msbase + '-noise_weights.png',
                                },
                                input=pipeline.input,
                                output=pipeline.diagnostic_plots,

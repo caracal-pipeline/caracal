@@ -1,10 +1,10 @@
 # -*- coding: future_fstrings -*-
 import caracal.dispatch_crew.utils as utils
-import yaml
 import caracal
 import sys
 import numpy as np
 import os
+import shutil
 
 from caracal import log
 
@@ -18,28 +18,25 @@ def repeat_val(val, n):
     return l
 
 def worker(pipeline, recipe, config):
-    msnames = pipeline.msnames
-    prefixes = pipeline.prefixes
-    nobs = pipeline.nobs
     recipe.msdir = pipeline.rawdatadir
     step = None
 
-    for i in range(nobs):
-        prefix = prefixes[i]
-        msname = msnames[i]
-        msroot = os.path.splitext(msname)[0]
+    for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
+        # filenames generated
+        obsinfo  = f'{msroot}-obsinfo.txt'
+        summary  = f'{msroot}-obsinfo.json'
+        elevplot = f'{msroot}-elevation-tracks.png'
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo']['listobs']:
-                obsinfo = '{0:s}-obsinfo.txt'.format(msroot)
-                if os.path.exists(os.path.join(pipeline.obsinfo, obsinfo)):
+                if os.path.exists(os.path.join(pipeline.msdir, obsinfo)):
                     caracal.log.info(f"obsinfo file {obsinfo} exists, not regenerating")
                 else:
-                    step = 'listobs-ms{:d}'.format(i)
+                    step = f'listobs-ms{i}'
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": msname,
-                                   "listfile": obsinfo,
+                                   "listfile": obsinfo+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -47,17 +44,16 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['summary_json']:
-                summary = '{0:s}-obsinfo.json'.format(msroot)
-                if os.path.exists(os.path.join(pipeline.obsinfo, summary)):
+                if os.path.exists(os.path.join(pipeline.msdir, summary)):
                     caracal.log.info(f"summary file {summary} exists, not regenerating")
                 else:
-                    step = 'summary_json-ms{:d}'.format(i)
+                    step = f'summary_json-ms{i}'
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": summary,
+                                   "outfile": summary+":msfile",
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,
@@ -78,18 +74,17 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plotelev'):
-                elevplot_name = "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
-                if os.path.exists(os.path.join(pipeline.obsinfo, elevplot_name)):
-                    caracal.log.info(f"elevation plot {elevplot_name} exists, not regenerating")
+                if os.path.exists(os.path.join(pipeline.msdir, elevplot)):
+                    caracal.log.info(f"elevation plot {elevplot} exists, not regenerating")
                 else:
-                    step = "elevation_plots-ms{:d}".format(i)
+                    step = "elevation-plots-ms{:d}".format(i)
                     if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
                         recipe.add("cab/casa_plotms", step, {
                                    "vis" : msname,
                                    "xaxis" : "hourangle",
                                    "yaxis" : "elevation",
                                    "coloraxis" : "field",
-                                   "plotfile": elevplot_name,
+                                   "plotfile": elevplot+":msfile",
                                    "overwrite" : True,
                                    },
                                    input=pipeline.input,
@@ -98,7 +93,7 @@ def worker(pipeline, recipe, config):
                     elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add("cab/owlcat_plotelev", step, {
                                    "msname" : msname,
-                                   "output-name" : elevplot_name
+                                   "output-name" : elevplot+":msfile"
                                    },
                                    input=pipeline.input,
                                    output=pipeline.obsinfo,
@@ -127,13 +122,22 @@ def worker(pipeline, recipe, config):
     #pipeline.Tsys_eta = config['Tsys_eta']
     #pipeline.dish_diameter = config['dish_diameter']
 
-    for i, prefix in enumerate(prefixes):
-        msinfo_file = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])
-        caracal.log.info('Extracting MS info from {0:s} '.format(msinfo_file))
-        msname = msnames[i]
+    for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
+        msdict = pipeline.get_msinfo(msname)
+        obsinfo  = f'{msroot}-obsinfo.txt'
+        summary  = f'{msroot}-obsinfo.json'
+        elevplot = f'{msroot}-elevation-tracks.png'
+
+        # copy these to obsinfo dir if needed
+        for filename in obsinfo, summary, elevplot:
+            src, dest = os.path.join(pipeline.msdir, filename), os.path.join(pipeline.obsinfo, filename)
+            if os.path.exists(src) and (not os.path.exists(dest) or os.path.getmtime(dest) < os.path.getmtime(src)):
+                caracal.log.info(f"generated new obsinfo/{filename}")
+                shutil.copy2(src, dest)
+
         # get the  actual date stamp for the start and end of the observations.
         # !!!!!!! This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file
-        with open('{0:s}/{1:s}-obsinfo.txt'.format(pipeline.obsinfo, pipeline.dataid[i]), 'r') as stdr:
+        with open(os.path.join(pipeline.msdir, obsinfo), 'r') as stdr:
             content = stdr.readlines()
         for line in content:
             info_on_line = [x for x in line.split() if x != '']
@@ -159,10 +163,6 @@ def worker(pipeline, recipe, config):
         #if config.get('refant') == 'auto':
         #    pipeline.refant[i] = '0'
 
-        # read MS info
-        with open(msinfo_file, 'r') as stdr:
-            msdict = yaml.safe_load(stdr)
-
         # Get channels in MS
         spw = msdict['SPW']['NUM_CHAN']
         pipeline.nchans[i] = spw
@@ -179,7 +179,7 @@ def worker(pipeline, recipe, config):
         pipeline.chanwidth[i] = chanwidth
         caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                 ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
-        if i == len(prefixes)-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
+        if i == pipeline.nobs-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
             raise caracal.BadDataError("MSs with mixed channel ordering not supported")
 
@@ -210,7 +210,7 @@ def worker(pipeline, recipe, config):
                 f = utils.observed_longest(msdict, fields)
                 getattr(pipeline, term)[i] = [f]
             elif "nearest" in conf_fields:
-                f = utils.set_gcal(msdict, fields, mode="nearest")
+                f = utils.select_gcal(msdict, fields, mode="nearest")
                 getattr(pipeline, term)[i] = [f]
             else:
                 raise RuntimeError("Could not find field/selection {0}."\

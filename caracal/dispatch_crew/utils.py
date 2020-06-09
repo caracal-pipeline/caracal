@@ -366,32 +366,3 @@ def filter_name(string):  # change field names into alphanumerical format for na
     return re.sub('[^0-9a-zA-Z]', '_', string)
 
 
-# creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files
-def target_to_msfiles(targets, msnames, label, prefixes):
-    target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
-
-    for t in targets:  # list all targets per input ms and make a unique list of all target fields
-        target_ls.append(t)
-        for tt in t:
-            all_target.append(tt)
-    all_target = list(set(all_target))
-
-    # make a list of all input ms file names for each target field
-    for i, ms in enumerate(msnames):
-        prefix = prefixes[i]
-        msprefx, ext = os.path.splitext(ms)
-        for t in target_ls[i]:
-            t = filter_name(t)
-            if label:
-                target_ms_ls.append(f'{prefix}-{t}-{label}{ext}')
-            else:
-                target_ms_ls.append(f'{prefix}-{t}{ext}')
-
-    for t in all_target:  # group ms files by target field name
-        tmp = []
-        for m in target_ms_ls:
-            if m.find(filter_name(t)) > -1:
-                tmp.append(m)
-        target_msfiles.append(tmp)
-
-    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))

@@ -66,10 +66,9 @@ def worker(pipeline, recipe, config):
 
     mslist = pipeline.get_msnames(label_out)
     for i in range(pipeline.nobs):
-        prefix = pipeline.prefixes[i]
+        prefix = pipeline.prefix_msbases[i]
         if from_target:
-           msins = pipeline.get_msnames(label_in, 
-                            fields=map(utils.filter_name, pipeline.target[i]))
+            msins = pipeline.get_msnames(label_in, fields=map(utils.filter_name, pipeline.target[i]))
         else:
             fms = msins[i]
         field_to_split = split_field.split(',')
@@ -230,15 +229,15 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
                     if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.txt'.format(tms[:-3])
+                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(tms)[0])
                     else:
-                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.dataid[i])
+                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
 
                     step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": listfile,
+                                   "listfile": listfile+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -247,9 +246,9 @@ def worker(pipeline, recipe, config):
 
                 if (config['obsinfo']['summary_json']):
                     if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.json'.format(tms[:-3])
+                        listfile = '{0:s}-obsinfo.json'.format(os.path.splitext(tms)[0])
                     else:
-                        listfile = '{0:s}-obsinfo.json'.format(pipeline.dataid[i])
+                        listfile = '{0:s}-obsinfo.json'.format(pipeline.msbasenames[i])
 
                     step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
@@ -257,7 +256,7 @@ def worker(pipeline, recipe, config):
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": listfile
+                                   "outfile": listfile+":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,

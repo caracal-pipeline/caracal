@@ -149,13 +149,11 @@ def worker(pipeline, recipe, config):
 
         for msname in mslist:
             log.info(f"plotting MS: {msname}")
-            prefix = os.path.splitext(msname)[0]
+            msbase = os.path.splitext(msname)[0]
 
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, prefix)
+            ms_info_dict = pipeline.get_msinfo(msname)
 
             corr = config['correlation']
-            with open(msinfo, 'r') as stdr:
-                ms_info_dict = yaml.load(stdr, Loader=yaml.FullLoader)
             ms_corrs = ms_info_dict['CORR']['CORR_TYPE']
 
             if corr == 'auto' or corr == 'all':
@@ -184,7 +182,7 @@ def worker(pipeline, recipe, config):
                 for field_names, field_type in field_map.items():
                     args = OrderedDict(
                                 # shadems uses its own "{}" codes in output name, so put it together like this
-                                png="{}-{}-{}-{}".format(prefix, label, field_type,
+                                png="{}-{}-{}-{}".format(msbase, label, field_type,
                                     "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
                                 title="'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                                 col=config['shadems']['default_column'],
@@ -203,7 +201,7 @@ def worker(pipeline, recipe, config):
 
                 args = OrderedDict(
                     # shadems uses its own "{}" codes in output name, so put it together like this
-                    png="{}-{}-{}".format(prefix, label,
+                    png="{}-{}-{}".format(msbase, label,
                                           "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
                     title="'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                     col=config['shadems']['default_column'],
@@ -312,7 +310,7 @@ def worker(pipeline, recipe, config):
                             if label_in != '' and field_type == 'target':
                                 fid = 0
                             else:
-                                fid = utils.get_field_id(msinfo, field)[0]
+                                fid = utils.get_field_id(ms_info_dict, field)[0]
                             field_map.setdefault(field, (field_type, fid))
 
                     if plotter == "shadems":
@@ -327,7 +325,7 @@ def worker(pipeline, recipe, config):
                             for field, (field_type, fid) in field_map.items():
                                 globals()[plotter](pipeline, recipe, config,
                                                    plotname, msname, field,
-                                                   iobs, label, prefix, opts,
+                                                   iobs, label, msbase, opts,
                                                    ftype=field_type, fid=fid, output_dir=output_dir,
                                                    corr_label=ms_corrs[int(co)])
 
@@ -345,7 +343,7 @@ def worker(pipeline, recipe, config):
                             for field, (field_type, fid) in field_map.items():
                                 globals()[plotter](pipeline, recipe, config,
                                                    plotname, msname, field,
-                                                   iobs, label, prefix, opts,
+                                                   iobs, label, msbase, opts,
                                                    ftype=field_type, fid=fid, output_dir=output_dir,
                                                    corr_label=ms_corrs[int(co)])
                     else:
@@ -353,5 +351,5 @@ def worker(pipeline, recipe, config):
                         for field, (field_type, fid) in field_map.items():
                             globals()[plotter](pipeline, recipe, config,
                                                plotname, msname, field, iobs, label,
-                                               prefix, opts, ftype=field_type,
+                                               msbase, opts, ftype=field_type,
                                                fid=fid, output_dir=output_dir)

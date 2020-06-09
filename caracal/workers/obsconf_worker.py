@@ -6,6 +6,8 @@ import sys
 import numpy as np
 import os
 
+from caracal import log
+
 NAME = 'Automatically Categorize Observed Fields'
 LABEL = 'obsconf'
 
@@ -20,6 +22,7 @@ def worker(pipeline, recipe, config):
     prefixes = pipeline.prefixes
     nobs = pipeline.nobs
     recipe.msdir = pipeline.rawdatadir
+    step = None
 
     for i in range(nobs):
         prefix = prefixes[i]
@@ -28,29 +31,37 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo']['listobs']:
-                step = 'listobs-ms{:d}'.format(i)
-                recipe.add('cab/casa_listobs', step,
-                           {
-                               "vis": msname,
-                               "listfile": '{0:s}-obsinfo.txt'.format(msroot),
-                               "overwrite": True,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.obsinfo,
-                           label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+                obsinfo = '{0:s}-obsinfo.txt'.format(msroot)
+                if os.path.exists(os.path.join(pipeline.obsinfo, obsinfo)):
+                    caracal.log.info(f"obsinfo file {obsinfo} exists, not regenerating")
+                else:
+                    step = 'listobs-ms{:d}'.format(i)
+                    recipe.add('cab/casa_listobs', step,
+                               {
+                                   "vis": msname,
+                                   "listfile": obsinfo,
+                                   "overwrite": True,
+                               },
+                               input=pipeline.input,
+                               output=pipeline.obsinfo,
+                               label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['summary_json']:
-                step = 'summary_json-ms{:d}'.format(i)
-                recipe.add('cab/msutils', step,
-                           {
-                               "msname": msname,
-                               "command": 'summary',
-                               "display": False,
-                               "outfile": '{0:s}-obsinfo.json'.format(msroot),
-                           },
-                           input=pipeline.input,
-                           output=pipeline.obsinfo,
-                           label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+                summary = '{0:s}-obsinfo.json'.format(msroot)
+                if os.path.exists(os.path.join(pipeline.obsinfo, summary)):
+                    caracal.log.info(f"summary file {summary} exists, not regenerating")
+                else:
+                    step = 'summary_json-ms{:d}'.format(i)
+                    recipe.add('cab/msutils', step,
+                               {
+                                   "msname": msname,
+                                   "command": 'summary',
+                                   "display": False,
+                                   "outfile": summary,
+                               },
+                               input=pipeline.input,
+                               output=pipeline.obsinfo,
+                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['vampirisms']:
                 step = 'vampirisms-ms{0:d}'.format(i)
@@ -67,28 +78,34 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plotelev'):
-                step = "elevation_plots-ms{:d}".format(i)
-                if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
-                    recipe.add("cab/casa_plotms", step, {
-                               "vis" : msname,
-                               "xaxis" : "hourangle",
-                               "yaxis" : "elevation",
-                               "coloraxis" : "field",
-                               "plotfile": "{:s}_elevation-tracks_{:d}.png".format(prefix, i),
-                               "overwrite" : True,
-                               },
-                               input=pipeline.input,
-                               output=pipeline.obsinfo,
-                               label="{:s}:: Plotting elevation tracks".format(step))
-                elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
-                    recipe.add("cab/owlcat_plotelev", step, {
-                               "msname" : msname,
-                               "output-name" : "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
-                               },
-                               input=pipeline.input,
-                               output=pipeline.obsinfo,
-                               label="{:s}:: Plotting elevation tracks".format(step))
+                elevplot_name = "{:s}_elevation-tracks_{:d}.png".format(prefix, i)
+                if os.path.exists(os.path.join(pipeline.obsinfo, elevplot_name)):
+                    caracal.log.info(f"elevation plot {elevplot_name} exists, not regenerating")
+                else:
+                    step = "elevation_plots-ms{:d}".format(i)
+                    if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
+                        recipe.add("cab/casa_plotms", step, {
+                                   "vis" : msname,
+                                   "xaxis" : "hourangle",
+                                   "yaxis" : "elevation",
+                                   "coloraxis" : "field",
+                                   "plotfile": elevplot_name,
+                                   "overwrite" : True,
+                                   },
+                                   input=pipeline.input,
+                                   output=pipeline.obsinfo,
+                                   label="{:s}:: Plotting elevation tracks".format(step))
+                    elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
+                        recipe.add("cab/owlcat_plotelev", step, {
+                                   "msname" : msname,
+                                   "output-name" : elevplot_name
+                                   },
+                                   input=pipeline.input,
+                                   output=pipeline.obsinfo,
+                                   label="{:s}:: Plotting elevation tracks".format(step))
 
+    # if any steps at all were inserted, run the recipe
+    if step is not None:
         recipe.run()
         recipe.jobs = []
 
@@ -111,7 +128,7 @@ def worker(pipeline, recipe, config):
     #pipeline.dish_diameter = config['dish_diameter']
 
     for i, prefix in enumerate(prefixes):
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])
+        msinfo_file = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, pipeline.dataid[i])
         caracal.log.info('Extracting MS info from {0:s} '.format(msinfo))
         msname = msnames[i]
         # get the  actual date stamp for the start and end of the observations.
@@ -142,11 +159,13 @@ def worker(pipeline, recipe, config):
         #if config.get('refant') == 'auto':
         #    pipeline.refant[i] = '0'
 
-        # Get channels in MS
-        with open(msinfo, 'r') as stdr:
+        # read MS info
+        with open(msinfo_file, 'r') as stdr:
             msdict = yaml.safe_load(stdr)
-            spw = msdict['SPW']['NUM_CHAN']
-            pipeline.nchans[i] = spw
+
+        # Get channels in MS
+        spw = msdict['SPW']['NUM_CHAN']
+        pipeline.nchans[i] = spw
         caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
             len(spw), ','.join(map(str, spw))))
 
@@ -165,14 +184,11 @@ def worker(pipeline, recipe, config):
             raise caracal.BadDataError("MSs with mixed channel ordering not supported")
 
         # Get spectral frame
-        with open(msinfo, 'r') as stdr:
-            pipeline.specframe[i] = yaml.safe_load(
-                stdr)['SPW']['MEAS_FREQ_REF']
+        pipeline.specframe[i] = msdict['SPW']['MEAS_FREQ_REF']
 
-        with open(msinfo, 'r') as stdr:
-            targetinfo = yaml.safe_load(stdr)['FIELD']
+        targetinfo = msdict['FIELD']
 
-        intents = utils.categorize_fields(msinfo)
+        intents = utils.categorize_fields(msdict)
         # Save all fields in a list
         all_fields = msdict["FIELD"]["NAME"]
         # The order of fields here is important
@@ -191,10 +207,10 @@ def worker(pipeline, recipe, config):
             elif "all" in conf_fields:
                 getattr(pipeline, term)[i] = fields
             elif "longest" in conf_fields:
-                f = utils.observed_longest(msinfo, fields)
+                f = utils.observed_longest(msdict, fields)
                 getattr(pipeline, term)[i] = [f]
             elif "nearest" in conf_fields:
-                f = utils.set_gcal(msinfo, fields, mode="nearest")
+                f = utils.set_gcal(msdict, fields, mode="nearest")
                 getattr(pipeline, term)[i] = [f]
             else:
                 raise RuntimeError("Could not find field/selection {0}."\
@@ -208,14 +224,14 @@ def worker(pipeline, recipe, config):
             _dec = []
             _fid = []
             for f in getattr(pipeline, term)[i]:
-                fid = utils.get_field_id(msinfo, f)[0]
+                fid = utils.get_field_id(msdict, f)[0]
                 targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                 ra = targetpos[0]/np.pi*180
                 dec = targetpos[1]/np.pi*180
                 _ra.append(ra)
                 _dec.append(dec)
                 _fid.append(fid)
-                tobs = utils.field_observation_length(msinfo, f)/60.0
+                tobs = utils.field_observation_length(msdict, f)/60.0
                 caracal.log.info(
                         '{0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
             getattr(pipeline, term+"_ra")[i] = _ra

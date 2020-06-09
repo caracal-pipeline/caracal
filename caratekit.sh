@@ -2,13 +2,13 @@
 # The following ensures the script to stop on errors
 set -e
 
-workspace=/var/lib/jenkins/jobs/PR_meerkathi/workspace/112/test-output
-test_data_dir=/var/lib/jenkins/jobs/PR_meerkathi/workspace/112/test-output/pull_request_data/
+workspace=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/test-output
+test_data_dir=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/test-output/pull_request_data/
 caracal_test_id=801a7ad11d2e5634454194eb771b556bf586716e
-local_caracal=/var/lib/jenkins/jobs/PR_meerkathi/workspace/112/projects/caracal/
+local_caracal=/var/lib/jenkins/jobs/PR_meerkathi/workspace/113/projects/caracal/
 workspace_root=${workspace}/${caracal_test_id}
 cvirtualenv=${workspace_root}/caracal_venv
-caracal_stimela_pullfolder=${workspace}/singularity_pullfolder
+CARATE_STIMELA_PULLFOLDER=${workspace}/singularity_pullfolder
 HOME_OLD=${HOME}
 
 mkdir -p ${workspace_root}

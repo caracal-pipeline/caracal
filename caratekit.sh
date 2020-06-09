@@ -2,6 +2,8 @@
 # The following ensures the script to stop on errors
 set -e
 
+echo HOME $HOME
+
 # Rule: Two newlines before ###, none at end except for the very end
 
 # Find out which caratekit this is, will be needed later

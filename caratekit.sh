@@ -2,45 +2,6 @@
 # The following ensures the script to stop on errors
 set -e
 
-workspace=/var/lib/jenkins/jobs/PR_meerkathi/workspace/118/test-output
-test_data_dir=/var/lib/jenkins/jobs/PR_meerkathi/workspace/118/test-output/pull_request_data/
-caracal_test_id=$pull_request_name
-local_caracal=/var/lib/jenkins/jobs/PR_meerkathi/workspace/118/projects/caracal/
-workspace_root=${workspace}/${caracal_test_id}
-cvirtualenv=${workspace_root}/caracal_venv
-CARATE_STIMELA_PULLFOLDER=${workspace}/singularity_pullfolder
-HOME_OLD=${HOME}
-
-mkdir -p ${workspace_root}
-HOME=${workspace_root}/home
-export HOME
-echo ${HOME}
-echo ${workspace_root}/home
-ls -a $HOME
-exit
-
-rm -rf ${HOME}
-mkdir -p ${HOME}
-cd ${HOME}
-rm -rf ${cvirtualenv}
-#python3 -m venv ${cvirtualenv}
-#rm -rf ${cvirtualenv}
-virtualenv -p python3 ${cvirtualenv}
-. ${cvirtualenv}/bin/activate
-export PYTHONPATH=''
-pip install pip setuptools wheel -U
-rm -rf ${workspace_root}/caracal
-cd ${workspace_root}
-cp -r ${local_caracal} ${workspace_root}/
-pip install -U --force-reinstall ${workspace_root}/caracal
-rm -f ${HOME}/.stimela/*
-echo "\${CARATE_STIMELA_PULLFOLDER} ${CARATE_STIMELA_PULLFOLDER}"
-export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER}
-mkdir -p ${CARATE_STIMELA_PULLFOLDER}
-stimela pull --singularity
-export HOME=${HOME_OLD}
-exit
-
 # Rule: Two newlines before ###, none at end except for the very end
 
 # Find out which caratekit this is, will be needed later

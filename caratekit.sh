@@ -2386,6 +2386,8 @@ echo "Entering virtualenv in ${WORKSPACE_ROOT}"
 echo ". \${cvirtualenv}/bin/activate" >> ${SS}
 # [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
 
+[[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
+
 echo "export PYTHONPATH=''" >> ${SS}
 export PYTHONPATH=''
 echo "pip install pip setuptools wheel -U"  >> ${SS}

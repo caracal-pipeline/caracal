@@ -148,7 +148,6 @@ def worker(pipeline, recipe, config):
             dcol = config['split_field']['col']
 
         target_iter = 0
-        import ipdb; ipdb.set_trace()
         for fld, target in enumerate(target_ls):
             tms = msouts[fld]
             if from_target:
@@ -246,9 +245,9 @@ def worker(pipeline, recipe, config):
 
                 if (config['obsinfo']['summary_json']):
                     if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.json'.format(os.path.splitext(tms)[0])
+                        listfile = '{0:s}-summary.json'.format(os.path.splitext(tms)[0])
                     else:
-                        listfile = '{0:s}-obsinfo.json'.format(pipeline.msbasenames[i])
+                        listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
 
                     step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,

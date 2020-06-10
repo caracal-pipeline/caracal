@@ -24,7 +24,7 @@ def worker(pipeline, recipe, config):
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
         # filenames generated
         obsinfo  = f'{msroot}-obsinfo.txt'
-        summary  = f'{msroot}-obsinfo.json'
+        summary  = f'{msroot}-summary.json'
         elevplot = f'{msroot}-elevation-tracks.png'
 
         if pipeline.enable_task(config, 'obsinfo'):
@@ -125,7 +125,7 @@ def worker(pipeline, recipe, config):
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
         msdict = pipeline.get_msinfo(msname)
         obsinfo  = f'{msroot}-obsinfo.txt'
-        summary  = f'{msroot}-obsinfo.json'
+        summary  = f'{msroot}-summary.json'
         elevplot = f'{msroot}-elevation-tracks.png'
 
         # copy these to obsinfo dir if needed

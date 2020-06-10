@@ -185,7 +185,7 @@ class worker_administrator(object):
         """Returns info dict corresponding to an MS"""
         if msname in self._msinfos:
             return self._msinfos[msname]
-        msinfo = f"{os.path.splitext(msname)[0]}-summary.json"
+        msinfo = f"{self.msdir}/{os.path.splitext(msname)[0]}-summary.json"
         with open(msinfo, 'r') as f:
             msdict = self._msinfos[msname] = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
         return msdict
@@ -202,7 +202,7 @@ class worker_administrator(object):
         # self.target is a list of lists of targets, per each MS
         for msbase, targets in zip(self.msbasenames, self.target):
             for targ in targets:
-                msname = f'{msbase}-{utils.filter_name(targ)}-{label}.{self.ms_extension}'
+                msname = f'{msbase}-{utils.filter_name(targ)}{label}.{self.ms_extension}'
                 target_msfiles.setdefault(targ, []).append(msname)
         # collect into flat list of MSs
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))

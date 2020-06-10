@@ -320,15 +320,16 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
-    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str,field_id)))
-    recipe.add('cab/ragavi', step,
-        {
+    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
+    params =  {
         "table"         : f"{gtab}:msfile",
         "gaintype"     : term,
-        "field"        : None if field_id is None else ",".join(map(str,field_id)),
         "corr"         : '',
         "htmlname"     : gtab,
-        },
+        }
+    if field_id is not None:
+        params['field'] = ",".join(map(str,field_id))
+    recipe.add('cab/ragavi', step, params,
         input=pipeline.input,
         msdir=pipeline.caltables,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),

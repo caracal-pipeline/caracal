@@ -25,6 +25,7 @@ def worker(pipeline, recipe, config):
     for i in range(nobs):
         prefix_msbase = pipeline.prefix_msbases[i]
         mslist  = pipeline.get_mslist(i, label, target=(config['field'] == "target"))
+        target_ls = pipeline.target[i] if config['field'] == "target" else []
 
         for j, msname in enumerate(mslist):
             msdict = pipeline.get_msinfo(msname)
@@ -449,7 +450,6 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'inspect'):
                 step = '{0:s}-inspect-ms{1:d}'.format(wname,msiter)
                 if config['field'] == 'target':
-                    fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                 else:
                     field = ",".join(map(str, utils.get_field_id(msdict, manfields.get_field(

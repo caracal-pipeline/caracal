@@ -41,6 +41,7 @@ def worker(pipeline, recipe, config):
                                    "overwrite": True,
                                },
                                input=pipeline.input,
+                               output=pipeline.msdir,
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['summary_json']:
@@ -56,6 +57,7 @@ def worker(pipeline, recipe, config):
                                    "outfile": summary,
                                },
                                input=pipeline.input,
+                               output=pipeline.msdir,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['vampirisms']:
@@ -69,6 +71,7 @@ def worker(pipeline, recipe, config):
                                "verb": True,
                            },
                        input=pipeline.input,
+                       output=pipeline.msdir,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plotelev'):
@@ -86,6 +89,7 @@ def worker(pipeline, recipe, config):
                                    "overwrite" : True,
                                    },
                                    input=pipeline.input,
+                                   output=pipeline.msdir,
                                    label="{:s}:: Plotting elevation tracks".format(step))
                     elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add("cab/owlcat_plotelev", step, {
@@ -93,6 +97,7 @@ def worker(pipeline, recipe, config):
                                    "output-name" : elevplot
                                    },
                                    input=pipeline.input,
+                                   output=pipeline.msdir,
                                    label="{:s}:: Plotting elevation tracks".format(step))
 
     # if any steps at all were inserted, run the recipe

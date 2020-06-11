@@ -270,6 +270,8 @@ class worker_administrator(object):
             os.mkdir(self.output)
         if not os.path.exists(self.rawdatadir):
             os.mkdir(self.rawdatadir)
+        if not os.path.exists(self.obsinfo):
+            os.mkdir(self.obsinfo)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
         log.info("output directory for logs is {}".format(self.logs))

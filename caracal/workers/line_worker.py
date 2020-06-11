@@ -26,8 +26,14 @@ from caracal.workers.utils import manage_flagsets as manflags
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
 
-# To split out cubes/<dir> from output/cubes/dir
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def get_relative_path(path, pipeline):
+    """Returns e.g. cubes/<dir> given output/cubes/<dir>"""
+    return os.path.relpath(path, pipeline.output)
+
+def add_ms_label(msname, label="mst"):
+    """Adds _label to end of MS name, before the extension"""
+    msbase, ext = os.path.splitext(msname)
+    return f"{msbase}_{label}{ext}"
 
 
 def freq_to_vel(filename, reverse):
@@ -395,7 +401,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Add model column'.format(step))
 
-        msname_mst = msname.replace('.ms', '_mst.ms')
+        msname_mst = add_ms_label(msname, "mst")
 
         if pipeline.enable_task(config, 'mstransform'):
             # If the output of this run of mstransform exists, delete it first
@@ -674,7 +680,7 @@ def worker(pipeline, recipe, config):
         for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))
             if config['make_cube']['use_mstransform']:
-                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+                mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
             field = utils.filter_name(target)
@@ -690,7 +696,7 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(cube_path):
                     os.mkdir(cube_path)
                 cube_dir = '{0:s}/cube_{1:d}'.format(
-                    get_dir_path(pipeline.cubes, pipeline), j)
+                    get_relative_path(pipeline.cubes, pipeline), j)
 
                 line_image_opts.update({
                     "msname": mslist,
@@ -702,7 +708,7 @@ def worker(pipeline, recipe, config):
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                            get_dir_path(pipeline.masking, pipeline), own_line_clean_mask)})
+                            get_relative_path(pipeline.masking, pipeline), own_line_clean_mask)})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
@@ -899,7 +905,7 @@ def worker(pipeline, recipe, config):
                             os.remove(MFScubename)
 
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='casa':
-        cube_dir = get_dir_path(pipeline.cubes, pipeline)
+        cube_dir = get_relative_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
         label = config['label_in']
         if label != '':
@@ -967,7 +973,7 @@ def worker(pipeline, recipe, config):
 
         for tt, target in enumerate(all_targets):
             if config['make_cube']['use_mstransform']:
-                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+                mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
             field = utils.filter_name(target)
@@ -1007,7 +1013,7 @@ def worker(pipeline, recipe, config):
 
     # Once all cubes have been made fix the headers etc.
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
-    cube_dir = get_dir_path(pipeline.cubes, pipeline)
+    cube_dir = get_relative_path(pipeline.cubes, pipeline)
     for tt, target in enumerate(all_targets):
         field = utils.filter_name(target)
 

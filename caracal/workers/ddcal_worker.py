@@ -284,7 +284,7 @@ def worker(pipeline, recipe, config):
         print("test_path",test_path)
         print("output_cubical",output_cubical)
         for ms in mslist:
-           mspref = ms.split('.ms')[0].replace('-','_')
+           mspref =os.path.splitext(ms)[0].replace('-','_')
            step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/cubical_ddf', step, {
               "data-ms"           : ms,
@@ -353,7 +353,7 @@ def worker(pipeline, recipe, config):
     def cp_data_column(field,mslist):
         outdir = field+"_ddcal"
         for ms in mslist:
-           mspref = ms.split('.ms')[0].replace('-','_')
+           mspref =os.path.splitext(ms)[0].replace('-','_')
            step = 'cp_datacol-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/msutils', step, {
                "command" : 'copycol',
@@ -370,7 +370,7 @@ def worker(pipeline, recipe, config):
         outdir = field+"_ddcal"
         imweight = config[key]['img_ws_weight']
         pref = "DD_wsclean"
-        mspref = mslist[0].split('.ms')[0].replace('-','_')
+        mspref = os.path.splitext(mslist[0])[0].replace('-','_')
         step = 'img_wsclean-{0:s}-{1:s}'.format(mspref,field)
         recipe.add('cab/wsclean', step, {
             "msname": mslist,
@@ -406,7 +406,7 @@ def worker(pipeline, recipe, config):
         pref = "DD_wsclean"
         crystalball_model = '{0:s}_{1:s}-sources.txt'.format(pref, field)
         for ms in mslist:
-           mspref = ms.split('.ms')[0].replace('-','_')
+           mspref =os.path.splitext(ms)[0].replace('-','_')
            step = 'crystalball-{0:s}-{1:s}'.format(mspref,field)
            recipe.add('cab/crystalball', step, {
                "ms": ms,

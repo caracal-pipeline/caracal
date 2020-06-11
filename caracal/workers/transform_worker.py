@@ -95,7 +95,7 @@ def worker(pipeline, recipe, config):
         # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
            target_ls = pipeline.target[i]
-           msouts = [pipeline.form_msname(msbase, label_out, targ) for targ in target_ls]
+           to_mslist = [pipeline.form_msname(msbase, label_out, targ) for targ in target_ls]
            # repeat the from-ms once per target, if not splitting from the target MS
            if not from_target:
                from_mslist = from_mslist*len(target_ls)

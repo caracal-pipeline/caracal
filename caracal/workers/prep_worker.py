@@ -13,16 +13,10 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     field_name = config["field"]
 
-    msnames = pipeline.get_msnames(label)
     msdir = pipeline.msdir
     for i in range(pipeline.nobs):
         prefix_msbase = pipeline.prefix_msbases[i]
-
-        if field_name == 'target':
-           fields = map(utils.filter_name, pipeline.target[i])
-           mslist = pipeline.get_msnames(label, fields=fields)
-        else:
-            mslist = [msnames[i]]
+        mslist  = pipeline.get_mslist(i, label, target=(field_name == "target"))
 
         for msname in mslist:
             if not os.path.exists(os.path.join(msdir, msname)):

@@ -420,9 +420,10 @@ def worker(pipeline, recipe, config):
     label_in = config["label_in"]
 
     # loop over all MSs for this label
-    for i, msname in enumerate(pipeline.get_msnames(label_in)):
+    for i, msbase in enumerate(pipeline.msbasenames):
+        msname = pipeline.form_msname(msbase, label_in)
         msinfo = pipeline.get_msinfo(msname)
-        prefix = f"{pipeline.prefix_msbases[i]}-{label}"
+        prefix_msbase = f"{pipeline.prefix_msbases[i]}-{label}"
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             # Write/rewind flag versions
@@ -540,7 +541,7 @@ def worker(pipeline, recipe, config):
         if no_secondary:
             primary_order = config["primary"]["order"]
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary")
+                    prefix_msbase, label=label, ftype="primary")
             caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
@@ -554,10 +555,10 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary")
+                    prefix_msbase, label=label, ftype="primary")
 
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary", 
+                    prefix_msbase, label=label, ftype="secondary",
                     prev=primary, prev_name="primary", smodel=True)
 
             interps = primary["interps"]
@@ -606,7 +607,7 @@ def worker(pipeline, recipe, config):
 
         callib_dict = dict(zip(calmodes, applycal_recipes))
 
-        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
+        with open(os.path.join(callib_dir, f'callib_{prefix_msbase}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'summary'):
@@ -626,5 +627,5 @@ def worker(pipeline, recipe, config):
 
             summary_log = glob.glob("{0:s}/log-{1:s}-{2:s}-*"
                                     ".txt".format(pipeline.logs, wname, step))[0]
-            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
-            manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
+            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix_msbase, wname )
+            manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)

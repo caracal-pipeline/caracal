@@ -50,7 +50,7 @@ class worker_administrator(object):
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
         self.ms_extension = self.config["getdata"]["extension"]
 
-        self._msinfos = {}
+        self._msinfo_cache = {}
 
         self.logs_symlink = self.config['general']['output'] + '/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
@@ -169,29 +169,44 @@ class worker_administrator(object):
                 value = value*self.nobs
                 setattr(self, item, value)
 
+    def get_msinfo(self, msname):
+        """Returns info dict corresponding to an MS. Caches and reloads as needed"""
+        msinfo_file = os.path.splitext(msname)[0] + "-summary.json"
+        msinfo_path = os.path.join(self.msdir, msinfo_file)
+        msdict, mtime_cache = self._msinfo_cache.get(msname, (None, 0))
+        if not os.path.exists(msinfo_path):
+            raise RuntimeError(f"MS summary file {msinfo_file} not found at expected location. This is a bug or "
+                                "a misconfiguration. Was the MS transformed properly?")
+        # reload cached dict if file on disk is newer
+        mtime = os.path.getmtime(msinfo_path)
+        if msdict is None or mtime > mtime_cache:
+            with open(msinfo_path, 'r') as f:
+                msdict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+            self._msinfo_cache[msname] = msdict, mtime
+        return msdict
+
+    ### The following three methods provide MS naming services for workers
+
     def form_msname(self, msbase, label=None, field=None):
-        """Given a base MS name, a label, and a field, return the full MS name"""
+        """
+        Given a base MS name, an optional label, and an optional field name, return the full MS name
+        """
         label = '' if not label else '-' + label
         field = '' if not field else '-' + utils.filter_name(field)
         return f'{msbase}{field}{label}.{self.ms_extension}'
 
-    def get_msnames(self, label="", fields=[]):
-        """Gets list of MS names corresponding to a label, and an optional list of fields.
-            If a list of fields is given, outer loop is over fields, inner is over MSs
+    def get_mslist(self, iobs, label="", target=False):
         """
-        if fields:
-            return [self.form_msname(msbase, label, field) for field in fields for msbase in self.msbasenames]
+        Given an MS number (0...nobs-1), and an optional label, returns list of corresponding MSs.
+        If target is True, this will be one MS per each (split-out) target.
+        If target is False, the list will contain just the single MS.
+        Applies label in both cases.
+        """
+        msbase = self.msbasenames[iobs]
+        if target:
+            return [self.form_msname(msbase, label, targ) for targ in self.target[iobs]]
         else:
-            return [self.form_msname(msbase, label) for msbase in self.msbasenames]
-
-    def get_msinfo(self, msname):
-        """Returns info dict corresponding to an MS"""
-        if msname in self._msinfos:
-            return self._msinfos[msname]
-        msinfo = f"{self.msdir}/{os.path.splitext(msname)[0]}-summary.json"
-        with open(msinfo, 'r') as f:
-            msdict = self._msinfos[msname] = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
-        return msdict
+            return [self.form_msname(msbase, label)]
 
     def get_target_mss(self, label=None):
         """

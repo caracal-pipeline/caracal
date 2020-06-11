@@ -78,27 +78,22 @@ def worker(pipeline, recipe, config):
 
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
         # if splitting from target, we have multiple MSs to iterate over
-        if from_target:
-            from_mslist = [pipeline.form_msname(msbase, label_in, targ) for targ in pipeline.target[i]]
-        # else just the one MS on the list
-        else:
-            from_mslist = [pipeline.form_msname(msbase, label_in)]
+        from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
+        to_mslist  = pipeline.get_mslist(i, label_out, target=not splitting_cals)
 
         # if splitting cals, we'll split one (combined) target to one output MS
         if splitting_cals:
-           calfields = []
+           calfields = set()
            for fd in field_to_split:
                for elem in getattr(pipeline, fd)[i]:
-                   calfields.append(elem)
+                   calfields.add(elem)
            target_ls = [','.join(calfields)]
-           to_mslist = [pipeline.form_msname(msbase, label_out)]
         # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
            target_ls = pipeline.target[i]
-           to_mslist = [pipeline.form_msname(msbase, label_out, targ) for targ in target_ls]
            # repeat the from-ms once per target, if not splitting from the target MS
            if not from_target:
-               from_mslist = from_mslist*len(target_ls)
+               from_mslist = from_mslist * len(target_ls)
 
         #use existing calibration library if user gives one
         if pipeline.enable_task(config['split_field'], 'otfcal') and config['split_field']['otfcal']['callib']:

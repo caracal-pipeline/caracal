@@ -20,21 +20,11 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
 
-    msnames = pipeline.get_msnames(label)
     nobs = pipeline.nobs
-
     msiter=0
     for i in range(nobs):
         prefix_msbase = pipeline.prefix_msbases[i]
-
-        # loop over all input .MS files
-        # the additional 'for loop' below loops over all single target .MS files
-        #   produced by the pipeline (see "if config['field']" below)
-        if config['field'] == 'target':
-            target_ls = pipeline.target[i]
-            mslist = pipeline.get_msnames(label, fields=map(utils.filter_name, target_ls))
-        else:
-            mslist = [msnames[i]]
+        mslist  = pipeline.get_mslist(i, label, target=(config['field'] == "target"))
 
         for j, msname in enumerate(mslist):
             msdict = pipeline.get_msinfo(msname)

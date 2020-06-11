@@ -111,12 +111,10 @@ def ragavi_vis(pipeline, recipe, config, plotname, msname, field, iobs, label, p
 
 
 def worker(pipeline, recipe, config):
-
     uvrange = config['uvrange']
     plotter = config['standard_plotter']
 
     label_in = config['label_in']
-    msnames = pipeline.get_msnames(label_in)
     nobs = pipeline.nobs
 
     subdir = config['dirname']
@@ -137,11 +135,7 @@ def worker(pipeline, recipe, config):
         
         label = config['label_plot']
 
-        if config['field'] == 'target':
-            fields = map(utils.filter_name, pipeline.target[iobs])
-            mslist = pipeline.get_msnames(label_in, fields=fields)
-        else:
-            mslist = [msnames[iobs]]
+        mslist  = pipeline.get_mslist(iobs, label_in, target=(config['field'] == 'target'))
 
         for msname in mslist:
             if not os.path.exists(os.path.join(pipeline.msdir, msname)):

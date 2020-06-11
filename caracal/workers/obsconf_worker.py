@@ -19,6 +19,7 @@ def repeat_val(val, n):
 
 def worker(pipeline, recipe, config):
     recipe.msdir = pipeline.rawdatadir
+    recipe.output = pipeline.msdir
     step = None
 
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
@@ -36,11 +37,10 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": msname,
-                                   "listfile": obsinfo+":msfile",
+                                   "listfile": obsinfo,
                                    "overwrite": True,
                                },
                                input=pipeline.input,
-                               output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['summary_json']:
@@ -53,10 +53,9 @@ def worker(pipeline, recipe, config):
                                    "msname": msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": summary+":msfile",
+                                   "outfile": summary,
                                },
                                input=pipeline.input,
-                               output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
 
             if config['obsinfo']['vampirisms']:
@@ -70,7 +69,6 @@ def worker(pipeline, recipe, config):
                                "verb": True,
                            },
                        input=pipeline.input,
-                       output=pipeline.obsinfo,
                        label='{0:s}:: Note sunrise and sunset'.format(step))
 
             if pipeline.enable_task(config['obsinfo'], 'plotelev'):
@@ -84,19 +82,17 @@ def worker(pipeline, recipe, config):
                                    "xaxis" : "hourangle",
                                    "yaxis" : "elevation",
                                    "coloraxis" : "field",
-                                   "plotfile": elevplot+":msfile",
+                                   "plotfile": elevplot,
                                    "overwrite" : True,
                                    },
                                    input=pipeline.input,
-                                   output=pipeline.obsinfo,
                                    label="{:s}:: Plotting elevation tracks".format(step))
                     elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add("cab/owlcat_plotelev", step, {
                                    "msname" : msname,
-                                   "output-name" : elevplot+":msfile"
+                                   "output-name" : elevplot
                                    },
                                    input=pipeline.input,
-                                   output=pipeline.obsinfo,
                                    label="{:s}:: Plotting elevation tracks".format(step))
 
     # if any steps at all were inserted, run the recipe

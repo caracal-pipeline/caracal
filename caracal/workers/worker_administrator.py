@@ -56,8 +56,7 @@ class worker_administrator(object):
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
         if not self.config['general']['rawdatadir']:
-            self.config['general']['rawdatadir'] = self.msdir
-            self.rawdatadir = self.config['general']['rawdatadir']
+            self.rawdatadir = self.config['general']['rawdatadir'] = self.msdir
         else:
             self.rawdatadir = self.config['general']['rawdatadir']
 

@@ -169,17 +169,20 @@ class worker_administrator(object):
                 value = value*self.nobs
                 setattr(self, item, value)
 
-    def get_msnames(self, label, fields=[]):
-        """Gets list of MS names corresponding to a label, and an optional list of fields"""
-        if label:
-            label = f"-{label}"
+    def form_msname(self, msbase, label=None, field=None):
+        """Given a base MS name, a label, and a field, return the full MS name"""
+        label = '' if not label else '-' + label
+        field = '' if not field else '-' + utils.filter_name(field)
+        return f'{msbase}{field}{label}.{self.ms_extension}'
+
+    def get_msnames(self, label="", fields=[]):
+        """Gets list of MS names corresponding to a label, and an optional list of fields.
+            If a list of fields is given, outer loop is over fields, inner is over MSs
+        """
         if fields:
-            msnames = []
-            for field in fields:
-                msnames += [f'{msbase}-{field}{label}.{self.ms_extension}' for msbase in self.msbasenames]
-            return msnames
+            return [self.form_msname(msbase, label, field) for field in fields for msbase in self.msbasenames]
         else:
-            return [f'{msbase}{label}.{self.ms_extension}' for msbase in self.msbasenames]
+            return [self.form_msname(msbase, label) for msbase in self.msbasenames]
 
     def get_msinfo(self, msname):
         """Returns info dict corresponding to an MS"""
@@ -196,17 +199,13 @@ class worker_administrator(object):
         Where all_mss is a list of all MSs to be processed for all targets, and mss_per_target maps target field
         to associated list of MSs
         """
-        label = "" if not label else "-"+label
         target_msfiles = OrderedDict()
-
         # self.target is a list of lists of targets, per each MS
         for msbase, targets in zip(self.msbasenames, self.target):
             for targ in targets:
-                msname = f'{msbase}-{utils.filter_name(targ)}{label}.{self.ms_extension}'
-                target_msfiles.setdefault(targ, []).append(msname)
+                target_msfiles.setdefault(targ, []).append(self.form_msname(msbase, label, targ))
         # collect into flat list of MSs
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))
-
         return list(target_msfiles.keys()), target_ms_ls, target_msfiles
 
     def parse_cabspec_dict(self, cabspec_seq):

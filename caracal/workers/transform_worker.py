@@ -28,7 +28,6 @@ applycal_interp_rules = {
 
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
 
-
 table_suffix = {
     "delay_cal": 'K0',
     "bp_cal": 'B0',
@@ -37,63 +36,69 @@ table_suffix = {
     "transfer_fluxscale": 'F0',
 }
 
-# Check if field was specified as known key, else return the
-# same value.
+_target_fields = {'target'}
+_cal_fields = set("fcal bpcal gcal xcal".split())
+
+def get_fields_to_split(config):
+    fields = config['split_field']['field']
+    if not fields:
+        raise ValueError("split_field: field cannot be empty")
+    elif fields == 'calibrators':
+        return _cal_fields
+    elif fields == 'target':
+        return _target_fields
+    # else better be a combination of calibrator designators
+    else:
+        fields_to_split = set(fields.split(','))
+        diff = fields_to_split.difference(_cal_fields)
+        if diff:
+            raise ValueError(
+                "split_field: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
+                    ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
+                ))
+        if config['from_target']:
+            raise ValueError("can't split calibrator fields when from_target is True")
+        return fields_to_split
 
 
-def filter_name(string):
-    string = string.replace('+', '_p_')
-    return re.sub('[^0-9a-zA-Z]', '_', string)
+def check_config(config):
+    get_fields_to_split(config)
 
 
 def worker(pipeline, recipe, config):
-
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    label_in = config['label_in']
     from_target = config['from_target']
+    label_in = config['label_in']
     label_out = config['label_out']
-    split_field = config['split_field']['field']
-    target_fields = ['target']
-    cal_fields = ['fcal','bpcal','gcal','xcal']
+    field_to_split = get_fields_to_split(config)
+    # are we splitting calibrators
+    splitting_cals = field_to_split.intersection(_cal_fields)
 
-    if label_in:
-        msins = pipeline.get_msnames(label_in)
-    else:
-        msins = pipeline.msnames
-
-
-    mslist = pipeline.get_msnames(label_out)
-    for i in range(pipeline.nobs):
-        prefix = pipeline.prefix_msbases[i]
+    for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
+        # if splitting from target, we have multiple MSs to iterate over
         if from_target:
-            msins = pipeline.get_msnames(label_in, fields=map(utils.filter_name, pipeline.target[i]))
+            from_mslist = [pipeline.form_msname(msbase, label_in, targ) for targ in pipeline.target[i]]
+        # else just the one MS on the list
         else:
-            fms = msins[i]
-        field_to_split = split_field.split(',')
+            from_mslist = [pipeline.form_msname(msbase, label_in)]
 
-        if 'calibrators' in field_to_split:
-            field_to_split.remove('calibrators')
-            field_to_split += cal_fields 
-
-        for fd in field_to_split:
-            if fd not in target_fields + cal_fields:
-                raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal', 'gcal' or 'xcal'. "\
-                                 "User selected: {}".format(field_to_split))
-
-        if any(x in field_to_split for x in cal_fields):
+        # if splitting cals, we'll split one (combined) target to one output MS
+        if splitting_cals:
            calfields = []
            for fd in field_to_split:
                for elem in getattr(pipeline, fd)[i]:
                    calfields.append(elem)
            target_ls = [','.join(calfields)]
-           msouts = [mslist[i]]
+           to_mslist = [pipeline.form_msname(msbase, label_out)]
+        # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
            target_ls = pipeline.target[i]
-           msouts = pipeline.get_msnames(label_out, 
-                            fields=map(utils.filter_name, target_ls))
-          
+           msouts = [pipeline.form_msname(msbase, label_out, targ) for targ in target_ls]
+           # repeat the from-ms once per target, if not splitting from the target MS
+           if not from_target:
+               from_mslist = from_mslist*len(target_ls)
 
         #use existing calibration library if user gives one
         if pipeline.enable_task(config['split_field'], 'otfcal') and config['split_field']['otfcal']['callib']:
@@ -113,12 +118,12 @@ def worker(pipeline, recipe, config):
         # write calibration library file for OTF cal
         elif pipeline.enable_task(config['split_field'], 'otfcal'):
             caltablelist, gainfieldlist, interplist = [], [], []
-            calprefix = '{0:s}-{1:s}'.format(prefix,
+            calprefix = '{0:s}-{1:s}'.format(prefix_msbase,
                                              config['split_field']['otfcal']['label_cal'])
-            callib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix,calprefix)
+            callib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix_msbase, calprefix)
 
             with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                  'callib_{0:s}-{1:s}.json'.format(prefix,
+                                  'callib_{0:s}-{1:s}.json'.format(prefix_msbase,
                                   config['split_field']['otfcal']['label_cal']))) as f:
                 callib_dict = json.load(f)
 
@@ -147,42 +152,37 @@ def worker(pipeline, recipe, config):
             docallib = False
             dcol = config['split_field']['col']
 
-        target_iter = 0
-        for fld, target in enumerate(target_ls):
-            tms = msouts[fld]
-            if from_target:
-                fms = msins[fld]
-
+        for target_iter, (target, from_ms, to_ms) in enumerate(zip(target_ls, from_mslist, to_mslist)):
             # Rewind flags
-            available_flagversions = manflags.get_flags(pipeline, fms)
+            available_flagversions = manflags.get_flags(pipeline, from_ms)
             if config['rewind_flags']['enable'] and label_in:
                 version = config['rewind_flags']['version']
                 if version in available_flagversions:
                     substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
-                    manflags.restore_cflags(pipeline, recipe, version, fms, cab_name=substep)
+                    manflags.restore_cflags(pipeline, recipe, version, from_ms, cab_name=substep)
                     if available_flagversions[-1] != version:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, target_iter)
                         manflags.delete_cflags(pipeline, recipe,
                             available_flagversions[available_flagversions.index(version)+1],
-                            fms, cab_name=substep)
+                            from_ms, cab_name=substep)
                 else:
-                    manflags.conflict('rewind_to_non_existing', pipeline, wname, fms,
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, from_ms,
                         config, flags_before_worker, flags_after_worker)
 
-            flagv = tms + '.flagversions'
+            flagv = to_ms + '.flagversions'
 
             if pipeline.enable_task(config, 'split_field'):
                 step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tms)) or \
+                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
                     os.system(
-                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, tms, flagv))
+                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
 
                 recipe.add('cab/casa_mstransform', step,
                            {
-                               "vis": fms if label_in else fms + ":input",
-                               "outputvis": tms,
+                               "vis": from_ms if label_in else from_ms + ":input",
+                               "outputvis": to_ms,
                                "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
                                "timebin": config['split_field']['time_avg'],
                                "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
@@ -198,14 +198,13 @@ def worker(pipeline, recipe, config):
                            },
                            input=pipeline.input if label_in else pipeline.rawdatadir,
                            output=pipeline.output,
-                           label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(fms)))
+                           label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(from_ms)))
 
                 substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
-                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', tms,
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                     cab_name=substep, overwrite=False)
 
-            obsinfo_msname = tms if pipeline.enable_task(
-                config, 'split_field') else fms
+            obsinfo_msname = to_ms if pipeline.enable_task(config, 'split_field') else from_ms
 
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre']['ra'] == '' or config['changecentre']['dec'] == '':
@@ -217,18 +216,18 @@ def worker(pipeline, recipe, config):
                 step = 'changecentre-ms{0:d}-{1:d}'.format(i,target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
-                               "msname": tms,
-                               "outputvis": tms,
+                               "msname": to_ms,
+                               "outputvis": to_ms,
                                "phasecenter": 'J2000 {0:s} {1:s}'.format(config['changecentre']['ra'], config['changecentre']['dec']),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
-                           label='{0:s}:: Change phase centre ms={1:s}'.format(step, tms))
+                           label='{0:s}:: Change phase centre ms={1:s}'.format(step, to_ms))
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
                     if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(tms)[0])
+                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
 
@@ -245,7 +244,7 @@ def worker(pipeline, recipe, config):
 
                 if (config['obsinfo']['summary_json']):
                     if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-summary.json'.format(os.path.splitext(tms)[0])
+                        listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
 
@@ -260,5 +259,3 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
-
-            target_iter += 1

@@ -9,6 +9,7 @@ import re
 import caracal
 import sys
 import glob
+import fnmatch
 import numpy as np
 
 NAME = 'Flag'
@@ -363,6 +364,32 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
+
+            if pipeline.enable_task(config, 'flag_manual'):
+                rules = config['flag_manual']['rules']
+                for irule, rule in enumerate(rules):
+                    # a manual flagging rule has a pattern to match the MS name, followed by key:value pairs
+                    rule_elements = rule.split()
+                    if len(rule_elements) < 2 or not all(':' in el for el in rule_elements[1:]):
+                        raise ValueError(f"invalid flag_manual rule '{rule}'")
+                    pattern = rule_elements[0]
+                    keywords = {elem.split(":", 1) for elem in rule_elements[1:]}
+                    # end of parsing block. Replace this with file if you like
+                    if not fnmatch.fnmatch(msname, pattern):
+                        continue
+                    caracal.log.info(f"adding manual flagging rule for {pattern}")
+                    step = f'{wname}-manual-ms{msiter}-{irule}'
+                    args = {
+                                   "vis": msname,
+                                   "mode": 'manual',
+                                   "flagbackup": False,
+                                   "field": fields,
+                           }
+                    args.update(keywords)
+                    recipe.add('cab/casa_flagdata', step, args,
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label=f'{step}::Flag ms={msname} using {rule}')
 
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)

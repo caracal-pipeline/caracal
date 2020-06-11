@@ -373,7 +373,7 @@ def worker(pipeline, recipe, config):
                     if len(rule_elements) < 2 or not all(':' in el for el in rule_elements[1:]):
                         raise ValueError(f"invalid flag_manual rule '{rule}'")
                     pattern = rule_elements[0]
-                    keywords = {elem.split(":", 1) for elem in rule_elements[1:]}
+                    keywords = {tuple(elem.split(":", 1)) for elem in rule_elements[1:]}
                     # end of parsing block. Replace this with file if you like
                     if not fnmatch.fnmatch(msname, pattern):
                         continue

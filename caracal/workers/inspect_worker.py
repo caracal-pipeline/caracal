@@ -161,9 +161,14 @@ def worker(pipeline, recipe, config):
 
             # new-school plots
             if config['shadems']['enable']:
-                plot_args = []
+                # make dict of substitutions
+                basesubst = OrderedDict(msbase=os.path.splitext(msname)[0])
+
                 # make a map: {(fields): field_type}, so we can loop over fields below, but only include unique fields
                 field_map = OrderedDict()
+                # make a reverse map: field_type -> "field_name,field_name"
+                field_map_names = OrderedDict()
+                # make set of all field names
                 all_fields = set()
                 for field_type in fields:
                     if (label_in != '') and (config['field'] == 'target'):
@@ -172,45 +177,52 @@ def worker(pipeline, recipe, config):
                         field_names = tuple(getattr(pipeline, field_type)[iobs])
                     field_map.setdefault(field_names, field_type)
                     all_fields.update(field_names)
+                    basesubst[field_type] = field_map_names[field_type] = ",".join(field_names)
+                basesubst["all_fields"] = ",".join(all_fields)
 
-                for field_names, field_type in field_map.items():
-                    args = OrderedDict(
-                                # shadems uses its own "{}" codes in output name, so put it together like this
-                                png="{}-{}-{}-{}".format(msbase, label, field_type,
-                                    "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
-                                title="'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
-                                col=config['shadems']['default_column'],
-                                corr=corr.replace(' ',''),
-                                field=",".join(field_names))
-
-                    for iplot, plotspec in enumerate(config['shadems']['plots_by_field']):
+                plot_args = []
+                def collect_plots(args, plotspecs, extra_args, subst=None):
+                    """Generic helper function to parse a list of shadems plot specs, and add them to plot_args"""
+                    for iplot, plotspec in enumerate(plotspecs):
                         if plotspec:
+                            plotspec = plotspec.format(**(subst or basesubst))
+                            # add arguments from args, if not present in plotspec
                             plotspec = plotspec.split()
                             for arg, value in args.items():
                                 arg = "--" + arg
                                 if arg not in plotspec:
                                     plotspec += [arg, value]
-                            plotspec.append("--iter-field")
+                            plotspec += extra_args
+
                             plot_args.append(" ".join(plotspec))
 
-                args = OrderedDict(
-                    # shadems uses its own "{}" codes in output name, so put it together like this
+                baseargs = OrderedDict(
                     png="{}-{}-{}".format(msbase, label,
                                           "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
                     title="'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                     col=config['shadems']['default_column'],
-                    field=",".join(all_fields),
                     corr=corr.replace(' ', ''))
-                for iplot, plotspec in enumerate(config['shadems']['plots_by_corr']):
-                    if plotspec:
-                        plotspec = plotspec.split()
-                        for arg, value in args.items():
-                            arg = "--" + arg
-                            if arg not in plotspec:
-                                plotspec += [arg, value]
-                        plotspec.append("--iter-corr")
-                        plot_args.append(" ".join(plotspec))
 
+                # collect generic plots
+                collect_plots(baseargs, config['shadems']['plots_by_corr'], [])
+
+                # collect plots_by_corr
+                args = baseargs.copy()
+                args["field"] = ",".join(all_fields)
+                collect_plots(args, config['shadems']['plots_by_corr'], ["--iter-corr"])
+
+                # collect plots_by_field
+                for field_type, field_names in field_map.items():
+                    args = baseargs.copy()
+                    args["field"] = ",".join(field_names)
+                    args["png"] = "{}-{}-{}-{}".format(msbase, label, field_type,
+                                  "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
+                    args["title"] ="'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'"
+                    subst = basesubst.copy()
+                    subst["field"] = field_type
+                    collect_plots(args,  config['shadems']['plots_by_field'], ["--iter-field"])
+
+                # dispatch plots
                 if plot_args:
                     step = 'plot-shadems-ms{0:d}'.format(iobs)
                     recipe.add("cab/shadems_direct", step,

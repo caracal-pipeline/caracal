@@ -124,6 +124,8 @@ def worker(pipeline, recipe, config):
     #pipeline.dish_diameter = config['dish_diameter']
 
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
+        caracal.log.info(f"MS #{i}: {msname}")
+
         msdict = pipeline.get_msinfo(msname)
         obsinfo  = f'{msroot}-obsinfo.txt'
         summary  = f'{msroot}-summary.json'
@@ -167,7 +169,7 @@ def worker(pipeline, recipe, config):
         # Get channels in MS
         spw = msdict['SPW']['NUM_CHAN']
         pipeline.nchans[i] = spw
-        caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
+        caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(
             len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
@@ -178,7 +180,7 @@ def worker(pipeline, recipe, config):
         pipeline.firstchanfreq[i] = firstchanfreq
         pipeline.lastchanfreq[i] = lastchanfreq
         pipeline.chanwidth[i] = chanwidth
-        caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+        caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                 ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
         if i == pipeline.nobs-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
@@ -218,9 +220,9 @@ def worker(pipeline, recipe, config):
                         " Please check the [observation_config.{1}] "\
                         "section of the config file".format(conf_fields, term))
 
-            caracal.log.info("====================================")
-            caracal.log.info(label)
-            caracal.log.info(" ---------------------------------- ")
+#            caracal.log.info("    ====================================")
+            caracal.log.info(f"  {label}:")
+#            caracal.log.info("     ---------------------------------- ")
             _ra = []
             _dec = []
             _fid = []
@@ -234,7 +236,7 @@ def worker(pipeline, recipe, config):
                 _fid.append(fid)
                 tobs = utils.field_observation_length(msdict, f)/60.0
                 caracal.log.info(
-                        '{0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
+                        '    {0:s} (ID={1:d}) : {2:.2f} minutes | RA={3:.2f} deg, Dec={4:.2f} deg'.format(f, fid, tobs, ra, dec))
             getattr(pipeline, term+"_ra")[i] = _ra
             getattr(pipeline, term+"_dec")[i] = _dec
             getattr(pipeline, term+"_id")[i] = _fid

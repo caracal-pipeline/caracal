@@ -204,7 +204,7 @@ def worker(pipeline, recipe, config):
                     corr=corr.replace(' ', ''))
 
                 # collect generic plots
-                collect_plots(baseargs, config['shadems']['plots_by_corr'], [])
+                collect_plots(baseargs, config['shadems']['plots'], [])
 
                 # collect plots_by_corr
                 args = baseargs.copy()
@@ -212,12 +212,12 @@ def worker(pipeline, recipe, config):
                 collect_plots(args, config['shadems']['plots_by_corr'], ["--iter-corr"])
 
                 # collect plots_by_field
-                for field_type, field_names in field_map.items():
+                for field_names, field_type in field_map.items():
                     args = baseargs.copy()
                     args["field"] = ",".join(field_names)
                     args["png"] = "{}-{}-{}-{}".format(msbase, label, field_type,
-                                  "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png"),
-                    args["title"] ="'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'"
+                                  "{field}{_Spw}{_Scan}{_Ant}-{label}{_alphalabel}{_colorlabel}{_suffix}.png")
+                    args["title"] = "'{ms} " + field_type + "{_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'"
                     subst = basesubst.copy()
                     subst["field"] = field_type
                     collect_plots(args,  config['shadems']['plots_by_field'], ["--iter-field"])

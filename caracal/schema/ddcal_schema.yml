@@ -340,7 +340,7 @@ mapping:
          dist_nworker:
            type: int
            desc: Number of processes.
-           example: "25"
+           example: "0"
            required: false
 
 

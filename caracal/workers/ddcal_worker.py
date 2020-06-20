@@ -309,7 +309,7 @@ def worker(pipeline, recipe, config):
               "dd-max-post-error"  : config[key]['dd_dd_max_post_error'],
               "g-time-int"        : config[key]['dd_g_timeslots_int'],
               "g-freq-int"        : config[key]['dd_g_chan_int'],
-              "dist-ncpu"         :  0,
+              "dist-ncpu"         : config[key]['dist_ncpu'],
               "dist-nworker"      : config[key]['dist_nworker'],
               "dist-max-chunks"   : config[key]['dist_nworker'],
               "dist-max-chunks"   : config[key]['dist_nworker'],

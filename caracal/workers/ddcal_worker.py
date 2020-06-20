@@ -367,7 +367,7 @@ def worker(pipeline, recipe, config):
                               },
                input=INPUT,
                output=OUTPUT+"/"+outdir,
-               label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field)),shared_memory=shared_mem
+               label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field),shared_memory=shared_mem)
 
     def img_wsclean(mslist,field):
         key='image_wsclean'

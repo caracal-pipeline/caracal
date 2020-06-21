@@ -35,7 +35,6 @@ def worker(pipeline, recipe, config):
     OUTPUT=pipeline.output+"/"+DD_DIR
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem'])+'gb'
-    print(shared_mem)
     all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
         pipeline.target, pipeline.msnames, label)
     print("All_targets", all_targets)
@@ -147,8 +146,8 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
         print("Imaging",ms_list)
-        postcal_datacol = config['calibrate_dd']['dd_out_data_col']
-        dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
+        postcal_datacol = config['image_dd']['data_colname_postcal']
+        dd_imagecol = {"Data-ColName": postcal_datacol}
         dd_image_opts_postcal.update(dd_ms_list)
         dd_image_opts_postcal.update(dd_imagecol)
         if (use_mask):
@@ -436,14 +435,14 @@ def worker(pipeline, recipe, config):
        print("Processing field",field,"for de calibration:")
        print(mslist)
 #       print(field)
-       if USEPB:
-          make_primary_beam()
-       if pipeline.enable_task(config,'image_dd'):
-          dd_precal_image(field,mslist)
+#       if USEPB:
+#          make_primary_beam()
+#       if pipeline.enable_task(config,'image_dd'):
+#          dd_precal_image(field,mslist)
     #sfind_intrinsic()
-       dagga(field)
-       if pipeline.enable_task(config,'calibrate_dd'):
-          dd_calibrate(field,mslist)
+#       dagga(field)
+#       if pipeline.enable_task(config,'calibrate_dd'):
+#          dd_calibrate(field,mslist)
        if pipeline.enable_task(config,'image_dd'):
           dd_postcal_image(field,mslist)
        if pipeline.enable_task(config, 'copy_data'):

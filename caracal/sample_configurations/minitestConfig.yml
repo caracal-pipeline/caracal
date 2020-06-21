@@ -4,7 +4,7 @@ general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['1532022061_subset']
+  dataid: ['']
 
 obsconf:
   refant: '0'

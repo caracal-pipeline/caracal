@@ -147,6 +147,7 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
         print("Imaging",ms_list)
+        postcal_datacol = config['calibrate_dd']['dd_out_data_col']
         dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
         dd_image_opts_postcal.update(dd_ms_list)
         dd_image_opts_postcal.update(dd_imagecol)

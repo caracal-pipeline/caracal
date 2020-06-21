@@ -422,6 +422,12 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
+          clean_threads: 
+            type: int
+            example: '0'
+            required: false
+            desc: Number of threads used by wsclean; has a default value of '0'. If specified in the configuration file, will overrule the value set by ncpu, which is the global default for both cubical and wsclean
+
 
       extract_sources:
         type: map

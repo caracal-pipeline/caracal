@@ -446,7 +446,7 @@ def worker(pipeline, recipe, config):
     def fake_image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-
+        thread = config[key]['clean_threads'] if config[key]['clean_threads'] else ncpu
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
@@ -470,7 +470,7 @@ def worker(pipeline, recipe, config):
             "savesourcelist": False,
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
-            "threads": ncpu,
+            "threads": thread,
         }
         if maxuvl > 0.:
             fake_image_opts.update({
@@ -494,6 +494,9 @@ def worker(pipeline, recipe, config):
         key = 'image'
         key_mt = 'calibrate'
 
+        thread = config[key]['clean_threads'] if config[key]['clean_threads'] else ncpu
+        caracal.log.info("threads:")
+        caracal.log.info(thread)
         if num > 1:
             matrix_type = config[key_mt]['gain_matrix_type'][
                 num - 2 if len(config[key_mt]['gain_matrix_type']) >= num else -1]
@@ -533,7 +536,7 @@ def worker(pipeline, recipe, config):
             "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
-            "threads": ncpu,
+            "threads": thread,
         }
         if maxuvl > 0.:
             image_opts.update({

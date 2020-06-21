@@ -7,7 +7,7 @@ getdata:
   dataid: ['']
 
 obsconf:
-  refant: 'm010'
+  refant: '0'
 
 transform:
   enable: true

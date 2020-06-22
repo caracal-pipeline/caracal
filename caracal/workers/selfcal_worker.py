@@ -446,7 +446,7 @@ def worker(pipeline, recipe, config):
     def fake_image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-        thread = config[key]['clean_threads'] if config[key]['clean_threads'] else ncpu
+        thread = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
@@ -494,8 +494,8 @@ def worker(pipeline, recipe, config):
         key = 'image'
         key_mt = 'calibrate'
 
-        thread = config[key]['clean_threads'] if config[key]['clean_threads'] else ncpu
-        caracal.log.info("threads:")
+        thread = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
+        caracal.log.info("Number of threads used by WSClean for gridding:")
         caracal.log.info(thread)
         if num > 1:
             matrix_type = config[key_mt]['gain_matrix_type'][

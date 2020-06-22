@@ -422,7 +422,7 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
-          clean_threads: 
+          ncpu_img: 
             type: int
             example: '0'
             required: false

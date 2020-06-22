@@ -331,7 +331,6 @@ do
     fi
     if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
     then
-	echo got here
         CC=1
     fi
     if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]

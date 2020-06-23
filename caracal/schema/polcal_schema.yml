@@ -30,28 +30,27 @@ mapping:
         required: true
         example: '>50'
       pol_calib:
-	descr: calibrator for the polarized angle
-	type: str
-	required: true
-	example: xcal
+        descr: calibrator for the polarized angle
+        type: str
+        required: true
+        example: xcal
       leakage_calib:
-	descr: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles
-	type: str
-	required: true
-	example: xcal      
+        descr: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles
+        type: str
+        required: true
+        example: xcal      
       avg_bw:
         desc: set the bandwidth average interval to increase SNR.
-	type: str
-	required: true
-	example: '1MHz'
+        type: str
+        required: true
+        example: '1MHz'
       make_checking_plots:
         desc: Plot solutions and save in <output>/diagnostic_plots/polcal/.
         type: bool
         required: false
         example: "True"
       refant_for_plots:
-	desc: Reference antenna for plots.
-	type: str
-	required: false
-	example: 'm007'
-
+        desc: Reference antenna for plots.
+        type: str
+        required: false
+        example: 'm007'

@@ -17,7 +17,7 @@ mapping:
       label_crosscal_in:
         desc: Label of the cross cal tables to be applied.
         type: str
-        required: false
+        required: true
         example: '1kgb'
       label_cal:
         desc: Label for output files (calibration tables, images).
@@ -27,7 +27,7 @@ mapping:
       uvrange:
         desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
         type: str
-        required: false
+        required: true
         example: '>50'
       pol_calib:
 	descr: calibrator for the polarized angle

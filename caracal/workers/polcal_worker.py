@@ -1,6 +1,3 @@
-#MS_SPLIT per partire dal MS cal con DATA cross_cal
-#git merge ogni giorno conc caracal master
-
 #import stimela
 import pickle
 import sys
@@ -548,22 +545,6 @@ def make_plots(msdir,field,ant):
 recipe.run()
 recipe.jobs = []
 
-#applycal(vis=msname,
-#         field=xcal,
-#         calwt=[True,False,False,False],
-#         gaintable=['%s/cal.Gpol2'%cal, '%s/cal.Kcrs'%cal, '%s/cal.Xfparang'%cal, '%s/cal.Df0gen'%cal],
-#         gainfield=[ '', '','',''],
-#         interp=['linear','nearest', 'nearest','nearest'],
-#         parang=True)
-
-#name='NGC1365'
-#applycal(vis='msdir/ngc1365_split-NGC1365_target.ms',
-#         field=name,
-#         calwt=[True,False,False,False],
-#         gaintable=['%s/cal.Gxyamp'%cal, '%s/cal.Kcrs'%cal, '%s/cal.Xfparang'%cal, '%s/cal.Df0gen'%cal],
-#         gainfield=['','','','',''],
-#         interp=['linear','nearest', 'nearest','nearest'],
-#         parang=True)
 
 
 

@@ -56,18 +56,18 @@ def worker(pipeline, recipe, config):
                 os.mkdir(pipeline.diagnostic_plots + "/polcal")
 
         ######## check linear feed OK
-        def lin_feed(msinfo):
-            with open(msinfo, 'r') as f:
-                info = yaml.safe_load(f)
-            raise SystemExit(nfo['CORR']['CORR_TYPE'])
-            if info['CORR']['CORR_TYPE'] == '["XX", "XY", "YX", "YY"]':
-                return True
-            else:
-                return False
-
-        if lin_feed(msinfo) is not True:
-            raise RuntimeError("Cannot calibrate polarization!"
-                               "Allowed strategies are for linear feed data but corr is " + info['CORR']['CORR_TYPE'])
+        # def lin_feed(msinfo):
+        #     with open(msinfo, 'r') as f:
+        #         info = yaml.safe_load(f)
+        #     raise SystemExit(nfo['CORR']['CORR_TYPE'])
+        #     if info['CORR']['CORR_TYPE'] == '["XX", "XY", "YX", "YY"]':
+        #         return True
+        #     else:
+        #         return False
+        #
+        # if lin_feed(msinfo) is not True:
+        #     raise RuntimeError("Cannot calibrate polarization!"
+        #                        "Allowed strategies are for linear feed data but corr is " + info['CORR']['CORR_TYPE'])
 
         ######## -90 deg receptor angle rotation
 
@@ -127,6 +127,7 @@ def worker(pipeline, recipe, config):
 
         return
 
+
         ######## choose the strategy according to config parameters OK
         if leakage_calib in set(unpolarized_calibrators):
             if pol_calib in set(polarized_calibrators):
@@ -159,9 +160,19 @@ def worker(pipeline, recipe, config):
                                "2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.")
 
             ######## apply cal TBD
+        caltable = "%s_%s_%s" % (prefix, config['leakage_calib'], 'floi_cal')
+        field = config['pol_calib']
+        # G1
+        recipe.add("cab/casa_gaincal",
+                   "pol_gain",
+                   {
+                       "vis": msname,
+                       "field": field,
+                   },
+                   input=pipeline.input, output=pipeline.output,
+                   label="pol_gain")
 
-
-########################################################################################################################################################################################
+        ########################################################################################################################################################################################
 def scan_length(msinfo, field):
     with open(msinfo, 'r') as f:
         info = yaml.safe_load(f)

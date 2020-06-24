@@ -36,7 +36,7 @@ def worker(pipeline, recipe, config):
                     step = f'listobs-ms{i}'
                     recipe.add('cab/casa_listobs', step,
                                {
-                                   "vis": msname,
+                                   "vis": msnamen,
                                    "listfile": obsinfo,
                                    "overwrite": True,
                                },

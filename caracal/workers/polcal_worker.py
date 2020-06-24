@@ -26,21 +26,26 @@ def get_dir_path(string, pipeline):
 # def worker
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
-    label_in = config["label_in"]
 
-    # loop over all MSs for this label
-    for i, msbase in enumerate(pipeline.msbasenames):
-        msname = pipeline.form_msname(msbase, label_in)
-        msinfo = pipeline.get_msinfo(msname)
-        prefix = f"{pipeline.prefix_msbases[i]}-{label}"
+    if pipeline.virtconcat:
+        msnames = [pipeline.vmsname]
+        nobs = 1
+        prefixes = [pipeline.prefix]
+    else:
+        msnames = pipeline.msnames
+        prefixes = pipeline.prefixes
+        nobs = pipeline.nobs
 
-        ######## set global param
-        refant = pipeline.refant[i] or '0'
+    for i in range(nobs):
 
-        field = config['pol_calib']
-        # G1
-        step = f'listobs-ms{i}'
+        ######## define msname
+        if config["label_in"]:
+            msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
+        else: msname = msnames[i]
+
         recipe.add('cab/casa_listobs', step,
                    {
                        "vis": msname,
@@ -49,5 +54,5 @@ def worker(pipeline, recipe, config):
                    },
                    input=pipeline.input,
                    output=pipeline.msdir,
-                   label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+                   label='prova')
 

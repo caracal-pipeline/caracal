@@ -45,4 +45,5 @@ def worker(pipeline, recipe, config):
                    input=pipeline.input,
                    output=pipeline.msdir,
                    label='prova')
+        recipe.run()
 

@@ -29,22 +29,12 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
+    label_in =config["label_in"]
 
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        nobs = 1
-        prefixes = [pipeline.prefix]
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
-
-    for i in range(nobs):
-
-        ######## define msname
-        if config["label_in"]:
-            msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
-        else: msname = msnames[i]
+    for i, msbase in enumerate(pipeline.msbasenames):
+        msname = pipeline.form_msname(msbase, label_in)
+        msinfo = pipeline.get_msinfo(msname)
+        prefix_msbase = f"{pipeline.prefix_msbases[i]}-{label}"
 
         recipe.add('cab/casa_listobs', 'listpro',
                    {

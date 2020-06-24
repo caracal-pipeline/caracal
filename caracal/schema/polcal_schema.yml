@@ -14,43 +14,8 @@ mapping:
         type: str
         required: false
         example: 'cal'
-      label_crosscal_in:
-        desc: Label of the cross cal tables to be applied.
-        type: str
-        required: false
-        example: '1kgb'
       label_cal:
         desc: Label for output files (calibration tables, images).
         type: str
         required: false
         example: '1pcal'
-      uvrange:
-        desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
-        type: str
-        required: false
-        example: '>50'
-      pol_calib:
-        desc: calibrator for the polarized angle
-        type: str
-        required: false
-        example: xcal
-      leakage_calib:
-        desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles
-        type: str
-        required: false
-        example: xcal      
-      avg_bw:
-        desc: set the bandwidth average interval to increase SNR.
-        type: str
-        required: false
-        example: '1MHz'
-      make_checking_plots:
-        desc: Plot solutions and save in <output>/diagnostic_plots/polcal/.
-        type: bool
-        required: false
-        example: "True"
-      refant_for_plots:
-        desc: Reference antenna for plots.
-        type: str
-        required: false
-        example: 'm007'

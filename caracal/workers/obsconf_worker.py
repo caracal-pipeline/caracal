@@ -36,7 +36,7 @@ def worker(pipeline, recipe, config):
                     step = f'listobs-ms{i}'
                     recipe.add('cab/casa_listobs', step,
                                {
-                                   "vis": msnamen,
+                                   "vis": msnamenm,
                                    "listfile": obsinfo,
                                    "overwrite": True,
                                },
@@ -51,7 +51,7 @@ def worker(pipeline, recipe, config):
                     step = f'summary_json-ms{i}'
                     recipe.add('cab/msutils', step,
                                {
-                                   "msname": msname,
+                                   "msname": msnamenm,
                                    "command": 'summary',
                                    "display": False,
                                    "outfile": summary,
@@ -81,7 +81,7 @@ def worker(pipeline, recipe, config):
                     step = "elevation-plots-ms{:d}".format(i)
                     if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
                         recipe.add("cab/casa_plotms", step, {
-                                   "vis" : msname,
+                                   "vis" : msnamenm,
                                    "xaxis" : "hourangle",
                                    "yaxis" : "elevation",
                                    "coloraxis" : "field",

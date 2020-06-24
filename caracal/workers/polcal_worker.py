@@ -31,27 +31,15 @@ def worker(pipeline, recipe, config):
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
     
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        nobs = 1
-        prefixes = [pipeline.prefix]
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
+    # loop over all MSs for this label
+    for i, msbase in enumerate(pipeline.msbasenames):
+        msname = pipeline.form_msname(msbase, label_in)
+        msinfo = pipeline.get_msinfo(msname)
+        prefix = f"{pipeline.prefix_msbases[i]}-{label}"
 
-    for i in range(nobs):
-
-        ######## define msname
-        if config["label_in"]:
-            msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
-        else: msname = msnames[i]
 
         ######## set global param
         refant = pipeline.refant[i] or '0'
-        prefix = prefixes[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
-        prefix = '{0:s}-{1:s}'.format(prefix, label)
         scandur = scan_length(msinfo, leakage_cal)
 
         ######## set local param
@@ -60,7 +48,7 @@ def worker(pipeline, recipe, config):
         leakage_calib = config["leakage_calib"]
         avgstring = ','+config["avg_bw"] #solint input param
         plot = config["make_checking_plots"]
-        if plot = True:
+        if plot == True:
             ant = config["refant_for_plots"]
             plot_dir = pipeline.diagnostic_plots+"/polcal"
             if not os.path.exists(pipeline.diagnostic_plots+"/polcal"):
@@ -70,7 +58,7 @@ def worker(pipeline, recipe, config):
         def lin_feed(msinfo):
             with open(msinfo, 'r') as f:
                 info = yaml.safe_load(f)
-        
+            raise SystemExit(nfo['CORR']['CORR_TYPE'])
             if info['CORR']['CORR_TYPE'] == '["XX", "XY", "YX", "YY"]':
                 return True
             else:
@@ -111,7 +99,7 @@ def worker(pipeline, recipe, config):
                    {
                        "vis": msname,
                        "field": "",
-                       "callib": os.path.join(pipeline.output,'caltables/callibs/{}'.format(config['label_crosscal_in']))
+                       "callib": os.path.join(pipeline.output,'caltables/callibs/{}'.format(config['label_crosscal_in'])),
                        "parang": False,
                    },
                    input=pipeline.input, output=pipeline.output,
@@ -140,7 +128,7 @@ def worker(pipeline, recipe, config):
             else:
                 raise RuntimeError("Unknown pol_calib!" 
                                    "Currently only these are known on caracal:"
-                                   "{1:s}".format(get_field("pol_calib"), ", ".join(list(polarized_calibrators.keys())))
+                                   "{1:s}".format(get_field("pol_calib"), ", ".join(list(polarized_calibrators.keys()))) + \
                                    "You can use one of these source to calibrate polarization"
                                    "or if none of them is available you can calibrate both leakage (leakage_calib) and polarization (pol_calib)"
                                    "with a source observed at several paralactic angles")
@@ -149,7 +137,7 @@ def worker(pipeline, recipe, config):
             if utils.field_observation_length(msinfo, leakage_cal) >= 3:
                 caltable = "%s_%s" % (prefix, leakage_calib)
                 floi_calib(newmsname,leakage_cal,caltable) #it would be useful to check at the beginning of the task whether the parallactic angle is well covered (i.e. range of 60 deg?)
-                if plot = True:
+                if plot == True:
                     make_plots(msdir,leakage_cal,ant)
                 if pol_calib in set(polarized_calibrators):
                     compare_with_model()
@@ -157,8 +145,8 @@ def worker(pipeline, recipe, config):
                 raise RuntimeError("Cannot calibrate polarization! Unsufficient number of scans for the leakage/pol calibrators.")
         else:
             raise RuntimeError("Cannot calibrate polarization! Allowed strategies are:"
-                               "1. Calibrate leakage with a unpolarized source (i.e. {1:s}".format(get_field("pol_calib"), ", ".join(list(unpolarized_calibrators.keys())))""
-                               "   and polarized angle with a know polarized source (i.e. {1:s}".format(get_field("pol_calib"), ", ".join(list(polarized_calibrators.keys())))""
+                               "1. Calibrate leakage with a unpolarized source (i.e. {1:s}".format(get_field("pol_calib"), ", ".join(list(unpolarized_calibrators.keys()))) + \
+                               "   and polarized angle with a know polarized source (i.e. {1:s}".format(get_field("pol_calib"), ", ".join(list(polarized_calibrators.keys()))) + \
                                "2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.") 
 
         ######## apply cal TBD
@@ -193,7 +181,7 @@ def ben_cal(msname):
     return
 
 ########################################################################################################################################################################################
-def compare_with_model:
+def compare_with_model():
     print("TBD")
     return
 
@@ -284,7 +272,7 @@ def floi_calib(msname, field, caltable):
         print("First [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s"%S1)
     
     else:
-        raise RuntimeError("Cannot find "caltable+'S1_from_QUfit:output')
+        raise RuntimeError("Cannot find "+caltable+'S1_from_QUfit:output')
         
     #QU abs delay
     recipe.add("cab/casa_polcal",
@@ -317,7 +305,7 @@ def floi_calib(msname, field, caltable):
         print("Second [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s"%S2)
         
     else:
-        raise RuntimeError("Cannot find "caltable+'.S2_from_polcal:output')
+        raise RuntimeError("Cannot find "+caltable+'.S2_from_polcal:output')
         
     recipe.add("cab/casa_gaincal",
                "second gaincal",

@@ -42,7 +42,7 @@ def worker(pipeline, recipe, config):
                                },
                                input=pipeline.input,
                                output=pipeline.msdir,
-                               label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+                               label='{0:s}:: Get observation information ms={1:s}'.format(step, msnamell))
 
             if config['obsinfo']['summary_json']:
                 if os.path.exists(os.path.join(pipeline.msdir, summary)):
@@ -58,14 +58,14 @@ def worker(pipeline, recipe, config):
                                },
                                input=pipeline.input,
                                output=pipeline.msdir,
-                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msname))
+                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, msnameff))
 
             if config['obsinfo']['vampirisms']:
                 step = 'vampirisms-ms{0:d}'.format(i)
                 recipe.add('cab/sunblocker', step,
                            {
                                "command": 'vampirisms',
-                               "inset": msname,
+                               "inset": msnamede,
                                "dryrun": True,
                                "nononsoleil": True,
                                "verb": True,
@@ -93,7 +93,7 @@ def worker(pipeline, recipe, config):
                                    label="{:s}:: Plotting elevation tracks".format(step))
                     elif config['obsinfo']["plotelev"]["plotter"] in ["owlcat"]:
                         recipe.add("cab/owlcat_plotelev", step, {
-                                   "msname" : msname,
+                                   "msname" : msname1w,
                                    "output-name" : elevplot
                                    },
                                    input=pipeline.input,
@@ -126,7 +126,7 @@ def worker(pipeline, recipe, config):
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
         caracal.log.info(f"MS #{i}: {msname}")
 
-        msdict = pipeline.get_msinfo(msname)
+        msdict = pipeline.get_msinfo(msnamede)
         obsinfo  = f'{msroot}-obsinfo.txt'
         summary  = f'{msroot}-summary.json'
         elevplot = f'{msroot}-elevation-tracks.png'

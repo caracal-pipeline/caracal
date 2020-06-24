@@ -41,12 +41,14 @@ def worker(pipeline, recipe, config):
 
         field = config['pol_calib']
         # G1
-        recipe.add("cab/casa_gaincal",
-                   "pol_gain",
+        step = f'listobs-ms{i}'
+        recipe.add('cab/casa_listobs', step,
                    {
                        "vis": msname,
-                       "field": field,
-                       "refant": refant,
+                       "listfile": obsinfo,
+                       "overwrite": True,
                    },
-                   input=pipeline.input, output=pipeline.output,
-                   label="pol_gain")
+                   input=pipeline.input,
+                   output=pipeline.msdir,
+                   label='{0:s}:: Get observation information ms={1:s}'.format(step, msname))
+

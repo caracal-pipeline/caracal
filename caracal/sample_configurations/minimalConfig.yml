@@ -5,6 +5,7 @@ general:
 
 getdata:
   dataid: ['']
+  extension: ms
 
 obsconf:
   refant: '0'

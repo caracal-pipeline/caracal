@@ -220,10 +220,10 @@ mapping:
         required: false
         example: '2'
       start_iter:
-              type: int
-              desc: Start selfcal iteration loop at this start value (1-indexed).
-              required: false
-              example: '1'
+        type: int
+        desc: Start selfcal iteration loop at this start value (1-indexed).
+        required: false
+        example: '1'
       cal_gain_cliplow:
         type: float
         desc: Lower threshold for clipping on gain amplitude.

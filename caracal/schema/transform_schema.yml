@@ -9,6 +9,11 @@ mapping:
         type: bool
         required: true
         example: 'True'
+      from_target:
+        desc: Spliting from MS(s) that have the target field(s)
+        type: bool
+        required: false
+        example: 'False'
       label_in:
         desc: Label of the input dataset.
         type: str

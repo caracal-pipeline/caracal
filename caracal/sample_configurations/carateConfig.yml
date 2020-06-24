@@ -1,13 +1,14 @@
-schema_version: 1.0.2
+schema_version: 1.1.0
 
 general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['']
+  dataid: []
+  extension: ms
 
 obsconf:
-  refant: 'm010'
+  refant: m010
 
 transform:
   enable: true
@@ -43,9 +44,9 @@ flag:
     enable: true
 
 inspect:
-  label_in: 'cal'
-  field: 'calibrators'
-  label_plot: 'pre1gc'
+  label_in: cal
+  field: calibrators
+  label_plot: pre1gc
   enable: true
   dirname: initial
   shadems:
@@ -78,7 +79,7 @@ inspect:
 crosscal:
   enable: true
   uvrange: '>150'
-  label_in: 'cal'
+  label_in: cal
   set_model:
     enable: true
   primary:
@@ -99,9 +100,9 @@ crosscal:
       - bpcal
 
 inspect__2:
-  label_in: 'cal'
-  field: 'calibrators'
-  label_plot: '1gc'
+  label_in: cal
+  field: calibrators
+  label_plot: 1gc
   enable: true
   dirname: crosscal
   shadems:
@@ -133,7 +134,7 @@ transform__2:
     enable: true
     otfcal:
       enable: true
-      label_cal: '1gc1'
+      label_cal: 1gc1
 
 prep__2:
   enable: true
@@ -162,6 +163,7 @@ transform__3:
   enable: true
   label_in: corr
   label_out: cont
+  from_target: true
   split_field:
     enable: true
     chan_avg: 4
@@ -200,7 +202,7 @@ selfcal:
   calibrate:
     enable: true
     model: ['1','2','3']
-    gain_matrix_type: ['GainDiagPhase', 'GainDiagPhase', 'GainDiagPhase']
+    gain_matrix_type: [GainDiagPhase, GainDiagPhase, GainDiagPhase]
     gsols_chan: [0, 0, 0]
     gsols_timeslots: [120, 60, 20]
   transfer_apply_gains:
@@ -219,18 +221,19 @@ selfcal:
 
 transform__4:
   enable: true
-  label_in: 'corr'
-  label_out: 'l'
+  label_in: corr
+  label_out: l
+  from_target: true
   split_field:
     enable: true
-    col: 'all'
+    col: all
     otfcal:
       enable: false
 
 line:
   enable: true
-  label_in: 'l'
-  restfreq: '1.420405752GHz'
+  label_in: l
+  restfreq: 1.420405752GHz
   subtractmodelcol:
     enable: true
   make_cube:

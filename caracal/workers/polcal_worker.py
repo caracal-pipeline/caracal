@@ -26,9 +26,8 @@ def get_dir_path(string, pipeline):
 # def worker
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
-    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
+    label_in = config["label_in"]
 
     # loop over all MSs for this label
     for i, msbase in enumerate(pipeline.msbasenames):

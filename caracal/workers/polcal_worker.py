@@ -26,7 +26,6 @@ def get_dir_path(string, pipeline):
 
 
 # def worker
-##################################################################################################
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
@@ -41,7 +40,6 @@ def worker(pipeline, recipe, config):
 
         ######## set global param
         refant = pipeline.refant[i] or '0'
-        scandur = scan_length(msinfo, leakage_cal)
 
         ######## set local param
         uvcut = config["uvrange"]
@@ -49,11 +47,11 @@ def worker(pipeline, recipe, config):
         leakage_calib = config["leakage_calib"]
         avgstring = ',' + config["avg_bw"]  # solint input param
         plot = config["make_checking_plots"]
-        if plot == True:
-            ant = config["refant_for_plots"]
-            plot_dir = pipeline.diagnostic_plots + "/polcal"
-            if not os.path.exists(pipeline.diagnostic_plots + "/polcal"):
-                os.mkdir(pipeline.diagnostic_plots + "/polcal")
+        # if plot == True:
+        #     ant = config["refant_for_plots"]
+        #     plot_dir = pipeline.diagnostic_plots + "/polcal"
+        #     if not os.path.exists(pipeline.diagnostic_plots + "/polcal"):
+        #         os.mkdir(pipeline.diagnostic_plots + "/polcal")
 
         ######## check linear feed OK
         # def lin_feed(msinfo):
@@ -92,46 +90,10 @@ def worker(pipeline, recipe, config):
         unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63",
                                    "PKS1934-638"]
 
-        ######## prepare data (APPLY KGB AND SPLIT a NEW MSDIR) OK
-        # but I WOULD LIKE TO COPY DATA COLUMN INTO RAW, CORRECTED INTO DATA
-        # USE DATA TO LLOK FOR SOLUTION AND AFTER APPLYING POLCAL TABLES RESTORE RAW INTO DATA
-        # THIS CAN BE DONE WITH PYRAP BUT IT IS NECESSARY TO DEFINE FUNCTIONS OUTSIDE CARACAL
-        # recipe.add("cab/casa_applycal",
-        #            "apply 0",
-        #            {
-        #                "vis": msname,
-        #                "field": "",
-        #                "callib": os.path.join(pipeline.output,'caltables/callibs/{}'.format(config['label_crosscal_in'])),
-        #                "parang": False,
-        #            },
-        #            input=pipeline.input, output=pipeline.output,
-        #            label="Apply crosscal")
-        #
-        # recipe.add("cab/casa_split",
-        #            "split_data",
-        #            {
-        #                "vis": msname,
-        #                "outputvis": newmsname,
-        #                "datacolumn": "corrected",
-        #                "field": "",
-        #                "uvrange": uvcut,
-        #                "correlation": "",
-        #            },
-        #            input=pipeline.input, output=pipeline.output, label="split_data")
-        #
-        # recipe.run()
-        # recipe.jobs = []
-        def ben_calib(msname, msinfo, recipe, config, pipeline, prefix, label):
-            caltable = "%s_%s_%s" % (prefix, config['leakage_calib'], 'ben_cal')
-            print("TBD")
-
-        return
-
-
-        ######## choose the strategy according to config parameters OK
+        # choose the strategy according to config parameters OK
         if leakage_calib in set(unpolarized_calibrators):
             if pol_calib in set(polarized_calibrators):
-                ben_calib(msname, msinfo, recipe, config, pipeline, prefix, label)
+                print("La la la")
             else:
                 raise RuntimeError("Unknown pol_calib!"
                                    "Currently only these are known on caracal:"
@@ -142,15 +104,7 @@ def worker(pipeline, recipe, config):
                                    "with a source observed at several paralactic angles")
 
         elif leakage_cal == pol_calib:
-            #            if utils.field_observation_length(msinfo, leakage_cal) >= 3:
             print("Hello!")
-        #                floi_calib(msname,msinfo,recipe,config,pipeline,prefix,label) #it would be useful to check at the beginning of the task whether the parallactic angle is well covered (i.e. range of 60 deg?)
-        # if plot == True:
-        #     make_plots(msdir,leakage_cal,ant)
-        # if pol_calib in set(polarized_calibrators):
-        #     compare_with_model()
-        # else:
-        #   raise RuntimeError("Cannot calibrate polarization! Unsufficient number of scans for the leakage/pol calibrators.")
         else:
             raise RuntimeError("Cannot calibrate polarization! Allowed strategies are:"
                                "1. Calibrate leakage with a unpolarized source (i.e. {1:s}".format(
@@ -159,7 +113,6 @@ def worker(pipeline, recipe, config):
                                    get_field("pol_calib"), ", ".join(list(polarized_calibrators.keys()))) + \
                                "2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.")
 
-            ######## apply cal TBD
         caltable = "%s_%s_%s" % (prefix, config['leakage_calib'], 'floi_cal')
         field = config['pol_calib']
         # G1
@@ -168,27 +121,7 @@ def worker(pipeline, recipe, config):
                    {
                        "vis": msname,
                        "field": field,
+                       "refant": refant,
                    },
                    input=pipeline.input, output=pipeline.output,
                    label="pol_gain")
-
-        ########################################################################################################################################################################################
-def scan_length(msinfo, field):
-    with open(msinfo, 'r') as f:
-        info = yaml.safe_load(f)
-
-    names = info['FIELD']['NAME']
-    ids = info['FIELD']['SOURCE_ID']
-
-    def index(field):
-        if isinstance(field, str):
-            idx = names.index(field)
-        elif isinstance(field, int):
-            idx = ids.index(field)
-        else:
-            raise ValueError("Field cannot be a {0:s}".format(type(field)))
-        return idx
-
-    field = str(ids[index(field)])
-
-    return float(info['TIME'][field].values()) / float(utils.field_observation_length(msinfo, field))

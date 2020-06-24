@@ -44,7 +44,7 @@ def worker(pipeline, recipe, config):
         recipe.add('cab/casa_listobs', step,
                    {
                        "vis": msname,
-                       "listfile": obsinfo,
+                       "listfile": 'ccc',
                        "overwrite": True,
                    },
                    input=pipeline.input,

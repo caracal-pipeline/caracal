@@ -46,7 +46,7 @@ def worker(pipeline, recipe, config):
             msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
         else: msname = msnames[i]
 
-        recipe.add('cab/casa_listobs', step,
+        recipe.add('cab/casa_listobs', 'listpro',
                    {
                        "vis": msname,
                        "listfile": 'ccc',

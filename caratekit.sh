@@ -731,10 +731,6 @@ then
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
     echo ""
-    echo "  --copy-config-data -cc              Copy test data as specified in the config-"
-    echo "                                      file parameter dataid unless"
-    echo "                                      CARATE_COPY_DATA_ID is defined"
-    echo ""
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_COPY_DATA_ID"
     echo ""
@@ -742,7 +738,7 @@ then
     echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
     echo "                                      unless CARATE_COPY_DATA_ID is defined."
     echo "                                      Ignored if CARATE_CONFIG_SOURCE is not"
-    echo "                                      defined and switches --config-source -cs"
+    echo "                                      defined or switches --config-source -cs"
     echo "                                      are not used"
     echo ""
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
@@ -1978,11 +1974,9 @@ then
 
     [[ -z ${CC} ]] || (( ${#dataid_config[@]} == 0 )) || dataid_final=( ${dataid_config[@]} )
     
-    dataid_provided=( )
     # Third attempt: use dataids from the command line
+    dataid_provided=( )
     [[ -z ${CARATE_COPY_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_COPY_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
-
-    echo ${CARATE_COPY_DATA_ID} | grep dataid | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}
     
     # More than one found, means that the final data ids are changed
     (( ${#dataid_provided[@]} == 0 )) || dataid_final=( ${dataid_provided[@]} )
@@ -2027,49 +2021,59 @@ then
 	fi
     fi
     
+    if (( ${#dataid_final[@]} != 0 ))
+    then
+	echo ""
+	echo "You are using the following data sets:"
+        for ii in ${dataid_final[@]}
+	do
+	    echo "${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	done
+    fi
+
     isshort=0
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final SHORT_TEST_DATA_IDS && isin SHORT_TEST_DATA_IDS dataid_final
     then
- isshort=1
+	isshort=1
     fi
 
     # Warn if these are unusual data sets
     if [[ -n ${DM} ]] || [[ -n ${SM} ]]
     then
- if [[ ${isshort} != 1 ]]
- then
-     echo "You intend to use unusual data sets for switches"
-     echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
-     echo "The dataids are:"
-     echo ${dataid_final[@]}
-     if [[ -z ${OR} ]]
-     then
-  waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
-     fi
-     echo ""
- fi
+	if [[ ${isshort} != 1 ]]
+	then
+	    echo "You intend to use unusual data sets for switches"
+	    echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
+	    echo "The dataids are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
     fi
 
     # Finally, if there is a difference between the chosen data sets and the ones in the config file, this will be commented.
     if (( ${#dataid_config[@]} != 0 ))
     then
- notequalconfs=0
- isin dataid_config dataid_final && isin dataid_final dataid_config || notequalconfs=1
- if (( notequalconfs == 1 ))
- then
-     echo "You intend to use different data sets in your test"
-     echo "run than are specified in your configuration file"
-     echo "The dataids in the configuration file are:"
-     echo ${dataid_config[@]}
-     echo "The dataids that will be used are:"
-     echo ${dataid_final[@]}
-     if [[ -z ${OR} ]]
-     then
-  waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
-     fi
-  echo ""
- fi
+	notequalconfs=0
+	isin dataid_config dataid_final && isin dataid_final dataid_config || notequalconfs=1
+	if (( notequalconfs == 1 ))
+	then
+	    echo "You intend to use different data sets in your test"
+	    echo "run than are specified in your configuration file"
+	    echo "The dataids in the configuration file are:"
+	    echo ${dataid_config[@]}
+	    echo "The dataids that will be used are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
     fi
 
     dataidstr=`echo ${dataid_final[@]} | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
@@ -2078,13 +2082,10 @@ then
     copytestdatastr=""
     for ii in ${dataid_final[@]}
     do
- copytestdatastr+="${CARATE_TEST_DATA_DIR}/${ii}.ms "
- stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
+	copytestdatastr+="${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
     done
 
-    #echo copytestdatastr ${copytestdatastr}
-    #echo stringcopytestdatastr ${stringcopytestdatastr}
-    
     echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}

@@ -154,8 +154,8 @@ def worker(pipeline, recipe, config):
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
                            {
                                "msname": msname,
-                               "field": fields,
-                               "cal_field": fields,
+                               "field": ",".join([str(id) for id in field_ids]),
+                               "cal_field": ",".join([str(id) for id in field_ids]),
                                "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
                                "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
                                "dpi": 300,

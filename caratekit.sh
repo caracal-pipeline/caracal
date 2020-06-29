@@ -70,6 +70,7 @@ IA=5
 endimessage=""
 ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
 SHORT_TEST_DATA_IDS=( "1532022061_subset" )
+SPHEVERSION="1.1.0"
 
 # current working directory
 cwd=`pwd`
@@ -93,6 +94,29 @@ do
     if [[ "$arg" == "--install" ]] || [[ "$arg" == "-i" ]]
     then
         IN=1
+    fi
+    if [[ "$arg" == "--home-original" ]] || [[ "$arg" == "-ho" ]]
+    then
+        HO=1
+	# This cannot be deleted, double security
+	HN=1
+    fi
+    if [[ "$arg" == "--home-workspace" ]] || [[ "$arg" == "-hw" ]]
+    then
+        HW=1
+    fi
+    if [[ "$arg" == "--home-no-delete" ]] || [[ "$arg" == "-hn" ]]
+    then
+        HN=1
+    fi
+    if [[ "$arg" == "--home-folder" ]] || [[ "$arg" == "-hf" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --home-folder or -hf switch, stopping."; kill "$PPID"; exit 1; }
+
+	CARATE_HOME_FOLDER=${!nextcount}
+ 	firstletter=`echo ${CARATE_HOME_FOLDER} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_HOME_FOLDER="${cwd}/${CARATE_HOME_FOLDER}"
     fi
     if [[ "$arg" == "--docker-minimal" ]] || [[ "$arg" == "-dm" ]]
     then
@@ -233,10 +257,6 @@ do
 	SLH=1
 	STH=1
     fi
-
-    ####
-    ####
-    ####   
     if [[ "$arg" == "--use-stimela-stable" ]] || [[ "$arg" == "-us" ]]
     then
         US=1
@@ -276,10 +296,6 @@ do
     then
         OR=1
     fi
-    if [[ "$arg" == "--keep-home" ]] || [[ "$arg" == "-kh" ]]
-    then
-        KH=1
-    fi
     if [[ "$arg" == "--keep-report-dir" ]] || [[ "$arg" == "-kr" ]]
     then
         KR=1
@@ -315,7 +331,7 @@ do
     fi
     if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
     then
-        OD=1
+        CC=1
     fi
     if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]
     then
@@ -497,6 +513,8 @@ then
     echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
     echo ""
 
+    echo "  CARATE_HOME_FOLDER:          Location of \$HOME during test"
+
     echo "  CARATE_SINGULARITY_CACHE:      Location of \$SINGULARITY_CACHEDIR"
     echo "  CARATE_SINGULARITY_LOCALCACHE: Location of \$SINGULARITY_LOCALCACHEDIR"
     echo "  CARATE_SINGULARITY_TMPDIR:     Location of \$SINGULARITY_TMPDIR"
@@ -552,6 +570,19 @@ then
     echo ""
     echo "  --workspace ARG -ws ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_WORKSPACE"
+    echo ""
+    echo "  --home-original -ho                 Do not change the HOME environment"
+    echo "                                      variable during installation test"
+    echo ""
+    echo "  --home-workspace -hw                Use \$CARATE_WORKSPACE/home"
+    echo "                                      as home folder during caratekit test"
+    echo ""
+    echo "  --home-folder ARG -hf ARG           Use ARG as home folder during caratekit"
+    echo "                                      test"
+    echo ""
+    echo "  --home-no-delete -hn                Do not delete the home folder (automati-"
+    echo "                                      cally applied if --home-original or"
+    echo "                                      -ho are set)"
     echo ""
     echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
     echo "                                      to re-invoke pip, to run stimela pull,"
@@ -686,9 +717,6 @@ then
     echo "                                      stimela_parameter_files) prior to"
     echo "                                      starting a test"
     echo ""
-    echo "  --keep-home -kh                     Do not change the HOME environment"
-    echo "                                      variable during installation test"
-    echo ""
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
     echo ""
@@ -703,10 +731,6 @@ then
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
     echo ""
-    echo "  --copy-config-data -cc              Copy test data as specified in the config-"
-    echo "                                      file parameter dataid unless"
-    echo "                                      CARATE_COPY_DATA_ID is defined"
-    echo ""
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
     echo "                                      CARATE_COPY_DATA_ID"
     echo ""
@@ -714,7 +738,7 @@ then
     echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
     echo "                                      unless CARATE_COPY_DATA_ID is defined."
     echo "                                      Ignored if CARATE_CONFIG_SOURCE is not"
-    echo "                                      defined and switches --config-source -cs"
+    echo "                                      defined or switches --config-source -cs"
     echo "                                      are not used"
     echo ""
     echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
@@ -772,18 +796,28 @@ echo " rationale behind that is that the test directory is always linked to"
 echo " a git(hub) build number if that exists. Otherwise, if"
 echo " CARATE_CARACAL_BUILD_ID is not defined, the user can supply an"
 echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home directory called"
-echo " home, a virtual environment called caracal_virtualenv, a CARACal copy"
-echo " caracal, and up to six test directories are created, within which the"
-echo " tests are conducted. If the --force or -f switch is set, existing"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, by default a home directory"
+echo "  called home, a virtual environment called caracal_virtualenv, a CARACal"
+echo " copy caracal, and up to six test directories are created, within which"
+echo " the tests are conducted. If the --force or -f switch is set, existing"
 echo " directories and installations are deleted and replaced, if not, only"
 echo " those directories and files are created, which do not exist"
 echo " yet. Exceptions from that rule exist. If the --omit-stimela-reinstall"
 echo " or -os switch is set, a re-installation of stimela is preventedeven"
 echo " if -f is set. This includes the Re-installation of the virtual"
 echo " environment, the home directory, and the file .stimela in the home"
-echo " directory. If the option --keep-home or -kh is set, the directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre- served. If"
+echo " directory. "
+echo " The location of the home directory can be changed using environment variables"
+echo " and switches. The environment variable CARATE_HOME_FOLDER defines directly the"
+echo " home folder. It can be overridden by the switches --home-folder ARG or -hf ARG,"
+echo " where ARG is the location of the home folder. Switch -hw defines the home"
+echo " folder to be the directory home in the workspace folder. Switch --home-original"
+echo " or -ho leaves the home folder as it is. The default, as said above, is to"
+echo " define the home folder as \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home"
+echo " If the option --home-no-delete or -hn is set, the home folder"
+echo " is preserved. -hn is automatically set if switches --home-original or -ho are set."
+echo ""
+echo " If"
 echo " the option --keep-report or -kr is set, the directory"
 echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
 echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the"
@@ -1228,6 +1262,29 @@ then
     kill "$PPID"; exit 1;
 fi
 
+function ahighereqb {
+
+    # supply two dot-separated lists of integers, returns 0 if first denotes higher or equal version than second, 1 otherwise
+    
+    local a
+    local b
+    
+    a=(`echo ${1} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+    b=(`echo ${2} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+
+    echo a ${a[@]}
+    echo b ${b[@]}
+
+    (( ${a[0]} > ${b[0]} )) && return 0
+    (( ${a[0]} < ${b[0]} )) && return 1
+    (( ${a[1]} > ${b[1]} )) && return 0
+    (( ${a[1]} < ${b[1]} )) && return 1
+    (( ${a[2]} > ${b[2]} )) && return 0
+    (( ${a[2]} < ${b[2]} )) && return 1
+    
+    return 0
+}
+
 function isin {
     
     # Checks if all elements of $1 are in $2
@@ -1508,6 +1565,21 @@ fi
     } ; \
 }
 
+# Do not define more than one home
+counts=0
+[[ -z ${HW} ]] || (( counts+=1 ))
+[[ -z ${HO} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_HOME_FOLDER} ]] || (( counts+=1 ))
+(( ${counts} < 2 )) || { \
+    echo "Use maximally one of switches and variables defined with -hw -ho -hf."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+(( ${counts} > 0 )) || \
+    { \
+      HT=1; \
+    }
+
 [[ -z ${CR} ]] || { \
     # Upon pypi release this has to be updated
     # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
@@ -1688,18 +1760,22 @@ else
 fi
 
 # Save home for later
-if [[ -n ${HOME} ]]
+if [[ -z ${HO} ]]
 then
-    [[ -n ${KH} ]] || ss+="HOME_OLD=\${HOME}"
-    [[ -n ${KH} ]] || ss+=$'\n'
-    [[ -n ${KH} ]] || HOME_OLD=${HOME}
+    [[ -z ${HOME} ]] && HOME_del=1 || \
+	    { \
+	      ss+="HOME_OLD=\${HOME}" ; \
+	      ss+=$'\n' ; \
+	      HOME_OLD=${HOME} ; \
+	    }
 fi
-if [[ -n ${PYTHONPATH} ]]
-then
-    ss+="PYTHONPATH_OLD=\${PYTHONPATH}"
-    ss+=$'\n'
-    PYTHONPATH_OLD=${PYTHONPATH}
-fi
+
+[[ -z ${PYTHONPATH} ]] && PYTHONPATH_del=1 || \
+	{ \
+	  ss+="PYTHONPATH_OLD=\${PYTHONPATH}" ; \
+	  ss+=$'\n' ; \
+	  PYTHONPATH_OLD=${PYTHONPATH} ; \
+	}
 
 if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
 then
@@ -1756,7 +1832,6 @@ fi
 use_pull_force=""
 [[ -z ${PF} ]] || (( ${FORCE} == 0 )) || use_pull_force=" -f"
 
-# This ensures that when stopping, the $HOME environment variable is restored
 # Variable defininition ends here in script
 ss+=""
 ss+=$'\n'
@@ -1779,7 +1854,6 @@ fi
 [[ -z ${use_pull_force} ]] || echo "The -f switch will be used if stimela pull is used"
 echo "Depending on the settings, other directories"
 echo "will also be changed."
-echo ""
 
 if [[ -z ${OR} ]]
 then
@@ -1792,7 +1866,6 @@ then
     if [[ -d $WORKSPACE_ROOT ]]
     then
         echo "Be aware that no existing file will be replaced, use -f to override"
-        echo ""
     fi
 fi
 
@@ -1901,11 +1974,9 @@ then
 
     [[ -z ${CC} ]] || (( ${#dataid_config[@]} == 0 )) || dataid_final=( ${dataid_config[@]} )
     
-    dataid_provided=( )
     # Third attempt: use dataids from the command line
+    dataid_provided=( )
     [[ -z ${CARATE_COPY_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_COPY_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
-
-    echo ${CARATE_COPY_DATA_ID} | grep dataid | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}
     
     # More than one found, means that the final data ids are changed
     (( ${#dataid_provided[@]} == 0 )) || dataid_final=( ${dataid_provided[@]} )
@@ -1950,49 +2021,59 @@ then
 	fi
     fi
     
+    if (( ${#dataid_final[@]} != 0 ))
+    then
+	echo ""
+	echo "You are using the following data sets:"
+        for ii in ${dataid_final[@]}
+	do
+	    echo "${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	done
+    fi
+
     isshort=0
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final SHORT_TEST_DATA_IDS && isin SHORT_TEST_DATA_IDS dataid_final
     then
- isshort=1
+	isshort=1
     fi
 
     # Warn if these are unusual data sets
     if [[ -n ${DM} ]] || [[ -n ${SM} ]]
     then
- if [[ ${isshort} != 1 ]]
- then
-     echo "You intend to use unusual data sets for switches"
-     echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
-     echo "The dataids are:"
-     echo ${dataid_final[@]}
-     if [[ -z ${OR} ]]
-     then
-  waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
-     fi
-     echo ""
- fi
+	if [[ ${isshort} != 1 ]]
+	then
+	    echo "You intend to use unusual data sets for switches"
+	    echo "--docker-minimal, -dm, --singularity-minimal, or -sm"
+	    echo "The dataids are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
     fi
 
     # Finally, if there is a difference between the chosen data sets and the ones in the config file, this will be commented.
     if (( ${#dataid_config[@]} != 0 ))
     then
- notequalconfs=0
- isin dataid_config dataid_final && isin dataid_final dataid_config || notequalconfs=1
- if (( notequalconfs == 1 ))
- then
-     echo "You intend to use different data sets in your test"
-     echo "run than are specified in your configuration file"
-     echo "The dataids in the configuration file are:"
-     echo ${dataid_config[@]}
-     echo "The dataids that will be used are:"
-     echo ${dataid_final[@]}
-     if [[ -z ${OR} ]]
-     then
-  waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
-     fi
-  echo ""
- fi
+	notequalconfs=0
+	isin dataid_config dataid_final && isin dataid_final dataid_config || notequalconfs=1
+	if (( notequalconfs == 1 ))
+	then
+	    echo "You intend to use different data sets in your test"
+	    echo "run than are specified in your configuration file"
+	    echo "The dataids in the configuration file are:"
+	    echo ${dataid_config[@]}
+	    echo "The dataids that will be used are:"
+	    echo ${dataid_final[@]}
+	    if [[ -z ${OR} ]]
+	    then
+		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
+	    fi
+	    echo ""
+	fi
     fi
 
     dataidstr=`echo ${dataid_final[@]} | sed '{s/ /\x27,\x27/g; s/$/\x27\]/; s/^/dataid: \[\x27/}'`
@@ -2001,13 +2082,10 @@ then
     copytestdatastr=""
     for ii in ${dataid_final[@]}
     do
- copytestdatastr+="${CARATE_TEST_DATA_DIR}/${ii}.ms "
- stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
+	copytestdatastr+="${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
     done
 
-    #echo copytestdatastr ${copytestdatastr}
-    #echo stringcopytestdatastr ${stringcopytestdatastr}
-    
     echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
@@ -2082,13 +2160,34 @@ function cleanup {
     echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
 
-    
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
-    [[ -n ${KH} ]] || export HOME=${OLD_HOME}
+    if [[ -z ${HO} ]]
+       then
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS}
+               export HOME=${HOME_OLD}
+	   else
+	       echo "unset HOME" >> ${SS}
+	       unset HOME
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
- echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
- export PYTHONPATH=${PYTHONPATH_OLD}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
+            export PYTHONPATH=${PYTHONPATH_OLD}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS} ; \
+		  unset PYTHONPATH ; \
+		}
+	fi
     fi
 
     if [[ -n ${CARATE_SINGULARITY_CACHEDIR_OLD} ]]
@@ -2137,30 +2236,32 @@ function cleanup {
 
     if [[ -n ${CARATE_SINGULARITY_TMPDIR_OLD} ]]
     then
- if [[ -z ${CARATE_SINGULARITY_TMPDIR_del} ]]
- then
-     echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
-     export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
- else
-     [[ -z ${SINGULARITY_TMPDIR} ]] || { \
-  echo "unset SINGULARITY_TMPDIR" >> ${SS} ; \
-  unset SINGULARITY_TMPDIR ; \
-  }
- fi
+	if [[ -z ${CARATE_SINGULARITY_TMPDIR_del} ]]
+	then
+	    echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
+	    export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
+	else
+	    [[ -z ${SINGULARITY_TMPDIR} ]] || \
+		{ \
+		  echo "unset SINGULARITY_TMPDIR" >> ${SS} ; \
+		  unset SINGULARITY_TMPDIR ; \
+		}
+	fi
     fi
 
     if [[ -n ${CARATE_STIMELA_PULLFOLDER_OLD} ]]
     then
- if [[ -z CARATE_STIMELA_PULLFOLDER_del ]]
- then
-     echo "export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER_OLD}" >> ${SS} 
-     export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER_OLD}
- else
-     [[ -z ${STIMELA_PULLFOLDER} ]] || { \
-                echo "unset STIMELA_PULLFOLDER" >> ${SS} ; \
-                unset STIMELA_PULLFOLDER ; \
-  }
- fi
+	if [[ -z CARATE_STIMELA_PULLFOLDER_del ]]
+	then
+	    echo "export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER_OLD}" >> ${SS} 
+	    export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER_OLD}
+	else
+	    [[ -z ${STIMELA_PULLFOLDER} ]] || \
+		{ \
+		  echo "unset STIMELA_PULLFOLDER" >> ${SS} ; \
+		  unset STIMELA_PULLFOLDER ; \
+		}
+	fi
     fi
 
     # If the number of tests is 0 we create the report directory
@@ -2178,40 +2279,71 @@ function cleanup {
 }
 trap cleanup EXIT
 
-[[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
-[[ -n ${KH} ]] || export HOME=${WORKSPACE_ROOT}/home
-if (( ${FORCE} != 0 ))
+if [[ -n ${HT} ]]
 then
-    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake, so tons of protection...
-[[ -n ${KH} ]] || \
- [[ -n ${ORSR} ]] || \
- false || { \
-   [[ ${WORKSPACE_ROOT}/home == ${OLD_HOME} ]] && \
-       echo "We do not delete ${OLD_HOME}"; \
- } || { \
-     [[ ${WORKSPACE_ROOT}/home == /home/${USER} ]] && \
-  echo "We do not delete /home/${USER}"; \
- } || { \
-     echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}; \
-     [[ -n ${FS} ]] || \
-  rm -rf \${WORKSPACE_ROOT}/home; \
- }
+    echo "export HOME=\${workspace_root}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}/home
+fi
+if [[ -n ${HW} ]]
+then
+    echo "export HOME=\${workspace}/home"
+    echo "export HOME=\${workspace}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/home
+fi
+if [[ -n ${CARATE_HOME_FOLDER} ]]
+then
+    echo "export HOME=${CARATE_HOME_FOLDER}"
+    echo "export HOME=${CARATE_HOME_FOLDER}" >> ${SS}
+    export HOME=${CARATE_HOME_FOLDER}
 fi
 
-[[ -n ${KH} ]] || echo "mkdir -p \${workspace_root}/home" >> ${SS}
+[[ -n ${HOME} ]] || \
+    { \
+      echo "No home directory defined. Cannot continue."; \
+      echo ""; \
+      kill "$PPID"; \
+      exit 1; \
+    }		      
 
-# Same here, don't do crazy stuff
-[[ -n ${KH} ]] || mkdir -p ${WORKSPACE_ROOT}/home
+if (( ${FORCE} != 0 ))
+then
+    # This is dangerous, use with great care, poison
+    [[ -n ${HN} ]] || \
+	[[ -n ${ORSR} ]] || \
+	{ \
+	  [[ ${HOME} == ${HOME_OLD} ]] && \
+	      echo "We do not delete ${HOME_OLD}"; \
+	} || \
+	{ \
+	  [[ ${HOME} == /home/${USER} ]] && \
+	      echo "We do not delete /home/${USER}"; \
+	} || \
+	{ \
+	  echo "rm -rf \${HOME}" >> ${SS}; \
+          [[ -n ${FS} ]] || \
+	      { \
+		rm -rf ${HOME}; \
+	      } \
+	}
+fi
+
+# Check if home exists, otherwise make it
+[[ -e ${HOME} ]] || \
+    { \
+      echo "mkdir -p \${HOME}" >> ${SS}; \
+      mkdir -p ${HOME} >> ${SS}; \
+    }
 
 # For some reason we have to be somewhere
 echo "cd \${HOME}" >> ${SS}
 cd $HOME
 
 # Create virtualenv and start
+echo ""
 echo "##########################################"
 echo " Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
-echo
+echo ""
 
 [[ ! -z ${CARATE_VIRTUALENV} ]] || CARATE_VIRTUALENV=${WORKSPACE_ROOT}/caracal_venv
 
@@ -2254,6 +2386,7 @@ fi
 echo "Entering virtualenv in ${WORKSPACE_ROOT}"
 echo ". \${cvirtualenv}/bin/activate" >> ${SS}
 # [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
+
 [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
 
 echo "export PYTHONPATH=''" >> ${SS}
@@ -2363,7 +2496,6 @@ then
 fi
 
 echo ""
-
 echo "###############################"
 echo " Installing/activating CARACal "
 echo "###############################"
@@ -2590,26 +2722,30 @@ fi
 
 if [[ -e ${HOME}/.stimela ]]
 then
-    [[ -n ${FS} ]] || [[ -n ${ORSR} ]] || { \
- echo "#######################" ; \
- echo " Running stimela clean " ; \
- echo "#######################" ; \
- echo "" ; \
- echo "stimela clean -ac" >> ${SS} ; \
- stimela clean -ac ; \
-    }
+    [[ -n ${FS} ]] || \
+	[[ -n ${ORSR} ]] || \
+	{ \
+	  echo "" ; \
+	  echo "#######################" ; \
+	  echo " Running stimela clean " ; \
+	  echo "#######################" ; \
+	  echo "" ; \
+	  echo "stimela clean -ac" >> ${SS} ; \
+	  stimela clean -ac ; \
+	}
 fi
 
 if [[ -z ${ORSR} ]]
 then
-    checkex ${HOME}/.stimela || { \
- echo "#############################" ; \
- echo " Removing Stimela directory " ; \
- echo "#############################" ; \
- echo "" ; \
- echo "Removing \${HOME}/.stimela/*" ; \
- echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
-    }
+    checkex ${HOME}/.stimela || \
+	{ \
+	  echo "#############################" ; \
+	  echo " Removing Stimela directory " ; \
+	  echo "#############################" ; \
+	  echo "" ; \
+	  echo "Removing \${HOME}/.stimela/*" ; \
+	  echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
+	}
     # Consider using stimela clean -ac here before running a docker prune
     # and not doing this:
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
@@ -2863,22 +2999,22 @@ runtest () {
     
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
- (( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname="${CARATE_CARACAL_RUN_PREFIX}-${testruns}"
- if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
- then
-     (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname="${CARATE_CARACAL_FORMER_RUN}-${testruns}"
- fi
- reportprefy="-${configfilename}"
+	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname="${CARATE_CARACAL_RUN_PREFIX}-${testruns}"
+	if [[ -n ${CARATE_CARACAL_FORMER_RUN} ]]
+	then
+	    (( ${testruns} == 1 )) && frname=${CARATE_CARACAL_FORMER_RUN} || frname="${CARATE_CARACAL_FORMER_RUN}-${testruns}"
+	fi
+	reportprefy="-${configfilename}"
     else
- trname="${configfilename}-${contarch}"
- reportprefy=""
+	trname="${configfilename}-${contarch}"
+	reportprefy=""
     fi
-
+    
     reportname=${trname}
     listoftestreps+=( ${reportname} )
-
+    
     mkdir -p ${WORKSPACE_ROOT}/report/${reportname}
-
+    
     SS_RUNTEST=${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt
     [[ ! -e ${SS_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SS_RUNTEST} || rm -rf ${SS_RUNTEST}
     cat ${SS} >> ${SS_RUNTEST}
@@ -2888,75 +3024,81 @@ runtest () {
     [[ ! -e ${SYA_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SYA_RUNTEST} || rm -rf ${SYA_RUNTEST}
     cat ${SYA} >> ${SYA_RUNTEST}
     [[ -z ${syacontainer} ]] || echo "${syacontainer}" >> ${SYA_RUNTEST}
-
+    
     echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA_RUNTEST}
-
+    
     if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE} == 0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
         echo "and use old results. Use -f to override."
     else
- if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
- then
-     [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || { \
-  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
-  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname}
-  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
-     }
- else 
-     [[ -z ${OD} ]] || \
-  [[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
-      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
-  } || { \
-      CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
-  }
-     [[ -n ${CARATE_TEST_DATA_DIR} ]] || { \
-  echo "No test data to process"; \
-  echo "This likely means that you have set the -od switch"; \
-  echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
-  echo "Stopping."; \
-  }
-     
-     #Check if the test directory is a parent of any of the supplied directories
-     if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
-     then
-  # Go through the files and remove individually
-  # continue here
-  dirs=(input msdir output stimela_parameter_files)
-  for dire in ${dirs[@]}
-  do
-      checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-   echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS_RUNTEST}
-      [[ -n ${FS} ]] || \
-   checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-   rm -rf ${workspace_root}/${trname}/${dire}
-  done
-     else
-  [[ -n ${FS} ]] || \
-      [[ -n ${KP} ]] || { \
-   echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
-   rm -rf ${WORKSPACE_ROOT}/${trname}; \
-      }
-     fi 
- fi
+	if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
+	then
+	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || \
+		{ \
+		  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
+		  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname} ; \
+		  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
+		}
+	else 
+	    [[ -z ${OD} ]] || \
+		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && \
+		    { \
+		      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
+		    } || \
+			{ \
+			  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+			}
+	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || \
+		{ \
+		  echo "No test data to process"; \
+		  echo "This likely means that you have set the -od switch"; \
+		  echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
+		  echo "Stopping."; \
+		}
+	    
+	    #Check if the test directory is a parent of any of the supplied directories
+	    if checkex ${WORKSPACE_ROOT}/${trname} && [[ -z ${KP} ]]
+	    then
+		# Go through the files and remove individually
+		# continue here
+		dirs=(input msdir output stimela_parameter_files)
+		for dire in ${dirs[@]}
+		do
+		    checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+			echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS_RUNTEST}
+		    [[ -n ${FS} ]] || \
+			checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+			rm -rf ${workspace_root}/${trname}/${dire}
+		done
+	    else
+		[[ -n ${FS} ]] || \
+		    [[ -n ${KP} ]] || \
+		    { \
+		      echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
+		      rm -rf ${WORKSPACE_ROOT}/${trname}; \
+		    }
+	    fi 
+	fi
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
- echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
+	echo "mkdir -p \${workspace_root}/${trname}/msdir" >> ${SS_RUNTEST}
         mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
- if [[ -d ${CARATE_INPUT_DIR} ]]
- then
-     echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
-     mkdir -p ${WORKSPACE_ROOT}/${trname}/input
-     checkex ${WORKSPACE_ROOT}/${trname}/input || \
-  [[ -n ${KP} ]] || { \
-      echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
-      cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
-  }
- fi
+	if [[ -d ${CARATE_INPUT_DIR} ]]
+	then
+	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
+	    mkdir -p ${WORKSPACE_ROOT}/${trname}/input
+	    checkex ${WORKSPACE_ROOT}/${trname}/input || \
+		[[ -n ${KP} ]] || \
+		{ \
+		  echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
+		  cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
+		}
+	fi
  # Check if user-supplied file is already the one that we are working with before working with it
  # This should in principle only affect the time stamps as if the dataid is not empty, the following
  # Would do nothing in the config file itself
@@ -3102,10 +3244,31 @@ runtest () {
     echo "##########################################" >> ${SYA_RUNTEST}
 
     # This should be at the end of a script even if we don't do it now
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS_RUNTEST}
+    # notice that this is only added to the shell script output.
+    if [[ -z ${HO} ]]
+       then
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS_RUNTEST}
+	   else
+	       echo "unset HOME" >> ${SS_RUNTEST}
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
-	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS_RUNTEST} ; \
+		}
+	fi
     fi
     
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
@@ -3417,11 +3580,12 @@ then
     fi
     
 
-    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || { \
-					       ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
-					       ss_sing+=$'\n' ; \
-					       STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
-					       export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
+    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
 	}
     
     [[ -z ${SPT} ]] || \
@@ -3432,11 +3596,12 @@ then
 	  export STIMELA_PULLFOLDER=${WORKSPACE_ROOT}/stimela_pullfolder ; \
 	}
     
-    [[ -z ${SPW} ]] || { \
-			 ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
-			 ss_sing+=$'\n' ; \
-			 STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
-			 export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
+    [[ -z ${SPW} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
 	}
 
     if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]] || [[ -z ${SDP} ]]

@@ -40,7 +40,7 @@ _target_fields = {'target'}
 _cal_fields = set("fcal bpcal gcal xcal".split())
 
 def get_fields_to_split(config):
-    fields = config['split_field']['field']
+    fields = config['field']
     if not fields:
         raise ValueError("split_field: field cannot be empty")
     elif fields == 'calibrators':
@@ -56,8 +56,6 @@ def get_fields_to_split(config):
                 "split_field: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
                     ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
                 ))
-        if config['from_target']:
-            raise ValueError("can't split calibrator fields when from_target is True")
         return fields_to_split
 
 
@@ -69,9 +67,9 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    from_target = config['from_target']
     label_in = config['label_in']
     label_out = config['label_out']
+    from_target = True if label_in and config['field'] == 'target' else False
     field_to_split = get_fields_to_split(config)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)

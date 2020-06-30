@@ -2,6 +2,7 @@ schema_version: 1.0.3
 
 getdata:
   dataid: ['']
+  extension: ms
 
 obsconf:
   refant: '0'

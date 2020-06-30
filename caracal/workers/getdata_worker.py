@@ -14,6 +14,9 @@ LABEL = 'getdata'
 
 def worker(pipeline, recipe, config):
     pipeline.init_names(config["dataid"])
+    if pipeline.nobs == 0:
+        raise RuntimeError(f'No MS files matching any of {pipeline.dataid} were found at {pipeline.rawdatadir}. '\
+                            'Please make sure that rawdatadir and dataid in the general and getdata sections resp., are set properly.')
 
     for i, msname in enumerate(pipeline.msnames):
         if pipeline.enable_task(config, 'untar'):

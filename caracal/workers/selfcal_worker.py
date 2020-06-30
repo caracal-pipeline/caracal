@@ -1310,19 +1310,19 @@ def worker(pipeline, recipe, config):
             step = 'calibrate-cubical-field{0:d}-iter{1:d}'.format(trg, num, i)
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'full':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             else:
                 raise RuntimeError("Something has corrupted the selfcal run")
             msbase = os.path.splitext(msname)[0]
@@ -1379,7 +1379,7 @@ def worker(pipeline, recipe, config):
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
                     "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                    pipeline), num, msname.split('.ms')[0],prefix),
+                                                                                                    pipeline), num, os.path.splitext(msname)[0],prefix),
                     "dd-clip-low": config['cal_gain_cliplow'],
                     "dd-clip-high": config['cal_gain_cliphigh'],
                     "dd-max-prior-error": config['cal_cubical']['max_prior_error'],
@@ -1388,16 +1388,16 @@ def worker(pipeline, recipe, config):
             if config['cal_bjones']:
                 if bupdate == 'phase-diag':
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'amp-diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'full':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 else:
                     raise RuntimeError("Something has corrupted the selfcal run")
                 cubical_opts.update({
@@ -1609,19 +1609,19 @@ def worker(pipeline, recipe, config):
             #Set the table name
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'full':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                    pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                    pipeline), num, os.path.splitext(fromname)[0],prefix)
             else:
                 raise RuntimeError("Something has corrupted the application of the tables")
             if config['transfer_apply_gains']['interpolate']['enable']:
@@ -1668,16 +1668,16 @@ def worker(pipeline, recipe, config):
                 #Set the table name
                 if bupdate == 'phase-diag':
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'amp-diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'full':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                        pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                        pipeline), num, os.path.splitext(fromname)[0],prefix)
                 else:
                     raise RuntimeError("Something has corrupted the application of the tables")
                 if config['transfer_apply_gains']['interpolate']['enable']:
@@ -1720,12 +1720,12 @@ def worker(pipeline, recipe, config):
                 if config['transfer_apply_gains']['interpolate']['enable']:
                     cubical_gain_interp_opts.update({
                         "dd-xfer-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                        pipeline),num,fromname.split('.ms')[0],prefix)
+                                                                        pipeline),num,os.path.splitext(fromname)[0],prefix)
                     })
                 else:
                     cubical_gain_interp_opts.update({
                         "dd-load-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                        pipeline),num,fromname.split('.ms')[0],prefix)
+                                                                        pipeline),num,os.path.splitext(fromname)[0],prefix)
                     })
             cubical_gain_interp_opts.update({
                 "data-time-chunk": time_chunk_apply,

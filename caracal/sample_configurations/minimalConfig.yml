@@ -12,10 +12,10 @@ obsconf:
 
 transform:
   enable: true
+  field: calibrators
   label_out: cal
   split_field:
     enable: true
-    field: calibrators
     col: data
 
 prep:

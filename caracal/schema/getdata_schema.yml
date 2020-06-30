@@ -14,6 +14,7 @@ mapping:
       extension:
         type: str
         desc: Extension of raw (input) visibility data
+        required: false
         example: 'ms'
       untar:
         type: map

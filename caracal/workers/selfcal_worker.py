@@ -302,8 +302,7 @@ def worker(pipeline, recipe, config):
     # label of MS where we interpolate and transform model column
     label_tmodel = config['transfer_model']['transfer_to_label']
 
-    all_targets, all_msfile, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, label)
+    all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
 
     i = 0
     for i, m in enumerate(all_msfile):
@@ -355,8 +354,8 @@ def worker(pipeline, recipe, config):
 
     i += 1
     if pipeline.enable_task(config, 'transfer_apply_gains'):
-        t, all_msfile_tgain, ms_dict_tgain = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label_tgain)
+        t, all_msfile_tgain, ms_dict_tgain = pipeline.get_target_mss(label_tgain)
+
         for j, m in enumerate(all_msfile_tgain):
             # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
@@ -403,8 +402,7 @@ def worker(pipeline, recipe, config):
                         m, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
     if pipeline.enable_task(config, 'transfer_model'):
-        t, all_msfile_tmodel, ms_dict_tmodel = utils.target_to_msfiles(
-            pipeline.target, pipeline.msnames, label_tmodel)
+        t, all_msfile_tmodel, ms_dict_tmodel = pipeline.get_target_mss(label_tmodel)
         for m in all_msfile_tmodel:  # check whether all ms files to be used exist
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
@@ -1166,6 +1164,7 @@ def worker(pipeline, recipe, config):
             model_cal = model_cal.split(":output")[0]
             inp_dir = pipeline.output+"/"+img_dir+"/"
             op_dir = pipeline.continuum+"/selfcal_products/"
+            msbase = os.path.splitext(msname)[0]
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel" : model_cal,
@@ -1176,9 +1175,7 @@ def worker(pipeline, recipe, config):
                            "column": incolumn,
                            "output-data": outdata,
                            "output-column": outcolumn,
-
-                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(pipeline.dataid[i], msname[:-3], num),
-                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(pipeline.dataid[i], msname[:-3], num),
+                           "prefix": '{0:s}_{1:s}_{2:d}_meqtrees'.format(prefix, msbase, num),
                            "label": 'cal{0:d}'.format(num),
                            "read-flags-from-ms": True,
                            "read-flagsets": "-stefcal",
@@ -1309,30 +1306,29 @@ def worker(pipeline, recipe, config):
         for i,msname in enumerate(mslist):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
             # Hence this temporary fix.
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
-            with open(msinfo, 'r') as stdr:
-                corrs = yaml.load(stdr,Loader=yaml.FullLoader)['CORR']['CORR_TYPE']
+            corrs = pipeline.get_msinfo(msname)['CORR']['CORR_TYPE']
             if len(corrs) > 2:
                 take_diag_terms = False
             #End temp fix
             step = 'calibrate-cubical-field{0:d}-iter{1:d}'.format(trg, num, i)
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             elif gupdate == 'full':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                               pipeline), num, os.path.splitext(msname)[0],prefix)
             else:
                 raise RuntimeError("Something has corrupted the selfcal run")
+            msbase = os.path.splitext(msname)[0]
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
@@ -1344,7 +1340,7 @@ def worker(pipeline, recipe, config):
                 "sol-term-iters": ",".join(sol_terms_add),
                 "sel-diag": take_diag_terms,
                 "out-name": '{0:s}/{1:s}_{2:s}_{3:d}_cubical'.format(get_dir_path(prod_path,
-                                                                                  pipeline), prefix, msname[:-3], num),
+                                                                                  pipeline), prefix, msbase, num),
                 "out-mode": CUBICAL_OUT[config[key]['output_data'][num-1 if len(config[key]['output_data']) >= num else -1]],
                 "out-plots": True,
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
@@ -1352,7 +1348,7 @@ def worker(pipeline, recipe, config):
                 "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                               pipeline), num, msname.split('.ms')[0]),
+                                                                                               pipeline), num, msbase),
                 "g-solvable": True,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
@@ -1386,7 +1382,7 @@ def worker(pipeline, recipe, config):
                     "dd-time-int": int(gasols_[0]),
                     "dd-freq-int": int(gasols_[1]),
                     "dd-save-to": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                    pipeline), num, msname.split('.ms')[0],prefix),
+                                                                                                    pipeline), num, os.path.splitext(msname)[0],prefix),
                     "dd-clip-low": config['cal_gain_cliplow'],
                     "dd-clip-high": config['cal_gain_cliphigh'],
                     "dd-max-prior-error": config['cal_cubical']['max_prior_error'],
@@ -1395,16 +1391,16 @@ def worker(pipeline, recipe, config):
             if config['cal_bjones']:
                 if bupdate == 'phase-diag':
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'amp-diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 elif bupdate == 'full':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, msname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(msname)[0],prefix)
                 else:
                     raise RuntimeError("Something has corrupted the selfcal run")
                 cubical_opts.update({
@@ -1511,9 +1507,7 @@ def worker(pipeline, recipe, config):
         for i, msname_out in enumerate(mslist_out):
             # Due to a bug in cubical full polarization datasets are not compliant with sel-diag: True
             # Hence this temporary fix.
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname_out[:-3])
-            with open(msinfo, 'r') as stdr:
-                corrs = yaml.load(stdr,Loader=yaml.FullLoader)['CORR']['CORR_TYPE']
+            corrs = pipeline.get_msinfo(msname_out)['CORR']['CORR_TYPE']
             if len(corrs) > 2:
                 take_diag_terms = False
             #End temp fix
@@ -1584,6 +1578,7 @@ def worker(pipeline, recipe, config):
                            label="remove-2gc_flags-{0:s}:: Remove 2GC flags".format(mspref))
 
             # build cubical commands
+            msbase = os.path.splitext(msname_out)[0]
             cubical_gain_interp_opts = {
                 "data-ms": msname_out,
                 "data-column": 'DATA',
@@ -1595,7 +1590,7 @@ def worker(pipeline, recipe, config):
                 "log-memory": True,
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
                                                                                            pipeline), prefix,
-                                                                              msname_out[:-3], num),
+                                                                              msbase, num),
                 "out-mode": apmode,
                 #"out-overwrite": config[key]['overwrite'],
                 "out-overwrite": True,
@@ -1617,19 +1612,19 @@ def worker(pipeline, recipe, config):
             #Set the table name
             if gupdate == 'phase-diag' and matrix_type == 'Fslope':
                 g_table_name = "{0:s}/{3:s}-g-delay-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'phase-diag':
                 g_table_name = "{0:s}/{3:s}-g-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'amp-diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'diag':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                   pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                   pipeline), num, os.path.splitext(fromname)[0],prefix)
             elif gupdate == 'full':
                 g_table_name = "{0:s}/{3:s}-g-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                    pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                    pipeline), num, os.path.splitext(fromname)[0],prefix)
             else:
                 raise RuntimeError("Something has corrupted the application of the tables")
             if config['transfer_apply_gains']['interpolate']['enable']:
@@ -1676,16 +1671,16 @@ def worker(pipeline, recipe, config):
                 #Set the table name
                 if bupdate == 'phase-diag':
                     b_table_name = "{0:s}/{3:s}-b-phase-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'amp-diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'diag':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-diag-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                       pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                       pipeline), num, os.path.splitext(fromname)[0],prefix)
                 elif bupdate == 'full':
                     b_table_name = "{0:s}/{3:s}-b-amp-phase-full-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                                                        pipeline), num, fromname.split('.ms')[0],prefix)
+                                                                                                        pipeline), num, os.path.splitext(fromname)[0],prefix)
                 else:
                     raise RuntimeError("Something has corrupted the application of the tables")
                 if config['transfer_apply_gains']['interpolate']['enable']:
@@ -1728,12 +1723,12 @@ def worker(pipeline, recipe, config):
                 if config['transfer_apply_gains']['interpolate']['enable']:
                     cubical_gain_interp_opts.update({
                         "dd-xfer-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                        pipeline),num,fromname.split('.ms')[0],prefix)
+                                                                        pipeline),num,os.path.splitext(fromname)[0],prefix)
                     })
                 else:
                     cubical_gain_interp_opts.update({
                         "dd-load-from": "{0:s}/{3:s}-g-amp-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
-                                                                        pipeline),num,fromname.split('.ms')[0],prefix)
+                                                                        pipeline),num,os.path.splitext(fromname)[0],prefix)
                     })
             cubical_gain_interp_opts.update({
                 "data-time-chunk": time_chunk_apply,
@@ -1764,10 +1759,7 @@ def worker(pipeline, recipe, config):
 
     def get_obs_data(msname):
         "Extracts data from the json data file"
-        filename='{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo,msname[:-3])
-        with open(filename) as f:
-            data = json.load(f)
-        return data
+        return pipeline.get_msinfo(msname)
 
     def quality_check(n, field, enable=True):
         "Examine the aimfast results to see if they meet specified conditions"

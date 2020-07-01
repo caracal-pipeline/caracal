@@ -11,31 +11,11 @@ mapping:
         desc: Basename of MS. For MeerKAT data to be downloaded by CARACal, this should be the data ID of the observation.
         example: mydata
 
-      mvftoms:
-        type: map
-        desc: For MeerKAT HDFS files only -- Convert HDF5/MVF files in data_path (specified for the general worker) to MS files. The latter are written to msdir (also as specified for the general worker), and an MS.TAR file is created.
-        mapping:
-          enable:
-            type: bool
-            desc: Enable the 'mvftoms' segment.
-            required: false
-            example: 'False'
-          tar: 
-            type: bool
-            desc: Create a tarball of the converted MS.
-            required: false
-            example: 'False'
-          chanrange:
-            type: str
-            desc: Only extract channels in this range (0-based, inclusive; comma-separated string). It is also possible to specify 'all'.
-            required: false
-            example: all
-          fullpol:
-            type: bool
-            desc: Extract all four correlations instead of only the XX and YY correlations.
-            required: false
-            example: 'False'
-
+      extension:
+        type: str
+        desc: Extension of raw (input) visibility data
+        required: false
+        example: 'ms'
       untar:
         type: map
         desc: Unarchive MS from an archive file.
@@ -51,48 +31,6 @@ mapping:
             required: false
             example: '-xvf'
 
-      combine:
-        desc: Virtually concatenate MSs and proceed with the combined MS.
-        type: map
-        mapping:
-          enable:
-            type: bool
-            desc: Enable the 'combine' segment.
-            required: false
-            example: 'False'
-          reset:
-            type: bool
-            desc: Delete concatenated MS if it exists. Otherwise, proceed with the existing MS.
-            required: false
-            example: 'False'
-          tar:
-            desc: Create a tarball of the concatenated MS.
-            type: map
-            mapping:
-              enable: 
-                desc: Enable the 'tar' segment.
-                type: bool
-                required: false
-                example: 'False'
-              tar_options:
-                type: str
-                desc: The tar options to pass to the 'tar' command.
-                required: false 
-                example: '-cvf'
-          untar:
-            desc: Unarchive MS from an archive file.
-            type: map
-            mapping:
-              enable: 
-                desc: Enable the 'untar' segment.
-                type: bool
-                required: false
-                example: 'False'
-              tar_options:
-                type: str
-                desc: The tar options to pass to the 'tar' command.
-                required: false
-                example: '-xvf'
       report:
         type: bool
         required: false

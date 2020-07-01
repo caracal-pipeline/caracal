@@ -410,9 +410,8 @@ def worker(pipeline, recipe, config):
     centre = config['centre_coord']
 
     flabel = config['label_in']
-    all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, flabel)
-    msfileName = str.split(all_msfiles[0], '.ms')[0]
+    all_targets, all_msfiles, ms_dict = pipeline.get_target_mss(flabel)
+    msinfo = pipeline.get_msinfo(all_msfiles[0])
 
 
     for target in all_targets:
@@ -421,18 +420,14 @@ def worker(pipeline, recipe, config):
         field = utils.filter_name(target)
     
         if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.obsinfo, msfileName)
-            with open(msinfo, 'r') as stdr:
-                tinfo = yaml.safe_load(stdr)['FIELD']
-                targetpos = tinfo['REFERENCE_DIR']
-                while len(targetpos) == 1:
-                    targetpos = targetpos[0]
-                coords = [targetpos[0]/np.pi*180., targetpos[1]/np.pi*180.]
-                centreCoord = coord.SkyCoord(
-                    coords[0], coords[1], frame='icrs', unit=(u.deg, u.deg))
-                centre[0] = centreCoord.ra.hms
-                centre[1] = centreCoord.dec.dms
+            targetpos = msinfo['REFERENCE_DIR']
+            while len(targetpos) == 1:
+                targetpos = targetpos[0]
+            coords = [targetpos[0]/np.pi*180., targetpos[1]/np.pi*180.]
+            centreCoord = coord.SkyCoord(
+                coords[0], coords[1], frame='icrs', unit=(u.deg, u.deg))
+            centre[0] = centreCoord.ra.hms
+            centre[1] = centreCoord.dec.dms
 
         mask_cell = config['cell_size']
         mask_imsize = config['mask_size']

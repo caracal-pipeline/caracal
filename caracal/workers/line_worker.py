@@ -26,8 +26,14 @@ from caracal.workers.utils import manage_flagsets as manflags
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
 
-# To split out cubes/<dir> from output/cubes/dir
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def get_relative_path(path, pipeline):
+    """Returns e.g. cubes/<dir> given output/cubes/<dir>"""
+    return os.path.relpath(path, pipeline.output)
+
+def add_ms_label(msname, label="mst"):
+    """Adds _label to end of MS name, before the extension"""
+    msbase, ext = os.path.splitext(msname)
+    return f"{msbase}_{label}{ext}"
 
 
 def freq_to_vel(filename, reverse):
@@ -188,51 +194,38 @@ def worker(pipeline, recipe, config):
         flabel = label
     else:
         flabel = label
-    all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-        pipeline.target, pipeline.msnames, flabel)
+    all_targets, all_msfiles, ms_dict = pipeline.get_target_mss(flabel)
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
-    pipeline.prefixes = [
-        '{2:s}-{0:s}-{1:s}'.format(did, config['label_in'],
-            pipeline.prefix) for did in pipeline.dataid]
-    prefixes = pipeline.prefixes
     restfreq = config['restfreq']
 
     for i, msfile in enumerate(all_msfiles):
-        # Upate pipeline attributes (useful if, e.g., channel averaging was
+        # Update pipeline attributes (useful if, e.g., channel averaging was
         # performed by the split_data worker)
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-            pipeline.obsinfo, msfile[:-3])
-        caracal.log.info('Updating info from {0:s}'.format(msinfo))
-        with open(msinfo, 'r') as stdr:
-            spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
-        caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
-            len(spw), ','.join(map(str, spw))))
+        msinfo = pipeline.get_msinfo(msfile)
+        spw = msinfo['SPW']['NUM_CHAN']
+        caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
-        with open(msinfo, 'r') as stdr:
-            chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
-            # To be done: add user selected  spw
-            firstchanfreq = [ss[0] for ss in chfr]
-            lastchanfreq = [ss[-1] for ss in chfr]
-            chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
-            firstchanfreq_all.append(firstchanfreq), chanw_all.append(
-                chanwidth), lastchanfreq_all.append(lastchanfreq)
+        chfr = msinfo['SPW']['CHAN_FREQ']
+        # To be done: add user selected  spw
+        firstchanfreq = [ss[0] for ss in chfr]
+        lastchanfreq = [ss[-1] for ss in chfr]
+        chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
+        firstchanfreq_all.append(firstchanfreq), chanw_all.append(
+            chanwidth), lastchanfreq_all.append(lastchanfreq)
         caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
             ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
-        with open(msinfo, 'r') as stdr:
-            tinfo = yaml.safe_load(stdr)['FIELD']
-            targetpos = tinfo['REFERENCE_DIR']
-            while len(targetpos) == 1:
-                targetpos = targetpos[0]
-            tRA = targetpos[0] / np.pi * 180.
-            tDec = targetpos[1] / np.pi * 180.
-            RA.append(tRA)
-            Dec.append(tDec)
-        caracal.log.info(
-            'Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(
-                RA[i], Dec[i]))
+        tinfo = msinfo['FIELD']
+        targetpos = tinfo['REFERENCE_DIR']
+        while len(targetpos) == 1:
+            targetpos = targetpos[0]
+        tRA = targetpos[0] / np.pi * 180.
+        tDec = targetpos[1] / np.pi * 180.
+        RA.append(tRA)
+        Dec.append(tDec)
+        caracal.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(RA[i], Dec[i]))
 
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
@@ -258,8 +251,7 @@ def worker(pipeline, recipe, config):
                 corr_order = True
 
         for i, msfile in enumerate(all_msfiles):
-            msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(
-                pipeline.obsinfo, msfile[:-3])
+            msinfo = '{0:s}/{1:s}-obsinfo.txt'.format(pipeline.msdir, os.path.splitext(msfile)[0])
             with open(msinfo, 'r') as searchfile:
                 for longdatexp in searchfile:
                     if "Observed from" in longdatexp:
@@ -409,7 +401,7 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Add model column'.format(step))
 
-        msname_mst = msname.replace('.ms', '_mst.ms')
+        msname_mst = add_ms_label(msname, "mst")
 
         if pipeline.enable_task(config, 'mstransform'):
             # If the output of this run of mstransform exists, delete it first
@@ -442,12 +434,13 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
+            msname_mst_base = os.path.splitext(msname_mst)[0]
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
                            step,
                            {"vis": msname_mst,
-                            "listfile": '{0:s}-obsinfo.txt'.format(msname_mst[:-3]),
+                            "listfile": '{0:s}-obsinfo.txt:msfile'.format(msname_mst_base),
                             "overwrite": True,
                             },
                            input=pipeline.input,
@@ -463,7 +456,7 @@ def worker(pipeline, recipe, config):
                         "msname": msname_mst,
                         "command": 'summary',
                         "display": False,
-                        "outfile": '{0:s}-obsinfo.json'.format(msname_mst[:-3]),
+                        "outfile": '{0:s}-obsinfo.json:msfile'.format(msname_mst_base),
                     },
                     input=pipeline.input,
                     output=pipeline.obsinfo,
@@ -595,40 +588,29 @@ def worker(pipeline, recipe, config):
             flabel = label
 
         if config['make_cube']['use_mstransform']:
-            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(
-                pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 # If channelisation changed during a previous pipeline run
                 # as stored in the obsinfo.json file
                 if not pipeline.enable_task(config, 'mstransform'):
-                    msinfo = '{0:s}/{1:s}_mst-obsinfo.json'.format(
-                        pipeline.obsinfo, msfile[:-3])
-                    caracal.log.info(
-                        'Updating info from {0:s}'.format(msinfo))
-
-                    # Get nr of channels
-                    with open(msinfo, 'r') as stdr:
-                        spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
-                        nchans = spw
-                        nchans_all.append(nchans)
+                    msbase, ext = os.path.splitext(msfile)
+                    msinfo = pipeline.get_msinfo(f"{msbase}_mst{ext}")
+                    spw = msinfo['SPW']['NUM_CHAN']
+                    nchans = spw
+                    nchans_all.append(nchans)
                     caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                         len(spw), ','.join(map(str, spw))))
-
                     # Get first chan, last chan, chan width
-                    with open(msinfo, 'r') as stdr:
-                        chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
-                        firstchanfreq = [ss[0] for ss in chfr]
-                        lastchanfreq = [ss[-1] for ss in chfr]
-                        chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
+                    chfr = msinfo['SPW']['CHAN_FREQ']
+                    firstchanfreq = [ss[0] for ss in chfr]
+                    lastchanfreq = [ss[-1] for ss in chfr]
+                    chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
                     caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
                     # Get spectral reference frame
-                    with open(msinfo, 'r') as stdr:
-                        specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
-                        specframe_all.append(specframe)
-                    caracal.log.info(
-                        'The spectral reference frame is {0:}'.format(specframe))
+                    specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                    specframe_all.append(specframe)
+                    caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
 
                 # Or get it from the mstransform segment executed in this
                 # same pipeline run
@@ -638,17 +620,14 @@ def worker(pipeline, recipe, config):
                                          config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
 
         else:
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.obsinfo, msfile[:-3])
-            with open(msinfo, 'r') as stdr:
-                spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
-                nchans = spw
-                nchans_all.append(nchans)
+            msinfo = pipeline.get_msinfo(msfile)
+            spw = msinfo['SPW']['NUM_CHAN']
+            nchans = spw
+            nchans_all.append(nchans)
             caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                 len(spw), ','.join(map(str, spw))))
-            with open(msinfo, 'r') as stdr:
-                specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
-                specframe_all.append(specframe)
+            specframe = msinfo['SPW']['MEAS_FREQ_REF']
+            specframe_all.append(specframe)
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
@@ -701,7 +680,7 @@ def worker(pipeline, recipe, config):
         for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))
             if config['make_cube']['use_mstransform']:
-                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+                mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
             field = utils.filter_name(target)
@@ -717,7 +696,7 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(cube_path):
                     os.mkdir(cube_path)
                 cube_dir = '{0:s}/cube_{1:d}'.format(
-                    get_dir_path(pipeline.cubes, pipeline), j)
+                    get_relative_path(pipeline.cubes, pipeline), j)
 
                 line_image_opts.update({
                     "msname": mslist,
@@ -729,7 +708,7 @@ def worker(pipeline, recipe, config):
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                            get_dir_path(pipeline.masking, pipeline), own_line_clean_mask)})
+                            get_relative_path(pipeline.masking, pipeline), own_line_clean_mask)})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
@@ -926,7 +905,7 @@ def worker(pipeline, recipe, config):
                             os.remove(MFScubename)
 
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='casa':
-        cube_dir = get_dir_path(pipeline.cubes, pipeline)
+        cube_dir = get_relative_path(pipeline.cubes, pipeline)
         nchans_all, specframe_all = [], []
         label = config['label_in']
         if label != '':
@@ -934,33 +913,26 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
         if config['make_cube']['use_mstransform']:
-            all_targets, all_msfiles, ms_dict = utils.target_to_msfiles(pipeline.target, pipeline.msnames, flabel)
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
-                    msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                        pipeline.obsinfo, msfile[:-3])
-                    caracal.log.info(
-                        'Updating info from {0:s}'.format(msinfo))
-                    with open(msinfo, 'r') as stdr:
-                        spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
-                        nchans = spw
-                        nchans_all.append(nchans)
+                    msinfo = pipeline.get_msinfo(msfile)
+                    spw = msinfo['SPW']['NUM_CHAN']
+                    nchans = spw
+                    nchans_all.append(nchans)
                     caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                         len(spw), ','.join(map(str, spw))))
 
                     # Get first chan, last chan, chan width
-                    with open(msinfo, 'r') as stdr:
-                        chfr = yaml.safe_load(stdr)['SPW']['CHAN_FREQ']
-                        firstchanfreq = [ss[0] for ss in chfr]
-                        lastchanfreq = [ss[-1] for ss in chfr]
-                        chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
-                                     for ss in chfr]
+                    chfr = msinfo['SPW']['CHAN_FREQ']
+                    firstchanfreq = [ss[0] for ss in chfr]
+                    lastchanfreq = [ss[-1] for ss in chfr]
+                    chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
+                                 for ss in chfr]
                     caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
-                    with open(msinfo, 'r') as stdr:
-                        specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
-                        specframe_all.append(specframe)
+                    specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                    specframe_all.append(specframe)
                     caracal.log.info(
                         'The spectral reference frame is {0:}'.format(specframe))
 
@@ -969,17 +941,14 @@ def worker(pipeline, recipe, config):
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
                                          config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
         else:
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.obsinfo, msfile[:-3])
-            with open(msinfo, 'r') as stdr:
-                spw = yaml.safe_load(stdr)['SPW']['NUM_CHAN']
-                nchans = spw
-                nchans_all.append(nchans)
+            msinfo = pipeline.get_msinfo(msfile)
+            spw = msinfo['SPW']['NUM_CHAN']
+            nchans = spw
+            nchans_all.append(nchans)
             caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
                 len(spw), ','.join(map(str, spw))))
-            with open(msinfo, 'r') as stdr:
-                specframe = yaml.safe_load(stdr)['SPW']['MEAS_FREQ_REF']
-                specframe_all.append(specframe)
+            specframe = msinfo['SPW']['MEAS_FREQ_REF']
+            specframe_all.append(specframe)
             caracal.log.info(
                 'The spectral reference frame is {0:}'.format(specframe))
 
@@ -1004,7 +973,7 @@ def worker(pipeline, recipe, config):
 
         for tt, target in enumerate(all_targets):
             if config['make_cube']['use_mstransform']:
-                mslist = [starget.replace('.ms','_mst.ms') for starget in ms_dict[target]]
+                mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]
             else:
                 mslist = ms_dict[target]
             field = utils.filter_name(target)
@@ -1044,7 +1013,7 @@ def worker(pipeline, recipe, config):
 
     # Once all cubes have been made fix the headers etc.
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
-    cube_dir = get_dir_path(pipeline.cubes, pipeline)
+    cube_dir = get_relative_path(pipeline.cubes, pipeline)
     for tt, target in enumerate(all_targets):
         field = utils.filter_name(target)
 

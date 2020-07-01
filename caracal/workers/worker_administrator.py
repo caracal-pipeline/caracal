@@ -1,37 +1,25 @@
 # -*- coding: future_fstrings -*-
 import caracal
 from caracal import log, pckgdir, notebooks
-import subprocess
 import sys
 import os
-import traceback
 from datetime import datetime
 import stimela
 import glob
 import shutil
-from caracal.dispatch_crew.config_parser import config_parser as cp
 import traceback
-import caracal.dispatch_crew.caltables as mkct
+import itertools
 try:
    from urllib.parse import urlencode
 except ImportError:
    from urllib import urlencode
  
 import ruamel.yaml
-from ruamel.yaml.comments import CommentedMap, CommentedKeySeq
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
 from collections import OrderedDict
+from caracal.dispatch_crew import utils
 
-# GIGJ commenting lines initiating a report
-# try:
-#    import caracal.scripts as scripts
-#    from caracal.scripts import reporter as mrr
-#    REPORTS = True
-# except ImportError:
-#    log.warning(
-#        "Modules for creating pipeline disgnostic reports are not installed. Please install \"caracal[extra_diagnostics]#\" if you want these reports")
-#    REPORTS = False
 REPORTS = True
 
 class worker_administrator(object):
@@ -60,14 +48,15 @@ class worker_administrator(object):
         self.mosaics = self.config['general']['output'] + '/mosaics'
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
+        self.ms_extension = self.config["getdata"]["extension"]
+
+        self._msinfo_cache = {}
 
         self.logs_symlink = self.config['general']['output'] + '/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
-
         if not self.config['general']['rawdatadir']:
-            self.config['general']['rawdatadir'] = os.getcwd()
-            self.rawdatadir = self.config['general']['rawdatadir']
+            self.rawdatadir = self.config['general']['rawdatadir'] = self.msdir
         else:
             self.rawdatadir = self.config['general']['rawdatadir']
 
@@ -150,45 +139,88 @@ class worker_administrator(object):
             general fields that must be propagated
         """
         self.dataid = dataid
-        self.nobs = nobs = len(self.dataid)
-        self.h5files = ['{:s}.h5'.format(dataid) for dataid in self.dataid]
-        self.msnames = ['{:s}.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.split_msnames = ['{:s}_split.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.cal_msnames = ['{:s}_cal.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.hires_msnames = ['{:s}_hires.ms'.format(
-            os.path.basename(dataid)) for dataid in self.dataid]
-        self.prefixes = [
-            '{0:s}-{1:s}'.format(self.prefix, os.path.basename(dataid)) for dataid in self.dataid]
 
-        for item in 'input msdir output'.split():
+        # names of all MSs
+        self.msnames = []
+        # basenames of all MSs (sans extension)
+        self.msbasenames = []
+        # filename prefixes for outputs (formed up as prefix-msbase)
+        self.prefix_msbases = []
+
+        for item in 'rawdatadir input msdir output'.split():
             value = getattr(self, item, None)
             if value:
                 setattr(self, item, value)
 
-        for item in 'rawdatadir refant fcal bpcal gcal target xcal'.split():
+        if self.rawdatadir:
+            for dataid in self.dataid:
+                pattern = os.path.join(self.rawdatadir, f"{dataid}.{self.ms_extension}")
+                msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
+                msbases = [os.path.splitext(ms)[0] for ms in msnames]
+                self.msnames += msnames
+                self.msbasenames += msbases
+                self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
+            self.nobs = len(self.msnames)
+
+        for item in 'refant fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
             if value and len(value) == 1:
-                value = value*nobs
+                value = value*self.nobs
                 setattr(self, item, value)
 
-    def set_cal_msnames(self, label):
-        if self.virtconcat:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
-        else:
-            self.cal_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3], "-"+label if label else "") for msname in self.msnames]
+    def get_msinfo(self, msname):
+        """Returns info dict corresponding to an MS. Caches and reloads as needed"""
+        msinfo_file = os.path.splitext(msname)[0] + "-summary.json"
+        msinfo_path = os.path.join(self.msdir, msinfo_file)
+        msdict, mtime_cache = self._msinfo_cache.get(msname, (None, 0))
+        if not os.path.exists(msinfo_path):
+            raise RuntimeError(f"MS summary file {msinfo_file} not found at expected location. This is a bug or "
+                                "a misconfiguration. Was the MS transformed properly?")
+        # reload cached dict if file on disk is newer
+        mtime = os.path.getmtime(msinfo_path)
+        if msdict is None or mtime > mtime_cache:
+            with open(msinfo_path, 'r') as f:
+                msdict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+            self._msinfo_cache[msname] = msdict, mtime
+        return msdict
 
-    def set_hires_msnames(self, label):
-        if self.virtconcat:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3].split("SUBMSS/")[-1], "-"+label if label else "") for msname in self.msnames]
+    ### The following three methods provide MS naming services for workers
+
+    def form_msname(self, msbase, label=None, field=None):
+        """
+        Given a base MS name, an optional label, and an optional field name, return the full MS name
+        """
+        label = '' if not label else '-' + label
+        field = '' if not field else '-' + utils.filter_name(field)
+        return f'{msbase}{field}{label}.{self.ms_extension}'
+
+    def get_mslist(self, iobs, label="", target=False):
+        """
+        Given an MS number (0...nobs-1), and an optional label, returns list of corresponding MSs.
+        If target is True, this will be one MS per each (split-out) target.
+        If target is False, the list will contain just the single MS.
+        Applies label in both cases.
+        """
+        msbase = self.msbasenames[iobs]
+        if target:
+            return [self.form_msname(msbase, label, targ) for targ in self.target[iobs]]
         else:
-            self.hires_msnames = ['{0:s}{1:s}.ms'.format(
-                msname[:-3], "-"+label if label else "") for msname in self.msnames]
+            return [self.form_msname(msbase, label)]
+
+    def get_target_mss(self, label=None):
+        """
+        Given an MS label, returns a tuple of unique_targets, all_mss, mss_per_target
+        Where all_mss is a list of all MSs to be processed for all targets, and mss_per_target maps target field
+        to associated list of MSs
+        """
+        target_msfiles = OrderedDict()
+        # self.target is a list of lists of targets, per each MS
+        for msbase, targets in zip(self.msbasenames, self.target):
+            for targ in targets:
+                target_msfiles.setdefault(targ, []).append(self.form_msname(msbase, label, targ))
+        # collect into flat list of MSs
+        target_ms_ls = list(itertools.chain(*target_msfiles.values()))
+        return list(target_msfiles.keys()), target_ms_ls, target_msfiles
 
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""
@@ -238,6 +270,8 @@ class worker_administrator(object):
             os.mkdir(self.output)
         if not os.path.exists(self.rawdatadir):
             os.mkdir(self.rawdatadir)
+        if not os.path.exists(self.obsinfo):
+            os.mkdir(self.obsinfo)
         if not os.path.exists(self.logs):
             os.mkdir(self.logs)
         log.info("output directory for logs is {}".format(self.logs))
@@ -355,7 +389,6 @@ class worker_administrator(object):
             # 1st get correct section of config file
             log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-
             log.info("{0:s}: running".format(label))
             recipe.run()
             log.info("{0:s}: finished".format(label))

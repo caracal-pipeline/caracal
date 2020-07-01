@@ -81,7 +81,7 @@ def worker(pipeline, recipe, config):
                     step = "elevation-plots-ms{:d}".format(i)
                     if config['obsinfo']["plotelev"]["plotter"] in ["plotms"]:
                         recipe.add("cab/casa_plotms", step, {
-                                   "vis" : msname,
+                                   "vis" : msnamenm,
                                    "xaxis" : "hourangle",
                                    "yaxis" : "elevation",
                                    "coloraxis" : "field",

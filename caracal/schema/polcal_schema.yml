@@ -14,8 +14,83 @@ mapping:
         type: str
         required: false
         example: 'cal'
+      label_crosscal_in:
+        desc: Label of the cross cal tables to be applied. If empty it assumes that we are starting from a splitted cross calibrated MS, otherwise it applies the cross_cal solutions and split the MS to look for polcal solutions.
+        type: str
+        required: false
+        example: '1kgb'
       label_cal:
         desc: Label for output files (calibration tables, images).
         type: str
         required: false
         example: '1pcal'
+      uvrange:
+        desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
+        type: str
+        required: false
+        example: '>50'
+      reuse_existing_tables:
+        desc: Use existing pcal tables
+        type: bool
+        required: false
+        example: "True"
+      pol_calib:
+        desc: calibrator for the polarized angle
+        type: str
+        required: false
+        example: xcal
+      leakage_calib:
+        desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles
+        type: str
+        required: false
+        example: xcal
+      avg_bw:
+        desc: set the bandwidth average interval to increase SNR.
+        type: str
+        required: false
+        example: '1MHz'
+      make_checking_plots:
+        desc: Plot solutions and save in <output>/diagnostic_plots/polcal/.
+        type: bool
+        required: false
+        example: "True"
+      refant_for_plots:
+        desc: Reference antenna for plots.
+        type: str
+        required: false
+        example: 'm007'
+      apply_pcal:
+        desc: Execute the set_model segment.
+        type: bool
+        required: false
+        example: 'True'
+      applyto:
+        seq:
+          - type: str
+        desc: Fields to apply calibration to
+        required: false
+        example: "xcal, bpcal, gcal, target"
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'

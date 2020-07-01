@@ -9,11 +9,11 @@ mapping:
         type: bool
         required: true
         example: 'True'
-      from_target:
-        desc: Spliting from MS(s) that have the target field(s)
-        type: bool
+      field:
+        desc: Fields to be split off from the input MS (see split_field below) or whose phase centre should be changed (see changecentre below). Options are (separately) 'target', 'calibrators', 'bpcal', 'gcal' and 'fcal'. Also valid is any combination of 'bpcal', 'gcal' and 'fcal' in a comma-separated string (e.g. 'bpcal, fcal').
+        type: str
         required: false
-        example: 'False'
+        example: 'target'
       label_in:
         desc: Label of the input dataset.
         type: str
@@ -47,11 +47,6 @@ mapping:
             type: bool
             required: false
             example: 'True'
-          field:
-            desc: Fields to be split off from the input MS. Options are (separately) 'target', 'calibrators', 'bpcal', 'gcal' and 'fcal'. Also valid is any combination of 'bpcal', 'gcal' and 'fcal' in a comma-separated string (e.g. 'bpcal, fcal').
-            type: str
-            required: false
-            example: 'target'
           time_avg:
             desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied. 
             type: str

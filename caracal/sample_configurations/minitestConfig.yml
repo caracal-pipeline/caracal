@@ -5,16 +5,17 @@ general:
 
 getdata:
   dataid: ['']
+  extension: ms
 
 obsconf:
   refant: '0'
 
 transform:
   enable: true
+  field: calibrators
   label_out: cal
   split_field:
     enable: true
-    field: calibrators
     col: data
 
 prep:

@@ -12,6 +12,7 @@ requirements = [
     'decorator',
     'numpy>=1.14',
     'stimela>=1.6.1',
+    'python-casacore',
     'scipy',
     'pysolr',
     'progressbar2',
@@ -33,7 +34,7 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.0.3'
+__version__ = '1.1.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,

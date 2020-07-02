@@ -47,13 +47,19 @@ mapping:
             seq:
               - type: str
             required: false
-            desc: Sequence of shadems plot specifications, made per field
+            desc: Sequence of shadems plot specifications, made per each field
             example: ''
           plots_by_corr:
             seq:
               - type: str
             required: false
-            desc: Sequence of shadems plot specifications, made per correlation
+            desc: Sequence of shadems plot specifications, made per each correlation
+            example: ''
+          plots:
+            seq:
+              - type: str
+            required: false
+            desc: Sequence of freeform shadems plot specifications
             example: ''
           ignore_errors:
             type: bool

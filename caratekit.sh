@@ -784,7 +784,7 @@ then
     echo ""
     echo ""
 fi
--spf stimela_pullfolder -hw
+
 if [[ -n "$VE" ]]
 then
     echo ""

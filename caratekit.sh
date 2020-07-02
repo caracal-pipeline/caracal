@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Debug if required
+# #!/usr/bin/env bash -xv
+
 # The following ensures the script to stop on errors
 set -e
 shopt -s expand_aliases

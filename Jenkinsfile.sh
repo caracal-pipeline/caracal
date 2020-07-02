@@ -38,12 +38,12 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
 							 -spf $WORKSPACE/singularity_pullfolder \
 							 -hf $WORKSPACE/home \
                                                          -hn
-rm -rf $pull_request_name
-mkdir -p $pull_request_name
+
+mkdir -p ${pull_request_name}_b
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
-                                                         -ct ${pull_request_name} \
+                                                         -ct ${pull_request_name}_b \
 							 -dm \
                                                          -or \
                                                          -f \

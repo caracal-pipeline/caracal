@@ -784,7 +784,7 @@ then
     echo ""
     echo ""
 fi
-
+-spf stimela_pullfolder -hw
 if [[ -n "$VE" ]]
 then
     echo ""
@@ -2724,12 +2724,12 @@ then
 
  # Attempt 3: otherwise, it will be a >= tag, fetch the tag of the latest release
  [[ -n ${stimelaline} ]] || { \
-     stimelaline=`pip search Stimela | grep "LATEST" | awk '{print $2}'`; \
+     stimelaline=`pip search Stimela | grep "LATEST" | head -1 | awk '{print $2}'`; \
  } || true
 
  # Attempt 4: if above did not work, then the installed is already the latest
  [[ -n ${stimelaline} ]] || { \
-     stimelaline=`pip search Stimela | grep "latest" | awk '{print $2}'`; \
+     stimelaline=`pip search Stimela | grep "latest" | head -1 | awk '{print $2}'`; \
  } || true
 
  # We can report on the release if this is not an installation from master and hence stimelabuild is defined
@@ -3085,7 +3085,7 @@ runtest () {
 		{ \
 		  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
 		  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname} ; \
-		  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
+		  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
 		}
 	else 
 	    [[ -z ${OD} ]] || \
@@ -3094,7 +3094,7 @@ runtest () {
 		      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
 		    } || \
 			{ \
-			  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+			  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || { CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; } \
 			}
 	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || \
 		{ \
@@ -3164,11 +3164,6 @@ runtest () {
 	    { \
 	      [[ -n ${KD} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
 	      [[ -z ${KD} ]] || cp ${configlocation} ${workspace_root}/${trname}/${configfilename}.yml; \
-	      echo "teststart"; \
-	      echo ${WORKSPACE_ROOT}; \
-	      echo ${trname}; \
-	      echo ${configfilename}.yml; \
-	      echo "testend"; \
 	      [[ -z ${RO} ]] || \
 		  { \
 		    indentationgen=`awk 'BEGIN{b=1}{if (b==0){printf("%s",$0);b=1}; if(match($1,"general:")) {b=0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print $0}' | sed 's/^\(  *\).*/\1/'`; \

@@ -26,13 +26,14 @@ def worker(pipeline, recipe, config):
     dist_ncpu = config['calibrate_dd']['dist_ncpu']
     label = config['label_in']
     USEPB = config['use_pb']
-    pipeline.set_cal_msnames(label)
-    mslist = pipeline.cal_msnames
-    hires_mslist = pipeline.hires_msnames
+    #pipeline.set_cal_msnames(label)
+    #mslist = pipeline.cal_msnames
+    #hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
     INPUT=pipeline.input
     DD_DIR = "3GC"
-    OUTPUT=pipeline.output+"/"+DD_DIR
+    #OUTPUT=pipeline.output+"/"+DD_DIR
+    OUTPUT = os.path.join(pipeline.output, DD_DIR)
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem'])+'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
@@ -54,7 +55,7 @@ def worker(pipeline, recipe, config):
     print(de_targets)
 
     dd_image_opts = {
-        "Data-MS"        : mslist,
+        "Data-MS"        : all_msfile,
         "Data-ColName"   : config['image_dd']['data_colname'],
         "Data-ChunkHours"       : config['image_dd']['data_chunkhours'],
         "Output-Mode"           : config['image_dd']['output_mode'],

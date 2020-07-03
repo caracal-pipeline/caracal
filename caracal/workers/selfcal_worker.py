@@ -445,6 +445,7 @@ def worker(pipeline, recipe, config):
         key = 'image'
         key_mt = 'calibrate'
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
+        absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
@@ -469,6 +470,7 @@ def worker(pipeline, recipe, config):
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "threads": ncpu_img,
+            "absmem" : absmem,
         }
         if maxuvl > 0.:
             fake_image_opts.update({
@@ -493,6 +495,7 @@ def worker(pipeline, recipe, config):
         key_mt = 'calibrate'
 
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
+        absmem = config[key]['absmem']
         caracal.log.info("Number of threads used by WSClean for gridding:")
         caracal.log.info(ncpu_img)
         if num > 1:
@@ -535,6 +538,7 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "threads": ncpu_img,
+            "absmem": absmem,
         }
         if maxuvl > 0.:
             image_opts.update({

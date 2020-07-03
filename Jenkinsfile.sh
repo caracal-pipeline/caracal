@@ -25,29 +25,17 @@ pull_request_data=$TEST_OUTPUT_DIR/pull_request_data/
 export pull_request_data
 pull_request_name=$(cd $PULLFOLDER; git rev-parse HEAD | sed 's/\(^.\{1,7\}\).*/\1/')
 export pull_request_name
-mkdir -p ${pull_request_name}_singularity
-mkdir -p ${pull_request_name}_docker
+mkdir -p ${pull_request_name}
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
-                                                         -ct ${pull_request_name}_singularity \
+                                                         -ct ${pull_request_name} \
 							 -sm \
+							 -dm \
                                                          -or \
                                                          -f \
                                                          -op \
 							 -ro \
 							 -spf $WORKSPACE/singularity_pullfolder \
 							 -hf $WORKSPACE/home \
-                                                         -hn ; \
-source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
-                                                         -td ${pull_request_data} \
-                                                         -lc ${caracal_version} \
-                                                         -ct ${pull_request_name}_docker \
-							 -dm \
-                                                         -or \
-                                                         -f \
-                                                         -op \
-							 -spf $WORKSPACE/singularity_pullfolder \
-							 -hf $WORKSPACE/home \
                                                          -hn
-

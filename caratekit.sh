@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Debug if required
-# #!/usr/bin/env bash -xv
+# set -xv
 
 # The following ensures the script to stop on errors
 set -e

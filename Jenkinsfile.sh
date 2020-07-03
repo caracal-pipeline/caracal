@@ -25,11 +25,12 @@ pull_request_data=$TEST_OUTPUT_DIR/pull_request_data/
 export pull_request_data
 pull_request_name=$(cd $PULLFOLDER; git rev-parse HEAD | sed 's/\(^.\{1,7\}\).*/\1/')
 export pull_request_name
-mkdir -p $pull_request_name
+mkdir -p ${pull_request_name}_singularity
+mkdir -p ${pull_request_name}_docker
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
-                                                         -ct ${pull_request_name} \
+                                                         -ct ${pull_request_name}_singularity \
 							 -sm \
                                                          -or \
                                                          -f \
@@ -37,13 +38,11 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
 							 -ro \
 							 -spf $WORKSPACE/singularity_pullfolder \
 							 -hf $WORKSPACE/home \
-                                                         -hn
-
-mkdir -p ${pull_request_name}_b
+                                                         -hn ; \
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
-                                                         -ct ${pull_request_name}_b \
+                                                         -ct ${pull_request_name}_docker \
 							 -dm \
                                                          -or \
                                                          -f \
@@ -51,4 +50,4 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
 							 -spf $WORKSPACE/singularity_pullfolder \
 							 -hf $WORKSPACE/home \
                                                          -hn
-							 
+

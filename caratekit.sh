@@ -1354,15 +1354,15 @@ then
     echo "upgrading/installing and then stopping."
     echo ""
 
-        # Create a tempdir to pip clone caracal
+    # Create a tempdir to pip clone caracal
     mytmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
     
     # Create a trap to delete mytmpdir
     function cleanup {      
 	rm -rf ${mytmpdir}
 	kill "$PPID"; \
-	exit 0; \
-    }
+	    exit 0; \
+	    }
     
     # register the cleanup function to be called on the EXIT signal
     trap cleanup EXIT
@@ -1370,24 +1370,24 @@ then
     # Now clone caracal
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-	    [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
+	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
     else
-    [[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git ${mytmpdir}
-#    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
+	[[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git ${mytmpdir}
+	#    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
     fi
     
     # Check out desired branch
     cd ${mytmpdir}
-
+    
     # Upon pypi release this has to be updated
     #    [[ -z ${CR} ]] || { \
-    #	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
-    #	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
-    #    }
+	#	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
+	#	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
+	#    }
     
+#	pip --version &>/dev/null || alias pip="pip3"; \
+#	pip --version &>/dev/null || { echo "pip not working. Please install Python, pip, or virtualenv. Stopping."; kill "$PPID"; exit 1; }; \
     [[ -z ${CR} ]] || \
-	pip --version &>/dev/null || alias pip="pip3"; \
-	pip --version &>/dev/null || { echo "pip not working. Please install Python, pip, or virtualenv. Stopping."; kill "$PPID"; exit 1; }; \
 	{ \
 	  [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || \
 	      { \
@@ -1395,64 +1395,64 @@ then
 		kill "$PPID"; \
 		exit 1; \
 	      }
-      CR=''
-      pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
-	  [[ -n ${CR} ]] || \
-	      { \
-		pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
-	      }; \
-	  [[ -n ${CR} ]] || \
-	      { \
-		echo "Please install Python to find the latest release tag of CARACal."; \
-		echo "Stopping."; \
-		kill "$PPID"; \
-		exit 1; \
-	      }; \
-	  thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
-	  }
-    
-    [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
-    
-    [[ -z ${thabuild} ]] || git checkout ${thabuild}
-
-    echo ""
-    # Now ask if you can actually do this
-    [[ -z ${caratekit_install} ]] || \
-	{ \
-	  echo "The current caratekit.sh"; \
-	  echo "${caratekit_install}"; \
-	  echo "will be replaced by"; \
-	}
-    echo "caratekit.sh from"
-    echo "https://github.com/caracal-pipeline/caracal"
-    [[ -z ${CR} ]] || echo "Release ${CR}"
-    [[ -z ${thabuild} ]] || echo "Build ${thabuild}"
-    echo "will be installed"
-    [[ -z ${caratekit_install} ]] || echo "replacing the former one."
-    echo ""
-
-    if [[ -z ${OR} ]]
-    then
-	waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
-    fi
-
-    if [[ -z ${caratekit_install} ]]
-    then	
-    	echo "Please provide installation directory (/usr/local/bin)"
-	no_response=true
-	while [ "$no_response" == true ]; do
-	    read proceed
-	    proceed=`echo ${proceed} | sed 's:/*$::'`
-	    if [[ -d ${proceed} ]]
-	    then
-		proceed=${proceed}/caratekit.sh
-		no_response=false
-	    elif [[ -z ${proceed} ]]
-	    then
-		proceed="/usr/local/bin/caratekit.sh"
-		no_response=false
-	    else
-		echo "Please provide an existing path to a directory"
+	  CR=''
+	  pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
+	      [[ -n ${CR} ]] || \
+		  { \
+		    pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
+		  }; \
+	      [[ -n ${CR} ]] || \
+		  { \
+		    echo "Please install Python to find the latest release tag of CARACal."; \
+		    echo "Stopping."; \
+		    kill "$PPID"; \
+		    exit 1; \
+		  }; \
+	      thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
+	      }
+	
+	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
+	
+	[[ -z ${thabuild} ]] || git checkout ${thabuild}
+	
+	echo ""
+	# Now ask if you can actually do this
+	[[ -z ${caratekit_install} ]] || \
+	    { \
+	      echo "The current caratekit.sh"; \
+	      echo "${caratekit_install}"; \
+	      echo "will be replaced by"; \
+	    }
+	echo "caratekit.sh from"
+	echo "https://github.com/caracal-pipeline/caracal"
+	[[ -z ${CR} ]] || echo "Release ${CR}"
+	[[ -z ${thabuild} ]] || echo "Build ${thabuild}"
+	echo "will be installed"
+	[[ -z ${caratekit_install} ]] || echo "replacing the former one."
+	echo ""
+	
+	if [[ -z ${OR} ]]
+	then
+	    waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	fi
+	
+	if [[ -z ${caratekit_install} ]]
+	then	
+    	    echo "Please provide installation directory (/usr/local/bin)"
+	    no_response=true
+	    while [ "$no_response" == true ]; do
+		read proceed
+		proceed=`echo ${proceed} | sed 's:/*$::'`
+		if [[ -d ${proceed} ]]
+		then
+		    proceed=${proceed}/caratekit.sh
+		    no_response=false
+		elif [[ -z ${proceed} ]]
+		then
+		    proceed="/usr/local/bin/caratekit.sh"
+		    no_response=false
+		else
+		    echo "Please provide an existing path to a directory"
 	    fi
 	done
     else

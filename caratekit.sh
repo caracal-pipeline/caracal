@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
+
+# Debug if required
+# #!/usr/bin/env bash -xv
+
 # The following ensures the script to stop on errors
 set -e
+shopt -s expand_aliases
 
 # Rule: Two newlines before ###, none at end except for the very end
 
@@ -329,15 +334,19 @@ do
     then
         OD=1
     fi
+    if [[ "$arg" == "--test-data-read-only" ]] || [[ "$arg" == "-ro" ]]
+    then
+        RO=1
+    fi
     if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
     then
         CC=1
     fi
-    if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]
+    if [[ "$arg" == "--raw-data-id" ]] || [[ "$arg" == "-ri" ]]
     then
 	(( nextcount=argcount+1 ))
-	(( $nextcount <= $# )) || { echo "Argument expected for --copy-data-id or -ci switch, stopping."; kill "$PPID"; exit 1; }
-	CARATE_COPY_DATA_ID=${!nextcount}
+	(( $nextcount <= $# )) || { echo "Argument expected for --raw-data-id or -ri switch, stopping."; kill "$PPID"; exit 1; }
+	CARATE_RAW_DATA_ID=${!nextcount}
     fi
     if [[ "$arg" == "--move-test-data" ]] || [[ "$arg" == "-md" ]]
     then
@@ -438,9 +447,9 @@ do
  	firstletter=`echo ${CARATE_CONFIG_SOURCE} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_CONFIG_SOURCE="${cwd}/${CARATE_CONFIG_SOURCE}"
     fi
-    if [[ "$arg" == "--keep-config-source" ]] || [[ "$arg" == "-kc" ]]
+    if [[ "$arg" == "--keep-config-dataid" ]] || [[ "$arg" == "-kd" ]]
     then
-        KC=1
+        KD=1
     fi
     if [[ "$arg" == "--docker-sample-configs" ]] || [[ "$arg" == "-dsc" ]]
     then
@@ -501,7 +510,7 @@ then
     echo "                               (optional)"
     echo ""
 
-    echo "  CARATE_LOCAL_CARACAL:         Local CARACal copy to use. If not"
+    echo "  CARATE_LOCAL_CARACAL:        Local CARACal copy to use. If not"
     echo "                               set, CARACal will be downloaded"
     echo "                               from https://github.com/caracal-pipeline/caracal"
     echo ""
@@ -546,7 +555,7 @@ then
     echo "                               individual carate run. Empty if not supplied."
     echo ""
 
-    echo "  CARATE_COPY_MS:              Names of the measurement sets to be copied"
+    echo "  CARATE_RAW_DATA_ID:          Names of the measurement sets to be copied"
     echo "                               (comma-separated list without .ms extensions)"
     echo ""
 
@@ -720,29 +729,30 @@ then
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
     echo ""
-    echo "  --keep-config-source -kc            Do not autodetect measurement sets but"
-    echo "                                      keep the confic source as it is. Only"
-    echo "                                      if --config-source is supplied."
+    echo "  --keep-config-dataid -kd            Do not autodetect measurement sets but"
+    echo "                                      keep the dataid in the confic source as"
+    echo "                                      it is. Only if --config-source is supplied."
     echo ""
     echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_TEST_DATA_DIR"
+    echo ""
+    echo "  --test-data-read-only -ro           Use CARATE_TEST_DATA_DIR as rawdatadir"
+    echo "                                      and do not (re-)copy any test data into"
+    echo "                                      msdir"
     echo ""
     echo "  --omit-copy-test-data -od           Do not re-copy test data and preserve msdir"
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
     echo ""
-    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
-    echo "                                      CARATE_COPY_DATA_ID"
-    echo ""
     echo "  --copy-config-data -cc              Copy test data as specified in the"
     echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
-    echo "                                      unless CARATE_COPY_DATA_ID is defined."
+    echo "                                      unless CARATE_RAW_DATA_ID is defined."
     echo "                                      Ignored if CARATE_CONFIG_SOURCE is not"
     echo "                                      defined or switches --config-source -cs"
     echo "                                      are not used"
     echo ""
-    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
-    echo "                                      CARATE_COPY_DATA_ID. Note that this over-"
+    echo "  --raw-data-id ARG -ri ARG           Use ARG instead of environment variable"
+    echo "                                      CARATE_RAW_DATA_ID. Note that this over-"
     echo "                                      rides --copy-config-data or -cc"
     echo ""
     echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
@@ -968,9 +978,9 @@ echo "    are copied into the msdir directory in the extended_singularity"
 echo "    directory and extendedConfig.yml is edited to point to those .ms"
 echo "    files in the variable dataid, then caracal is run with"
 echo "    extendedConfig.yml and declared successful if certain expected files"
-echo "    are created (see exceptions using variable CARATE_COPY_DATA_ID or"
-echo "     switches --keep-config-source, -ks, --copy-config-data -cc,"
-echo "     --copy-data-id, -ci below)."
+echo "    are created (see exceptions using variable CARATE_RAW_DATA_ID or"
+echo "     switches --keep-config-dataid, -kd, --copy-config-data -cc,"
+echo "     --copy-data-id, -ci, --test-data-read-only, -ro below)."
 echo ""
 echo "  - when switch --docker-minimal or -dm is set, a directory \-"
 echo "    minimal_docker is created (if not existing or if -f is set), the"
@@ -981,9 +991,9 @@ echo "    copied into the msdir directory in the minimal_docker directory"
 echo "    and minitestConfig.yml is edited to point to those .ms files in the"
 echo "    variable dataid, then caracal is run with minitestConfig.yml and"
 echo "    declared successful if certain expected files are created (see"
-echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci below)."
+echo "    exceptions using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci --test-data-read-only, -ro below)."
 echo ""
 echo "  - when switch --docker_extended or -da is set, a directory"
 echo "    extended_docker is created (if not existing or if -f is set), the"
@@ -994,9 +1004,9 @@ echo "    copied into the msdir directory in the extended_docker directory"
 echo "    and extendedConfig.yml is edited to point to those .ms files in"
 echo "    the variable dataid, then caracal is run with extendedConfig.yml"
 echo "    and declared successful if certain expected files are created (see"
-echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci below)."
+echo "    exceptions using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci, --test-data-read-only, -ro below)."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --singularity-installation or -si set,"
@@ -1005,9 +1015,9 @@ echo "    singularity test in the directory prefix_singularity, where prefix"
 echo "    is the prefix of the yaml file. The line dataid: ['...','...'] in"
 echo "    that file is replaced by the appropriate line to process the test"
 echo "    data sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
-echo "    changed using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci . See below for those exceptions."
+echo "    changed using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci. See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --docker-installation or -di set, then"
@@ -1016,8 +1026,8 @@ echo "    test in the directory prefix_singularity, where prefix is the"
 echo "    prefix of the yaml file. The line dataid: ['...','...'] in that"
 echo "    file is replaced by the appropriate line to process the test data"
 echo "    sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
-echo "    changed using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    changed using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
 echo "    -ci . See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_INPUT_DIR is set the contents of"
@@ -1035,7 +1045,7 @@ echo "    direcory is used as the Stimela location. Notice that all environ-"
 echo "    ment variables can be re-defined by using appropriate switches,"
 echo "    in this case --local-stimela or -lst." 
 echo ""
-echo "  - when environment variable CARATE_COPY_DATA_ID is set, it contains"
+echo "  - when environment variable CARATE_RAW_DATA_ID is set, it contains"
 echo "    a comma- or space-separated list of dataids (Measurement Set names"
 echo "    without the .ms suffixes). Instead of using all data sets in the"
 echo "    test data directory, only data sets with that ID are used and the"
@@ -1046,9 +1056,14 @@ echo ""
 echo "  - when switches --copy-config-data or -cc are set, the dataids"
 echo "    (Measurement Set names without the .ms suffixes) are read from"
 echo "    the configuration file parameter dataid unless it is not empty."
-echo "    Dataids set in CARATE_COPY_DATA_ID or by using switches"
+echo "    Dataids set in CARATE_RAW_DATA_ID or by using switches"
 echo "    --copy-config-data or -cc get preference and --copy-config-data"
 echo "    or -cc is ignored if they are set."
+echo ""
+echo "  - when switches --test-data-read-only or -ro are set, the test data will"
+echo "    not be copied but the content of the parameter rawdatadir in the yml"
+echo "    file will be replaced by CARATE_TEST_DATA_DIR or the argument of the"
+echo "    switches --test-data-dir or -td."
 echo ""
 echo "  - when switches --omit-copy-test-data -od are set, the test data"
 echo "    will not be copied if for a test run the directory with the test"
@@ -1237,7 +1252,7 @@ then
     echo " caratekit.sh the default is that the contents of the parameter dataid"
     echo " will be replaced to reflect the measurement sets found in the"
     echo " \${rawdata} directory. This can be overridden by using the caratekit.sh"
-    echo " -kc switch. A (partial) data reduction is then conducted following the"
+    echo " -kd switch. A (partial) data reduction is then conducted following the"
     echo " command (Docker):"
     echo ""
     echo "   \$ caratekit.sh -ws \${workspace} -cd -di -ct \${caracal_testdir} -rp"
@@ -1371,6 +1386,8 @@ then
     #    }
     
     [[ -z ${CR} ]] || \
+	pip --version &>/dev/null || alias pip="pip3"; \
+	pip --version &>/dev/null || { echo "pip not working. Please install Python, pip, or virtualenv. Stopping."; kill "$PPID"; exit 1; }; \
 	{ \
 	  [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || \
 	      { \
@@ -1378,7 +1395,19 @@ then
 		kill "$PPID"; \
 		exit 1; \
 	      }
-	  CR="0.1.0" ; \
+      CR=''
+      pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
+	  [[ -n ${CR} ]] || \
+	      { \
+		pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
+	      }; \
+	  [[ -n ${CR} ]] || \
+	      { \
+		echo "Please install Python to find the latest release tag of CARACal."; \
+		echo "Stopping."; \
+		kill "$PPID"; \
+		exit 1; \
+	      }; \
 	  thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
 	  }
     
@@ -1580,14 +1609,20 @@ counts=0
       HT=1; \
     }
 
-[[ -z ${CR} ]] || { \
-    # Upon pypi release this has to be updated
-    # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
-    CR="0.1.0"
-    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
-	CARATE_CARACAL_TEST_ID=${CR}; \
-    }; \
-}
+[[ -z ${CR} ]] || \
+    { \
+      # Upon pypi release this has to be updated
+      CR=''
+      pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
+	  [[ -n ${CR} ]] || \
+	      { \
+		pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
+	      }; \
+	  [[ -n CARATE_CARACAL_TEST_ID ]] || \
+	      { \
+		CARATE_CARACAL_TEST_ID=${CR}; \
+	      }; \
+	  }
 
 [[ -n "$CARATE_CARACAL_TEST_ID" ]] || { \
     echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID"; \
@@ -1676,6 +1711,17 @@ numberoftests=0
 	echo "";\
 	kill "$PPID"; exit 1;
     }
+
+[[ -z ${MD} ]] || \
+    [[ -z ${RO} ]] || \
+    {\
+     echo  "Switches --move-test-data or -md and --test-data-read-only or -ro are mutually exclusive.";\
+     echo "Exiting";\
+     echo "";\
+     kill "$PPID"; exit 1;
+    }
+
+		   
 
 # Singularity directories, avoid conflicts
 counts=0
@@ -1976,7 +2022,7 @@ then
     
     # Third attempt: use dataids from the command line
     dataid_provided=( )
-    [[ -z ${CARATE_COPY_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_COPY_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
+    [[ -z ${CARATE_RAW_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_RAW_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
     
     # More than one found, means that the final data ids are changed
     (( ${#dataid_provided[@]} == 0 )) || dataid_final=( ${dataid_provided[@]} )
@@ -2095,7 +2141,7 @@ then
     # Size of test data
     outsize=`du -ms ${CARATE_TEST_DATA_DIR} | awk '{print $1}'`
     echo "Total size of test data directory: ${outsize} MB" >> ${SYA}
-    [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
+    [[ -z ${KD} ]] || { echo "--keep-config-dataid or -kd switch is set."; \
    echo "The real test data might hence be different."; \
     }
     [[ -z ${OD} ]] || { echo "--omit-copy-test-data or -od switch is set."; \
@@ -2613,20 +2659,21 @@ then
     cd ${WORKSPACE_ROOT}/caracal
     if [[ -n ${CR} ]]
     then
- echo "CARACal release: ${CR}" >> ${SYA}
+	echo "CARACal release: ${CR}" >> ${SYA}
     else
- [[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
- [[ -n ${CARATE_LOCAL_CARACAL} ]] || { \
-     echo "CARACal build from master at https://github.com/caracal-pipeline/caracal" >> ${SYA};\
- }
+	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
+	    [[ -n ${CARATE_LOCAL_CARACAL} ]] || \
+	    { \
+	      echo "CARACal build from master at https://github.com/caracal-pipeline/caracal" >> ${SYA};\
+	    }
     fi
     
     if [[ -n "$CARATE_LOCAL_CARACAL" ]] && [[ -z ${CR} ]]
     then
- echo "CARACal build: local" >> ${SYA}
+	echo "CARACal build: local" >> ${SYA}
     else
         sya="CARACal build: "; sya+=`git log -1 --format=%H`; sya+=$'\n';
- sya+="from: https://github.com/caracal-pipeline/caracal"
+	sya+="from: https://github.com/caracal-pipeline/caracal"
         echo "${sya}" >> ${SYA}
     fi
     [[ -z ${OC} ]] || echo "CARACal has not been re-build, so this is a guess" >> ${SYA}
@@ -2681,12 +2728,12 @@ then
 
  # Attempt 3: otherwise, it will be a >= tag, fetch the tag of the latest release
  [[ -n ${stimelaline} ]] || { \
-     stimelaline=`pip search Stimela | grep "LATEST" | awk '{print $2}'`; \
+     stimelaline=`pip search Stimela | grep "LATEST" | head -1 | awk '{print $2}'`; \
  } || true
 
  # Attempt 4: if above did not work, then the installed is already the latest
  [[ -n ${stimelaline} ]] || { \
-     stimelaline=`pip search Stimela | grep "latest" | awk '{print $2}'`; \
+     stimelaline=`pip search Stimela | grep "latest" | head -1 | awk '{print $2}'`; \
  } || true
 
  # We can report on the release if this is not an installation from master and hence stimelabuild is defined
@@ -3042,7 +3089,7 @@ runtest () {
 		{ \
 		  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
 		  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname} ; \
-		  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
+		  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
 		}
 	else 
 	    [[ -z ${OD} ]] || \
@@ -3051,7 +3098,7 @@ runtest () {
 		      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
 		    } || \
 			{ \
-			  CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+			  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || { CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; } \
 			}
 	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || \
 		{ \
@@ -3099,21 +3146,38 @@ runtest () {
 		  cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 		}
 	fi
- # Check if user-supplied file is already the one that we are working with before working with it
- # This should in principle only affect the time stamps as if the dataid is not empty, the following
- # Would do nothing in the config file itself
- checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
-     [[ -n ${KC} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
-     [[ -z ${KC} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
- }
+	
+	# Check if user-supplied file is already the one that we are working with before working with it
+	# This should in principle only affect the time stamps as if the dataid is not empty, the following
+	# Would do nothing in the config file itself
+	checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || \
+	    { \
+	      [[ -n ${KD} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
+	      [[ -z ${KD} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
+	      [[ -z ${RO} ]] || \
+		  { \
+		    echo "indentationgen=\`awk 'BEGIN{b=1}{if (b==0){printf(\"%s\",\$0);b=1}; if(match(\$1,\"general:\")) {b=0}}' \${workspace_root}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print \$0}' | sed 's/^\(  *\).*/\1/'\`" >> ${SS_RUNTEST};\
+		    echo "rawdatadirstr=\"\${indentationgen}rawdatadir: '\${CARATE_TEST_DATA_DIR}'\"" >> ${SS_RUNTEST};\
+		    echo "placeholder=\`awk '{if("'!'"match(\$1,\"rawdatadir:\")) {print \$0}}' \${workspace_root}/${trname}/${configfilename}.yml | awk -v rawdatadirstr=\"\${rawdatadirstr}\" '{if(match(\$1,\"general:\")) {printf(\"general:\\n%s\\n\",rawdatadirstr);} else {printf(\"%s\n\",\$0)}}'\`" >> ${SS_RUNTEST};\
+		    echo "echo \"\${placeholder}\" > \${workspace_root}/\${trname}/\${configfilename}.yml" >> ${SS_RUNTEST};\
+		  } \
+	    }
+	      
+	[[ -n ${FS} ]] || \
+	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || \
+	    { \
+	      [[ -n ${KD} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
+	      [[ -z ${KD} ]] || cp ${configlocation} ${workspace_root}/${trname}/${configfilename}.yml; \
+	      [[ -z ${RO} ]] || \
+		  { \
+		    indentationgen=`awk 'BEGIN{b=1}{if (b==0){printf("%s",$0);b=1}; if(match($1,"general:")) {b=0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print $0}' | sed 's/^\(  *\).*/\1/'`; \
+		    rawdatadirstr="${indentationgen}rawdatadir: '${CARATE_TEST_DATA_DIR}'"; \
+		    placeholder=`awk '{if(!match($1,"rawdatadir:")) {print $0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -v rawdatadirstr="${rawdatadirstr}" '{if(match($1,"general:")) {printf("general:\n%s\n",rawdatadirstr);} else {printf("%s\n",$0)}}'`; \
+		    echo "${placeholder}" > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
+		  }
+	    }
 
- [[ -n ${FS} ]] || \
-     checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
-  [[ -n ${KC} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
-  [[ -z ${KC} ]] || cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml; \
-     }
-
- # This prevents the script to stop if there -fs is switched on
+	# This prevents the script to stop if there -fs is switched on
  [[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
      cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}.yml.txt
 
@@ -3121,17 +3185,21 @@ runtest () {
  d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
  e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
  
- [[ $d == $e ]] || { \
-     [[ -n ${MD} ]] && { \
-  echo "mv ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
-  [[ -n ${FS} ]] || \
-      mv ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-     } || { \
-  echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
-  [[ -n ${FS} ]] || \
-      cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-     } \
- }
+ [[ $d == $e ]] || \
+     { \
+       [[ -n ${MD} ]] && \
+	   { \
+	     echo "mv ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+	     [[ -n ${FS} ]] || \
+		 mv ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	   } || \
+	       [[ -n ${RO} ]] || \
+	       { \
+		 echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+		 [[ -n ${FS} ]] || \
+		     cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	       } \
+     }
  
  # Now run the test
         echo "Running ${contarch} test (using ${configfilename}.yml)"
@@ -3384,17 +3452,21 @@ runtestsample () {
     # Check if source msdir is identical to the target msdir. If yes, don't copy
     d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
     e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
-    [[ $d == $e ]] || { \
- [[ -n ${MD} ]] && { \
-     echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
-     [[ -n ${FS} ]] || \
-      mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
- } || { \
-     echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
-     [[ -n ${FS} ]] || \
-  cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
- } \
-    }
+    [[ $d == $e ]] || \
+	{ \
+	  [[ -n ${MD} ]] && \
+	      { \
+		echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		[[ -n ${FS} ]] || \
+		    mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	      } || \
+		  [[ -n ${RO} ]] || \
+		  { \
+		    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		    [[ -n ${FS} ]] || \
+			cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		  } \
+	}
 
     #We need to take the config file from the meerkat input to our test directoru, always
     cp ${inputconfiglocation} ${configlocation}

@@ -456,7 +456,7 @@ def worker(pipeline, recipe, config):
                         "msname": msname_mst,
                         "command": 'summary',
                         "display": False,
-                        "outfile": '{0:s}-obsinfo.json:msfile'.format(msname_mst_base),
+                        "outfile": '{0:s}-summary.json:msfile'.format(msname_mst_base),
                     },
                     input=pipeline.input,
                     output=pipeline.obsinfo,

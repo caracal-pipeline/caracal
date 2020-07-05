@@ -277,7 +277,7 @@ class config_parser(object):
                 if is_list and isinstance(val, list):
                     return [typecast(x) for x in val]
                 if dtype is bool and type(val) is str:
-                    return val in {"true", "yes", "1"}
+                    return val.lower() in {"true", "yes", "1"}
                 return dtype(val)
 
             def value2str(val):
@@ -311,7 +311,8 @@ class config_parser(object):
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]
-                default_value = subVars["example"]
+                if default_value is None:
+                    default_value = subVars["example"]
 
             # convert default value to expected type
             groups[key] = default_value = typecast(default_value)
@@ -385,6 +386,9 @@ class config_parser(object):
                     #     indent.ljust(60, "-"))
                     _tree_print(v, indent=indent+indent0)
                 else:
+                    # totally ugly -- I promise I'll fix it when we have a better qualifier
+                    if k == "cabs" and not v:
+                        return
                     if type(v) in (list, tuple):
                         vstr = ', '.join([str(x) or '""' for x in v])
                         if len(v) < 2:

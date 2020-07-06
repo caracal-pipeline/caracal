@@ -49,6 +49,7 @@ class worker_administrator(object):
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
         self.ms_extension = self.config["getdata"]["extension"]
+        self.ignore_missing = self.config["getdata"]["ignore_missing"]
 
         self._msinfo_cache = {}
 
@@ -154,6 +155,12 @@ class worker_administrator(object):
             for dataid in self.dataid:
                 pattern = os.path.join(self.rawdatadir, f"{dataid}.{self.ms_extension}")
                 msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
+                if len(msnames) == 0 and not self.ignore_missing:
+                    raise RuntimeError(f"The pattern/path '{pattern}' did not "\
+                          f"return files. Please double check your"\
+                          " general: msdir, general: rawdatadir, and/or getdata: dataid "\
+                          "settings in your config file. However, if you wish to proceed regardless,"\
+                          " you can set getdata: ignore_missing: true")
                 msbases = [os.path.splitext(ms)[0] for ms in msnames]
                 self.msnames += msnames
                 self.msbasenames += msbases

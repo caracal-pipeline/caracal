@@ -9,6 +9,7 @@ import re
 import caracal
 import sys
 import glob
+import fnmatch
 import numpy as np
 
 NAME = 'Flag'
@@ -120,8 +121,8 @@ def worker(pipeline, recipe, config):
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
                            {
                                "msname": msname,
-                               "field": fields,
-                               "cal_field": fields,
+                               "field": ",".join([str(id) for id in field_ids]),
+                               "cal_field": ",".join([str(id) for id in field_ids]),
                                "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
                                "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
                                "dpi": 300,
@@ -363,6 +364,32 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
+
+            if pipeline.enable_task(config, 'flag_manual'):
+                rules = config['flag_manual']['rules']
+                for irule, rule in enumerate(rules):
+                    # a manual flagging rule has a pattern to match the MS name, followed by key:value pairs
+                    rule_elements = rule.split()
+                    if len(rule_elements) < 2 or not all(':' in el for el in rule_elements[1:]):
+                        raise ValueError(f"invalid flag_manual rule '{rule}'")
+                    pattern = rule_elements[0]
+                    keywords = {tuple(elem.split(":", 1)) for elem in rule_elements[1:]}
+                    # end of parsing block. Replace this with file if you like
+                    if not fnmatch.fnmatch(msname, pattern):
+                        continue
+                    caracal.log.info(f"adding manual flagging rule for {pattern}")
+                    step = f'{wname}-manual-ms{msiter}-{irule}'
+                    args = {
+                                   "vis": msname,
+                                   "mode": 'manual',
+                                   "flagbackup": False,
+                                   "field": fields,
+                           }
+                    args.update(keywords)
+                    recipe.add('cab/casa_flagdata', step, args,
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label=f'{step}::Flag ms={msname} using {rule}')
 
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)

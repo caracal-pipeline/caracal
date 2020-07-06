@@ -49,6 +49,7 @@ class worker_administrator(object):
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
         self.ms_extension = self.config["getdata"]["extension"]
+        self.ignore_missing = self.config["getdata"]["ignore_missing"]
 
         self._msinfo_cache = {}
 
@@ -122,17 +123,15 @@ class worker_administrator(object):
         self.skip = []
         # Initialize empty lists for ddids, leave this up to get data worker to define
         self.init_names([])
-        if config["general"]["prep_workspace"]:
-            self.init_pipeline()
+        self.init_pipeline(prep_input=config["general"]["prep_workspace"])
 
         # save configuration file
         configFileName = os.path.splitext(configFileName)[0]
         outConfigName = '{0:s}_{1:s}.yml'.format(
             configFileName, self.timeNow)
 
-        with open(self.configFolder+'/'+outConfigName, 'w') as outfile:
-            ruamel.yaml.dump(self.config, outfile,
-                             Dumper=ruamel.yaml.RoundTripDumper)
+        with open(os.path.join(self.configFolder, outConfigName), 'w') as outfile:
+            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
 
     def init_names(self, dataid):
         """ iniitalize names to be used throughout the pipeline and associated
@@ -156,6 +155,12 @@ class worker_administrator(object):
             for dataid in self.dataid:
                 pattern = os.path.join(self.rawdatadir, f"{dataid}.{self.ms_extension}")
                 msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
+                if len(msnames) == 0 and not self.ignore_missing:
+                    raise RuntimeError(f"The pattern/path '{pattern}' did not "\
+                          f"return files. Please double check your"\
+                          " general: msdir, general: rawdatadir, and/or getdata: dataid "\
+                          "settings in your config file. However, if you wish to proceed regardless,"\
+                          " you can set getdata: ignore_missing: true")
                 msbases = [os.path.splitext(ms)[0] for ms in msnames]
                 self.msnames += msnames
                 self.msbasenames += msbases
@@ -251,7 +256,7 @@ class worker_administrator(object):
                 log.info(f"  {name}: using tag {tag} for version {version}")
         return cabspecs
 
-    def init_pipeline(self):
+    def init_pipeline(self, prep_input=True):
         def make_symlink(link, target):
             if os.path.lexists(link):
                 if os.path.islink(link):
@@ -301,16 +306,17 @@ class worker_administrator(object):
                      os.path.join(os.path.basename(self.logs), CARACAL_LOG_BASENAME))
 
         # Copy input data files into pipeline input folder
-        log.info("Copying MeerKAT input files into input folder")
-        datadir = "{0:s}/data/meerkat_files".format(pckgdir)
-        for filename in os.listdir(datadir):
-            src = os.path.join(datadir, filename)
-            dest = os.path.join(self.input, filename)
-            if not os.path.exists(dest):
-                if os.path.isdir(src):
-                    shutil.copytree(src, dest)
-                else:
-                    shutil.copy2(src, dest, follow_symlinks=False)
+        if prep_input:
+            log.info("Copying MeerKAT input files into input folder")
+            datadir = "{0:s}/data/meerkat_files".format(pckgdir)
+            for filename in os.listdir(datadir):
+                src = os.path.join(datadir, filename)
+                dest = os.path.join(self.input, filename)
+                if not os.path.exists(dest):
+                    if os.path.isdir(src):
+                        shutil.copytree(src, dest)
+                    else:
+                        shutil.copy2(src, dest, follow_symlinks=False)
 
         # Copy standard notebooks
         self._init_notebooks = self.config['general']['init_notebooks']

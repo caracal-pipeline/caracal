@@ -14,16 +14,21 @@ mapping:
         type: str
         required: false
         example: 'cal'
-      label_crosscal_in:
-        desc: Label of the cross cal tables to be applied. If empty it assumes that we are starting from a splitted cross calibrated MS, otherwise it applies the cross_cal solutions and split the MS to look for polcal solutions.
+      crosscal_callib:
+        desc: Label of the cross cal tables to be applied. If empty it assumes that we are starting from a splitted cross calibrated MS, otherwise it applies the cross_cal solutions and split the MS to look for polcal solutions. Please, write the full json file name.
         type: str
         required: false
-        example: '1kgb'
+        example: ''
       label_cal:
         desc: Label for output files (calibration tables, images).
         type: str
         required: false
         example: '1pcal'
+      feed_angle_rotation:
+        desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you don't want to rotate the feeds.
+        type: str
+        required: false
+        example: ''
       uvrange:
         desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
         type: str
@@ -60,14 +65,14 @@ mapping:
         required: false
         example: 'm007'
       apply_pcal:
-        desc: Execute the set_model segment.
+        desc: Apply the polcal solutions to the cross calibrated corrected MS. If this is set to 'False' the cross calibrated MS will be deleted.
         type: bool
         required: false
         example: 'True'
       applyto:
         seq:
           - type: str
-        desc: Fields to apply calibration to
+        desc: Fields to apply calibration to.
         required: false
         example: "xcal, bpcal, gcal, target"
       cabs:

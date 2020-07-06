@@ -7,6 +7,7 @@ import getpass
 import stimela.recipe
 import re
 import json
+import shutil
 import numpy as np
 from caracal.dispatch_crew import utils
 from caracal.workers.utils import manage_fields as manfields
@@ -171,11 +172,14 @@ def worker(pipeline, recipe, config):
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
                     os.system(
                         'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
+                if config['split_field']['otfcal']['pol_callib']:
+                    shutil.rmtree(os.path.join(pipeline.msdir, to_ms + '_tmp'), ignore_errors=True)
+                    shutil.rmtree(os.path.join(pipeline.msdir, to_ms + '_tmp.flagversions'), ignore_errors=True)
 
                 recipe.add('cab/casa_mstransform', step,
                            {
                                "vis": from_ms if label_in else from_ms + ":input",
-                               "outputvis": to_ms,
+                               "outputvis": sdm.dismissable(to_ms+"_tmp" if config['split_field']['otfcal']['pol_callib'] else to_ms),
                                "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
                                "timebin": config['split_field']['time_avg'],
                                "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
@@ -193,10 +197,54 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(from_ms)))
 
-                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
-                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
-                    cab_name=substep, overwrite=False)
+                if config['split_field']['otfcal']['pol_callib']:
+                    pcallib_path = 'caltables/callibs/{}'.format(config['split_field']['otfcal']['pol_callib'])
+                    if not os.path.exists(os.path.join(pipeline.output, pcallib_path)):
+                        raise RuntimeError(
+                                "Cannot find cross_cal callib, check 'pol_callib' parameter in config file!")
 
+                    pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist = [], [], [], []
+
+                    with open(os.path.join(pipeline.output, pcallib_path)) as f:
+                        pcallib_dict = json.load(f)
+
+                    for applyme in pcallib_dict:
+                        pcaltablelist.append(pcallib_dict[applyme]['caltable'])
+                        if 'fldmap' in pcallib_dict[applyme]: pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
+                        if 'interp' in pcallib_dict[applyme]: pinterplist.append(pcallib_dict[applyme]['interp'])
+                        if 'calwt' in pcallib_dict[applyme]: pcalwtlist.append(pcallib_dict[applyme]['calwt'])
+
+                    for cal in pcaltablelist:
+                        if not os.path.exists(os.path.join(pipeline.caltables, cal)):
+                            raise RuntimeError("Cannot find pcal tables, check in the pol_callib file!")
+
+                    step = 'apply_polcal_-ms{0:d}-{1:d}'.format(i,target_iter)
+                    recipe.add("cab/casa_applycal", "apply_pcaltables", {
+                        "vis": to_ms+"_tmp",
+                        "field": target,
+                        "gaintable": ["%s:output" % ct for ct in pcaltablelist],
+                        "interp": pinterplist,
+                        "calwt": pcalwtlist,
+                        "gainfield": pgainfieldlist,
+                        "parang": True,
+                    },
+                               input=pipeline.input, output=pipeline.caltables,
+                               label='{0:s}:: Apply polcal to ms={1:s}'.format(step, "".join(to_ms)+"_tmp"))
+
+                    step = 'split_polcal_-ms{0:d}-{1:d}'.format(i,target_iter)
+                    recipe.add("cab/casa_split", "split", {
+                        "vis": to_ms+"_tmp",
+                        "outputvis": to_ms,
+                        "field": '',
+                        "datacolumn": 'corrected',
+                    },
+                               input=pipeline.input, output=pipeline.output,
+                               label='{0:s}:: Split polcalib data to ms={1:s}'.format(step, "".join(to_ms)))
+
+
+            substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+            manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
+                                cab_name=substep, overwrite=False)
             obsinfo_msname = to_ms if pipeline.enable_task(config, 'split_field') else from_ms
 
             if pipeline.enable_task(config, 'changecentre'):

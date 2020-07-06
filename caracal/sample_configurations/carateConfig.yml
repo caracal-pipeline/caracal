@@ -1,5 +1,6 @@
 schema_version: 1.1.0
 
+
 general:
   prefix: mypipelinerun
 
@@ -8,7 +9,8 @@ getdata:
   extension: ms
 
 obsconf:
-  refant: m010
+  refant: '0'
+
 
 transform:
   enable: true

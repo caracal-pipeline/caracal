@@ -165,7 +165,6 @@ transform__3:
   enable: true
   label_in: corr
   label_out: cont
-  from_target: true
   split_field:
     enable: true
     chan_avg: 4
@@ -225,7 +224,6 @@ transform__4:
   enable: true
   label_in: corr
   label_out: l
-  from_target: true
   split_field:
     enable: true
     col: all

@@ -11,7 +11,7 @@ requirements = [
     'ruamel.yaml',
     'decorator',
     'numpy>=1.14',
-    'stimela>=1.6.1',
+    'stimela>=1.6.5',
     'python-casacore',
     'scipy',
     'pysolr',

@@ -54,7 +54,7 @@ mapping:
         type: str
         required: false
         example: '1MHz'
-      make_checking_plots:
+      make_diagnostic_plots:
         desc: Plot solutions and save in <output>/diagnostic_plots/polcal/.
         type: bool
         required: false

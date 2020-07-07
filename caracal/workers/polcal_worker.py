@@ -37,14 +37,27 @@ def scan_length(msinfo, field):
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
 
-def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, unpolarized_calibrators):
-    caltable = "%s_%s" % (prefix, 'ben_cal')
+def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators):
+    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + 'Xf',
+                  prefix + '.Dref', prefix + '.Df']
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
+    leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
     avgstring = ',' + config["avg_bw"]
     scandur = scan_length(msinfo, field)
+    if config["make_diagnostic_plots"]:
+        ant = config['refant_for_plots']
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        plotname = "%s_%s" % (prefix, config['pol_calib'])
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
 
-    if not config['reuse_existing_tables']:
+    docal = config['reuse_existing_tables']
+    for cal in gaintables:
+        if not os.path.exists(os.path.join(pipeline.caltables, cal)):
+            docal = False
+
+    if not docal:
         recipe.add("cab/casa_setjy",
                    "set_model_%d" % 0,
                    {
@@ -67,7 +80,7 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    "crosshand_phaseup",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.G1:output',
+                       "caltable": prefix + '.Gpol1:output',
                        "field": field,
                        "refant": ref,
                        "solint": scandur,
@@ -80,13 +93,13 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phaseup")
-        gaintables += [caltable + '.G1']
+        gaintables += [prefix + '.Gpol1']
 
         recipe.add("cab/casa_gaincal",
                    "crosshand_delay",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.KX:output',
+                       "caltable": prefix + '.Kcrs:output',
                        "field": field,
                        "refant": ref,
                        "solint": scandur,
@@ -98,19 +111,21 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_delay")
-        gaintables += [caltable + '.KX']
-        # recipe.add("cab/casa_plotcal",
-        #            "crosshand_delay_plot",
-        #            {
-        #                "caltable": caltable + '.KX:output',
-        #                "xaxis": "time",
-        #                "yaxis": "delay",
-        #                "field": field,
-        #                "plotsymbol": "o",
-        #                "figfile": pipeline.prefix + ".KX.png",
-        #                "showgui": False
-        #            },
-        #            input=pipeline.input, output=pipeline.output, label="crosshand_delay_plot")
+        gaintables += [prefix + '.Kcrs']
+
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "crosshand_delay_plot",
+                       {
+                           "vis": prefix + '.Kcrs:msfile',
+                           "xaxis": "time",
+                           "yaxis": "delay",
+                           "field": '',
+                           "plotfile": plotname + ".Kcrs.png",
+                           "overwrite": True,
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="crosshand_delay_plot")
 
         # Solve for the absolute angle (phase) between the feeds
         # (P Jones auto enabled)
@@ -124,7 +139,7 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    "crosshand_phase_ref",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Xref:output',
+                       "caltable": prefix + '.Xref:output',
                        "field": field,
                        "solint": scandur,
                        "combine": "",
@@ -134,25 +149,27 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_ref")
-        gaintables += [caltable + '.Xref']
-        # recipe.add("cab/casa_plotms", "crosshand_phase_ref_plot", {
-        #     "xaxis": "time",
-        #     "yaxis": "phase",
-        #     "expformat": "png",
-        #     "exprange": "all",
-        #     "overwrite": True,
-        #     "showgui": False,
-        #     "vis": caltable + '.Xref:output',
-        #     "field": field,
-        #     "plotfile": pipeline.prefix + ".Xref.png",
-        # },
-        #            input=pipeline.input, output=pipeline.output, label="crosshand_phase_ref_plot")
-        #
+        gaintables += [prefix + '.Xref']
+
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "crosshand_phase_ref_plot",
+                       {
+                           "vis": prefix + '.Xref:msfile',
+                           "xaxis": "time",
+                           "yaxis": "phase",
+                           "overwrite": True,
+                           "field": '',
+                           "plotfile": plotname + ".Xref.png",
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="crosshand_phase_ref_plot")
+
         recipe.add("cab/casa_polcal",
                    "crosshand_phase_freq",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Xf:output',
+                       "caltable": prefix + '.Xf:output',
                        "field": field,
                        "solint": 'inf' + avgstring,  # solint to obtain SNR on solutions
                        "combine": "scan",
@@ -162,19 +179,21 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
-        gaintables += [caltable + '.Xf']
+        gaintables += [prefix + '.Xf']
 
-        # recipe.add("cab/casa_plotcal", "crosshand_phase_freq_plot", {
-        #     "caltable": caltable + '.Xf:output',
-        #     "xaxis": "freq",
-        #     "yaxis": "phase",
-        #     "field": field,
-        #     "subplot": 111,
-        #     "plotsymbol": "o",
-        #     "figfile": PREFIX + ".Xf.png",
-        #     "showgui": False
-        # },
-        #            input=pipeline.input, output=pipeline.output, label="crosshand_phase_freq_plot")
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "crosshand_phase_freq_plot",
+                       {
+                           "vis": prefix + '.Xf:msfile',
+                           "xaxis": "freq",
+                           "yaxis": "phase",
+                           "field": '',
+                           "plotfile": plotname + ".Xf.png",
+                           "overwrite": True,
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="crosshand_phase_freq_plot")
 
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
@@ -184,8 +203,8 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    "leakage_ref",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Dref:output',
-                       "field": field,
+                       "caltable": prefix + '.Dref:output',
+                       "field": leak_field,
                        "solint": scandur,
                        "combine": "",
                        "poltype": "D",
@@ -195,30 +214,30 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_ref")
-        gaintables += [caltable + '.Dref']
+        gaintables += [prefix + '.Dref']
 
-        # recipe.add("cab/casa_plotcal",
-        #            "leakage_ref_plot",
-        #            {
-        #                "caltable": caltable + '.Dref:output',
-        #                "xaxis": "time",
-        #                "yaxis": "amp",
-        #                "field": field,
-        #                "subplot": 441,
-        #                "iteration": "antenna",
-        #                "plotsymbol": "o",
-        #                "figfile": pipeline.prefix + ".Dref.png",
-        #                "showgui": False
-        #            },
-        #            input=pipeline.input, output=pipeline.output, label="leakage_ref_plot")
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "leakage_ref_plot",
+                       {
+                           "vis": prefix + '.Dref:msfile',
+                           "xaxis": "time",
+                           "yaxis": "amp",
+                           "field": '',
+                           "antenna": ant,
+                           "plotfile": plotname + ".Dref.png",
+                           "overwrite": True
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="leakage_ref_plot")
 
         recipe.add("cab/casa_polcal",
                    "leakage_freq",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Df:output',
+                       "caltable": prefix + '.Df:output',
                        "spw": '',
-                       "field": field,
+                       "field": leak_field,
                        "solint": 'inf' + avgstring,  # ensure SNR criterion is met
                        "combine": "scan",
                        "poltype": "Df",
@@ -228,19 +247,23 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
-        gaintables += [caltable + '.Df']
-        # recipe.add("cab/casa_plotcal", "leakage_freq_plot", {
-        #     "caltable": caltable + '.Df:output',
-        #     "xaxis": "freq",
-        #     "yaxis": "amp",
-        #     "field": field,
-        #     "subplot": 441,
-        #     "iteration": "antenna",
-        #     "plotsymbol": "o",
-        #     "figfile": PREFIX + ".Dfreq.png",
-        #     "showgui": False
-        # },
-        #            input=pipeline.input, output=pipeline.output, label="leakage_freq_plot")
+        gaintables += [prefix + '.Df']
+
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "leakage_freq_plot",
+                       {
+                           "vis": prefix + '.Df:msfile',
+                           "xaxis": "freq",
+                           "yaxis": "amp",
+                           "field": '',
+                           "antenna": ant,
+                           "plotfile": plotname + ".Dfreq.png",
+                           "overwrite": True
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="leakage_freq_plot")
+
         applycal_recipes = []
         calmodes = []
         interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest', 'nearest']
@@ -275,19 +298,18 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
 
 
 def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
-    caltable = "%s_%s" % (prefix, 'floi_cal')
-    gaintables = [caltable + '.Gxyamp', caltable + '.Gpol2', caltable + '.Kcrs', caltable + '.Xfparang',
-                  caltable + '.Df0gen']
-    field = ",".join(getattr(pipeline, config["pol_calib"])[i])
+    gaintables = [prefix + '.Gxyamp', prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang',
+                  prefix + '.Df0gen']
     ref = pipeline.refant[i] or '0'
+    field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     avgstring = ',' + config["avg_bw"]
     scandur = scan_length(msinfo, field)
-    if not os.path.exists(os.path.join(pipeline.diagnostic_plots, "polcal")):
-        os.mkdir(os.path.join(pipeline.diagnostic_plots, "polcal"))
-    plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
-    plotname = "%s_%s" % (prefix, config['pol_calib'])
     if config["make_diagnostic_plots"]:
         ant = config['refant_for_plots']
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        plotname = "%s_%s" % (prefix, config['pol_calib'])
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
 
     docal = config['reuse_existing_tables']
     for cal in gaintables:
@@ -301,7 +323,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                    {
                        "vis": msname,
                        "field": field,
-                       "caltable": caltable + '.Gpol1:output',
+                       "caltable": prefix + '.Gpol1:output',
                        "smodel": ['1', '0', '0', '0'],
                        "refantmode": 'strict',
                        "refant": ref,
@@ -317,7 +339,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
             recipe.add("cab/casa_plotms",
                        "plot_firstGpol",
                        {
-                           "vis": caltable + '.Gpol1:msfile',
+                           "vis": prefix + '.Gpol1:msfile',
                            "field": '',
                            "xaxis": 'scan',
                            "yaxis": 'amp',
@@ -349,15 +371,15 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        input=pipeline.input, output=plotdir, msdir=pipeline.msdir,
                        label="plot before Kcrs")
 
-        shutil.rmtree(os.path.join(pipeline.caltables, caltable + '.Gpol1a'), ignore_errors=True)
+        shutil.rmtree(os.path.join(pipeline.caltables, prefix + '.Gpol1a'), ignore_errors=True)
         # QU
         recipe.add("cab/casa_polfromgain",
                    "QU from gain",
                    {
                        "vis": msname,
-                       "tablein": caltable + '.Gpol1:output',
-                       "caltable": caltable + '.Gpol1a:output',
-                       "save_result": caltable + '_S1_from_QUfit:output',
+                       "tablein": prefix + '.Gpol1:output',
+                       "caltable": prefix + '.Gpol1a:output',
+                       "save_result": prefix + '_S1_from_QUfit:output',
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="QU from gain")
@@ -366,7 +388,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
 
         # We search for the scan where the polarization signal is minimum in XX and YY
         # (i.e., maximum in XY and YX):
-        with tb(os.path.join(pipeline.caltables, caltable + '.Gpol1')) as t:
+        with tb(os.path.join(pipeline.caltables, prefix + '.Gpol1')) as t:
             scans = t.getcol('SCAN_NUMBER')
             gains = numpy.squeeze(t.getcol('CPARAM'))
             t.close()
@@ -391,7 +413,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                    "Kcross delay",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Kcrs:output',
+                       "caltable": prefix + '.Kcrs:output',
                        "selectdata": True,
                        "field": field,
                        "scan": str(bestscan),
@@ -400,7 +422,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        "refantmode": 'strict',
                        "refant": ref,
                        "smodel": ['1', '0', '1', '0'],
-                       "gaintable": [caltable + '.Gpol1:output'],
+                       "gaintable": [prefix + '.Gpol1:output'],
                        "interp": ['linear'],
                    },
                    input=pipeline.input, output=pipeline.caltables,
@@ -416,7 +438,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                            "vis": msname,
                            "field": field,
                            "calwt": True,
-                           "gaintable": [caltable + '.Gpol1:output', caltable + '.Kcrs:output'],
+                           "gaintable": [prefix + '.Gpol1:output', prefix + '.Kcrs:output'],
                            "interp": ['linear', 'nearest'],
                            "parang": False,
                        },
@@ -468,21 +490,21 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        input=pipeline.input, output=plotdir,
                        label="plot before Xf")
 
-        if os.path.isfile(pipeline.output + '/caltables/' + caltable + '_S1_from_QUfit'):
-            with open(pipeline.output + '/caltables/' + caltable + '_S1_from_QUfit', 'rb') as stdr:
+        if os.path.isfile(pipeline.output + '/caltables/' + prefix + '_S1_from_QUfit'):
+            with open(pipeline.output + '/caltables/' + prefix + '_S1_from_QUfit', 'rb') as stdr:
                 S1 = pickle.load(stdr, encoding='latin1')
 
             S1 = S1[field]['SpwAve']
             caracal.log.info("First [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S1)
         else:
-            raise RuntimeError("Cannot find S1")  # caltable+'S1_from_QUfit:output'
+            raise RuntimeError("Cannot find S1")  # prefix+'S1_from_QUfit:output'
 
         # QU abs delay
         recipe.add("cab/casa_polcal",
                    "Abs phase and QU fit",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Xfparang:output',
+                       "caltable": prefix + '.Xfparang:output',
                        "field": field,
                        "spw": '',
                        "poltype": 'Xfparang+QU',
@@ -490,9 +512,9 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        "combine": 'scan,obs',
                        "preavg": scandur,
                        "smodel": S1,
-                       "gaintable": [caltable + '.Gpol1:output', caltable + '.Kcrs:output'],
+                       "gaintable": [prefix + '.Gpol1:output', prefix + '.Kcrs:output'],
                        "interp": ['linear', 'nearest'],
-                       "save_result": caltable + '_S2_from_polcal:output',
+                       "save_result": prefix + '_S2_from_polcal:output',
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="Abs phase and QU fit")
@@ -504,7 +526,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
             recipe.add("cab/casa_plotms",
                        "plot_Xf",
                        {
-                           "vis": caltable + '.Xfparang:msfile',
+                           "vis": prefix + '.Xfparang:msfile',
                            "field": '',
                            "xaxis": 'freq',
                            "yaxis": 'phase',
@@ -525,8 +547,8 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                            "vis": msname,
                            "field": field,
                            "calwt": True,
-                           "gaintable": [caltable + '.Gpol1:output', caltable + '.Kcrs:output',
-                                         caltable + '.Xfparang:output'],
+                           "gaintable": [prefix + '.Gpol1:output', prefix + '.Kcrs:output',
+                                         prefix + '.Xfparang:output'],
                            "interp": ['linear', 'nearest', 'nearest'],
                            "parang": False,
                        },
@@ -556,20 +578,20 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        input=pipeline.input, output=plotdir,
                        label="plot after Xf")
 
-        if os.path.isfile(pipeline.output + '/caltables/' + caltable + '_S2_from_polcal'):
-            with open(pipeline.output + '/caltables/' + caltable + '_S2_from_polcal', 'rb') as stdr:
+        if os.path.isfile(pipeline.output + '/caltables/' + prefix + '_S2_from_polcal'):
+            with open(pipeline.output + '/caltables/' + prefix + '_S2_from_polcal', 'rb') as stdr:
                 S2 = pickle.load(stdr, encoding='latin1')
             S2 = S2[field]['SpwAve'].tolist()
             caracal.log.info("Second [I,Q,U,V] fitted model (with I=1 and Q, U fractional): %s" % S2)
         else:
-            raise RuntimeError("Cannot find " + pipeline.output + "/caltables/" + caltable + "_S2_from_polcal")
+            raise RuntimeError("Cannot find " + pipeline.output + "/caltables/" + prefix + "_S2_from_polcal")
 
         recipe.add("cab/casa_gaincal",
                    "second gaincal",
                    {
                        "vis": msname,
                        "field": field,
-                       "caltable": caltable + '.Gpol2:output',
+                       "caltable": prefix + '.Gpol2:output',
                        "smodel": S2,
                        "refantmode": 'strict',
                        "refant": ref,
@@ -585,7 +607,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
             recipe.add("cab/casa_plotms",
                        "plot_Gpol2",
                        {
-                           "vis": caltable + '.Gpol2:msfile',
+                           "vis": prefix + '.Gpol2:msfile',
                            "field": '',
                            "xaxis": 'scan',
                            "yaxis": 'amp',
@@ -602,7 +624,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                    "leakage terms",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Df0gen:output',
+                       "caltable": prefix + '.Df0gen:output',
                        "field": field,
                        "spw": '',
                        "solint": 'inf' + avgstring,
@@ -611,8 +633,8 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        "poltype": 'Dflls',
                        "refant": '',  # solve absolute D-term
                        "smodel": S2,
-                       "gaintable": [caltable + '.Gpol2:output', caltable + '.Kcrs:output',
-                                     caltable + '.Xfparang:output'],
+                       "gaintable": [prefix + '.Gpol2:output', prefix + '.Kcrs:output',
+                                     prefix + '.Xfparang:output'],
                        "gainfield": ['', '', ''],
                        "interp": ['linear', 'nearest', 'nearest'],
                    },
@@ -625,7 +647,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                    "normalize gain ampl for target",
                    {
                        "vis": msname,
-                       "caltable": caltable + '.Gxyamp:output',
+                       "caltable": prefix + '.Gxyamp:output',
                        "field": field,
                        "solint": 'inf',
                        "combine": 'scan,obs',
@@ -634,8 +656,8 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                        "gaintype": 'G',
                        "smodel": S2,
                        "calmode": 'a',
-                       "gaintable": [caltable + '.Kcrs:output', caltable + '.Xfparang:output',
-                                     caltable + '.Df0gen:output'],
+                       "gaintable": [prefix + '.Kcrs:output', prefix + '.Xfparang:output',
+                                     prefix + '.Df0gen:output'],
                        "gainfield": ['', '', ''],
                        "interp": ['nearest', 'nearest', 'nearest'],
                        "solnorm": True,
@@ -649,7 +671,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
 
         applycal_recipes = []
         calmodes = []
-        gaintables = [caltable + '.Gpol2', caltable + '.Kcrs', caltable + '.Xfparang', caltable + '.Df0gen']
+        gaintables = [prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
         interps = ['linear', 'nearest', 'nearest', 'nearest']
         fields = ['', '', '', '']
         calwt = [True, False, False, False]
@@ -676,7 +698,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
 
         applycal_recipes = []
         calmodes = []
-        gaintables = [caltable + '.Gxyamp', caltable + '.Kcrs', caltable + '.Xfparang', caltable + '.Df0gen']
+        gaintables = [prefix + '.Gxyamp', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
         interps = ['linear', 'nearest', 'nearest', 'nearest']
         fields = ['', '', '', '']
         calwt = [True, False, False, False]
@@ -698,7 +720,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
 
         callib_dict = dict(zip(calmodes, applycal_recipes))
 
-        with open(os.path.join(callib_dir, f'callib_{prefix}_target.json'), 'w') as json_file:
+        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
     else:
@@ -706,9 +728,8 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
 
 
 def applycal(msname, recipe, config, pipeline, i, prefix, field):
-    caltable = "%s_%s" % (prefix, config['pol_calib'])
-    gaintables = [caltable + '.Gxyamp', caltable + '.Gpol2', caltable + '.Kcrs', caltable + '.Xfparang',
-                  caltable + '.Df0gen']
+    gaintables = [prefix + '.Gxyamp', prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang',
+                  prefix + '.Df0gen']
     for cal in gaintables:
         if not os.path.exists(os.path.join(pipeline.caltables, cal)):
             raise RuntimeError("Cannot find caltables!")
@@ -719,8 +740,8 @@ def applycal(msname, recipe, config, pipeline, i, prefix, field):
         recipe.add("cab/casa_applycal", "apply_caltables", {
             "vis": msname,
             "field": f,
-            "gaintable": [caltable + '.Gpol2:output', caltable + '.Kcrs:output', caltable + '.Xfparang:output',
-                          caltable + '.Df0gen:output'],
+            "gaintable": [prefix + '.Gpol2:output', prefix + '.Kcrs:output', prefix + '.Xfparang:output',
+                          prefix + '.Df0gen:output'],
             "interp": ['linear', 'nearest', 'nearest', 'nearest'],
             "calwt": [True, False, False, False],
             "gainfield": ['', '', '', ''],
@@ -733,8 +754,8 @@ def applycal(msname, recipe, config, pipeline, i, prefix, field):
         recipe.add("cab/casa_applycal", "apply_caltables", {
             "vis": msname,
             "field": f,
-            "gaintable": [caltable + '.Gxyamp:output', caltable + '.Kcrs:output', caltable + '.Xfparang:output',
-                          caltable + '.Df0gen:output'],
+            "gaintable": [prefix + '.Gxyamp:output', prefix + '.Kcrs:output', prefix + '.Xfparang:output',
+                          prefix + '.Df0gen:output'],
             "interp": ['linear', 'nearest', 'nearest', 'nearest'],
             "calwt": [True, False, False, False],
             "gainfield": ['', '', '', ''],
@@ -747,8 +768,6 @@ def applycal(msname, recipe, config, pipeline, i, prefix, field):
 # def worker
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
-    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
-    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
     label_in = config["label_in"]
 
@@ -858,8 +877,7 @@ def worker(pipeline, recipe, config):
             if pol_calib in set(polarized_calibrators):
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix_msbase, polarized_calibrators,
-                        unpolarized_calibrators)
+                ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix_msbase, polarized_calibrators)
             else:
                 raise RuntimeError("Unknown pol_calib!"
                                    "Currently only these are known on caracal:\
@@ -889,8 +907,7 @@ def worker(pipeline, recipe, config):
         else:
             raise RuntimeError("Cannot calibrate polarization! Allowed strategies are: \
                                1. Calibrate leakage with a unpolarized source (i.e. " + str(unpolarized_calibrators) + ") \
-                               and polarized angle with a know polarized source (i.e. " + str(
-                polarized_calibrators.keys()) + ") \
+                               and polarized angle with a know polarized source (i.e. " + str(polarized_calibrators.keys()) + ") \
                                2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.")
 
         recipe.run()

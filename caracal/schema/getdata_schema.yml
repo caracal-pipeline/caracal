@@ -36,6 +36,11 @@ mapping:
         required: false
         desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
+      ignore_missing:
+        type: bool
+        required: false
+        desc: Ignore missing matches/files in the dataid list and proceed with the files that were found. If none can be found, an exception will be raised refardless.
+        example: 'False'
       cabs:
         desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
         required: false

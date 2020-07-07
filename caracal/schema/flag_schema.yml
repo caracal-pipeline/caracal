@@ -250,6 +250,21 @@ mapping:
             type: str
             required: False
             example: ''
+      flag_manual:
+        desc: Manually flag subsets of data, using a syntax based on the CASA flagdata task
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'flag_manual' segment.
+            type: bool
+            required: False
+            example: 'False'
+          rules:
+            seq:
+              - type: str
+            required: false
+            desc: Sequence of flagging rules, of the form "ms_pattern key:value key:value"
+            example: ''
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.
         type: map

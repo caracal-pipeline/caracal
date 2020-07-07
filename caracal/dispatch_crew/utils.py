@@ -48,6 +48,9 @@ def categorize_fields(info):
         for i, field in enumerate(names):
             ints = intents[intent_ids[i]].split(',')
             for intent in ints:
+                # for the intents with #, the string after the # does not look useful for us
+                # This can be reviewed if need be (Issue 1130)
+                intent = intent.split("#")[0]
                 for ftype in mapping:
                     if intent in mapping[ftype][0]:
                         mapping[ftype][-1].append(field)

@@ -19,7 +19,11 @@ mapping:
         desc: Enable primary beam usage in making the DD-corrected DDFacet image. Note that this is EXPERIMENTAL and currently only available for MeerKAT data.
         required: False
         example: 'False'
-
+      shared_mem:
+       type: int
+       desc: Shared memory for tasks in units of GBs. Does not work with singularity.
+       required: False
+       example: '400'
       image_dd:
        type: map
        desc: Imaging parameters for DD calibration with DDFacet.
@@ -336,7 +340,7 @@ mapping:
          dist_nworker:
            type: int
            desc: Number of processes.
-           example: "25"
+           example: "0"
            required: false
 
 

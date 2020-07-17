@@ -520,7 +520,7 @@ def worker(pipeline, recipe, config):
                         "vis": msname,
                         "field": fluxscale_field,
                         "standard": standard,
-                        "usescratch": False,
+                        "usescratch": True,
                         "scalebychan": True,
                     }
                 else:

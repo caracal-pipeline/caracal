@@ -135,7 +135,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
         params["caltable"] = caltable + ":output"
         my_term = term
-        if "I" not in order and smodel and term in "KGF":
+        did_I = 'I' in order[:i+1] 
+        if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
         if term in "KGF":

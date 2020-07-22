@@ -402,6 +402,16 @@ mapping:
             type: bool
             required: false
             example: 'False'
+          pb_type:
+            desc: Choose between a Gaussian (Gauss) primary beam model or the MeerKAT Mauch et al. (2020) model (Mauch).
+            type: str
+            required: false
+            example: 'Gauss'
+          dish_size:
+            desc: Dish diameter in meters. Only used in the Gaussian primary beam model
+            type: float   
+            required: false
+            example: '13.5'
       
       freq_to_vel:
         desc: Convert the spectral axis' header keys of the line cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed.

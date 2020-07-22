@@ -589,35 +589,25 @@ def worker(pipeline, recipe, config):
 
         if config['make_cube']['use_mstransform']:
             for i, msfile in enumerate(all_msfiles):
-                # If channelisation changed during a previous pipeline run
-                # as stored in the obsinfo.json file
-                if not pipeline.enable_task(config, 'mstransform'):
-                    msbase, ext = os.path.splitext(msfile)
-                    msinfo = pipeline.get_msinfo(f"{msbase}_mst{ext}")
-                    spw = msinfo['SPW']['NUM_CHAN']
-                    nchans = spw
-                    nchans_all.append(nchans)
-                    caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
-                        len(spw), ','.join(map(str, spw))))
-                    # Get first chan, last chan, chan width
-                    chfr = msinfo['SPW']['CHAN_FREQ']
-                    firstchanfreq = [ss[0] for ss in chfr]
-                    lastchanfreq = [ss[-1] for ss in chfr]
-                    chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
-                    caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
-                        ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
-
-                    # Get spectral reference frame
-                    specframe = msinfo['SPW']['MEAS_FREQ_REF']
-                    specframe_all.append(specframe)
-                    caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
-
-                # Or get it from the mstransform segment executed in this
-                # same pipeline run
-                elif pipeline.enable_task(config['mstransform'], 'doppler'):
-                    nchans_all.append([nchan_dopp for kk in chanw_all[i]])
-                    specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
+                # Get channelisation of _mst.ms file
+                msbase, ext = os.path.splitext(msfile)
+                msinfo = pipeline.get_msinfo(f"{msbase}_mst{ext}")
+                spw = msinfo['SPW']['NUM_CHAN']
+                nchans = spw
+                nchans_all.append(nchans)
+                caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
+                    len(spw), ','.join(map(str, spw))))
+                # Get first chan, last chan, chan width
+                chfr = msinfo['SPW']['CHAN_FREQ']
+                firstchanfreq = [ss[0] for ss in chfr]
+                lastchanfreq = [ss[-1] for ss in chfr]
+                chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
+                caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+                    ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
+                # Get spectral reference frame
+                specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                specframe_all.append(specframe)
+                caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
 
         else:
             msinfo = pipeline.get_msinfo(msfile)

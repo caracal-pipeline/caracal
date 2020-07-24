@@ -22,6 +22,7 @@ import yaml
 from caracal.dispatch_crew import utils
 import itertools
 from caracal.workers.utils import manage_flagsets as manflags
+import psutil
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -198,6 +199,18 @@ def worker(pipeline, recipe, config):
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
     restfreq = config['restfreq']
+
+    # distributed deconvolution settings
+    ncpu = config['ncpu']
+    if ncpu == 0:
+      ncpu = psutil.cpu_count()
+    else:
+      ncpu = min(ncpu, psutil.cpu_count())
+    nrdeconvsubimg = ncpu if config['make_cube']['wscl_nrdeconvsubimg'] == 0 else config['make_cube']['wscl_nrdeconvsubimg']
+    if nrdeconvsubimg == 1:
+        wscl_parallel_deconv = None
+    else:
+        wscl_parallel_deconv = int(np.ceil(max(config['make_cube']['npix'])/np.sqrt(nrdeconvsubimg)))
 
     for i, msfile in enumerate(all_msfiles):
         # Update pipeline attributes (useful if, e.g., channel averaging was
@@ -661,6 +674,7 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config['make_cube']['wscl_auto_thr'],
             "multiscale": config['make_cube']['wscl_multiscale'],
             "multiscale-scale-bias": config['make_cube']['wscl_multiscale_bias'],
+            "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "no-update-model-required": config['make_cube']['wscl_noupdatemod']
         }
         if config['make_cube']['wscl_multiscale_scales']:

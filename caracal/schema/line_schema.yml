@@ -24,7 +24,11 @@ mapping:
         type: str
         required: false
         example: '1.420405752GHz'
-
+      ncpu:
+        type: int
+        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is currently only passed on to WSClean for line imaging.
+        required: false
+        example: '0'
       rewind_flags:
         desc: Rewind flags of the input .MS file(s) to specified version. Note that this is not applied to the .MS file(s) you might be running "transfer_apply_gains" on.
         type: map
@@ -367,6 +371,11 @@ mapping:
             type: float
             required: false
             example: '0.6'
+          wscl_nrdeconvsubimg:
+            desc: Speed-up deconvolution by splitting each channel into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the line worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
+            type: int
+            required: false
+            example: '0'
           casa_thr:
             desc: Flux-density level to stop CASA cleaning. It must include units, e.g. '1.0mJy'.
             type: str

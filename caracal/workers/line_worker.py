@@ -127,7 +127,7 @@ def fix_specsys(filename, specframe):
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
 
-def make_pb_cube(filename, apply_corr, typ):
+def make_pb_cube(filename, apply_corr, typ, dish_size):
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -145,11 +145,11 @@ def make_pb_cube(filename, apply_corr, typ):
                                  axis=0) * np.abs(headcube['cdelt1'])
             freq = (headcube['crval3'] + headcube['cdelt3'] * (
                 np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
-            if typ == 'Gauss':
-               sigma_pb = 17.52 / (freq / 1e+9) / config['pb_cube']['dish_size'] / 2.355
+            if typ == 'gauss':
+               sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
                sigma_pb.resize((sigma_pb.shape[0], 1, 1))
                datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
-            elif typ == 'Mauch':
+            elif typ == 'mauch':
                FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
                FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
                datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
@@ -1051,7 +1051,9 @@ def worker(pipeline, recipe, config):
                            'make pb_cube-{0:d}'.format(uu),
                            {'filename': image_cube_list[uu],
                             'apply_corr': config['pb_cube']['apply_pb'],
-                            'typ': config['pb_cube']['pb_type'],},
+                            'typ': config['pb_cube']['pb_type'],
+                            'dish_size': config['pb_cube']['dish_size'],
+                           },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))

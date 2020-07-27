@@ -412,10 +412,11 @@ mapping:
             required: false
             example: 'False'
           pb_type:
-            desc: Choose between a Gaussian (Gauss) primary beam model or the MeerKAT Mauch et al. (2020) model (Mauch).
+            desc: Choose between a Gaussian (gauss) primary beam model or the MeerKAT Mauch et al. (2020) model (mauch).
             type: str
+            enum: ['gauss', 'mauch']
             required: false
-            example: 'Gauss'
+            example: 'gauss'
           dish_size:
             desc: Dish diameter in meters. Only used in the Gaussian primary beam model
             type: float   

@@ -26,14 +26,16 @@ def worker(pipeline, recipe, config):
     dist_ncpu = config['calibrate_dd']['dist_ncpu']
     label = config['label_in']
     USEPB = config['use_pb']
-    pipeline.set_cal_msnames(label)
-    mslist = pipeline.cal_msnames
-    hires_mslist = pipeline.hires_msnames
+    #pipeline.set_cal_msnames(label)
+    #mslist = pipeline.cal_msnames
+    #hires_mslist = pipeline.hires_msnames
     prefix = pipeline.prefix
     INPUT=pipeline.input
     DD_DIR = "3GC"
-    OUTPUT=pipeline.output+"/"+DD_DIR
+    #OUTPUT=pipeline.output+"/"+DD_DIR
+    OUTPUT = os.path.join(pipeline.output, DD_DIR)
     DDF_LSM = "DDF_lsm.lsm.html"
+    shared_mem = str(config['shared_mem'])+'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
     print("All_targets", all_targets)
     print("All_msfiles", all_msfile)
@@ -53,7 +55,7 @@ def worker(pipeline, recipe, config):
     print(de_targets)
 
     dd_image_opts = {
-        "Data-MS"        : mslist,
+        "Data-MS"        : all_msfile,
         "Data-ColName"   : config['image_dd']['data_colname'],
         "Data-ChunkHours"       : config['image_dd']['data_chunkhours'],
         "Output-Mode"           : config['image_dd']['output_mode'],
@@ -93,7 +95,9 @@ def worker(pipeline, recipe, config):
         recipe.add("cab/eidos", "make-pb", eidos_opts,
         input=INPUT,
         output=OUTPUT,
-        label="make-pb:: Generate primary beams from Eidos",)
+        label="make-pb:: Generate primary beams from Eidos",
+        shared_memory=shared_mem)
+
 
     def dd_precal_image(field,ms_list):
         dd_image_opts_precal = copy.deepcopy(dd_image_opts)
@@ -107,8 +111,8 @@ def worker(pipeline, recipe, config):
             recipe.add("cab/ddfacet", "ddf_image-for_mask-{0:s}".format(field), dd_image_opts_precal,
                  input=INPUT,
                  output=OUTPUT,
-                 shared_memory="500gb",
-                 label="ddf_image-for_mask-{0:s}:: DDFacet image for masking".format(field))
+                 label="ddf_image-for_mask-{0:s}:: DDFacet image for masking".format(field),
+                 shared_memory=shared_mem)
 
 
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_precal,"-DD-masking")
@@ -122,7 +126,7 @@ def worker(pipeline, recipe, config):
                  'overlap': config['image_dd']['mask_overlap'],
                  'no-negative': True,
                  'tolerance': config['image_dd']['mask_tol'],
-                 }, input=INPUT, output = OUTPUT, label='mask_ddf-precal-{0:s}:: Make a mask for the initial ddf image'.format(field))
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf-precal-{0:s}:: Make a mask for the initial ddf image'.format(field),shared_memory=shared_mem)
             recipe.run()
             recipe.jobs = []
         dd_imagename = {"Output-Name": image_prefix_precal+"-DD-precal"}
@@ -133,8 +137,7 @@ def worker(pipeline, recipe, config):
         recipe.add("cab/ddfacet", "ddf_image-{0:s}".format(field), dd_image_opts_precal,
                     input=INPUT,
                     output=OUTPUT,
-                    shared_memory="500gb",
-                    label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field))
+                    label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field),shared_memory=shared_mem)
         recipe.run()
         recipe.jobs = []
     def dd_postcal_image(field,ms_list):
@@ -143,7 +146,8 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
         print("Imaging",ms_list)
-        dd_imagecol = {"Data-ColName": "SUBDD_DATA"}
+        postcal_datacol = config['image_dd']['data_colname_postcal']
+        dd_imagecol = {"Data-ColName": postcal_datacol}
         dd_image_opts_postcal.update(dd_ms_list)
         dd_image_opts_postcal.update(dd_imagecol)
         if (use_mask):
@@ -153,7 +157,7 @@ def worker(pipeline, recipe, config):
                  input=INPUT,
                  output=OUTPUT,
                  label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
-                 shared_memory="500gb")
+                 shared_memory=shared_mem)
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_postcal,"-DD-masking")
             output_folder = "/"+outdir
             recipe.add("cab/cleanmask", "mask_ddf-postcal-{0:s}".format(field),{
@@ -166,7 +170,7 @@ def worker(pipeline, recipe, config):
                  'overlap': config['image_dd']['mask_overlap'],
                  'no-negative': True,
                  'tolerance': config['image_dd']['mask_tol'],
-                 }, input=INPUT, output = OUTPUT, label='mask_ddf-postcal-{0:s}:: Make a mask for the initial ddf image'.format(field))
+                 }, input=INPUT, output = OUTPUT, label='mask_ddf-postcal-{0:s}:: Make a mask for the initial ddf image'.format(field),shared_memory=shared_mem)
             recipe.run()
             recipe.jobs = []
 
@@ -187,7 +191,7 @@ def worker(pipeline, recipe, config):
                     input=INPUT,
                     output=OUTPUT,
                     label="ddf_image-postcal-{0:s}:: Primary beam corrected image".format(field),
-                    shared_memory="500gb")
+                    shared_memory=shared_mem)
 
 #    def sfind_intrinsic():
 #        DDF_INT_IMAGE = prefix+"-DD-precal.int.restored.fits:output"
@@ -238,7 +242,7 @@ def worker(pipeline, recipe, config):
            }
 
            recipe.add('cab/catdagger', 'tag_sources-auto_mode', catdagger_opts,input=INPUT,
-              output=OUTPUT+"/"+outdir,label='tag_sources-auto_mode::Tag dE sources with CatDagger')
+              output=OUTPUT+"/"+outdir,label='tag_sources-auto_mode::Tag dE sources with CatDagger',shared_memory=shared_mem)
 
         if de_sources_mode == 'manual':
            img = prefix+"_"+field+"-DD-precal.app.restored.fits"
@@ -305,7 +309,7 @@ def worker(pipeline, recipe, config):
               "dd-max-post-error"  : config[key]['dd_dd_max_post_error'],
               "g-time-int"        : config[key]['dd_g_timeslots_int'],
               "g-freq-int"        : config[key]['dd_g_chan_int'],
-              "dist-ncpu"         :  0,
+              "dist-ncpu"         : config[key]['dist_ncpu'],
               "dist-nworker"      : config[key]['dist_nworker'],
               "dist-max-chunks"   : config[key]['dist_nworker'],
               "dist-max-chunks"   : config[key]['dist_nworker'],
@@ -347,7 +351,7 @@ def worker(pipeline, recipe, config):
                input=INPUT,
                #output=OUTPUT+"/"+outdir,
                output=output_cubical,
-               shared_memory="400gb",
+               shared_memory=shared_mem,
                label='dd_calibrate-{0:s}-{1:s}:: Carry out DD calibration'.format(mspref,field))
 
     def cp_data_column(field,mslist):
@@ -363,7 +367,7 @@ def worker(pipeline, recipe, config):
                               },
                input=INPUT,
                output=OUTPUT+"/"+outdir,
-               label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field))
+               label='cp_datacol-{0:s}-{1:s}:: Copy SUBDD_DATA to CORRECTED_DATA'.format(mspref,field),shared_memory=shared_mem)
 
     def img_wsclean(mslist,field):
         key='image_wsclean'
@@ -398,7 +402,7 @@ def worker(pipeline, recipe, config):
         input=INPUT,
         output=OUTPUT+"/"+outdir,
         version='2.6' if config[key]['img_ws_multi_scale'] else None,
-        label='img_wsclean-{0:s}-{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field))
+        label='img_wsclean-{0:s}-{1:s}:: Image DD-calibrated data with WSClean'.format(mspref,field),shared_memory=shared_mem)
 
     def run_crystalball(mslist,field):
         key='transfer_model_dd'
@@ -422,7 +426,7 @@ def worker(pipeline, recipe, config):
                "memory-fraction": config[key]['dd_mem_frac'],
              },
                input=INPUT,
-               output=OUTPUT+"/"+outdir,
+               output=OUTPUT+"/"+outdir,shared_memory=shared_mem,
                label='crystalball-{0:s}-{1:s}:: Run Crystalball'.format(mspref,field))
 
     for target in de_targets:
@@ -431,14 +435,14 @@ def worker(pipeline, recipe, config):
        print("Processing field",field,"for de calibration:")
        print(mslist)
 #       print(field)
-       if USEPB:
-          make_primary_beam()
-       if pipeline.enable_task(config,'image_dd'):
-          dd_precal_image(field,mslist)
+#       if USEPB:
+#          make_primary_beam()
+#       if pipeline.enable_task(config,'image_dd'):
+#          dd_precal_image(field,mslist)
     #sfind_intrinsic()
-       dagga(field)
-       if pipeline.enable_task(config,'calibrate_dd'):
-          dd_calibrate(field,mslist)
+#       dagga(field)
+#       if pipeline.enable_task(config,'calibrate_dd'):
+#          dd_calibrate(field,mslist)
        if pipeline.enable_task(config,'image_dd'):
           dd_postcal_image(field,mslist)
        if pipeline.enable_task(config, 'copy_data'):

@@ -115,6 +115,11 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
+          spw:
+            desc: Only use this subset(s) of the band to compute 'KGF' gains 
+            example: ""
+            required: false 
+            type: str
           b_fillgaps:
             desc: Fill flagged solution channels by interpolation.
             type: int
@@ -214,6 +219,11 @@ mapping:
             type: int
             required: false
             example: "70"
+          spw:
+            desc: Only use this subset(s) of the band to compute 'KGF' gains
+            example: ""
+            required: false 
+            type: str
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool

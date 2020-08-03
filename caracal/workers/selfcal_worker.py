@@ -561,8 +561,11 @@ def worker(pipeline, recipe, config):
             image_opts.update({
                 "auto-mask": config[key]['cleanmask_thr'][num-1 if len(config[key]['cleanmask_thr']) >= num else -1],
                 "local-rms": config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1],
-                "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
               })
+            if config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1]:
+                image_opts.update({
+                    "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
+                  })
         elif mask_key == 'sofia':
             fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
                 prefix,field, num)

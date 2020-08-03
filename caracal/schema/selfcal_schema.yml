@@ -148,8 +148,8 @@ mapping:
         example: '2'
       img_stokes:
         type: str
-        enum: ["I"]
-        desc: Stokes image to create. For this first release of CARACal, the only option is 'I'.  
+        enum: ["I","Q","U","V"]
+        desc: Stokes image to create.
         required: false
         example: 'I'
       img_multiscale:

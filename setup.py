@@ -43,7 +43,7 @@ setup(name=PACKAGE_NAME,
       author_email="caracal-info@googlegroups.com",
       url="https://github.com/caracal-pipeline/caracal",
       packages=[PACKAGE_NAME],
-      python_requires='>=3.5',
+      python_requires='>=3.6',
       install_requires=requirements,
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in

@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
+
+# Debug if required
+# set -xv
+
 # The following ensures the script to stop on errors
 set -e
+shopt -s expand_aliases
+
+# Rule: Two newlines before ###, none at end except for the very end
 
 # Find out which caratekit this is, will be needed later
 caratekit_install=`which caratekit.sh` || caratekit_install=""
@@ -36,21 +43,28 @@ success=0
 
 # Preamble
 echo ""
-echo "#######################"
-echo "Testing CARACal at home "
-echo "#######################"
+echo "#########################"
+echo " Testing CARACal at home "
+echo "#########################"
 echo ""
 echo "caratekit.sh $*"
 echo ""
 
- sya="############################" ; sya+=$'\n\n'
-sya+="Caratekit system information"  ; sya+=$'\n\n'
-sya+="############################" ; sya+=$'\n\n'
+sya="############################" ; sya+=$'\n'
+sya+=$'\n'
+sya+="Caratekit system information" ; sya+=$'\n'
+sya+=$'\n'
+sya+="############################" ; sya+=$'\n'
+sya+=$'\n'
 sya+="Start time: "; sya+=`date -u`; sya+=$'\n'
-sya+="Call executing: caratekit.sh $*"; sya+=$'\n\n'
-sya+="############################" ; sya+=$'\n\n'
+sya+="Call executing: caratekit.sh $*"; sya+=$'\n'
+sya+=$'\n'
+sya+="############################" ; sya+=$'\n'
+sya+=$'\n'
 hostnamectl &>/dev/null && hostinfo=`hostnamectl | grep -Ev "Machine ID"'|'"Boot ID"` || hostinfo="Not accessible"
-sya+="Host info: ";sya+=$'\n'; sya+=${hostinfo};sya+=$'\n'
+sya+="Host info: ";sya+=$'\n'
+sya+=${hostinfo}
+#sya+=$'\n'
 # Control if help should be switched on
 #(( $# > 0 )) || NOINPUT=1
 
@@ -61,6 +75,7 @@ IA=5
 endimessage=""
 ALTERNATIVE_TEST_DATA_IDS=( "1524929477" "1524947605" "1532022061" )
 SHORT_TEST_DATA_IDS=( "1532022061_subset" )
+SPHEVERSION="1.1.0"
 
 # current working directory
 cwd=`pwd`
@@ -84,6 +99,29 @@ do
     if [[ "$arg" == "--install" ]] || [[ "$arg" == "-i" ]]
     then
         IN=1
+    fi
+    if [[ "$arg" == "--home-original" ]] || [[ "$arg" == "-ho" ]]
+    then
+        HO=1
+	# This cannot be deleted, double security
+	HN=1
+    fi
+    if [[ "$arg" == "--home-workspace" ]] || [[ "$arg" == "-hw" ]]
+    then
+        HW=1
+    fi
+    if [[ "$arg" == "--home-no-delete" ]] || [[ "$arg" == "-hn" ]]
+    then
+        HN=1
+    fi
+    if [[ "$arg" == "--home-folder" ]] || [[ "$arg" == "-hf" ]]
+    then
+	(( nextcount=argcount+1 ))
+	(( $nextcount <= $# )) || { echo "Argument expected for --home-folder or -hf switch, stopping."; kill "$PPID"; exit 1; }
+
+	CARATE_HOME_FOLDER=${!nextcount}
+ 	firstletter=`echo ${CARATE_HOME_FOLDER} | head -c 1`
+	[[ ${firstletter} == "/" ]] || CARATE_HOME_FOLDER="${cwd}/${CARATE_HOME_FOLDER}"
     fi
     if [[ "$arg" == "--docker-minimal" ]] || [[ "$arg" == "-dm" ]]
     then
@@ -109,6 +147,121 @@ do
     then
         SI=1
     fi
+
+    if [[ "$arg" == "--singularity-cache-workspace" ]] || [[ "$arg" == "-scw" ]]
+    then
+	SCW=1
+    fi
+
+    if [[ "$arg" == "--singularity-localcache-workspace" ]] || [[ "$arg" == "-slw" ]]
+    then
+	SLW=1
+    fi
+
+    if [[ "$arg" == "--singularity-tmp-workspace" ]] || [[ "$arg" == "-stw" ]]
+    then
+	STW=1
+    fi
+    
+    if [[ "$arg" == "--stimela-pull-workspace" ]] || [[ "$arg" == "-spw" ]]
+    then
+	SPW=1
+    fi
+    
+    if [[ "$arg" == "--singularity-cache-home" ]] || [[ "$arg" == "-sch" ]]
+    then
+	SCH=1
+    fi
+    
+    if [[ "$arg" == "--singularity-localcache-home" ]] || [[ "$arg" == "-slh" ]]
+    then
+	SLH=1
+    fi
+    
+    if [[ "$arg" == "--singularity-tmp-home" ]] || [[ "$arg" == "-sth" ]]
+    then
+	STH=1
+    fi
+    
+    if [[ "$arg" == "--stimela-pull-test" ]] || [[ "$arg" == "-spt" ]]
+    then
+	SPT=1
+    fi
+    
+    if [[ "$arg" == "--singularity-cachedir" ]] || [[ "$arg" == "-scd" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --singularity-cachedir or -scd switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_SINGULARITY_CACHEDIR=${!nextcount}
+    fi
+
+    if [[ "$arg" == "--singularity-localcachedir" ]] || [[ "$arg" == "-sld" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --singularity-localcachedir or -sld switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_SINGULARITY_LOCALCACHEDIR=${!nextcount}
+    fi
+
+    if [[ "$arg" == "--singularity-tmpdir" ]] || [[ "$arg" == "-std" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --singularity-tmpdir or -std switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_SINGULARITY_TMPDIR=${!nextcount}
+    fi
+
+    if [[ "$arg" == "--singularity-nocache" ]] || [[ "$arg" == "-snc" ]]
+    then
+	SNC=1
+    fi
+
+    if [[ "$arg" == "--stimela-pullfolder" ]] || [[ "$arg" == "-spf" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --stimela-pullfolder or -spf switch, stopping."; kill "$PPID"; exit 1; }
+        CARATE_STIMELA_PULLFOLDER=${!nextcount}
+    fi
+
+    if [[ "$arg" == "--stimela-delete-pullfolder" ]] || [[ "$arg" == "-sdp" ]]
+    then
+	SKP=1
+    fi
+    
+    if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
+    then
+        (( nextcount=argcount+1 ))
+        (( $nextcount <= $# )) || { echo "Argument expected for --install-attempt or -ia switch, stopping."; kill "$PPID"; exit 1; }
+        IA=${!nextcount}
+    fi
+
+    if [[ "$arg" == "--container-all-workspace" ]] || [[ "$arg" == "-caw" ]]
+    then
+	SCW=1
+	SLW=1
+	STW=1
+	SPW=1
+    fi
+    
+    if [[ "$arg" == "--container-all-test" ]] || [[ "$arg" == "-cat" ]]
+    then
+	SCH=1
+	SLH=1
+	STH=1
+	SPT=1
+    fi
+
+    if [[ "$arg" == "--singularity-all-workspace" ]] || [[ "$arg" == "-saw" ]]
+    then
+	SCW=1
+	SLW=1
+	STW=1
+    fi
+    
+    if [[ "$arg" == "--singularity-all-home" ]] || [[ "$arg" == "-sah" ]]
+    then
+	SCH=1
+	SLH=1
+	STH=1
+    fi
     if [[ "$arg" == "--use-stimela-stable" ]] || [[ "$arg" == "-us" ]]
     then
         US=1
@@ -117,10 +270,6 @@ do
     then
 	[[ -z ${US} ]] ||  { echo "You can use only one of -us (--use-stimela-stable) or -um (--use-stimela-master), stopping."; kill "$PPID"; exit 1; }
         UM=1
-    fi
-    if [[ "$arg" == "--singularity-root" ]] || [[ "$arg" == "-sr" ]]
-    then
-        SR=1
     fi
     if [[ "$arg" == "--install-attempts" ]] || [[ "$arg" == "-ia" ]]
     then
@@ -131,6 +280,10 @@ do
     if [[ "$arg" == "--omit-stimela-reinstall" ]] || [[ "$arg" == "-os" ]]
     then
         ORSR=1
+    fi
+    if [[ "$arg" == "--stimela-pull-force" ]] || [[ "$arg" == "-pf" ]]
+    then
+        PF=1
     fi
     if [[ "$arg" == "--omit-docker-prune" ]] || [[ "$arg" == "-op" ]]
     then
@@ -148,10 +301,6 @@ do
     then
         OR=1
     fi
-    if [[ "$arg" == "--keep-home" ]] || [[ "$arg" == "-kh" ]]
-    then
-        KH=1
-    fi
     if [[ "$arg" == "--keep-report-dir" ]] || [[ "$arg" == "-kr" ]]
     then
         KR=1
@@ -160,7 +309,7 @@ do
     then
         KP=1
     fi
-    if [[ "$arg" == "--no-pull-docker" ]] || [[ "$arg" == "-np" ]]
+    if [[ "$arg" == "--no-pull" ]] || [[ "$arg" == "-np" ]]
     then
         NP=1
     fi
@@ -185,15 +334,19 @@ do
     then
         OD=1
     fi
+    if [[ "$arg" == "--test-data-read-only" ]] || [[ "$arg" == "-ro" ]]
+    then
+        RO=1
+    fi
     if [[ "$arg" == "--copy-config-data-id" ]] || [[ "$arg" == "-cc" ]]
     then
-        OD=1
+        CC=1
     fi
-    if [[ "$arg" == "--copy-data-id" ]] || [[ "$arg" == "-ci" ]]
+    if [[ "$arg" == "--raw-data-id" ]] || [[ "$arg" == "-ri" ]]
     then
 	(( nextcount=argcount+1 ))
-	(( $nextcount <= $# )) || { echo "Argument expected for --copy-data-id or -ci switch, stopping."; kill "$PPID"; exit 1; }
-	CARATE_COPY_DATA_ID=${!nextcount}
+	(( $nextcount <= $# )) || { echo "Argument expected for --raw-data-id or -ri switch, stopping."; kill "$PPID"; exit 1; }
+	CARATE_RAW_DATA_ID=${!nextcount}
     fi
     if [[ "$arg" == "--move-test-data" ]] || [[ "$arg" == "-md" ]]
     then
@@ -294,9 +447,9 @@ do
  	firstletter=`echo ${CARATE_CONFIG_SOURCE} | head -c 1`
 	[[ ${firstletter} == "/" ]] || CARATE_CONFIG_SOURCE="${cwd}/${CARATE_CONFIG_SOURCE}"
     fi
-    if [[ "$arg" == "--keep-config-source" ]] || [[ "$arg" == "-kc" ]]
+    if [[ "$arg" == "--keep-config-dataid" ]] || [[ "$arg" == "-kd" ]]
     then
-        KC=1
+        KD=1
     fi
     if [[ "$arg" == "--docker-sample-configs" ]] || [[ "$arg" == "-dsc" ]]
     then
@@ -357,7 +510,7 @@ then
     echo "                               (optional)"
     echo ""
 
-    echo "  CARATE_LOCAL_CARACAL:         Local CARACal copy to use. If not"
+    echo "  CARATE_LOCAL_CARACAL:        Local CARACal copy to use. If not"
     echo "                               set, CARACal will be downloaded"
     echo "                               from https://github.com/caracal-pipeline/caracal"
     echo ""
@@ -367,6 +520,14 @@ then
     echo ""
 
     echo "  CARATE_LOCAL_STIMELA:        Location of a local stimela"
+    echo ""
+
+    echo "  CARATE_HOME_FOLDER:          Location of \$HOME during test"
+
+    echo "  CARATE_SINGULARITY_CACHE:      Location of \$SINGULARITY_CACHEDIR"
+    echo "  CARATE_SINGULARITY_LOCALCACHE: Location of \$SINGULARITY_LOCALCACHEDIR"
+    echo "  CARATE_SINGULARITY_TMPDIR:     Location of \$SINGULARITY_TMPDIR"
+    echo "  CARATE_STIMELA_PULLFOLDER:     Location of \$STIMELA_PULLFOLDER"
     echo ""
 
     echo "  CARATE_CARACAL_TEST_ID:      Only specify if CARATE_CARACAL_BUILD_ID"
@@ -394,7 +555,7 @@ then
     echo "                               individual carate run. Empty if not supplied."
     echo ""
 
-    echo "  CARATE_COPY_MS:              Names of the measurement sets to be copied"
+    echo "  CARATE_RAW_DATA_ID:          Names of the measurement sets to be copied"
     echo "                               (comma-separated list without .ms extensions)"
     echo ""
 
@@ -418,6 +579,19 @@ then
     echo ""
     echo "  --workspace ARG -ws ARG             Use ARG instead of environment variable"
     echo "                                      CARATE_WORKSPACE"
+    echo ""
+    echo "  --home-original -ho                 Do not change the HOME environment"
+    echo "                                      variable during installation test"
+    echo ""
+    echo "  --home-workspace -hw                Use \$CARATE_WORKSPACE/home"
+    echo "                                      as home folder during caratekit test"
+    echo ""
+    echo "  --home-folder ARG -hf ARG           Use ARG as home folder during caratekit"
+    echo "                                      test"
+    echo ""
+    echo "  --home-no-delete -hn                Do not delete the home folder (automati-"
+    echo "                                      cally applied if --home-original or"
+    echo "                                      -ho are set)"
     echo ""
     echo "  --install-attempts -ia              Allowed number of attempts to pull images,"
     echo "                                      to re-invoke pip, to run stimela pull,"
@@ -458,20 +632,79 @@ then
     echo ""
     echo "  --omit-stimela-reinstall -os        Do not re-install stimela"
     echo ""
+    echo "  --stimela-pull-force -pf            Use -f switch when invoking stimela pull"
+    echo ""
     echo "  --docker-installation -di           Test Docker installation/install Docker"
     echo "                                      Stimela (no installation if -os is set)"
     echo ""
-    echo "  --no-pull-docker -np                Do not run stimela pull -d (only Docker)"
-    echo "                                      omit the step when switch is not set"
+    echo "  --no-pull -np                       Do not run stimela pull prior to running"
+    echo "                                      CARACal"
     echo ""
     echo "  --omit-docker-prune -op             Do not prune system during docker install"
     echo ""
     echo "  --singularity-installation -si      Test Singularity installation/install"
     echo "                                      Singularity Stimela"
     echo ""
-    echo "  --singularity-root -sr              Do not install Singularity images in"
-    echo "                                      global \$CARATE_WORKSPACE but in the"
-    echo "                                      specific root directory"
+    echo "  --singularity-cache-workspace -scw  Use \$CARATE_WORKSPACE/.singularity/cache"
+    echo "                                      as \${SINGULARITY_CACHEDIR}"
+    echo ""
+    echo "  --singularity-localcache-workspace -slw Use"
+    echo "                                          \$CARATE_WORKSPACE/.singularity/localcache"
+    echo "                                          as \${SINGULARITY_LOCALCACHEDIR}"
+    echo ""
+    echo "  --singularity-tmp-workspace -stw    Use \$CARATE_WORKSPACE/.singularity/tmp"
+    echo "                                      as \${SINGULARITY_TMPDIR}"
+    echo ""
+    echo "  --singularity-pull-workspace -spw   Use \$CARATE_WORKSPACE/stimela_pullfolder"
+    echo "                                      as \${STIMELA_PULLFOLDER}"
+    echo ""
+    echo "  --singularity-cache-home -sch       Use \${home}/.singularity/cache"
+    echo "                                      as \${SINGULARITY_CACHEDIR}"
+    echo "                                      \$home=your_test_directory/.home"
+    echo ""
+    echo "  --singularity-localcache-home -slh  Use \${home}/.singularity/localcache"
+    echo "                                      as \${SINGULARITY_LOCALCACHEDIR}"
+    echo "                                      \$home=your_test_directory/.home"
+    echo ""
+    echo "  --singularity-tmp-home -sth         Use \${home}/.singularity/tmp"
+    echo "                                      as \${SINGULARITY_TMPDIR}"
+    echo "                                      \$home=your_test_directory/.home"
+    echo ""
+    echo "  --singularity-nocache -snc          Set \${SINGULARITY_DISABLE_CACHE}"
+    echo "                                      to 'True' (otherwise unset)"
+    echo ""
+    echo "  --stimela-pull-test -spt            Use your_test_directory/stimela_pullfolder"
+    echo "                                      as \${STIMELA_PULLFOLDER}"
+    echo ""
+    echo "  --singularity-cachedir ARG -scd ARG Use ARG instead of environment variable"
+    echo "                                      CARATE_SINGULARITY_CACHEDIR"
+    echo "                                      Location of \$SINGULARITY_CACHEDIR"
+    echo ""
+    echo "  --singularity-localcachedir ARG -sld ARG   Use ARG instead of environment"
+    echo "                                             variable"
+    echo "                                             CARATE_SINGULARITY_LOCALCACHEDIR"
+    echo "                                             Location of"
+    echo "                                             \$SINGULARITY_LOCALCACHEDIR"
+    echo ""
+    echo "  --singularity-tmpdir ARG -std ARG   Use ARG instead of environment variable"
+    echo "                                      CARATE_SINGULARITY_TMPDIR"
+    echo "                                      Location of \$SINGULARITY_TMPDIR"
+    echo ""
+    echo "  --stimela-pullfolder ARG -spf ARG   Use ARG instead of environment variable"
+    echo "                                      CARATE_STIMELA_PULLFOLDER"
+    echo "                                      Location of \$STIMELA_PULLFOLDER"
+    echo ""
+    echo "  --stimela-delete-pullfolder -sdp    Delete the content of"
+    echo "                                      \$STIMELA_PULLFOLDER"
+    echo "                                      (and reinstall)"
+    echo ""
+    echo "  --singularity-all-home -sah         Alias for -sch -slh -sth"
+    echo ""
+    echo "  --singularity-all-workspace -saw    Alias for -scw -slw -stw"
+    echo ""
+    echo "  --container-all-test -cat           Alias for -sch -slh -sth -spt"
+    echo ""
+    echo "  --container-all-workspace -caw      Alias for -scw -slw -stw -spw"
     echo ""
     echo "  --caracal-test-id ARG -ct ARG       Use ARG instead of environment variable"
     echo "                                      CARATE_CARACAL_TEST_ID"
@@ -493,42 +726,33 @@ then
     echo "                                      stimela_parameter_files) prior to"
     echo "                                      starting a test"
     echo ""
-    echo "  --keep-home -kh                     Do not change the HOME environment"
-    echo "                                      variable during installation test"
-    echo ""
     echo "  --config-source ARG -cs ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_CONFIG_SOURCE"
     echo ""
-    echo "  --keep-config-source -kc            Do not autodetect measurement sets but"
-    echo "                                      keep the confic source as it is. Only"
-    echo "                                      if --config-source is supplied."
+    echo "  --keep-config-dataid -kd            Do not autodetect measurement sets but"
+    echo "                                      keep the dataid in the confic source as"
+    echo "                                      it is. Only if --config-source is supplied."
     echo ""
     echo "  --test-data-dir ARG -td ARG         Use ARG instead of environment variable"
     echo "                                      CARATE_TEST_DATA_DIR"
     echo ""
+    echo "  --test-data-read-only -ro           Use CARATE_TEST_DATA_DIR as rawdatadir"
+    echo "                                      and do not (re-)copy any test data into"
+    echo "                                      msdir"
+    echo ""
     echo "  --omit-copy-test-data -od           Do not re-copy test data and preserve msdir"
     echo ""
     echo "  --move-test-data -md                Move test data instead of creating a copy"
-    ####
-    ####
-    ####
-    echo ""
-    echo "  --copy-config-data -cc              Copy test data as specified in the config-"
-    echo "                                      file parameter dataid unless"
-    echo "                                      CARATE_COPY_DATA_ID is defined"
-    echo ""
-    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
-    echo "                                      CARATE_COPY_DATA_ID"
     echo ""
     echo "  --copy-config-data -cc              Copy test data as specified in the"
     echo "                                      parameter dataid from CARATE_CONFIG_SOURCE"
-    echo "                                      unless CARATE_COPY_DATA_ID is defined."
+    echo "                                      unless CARATE_RAW_DATA_ID is defined."
     echo "                                      Ignored if CARATE_CONFIG_SOURCE is not"
-    echo "                                      defined and switches --config-source -cs"
+    echo "                                      defined or switches --config-source -cs"
     echo "                                      are not used"
     echo ""
-    echo "  --copy-data-id ARG -ci ARG          Use ARG instead of environment variable"
-    echo "                                      CARATE_COPY_DATA_ID. Note that this over-"
+    echo "  --raw-data-id ARG -ri ARG           Use ARG instead of environment variable"
+    echo "                                      CARATE_RAW_DATA_ID. Note that this over-"
     echo "                                      rides --copy-config-data or -cc"
     echo ""
     echo "  --input-dir ARG -id ARG             Use ARG instead of environment variable"
@@ -582,18 +806,28 @@ echo " rationale behind that is that the test directory is always linked to"
 echo " a git(hub) build number if that exists. Otherwise, if"
 echo " CARATE_CARACAL_BUILD_ID is not defined, the user can supply an"
 echo " alternative name \$CARATE_CARACAL_TEST_ID. In the test root directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, a home directory called"
-echo " home, a virtual environment called caracal_virtualenv, a CARACal copy"
-echo " caracal, and up to six test directories are created, within which the"
-echo " tests are conducted. If the --force or -f switch is set, existing"
+echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID, by default a home directory"
+echo "  called home, a virtual environment called caracal_virtualenv, a CARACal"
+echo " copy caracal, and up to six test directories are created, within which"
+echo " the tests are conducted. If the --force or -f switch is set, existing"
 echo " directories and installations are deleted and replaced, if not, only"
 echo " those directories and files are created, which do not exist"
 echo " yet. Exceptions from that rule exist. If the --omit-stimela-reinstall"
 echo " or -os switch is set, a re-installation of stimela is preventedeven"
 echo " if -f is set. This includes the Re-installation of the virtual"
 echo " environment, the home directory, and the file .stimela in the home"
-echo " directory. If the option --keep-home or -kh is set, the directory"
-echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home is pre- served. If"
+echo " directory. "
+echo " The location of the home directory can be changed using environment variables"
+echo " and switches. The environment variable CARATE_HOME_FOLDER defines directly the"
+echo " home folder. It can be overridden by the switches --home-folder ARG or -hf ARG,"
+echo " where ARG is the location of the home folder. Switch -hw defines the home"
+echo " folder to be the directory home in the workspace folder. Switch --home-original"
+echo " or -ho leaves the home folder as it is. The default, as said above, is to"
+echo " define the home folder as \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/home"
+echo " If the option --home-no-delete or -hn is set, the home folder"
+echo " is preserved. -hn is automatically set if switches --home-original or -ho are set."
+echo ""
+echo " If"
 echo " the option --keep-report or -kr is set, the directory"
 echo " \$CARATE_WORKSPACE/\$CARATE_CARACAL_TEST_ID/report is pre-"
 echo " served. Switches --omit-virtualenv-reinstall and -ov prevent the"
@@ -649,20 +883,80 @@ echo "    system prune is invoked, and docker stimela is installed (stimela"
 echo "    build). If switches --omit-stimela-reinstall or -os are set, this is"
 echo "    not done"
 echo ""
-echo "  - when switches --no-pull-docker, -np are set, stimela pull -d is"
-echo "    invoked for a Stimela Docker installation, omit this"
-echo "    step otherwise. If switches --omit-stimela-reinstall or -os are"
-echo "    set, this is not done"
+echo "  - when switches --no-pull, -np are set, stimela pull is"
+echo "    not invoked for a Stimela installation, otherwise a stimela pull"
+echo "    is executed prior to running CARACal. If switches"
+echo "    --omit-stimela-reinstall or -os are set, stimela pull is not"
+echo "    invoked either."
+echo ""
+echo "  - There are four environment variables connected to the use of"
+echo "    Singularity, which can be temporarily be replaced while "
+echo "    using caratekit.sh. After running caratekit.sh"
+echo "    they will be changed back to their original values."
+echo "    \$SINGULARITY_CACHEDIR, \$SINGULARITY_LOCALCACHEDIR and"
+echo "    \$SINGULARITY_TMPDIR are environment"
+echo "    variables recognized by Singularity, while"
+echo "    \$STIMELA_PULLFOLDER is the directory used by Stimela to store"
+echo "    Singularity images in. By default the values of these variables are"
+echo "    not changed, implying that if they are unset, they are left unset."
+echo "    If switch --singularity-cache-workspace or -scw is set,"
+echo "    \$CARATE_WORKSPACE/.singularity/cache is used"
+echo "    as \${SINGULARITY_CACHEDIR}"
+echo "    If switch --singularity-localcache-workspace or -slw is set,"
+echo "    \$CARATE_WORKSPACE/.singularity/localcache is used"
+echo "    as \${SINGULARITY_LOCALCACHEDIR}"
+echo "    If switch --singularity-tmp-workspace or -stw is set,"
+echo "    \$CARATE_WORKSPACE/.singularity/tmp is used"
+echo "    as \${SINGULARITY_TMPDIR}"
+echo "    If switch --stimela-pull-workspace or -spw is set,"
+echo "    \$CARATE_WORKSPACE/stimela_pullfolder is used"
+echo "    as \${STIMELA_PULLFOLDER}."
+echo "    If switch --singularity-cache-home or -sch is set,"
+echo "    \${home}/.singularity/cache is used as \${SINGULARITY_CACHEDIR},"
+echo "    where \$home denotes the home folder in the test directory."
+echo "    If switch --singularity-localcache-home or -slh is set,"
+echo "    \${home}/.singularity/localcache is used as \${SINGULARITY_LOCALCACHEDIR},"
+echo "    where \$home denotes the home folder in the test directory."
+echo "    If switch --singularity-tmp-home or -sth is set,"
+echo "    \${home}/.singularity/tmp is used as \${SINGULARITY_TMPDIR},"
+echo "    where \$home denotes the home folder in the test directory."
+echo "    If switch --stimela-pull-test -spt is set,"
+echo "    your_test_directory//stimela_pullfolder is used as"
+echo "    \${STIMELA_PULLFOLDER},"
+echo "    where your_test_directory denotes the test directory."
+echo "    The environment variable CARATE_SINGULARITY_CACHEDIR or the"
+echo "    argument ARG of switches --singularity-cachedir ARG or -scd ARG"
+echo "    are used to directly define \$SINGULARITY_CACHEDIR."
+echo "    The environment variable CARATE_SINGULARITY_LOCALCACHEDIR or the"
+echo "    argument ARG of switches --singularity-localcachedir ARG or -sld ARG"
+echo "    are used to directly define \$SINGULARITY_LOCALCACHEDIR."
+echo "    The environment variable CARATE_SINGULARITY_TMPDIR or the"
+echo "    argument ARG of switches --singularity-tmpdir ARG or -std ARG"
+echo "    are used to directly define \$SINGULARITY_TMPDIR."
+echo "    The environment variable CARATE_STIMELA_PULLFOLDER or the"
+echo "    argument ARG of switches --stimela-pullfolder ARG or -spf ARG"
+echo "    are used to directly define \$STIMELA_PULLFOLDER."
+echo "    The definition of the environment variables using the switches"
+echo "    above is mutually exclusive."
+echo "    If \${STIMELA_PULLFOLDER} is not defined by any switch and it"
+echo "    is not defined prior to invoking caratekit.sh, it defaults to"
+echo "    STIMELA_PULLFOLDER=\$CARATE_WORKSPACE/stimela_pullfolder"
+echo "    If switches --singularity-nocache or -snc are set, the"
+echo "    environment variable \${SINGULARITY_DISABLE_CACHE} is set to"
+echo "    True for the time of the caratekit run (disabling caching)"
+echo "    and then reset to its original value (or unset). If"
+echo "    --singularity-nocache or -snc are not set, the environment variable"
+echo "    \${SINGULARITY_DISABLE_CACHE} is unset for the duration of the"
+echo "    caratekit run."
 echo ""
 echo "  - when switches --singularity-minimal, -sm,"
 echo "    --singularity-alternative, -se, --singularity-installation, -si"
-echo "    are set, home/.stimela is removed, and singularity stimela is by"
-echo "    default installed in the directory (if not existing or if -f is"
-echo "    set) \$CARATE_WORKSPACE/stimela-singularity. If --stimela-root or"
-echo "    -sr are set, it is installed in rootfolder/stimela-singularity."
-echo "    The first variant allows to re-use the same stimela installation"
-echo "    In multiple tests. If switches --omit-stimela-reinstall or -os are"
-echo "    set, this is not done"
+echo "    are set, home/.stimela is removed. If switches"
+echo "    --omit-stimela-reinstall or -os are set, this is not done"
+echo ""
+echo "  - by default, the content of \$CARATE_STIMELA_PULLFOLDER is"
+echo "    not deleted. This can be prevented using the switch"
+echo "    --stimela-delete-pullfolder or -sdp" 
 echo ""
 echo "  - when switch --singularity-minimal or -sm is set, a directory"
 echo "    minimal_singularity is created (if not existing or if -f is set),"
@@ -684,9 +978,9 @@ echo "    are copied into the msdir directory in the extended_singularity"
 echo "    directory and extendedConfig.yml is edited to point to those .ms"
 echo "    files in the variable dataid, then caracal is run with"
 echo "    extendedConfig.yml and declared successful if certain expected files"
-echo "    are created (see exceptions using variable CARATE_COPY_DATA_ID or"
-echo "     switches --keep-config-source, -ks, --copy-config-data -cc,"
-echo "     --copy-data-id, -ci below)."
+echo "    are created (see exceptions using variable CARATE_RAW_DATA_ID or"
+echo "     switches --keep-config-dataid, -kd, --copy-config-data -cc,"
+echo "     --copy-data-id, -ci, --test-data-read-only, -ro below)."
 echo ""
 echo "  - when switch --docker-minimal or -dm is set, a directory \-"
 echo "    minimal_docker is created (if not existing or if -f is set), the"
@@ -697,9 +991,9 @@ echo "    copied into the msdir directory in the minimal_docker directory"
 echo "    and minitestConfig.yml is edited to point to those .ms files in the"
 echo "    variable dataid, then caracal is run with minitestConfig.yml and"
 echo "    declared successful if certain expected files are created (see"
-echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci below)."
+echo "    exceptions using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci --test-data-read-only, -ro below)."
 echo ""
 echo "  - when switch --docker_extended or -da is set, a directory"
 echo "    extended_docker is created (if not existing or if -f is set), the"
@@ -710,9 +1004,9 @@ echo "    copied into the msdir directory in the extended_docker directory"
 echo "    and extendedConfig.yml is edited to point to those .ms files in"
 echo "    the variable dataid, then caracal is run with extendedConfig.yml"
 echo "    and declared successful if certain expected files are created (see"
-echo "    exceptions using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci below)."
+echo "    exceptions using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci, --test-data-read-only, -ro below)."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --singularity-installation or -si set,"
@@ -721,9 +1015,9 @@ echo "    singularity test in the directory prefix_singularity, where prefix"
 echo "    is the prefix of the yaml file. The line dataid: ['...','...'] in"
 echo "    that file is replaced by the appropriate line to process the test"
 echo "    data sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
-echo "    changed using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
-echo "    -ci . See below for those exceptions."
+echo "    changed using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
+echo "    -ci. See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_CONFIG_SOURCE is set in"
 echo "    combination with switches --docker-installation or -di set, then"
@@ -732,8 +1026,8 @@ echo "    test in the directory prefix_singularity, where prefix is the"
 echo "    prefix of the yaml file. The line dataid: ['...','...'] in that"
 echo "    file is replaced by the appropriate line to process the test data"
 echo "    sets in \$CARATE_TEST_DATA_DIR unless expressively prevented or"
-echo "    changed using variable CARATE_COPY_DATA_ID or switches"
-echo "    --keep-config-source, -ks, --copy-config-data -cc, --copy-data-id"
+echo "    changed using variable CARATE_RAW_DATA_ID or switches"
+echo "    --keep-config-dataid, -kd, --copy-config-data -cc, --copy-data-id"
 echo "    -ci . See below for those exceptions."
 echo ""
 echo "  - when environment variable CARATE_INPUT_DIR is set the contents of"
@@ -751,7 +1045,7 @@ echo "    direcory is used as the Stimela location. Notice that all environ-"
 echo "    ment variables can be re-defined by using appropriate switches,"
 echo "    in this case --local-stimela or -lst." 
 echo ""
-echo "  - when environment variable CARATE_COPY_DATA_ID is set, it contains"
+echo "  - when environment variable CARATE_RAW_DATA_ID is set, it contains"
 echo "    a comma- or space-separated list of dataids (Measurement Set names"
 echo "    without the .ms suffixes). Instead of using all data sets in the"
 echo "    test data directory, only data sets with that ID are used and the"
@@ -762,9 +1056,14 @@ echo ""
 echo "  - when switches --copy-config-data or -cc are set, the dataids"
 echo "    (Measurement Set names without the .ms suffixes) are read from"
 echo "    the configuration file parameter dataid unless it is not empty."
-echo "    Dataids set in CARATE_COPY_DATA_ID or by using switches"
+echo "    Dataids set in CARATE_RAW_DATA_ID or by using switches"
 echo "    --copy-config-data or -cc get preference and --copy-config-data"
 echo "    or -cc is ignored if they are set."
+echo ""
+echo "  - when switches --test-data-read-only or -ro are set, the test data will"
+echo "    not be copied but the content of the parameter rawdatadir in the yml"
+echo "    file will be replaced by CARATE_TEST_DATA_DIR or the argument of the"
+echo "    switches --test-data-dir or -td."
 echo ""
 echo "  - when switches --omit-copy-test-data -od are set, the test data"
 echo "    will not be copied if for a test run the directory with the test"
@@ -953,7 +1252,7 @@ then
     echo " caratekit.sh the default is that the contents of the parameter dataid"
     echo " will be replaced to reflect the measurement sets found in the"
     echo " \${rawdata} directory. This can be overridden by using the caratekit.sh"
-    echo " -kc switch. A (partial) data reduction is then conducted following the"
+    echo " -kd switch. A (partial) data reduction is then conducted following the"
     echo " command (Docker):"
     echo ""
     echo "   \$ caratekit.sh -ws \${workspace} -cd -di -ct \${caracal_testdir} -rp"
@@ -977,6 +1276,29 @@ then
     echo ""
     kill "$PPID"; exit 1;
 fi
+
+function ahighereqb {
+
+    # supply two dot-separated lists of integers, returns 0 if first denotes higher or equal version than second, 1 otherwise
+    
+    local a
+    local b
+    
+    a=(`echo ${1} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+    b=(`echo ${2} | awk 'BEGIN{FS="."}{print $1,$2,$3}'`)
+
+    echo a ${a[@]}
+    echo b ${b[@]}
+
+    (( ${a[0]} > ${b[0]} )) && return 0
+    (( ${a[0]} < ${b[0]} )) && return 1
+    (( ${a[1]} > ${b[1]} )) && return 0
+    (( ${a[1]} < ${b[1]} )) && return 1
+    (( ${a[2]} > ${b[2]} )) && return 0
+    (( ${a[2]} < ${b[2]} )) && return 1
+    
+    return 0
+}
 
 function isin {
     
@@ -1032,15 +1354,15 @@ then
     echo "upgrading/installing and then stopping."
     echo ""
 
-        # Create a tempdir to pip clone caracal
+    # Create a tempdir to pip clone caracal
     mytmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
     
     # Create a trap to delete mytmpdir
     function cleanup {      
 	rm -rf ${mytmpdir}
 	kill "$PPID"; \
-	exit 0; \
-    }
+	    exit 0; \
+	    }
     
     # register the cleanup function to be called on the EXIT signal
     trap cleanup EXIT
@@ -1048,100 +1370,117 @@ then
     # Now clone caracal
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
-	    [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
+	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL}/* ${mytmpdir}/
     else
-    [[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git ${mytmpdir}
-#    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
+	[[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git ${mytmpdir}
+	#    [[ -n ${FS} ]] || cp /home/jozsa/software/caracal/caratekit.sh ${mytmpdir}/
     fi
     
     # Check out desired branch
     cd ${mytmpdir}
-
+    
     # Upon pypi release this has to be updated
     #    [[ -z ${CR} ]] || { \
-    #	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
-    #	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
-    #    }
+	#	CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
+	#	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
+	#    }
     
-    [[ -z ${CR} ]] || { \
-	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || { \
-	    "Not possible to both define a build id and requesting release branch at the same time."; \
-	    kill "$PPID"; \
-	    exit 1; \
-	}
-	CR="0.1.0"; \
-	thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
-    }
-    
-    [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
-    
-    [[ -z ${thabuild} ]] || git checkout ${thabuild}
-
-    echo ""
-    # Now ask if you can actually do this
-    [[ -z ${caratekit_install} ]] || { \
-	echo "The current caratekit.sh"; \
-	echo "${caratekit_install}"; \
-	echo "will be replaced by"; \
-    }
-    echo "caratekit.sh from"
-    echo "https://github.com/caracal-pipeline/caracal"
-    [[ -z ${CR} ]] || echo "Release ${CR}"
-    [[ -z ${thabuild} ]] || echo "Build ${thabuild}"
-    echo "will be installed"
-    [[ -z ${caratekit_install} ]] || echo "replacing the former one."
-    echo ""
-
-    if [[ -z ${OR} ]]
-    then
-	waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+#	pip --version &>/dev/null || alias pip="pip3"; \
+#	pip --version &>/dev/null || { echo "pip not working. Please install Python, pip, or virtualenv. Stopping."; kill "$PPID"; exit 1; }; \
+    [[ -z ${CR} ]] || \
+	{ \
+	  [[ -z ${CARATE_CARACAL_BUILD_ID} ]] || \
+	      { \
+		"Not possible to both define a build id and requesting release branch at the same time."; \
+		kill "$PPID"; \
+		exit 1; \
+	      }
+	  CR=''
+	  pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
+	      [[ -n ${CR} ]] || \
+		  { \
+		    pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
+		  }; \
+	      [[ -n ${CR} ]] || \
+		  { \
+		    echo "Please install Python to find the latest release tag of CARACal."; \
+		    echo "Stopping."; \
+		    kill "$PPID"; \
+		    exit 1; \
+		  }; \
+	      thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`; \
+	      }
+	
+	[[ -z ${CARATE_CARACAL_BUILD_ID} ]] || thabuild=${CARATE_CARACAL_BUILD_ID}
+	
+	[[ -z ${thabuild} ]] || git checkout ${thabuild}
+	
 	echo ""
-    fi
-
-    if [[ -z ${caratekit_install} ]]
-    then	
-    	echo "Please provide installation directory (/usr/local/bin)"
-	no_response=true
-	while [ "$no_response" == true ]; do
-	    read proceed
-	    proceed=`echo ${proceed} | sed 's:/*$::'`
-	    if [[ -d ${proceed} ]]
-	    then
-		proceed=${proceed}/caratekit.sh
-		no_response=false
-	    elif [[ -z ${proceed} ]]
-	    then
-		proceed="/usr/local/bin/caratekit.sh"
-		no_response=false
-	    else
-		echo "Please provide an existing path to a directory"
+	# Now ask if you can actually do this
+	[[ -z ${caratekit_install} ]] || \
+	    { \
+	      echo "The current caratekit.sh"; \
+	      echo "${caratekit_install}"; \
+	      echo "will be replaced by"; \
+	    }
+	echo "caratekit.sh from"
+	echo "https://github.com/caracal-pipeline/caracal"
+	[[ -z ${CR} ]] || echo "Release ${CR}"
+	[[ -z ${thabuild} ]] || echo "Build ${thabuild}"
+	echo "will be installed"
+	[[ -z ${caratekit_install} ]] || echo "replacing the former one."
+	echo ""
+	
+	if [[ -z ${OR} ]]
+	then
+	    waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
+	fi
+	
+	if [[ -z ${caratekit_install} ]]
+	then	
+    	    echo "Please provide installation directory (/usr/local/bin)"
+	    no_response=true
+	    while [ "$no_response" == true ]; do
+		read proceed
+		proceed=`echo ${proceed} | sed 's:/*$::'`
+		if [[ -d ${proceed} ]]
+		then
+		    proceed=${proceed}/caratekit.sh
+		    no_response=false
+		elif [[ -z ${proceed} ]]
+		then
+		    proceed="/usr/local/bin/caratekit.sh"
+		    no_response=false
+		else
+		    echo "Please provide an existing path to a directory"
 	    fi
 	done
     else
 	proceed=${caratekit_install}
     fi
-    echo ""
     
     # Now try to copy the file
     success=false
     echo "Trying:"
     echo "\$ cp caratekit.sh ${proceed}"
     cp caratekit.sh ${proceed} &>/dev/null && success=true || true
-    [[ ${success} == true ]] || { \
-	echo "Normal copy failed, trying to use sudo:"; \
-	echo "\$ sudo cp caratekit.sh ${proceed}"; \
-#	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
-	sudo cp caratekit.sh ${proceed} && success=true || true ; \
-    }
-    [[ ${success} == true ]] || { \
-	echo "No success, aborting"; \
-	kill "$PPID"; \
-	exit 1; \
-    }
+    [[ ${success} == true ]] || \
+	{ \
+	  echo "Normal copy failed, trying to use sudo:"; \
+	  echo "\$ sudo cp caratekit.sh ${proceed}"; \
+	  #	sudo cp caratekit.sh ${proceed} &>/dev/null && success=true || true ; \
+	  sudo cp caratekit.sh ${proceed} && success=true || true ; \
+	}
+    [[ ${success} == true ]] || \
+	{ \
+	  echo "No success, aborting"; \
+	  kill "$PPID"; \
+	  exit 1; \
+	}
     echo ""
     
     caracalpath=`echo ${proceed} | sed 's|/[^/]*$||'`
-
+    
     # Check if the directory is in path
     case :$PATH: # notice colons around the value
     in *:${caracalpath}:*) ;; # do nothing, it's there
@@ -1189,13 +1528,14 @@ echo "##########"
 echo ""
 
 # Environment variables
-[[ -n "$CARATE_WORKSPACE" ]] || { \
-    echo "You have to define a global CARATE_WORKSPACE variable, like (if you're\nusing bash):";\
-    echo "$ export CARATE_WORKSPACE=\"/home/username/caracal_tests\"";\
-    echo "Or use the -ws switch. It is the top level directory of all tests.";\
-    echo "";\
-    kill "$PPID"; exit 1;
-}
+[[ -n "$CARATE_WORKSPACE" ]] || \
+    { \
+      echo "You have to define a global CARATE_WORKSPACE variable, like (if you're\nusing bash):";\
+      echo "$ export CARATE_WORKSPACE=\"/home/username/caracal_tests\"";\
+      echo "Or use the -ws switch. It is the top level directory of all tests.";\
+      echo "";\
+      kill "$PPID"; exit 1;
+    }
 
 # Create header to script
 ss="workspace=${CARATE_WORKSPACE}"
@@ -1218,23 +1558,24 @@ fi
 # If there is an error of the first kind, check if the od switch is set
 if [[ ${tdfault} == 1 ]]
 then
-    [[ -z ${OD} ]] || { \
-	tdfault = 0;
+    [[ -z ${OD} ]] || \
+	{ \
+	  tdfault = 0;
 	}
 fi
 
-
-(( $tdfault == 0 )) || { \
-    echo "You have to define a CARATE_TEST_DATA_DIR variable, like (if";\
-    echo "you're using bash):";\
-    echo "$ export CARATE_TEST_DATA_DIR=\"/home/username/caracal_tests/rawdata\"";\
-    echo "Or use the -td switch.";\
-    echo "You also have to create that directory $CARATE_TEST_DATA_DIR";\
-    echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
-    echo "These test data will be copied across for the test.";\
-    kill "$PPID"; \
-    exit 1; \
-}
+(( $tdfault == 0 )) || \
+    { \
+      echo "You have to define a CARATE_TEST_DATA_DIR variable, like (if";\
+      echo "you're using bash):";\
+      echo "$ export CARATE_TEST_DATA_DIR=\"/home/username/caracal_tests/rawdata\"";\
+      echo "Or use the -td switch.";\
+      echo "You also have to create that directory $CARATE_TEST_DATA_DIR";\
+      echo "and put test rawdata therein: a.ms  b.ms c.ms ...";\
+      echo "These test data will be copied across for the test.";\
+      kill "$PPID"; \
+      exit 1; \
+    }
 
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+="test_data_dir=${CARATE_TEST_DATA_DIR}"
 [[ ! -n "${CARATE_TEST_DATA_DIR}" ]] || ss+=$'\n'
@@ -1253,14 +1594,35 @@ fi
     } ; \
 }
 
-[[ -z ${CR} ]] || { \
-    # Upon pypi release this has to be updated
-    # CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'`; \
-    CR="0.1.0"
-    [[ -n CARATE_CARACAL_TEST_ID ]] || { \
-	CARATE_CARACAL_TEST_ID=${CR}; \
-    }; \
-}
+# Do not define more than one home
+counts=0
+[[ -z ${HW} ]] || (( counts+=1 ))
+[[ -z ${HO} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_HOME_FOLDER} ]] || (( counts+=1 ))
+(( ${counts} < 2 )) || { \
+    echo "Use maximally one of switches and variables defined with -hw -ho -hf."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+(( ${counts} > 0 )) || \
+    { \
+      HT=1; \
+    }
+
+[[ -z ${CR} ]] || \
+    { \
+      # Upon pypi release this has to be updated
+      CR=''
+      pip search caracal  &>/dev/null && CR=`pip search caracal | grep "LATEST:" | awk '{print $2}'` ; \
+	  [[ -n ${CR} ]] || \
+	      { \
+		pip search caracal &>/dev/null && CR=`pip search caracal | awk '{print $2}' | sed 's/(//;s/)//'` ; \
+	      }; \
+	  [[ -n CARATE_CARACAL_TEST_ID ]] || \
+	      { \
+		CARATE_CARACAL_TEST_ID=${CR}; \
+	      }; \
+	  }
 
 [[ -n "$CARATE_CARACAL_TEST_ID" ]] || { \
     echo "Without build number you have to define a global CARATE_CARACAL_TEST_ID"; \
@@ -1350,6 +1712,63 @@ numberoftests=0
 	kill "$PPID"; exit 1;
     }
 
+[[ -z ${MD} ]] || \
+    [[ -z ${RO} ]] || \
+    {\
+     echo  "Switches --move-test-data or -md and --test-data-read-only or -ro are mutually exclusive.";\
+     echo "Exiting";\
+     echo "";\
+     kill "$PPID"; exit 1;
+    }
+
+		   
+
+# Singularity directories, avoid conflicts
+counts=0
+[[ -z ${STW} ]] || (( counts+=1 ))
+[[ -z ${STH} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_SINGULARITY_TMPDIR} ]] || (( counts+=1 ))
+(( ${counts}<2 )) || { \
+    echo "Use maximally one of switches and variables defined with -stw -sth -std."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+
+counts=0
+[[ -z ${SCW} ]] || (( counts+=1 ))
+[[ -z ${SCH} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_SINGULARITY_CACHEDIR} ]] || (( counts+=1 ))
+(( ${counts}<2 )) || { \
+    echo "Use maximally one of switches and variables defined with -scw -sch -scd."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+
+counts=0
+[[ -z ${SLW} ]] || (( counts+=1 ))
+[[ -z ${SLH} ]] || { (( counts+=1 )); }
+[[ -z ${CARATE_SINGULARITY_LOCALCACHEDIR} ]] || (( counts+=1 ))
+(( ${counts}<2 )) || { \
+    echo "Use maximally one of switches and variables defined with -slw -slh -sld."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+
+spfcounts=0
+[[ -z ${SPW} ]] || (( spfcounts+=1 ))
+[[ -z ${SPH} ]] || { (( spfcounts+=1 )); }
+[[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || (( spfcounts+=1 ))
+(( ${spfcounts}<2 )) || { \
+    echo "Use maximally one of switches and variables defined with -spw -sph -spf."; \
+    kill "$PPID"; \
+    exit 1; \
+    }
+
+# Default
+(( ${spfcounts} > 0 )) || { \
+			 [[ -n ${STIMELA_PULLFOLDER} ]] || SPW=1 ; \
+    }
+
 # Start test
 echo "##########################################"
 echo " CARACal test $CARATE_CARACAL_TEST_ID"
@@ -1387,17 +1806,52 @@ else
 fi
 
 # Save home for later
-if [[ -n $HOME ]]
+if [[ -z ${HO} ]]
 then
-    [[ -n ${KH} ]] || ss+="HOME_OLD=\${HOME}"
-    [[ -n ${KH} ]] || ss+=$'\n'
-    [[ -n ${KH} ]] || HOME_OLD=${HOME}
+    [[ -z ${HOME} ]] && HOME_del=1 || \
+	    { \
+	      ss+="HOME_OLD=\${HOME}" ; \
+	      ss+=$'\n' ; \
+	      HOME_OLD=${HOME} ; \
+	    }
 fi
-if [[ -n ${PYTHONPATH} ]]
+
+[[ -z ${PYTHONPATH} ]] && PYTHONPATH_del=1 || \
+	{ \
+	  ss+="PYTHONPATH_OLD=\${PYTHONPATH}" ; \
+	  ss+=$'\n' ; \
+	  PYTHONPATH_OLD=${PYTHONPATH} ; \
+	}
+
+if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
 then
-    ss+="PYTHONPATH_OLD=\${PYTHONPATH}"
-    ss+=$'\n'
-    PYTHONPATH_OLD=${PYTHONPATH}
+    
+    # Save them if they are present
+    [[ -z ${SINGULARITY_CACHEDIR} ]] && CARACAL_SINGULARITY_CACHEDIR_del=1 || { \
+	ss+="CARATE_SINGULARITY_CACHEDIR_OLD=\${SINGULARITY_CACHEDIR}" ; \
+	ss+=$'\n'
+	CARATE_SINGULARITY_CACHEDIR_OLD=${SINGULARITY_CACHEDIR} ; \
+	}
+    [[ -z ${SINGULARITY_DISABLE_CACHE} ]] && CARACAL_SINGULARITY_DISABLE_CACHE_del=1 || { \
+	ss+="CARATE_SINGULARITY_DISABLE_CACHE_OLD=\${SINGULARITY_DISABLE_CACHE}" ; \
+	ss+=$'\n'
+	CARATE_SINGULARITY_DISABLE_CACHE_OLD=${SINGULARITY_DISABLE_CACHE} ; \
+	}
+    [[ -z ${SINGULARITY_LOCALCACHEDIR} ]] && CARACAL_SINGULARITY_LOCALCACHEDIR_del=1 || { \
+	ss+="CARATE_SINGULARITY_LOCALCACHEDIR_OLD=\${SINGULARITY_LOCALCACHEDIR}" ; \
+	ss+=$'\n'
+	CARATE_SINGULARITY_LOCALCACHEDIR_OLD=${SINGULARITY_LOCALCACHEDIR} ; \
+	}
+    [[ -z ${SINGULARITY_TMPDIR} ]] && CARACAL_SINGULARITY_TMPDIR_del=1 || { \
+	ss+="CARATE_SINGULARITY_TMPDIR_OLD=\${SINGULARITY_TMPDIR}" ; \
+	ss+=$'\n'
+        CARATE_SINGULARITY_TMPDIR_OLD=${SINGULARITY_TMPDIR} ; \
+	}
+    [[ -z ${STIMELA_PULLFOLDER} ]]  && STIMELA_PULLFOLDER_del=1 || { \
+	ss+="CARATE_STIMELA_PULLFOLDER_OLD=\${STIMELA_PULLFOLDER}" ; \
+	ss+=$'\n'
+        CARATE_STIMELA_PULLFOLDER_OLD=${STIMELA_PULLFOLDER} ; \
+	}
 fi
 
 if [[ -n "$CARATE_CONFIG_SOURCE" ]]
@@ -1421,7 +1875,9 @@ fi
 # Determine CARATE_CARACAL_RUN_MEDIFIX to be something
 [[ -n ${CARATE_CARACAL_RUN_MEDIFIX} ]] && CARATE_CARACAL_RUN_MEDIFIX="-${CARATE_CARACAL_RUN_MEDIFIX}" || CARATE_CARACAL_RUN_MEDIFIX=""
 
-# This ensures that when stopping, the $HOME environment variable is restored
+use_pull_force=""
+[[ -z ${PF} ]] || (( ${FORCE} == 0 )) || use_pull_force=" -f"
+
 # Variable defininition ends here in script
 ss+=""
 ss+=$'\n'
@@ -1430,13 +1886,24 @@ ss+=$'\n'
 echo "The directory"
 echo "$CARATE_WORKSPACE/$CARATE_CARACAL_TEST_ID"
 echo "and its content will be created/changed."
-echo "The directory $CARATE_WORKSPACE/.singularity might be created/changed"
-echo ""
+
+if [[ -n ${SM} ]] || [[ -n ${SA} ]] || [[ -n ${SI} ]] || [[ -n ${SSC} ]]
+then
+[[ -z ${SDP} ]] || { \
+       [[ -z ${SPW} ]] || echo "The Singularity pull folder ${CARATE_WORKSPACE}/stimela_pullfolder" ; \
+    [[ -z ${SPT} ]] || echo "The Singularity pull folder ${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}/stimela_pullfolder" ; \
+    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || echo "The Stimela pull folder ${CARATE_STIMELA_PULLFOLDER}" ; \
+    [[ -z ${STIMELA_PULLFOLDER} ]] || (( ${spfcounts} > 0 )) || echo "The Stimela pull folder ${STIMELA_PULLFOLDER}" ; \
+    echo "will be deleted and a reinstallation will be attempted." ; \
+    }
+fi
+[[ -z ${use_pull_force} ]] || echo "The -f switch will be used if stimela pull is used"
+echo "Depending on the settings, other directories"
+echo "will also be changed."
 
 if [[ -z ${OR} ]]
 then
     waitforresponse "Is that ok?" || { echo "Cowardly quitting"; kill "$PPID"; exit 1; }
-    echo ""
 fi
 
 # Check if workspace_root exists if we do not use force
@@ -1445,7 +1912,6 @@ then
     if [[ -d $WORKSPACE_ROOT ]]
     then
         echo "Be aware that no existing file will be replaced, use -f to override"
-        echo ""
     fi
 fi
 
@@ -1473,39 +1939,38 @@ checkex () {
 
     if [[ -d ${tocheck} ]]
     then
-	files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
-	for file in ${files[@]}
-	do
-	    echo file ${file}
-	    e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
-	    [[ ${e} == "" ]] && unset e
-	    [[ -z ${e} ]] || { \
-		a=`basename $file`; \
-		b=`find $tocheck -name $a` || true; \
-		c=($b); \
-		}
-	    for subfile in ${c[@]}
-	    do
-		d=`stat -c %i $subfile`	
-		[[ ${e} != ${d} ]] || { return 0; }
-	    done
-	done
+ files=(${CARATE_VIRTUALENV} ${CARATE_LOCAL_STIMELA} ${CARATE_INPUT_DIR} ${CARATE_LOCAL_CARACAL} ${CARATE_WORKSPACE} ${CARATE_TEST_DATA_DIR} ${CARATE_CONFIG_SOURCE})
+ for file in ${files[@]}
+ do
+     e=`[[ -e ${file} ]] && stat -c %i ${file} || echo ""`
+     [[ ${e} == "" ]] && unset e
+     [[ -z ${e} ]] || { \
+  a=`basename $file`; \
+  b=`find $tocheck -name $a` || true; \
+  c=($b); \
+  }
+     for subfile in ${c[@]}
+     do
+  d=`stat -c %i $subfile` 
+  [[ ${e} != ${d} ]] || { return 0; }
+     done
+ done
     else
-	[[ -f ${tocheck} ]] && e=`stat -c %i ${tocheck}`
-	files=(${CARATE_CONFIG_SOURCE})
-	for file in ${files[@]}
-	do
-	    d=`stat -c %i $file`
-	    [[ ${e} != ${d} ]] || { return 0; }
-	done
+ [[ -f ${tocheck} ]] && e=`stat -c %i ${tocheck}`
+ files=(${CARATE_CONFIG_SOURCE})
+ for file in ${files[@]}
+ do
+     d=`stat -c %i $file`
+     [[ ${e} != ${d} ]] || { return 0; }
+ done
     fi
     return 1
 }
 
+echo ""
 echo "##########################################"
 echo " Setting up build in $WORKSPACE_ROOT"
 echo "##########################################"
-echo
 
 ss+="mkdir -p \${workspace_root}"
 mkdir -p ${WORKSPACE_ROOT}
@@ -1531,7 +1996,7 @@ SYA=${WORKSPACE_ROOT}/report/${CARATE_CARACAL_TEST_ID}${CARATE_CARACAL_RUN_MEDIF
 
 # Empty into the sysinfo
 [[ ! -e ${SYA} ]] || (( ${FORCE} == 0 )) || checkex ${SYA} || rm -rf ${SYA}
-echo "$sya" >> ${SYA}
+echo "${sya}" >> ${SYA}
 
 # Search for test data and set variable accordingly
 if [[ -d ${CARATE_TEST_DATA_DIR} ]]
@@ -1555,29 +2020,27 @@ then
 
     [[ -z ${CC} ]] || (( ${#dataid_config[@]} == 0 )) || dataid_final=( ${dataid_config[@]} )
     
-    dataid_provided=( )
     # Third attempt: use dataids from the command line
-    [[ -z ${CARATE_COPY_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_COPY_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
-
-    echo ${CARATE_COPY_DATA_ID} | grep dataid | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}
+    dataid_provided=( )
+    [[ -z ${CARATE_RAW_DATA_ID} ]] || dataid_provided=( `echo ${CARATE_RAW_DATA_ID} | sed {'s/]/ /g;s/\[/ /g;s/\x27/ /g;s/\,/ /g;s/dataid:/ /g'}` )
     
     # More than one found, means that the final data ids are changed
     (( ${#dataid_provided[@]} == 0 )) || dataid_final=( ${dataid_provided[@]} )
 
     # OK, now we check if the data sets requested are present in the directory
     [[ -n ${OD} ]] || \
-	isin dataid_final idlist || { \
-	    echo "The test data specified either directly or using"; \
-	    echo "the configuration file with the ids"; \
-	    echo "${dataid_final[@]}"; \
-	    echo "are not present in the"; \
-	    echo "test data directory"; \
-	    echo "$CARATE_TEST_DATA_DIR"; \
-	    echo "Quitting."; \
-	    echo ""; \
-	    kill "$PPID"; \
-	    exit 1; \
-	    }
+ isin dataid_final idlist || { \
+     echo "The test data specified either directly or using"; \
+     echo "the configuration file with the ids"; \
+     echo "${dataid_final[@]}"; \
+     echo "are not present in the"; \
+     echo "test data directory"; \
+     echo "$CARATE_TEST_DATA_DIR"; \
+     echo "Quitting."; \
+     echo ""; \
+     kill "$PPID"; \
+     exit 1; \
+     }
 
     isalternative=0
     
@@ -1604,6 +2067,16 @@ then
 	fi
     fi
     
+    if (( ${#dataid_final[@]} != 0 ))
+    then
+	echo ""
+	echo "You are using the following data sets:"
+        for ii in ${dataid_final[@]}
+	do
+	    echo "${CARATE_TEST_DATA_DIR}/${ii}.ms "
+	done
+    fi
+
     isshort=0
     # Check if the test data are the standard data and ask if this is ok
     if isin dataid_final SHORT_TEST_DATA_IDS && isin SHORT_TEST_DATA_IDS dataid_final
@@ -1645,7 +2118,7 @@ then
 	    then
 		waitforresponse "Proceed?" || { echo "OK, stopping."; kill "$PPID"; exit 1; }
 	    fi
-		echo ""
+	    echo ""
 	fi
     fi
 
@@ -1659,9 +2132,7 @@ then
 	stringcopytestdatastr+="\${test_data_dir}/${ii}.ms "
     done
 
-    #echo copytestdatastr ${copytestdatastr}
-    #echo stringcopytestdatastr ${stringcopytestdatastr}
-    
+    echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     [[ -z "$mss" ]] || sya=`ls -d ${CARATE_TEST_DATA_DIR}/*.ms | sed '{s=.*/==}' | sed '{:q;N;s/\n/, /g;t q}'`
@@ -1670,14 +2141,13 @@ then
     # Size of test data
     outsize=`du -ms ${CARATE_TEST_DATA_DIR} | awk '{print $1}'`
     echo "Total size of test data directory: ${outsize} MB" >> ${SYA}
-    [[ -z ${KC} ]] || { echo "--keep-config-source or -kc switch is set."; \
-			echo "The real test data might hence be different."; \
+    [[ -z ${KD} ]] || { echo "--keep-config-dataid or -kd switch is set."; \
+   echo "The real test data might hence be different."; \
     }
     [[ -z ${OD} ]] || { echo "--omit-copy-test-data or -od switch is set."; \
-			echo "The real test data might hence be different."; \
+   echo "The real test data might hence be different."; \
     }
     echo ""
-    echo "" >> ${SYA}
 fi
 
 # This contains a list of tests made
@@ -1698,33 +2168,37 @@ function cleanup {
 
     if (( success == 0 ))
     then
-	echo "##########################################"
-	echo ""
-	echo ${kkfailquotes[$(( $RANDOM % 16 ))]}
-	echo "Caratekit failed."
-	echo ""
-	echo "##########################################"
-	echo ""
+ echo ""
+ echo "##########################################"
+ echo ""
+ echo ${kkfailquotes[$(( $RANDOM % 16 ))]}
+ echo "Caratekit failed."
+ echo ""
+ echo "##########################################"
+ echo ""
+    echo "" >> ${SYA}
         echo "############" >> ${SYA}
         echo "" >> ${SYA}
         echo "Test failed." >> ${SYA}
-        echo "" >> ${SYA}
     else
-	echo "###########################################################"
-	echo ""
-	echo ${kksuccessquotes[$(( $RANDOM % 2 ))]}
-	echo "Caratekit succeeded."
-	echo ""
-	echo "###########################################################"
-	echo ""
-	echo "###############" >> ${SYA}
-	echo "" >> ${SYA}
-	echo "Test succeeded." >> ${SYA}
-	echo "" >> ${SYA}
+ echo ""
+ echo "###########################################################"
+ echo ""
+ echo ${kksuccessquotes[$(( $RANDOM % 2 ))]}
+ echo "Caratekit succeeded."
+ echo ""
+ echo "###########################################################"
+ echo ""
+ echo "" >> ${SYA}
+ echo "###############" >> ${SYA}
+ echo "" >> ${SYA}
+ echo "Test succeeded." >> ${SYA}
+ echo "" >> ${SYA}
     fi
 
     [[ -z ${endimessage} ]] || echo "${endimessage}"
 
+    echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     sya=" End time: "; sya+=`date -u`;
@@ -1732,64 +2206,190 @@ function cleanup {
     echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
 
-    
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS}
-    [[ -n ${KH} ]] || export HOME=${OLD_HOME}
+    if [[ -z ${HO} ]]
+       then
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS}
+               export HOME=${HOME_OLD}
+	   else
+	       echo "unset HOME" >> ${SS}
+	       unset HOME
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
-	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
-	export PYTHONPATH=${PYTHONPATH_OLD}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS}
+            export PYTHONPATH=${PYTHONPATH_OLD}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS} ; \
+		  unset PYTHONPATH ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_CACHEDIR_OLD} ]]
+    then
+	if [[ -z ${CARACAL_SINGULARITY_CACHEDIR_del} ]]
+	then
+            echo "export SINGULARITY_CACHEDIR=\${CARATE_SINGULARITY_CACHEDIR_OLD}" >> ${SS}
+            export SINGULARITY_CACHEDIR=${CARATE_SINGULARITY_CACHEDIR_OLD}
+	else
+	    [[ -z ${SINGULARITY_CACHEDIR} ]] || \
+		{ \
+		  echo "unset SINGULARITY_CACHEDIR" >> ${SS} ; \
+		  unset SINGULARITY_CACHEDIR ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_DISABLE_CACHE_OLD} ]]
+    then
+	if [[ -z ${CARACAL_SINGULARITY_DISABLE_CACHE_del} ]]
+	then
+            echo "export SINGULARITY_DISABLE_CACHE=\${CARATE_SINGULARITY_DISABLE_CACHE_OLD}" >> ${SS}
+            export SINGULARITY_DISABLE_CACHE=${CARATE_SINGULARITY_DISABLE_CACHE_OLD}
+	else
+	    [[ -z ${SINGULARITY_DISABLE_CACHE} ]] || \
+		{ \
+		  echo "unset SINGULARITY_DISABLE_CACHE" >> ${SS} ; \
+		  unset SINGULARITY_DISABLE_CACHE ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_LOCALCACHEDIR_OLD} ]]
+    then
+	if [[ -z ${CARACAL_SINGULARITY_LOCALCACHEDIR_del} ]]
+	then
+            echo "export SINGULARITY_LOCALCACHEDIR=\${CARATE_SINGULARITY_LOCALCACHEDIR_OLD}" >> ${SS}
+            export SINGULARITY_LOCALCACHEDIR=${CARATE_SINGULARITY_LOCALCACHEDIR_OLD}
+	else
+	    [[ -z ${SINGULARITY_LOCALCACHEDIR} ]] || { \
+						  echo "unset SINGULARITY_LOCALCACHEDIR" >> ${SS} ; \
+						  unset SINGULARITY_LOCALCACHEDIR ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_SINGULARITY_TMPDIR_OLD} ]]
+    then
+	if [[ -z ${CARATE_SINGULARITY_TMPDIR_del} ]]
+	then
+	    echo "export SINGULARITY_TMPDIR=\${CARATE_SINGULARITY_TMPDIR_OLD}" >> ${SS} 
+	    export SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR_OLD}
+	else
+	    [[ -z ${SINGULARITY_TMPDIR} ]] || \
+		{ \
+		  echo "unset SINGULARITY_TMPDIR" >> ${SS} ; \
+		  unset SINGULARITY_TMPDIR ; \
+		}
+	fi
+    fi
+
+    if [[ -n ${CARATE_STIMELA_PULLFOLDER_OLD} ]]
+    then
+	if [[ -z CARATE_STIMELA_PULLFOLDER_del ]]
+	then
+	    echo "export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER_OLD}" >> ${SS} 
+	    export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER_OLD}
+	else
+	    [[ -z ${STIMELA_PULLFOLDER} ]] || \
+		{ \
+		  echo "unset STIMELA_PULLFOLDER" >> ${SS} ; \
+		  unset STIMELA_PULLFOLDER ; \
+		}
+	fi
     fi
 
     # If the number of tests is 0 we create the report directory
     if [[ ${#listoftestreps[@]} == 0 ]]
     then
-	if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
-	then
-	    mkdir -p ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}
-	    mv ${SS} ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}/
-	    mv ${SYA} ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}/
-	fi
+ if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
+ then
+     mkdir -p ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}
+     mv ${SS} ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}/
+     mv ${SYA} ${WORKSPACE_ROOT}/report/${CARATE_CARACAL_RUN_PREFIX}/
+ fi
     else
 	rm ${SS} ${SYA}
     fi
 }
 trap cleanup EXIT
 
-[[ -n ${KH} ]] || echo "export HOME=\${workspace_root}/home" >> ${SS}
-[[ -n ${KH} ]] || export HOME=${WORKSPACE_ROOT}/home
+if [[ -n ${HT} ]]
+then
+    echo "export HOME=\${workspace_root}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/${CARATE_CARACAL_TEST_ID}/home
+fi
+if [[ -n ${HW} ]]
+then
+    echo "export HOME=\${workspace}/home"
+    echo "export HOME=\${workspace}/home" >> ${SS}
+    export HOME=${CARATE_WORKSPACE}/home
+fi
+if [[ -n ${CARATE_HOME_FOLDER} ]]
+then
+    echo "export HOME=${CARATE_HOME_FOLDER}"
+    echo "export HOME=${CARATE_HOME_FOLDER}" >> ${SS}
+    export HOME=${CARATE_HOME_FOLDER}
+fi
+
+[[ -n ${HOME} ]] || \
+    { \
+      echo "No home directory defined. Cannot continue."; \
+      echo ""; \
+      kill "$PPID"; \
+      exit 1; \
+    }		      
+
 if (( ${FORCE} != 0 ))
 then
-    # We could write rm -rf ${HOME} but we are not crazy, some young hacker makes one mistake, so tons of protection...
-[[ -n ${KH} ]] || \
+    # This is dangerous, use with great care, poison
+    [[ -n ${HN} ]] || \
 	[[ -n ${ORSR} ]] || \
-	false || { \
-	  [[ ${WORKSPACE_ROOT}/home == ${OLD_HOME} ]] && \
-	      echo "We do not delete ${OLD_HOME}"; \
-	} || { \
-	    [[ ${WORKSPACE_ROOT}/home == /home/${USER} ]] && \
-		echo "We do not delete /home/${USER}"; \
-	} || { \
-	    echo "rm -rf \${WORKSPACE_ROOT}/home" >> ${SS}; \
-	    [[ -n ${FS} ]] || \
-		rm -rf \${WORKSPACE_ROOT}/home; \
+	{ \
+	  [[ ${HOME} == ${HOME_OLD} ]] && \
+	      echo "We do not delete ${HOME_OLD}"; \
+	} || \
+	{ \
+	  [[ ${HOME} == /home/${USER} ]] && \
+	      echo "We do not delete /home/${USER}"; \
+	} || \
+	{ \
+	  echo "rm -rf \${HOME}" >> ${SS}; \
+          [[ -n ${FS} ]] || \
+	      { \
+		rm -rf ${HOME}; \
+	      } \
 	}
 fi
 
-[[ -n ${KH} ]] || echo "mkdir -p \${workspace_root}/home" >> ${SS}
-
-# Same here, don't do crazy stuff
-[[ -n ${KH} ]] || mkdir -p ${WORKSPACE_ROOT}/home
+# Check if home exists, otherwise make it
+[[ -e ${HOME} ]] || \
+    { \
+      echo "mkdir -p \${HOME}" >> ${SS}; \
+      mkdir -p ${HOME} >> ${SS}; \
+    }
 
 # For some reason we have to be somewhere
 echo "cd \${HOME}" >> ${SS}
 cd $HOME
 
 # Create virtualenv and start
+echo ""
 echo "##########################################"
 echo " Building virtualenv in $WORKSPACE_ROOT"
 echo "##########################################"
-echo
+echo ""
 
 [[ ! -z ${CARATE_VIRTUALENV} ]] || CARATE_VIRTUALENV=${WORKSPACE_ROOT}/caracal_venv
 
@@ -1797,33 +2397,42 @@ echo
 if (( ${FORCE} != 0 ))
 then
     [[ -n ${ORSR} ]] || \
-	[[ -n ${OV} ]] || \
-	[[ -n ${OC} ]] || { \
-	    checkex ${CARATE_VIRTUALENV} && \
-		[[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
-	} || { \
-	    echo "rm -rf \${cvirtualenv}" >> ${SS}; \
-	    [[ -n ${FS} ]] || \
-		rm -rf ${CARATE_VIRTUALENV}; \
-	    }
+ [[ -n ${OV} ]] || \
+ [[ -n ${OC} ]] || { \
+     checkex ${CARATE_VIRTUALENV} && \
+  [[ ${CARATE_VIRTUALENV} != ${WORKSPACE_ROOT}/caracal_venv ]]; \
+ } || { \
+     echo "rm -rf \${cvirtualenv}" >> ${SS}; \
+     [[ -n ${FS} ]] || \
+  rm -rf ${CARATE_VIRTUALENV}; \
+     }
 fi
 if [[ ! -d ${CARATE_VIRTUALENV} ]]
 then
-    [[ -n ${FS} ]] || { echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV}; } || { echo 'Using "python3 -m venv" failed when instaling virtualenv.'; echo 'Trying "virtualenv -p python3"'; echo "rm -rf \${cvirtualenv}" >> ${SS}; rm -rf ${CARATE_VIRTUALENV}; echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; }
+    [[ -n ${FS} ]] || \
+	{ echo "python3 -m venv \${cvirtualenv}" >> ${SS} && python3 -m venv ${CARATE_VIRTUALENV}; } || \
+	{ echo 'Using "python3 -m venv" failed when instaling virtualenv.'; \
+	  echo 'Trying "virtualenv -p python3"'; \
+	  echo "rm -rf \${cvirtualenv}" >> ${SS}; \
+	  rm -rf ${CARATE_VIRTUALENV}; \
+	  echo "virtualenv -p python3 \${cvirtualenv}" >> ${SS} && virtualenv -p python3 ${CARATE_VIRTUALENV}; \
+	}
 fi
 
 # Report on virtualenv
 if [[ -f ${CARATE_VIRTUALENV}/pyvenv.cfg ]]
 then
+    echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     echo "Virtualenv info (from pyvenv.cfg):" >> ${SYA}
     cat ${CARATE_VIRTUALENV}/pyvenv.cfg >> ${SYA}
-    echo "" >> ${SYA}
 fi
 
 echo "Entering virtualenv in ${WORKSPACE_ROOT}"
 echo ". \${cvirtualenv}/bin/activate" >> ${SS}
+# [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
+
 [[ -n ${FS} ]] || . ${CARATE_VIRTUALENV}/bin/activate
 
 echo "export PYTHONPATH=''" >> ${SS}
@@ -1832,13 +2441,13 @@ echo "pip install pip setuptools wheel -U"  >> ${SS}
 [[ -n ${FS} ]] || pip install pip setuptools wheel -U
 
 # Report on Python version
+echo "" >> ${SYA}
 echo "##########################################" >> ${SYA}
 echo "" >> ${SYA}
 python --version >> ${SYA}
 
 # Report on pip version
 pip --version | awk '{print $1, $2}' >> ${SYA}
-echo "" >> ${SYA}
 echo ""
 
 # Install software
@@ -1849,12 +2458,12 @@ echo
 if (( ${FORCE} == 1 ))
 then
     checkex ${WORKSPACE_ROOT}/caracal || \
-	[[ -n ${OF} ]] || \
-	echo "rm -rf \${workspace_root}/caracal" >> ${SS}
+ [[ -n ${OF} ]] || \
+ echo "rm -rf \${workspace_root}/caracal" >> ${SS}
     [[ -n ${FS} ]] || \
-	checkex ${WORKSPACE_ROOT}/caracal || \
-	[[ -n ${OF} ]] || \
-	rm -rf ${WORKSPACE_ROOT}/caracal
+ checkex ${WORKSPACE_ROOT}/caracal || \
+ [[ -n ${OF} ]] || \
+ rm -rf ${WORKSPACE_ROOT}/caracal
 fi
 
 echo "cd \${workspace_root}" >> ${SS}
@@ -1865,39 +2474,38 @@ then
     then
         echo "Not re-fetching CARACal, use -f if you want that or"
         echo "omit -of if you have set it."
-	echo ""
     else
-	echo "Fetching CARACal from local source ${local_caracal}"
+ echo "Fetching CARACal from local source ${local_caracal}"
         echo "cp -r \${local_caracal} \${workspace_root}/" >> ${SS}
-	[[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL} ${WORKSPACE_ROOT}/
+ [[ -n ${FS} ]] || cp -r ${CARATE_LOCAL_CARACAL} ${WORKSPACE_ROOT}/
     fi
 else
     if [[ -e ${WORKSPACE_ROOT}/caracal ]]
     then
         if (( ${FORCE} == 0 ))
-        then	
+        then 
             echo "Not re-fetching CARACal, use -f if you want that."
-	elif [[ -n ${OF} ]]
-	then
-	    echo "Not re-fetching CARACal, turn off -of if you want that."
+ elif [[ -n ${OF} ]]
+ then
+     echo "Not re-fetching CARACal, turn off -of if you want that."
         else
-	    echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
-	    checkex ${WORKSPACE_ROOT}/caracal || \
-		echo "rm -rf \${workspace_root}/caracal" >> ${SS}
-	    [[ -n ${FS} ]] || \
-		checkex ${WORKSPACE_ROOT}/caracal || \
-		rm -rf ${WORKSPACE_ROOT}/caracal
-	    
+     echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
+     checkex ${WORKSPACE_ROOT}/caracal || \
+  echo "rm -rf \${workspace_root}/caracal" >> ${SS}
+     [[ -n ${FS} ]] || \
+  checkex ${WORKSPACE_ROOT}/caracal || \
+  rm -rf ${WORKSPACE_ROOT}/caracal
+     
             checkex ${WORKSPACE_ROOT}/caracal || \
-		echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
+  echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
             [[ -n ${FS} ]] || \
-		checkex ${WORKSPACE_ROOT}/caracal || \
-		git clone https://github.com/caracal-pipeline/caracal.git
+  checkex ${WORKSPACE_ROOT}/caracal || \
+  git clone https://github.com/caracal-pipeline/caracal.git
         fi
     else
-	echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
-	echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
-	[[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git
+ echo "Fetching CARACal from https://github.com/caracal-pipeline/caracal.git"
+ echo "git clone https://github.com/caracal-pipeline/caracal.git" >> ${SS}
+ [[ -n ${FS} ]] || git clone https://github.com/caracal-pipeline/caracal.git
     fi
 fi
 
@@ -1906,12 +2514,12 @@ then
     echo "cd \${workspace_root}/caracal" >> ${SS}
     [[ -n ${FS} ]] || cd ${WORKSPACE_ROOT}/caracal
     [[ -z $CARATE_LOCAL_CARACAL ]] || { \
-	echo "If an error occurs here, it likely means that the local installation";\
-	echo "of CARACal does not contain the build number. You may want to use the";\
-	echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_ID:";\
-	echo "In bash: $ unset CARATE_CARACAL_BUILD_ID";\
-	echo "Also, you might have used switches --caracal-build-id or -cb, which";\
-	echo "you should not";\
+ echo "If an error occurs here, it likely means that the local installation";\
+ echo "of CARACal does not contain the build number. You may want to use the";\
+ echo "master branch and unset the environmrnt variable CARATE_CARACAL_BUILD_ID:";\
+ echo "In bash: $ unset CARATE_CARACAL_BUILD_ID";\
+ echo "Also, you might have used switches --caracal-build-id or -cb, which";\
+ echo "you should not";\
     }
     echo "git checkout ${CARATE_CARACAL_BUILD_ID}" >> ${SS}
     [[ -n ${FS} ]] || git checkout ${CARATE_CARACAL_BUILD_ID}
@@ -1921,19 +2529,19 @@ if [[ -n ${CR} ]]
 then
     echo "cd \${workspace_root}/caracal" >> ${SS}
     cd ${WORKSPACE_ROOT}/caracal
-    [[ -z $CARATE_LOCAL_CARACAL ]] || { \
-	echo "If an error occurs here, it likely means that the local installation";\
-	echo "of CARACal does not contain the latest release. Because you set the";\
-	echo "switches --caracal-release or -cr, caratekit is trying to install the";\
-	echo "latest release.";\
-    }
+    [[ -z $CARATE_LOCAL_CARACAL ]] || \
+	{ \
+	  echo "If an error occurs here, it likely means that the local installation" ; \
+	  echo "of CARACal does not contain the latest release. Because you set the" ; \
+	  echo "switches --caracal-release or -cr, caratekit is trying to install the" ; \
+	  echo "latest release."; \
+	}
     thabuild=`git ls-remote --tags https://github.com/caracal-pipeline/caracal | grep ${CR} | awk '{print $1}'`
     echo "git checkout ${thabuild}" >> ${SS}
     git checkout ${thabuild}
 fi
 
 echo ""
-
 echo "###############################"
 echo " Installing/activating CARACal "
 echo "###############################"
@@ -1947,35 +2555,38 @@ then
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall \${workspace_root}/caracal"
-	echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
+ echo "Running pip install -U --force-reinstall \${workspace_root}/caracal"
+ echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
         if [[ -z ${FS} ]]
-	then
-	    pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal && break || {
-		    echo "pip install -U --force-reinstall \${workspace_root}/caracal failed"
-		    (( ii++ ))
-		}
-	else
-	    break
-	fi
+ then
+     pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal && break || {
+      echo "pip install -U --force-reinstall \${workspace_root}/caracal failed"
+      (( ii++ ))
+  }
+ else
+     break
+ fi
     done
 fi
 
 # Checking if caratekit has changed
-caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/caratekit.sh` || true
-[[ -z ${caratekit_install_changes} ]] || { \
-    endimessage+="The installed caratekit.sh:"; endimessage+=$'\n'; \
-    endimessage+="  ${caratekit_install}"; endimessage+=$'\n'; \
-    endimessage+="differs from the one found in \${WORKSPACE_ROOT}/caracal:"; endimessage+=$'\n'; \
-    endimessage+="  ${WORKSPACE_ROOT}/caracal/caratekit.sh"; endimessage+=$'\n'; \
-    endimessage+="Consider updating your caratekit installation by typing:"; endimessage+=$'\n'; \
-    endimessage+="  $ caratekit.sh --install"; endimessage+=$'\n'; \
-    endimessage+=$'\n';
-    endimessage+="Details can be found at https://github.com/caracal-pipeline/caracal"; endimessage+=$'\n'; \
-    endimessage+=$'\n';
-    endimessage+="########################################################"
-    endimessage+=$'\n';
-}
+if [[ -z ${FS} ]]
+then
+    [[ -z ${caratekit_install} ]] || caratekit_install_changes=`diff ${caratekit_install} ${WORKSPACE_ROOT}/caracal/caratekit.sh` || true
+    [[ -z ${caratekit_install_changes} ]] || { \
+					       endimessage+="The installed caratekit.sh:"; endimessage+=$'\n'; \
+					       endimessage+="  ${caratekit_install}"; endimessage+=$'\n'; \
+					       endimessage+="differs from the one found in \${WORKSPACE_ROOT}/caracal:"; endimessage+=$'\n'; \
+					       endimessage+="  ${WORKSPACE_ROOT}/caracal/caratekit.sh"; endimessage+=$'\n'; \
+					       endimessage+="Consider updating your caratekit installation by typing:"; endimessage+=$'\n'; \
+					       endimessage+="  $ caratekit.sh --install"; endimessage+=$'\n'; \
+					       endimessage+=$'\n';
+					       endimessage+="Details can be found at https://github.com/caracal-pipeline/caracal"; endimessage+=$'\n'; \
+					       endimessage+=$'\n';
+					       endimessage+="########################################################"
+					       endimessage+=$'\n';
+    }
+fi
 
 if [[ -n ${UM} ]]
 then
@@ -1983,17 +2594,17 @@ then
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt"
-	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt" >> ${SS}
+ echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt"
+ echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt" >> ${SS}
         if [[ -z ${FS} ]]
-	then
-	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-master.txt && break || {
-		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt failed"
-		    (( ii++ ))
-		}
-	else
-	    break
-	fi
+ then
+     pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-master.txt && break || {
+      echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-master.txt failed"
+      (( ii++ ))
+  }
+ else
+     break
+ fi
     done
 fi
 
@@ -2003,17 +2614,17 @@ then
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt"
-	echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt" >> ${SS}
+ echo "Running pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt"
+ echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt" >> ${SS}
         if [[ -z ${FS} ]]
-	then
-	    pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-last_stable.txt && break || {
-		    echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt failed"
-		    (( ii++ ))
-		}
-	else
-	    break
-	fi
+ then
+     pip install -U --force-reinstall -r ${WORKSPACE_ROOT}/caracal/stimela-last_stable.txt && break || {
+      echo "pip install -U --force-reinstall -r \${workspace_root}/caracal/stimela-last_stable.txt failed"
+      (( ii++ ))
+  }
+ else
+     break
+ fi
     done
 fi
 
@@ -2025,23 +2636,24 @@ then
     ii=1
     until (( ${ii} > ${IA} ))
     do
-	echo "Running pip install -U --force-reinstall \${CARATE_LOCAL_STIMELA}"
-	echo "pip install -U --force-reinstall -r  \${local_stimela}" >> ${SS}
+ echo "Running pip install -U --force-reinstall \${CARATE_LOCAL_STIMELA}"
+ echo "pip install -U --force-reinstall -r  \${local_stimela}" >> ${SS}
         if [[ -z ${FS} ]]
-	then
-	    pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA} && break || {
-		    echo "pip install -U --force-reinstall \${local_stimela} failed"
-		    (( ii++ ))
-		}
-	else
-	    break
-	fi
+ then
+     pip install -U --force-reinstall ${CARATE_LOCAL_STIMELA} && break || {
+      echo "pip install -U --force-reinstall \${local_stimela} failed"
+      (( ii++ ))
+  }
+ else
+     break
+ fi
     done
 fi
 
 if [[ -d ${WORKSPACE_ROOT}/caracal ]]
 then
     # Report on CARACal build
+    echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     cd ${WORKSPACE_ROOT}/caracal
@@ -2050,9 +2662,10 @@ then
 	echo "CARACal release: ${CR}" >> ${SYA}
     else
 	[[ -n ${CARATE_CARACAL_BUILD_ID} ]] || \
-	[[ -n ${CARATE_LOCAL_CARACAL} ]] || { \
-	    echo "CARACal build from master at https://github.com/caracal-pipeline/caracal" >> ${SYA};\
-	}
+	    [[ -n ${CARATE_LOCAL_CARACAL} ]] || \
+	    { \
+	      echo "CARACal build from master at https://github.com/caracal-pipeline/caracal" >> ${SYA};\
+	    }
     fi
     
     if [[ -n "$CARATE_LOCAL_CARACAL" ]] && [[ -z ${CR} ]]
@@ -2064,26 +2677,25 @@ then
         echo "${sya}" >> ${SYA}
     fi
     [[ -z ${OC} ]] || echo "CARACal has not been re-build, so this is a guess" >> ${SYA}
-    echo ""  >> ${SYA}
 
     # Get Stimela tag. This can be simplified...
     if [[ -n ${US} ]]
     then
-	stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela-last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || \
-	    true
+ stimelaline=`grep "https://github.com/ratt-ru/Stimela" stimela-last_stable.txt | sed -e 's/.*Stimela@\(.*\)#egg.*/\1/'` || \
+     true
         if [[ -z ${stimelaline} ]]
         then
-	    # Stimela tag depends on whether the repository is in or not
+     # Stimela tag depends on whether the repository is in or not
             stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || \
-		true
+  true
             [[ -z ${stimelaline} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
             stimelaline=`grep https://github.com/ratt-ru/Stimela setup.py` || \
-		true
+  true
             [[ -z ${stimelaline} ]] || \
-		stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || \
-		true
+  stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || \
+  true
             [[ -z ${stimelabuild} ]] || \
-		echo "Stimela build: ${stimelabuild}" >> ${SYA}
+  echo "Stimela build: ${stimelabuild}" >> ${SYA}
         else
             echo "Stimela build: ${stimelaline}" >> ${SYA}
         fi
@@ -2091,54 +2703,53 @@ then
     then
         # Stimela tag depends on whether the repository is in or not
         stimelaline=`grep https://github.com/ratt-ru/Stimela stimela-master.txt` || \
-	    true
-	[[ -z ${stimelaline} ]] || \
-	    stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
+     true
+ [[ -z ${stimelaline} ]] || \
+     stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'`
         [[ -z ${stimelabuild} ]] || \
-	    echo "Stimela build: ${stimelabuild}" >> ${SYA}
+     echo "Stimela build: ${stimelabuild}" >> ${SYA}
     elif [[ -n ${CARATE_LOCAL_STIMELA} ]]
     then
-	echo "Stimela build: ${CARATE_LOCAL_STIMELA} (local)" >> ${SYA}
+ echo "Stimela build: ${CARATE_LOCAL_STIMELA} (local)" >> ${SYA}
     else
-	# Attempt 1: if setup.py points to master
+ # Attempt 1: if setup.py points to master
         stimelaline=`grep 'https://github.com/ratt-ru/Stimela' setup.py` || \
-	    true
-	[[ -z ${stimelaline} ]] || \
-	    echo "Stimela master at https://github.com/ratt-ru/Stimela" >> ${SYA}
+     true
+ [[ -z ${stimelaline} ]] || \
+     echo "Stimela master at https://github.com/ratt-ru/Stimela" >> ${SYA}
         [[ -z ${stimelaline} ]] || \
-	    stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || \
-	    true
+     stimelabuild=`git ls-remote https://github.com/ratt-ru/Stimela | grep HEAD | awk '{print $1}'` || \
+     true
 
         # Attempt 2: if setup.py points to a specific release
         [[ -n ${stimelaline} ]] || \
-	    stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || \
-	    true
+     stimelaline=`grep "stimela==" setup.py | sed -e 's/.*==\(.*\)\x27.*/\1/'` || \
+     true
 
-	# Attempt 3: otherwise, it will be a >= tag, fetch the tag of the latest release
-	[[ -n ${stimelaline} ]] || { \
-	    stimelaline=`pip search Stimela | grep "LATEST" | awk '{print $2}'`; \
-	} || true
+ # Attempt 3: otherwise, it will be a >= tag, fetch the tag of the latest release
+ [[ -n ${stimelaline} ]] || { \
+     stimelaline=`pip search Stimela | grep "LATEST" | head -1 | awk '{print $2}'`; \
+ } || true
 
-	# Attempt 4: if above did not work, then the installed is already the latest
-	[[ -n ${stimelaline} ]] || { \
-	    stimelaline=`pip search Stimela | grep "latest" | awk '{print $2}'`; \
-	} || true
+ # Attempt 4: if above did not work, then the installed is already the latest
+ [[ -n ${stimelaline} ]] || { \
+     stimelaline=`pip search Stimela | grep "latest" | head -1 | awk '{print $2}'`; \
+ } || true
 
-	# We can report on the release if this is not an installation from master and hence stimelabuild is defined
+ # We can report on the release if this is not an installation from master and hence stimelabuild is defined
         [[ -z ${stimelaline} ]] || \
-	    [[ -n ${stimelabuild} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
-	
-	# If Stimela build has not been defined, do it now
-	[[ -z ${stimelaline} ]] || \
-	    [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote --tags https://github.com/ratt-ru/Stimela | grep ${stimelaline} | awk '{print $1}'` || \
-	    true
-	[[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA}	
+     [[ -n ${stimelabuild} ]] || echo "Stimela release: $stimelaline" >> ${SYA}
+ 
+ # If Stimela build has not been defined, do it now
+ [[ -z ${stimelaline} ]] || \
+     [[ -n ${stimelabuild} ]] || stimelabuild=`git ls-remote --tags https://github.com/ratt-ru/Stimela | grep ${stimelaline} | awk '{print $1}'` || \
+     true
+ [[ -z ${stimelabuild} ]] || echo "Stimela build: ${stimelabuild}" >> ${SYA} 
     fi
 
     echo "from: https://github.com/ratt-ru/Stimela" >> ${SYA}
     [[ -z ${ORSR} ]] || echo "Stimela has not been re-build, so this is a guess" >> ${SYA}
-    echo "" >> ${SYA}
-#    echo ""
+    echo ""
 fi
 
 if [[ -z $DM ]] && [[ -z $DA ]] && [[ -z $DI ]] && [[ -z $SM ]] && [[ -z $SA ]] && [[ -z $SI ]] && [[ -z $DSC ]] && [[ -z $SSC ]]
@@ -2158,26 +2769,30 @@ fi
 
 if [[ -e ${HOME}/.stimela ]]
 then
-    [[ -n ${FS} ]] || [[ -n ${ORSR} ]] || { \
-	echo "#######################" ; \
-	echo " Running stimela clean " ; \
-	echo "#######################" ; \
-	echo "" ; \
-	echo "stimela clean -ac" >> ${SS} ; \
-	stimela clean -ac ; \
-    }
+    [[ -n ${FS} ]] || \
+	[[ -n ${ORSR} ]] || \
+	{ \
+	  echo "" ; \
+	  echo "#######################" ; \
+	  echo " Running stimela clean " ; \
+	  echo "#######################" ; \
+	  echo "" ; \
+	  echo "stimela clean -ac" >> ${SS} ; \
+	  stimela clean -ac ; \
+	}
 fi
 
 if [[ -z ${ORSR} ]]
 then
-    checkex ${HOME}/.stimela || { \
-	echo "#############################" ; \
-	echo " Removing Stimela directory " ; \
-	echo "#############################" ; \
-	echo "" ; \
-	echo "Removing \${HOME}/.stimela/*" ; \
-	echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
-    }
+    checkex ${HOME}/.stimela || \
+	{ \
+	  echo "#############################" ; \
+	  echo " Removing Stimela directory " ; \
+	  echo "#############################" ; \
+	  echo "" ; \
+	  echo "Removing \${HOME}/.stimela/*" ; \
+	  echo "rm -f \${HOME}/.stimela/*" >> ${SS} ; \
+	}
     # Consider using stimela clean -ac here before running a docker prune
     # and not doing this:
     [[ -n ${FS} ]] || checkex ${HOME}/.stimela || rm -f ${HOME}/.stimela/*
@@ -2196,9 +2811,10 @@ then
 
     if [[ -n ${ORSR} ]]
     then
+	sya_docker+=$'\n'
         sya_docker+="##########################################"; sya_docker+=$'\n'
         sya_docker+=$'\n'
-	sya_docker+="Omitting re-installation of Stimela Docker images"; sya_docker+=$'\n'
+ sya_docker+="Omitting re-installation of Stimela Docker images"; sya_docker+=$'\n'
 #        sya_docker+=$'\n'
     else
         echo
@@ -2208,66 +2824,67 @@ then
         echo
         echo "Installing Stimela (Docker)"
 
+	sya_docker+=$'\n'
         sya_docker+="##########################################"; sya_docker+=$'\n'
-        sya_docker+=$'\n';
+        sya_docker+=$'\n'
 	sya_docker+=`docker --version`; sya_docker+=$'\n'
         sya_docker+=$'\n'
 
         # Not sure if stimela listens to $HOME or if another variable has to be set.
         # This $HOME is not the usual $HOME, see above
-	[[ -z ${OR} ]] || pruneforce='-f'
+ [[ -z ${OR} ]] || pruneforce='-f'
         [[ -n ${OP} ]] || echo "Running docker system prune"
         [[ -n ${OP} ]] || { ss_docker+="docker system prune ${pruneforce}"; ss_docker+=$'\n'; }
-	
+ 
         [[ -n ${OP} ]] || [[ -n ${FS} ]] || docker system prune ${pruneforce}
         if [[ -z ${NP} ]]
         then
-	    ii=1
-	    until (( ${ii} > ${IA} ))
-	    do
-	        echo "Running stimela pull -d"
-	        ss_docker+="stimela pull -d"; ss_docker+=$'\n'
+     ii=1
+     until (( ${ii} > ${IA} ))
+     do
+         echo "Running stimela pull -d${use_pull_force}"
+         ss_docker+="stimela pull -d${use_pull_force}"; ss_docker+=$'\n'
                 if [[ -z ${FS} ]]
-	        then
-		    stimela pull -d && break || {
-			echo "stimela pull -d failed"
-			(( ii++ ))
-			}
-		else
-		    break
-	        fi
-	    done
-	    if (( ${ii} > ${IA} ))
-	    then
-		echo "Maximum number of pull attempts for Stimela reached."
-		sya_docker+="Maximum number of pull attempts for Stimela reached."; sya_docker+=$'\n'
-		#echo "${ss_docker}" >> ${SS}
-		#echo "${sya_docker}" >> ${SYA}
-		exit 1
-	    fi
+         then
+      stimela pull -d${use_pull_force} && break || {
+   echo "stimela pull -d failed"
+   (( ii++ ))
+   }
+  else
+      break
+         fi
+     done
+     if (( ${ii} > ${IA} ))
+     then
+  echo "Maximum number of pull attempts for Stimela reached."
+  sya_docker+="Maximum number of pull attempts for Stimela reached."; sya_docker+=$'\n'
+  #echo "${ss_docker}" >> ${SS}
+  #echo "${sya_docker}" >> ${SYA}
+  exit 1
+     fi
         fi
-#	ii=1
+# ii=1
 #        until (( ${ii} > ${IA} ))
 #        do
 #            echo "Running stimela build"
 #            ss_docker+="stimela build${stimela_ns}"; ss_docker+=$'\n'
 #            if [[ -z ${FS} ]]
-#	    then
-#		stimela build${stimela_ns} && break || {
-#			echo "stimela build failed ${ii}" ; \
-#			(( ii++ )) ; \
-#		    }
-#	    else
-#		break
-#	    fi
+#     then
+#  stimela build${stimela_ns} && break || {
+#   echo "stimela build failed ${ii}" ; \
+#   (( ii++ )) ; \
+#      }
+#     else
+#  break
+#     fi
 #        done
-#	if (( ${ii} > ${IA} ))
-#	then
-#	    echo "Maximum number of build attempts for Stimela reached."
-#	    echo "${ss_docker}" >> ${SS}
-#	    echo "${sya_docker}" >> ${SYA}
-#	    exit 1
-#	fi
+# if (( ${ii} > ${IA} ))
+# then
+#     echo "Maximum number of build attempts for Stimela reached."
+#     echo "${ss_docker}" >> ${SS}
+#     echo "${sya_docker}" >> ${SYA}
+#     exit 1
+# fi
     echo ""
     fi
 fi
@@ -2310,10 +2927,10 @@ testingoutput () {
     for log in ${allogs}
     do
         (( total+=1 ))
-	[[ -z $hadcaracal2 ]] || { reporting+="$log is the second last log before ${caracallogsh}"; \
-				     reporting+=$'\n'; unset hadcaracal2; }	
-	[[ -z $hadcaracal ]] || { reporting+="$log is the last log before ${caracallogsh}"; reporting+=$'\n'; \
-				    hadcaracal2=1; unset hadcaracal; }
+ [[ -z $hadcaracal2 ]] || { reporting+="$log is the second last log before ${caracallogsh}"; \
+         reporting+=$'\n'; unset hadcaracal2; } 
+ [[ -z $hadcaracal ]] || { reporting+="$log is the last log before ${caracallogsh}"; reporting+=$'\n'; \
+        hadcaracal2=1; unset hadcaracal; }
         [[ ${log} != ${caracallogsh} ]] || hadcaracal=1
     done
     
@@ -2326,47 +2943,47 @@ testingoutput () {
     worker_fins=0
     [[ -z ${caracallog} ]] && { \
         reporting="This CARACal run is missing a summary logfile"; reporting+=$'\n'; \
-	reporting+="Returning error";\
-	reporting+=$'\n'; \
-	echo "${reporting}"; \
-	echo "${reporting}" >> ${SYA_TESTING}; \
-	return 1; \
+ reporting+="Returning error";\
+ reporting+=$'\n'; \
+ echo "${reporting}"; \
+ echo "${reporting}" >> ${SYA_TESTING}; \
+ return 1; \
     } || { \
-	worker_runs=`grep ": initializing" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
-	worker_fins=`grep ": finished" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
-	reporting="CARACal logfile indicates ${worker_runs} workers starting"; \
-	reporting+=$'\n'; \
-	reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'; \
-	echo "${reporting}"; \
-	echo "${reporting}" >> ${SYA_TESTING}; \
+ worker_runs=`grep ": initializing" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
+ worker_fins=`grep ": finished" ${caracallog} | wc | sed 's/^ *//; s/ .*//'`; \
+ reporting="CARACal logfile indicates ${worker_runs} workers starting"; \
+ reporting+=$'\n'; \
+ reporting+="and ${worker_fins} workers ending."; reporting+=$'\n'; \
+ echo "${reporting}"; \
+ echo "${reporting}" >> ${SYA_TESTING}; \
     }
 
 
     (( $worker_runs == $worker_fins )) || { \
-	reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-caracal.txt"; \
-	reporting+=$'\n'; \
-	echo "${reporting}"; \
-	echo "${reporting}" >> ${SYA_TESTING}; \
-	return 1; \
+ reporting="Workers starting (${worker_runs}) and ending (${worker_fins}) are unequal in log-caracal.txt"; \
+ reporting+=$'\n'; \
+ echo "${reporting}"; \
+ echo "${reporting}" >> ${SYA_TESTING}; \
+ return 1; \
     }
     [[ -z $caracallog ]] || (( $worker_runs > 0 )) || { \
-	reporting="No workers have started according to log-caracal.txt"; \
-	reporting+=$'\n'; \
-	reporting+="Returning error";\
-	reporting+=$'\n'; \
-	echo "${reporting}"; \
-	echo "${reporting}" >> ${SYA_TESTING}; \
-	return 1; \
+ reporting="No workers have started according to log-caracal.txt"; \
+ reporting+=$'\n'; \
+ reporting+="Returning error";\
+ reporting+=$'\n'; \
+ echo "${reporting}"; \
+ echo "${reporting}" >> ${SYA_TESTING}; \
+ return 1; \
     }
 
     # Notice that 0 is true in bash
     (( $total > 0 )) || { reporting="No logfiles produced. Returning error."; reporting+=$'\n'; \
                           "echo ${reporting}" \
-			  "echo ${reporting}" >> ${SYA_TESTING}; \
+     "echo ${reporting}" >> ${SYA_TESTING}; \
                           return 1; }
     [[ -n ${caracallog} ]] || { reporting="No CARACal main log produced. Returning error."; reporting+=$'\n'; \
                           "echo ${reporting}" \
-			  "echo ${reporting}" >> ${SYA_TESTING}; \
+     "echo ${reporting}" >> ${SYA_TESTING}; \
                           return 1; }
     return 0
 }
@@ -2416,6 +3033,7 @@ runtest () {
     local jj
     local reportprefy
 
+    echo ""
     echo "##########################################"
     echo " $greetings_line "
     echo "##########################################"
@@ -2438,12 +3056,12 @@ runtest () {
 	trname="${configfilename}-${contarch}"
 	reportprefy=""
     fi
-
+    
     reportname=${trname}
     listoftestreps+=( ${reportname} )
-
+    
     mkdir -p ${WORKSPACE_ROOT}/report/${reportname}
-
+    
     SS_RUNTEST=${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}.sh.txt
     [[ ! -e ${SS_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SS_RUNTEST} || rm -rf ${SS_RUNTEST}
     cat ${SS} >> ${SS_RUNTEST}
@@ -2453,13 +3071,13 @@ runtest () {
     [[ ! -e ${SYA_RUNTEST} ]] || (( ${FORCE} == 0 )) || checkex ${SYA_RUNTEST} || rm -rf ${SYA_RUNTEST}
     cat ${SYA} >> ${SYA_RUNTEST}
     [[ -z ${syacontainer} ]] || echo "${syacontainer}" >> ${SYA_RUNTEST}
-
+    
+    echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA_RUNTEST}
-    echo""  >> ${SYA_RUNTEST}
-
+    
     if [[ -e ${WORKSPACE_ROOT}/${trname} ]] && (( ${FORCE} == 0 ))
     then
         echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
@@ -2467,23 +3085,27 @@ runtest () {
     else
 	if [[ -n ${frname} ]] && [[ -e ${WORKSPACE_ROOT}/${frname} ]]
 	then
-	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || { \
-		mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
-		ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname}
-		CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
-	    }
-	else	
-	    [[ -z ${OD} ]] || \
-		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && { \
-		    CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
-		} || { \
-		    CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir;\
+	    [[ ${WORKSPACE_ROOT}/${frname} ==  ${WORKSPACE_ROOT}/${trname} ]] || \
+		{ \
+		  mv ${WORKSPACE_ROOT}/${frname} ${WORKSPACE_ROOT}/${trname}; \
+		  ln -s ${WORKSPACE_ROOT}/${trname} ${WORKSPACE_ROOT}/${frname} ; \
+		  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; \
 		}
-	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || { \
-		echo "No test data to process"; \
-		echo "This likely means that you have set the -od switch"; \
-		echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
-		echo "Stopping."; \
+	else 
+	    [[ -z ${OD} ]] || \
+		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && \
+		    { \
+		      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; \
+		    } || \
+			{ \
+			  [[ -n ${RO} ]] && { CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD}; } || { CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir; } \
+			}
+	    [[ -n ${CARATE_TEST_DATA_DIR} ]] || \
+		{ \
+		  echo "No test data to process"; \
+		  echo "This likely means that you have set the -od switch"; \
+		  echo "But there are no data in \${WORKSPACE_ROOT}/${trname}/msdir."; \
+		  echo "Stopping."; \
 		}
 	    
 	    #Check if the test directory is a parent of any of the supplied directories
@@ -2502,11 +3124,12 @@ runtest () {
 		done
 	    else
 		[[ -n ${FS} ]] || \
-		    [[ -n ${KP} ]] || { \
-			echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
-			rm -rf ${WORKSPACE_ROOT}/${trname}; \
+		    [[ -n ${KP} ]] || \
+		    { \
+		      echo "rm -rf \${workspace_root}/${trname}" >> ${SS_RUNTEST}; \
+		      rm -rf ${WORKSPACE_ROOT}/${trname}; \
 		    }
-	    fi	
+	    fi 
 	fi
         echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
         echo "${WORKSPACE_ROOT}/${trname}"
@@ -2517,82 +3140,103 @@ runtest () {
 	    echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS_RUNTEST}
 	    mkdir -p ${WORKSPACE_ROOT}/${trname}/input
 	    checkex ${WORKSPACE_ROOT}/${trname}/input || \
-		[[ -n ${KP} ]] || { \
-		    echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
-		    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
+		[[ -n ${KP} ]] || \
+		{ \
+		  echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
+		  cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 		}
 	fi
+	
 	# Check if user-supplied file is already the one that we are working with before working with it
 	# This should in principle only affect the time stamps as if the dataid is not empty, the following
 	# Would do nothing in the config file itself
-	checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
-	    [[ -n ${KC} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
-	    [[ -z ${KC} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
-	}
-
+	checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || \
+	    { \
+	      [[ -n ${KD} ]] || echo "sed \"s/dataid: \[.*\]/$dataidstr/\" ${configlocationstring} > \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
+	      [[ -z ${KD} ]] || echo "cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml" >> ${SS_RUNTEST}; \
+	      [[ -z ${RO} ]] || \
+		  { \
+		    echo "indentationgen=\`awk 'BEGIN{b=1}{if (b==0){printf(\"%s\",\$0);b=1}; if(match(\$1,\"general:\")) {b=0}}' \${workspace_root}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print \$0}' | sed 's/^\(  *\).*/\1/'\`" >> ${SS_RUNTEST};\
+		    echo "rawdatadirstr=\"\${indentationgen}rawdatadir: '\${CARATE_TEST_DATA_DIR}'\"" >> ${SS_RUNTEST};\
+		    echo "placeholder=\`awk '{if("'!'"match(\$1,\"rawdatadir:\")) {print \$0}}' \${workspace_root}/${trname}/${configfilename}.yml | awk -v rawdatadirstr=\"\${rawdatadirstr}\" '{if(match(\$1,\"general:\")) {printf(\"general:\\n%s\\n\",rawdatadirstr);} else {printf(\"%s\n\",\$0)}}'\`" >> ${SS_RUNTEST};\
+		    echo "echo \"\${placeholder}\" > \${workspace_root}/\${trname}/\${configfilename}.yml" >> ${SS_RUNTEST};\
+		  } \
+	    }
+	      
 	[[ -n ${FS} ]] || \
-	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || { \
-		[[ -n ${KC} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
-		[[ -z ${KC} ]] || cp ${configlocationstring} \${workspace_root}/${trname}/${configfilename}.yml; \
+	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || \
+	    { \
+	      [[ -n ${KD} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
+	      [[ -z ${KD} ]] || cp ${configlocation} ${workspace_root}/${trname}/${configfilename}.yml; \
+	      [[ -z ${RO} ]] || \
+		  { \
+		    indentationgen=`awk 'BEGIN{b=1}{if (b==0){printf("%s",$0);b=1}; if(match($1,"general:")) {b=0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print $0}' | sed 's/^\(  *\).*/\1/'`; \
+		    rawdatadirstr="${indentationgen}rawdatadir: '${CARATE_TEST_DATA_DIR}'"; \
+		    placeholder=`awk '{if(!match($1,"rawdatadir:")) {print $0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -v rawdatadirstr="${rawdatadirstr}" '{if(match($1,"general:")) {printf("general:\n%s\n",rawdatadirstr);} else {printf("%s\n",$0)}}'`; \
+		    echo "${placeholder}" > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
+		  }
 	    }
 
 	# This prevents the script to stop if there -fs is switched on
-	[[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
-	    cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}.yml.txt
+ [[ ! -f ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ]] || \
+     cp ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}${reportprefy}.yml.txt
 
-	# Check if source msdir is identical to the target msdir. If yes, don't copy
-	d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
-	e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
-	
-	[[ $d == $e ]] || { \
-	    [[ -n ${MD} ]] && { \
-		echo "mv ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
-		[[ -n ${FS} ]] || \
-		    mv ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-	    } || { \
-		echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
-		[[ -n ${FS} ]] || \
-		    cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-	    } \
-	}
-	
-	# Now run the test
+ # Check if source msdir is identical to the target msdir. If yes, don't copy
+ d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
+ e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
+ 
+ [[ $d == $e ]] || \
+     { \
+       [[ -n ${MD} ]] && \
+	   { \
+	     echo "mv ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+	     [[ -n ${FS} ]] || \
+		 mv ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	   } || \
+	       [[ -n ${RO} ]] || \
+	       { \
+		 echo "cp -r ${stringcopytestdatastr} \${workspace_root}/${trname}/msdir/" >> ${SS_RUNTEST}; \
+		 [[ -n ${FS} ]] || \
+		     cp -r ${copytestdatastr} ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+	       } \
+     }
+ 
+ # Now run the test
         echo "Running ${contarch} test (using ${configfilename}.yml)"
-	echo "cd \${workspace_root}/${trname}" >> ${SS_RUNTEST}
+ echo "cd \${workspace_root}/${trname}" >> ${SS_RUNTEST}
         cd ${WORKSPACE_ROOT}/${trname}
-	
+ 
         # Notice that currently all output will be false, such that || true is required to ignore this
-	failed=0
-	echo caracal -c ${configfilename}.yml ${caracalswitches} || true
+ failed=0
+ echo caracal -c ${configfilename}.yml ${caracalswitches} || true
 
-	# Report CARACal start time
+ # Report CARACal start time
         sya="${trname} starting to run CARACal:"; sya+=$'\n'; sya+=`date -u`;
         echo "${sya}" >> ${SYA_RUNTEST}
-	echo "" >> ${SYA_RUNTEST}
 
-	echo "caracal -c ${configfilename}.yml ${caracalswitches}" >> ${SS_RUNTEST}
-	[[ -n ${FS} ]] || caracal -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
+ echo "caracal -c ${configfilename}.yml ${caracalswitches}" >> ${SS_RUNTEST}
+ [[ -n ${FS} ]] || caracal -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
     fi
 
     sya="${trname} CARACal run end time:"; sya+=$'\n'; sya+=`date -u`
     echo "${sya}" >> ${SYA_RUNTEST}
-    echo "" >> ${SYA}
-    echo "" >> ${SYA_RUNTEST}
+#    echo "" >> ${SYA}
+#    echo "" >> ${SYA_RUNTEST}
 
     if [[ ${failedrun} == 0 ]]
     then
-	mes="CARACal run ${trname} did not return an error."
-	echo ${mes}
-	echo ${mes} >> ${SYA_RUNTEST}
-	echo ${mes} >> ${SYA}
-    else	
-	mes="CARACal run ${trname} returned an error."
-	echo ${mes}
-	echo ${mes} >> ${SYA}
-	echo ${mes} >> ${SYA_RUNTEST}
+ mes="CARACal run ${trname} did not return an error."
+ echo ${mes}
+ echo ${mes} >> ${SYA_RUNTEST}
+ echo ${mes} >> ${SYA}
+    else 
+ mes="CARACal run ${trname} returned an error."
+ echo ${mes}
+ echo ${mes} >> ${SYA}
+ echo ${mes} >> ${SYA_RUNTEST}
     fi
-    echo "" >> ${SYA}
-    echo "" >> ${SYA_RUNTEST}
+#    echo "" >> ${SYA}
+#    echo "" >> ${SYA_RUNTEST}
     
     # Make a copy of the logfile
     caracallog=`[[ -e ${WORKSPACE_ROOT}/${trname}/output/logs ]] && ls -t ${WORKSPACE_ROOT}/${trname}/output/logs/log-caracal*.txt | head -1 || echo ""`
@@ -2604,29 +3248,29 @@ runtest () {
     #    failedoutput=$?
     if [[ ${failedoutput} == 0 ]]
     then
-	mes="CARACal run ${trname} did not return a faulty output."
-	echo ${mes}
-	echo ${mes} >> ${SYA_RUNTEST}
-    else	
+ mes="CARACal run ${trname} did not return a faulty output."
+ echo ${mes}
+ echo ${mes} >> ${SYA_RUNTEST}
+    else 
 	mes="CARACal run ${trname} returned a faulty output."
 	
 	echo ${mes}
 	echo ${mes} >> ${SYA_RUNTEST}
 	echo ${mes} >> ${SYA}
     fi
-    echo ""
-    echo "" >> ${SYA_RUNTEST}
-    echo "" >> ${SYA}
+    #    echo ""
+    #    echo "" >> ${SYA_RUNTEST}
+    #    echo "" >> ${SYA}
     
     [[ ! -e ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs ]] || rm -r ${WORKSPACE_ROOT}/report/${reportname}/${reportname}${CARATE_CARACAL_RUN_MEDIFIX}-badlogs
 
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
+        echo "" >> ${SYA_RUNTEST}
         echo "############" >> ${SYA_RUNTEST}
         echo "" >> ${SYA_RUNTEST}
         echo "Test failed." >> ${SYA_RUNTEST}
-        echo "" >> ${SYA_RUNTEST}
-
+	
 	# Collect all files that indicate an error and dump them into the report directory
 	[[ -d ${WORKSPACE_ROOT}/${trname}/output/logs/ ]] && faultylist=( `grep -l ERROR ${WORKSPACE_ROOT}/${trname}/output/logs/*` ) || faultylist=()
 	if (( ${#faultylist[@]} > 0 ))
@@ -2645,33 +3289,56 @@ runtest () {
         kill "$PPID"
         exit 1
     else
+        echo "" >> ${SYA_RUNTEST}
 	echo "###############" >> ${SYA_RUNTEST}
 	echo "" >> ${SYA_RUNTEST}
 	echo "Test succeeded." >> ${SYA_RUNTEST}
-	echo "" >> ${SYA_RUNTEST}
     fi
-
+    
     # Size of test
+    echo "" >> ${SYA_RUNTEST}
     echo "###############" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
     outsize=`du -ms ${WORKSPACE_ROOT}/${trname} | awk '{print $1}'`
     echo "Final test folder size (${trname}): ${outsize} MB" >> ${SYA_RUNTEST}
+    
     echo "" >> ${SYA_RUNTEST}
-
     echo "##########################################" >> ${SYA_RUNTEST}
     echo "" >> ${SYA_RUNTEST}
-     sya="End time for this test: "; sya+=`date -u`;
+    sya="End time for this test: "; sya+=`date -u`;
     echo "${sya}" >> ${SYA_RUNTEST}
+    
     echo "" >> ${SYA_RUNTEST}
     echo "##########################################" >> ${SYA_RUNTEST}
 
     # This should be at the end of a script even if we don't do it now
-    [[ -n ${KH} ]] || echo "export HOME=\${OLD_HOME}" >> ${SS_RUNTEST}
+    # notice that this is only added to the shell script output.
+    if [[ -z ${HO} ]]
+       then
+       if [[ -n ${HOME_OLD} ]]
+       then
+	   if [[ -z ${HOME_del} ]]
+	   then
+               echo "export HOME=\${HOME_OLD}" >> ${SS_RUNTEST}
+	   else
+	       echo "unset HOME" >> ${SS_RUNTEST}
+	   fi
+       fi
+    fi
+       
     if [[ -n ${PYTHONPATH_OLD} ]]
     then
-	echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	if [[ -z ${PYTHONPATH_del} ]]
+	then
+            echo "export PYTHONPATH=\${PYTHONPATH_OLD}" >> ${SS_RUNTEST}
+	else
+	    [[ -z ${PYTHONPATH} ]] || \
+		{ \
+		  echo "unset PYTHONPATH" >> ${SS_RUNTEST} ; \
+		}
+	fi
     fi
-
+    
     if (( ${failedrun} == 1 || ${failedoutput} == 1 ))
     then
         kill "$PPID"
@@ -2720,11 +3387,12 @@ runtestsample () {
 
     if [[ -n ${CARATE_CARACAL_RUN_PREFIX} ]]
     then
-	(( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}-cs-${testruns}
+ (( ${testruns} == 1 )) && trname=${CARATE_CARACAL_RUN_PREFIX} || trname=${CARATE_CARACAL_RUN_PREFIX}-cs-${testruns}
     else
-	trname="config_sample-${contarch}"
+ trname="config_sample-${contarch}"
     fi
 
+    echo "" >> ${SYA}
     echo "##########################################" >> ${SYA}
     echo "" >> ${SYA}
     sya="${trname} preparation start time:";sya+=$'\n'; sya+=`date -u`;
@@ -2732,40 +3400,40 @@ runtestsample () {
 
     if [[ -e ${WORKSPACE_ROOT}/${trname} ]]
     then
-	if (( ${FORCE} == 0 ))
-	then
+ if (( ${FORCE} == 0 ))
+ then
             echo "Will not re-create existing directory ${WORKSPACE_ROOT}/${trname}"
-	else
-	    true
-	fi
+ else
+     true
+ fi
     else
-	if (( ${FORCE} == 0 ))
-	then
-	    [[ -z ${OD} ]] || \
-		[[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && \
-		    CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD} || \
-			CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir
-	    
-	    #Check if the test directory is a parent of any of the supplied directories
-	    if checkex ${WORKSPACE_ROOT}/${trname}
-	    then
-		# Go through the files and remove individually
-		# continue here
-		dirs=(input  msdir  output  stimela_parameter_files)
-		for dire in ${dirs[@]}
-		do
-		    checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-			echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS}
-		    [[ -n ${FS} ]] || \
-			checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
-			rm -rf \${workspace_root}/${trname}/${dire}
-		done
-	    fi	    
-	else
-	    echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
+ if (( ${FORCE} == 0 ))
+ then
+     [[ -z ${OD} ]] || \
+  [[ ! -d ${WORKSPACE_ROOT}/${trname}/msdir ]] && \
+      CARATE_TEST_DATA_DIR=${CARATE_TEST_DATA_DIR_OLD} || \
+   CARATE_TEST_DATA_DIR=${WORKSPACE_ROOT}/${trname}/msdir
+     
+     #Check if the test directory is a parent of any of the supplied directories
+     if checkex ${WORKSPACE_ROOT}/${trname}
+     then
+  # Go through the files and remove individually
+  # continue here
+  dirs=(input  msdir  output  stimela_parameter_files)
+  for dire in ${dirs[@]}
+  do
+      checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+   echo "rm -rf \${workspace_root}/${trname}/${dire}" >> ${SS}
+      [[ -n ${FS} ]] || \
+   checkex ${WORKSPACE_ROOT}/${trname}/${dire} || \
+   rm -rf \${workspace_root}/${trname}/${dire}
+  done
+     fi     
+ else
+     echo "rm -rf \${workspace_root}/${trname}" >> ${SS}
             [[ -n ${FS} ]] || \
-		rm -rf ${WORKSPACE_ROOT}/${trname}
-	fi
+  rm -rf ${WORKSPACE_ROOT}/${trname}
+ fi
     fi
 
     echo "Preparing ${contarch} test (using ${configfilename}.yml) in"
@@ -2774,27 +3442,31 @@ runtestsample () {
     mkdir -p ${WORKSPACE_ROOT}/${trname}/msdir
     if [[ -d ${CARATE_INPUT_DIR} ]]
     then
-	echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS}
-	mkdir -p ${WORKSPACE_ROOT}/${trname}/input
-	checkex ${WORKSPACE_ROOT}/${trname}/input || { \
-	    echo "cp -r \${CARATE_INPUT_DIR}/* \${workspace_root}/${trname}/input/" >> ${SS}; \
-	    cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
-	    }
+ echo "mkdir -p \${workspace_root}/${trname}/input" >> ${SS}
+ mkdir -p ${WORKSPACE_ROOT}/${trname}/input
+ checkex ${WORKSPACE_ROOT}/${trname}/input || { \
+     echo "cp -r \${CARATE_INPUT_DIR}/* \${workspace_root}/${trname}/input/" >> ${SS}; \
+     cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
+     }
     fi
     # Check if source msdir is identical to the target msdir. If yes, don't copy
     d=`stat -c %i ${CARATE_TEST_DATA_DIR}`
     e=`stat -c %i ${WORKSPACE_ROOT}/${trname}/msdir`
-    [[ $d == $e ]] || { \
-	[[ -n ${MD} ]] && { \
-	    echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
-	    [[ -n ${FS} ]] || \
+    [[ $d == $e ]] || \
+	{ \
+	  [[ -n ${MD} ]] && \
+	      { \
+		echo "mv \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		[[ -n ${FS} ]] || \
 		    mv ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-	} || { \
-	    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
-	    [[ -n ${FS} ]] || \
-		cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
-	} \
-    }
+	      } || \
+		  [[ -n ${RO} ]] || \
+		  { \
+		    echo "cp -r \${test_data_dir}/*.ms \${workspace_root}/${trname}/msdir/" >> ${SS}; \
+		    [[ -n ${FS} ]] || \
+			cp -r ${CARATE_TEST_DATA_DIR}/*.ms ${WORKSPACE_ROOT}/${trname}/msdir/ ; \
+		  } \
+	}
 
     #We need to take the config file from the meerkat input to our test directoru, always
     cp ${inputconfiglocation} ${configlocation}
@@ -2818,19 +3490,19 @@ runtestsample () {
     # Report CARACal start time
     sya="${trname} start time:"; sya+=$'\n'; sya+=`date -u`;
     echo "${sya}" >> ${SYA}
-	  [[ -n ${FS} ]] || caracal -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
+   [[ -n ${FS} ]] || caracal -c ${configfilename}.yml ${caracalswitches} || { true; failedrun=1; }
     echo "${failedrun}"
     if [[ ${failedrun} == 0 ]]
     then
-    	mes="CARACal test for ${configfilename}.yml did not return an error."
-	echo ${mes}
+     mes="CARACal test for ${configfilename}.yml did not return an error."
+ echo ${mes}
     else
-	mes="CARACal test for ${configfilename}.yml was unsuccesful."
-	echo ${mes}
-	kill "$PPID"
-	exit 1
+ mes="CARACal test for ${configfilename}.yml was unsuccesful."
+ echo ${mes}
+ kill "$PPID"
+ exit 1
     fi
-    echo "" >> ${SYA}
+#    echo "" >> ${SYA}
 }
 
 # Test run number
@@ -2845,7 +3517,7 @@ then
     greetings_line="Docker: minitestConfig"
     confilename="minitestConfig"
     contarch="docker"
-    caracalswitches="${stimela_ns}"
+    caracalswitches="-ct docker ${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\{workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
 fi
 
@@ -2855,7 +3527,7 @@ then
     greetings_line="Docker: (alternative) carateConfig"
     confilename="carateConfig"
     contarch="docker"
-    caracalswitches="${stimela_ns}"
+    caracalswitches="-ct docker ${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
 fi
 
@@ -2865,7 +3537,7 @@ then
     greetings_line="Docker: $configfilename"
     confilename=$configfilename
     contarch="docker"
-    caracalswitches="${stimela_ns}"
+    caracalswitches="-ct docker ${stimela_ns}"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
 fi
 
@@ -2877,7 +3549,7 @@ then
     echo "####################################"
     greetings_line="Docker: Testing Sample configurations"
     contarch="docker"
-    caracalswitches="${stimela_ns}"
+    caracalswitches="-ct docker ${stimela_ns}"
     # First we need to know all the sample configurations present that are not old
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then
@@ -2914,69 +3586,160 @@ if [[ -n $SM ]] || [[ -n $SA ]] || [[ -n $SI ]] || [[ -n $SSC ]]
 then
     # This sets the singularity image folder to the test environment, but it does not work correctly
     # Not only the cache is moved there but also the images and it gets all convolved.
-    ###### export SINGULARITY_CACHEDIR=$CARATE_WORKSPACE/.singularity
     
-    if [[ -n ${SR} ]]
+    [[ -z ${SCH} ]] || { \
+			 ss_sing+="export SINGULARITY_CACHEDIR=\${HOME}/.singularity/cache" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_CACHEDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_CACHEDIR=${HOME}/.singularity/cache ; \
+			 mkdir -p ${SINGULARITY_CACHEDIR} ; \
+	}
+    
+    [[ -z ${SLH} ]] || { \
+			 ss_sing+="export SINGULARITY_LOCALCACHEDIR=\${HOME}/.singularity/localcache" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_LOCALCACHEDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_LOCALCACHEDIR=${HOME}/.singularity/localcache ; \
+			 mkdir -p ${SINGULARITY_LOCALCACHEDIR} ; \
+	}
+    
+    [[ -z ${SCW} ]] || { \
+			 ss_sing+="export SINGULARITY_CACHEDIR=\${workspace}/.singularity/cache" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_CACHEDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_CACHEDIR=${CARATE_WORKSPACE}/.singularity/cache ; \
+			 mkdir -p ${SINGULARITY_CACHEDIR} ; \
+	}
+    
+    
+    [[ -z ${SLW} ]] || { \
+			 ss_sing+="export SINGULARITY_LOCALCACHEDIR=\${workspace}/.singularity/localcache" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_LOCALCACHEDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_LOCALCACHEDIR=${CARATE_WORKSPACE}/.singularity/localcache ; \
+			 mkdir -p ${SINGULARITY_LOCALCACHEDIR} ; \
+	}
+    
+    
+    [[ -z ${STH} ]] || { \
+			 ss_sing+="export SINGULARITY_TMPDIR=\${HOME}/.singularity/tmp" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_TMPDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_TMPDIR=${HOME}/.singularity/tmp ; \
+			 mkdir -p ${SINGULARITY_TMPDIR} ; \
+	}
+    [[ -z ${STW} ]] || { \
+			 ss_sing+="export SINGULARITY_TMPDIR=\${workspace}/.singularity/tmp" ; \
+			 ss_sing+=$'\n' ; \
+			 ss_sing+="mkdir -p \${SINGULARITY_TMPDIR}" ; \
+			 ss_sing+=$'\n' ; \
+			 export SINGULARITY_TMPDIR=${CARATE_WORKSPACE}/.singularity/tmp ; \
+			 mkdir -p ${SINGULARITY_TMPDIR} ; \
+	}
+    
+    if [[ -n ${SNC} ]]
     then
-	singularity_loc=${CARATE_WORKSPACE}/stimela-singularity
-	singularity_locstring="\${workspace}/stimela-singularity"
+	ss_sing+="export SINGULARITY_DISABLE_CACHE=\"True\""
+	ss_sing+=$'\n'
+	export SINGULARITY_DISABLE_CACHE="True"
     else
-	singularity_loc=${WORKSPACE_ROOT}/stimela-singularity
-	singularity_locstring="\${workspace_root}/stimela-singularity"
+	[[ -z ${SINGULARITY_DISABLE_CACHE} ]] || unset SINGULARITY_DISABLE_CACHE
     fi
     
-    if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]]
+
+    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${CARATE_STIMELA_PULLFOLDER}" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER} ; \
+	}
+    
+    [[ -z ${SPT} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${workspace_root}/stimela_pullfolder" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${workspace_root}/stimela_pullfolder" ; \
+	  export STIMELA_PULLFOLDER=${WORKSPACE_ROOT}/stimela_pullfolder ; \
+	}
+    
+    [[ -z ${SPW} ]] || \
+	{ \
+	  ss_sing+="export STIMELA_PULLFOLDER=\${workspace}/stimela_pullfolder" ; \
+	  ss_sing+=$'\n' ; \
+	  STIMELA_PULLFOLDERstring="\${workspace}/stimela_pullfolder" ; \
+	  export STIMELA_PULLFOLDER=${CARATE_WORKSPACE}/stimela_pullfolder ; \
+	}
+
+    if (( ${FORCE} == 0 )) || [[ -n ${ORSR} ]] || [[ -z ${SDP} ]]
     then
-        if [[ -e ${singularity_loc} ]]
+        if [[ -e ${STIMELA_PULLFOLDER} ]]
         then
-            echo "Will not re-create existing stimela-singularity and use old installation."
-            echo "Use -f to override and unset -or or --omit-stimela-reinstall flags."
-            sya_sing+="##########################################"; sya_sing+=$'\n'
-	    sya_sing+=$'\n'
-            sya_sing+="Will not re-create existing stimela-singularity and use old installation."; sya_sing+=$'\n'
-            sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags."; sya_sing+=$'\n'
+            echo "Will not re-create existing stimela pullfolder and potentially re-use its content."
+            echo "Use -f to override and unset -or or --omit-stimela-reinstall flags or use -sdp."
 	    sya_sing+=$'\n'
             sya_sing+="##########################################"; sya_sing+=$'\n'
-            sya_sing+=$'\n';
+	    sya_sing+=$'\n'
+            sya_sing+="Will not re-create existing stimela pullfolder and potentially re-use its content."; sya_sing+=$'\n'
+            sya_sing+="Use -f to override and unset -or or --omit-stimela-reinstall flags or use -sdp."; sya_sing+=$'\n'
+	    sya_sing+=$'\n'
+            sya_sing+="##########################################"; sya_sing+=$'\n'
         fi
     else
-	checkex ${singularity_loc} || \
-	    ss_sing+="rm -rf ${singularity_locstring}"; ss_sing+=$'\n'
-        [[ -n ${FS} ]] || checkex ${singularity_loc} || \
-	    checkex ${singularity_loc} || \
-	    rm -rf ${singularity_loc}
-        ######rm -rf $CARATE_WORKSPACE/.singularity
+	checkex ${STIMELA_PULLFOLDER} || \
+	    { ss_sing+="rm -rf ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n' ; }
+        [[ -n ${FS} ]] || checkex ${STIMELA_PULLFOLDER} || \
+	    checkex ${STIMELA_PULLFOLDER} || \
+	    rm -rf ${STIMELA_PULLFOLDER}
     fi
-    if [[ ! -e "${singularity_loc}" ]]
+
+    if [[ ! -e "${STIMELA_PULLFOLDER}" ]]
+    then
+        echo
+        echo "##################################"
+        echo " Creating Singularity pull folder "
+        echo "##################################"
+        echo
+	
+	echo "Installing Stimela images in ${STIMELA_PULLFOLDERstring}"
+	ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
+	mkdir -p ${STIMELA_PULLFOLDER}
+    fi
+
+    sya_sing+=$'\n';
+    sya_sing+="##########################################"; sya_sing+=$'\n'
+    sya_sing+=$'\n'
+    singvers=`singularity --version`
+    sya_sing+="Singularity version: ${singvers}"; sya_sing+=$'\n'
+    
+    if [[ -z ${NP} ]]
     then
         echo
         echo "#########################################"
         echo " Installing Stimela images (Singularity) "
         echo "#########################################"
         echo
-        sya_sing+="##########################################"; sya_sing+=$'\n'
-        sya_sing+=$'\n'
-	singvers=`singularity --version`
-	sya_sing+="Singularity version: ${singvers}"; sya_sing+=$'\n'
-        sya_sing+=$'\n'
-
-	echo "Installing Stimela images in ${singularity_locstring}"
-	ss_sing+="mkdir -p ${singularity_locstring}"; ss_sing+=$'\n'
-	mkdir -p ${singularity_loc}
+	echo "Installing Stimela images in ${STIMELA_PULLFOLDERstring}"
+	ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
 	ii=1
 	until (( ${ii} > ${IA} ))
 	do
-	    echo stimela pull --singularity -f --pull-folder ${singularity_loc}
-	    ss_sing+="stimela pull --singularity -f --pull-folder ${singularity_locstring}"; ss_sing+=$'\n'
+	    echo stimela pull --singularity${use_pull_force}
+	    ss_sing+="stimela pull --singularity${use_pull_force}"; ss_sing+=$'\n'
 	    if [[ -z ${FS} ]]
 	    then
-		stimela pull --singularity -f --pull-folder ${singularity_loc} && break || {
-			echo "stimela pull --singularity -f --pull-folder ${singularity_loc} failed"
+		stimela pull --singularity${use_pull_force} && break || {
+			echo "stimela pull --singularity${use_pull_force} failed"
 			(( ii++ ))
-			}
+		    }
 	    else
 		break
-	    fi		
+	    fi  
 	done
 	if (( ${ii} > ${IA} ))
 	then
@@ -2984,18 +3747,15 @@ then
 	    sya_sing+="Maximum number of pull attempts for Stimela reached."
 	    sya_sing+=$'\n'
 	    echo "${sya_sing}" >> ${SYA}
-	    echo "${ss_sing}" >> ${SS}	    
+	    echo "${ss_sing}" >> ${SS}     
 	    exit 1
 	fi
     fi
-    echo got here
-    echo "\${singularity_loc} ${singularity_loc}"
+    
     # Size of images
-    outsize=`du -ms ${singularity_loc} | awk '{print $1}'`
+    outsize=`du -ms ${STIMELA_PULLFOLDER} | awk '{print $1}'`
     sya_sing+="Singularity image folder size: ${outsize} MB"; sya_sing+=$'\n'
-    sya_sing+=$'\n'
-    echo ${sya_sing}
-    echo got here 2
+
 fi
 
 if [[ -n ${SM} ]]
@@ -3004,17 +3764,17 @@ then
     greetings_line="Singularity: minitestConfig-singularity"
     confilename="minitestConfig"
     contarch="singularity"
-    caracalswitches="--container-tech singularity -sid ${singularity_loc}"
+    caracalswitches="-ct singularity"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_sing}" "${ss_sing}" "${caracalswitches}"
 fi
 
 if [[ -n ${SA} ]]
 then
     (( testrunnumber+=1 ))
-    greetings_line="Singularity: (alternative) carateConfig"
+    greetings_line='Singularity: (alternative) carateConfig'
     confilename="carateConfig"
     contarch="singularity"
-    caracalswitches="--container-tech singularity -sid ${singularity_loc}"
+    caracalswitches="-ct singularity"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_sing}" "${ss_sing}" "${caracalswitches}"
 fi
 
@@ -3024,7 +3784,7 @@ then
     greetings_line="Singularity: $configfilename"
     confilename=$configfilename
     contarch="singularity"
-    caracalswitches="--container-tech singularity -sid ${singularity_loc}"
+    caracalswitches="-ct singularity"
     runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${CARATE_CONFIG_SOURCE}" "\${config_source}" "${testrunnumber}" "${sya_sing}" "${ss_sing}" "${caracalswitches}"
 fi
 
@@ -3036,7 +3796,7 @@ then
     echo "####################################"
     greetings_line="Singularity: Testing Sample configurations"
     contarch="singularity"
-    caracalswitches="--container-tech singularity -sid ${singularity_loc}"
+    caracalswitches="-ct singularity"
     # First we need to know all the sample configurations present that are not old
     if [[ -n "$CARATE_LOCAL_CARACAL" ]]
     then

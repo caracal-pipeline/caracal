@@ -3,10 +3,8 @@ import sys
 import os
 import caracal.dispatch_crew.utils as utils
 import caracal
-import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_caltabs as manGtabs
 import copy
 import re
@@ -15,6 +13,7 @@ import glob
 
 import shutil
 import numpy
+from casacore.tables import table
 
 
 NAME = "Cross-calibration"
@@ -129,14 +128,15 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         gtable_ = None
         ftable_ = None
         interp = RULES[term]["interp"]
-        params["refant"] = pipeline.refant[iobs]
+        params["refant"] = pipeline.refant[iobs] or '0'
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)
         caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
         params["caltable"] = caltable + ":output"
         my_term = term
-        if "I" not in order and smodel and term in "KGF":
+        did_I = 'I' in order[:i+1] 
+        if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
         if term in "GF":
@@ -175,9 +175,8 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         can_reuse = False
         if config[ftype]["reuse_existing_gains"] and exists(pipeline.caltables, caltable):
             # check if field is in gain table
-            substep = "check_fields-%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
-            fields_in_tab = manGtabs.get_fields(pipeline, recipe, pipeline.caltables, caltable, substep)
-            if set(fields_in_tab["field_id"]).issubset(field_id):
+            fields_in_tab = set(table(os.path.join(pipeline.caltables, caltable), ack=False).getcol("FIELD_ID"))
+            if fields_in_tab.issubset(field_id):
                 can_reuse = True
 
         if can_reuse:
@@ -201,7 +200,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
-            plotgains(recipe, pipeline, field_id, caltable, iobs, term=term)
+            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
 
         fields.append(",".join(field))
         interps.append(interp)
@@ -326,15 +325,16 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
-    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str,field_id)))
-    recipe.add('cab/ragavi', step,
-        {
+    step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
+    params =  {
         "table"         : f"{gtab}:msfile",
         "gaintype"     : term,
-        "field"        : ",".join(map(str,field_id)),
         "corr"         : '',
         "htmlname"     : gtab,
-        },
+        }
+    if field_id is not None:
+        params['field'] = ",".join(map(str,field_id))
+    recipe.add('cab/ragavi', step, params,
         input=pipeline.input,
         msdir=pipeline.caltables,
         output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
@@ -422,26 +422,13 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
+    label_in = config["label_in"]
 
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        nobs = 1
-        prefixes = [pipeline.prefix]
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
-
-    for i in range(nobs):
-
-        if config["label_in"]:
-            msname = '{0:s}_{1:s}.ms'.format(msnames[i][:-3],config["label_in"])
-        else: msname = msnames[i]
-
-        refant = pipeline.refant[i] or '0'
-        prefix = prefixes[i]
-        msinfo = '{0:s}/{1:s}-obsinfo.json'.format(pipeline.obsinfo, msname[:-3])
-        prefix = '{0:s}-{1:s}'.format(prefix, label)
+    # loop over all MSs for this label
+    for i, msbase in enumerate(pipeline.msbasenames):
+        msname = pipeline.form_msname(msbase, label_in)
+        msinfo = pipeline.get_msinfo(msname)
+        prefix_msbase = f"{pipeline.prefix_msbases[i]}-{label}"
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             # Write/rewind flag versions
@@ -534,7 +521,7 @@ def worker(pipeline, recipe, config):
                         "vis": msname,
                         "field": fluxscale_field,
                         "standard": standard,
-                        "usescratch": False,
+                        "usescratch": True,
                         "scalebychan": True,
                     }
                 else:
@@ -559,7 +546,7 @@ def worker(pipeline, recipe, config):
         if no_secondary:
             primary_order = config["primary"]["order"]
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary")
+                    prefix_msbase, label=label, ftype="primary")
             caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
@@ -573,10 +560,10 @@ def worker(pipeline, recipe, config):
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="primary")
+                    prefix_msbase, label=label, ftype="primary")
 
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix, label=label, ftype="secondary", 
+                    prefix_msbase, label=label, ftype="secondary",
                     prev=primary, prev_name="primary", smodel=True)
 
             interps = primary["interps"]
@@ -625,7 +612,7 @@ def worker(pipeline, recipe, config):
 
         callib_dict = dict(zip(calmodes, applycal_recipes))
 
-        with open(os.path.join(callib_dir, 'callib_{}.json'.format(prefix)), 'w') as json_file:
+        with open(os.path.join(callib_dir, f'callib_{prefix_msbase}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'summary'):
@@ -645,5 +632,5 @@ def worker(pipeline, recipe, config):
 
             summary_log = glob.glob("{0:s}/log-{1:s}-{2:s}-*"
                                     ".txt".format(pipeline.logs, wname, step))[0]
-            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix, wname )
-            manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
+            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix_msbase, wname )
+            manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)

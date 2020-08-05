@@ -241,14 +241,29 @@ mapping:
             required: False
             example: 'False'
           mask:
-            desc: The mask to apply. This can be provided by the user, but CARACal provides an existing static mask ('labelled_rfimask.pickle.npy') that is specific to MeerKAT data.
+            desc: The mask to apply. This can be provided by the user, but CARACal also provides an existing static mask for MeerKAT, specify 'meerkat.rfimask.npy' to use it.
+            type: str
+            required: True
+            example: ''
+          uvrange:
+            desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in units of metres. Leaving this parameter blank will select the entire range in UV-distance.
             type: str
             required: False
             example: ''
-          uvrange:
-            desc: Select range in UV-distance (CASA-style range, e.g. 'lower~upper') for flagging. This is in default units of metres but, e.g., '0~1000km' and '0-500klambda' can also be specified. Leaving this parameter blank will select the entire range in UV-distance.
-            type: str
+      flag_manual:
+        desc: Manually flag subsets of data, using a syntax based on the CASA flagdata task
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'flag_manual' segment.
+            type: bool
             required: False
+            example: 'False'
+          rules:
+            seq:
+              - type: str
+            required: false
+            desc: Sequence of flagging rules, of the form "ms_pattern key:value key:value"
             example: ''
       flag_rfi:
         desc: Flag RFI using AOFlagger, Tricolour, or CASA FLAGDATA with tfcrop.
@@ -407,5 +422,24 @@ mapping:
       report:
         type: bool
         required: false
-        desc: (Re)generate a full HTML report at the end of this segment.
+        desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

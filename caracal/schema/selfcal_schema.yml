@@ -57,9 +57,9 @@ mapping:
         example: '0'
       ncpu:
         type: int
-        desc: Number of CPUs to use.
+        desc: Number of CPUs to use for distributed processing. If set to 0 all available CPUs are used. This parameter is passed on to the following software in the selfcal worker, WSClean for imaging, Cubical and MeqTrees for calibration, PyBDSF for source finding.
         required: false
-        example: '5'
+        example: '0'
       minuvw_m:
         type: int
         desc: Exclude baselines shorter than this value (given in metres) from the imaging and self-calibration loop.
@@ -153,16 +153,20 @@ mapping:
         required: false
         example: 'I'
       img_multiscale:
-          type: bool
-          desc: Switch on multiscale cleaning.
-          required: false
-          example: 'False'
+        type: bool
+        desc: Switch on multiscale cleaning.
+        required: false
+        example: 'False'
       img_multiscale_scales:
-          seq:
-            - type: int
-          desc: Scales of multiscale [0,10,20,etc.] in pixels.
-          required: false
-          example: '10, 20, 30'
+        type: str
+        desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+        required: false
+        example: ''
+      img_nrdeconvsubimg:
+        desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
+        type: int
+        required: false
+        example: '0'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map
@@ -216,10 +220,10 @@ mapping:
         required: false
         example: '2'
       start_iter:
-              type: int
-              desc: Start selfcal iteration loop at this start value (1-indexed).
-              required: false
-              example: '1'
+        type: int
+        desc: Start selfcal iteration loop at this start value (1-indexed).
+        required: false
+        example: '1'
       cal_gain_cliplow:
         type: float
         desc: Lower threshold for clipping on gain amplitude.
@@ -418,6 +422,16 @@ mapping:
               - type: int
             required: false
             example: '31, 31'
+          ncpu_img: 
+            type: int
+            example: '0'
+            required: false
+            desc: Number of threads used by wsclean; has a default value of '0'. If specified in the configuration file, will overrule the value set by ncpu, which is the global default for both cubical and wsclean
+          absmem:   
+            type: float
+            example: '100.0'
+            required: false
+            desc: "Specifies a fixed amount of memory in gigabytes."
 
       extract_sources:
         type: map
@@ -653,9 +667,28 @@ mapping:
             type: float
             desc: Fraction of system RAM that can be used. Used when setting automatically the chunk size.
             required: false
-            example: '0.5'
+            example: '0.05'
       report:
         type: bool
         required: false
-        desc: (Re)generate a full HTML report at the end of this segment.
+        desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

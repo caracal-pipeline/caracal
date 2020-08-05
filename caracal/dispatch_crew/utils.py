@@ -7,7 +7,7 @@ import caracal.dispatch_crew.caltables as mkct
 import re
 import astropy.io.fits as fitsio
 import codecs
-
+import os
 
 def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -27,9 +27,10 @@ def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     return R, PA
 
 
-def categorize_fields(msinfo):
-    with open(msinfo, 'r') as f:
-        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+def categorize_fields(info):
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -47,6 +48,9 @@ def categorize_fields(msinfo):
         for i, field in enumerate(names):
             ints = intents[intent_ids[i]].split(',')
             for intent in ints:
+                # for the intents with #, the string after the # does not look useful for us
+                # This can be reviewed if need be (Issue 1130)
+                intent = intent.split("#")[0]
                 for ftype in mapping:
                     if intent in mapping[ftype][0]:
                         mapping[ftype][-1].append(field)
@@ -54,13 +58,14 @@ def categorize_fields(msinfo):
     return mapping
 
 
-def get_field_id(msinfo, field_name):
+def get_field_id(info, field_name):
     """ Gets field id """
     if not isinstance(field_name, str) and not isinstance(field_name, list):
         raise ValueError(
             "field_name argument must be comma-separated string or list")
-    with open(msinfo, 'r') as f:
-        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
     results = []
@@ -72,12 +77,13 @@ def get_field_id(msinfo, field_name):
     return results
 
 
-def select_gcal(msinfo, targets, calibrators, mode='nearest'):
+def select_gcal(info, targets, calibrators, mode='nearest'):
     """
       Automatically select gain calibrator
     """
-    with open(msinfo, 'r') as f:
-        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -125,12 +131,13 @@ def select_gcal(msinfo, targets, calibrators, mode='nearest'):
     return gcal
 
 
-def observed_longest(msinfo, bpcals):
+def observed_longest(info, bpcals):
     """
       Automatically select bandpass calibrator
     """
-    with open(msinfo, 'r') as f:
-        info = yaml.safe_load(f)
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -156,9 +163,10 @@ def observed_longest(msinfo, bpcals):
     return field
 
 
-def field_observation_length(msinfo, field):
-    with open(msinfo, 'r') as f:
-        info = yaml.safe_load(f)
+def field_observation_length(info, field):
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     names = info['FIELD']['NAME']
     ids = info['FIELD']['SOURCE_ID']
@@ -218,11 +226,14 @@ def hetfield(info, field, db, tol=2.9E-3):
             return key
     return False
 
-def find_in_native_calibrators(msinfo, field, mode = 'both'):
+def find_in_native_calibrators(info, field, mode = 'both'):
     """Check if field is in the South Calibrators database.
        Return model if it is. Return lsm if an lsm is available.
        Otherwise, return False.
     """
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     returnsky = False
     returnmod = False
@@ -235,9 +246,6 @@ def find_in_native_calibrators(msinfo, field, mode = 'both'):
         returnmod = True
 
     db = mkct.calibrator_database()
-
-    with open(msinfo, 'r') as stdr:
-        info = yaml.safe_load(stdr)
 
     fielddb = hetfield(info, field, db)
 
@@ -265,13 +273,14 @@ def find_in_native_calibrators(msinfo, field, mode = 'both'):
     else:
         return False
 
-def find_in_casa_calibrators(msinfo, field):
+def find_in_casa_calibrators(info, field):
     """Check if field is in the CASA NRAO Calibrators database.
        Return model if it is. Else, return False.
     """
 
-    with open(msinfo, 'r') as stdra:
-        info = yaml.safe_load(stdra)
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     with open(caracal.pckgdir + '/data/casa_calibrators.yml') as stdrb:
         db = yaml.safe_load(stdrb)
@@ -295,7 +304,7 @@ def meerkat_refant(obsinfo):
     """ get reference antenna. Only works for MeerKAT observations downloaded through CARACal"""
 
     with open(obsinfo) as stdr:
-        info = yaml.load(stdr)
+        info = yaml.safe_load(stdr)
     return info['RefAntenna']
 
 
@@ -310,8 +319,8 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
         flux += model['Total_flux'].sum()
 
     # Get number of antennas
-    with open(msinfo) as yr:
-        info = yaml.load(yr)
+    with open(msinfo, 'r') as f:
+        info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     nant = len(info['ANT']['NAME'])
 
     # Get time and frequency resoltion of data
@@ -339,9 +348,10 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
     return dt_dfreq, dtime, dfreq
 
 
-def imaging_params(msinfo, spwid=0):
-    with open(msinfo) as yr:
-        info = yaml.load(yr)
+def imaging_params(info, spwid=0):
+    if type(info) is str:
+        with open(info, 'r') as f:
+            info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     maxbl = info['MAXBL']
     dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])
@@ -359,31 +369,3 @@ def filter_name(string):  # change field names into alphanumerical format for na
     return re.sub('[^0-9a-zA-Z]', '_', string)
 
 
-# creates lists of all unique target fields across a list of ms files, a dictionary of target field - all associated splitted ms files
-def target_to_msfiles(targets, msnames, label):
-    target_ls, target_msfiles, target_ms_ls, all_target = [], [], [], []
-
-    for t in targets:  # list all targets per input ms and make a unique list of all target fields
-        target_ls.append(t)
-        for tt in t:
-            all_target.append(tt)
-    all_target = list(set(all_target))
-
-    # make a list of all input ms file names for each target field
-    for i, ms in enumerate(msnames):
-        for t in target_ls[i]:
-            t = filter_name(t)
-            if label:
-                target_ms_ls.append(
-                    '{0:s}-{1:s}_{2:s}.ms'.format(ms[:-3], t, label))
-            else:
-                target_ms_ls.append('{0:s}-{1:s}.ms'.format(ms[:-3], t))
-
-    for t in all_target:  # group ms files by target field name
-        tmp = []
-        for m in target_ms_ls:
-            if m.find(filter_name(t)) > -1:
-                tmp.append(m)
-        target_msfiles.append(tmp)
-
-    return all_target, target_ms_ls, dict(list(zip(all_target, target_msfiles)))

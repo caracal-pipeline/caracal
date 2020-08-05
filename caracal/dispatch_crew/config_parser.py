@@ -1,3 +1,5 @@
+# -*- coding: future_fstrings -*-
+
 import argparse
 import yaml
 import caracal
@@ -167,14 +169,15 @@ class config_parser(object):
             else:
                 schema_fn = os.path.join(caracal.pckgdir,"schema", "{0:s}_schema.yml".format(_worker))
 
-                if not os.path.exists(schema_fn):
+                if _worker == "worker" or not os.path.exists(schema_fn):
                     errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
                     continue
 
                 with open(schema_fn, 'r') as file:
-                    schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
+                    full_schema = ruamel.yaml.load(file, ruamel.yaml.RoundTripLoader, version=(1, 1))
 
-                self._schemas[worker] = self._schemas[_worker] = schema_fn, schema["mapping"][_worker]
+                schema = full_schema["mapping"][_worker]
+                self._schemas[worker] = self._schemas[_worker] = schema_fn, schema
 
             # validate worker config
             core = Core(source_data={_worker: variables}, schema_files=[schema_fn])
@@ -247,75 +250,101 @@ class config_parser(object):
         # loop over each key of the variables in the schema
         # the key may contain a set of subkeys, being the schema a nested dictionary
         for key, subVars in sec_defaults.items():
-
             # store the total name of the key given the workerName(base_section) and key (which may be nested)
             # This has '-; for separators
             option_name = base_section + "-" + key if base_section != "" else key
             # corresponding attribute name
             attr_name = option_name.replace("-", "_")
 
-            def typecast(typ, val, string=False):
-                if isinstance(val, list):
-                    return val
-                if typ is bool  and string:
-                    return str(val).lower()
-                elif typ is bool and type(val) is str:
-                    return val in "true yes 1".split()
-                else:
-                    return typ(val)
-
-            # need to go in the nested variable
+            # For subsection, recurse into the nested variable
             if "mapping" in subVars:
-                if key in list(cfgVars.keys()):  # check if enabled in config file
+                if key in cfgVars:  # check if enabled in config file
                     sub_vars = cfgVars[key]
                 else:
-                    sub_vars = dict.fromkeys(list(cfgVars.keys()), {})
-
-                # recall the function with the set of variables of the nest
-                groups[key] = self._process_subparser_tree(sub_vars, subVars, base_section=option_name,
-                                                           options=options)
+                    sub_vars = {key: {} for key in cfgVars.keys()}
+                # recurse with the set of variables of the nest
+                groups[key] = self._process_subparser_tree(sub_vars, subVars, base_section=option_name, options=options)
                 continue
 
-            elif "seq" in subVars:
-                # for lists
+            # True if variable is a list
+            is_list = "seq" in subVars
+            # type of variable (of list element, if dealing with lists)
+            dtype = None
+
+            def typecast(val):
+                """Helper function to cast value to excpected type.
+                If string=True, bools are cast to string bools, so value is suitable for command-line parsing"""
+                if is_list and isinstance(val, list):
+                    return [typecast(x) for x in val]
+                if dtype is bool and type(val) is str:
+                    return val.lower() in {"true", "yes", "1"}
+                return dtype(val)
+
+            def value2str(val):
+                """Converts value to string representation. Bools get special lowercase treatment."""
+                return str(bool(val)).lower() if dtype is bool else str(val)
+
+            def str2list(val):
+                """Converts lists in string representation, e.g. "[a, b]" and "a,b", to lists of strings"""
+                return list(val.lstrip("[").rstrip("]").replace(", ",",").split(","))
+
+            # update default if set in user config
+            default_value = None
+            # NB: not sure why the check for _empty() is needed, some archaic carryover
+            if not _empty(list(cfgVars.values())):
+                default_value = cfgVars.get(key)
+
+            # for sequences, do some type fiddling
+            if is_list:
                 dtype = __builtins__[subVars['seq'][0]['type']]
-                if type(subVars["example"]) is not list:
-                    subVars["example"] = list(str.split(subVars['example'].replace(' ', ''), ','))
-                if subVars['seq'][0]['type'] == 'bool':
-                    default_value=[]
-                    for i in range(0,len(subVars['example'])):
-                        default_value.append(typecast(dtype, subVars['example'][i],string=False))
-                else:
-                    default_value = list(map(dtype, subVars["example"]))
+                if dtype is map:
+                    dtype = dict
+                if default_value is None:
+                    if dtype is dict:
+                        default_value = []
+                    else:
+                        default_value = subVars["example"]
+                        if type(default_value) is str:
+                            default_value = str2list(default_value)
+                        if type(default_value) is not list:
+                            raise TypeError(f"{option_name} default value is not configured correctly. This is a bug, please report!")
             else:
                 # for int, float, bool, str
                 dtype = __builtins__[subVars['type']]
-                default_value = subVars["example"]
-                default_value = typecast(dtype, default_value, string=True)
+                if default_value is None:
+                    default_value = subVars["example"]
 
-            # update default if set in user config
-            if key in list(cfgVars.keys()) and not _empty(list(cfgVars.values())):
-                default_value = cfgVars[key]
+            # convert default value to expected type
+            groups[key] = default_value = typecast(default_value)
 
+            # if an options object is passed in, look if its value overrides our setting
             if options is not None:
-                option_value = typecast(dtype, getattr(options, attr_name, default_value))
-                if option_value != typecast(dtype, default_value):
-                    caracal.log.info("  command line sets --{} = {}".format(option_name, option_value))
-                groups[key] = option_value
+                if hasattr(options, attr_name):
+                    optval = getattr(options, attr_name)
+                    # parse lists
+                    if is_list:
+                        optval = str2list(optval)
+                    option_value = typecast(optval)
+                    if option_value != default_value:
+                        caracal.log.info("  command line sets --{} = {}".format(option_name, option_value))
+                    groups[key] = option_value
+            # else populate parser with default value
             else:
-                default_value = typecast(dtype, default_value, string=True)
-                if dtype.__name__ == "bool":
+                # lists correspond to multiple arguments
+                if is_list:
+                    # no support for lists of dicts from the command line, for now
+                    if dtype is not dict:
+                        self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=str,
+                                                  default=",".join(map(value2str, default_value)))
+                # booleans have a choice
+                elif dtype is bool:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                                              choices="true yes 1 false no 0".split(), default=default_value)
-                elif isinstance(default_value, (list, tuple)):
-                    #parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                    #                    type=dtype, nargs="+", default=default_value)
-                    self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
-                                             type=dtype, nargs="+", default=list(map(dtype, default_value)))
+                                              choices="true yes 1 false no 0".split(),
+                                              default=value2str(bool(default_value)))
+                # all others passed with native dtype
                 else:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
                                               type=dtype, default=default_value)
-                groups[key] = default_value
 
         return groups
 
@@ -350,14 +379,24 @@ class config_parser(object):
                         extra = {}
                     # (indent == "\t") and caracal.log.info(
                     #     indent.ljust(60, "#"))
-                    caracal.log.info("{}{}:".format(indent, k), extra=extra)
+                    caracal.log.info(f"{indent}{k}:", extra=extra)
                     # (indent == "\t") and caracal.log.info(
                     #     indent.ljust(60, "#"))
                     # (indent != "\t") and caracal.log.info(
                     #     indent.ljust(60, "-"))
                     _tree_print(v, indent=indent+indent0)
                 else:
-                    caracal.log.info("{}{:30}{}".format(indent, k+":", v))
+                    # totally ugly -- I promise I'll fix it when we have a better qualifier
+                    if k == "cabs" and not v:
+                        return
+                    if type(v) in (list, tuple):
+                        vstr = ', '.join([str(x) or '""' for x in v])
+                        if len(v) < 2:
+                            vstr = f"[{vstr}]"
+                    else:
+                        vstr = str(v) or '""'
+                    k += ":"
+                    caracal.log.info(f"{indent}{k:30}{vstr}")
 
             for k, v in other.items():
                 _printval(k, v)

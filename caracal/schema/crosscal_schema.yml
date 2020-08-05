@@ -224,6 +224,7 @@ mapping:
             type: int
             required: false
             example: "70"
+<<<<<<< HEAD
           spw_k:
             desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
             example: ""
@@ -231,6 +232,10 @@ mapping:
             type: str
           spw_g:
             desc: Only use this subset(s) of the band to compute 'GF' gains. Default uses full band
+=======
+          spw:
+            desc: Only use this subset(s) of the band to compute 'KGF' gains
+>>>>>>> origin/master
             example: ""
             required: false 
             type: str
@@ -379,5 +384,24 @@ mapping:
       report:
         type: bool
         required: false
-        desc: (Re)generate a full HTML report at the end of this segment.
+        desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

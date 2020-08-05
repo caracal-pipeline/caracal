@@ -9,17 +9,17 @@ mapping:
         type: map
         mapping:
           enable:
-            desc: Execute the obsconf worker. 
+            desc: Enable segment 'obsinfo'.
             type: bool
             required: true
             example: 'True'
           listobs:
-            desc: Run the CASA 'listobs' task to get observation information.
+            desc: Run the CASA 'listobs' task to write the observation information to an TXT file. This is not executed if the TXT file already exists.
             type: bool
             required: false
             example: 'True'
           summary_json:
-            desc: Run the MSUtils summary function to get observation information written as a JSON file, which can then be used to automatically configure pipeline.
+            desc: Run the MSUtils summary function to get observation information written as a JSON file, which can then be used to automatically configure pipeline. This is not executed if the JSON file already exists.
             type: bool
             required: false
             example: 'True'
@@ -33,7 +33,7 @@ mapping:
             type: map
             mapping:
               enable:
-                desc: Enable segment 'plot_elevation_tracks'.
+                desc: Enable segment 'plot_elevation_tracks'. This is not executed if the elevation plots already exist.
                 type: bool
                 example: "True"
                 required: false
@@ -81,5 +81,24 @@ mapping:
       report:
         type: bool
         required: false
-        desc: (Re)generate a full HTML report at the end of this segment.
+        desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

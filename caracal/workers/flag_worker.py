@@ -9,6 +9,7 @@ import re
 import caracal
 import sys
 import glob
+import fnmatch
 import numpy as np
 
 NAME = 'Flag'
@@ -19,54 +20,20 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    if pipeline.virtconcat:
-        msnames = [pipeline.vmsname]
-        prefixes = [pipeline.prefix]
-        nobs = 1
-    else:
-        msnames = pipeline.msnames
-        prefixes = pipeline.prefixes
-        nobs = pipeline.nobs
 
+    nobs = pipeline.nobs
     msiter=0
     for i in range(nobs):
-        # loop over all input .MS files
-        # the additional 'for loop' below loops over all single target .MS files
-        #   produced by the pipeline (see "if config['field']" below)
-
-        prefix = pipeline.prefixes[i]
-
-        '''GET LIST OF INPUT MS'''
-        mslist = []
-        msn = pipeline.msnames[i][:-3]
-
-        if label == '':
-          mslist.append(pipeline.msnames[i])
-
-        elif config['field'] == 'target':
-           target_ls = pipeline.target[i]
-           for target in target_ls:
-                field = utils.filter_name(target)
-                mslist.append('{0:s}-{1:s}_{2:s}.ms'.format(msn, field, label))
-
-        elif config['field'] == 'calibrators':
-            mslist.append('{0:s}_{1:s}.ms'.format(msn, label))
-
-        for m in mslist:
-            if not os.path.exists(os.path.join(pipeline.msdir, m)):
-                raise IOError(
-                    "MS file {0:s} does not exist. Please check that is where it should be.".format(m))
+        prefix_msbase = pipeline.prefix_msbases[i]
+        mslist  = pipeline.get_mslist(i, label, target=(config['field'] == "target"))
+        target_ls = pipeline.target[i] if config['field'] == "target" else []
 
         for j, msname in enumerate(mslist):
-            msinfo = '{0:s}/{1:s}-obsinfo.json'.format(
-                pipeline.obsinfo, msname[:-3])
+            msdict = pipeline.get_msinfo(msname)
+            prefix = os.path.splitext(msname)[0]
 
-            if not os.path.exists(msinfo):
-                raise IOError(
-                    "MS info file {0:s} does not exist. Please check that is where it should be.".format(msinfo))
-
-            with open(msinfo, 'r') as stdr:
-                msdict = yaml.load(stdr)
+            if not os.path.exists(os.path.join(pipeline.msdir, msname)):
+                raise IOError("MS file {0:s} does not exist. Please check that is where it should be.".format(msname))
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, msname)
@@ -127,7 +94,7 @@ def worker(pipeline, recipe, config):
                     if tfld:
                         fields += tfld
                 fields = list(set(fields))
-            field_ids = utils.get_field_id(msinfo, fields)
+            field_ids = utils.get_field_id(msdict, fields)
             fields = ",".join(fields)
 
             if pipeline.enable_task(config, 'unflag'):
@@ -154,8 +121,8 @@ def worker(pipeline, recipe, config):
                 recipe.add("cab/politsiyakat_autocorr_amp", step,
                            {
                                "msname": msname,
-                               "field": fields,
-                               "cal_field": fields,
+                               "field": ",".join([str(id) for id in field_ids]),
+                               "cal_field": ",".join([str(id) for id in field_ids]),
                                "scan_to_scan_threshold": config["flag_autopowerspec"]["scan_thr"],
                                "antenna_to_group_threshold": config["flag_autopowerspec"]["ant_group_thr"],
                                "dpi": 300,
@@ -391,12 +358,38 @@ def worker(pipeline, recipe, config):
                                "msname": msname,
                                "mask": config['flag_mask']['mask'],
                                "accumulation_mode": 'or',
-                               "uvrange": sdm.dismissable(config['flag_mask']['uvrange']),
+                               "uvrange": sdm.dismissable(config['flag_mask']['uvrange'] or None),
                                "memory": 4096,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Apply flag mask ms={1:s}'.format(step, msname))
+
+            if pipeline.enable_task(config, 'flag_manual'):
+                rules = config['flag_manual']['rules']
+                for irule, rule in enumerate(rules):
+                    # a manual flagging rule has a pattern to match the MS name, followed by key:value pairs
+                    rule_elements = rule.split()
+                    if len(rule_elements) < 2 or not all(':' in el for el in rule_elements[1:]):
+                        raise ValueError(f"invalid flag_manual rule '{rule}'")
+                    pattern = rule_elements[0]
+                    keywords = {tuple(elem.split(":", 1)) for elem in rule_elements[1:]}
+                    # end of parsing block. Replace this with file if you like
+                    if not fnmatch.fnmatch(msname, pattern):
+                        continue
+                    caracal.log.info(f"adding manual flagging rule for {pattern}")
+                    step = f'{wname}-manual-ms{msiter}-{irule}'
+                    args = {
+                                   "vis": msname,
+                                   "mode": 'manual',
+                                   "flagbackup": False,
+                                   "field": fields,
+                           }
+                    args.update(keywords)
+                    recipe.add('cab/casa_flagdata', step, args,
+                               input=pipeline.input,
+                               output=pipeline.output,
+                               label=f'{step}::Flag ms={msname} using {rule}')
 
             if pipeline.enable_task(config, 'flag_rfi'):
                 step = '{0:s}-rfi-ms{1:d}'.format(wname, msiter)
@@ -484,10 +477,9 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'inspect'):
                 step = '{0:s}-inspect-ms{1:d}'.format(wname,msiter)
                 if config['field'] == 'target':
-                    fieldName = utils.filter_name(target_ls[j])
                     field = '0'
                 else:
-                    field = ",".join(map(str, utils.get_field_id(msinfo, manfields.get_field(
+                    field = ",".join(map(str, utils.get_field_id(msdict, manfields.get_field(
                         pipeline, i, config['inspect']['field']).split(","))))
                 for f in field.split(','):
                     outlabel = '_{0:d}'.format(i) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(i,f)
@@ -531,8 +523,8 @@ def worker(pipeline, recipe, config):
                 summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs,
                     step))[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
-                                                              prefix, wname)
-                manflags.flag_summary_plots(pipeline, json_summary, prefix, wname, i)
+                                                              prefix_msbase, wname)
+                manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)
 
 
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, msiter)

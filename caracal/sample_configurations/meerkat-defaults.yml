@@ -1,20 +1,21 @@
-schema_version: 1.0.0
+schema_version: 1.1.0
 
 general:
   prefix: mypipelinerun
 
 getdata:
   dataid: ['']
+  extension: ms
 
 obsconf:
   refant: '0'
 
 transform:
   enable: true
+  field: calibrators
   label_out: cal
   split_field:
     enable: true
-    field: calibrators
     col: data
 
 prep:
@@ -40,7 +41,7 @@ flag:
     antennas: '0'
   flag_mask:
     enable: true
-    mask: labelled_rfimask.pickle.npy
+    mask: meerkat.rfimask.npy
     uvrange: '0~1000'
   flag_rfi:
     enable: true

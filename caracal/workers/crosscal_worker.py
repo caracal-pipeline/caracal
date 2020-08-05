@@ -138,7 +138,11 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         my_term = term
         if "I" not in order and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
-
+        # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
+        if term in "GF":
+            params["spw"] = config[ftype]["spw_g"]
+        elif term == "K":
+            params["spw"] = config[ftype]["spw_k"]
         if term == "B":
             params["bandtype"] = term
             params["solnorm"] = config[ftype]["b_solnorm"]

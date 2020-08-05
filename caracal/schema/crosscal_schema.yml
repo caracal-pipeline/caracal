@@ -115,6 +115,16 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
+          spw_k:
+            desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
+            example: ""
+            required: false 
+            type: str
+          spw_g:
+            desc: Only use this subset(s) of the band to compute 'GF' gains. Default uses full band
+            example: ""
+            required: false 
+            type: str
           b_fillgaps:
             desc: Fill flagged solution channels by interpolation.
             type: int
@@ -214,6 +224,16 @@ mapping:
             type: int
             required: false
             example: "70"
+          spw_k:
+            desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
+            example: ""
+            required: false 
+            type: str
+          spw_g:
+            desc: Only use this subset(s) of the band to compute 'GF' gains. Default uses full band
+            example: ""
+            required: false 
+            type: str
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool

@@ -460,7 +460,7 @@ def worker(pipeline, recipe, config):
             "channelsout": config['img_nchans'],
             "joinchannels": config['img_joinchans'],
             "fit-spectral-pol":  config['img_specfit_nrcoeff'],
-            "local-rms": True,
+            "local-rms": False,
             "auto-mask": 6,
             "auto-threshold": config[key]['clean_cutoff'][0],
             "savesourcelist": False,

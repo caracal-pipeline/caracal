@@ -65,7 +65,7 @@ def worker(pipeline, recipe, config):
         last_subdirectory = subdirectory_prefix + str(max_num)
         return max_num, last_subdirectory
 
-    # Copied from masking_worker.py and edited
+    # Copied from masking_worker.py and edited. This is to get a Gaussian beam.
     def build_beam(obs_freq, centre, cell, imsize, out_beam):
 
         # if copy_head == True:
@@ -111,6 +111,45 @@ def worker(pipeline, recipe, config):
         gaussian = np.exp(-((d-mu)**2 / (2.0 * sigma**2)))
 
         fits.writeto(out_beam, gaussian, hdr, overwrite=True)
+
+    # Copied from line_worker.py and edited. This is to get a Mauchian beam.
+    # The original version makes the build_beam function above redundant but do not want to change too many things at once.
+    def make_mauchian_pb(filename, apply_corr, typ, dish_size):
+        if not os.path.exists(filename):
+            caracal.log.warn(
+                'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
+        else:
+            with fits.open(filename) as cube:
+                headcube = cube[0].header
+                datacube = np.indices(
+                    (headcube['naxis2'], headcube['naxis1']), dtype=np.float32)
+                datacube[0] -= (headcube['crpix2'] - 1)
+                datacube[1] -= (headcube['crpix1'] - 1)
+                datacube = np.sqrt((datacube**2).sum(axis=0))
+                datacube.resize((1, datacube.shape[0], datacube.shape[1]))
+                datacube = np.repeat(datacube,
+                                 headcube['naxis3'],
+                                 axis=0) * np.abs(headcube['cdelt1'])
+                freq = (headcube['crval3'] + headcube['cdelt3'] * (
+                    np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
+                if typ == 'gauss':
+                    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
+                    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
+                    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
+                elif typ == 'mauch':
+                    FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
+                    FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
+                    datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
+                           1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
+                fits.writeto(filename.replace('image.fits','pb.fits'),
+                    datacube, header=headcube, overwrite=True)
+                if apply_corr:
+                    fits.writeto(filename.replace('image.fits','pb_corr.fits'),
+                        cube[0].data / datacube, header=headcube, overwrite=True)  # Applying the primary beam correction
+                caracal.log.info('Created primary beam cube FITS {0:s}'.format(
+                    filename.replace('image.fits', 'pb.fits')))
+
+
 
     ##########################################
     # Main part of the worker

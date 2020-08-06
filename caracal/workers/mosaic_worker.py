@@ -115,19 +115,19 @@ def worker(pipeline, recipe, config):
     # Copied from line_worker.py and edited. This is to get a Mauchian beam.
     # The original version makes the build_beam function above redundant but do not want to change too many things at once.
     def make_mauchian_pb(filename): # pbtype):
-        with fits.open(filename) as cube:
-            headcube = cube[0].header
-            datacube = np.indices(
-                (headcube['naxis2'], headcube['naxis1']), dtype=np.float32)
-            datacube[0] -= (headcube['crpix2'] - 1)
-            datacube[1] -= (headcube['crpix1'] - 1)
-            datacube = np.sqrt((datacube**2).sum(axis=0))
-            datacube.resize((1, datacube.shape[0], datacube.shape[1]))
-            datacube = np.repeat(datacube,
-                                 headcube['naxis3'],
-                                 axis=0) * np.abs(headcube['cdelt1'])
-            freq = (headcube['crval3'] + headcube['cdelt3'] * (
-                    np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
+        with fits.open(filename) as image:
+            headimage = image[0].header
+            imagecube = np.indices(
+                (imagecube['naxis2'], imagecube['naxis1']), dtype=np.float32)
+            dataimage[0] -= (headimage['crpix2'] - 1)
+            dataimage[1] -= (headimage['crpix1'] - 1)
+            dataimage = np.sqrt((dataimage**2).sum(axis=0))
+            dataimage.resize((1, dataimage.shape[0], dataimage.shape[1]))
+            #dataimage = np.repeat(datacube,
+            #                     headcube['naxis3'],  ### Only relevant for cubes I take it then
+            #                     axis=0) * np.abs(headcube['cdelt1'])
+            #freq = (headcube['crval3'] + headcube['cdelt3'] * (
+            #        np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
             #if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
@@ -135,10 +135,10 @@ def worker(pipeline, recipe, config):
             #elif pbtype == 'mauchian':
             FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
             FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
-            datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
-                           1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
+            dataimage = (np.cos(1.189 * np.pi * (dataimage / FWHM_pb)) / (
+                           1 - 4 * (1.189 * dataimage / FWHM_pb)**2))**2
             fits.writeto(filename.replace('image.fits','pb.fits'),
-                datacube, header=headcube, overwrite=True)
+                dataimage, header=headimage, overwrite=True)
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
                 filename.replace('image.fits', 'pb.fits')))
 

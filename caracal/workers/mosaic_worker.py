@@ -126,15 +126,13 @@ def worker(pipeline, recipe, config):
             #dataimage = np.repeat(datacube,
             #                     headcube['naxis3'],  ### Only relevant for cubes I take it then
             #                     axis=0) * np.abs(headcube['cdelt1'])
-            #freq = (headcube['crval3'] + headcube['cdelt3'] * (
-            #        np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
             #if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             #    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
             #elif pbtype == 'mauchian':
             FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
-            FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
+            FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))  ### Wary of number of axes
             dataimage = (np.cos(1.189 * np.pi * (dataimage / FWHM_pb)) / (
                            1 - 4 * (1.189 * dataimage / FWHM_pb)**2))**2
             fits.writeto(filename.replace('image.fits','pb.fits'),

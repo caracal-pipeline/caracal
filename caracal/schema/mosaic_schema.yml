@@ -68,7 +68,7 @@ mapping:
         required: false
         example: '13.5'
       ref_frequency:
-        desc: If 'pb_type' has been set to 'gaussian', user needs to specify the reference frequency (in units of Hz).
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that primary beams can be created.
         type: float
         required: false
         example: '1383685546.875'

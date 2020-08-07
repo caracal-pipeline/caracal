@@ -117,8 +117,8 @@ def worker(pipeline, recipe, config):
     def make_mauchian_pb(filename, freq): # pbtype):
         with fits.open(filename) as image:
             headimage = image[0].header
-            imagecube = np.indices(
-                (imagecube['naxis2'], imagecube['naxis1']), dtype=np.float32)
+            dataimage = np.indices(
+                (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
             dataimage[0] -= (headimage['crpix2'] - 1)
             dataimage[1] -= (headimage['crpix1'] - 1)
             dataimage = np.sqrt((dataimage**2).sum(axis=0))

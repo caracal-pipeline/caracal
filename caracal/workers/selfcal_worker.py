@@ -452,6 +452,7 @@ def worker(pipeline, recipe, config):
             "column": 'DATA',
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(robust),
             "nmiter": sdm.dismissable(config['img_nmiter']),
+            "nomfsweighting": config['img_mfs_weighting'],
             "npix": config['img_npix'],
             "padding": config['img_padding'],
             "scale": config['img_cell'],
@@ -462,16 +463,18 @@ def worker(pipeline, recipe, config):
             "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
             "joinchannels": config['img_joinchans'],
-            "fit-spectral-pol":  config['img_specfit_nrcoeff'],
             "local-rms": False,
             "auto-mask": 6,
             "auto-threshold": config[key]['clean_cutoff'][0],
-            "savesourcelist": False,
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "threads": ncpu_img,
             "absmem" : absmem,
         }
+        if config['img_specfit_nrcoeff'] >= 0:
+            fake_image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
+        if not config['img_mfs_weighting']:
+            fake_image_opts["nomfsweighting"] = True
         if maxuvl > 0.:
             fake_image_opts.update({
                 "maxuv-l": maxuvl,
@@ -533,13 +536,17 @@ def worker(pipeline, recipe, config):
             "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
             "joinchannels": config['img_joinchans'],
-            "fit-spectral-pol": config['img_specfit_nrcoeff'],
-            "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "threads": ncpu_img,
             "absmem": absmem,
         }
+        if config['img_specfit_nrcoeff'] > 0:
+            image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
+            if config['img_niter'] > 0:
+                image_opts["savesourcelist"] = True
+        if not config['img_mfs_weighting']:
+            image_opts["nomfsweighting"] = True
         if maxuvl > 0.:
             image_opts.update({
                 "maxuv-l": maxuvl,

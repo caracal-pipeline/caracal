@@ -121,22 +121,17 @@ def worker(pipeline, recipe, config):
                 (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
             ang_offset[0] -= (headimage['crpix2'] - 1)
             ang_offset[1] -= (headimage['crpix1'] - 1)
-            ang_offset = np.sqrt((ang_offset**2).sum(axis=0))  # Using offset in x and y direction to calculate the total offset
+            ang_offset = np.sqrt( (ang_offset**2).sum(axis=0) )  # Using offset in x and y direction to calculate the total offset
             #ang_offset.resize((1, ang_offset.shape[0], ang_offset.shape[1]))  # Only relevant for cubes
-            #print(ang_offset)
-            #print(np.shape(ang_offset))
-            ang_offset = ang_offset * np.abs(headcube['cdelt1'])
-            print(ang_offset)
-            exit()
+            ang_offset = ang_offset * np.abs(headimage['cdelt1'])
             #if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             #    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
             #elif pbtype == 'mauchian':
-            #caracal.log.info('freq = {0:f}'.format(freq))
             FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case 
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
-                           1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2
+                           1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 pb_image, header=headimage, overwrite=True)
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(

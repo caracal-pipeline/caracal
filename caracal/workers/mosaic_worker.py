@@ -121,9 +121,8 @@ def worker(pipeline, recipe, config):
                 (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
             ang_offset[0] -= (headimage['crpix2'] - 1)
             ang_offset[1] -= (headimage['crpix1'] - 1)
-            ang_offset = np.sqrt( (ang_offset**2).sum(axis=0) )  # Using offset in x and y direction to calculate the total offset
-            #ang_offset.resize((1, ang_offset.shape[0], ang_offset.shape[1]))  # Only relevant for cubes
-            ang_offset = ang_offset * np.abs(headimage['cdelt1'])
+            ang_offset = np.sqrt( (ang_offset**2).sum(axis=0) )  # Using offset in x and y direction to calculate the total offset from the pointing centre
+            ang_offset = ang_offset * np.abs(headimage['cdelt1'])  # Now offset is in units of deg
             #if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
@@ -306,8 +305,6 @@ def worker(pipeline, recipe, config):
                     filename = pathname + '/' + image_name
                     freq = config['ref_frequency'] # Units of Hz. The default assumes that MeerKAT data is being processed
                     make_mauchian_pb(filename, freq)
-                    print('Check Mauchian beam before proceeding')
-                    exit()
 
                     # Confirming freq value being used for the primary beam
                     caracal.log.info('Observing frequency = {0:f} Hz'.format(

@@ -117,12 +117,15 @@ def worker(pipeline, recipe, config):
     def make_mauchian_pb(filename, freq): # pbtype):
         with fits.open(filename) as image:
             headimage = image[0].header
-            dataimage = np.indices(
+            ang_offset = np.indices(
                 (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
-            dataimage[0] -= (headimage['crpix2'] - 1)
-            dataimage[1] -= (headimage['crpix1'] - 1)
-            dataimage = np.sqrt((dataimage**2).sum(axis=0))
-            dataimage.resize((1, dataimage.shape[0], dataimage.shape[1]))
+            ang_offset[0] -= (headimage['crpix2'] - 1)
+            ang_offset[1] -= (headimage['crpix1'] - 1)
+            ang_offset = np.sqrt((ang_offset**2).sum(axis=0))  # Using offset in x and y direction to calculate the total offset
+            #dataimage.resize((1, dataimage.shape[0], dataimage.shape[1]))  # Only relevant for cubes
+            #print(ang_offset)
+            #print(np.shape(ang_offset))
+            exit()
             #dataimage = np.repeat(datacube,
             #                     headcube['naxis3'],  # Only relevant for cubes
             #                     axis=0) * np.abs(headcube['cdelt1'])
@@ -134,10 +137,10 @@ def worker(pipeline, recipe, config):
             #caracal.log.info('freq = {0:f}'.format(freq))
             FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # freq is just a float for the 2D case 
             #FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))  # FWHM_pb is just a float for the 2D case
-            dataimage = (np.cos(1.189 * np.pi * (dataimage / FWHM_pb)) / (
-                           1 - 4 * (1.189 * dataimage / FWHM_pb)**2))**2
+            pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
+                           1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2
             fits.writeto(filename.replace('image.fits','pb.fits'),
-                dataimage, header=headimage, overwrite=True)
+                pb_image, header=headimage, overwrite=True)
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
                 filename.replace('image.fits', 'pb.fits')))
 
@@ -310,7 +313,7 @@ def worker(pipeline, recipe, config):
                     filename = pathname + '/' + image_name
                     freq = config['ref_frequency'] # Units of Hz. The default assumes that MeerKAT data is being processed
                     make_mauchian_pb(filename, freq)
-                    print('Check Mauchian beam before processing')
+                    print('Check Mauchian beam before proceeding')
                     exit()
 
                     # Confirming freq value being used for the primary beam

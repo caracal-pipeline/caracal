@@ -124,15 +124,16 @@ def worker(pipeline, recipe, config):
             dataimage = np.sqrt((dataimage**2).sum(axis=0))
             dataimage.resize((1, dataimage.shape[0], dataimage.shape[1]))
             #dataimage = np.repeat(datacube,
-            #                     headcube['naxis3'],  ### Only relevant for cubes I take it then
+            #                     headcube['naxis3'],  # Only relevant for cubes
             #                     axis=0) * np.abs(headcube['cdelt1'])
             #if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             #    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
             #elif pbtype == 'mauchian':
-            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
-            FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))  ### Wary of number of axes
+            #caracal.log.info('freq = {0:f}'.format(freq))
+            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # freq is just a float for the 2D case 
+            #FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))  # FWHM_pb is just a float for the 2D case
             dataimage = (np.cos(1.189 * np.pi * (dataimage / FWHM_pb)) / (
                            1 - 4 * (1.189 * dataimage / FWHM_pb)**2))**2
             fits.writeto(filename.replace('image.fits','pb.fits'),
@@ -306,8 +307,11 @@ def worker(pipeline, recipe, config):
 
                 else:  # i.e. pb_type == 'mauchian'
 
+                    filename = pathname + '/' + image_name
                     freq = config['ref_frequency'] # Units of Hz. The default assumes that MeerKAT data is being processed
                     make_mauchian_pb(filename, freq)
+                    print('Check Mauchian beam before processing')
+                    exit()
 
                     # Confirming freq value being used for the primary beam
                     caracal.log.info('Observing frequency = {0:f} Hz'.format(

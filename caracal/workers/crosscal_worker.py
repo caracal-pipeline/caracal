@@ -6,6 +6,7 @@ import caracal
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_caltabs as manGtabs
+from caracal.workers.utils import manage_antennas as manants
 import copy
 import re
 import json
@@ -128,7 +129,18 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         gtable_ = None
         ftable_ = None
         interp = RULES[term]["interp"]
-        params["refant"] = pipeline.refant[iobs] or '0'
+        if pipeline.refant[iobs] in ['auto']:
+            params["refant"] = manants.get_refant(pipeline, recipe,
+                                                  prefix, msname, fields,
+                                                  pipeline.minbase[iobs],
+                                                  pipeline.maxdist[iobs], i)
+            if params["refant"]:
+                caracal.log.info(f"Auto selected ref antenna(s): {params['refant']}")
+            else:
+                caracal.log.error("Cannot auto-select ref antenna(s). Set it manually.")
+
+        else:
+            params["refant"] = pipeline.refant[iobs]
         params["solint"] = first_if_single(config[ftype]["solint"], i)
         params["combine"] = first_if_single(config[ftype]["combine"], i).strip("'")
         params["field"] = ",".join(field)

@@ -158,7 +158,7 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
                 else:
                     restfreq = HI
                 cdelt3 = - restfreq*cdelt3/C
-                crval3 = restfreq*(1-crval3v/C)
+                crval3 = restfreq*(1-crval3/C)
                 
             freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3']) -
                                        headcube['crpix3'] + 1))

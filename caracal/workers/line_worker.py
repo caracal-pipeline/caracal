@@ -128,6 +128,9 @@ def fix_specsys(filename, specframe):
             headcube['specsys3'] = specsys3
 
 def make_pb_cube(filename, apply_corr, typ, dish_size):
+    C = 2.99792458e+8       # m/s
+    HI = 1.4204057517667e+9  # Hz
+    
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -140,11 +143,26 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
             datacube[1] -= (headcube['crpix1'] - 1)
             datacube = np.sqrt((datacube**2).sum(axis=0))
             datacube.resize((1, datacube.shape[0], datacube.shape[1]))
+
             datacube = np.repeat(datacube,
                                  headcube['naxis3'],
                                  axis=0) * np.abs(headcube['cdelt1'])
-            freq = (headcube['crval3'] + headcube['cdelt3'] * (
-                np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
+            
+            cdelt3 = float(headcube['cdelt3'])
+            crval3 = float(headcube['crval3'])
+            
+            # Convert radio velocity to frequency if required
+            if 'VRAD' in headcube['ctype3']:
+                if 'restfreq' in headcube:
+                    restfreq = float(headcube['restfreq'])
+                else:
+                    restfreq = HI
+                cdelt3 = - restfreq*cdelt3/C
+                crval3 = restfreq*(1-crval3v/C)
+                
+            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3']) -
+                                       headcube['crpix3'] + 1))
+            
             if typ == 'gauss':
                sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
                sigma_pb.resize((sigma_pb.shape[0], 1, 1))

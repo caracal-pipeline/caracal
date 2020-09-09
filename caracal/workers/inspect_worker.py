@@ -200,7 +200,7 @@ def get_xy(plot_name):
     return basic[plot_name]
 
 
-def get_cfg_fields(pipeline, iobs, cfg_field):
+def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
     """
     Convert field representative names (e.g bpcal etc) to actual field names
     and ids
@@ -214,6 +214,8 @@ def get_cfg_fields(pipeline, iobs, cfg_field):
     cfg_field: :obj:`str`
         A string from the field section configuration file containing the
         representative field names
+    label_in: str
+        Label associated with input MS
 
     Returns
     -------
@@ -240,6 +242,9 @@ def get_cfg_fields(pipeline, iobs, cfg_field):
         fids = getattr(pipeline, f"{f_type}_id")[iobs]
 
         for _fid, _fname in zip(fids, fnames):
+            # set field id to 0 if the active MS is a target only split
+            if label_in != '' and f_type == "target":
+                _fid = 0
             fields[_fname] = (f_type, _fid)
 
     # return none if no items in field dict
@@ -520,8 +525,7 @@ def worker(pipeline, recipe, config):
 
         for ms in mslist:
             if not ms_exists(pipeline.msdir, ms):
-                raise IOError(f"""MS {ms} does not exist. \
-                                  Please check that is where it should be.""")
+                raise IOError(f"MS {ms} does not exist. Please check that is where it should be.")
 
             log.info(f"Plotting MS: {ms}")
 
@@ -533,7 +537,8 @@ def worker(pipeline, recipe, config):
 
             corrs = get_cfg_corrs(plotter_params.correlation, ms_corrs)
 
-            fields = get_cfg_fields(pipeline, iobs, plotter_params.field)
+            fields = get_cfg_fields(pipeline, iobs, plotter_params.field,
+                                    label_in)
 
             if fields is None:
                 raise ValueError(f"""

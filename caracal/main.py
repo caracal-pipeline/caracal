@@ -6,7 +6,6 @@ import sys
 import ruamel.yaml
 import pdb
 import traceback
-import pdb
 import logging
 import shutil
 from caracal.dispatch_crew import config_parser

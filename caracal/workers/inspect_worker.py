@@ -404,7 +404,7 @@ def shadems(pipeline, recipe, basic, extras=None):
         "chan": "CHAN", "freq": "FREQ",
         "amp": "amp", "phase": "phase",
         "real": "real", "imag": " imag",
-        "uvwave": "UV"
+        "uvwave": "UV", "baseline": "UV"
     }
 
     # get a name conforming to those allowed in shadems
@@ -423,7 +423,7 @@ def shadems(pipeline, recipe, basic, extras=None):
             "ms": basic["ms"],
             "corr": _corr,
             "field": basic["field"],
-            "colour-by": basic["colour"],
+            "colour-by": shade_cols(basic["colour"], col_names),
             "png": f"{basic['output']}-corr-{_corr}.png",
             # "mem_limit": basic["mem_limit"],
             "num-parallel": basic["num_cores"]
@@ -585,4 +585,5 @@ def worker(pipeline, recipe, config):
                         "label": label,
                         **plot_axes[axes]})
 
-                    eval(plotter)(pipeline, recipe, plot_args, extras=None)
+                    globals()[plotter](pipeline, recipe, plot_args,
+                                       extras=None)

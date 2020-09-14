@@ -75,7 +75,7 @@ mapping:
             example: 'fcal'
           tile_size:
             type: int
-            desc: Size of tiles loaded into memory by MeqTrees.
+            desc: Size of tile (time bins) to process. Can be used to reduce memory footprint.
             required: false
             example: '128'
           threads:

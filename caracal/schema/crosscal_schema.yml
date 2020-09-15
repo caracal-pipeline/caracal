@@ -73,6 +73,11 @@ mapping:
             type: str
             required: false
             example: 'fcal'
+          tile_size:
+            type: int
+            desc: Size of tile (time bins) to process. Can be used to reduce memory footprint.
+            required: false
+            example: '128'
           threads:
             type: int
             desc: Number of threads used by MeqTrees if meerkat_skymodel above is enabled.

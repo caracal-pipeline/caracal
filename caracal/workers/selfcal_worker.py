@@ -2151,7 +2151,7 @@ def worker(pipeline, recipe, config):
                 calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             mask_key=config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1]
-            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
                 recipe.run()

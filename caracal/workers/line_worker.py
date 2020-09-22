@@ -22,6 +22,7 @@ import yaml
 from caracal.dispatch_crew import utils
 import itertools
 from caracal.workers.utils import manage_flagsets as manflags
+import psutil
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -126,7 +127,10 @@ def fix_specsys(filename, specframe):
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
 
-def make_pb_cube(filename, apply_corr):
+def make_pb_cube(filename, apply_corr, typ, dish_size):
+    C = 2.99792458e+8       # m/s
+    HI = 1.4204057517667e+9  # Hz
+    
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -139,14 +143,35 @@ def make_pb_cube(filename, apply_corr):
             datacube[1] -= (headcube['crpix1'] - 1)
             datacube = np.sqrt((datacube**2).sum(axis=0))
             datacube.resize((1, datacube.shape[0], datacube.shape[1]))
+
             datacube = np.repeat(datacube,
                                  headcube['naxis3'],
                                  axis=0) * np.abs(headcube['cdelt1'])
-            sigma_pb = 17.52 / (headcube['crval3'] + headcube['cdelt3'] * (
-                np.arange(headcube['naxis3']) - headcube['crpix3'] + 1)) * 1e+9 / 13.5 / 2.355
-            # sigma_pb=headcube['crval3']+headcube['cdelt3']*(np.arange(headcube['naxis3'])-headcube['crpix3']+1)
-            sigma_pb.resize((sigma_pb.shape[0], 1, 1))
-            datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
+            
+            cdelt3 = float(headcube['cdelt3'])
+            crval3 = float(headcube['crval3'])
+            
+            # Convert radio velocity to frequency if required
+            if 'VRAD' in headcube['ctype3']:
+                if 'restfreq' in headcube:
+                    restfreq = float(headcube['restfreq'])
+                else:
+                    restfreq = HI
+                cdelt3 = - restfreq*cdelt3/C
+                crval3 = restfreq*(1-crval3/C)
+                
+            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3']) -
+                                       headcube['crpix3'] + 1))
+            
+            if typ == 'gauss':
+               sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
+               sigma_pb.resize((sigma_pb.shape[0], 1, 1))
+               datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
+            elif typ == 'mauch':
+               FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1
+               FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
+               datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
+                           1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 datacube, header=headcube, overwrite=True)
             if apply_corr:
@@ -198,6 +223,18 @@ def worker(pipeline, recipe, config):
     RA, Dec = [], []
     firstchanfreq_all, chanw_all, lastchanfreq_all = [], [], []
     restfreq = config['restfreq']
+
+    # distributed deconvolution settings
+    ncpu = config['ncpu']
+    if ncpu == 0:
+      ncpu = psutil.cpu_count()
+    else:
+      ncpu = min(ncpu, psutil.cpu_count())
+    nrdeconvsubimg = ncpu if config['make_cube']['wscl_nrdeconvsubimg'] == 0 else config['make_cube']['wscl_nrdeconvsubimg']
+    if nrdeconvsubimg == 1:
+        wscl_parallel_deconv = None
+    else:
+        wscl_parallel_deconv = int(np.ceil(max(config['make_cube']['npix'])/np.sqrt(nrdeconvsubimg)))
 
     for i, msfile in enumerate(all_msfiles):
         # Update pipeline attributes (useful if, e.g., channel averaging was
@@ -589,35 +626,25 @@ def worker(pipeline, recipe, config):
 
         if config['make_cube']['use_mstransform']:
             for i, msfile in enumerate(all_msfiles):
-                # If channelisation changed during a previous pipeline run
-                # as stored in the obsinfo.json file
-                if not pipeline.enable_task(config, 'mstransform'):
-                    msbase, ext = os.path.splitext(msfile)
-                    msinfo = pipeline.get_msinfo(f"{msbase}_mst{ext}")
-                    spw = msinfo['SPW']['NUM_CHAN']
-                    nchans = spw
-                    nchans_all.append(nchans)
-                    caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
-                        len(spw), ','.join(map(str, spw))))
-                    # Get first chan, last chan, chan width
-                    chfr = msinfo['SPW']['CHAN_FREQ']
-                    firstchanfreq = [ss[0] for ss in chfr]
-                    lastchanfreq = [ss[-1] for ss in chfr]
-                    chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
-                    caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
-                        ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
-
-                    # Get spectral reference frame
-                    specframe = msinfo['SPW']['MEAS_FREQ_REF']
-                    specframe_all.append(specframe)
-                    caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
-
-                # Or get it from the mstransform segment executed in this
-                # same pipeline run
-                elif pipeline.enable_task(config['mstransform'], 'doppler'):
-                    nchans_all.append([nchan_dopp for kk in chanw_all[i]])
-                    specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
-                                         config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
+                # Get channelisation of _mst.ms file
+                msbase, ext = os.path.splitext(msfile)
+                msinfo = pipeline.get_msinfo(f"{msbase}_mst{ext}")
+                spw = msinfo['SPW']['NUM_CHAN']
+                nchans = spw
+                nchans_all.append(nchans)
+                caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
+                    len(spw), ','.join(map(str, spw))))
+                # Get first chan, last chan, chan width
+                chfr = msinfo['SPW']['CHAN_FREQ']
+                firstchanfreq = [ss[0] for ss in chfr]
+                lastchanfreq = [ss[-1] for ss in chfr]
+                chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
+                caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+                    ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
+                # Get spectral reference frame
+                specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                specframe_all.append(specframe)
+                caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
 
         else:
             msinfo = pipeline.get_msinfo(msfile)
@@ -671,6 +698,7 @@ def worker(pipeline, recipe, config):
             "auto-threshold": config['make_cube']['wscl_auto_thr'],
             "multiscale": config['make_cube']['wscl_multiscale'],
             "multiscale-scale-bias": config['make_cube']['wscl_multiscale_bias'],
+            "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             "no-update-model-required": config['make_cube']['wscl_noupdatemod']
         }
         if config['make_cube']['wscl_multiscale_scales']:
@@ -1040,7 +1068,10 @@ def worker(pipeline, recipe, config):
                 recipe.add(make_pb_cube,
                            'make pb_cube-{0:d}'.format(uu),
                            {'filename': image_cube_list[uu],
-                            'apply_corr': config['pb_cube']['apply_pb'],},
+                            'apply_corr': config['pb_cube']['apply_pb'],
+                            'typ': config['pb_cube']['pb_type'],
+                            'dish_size': config['pb_cube']['dish_size'],
+                           },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))

@@ -73,6 +73,11 @@ mapping:
             type: str
             required: false
             example: 'fcal'
+          tile_size:
+            type: int
+            desc: Size of tile (time bins) to process. Can be used to reduce memory footprint.
+            required: false
+            example: '128'
           threads:
             type: int
             desc: Number of threads used by MeqTrees if meerkat_skymodel above is enabled.
@@ -115,6 +120,11 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
+          spw:
+            desc: Only use this subset(s) of the band to compute 'KGF' gains 
+            example: ""
+            required: false 
+            type: str
           b_fillgaps:
             desc: Fill flagged solution channels by interpolation.
             type: int
@@ -214,6 +224,11 @@ mapping:
             type: int
             required: false
             example: "70"
+          spw:
+            desc: Only use this subset(s) of the band to compute 'KGF' gains
+            example: ""
+            required: false 
+            type: str
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool

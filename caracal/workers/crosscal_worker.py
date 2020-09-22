@@ -135,8 +135,12 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
         params["caltable"] = caltable + ":output"
         my_term = term
-        if "I" not in order and smodel and term in "KGF":
+        did_I = 'I' in order[:i+1] 
+        if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
+        # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
+        if term in "KGF":
+            params["spw"] = config[ftype]["spw"]
 
         if term == "B":
             params["bandtype"] = term
@@ -497,7 +501,7 @@ def worker(pipeline, recipe, config):
                         "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
                         "threads": config["set_model"]['threads'],
                         "mode": "simulate",
-                        "tile-size": 128,
+                        "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
                 elif modelpoint:  # spectral model if specified in our standard
@@ -516,7 +520,7 @@ def worker(pipeline, recipe, config):
                         "vis": msname,
                         "field": fluxscale_field,
                         "standard": standard,
-                        "usescratch": False,
+                        "usescratch": True,
                         "scalebychan": True,
                     }
                 else:

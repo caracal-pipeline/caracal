@@ -444,7 +444,8 @@ def worker(pipeline, recipe, config):
     def fake_image(trg, num, img_dir, mslist, field):
         key = 'image'
         key_mt = 'calibrate'
-
+        ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
+        absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
@@ -468,8 +469,9 @@ def worker(pipeline, recipe, config):
             "savesourcelist": False,
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
-            "threads": ncpu,
             "nwlayers-factor": nwlayers_factor,
+            "threads": ncpu_img,
+            "absmem" : absmem,
         }
         if maxuvl > 0.:
             fake_image_opts.update({
@@ -493,6 +495,10 @@ def worker(pipeline, recipe, config):
         key = 'image'
         key_mt = 'calibrate'
 
+        ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
+        absmem = config[key]['absmem']
+        caracal.log.info("Number of threads used by WSClean for gridding:")
+        caracal.log.info(ncpu_img)
         if num > 1:
             matrix_type = config[key_mt]['gain_matrix_type'][
                 num - 2 if len(config[key_mt]['gain_matrix_type']) >= num else -1]
@@ -532,8 +538,9 @@ def worker(pipeline, recipe, config):
             "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
-            "threads": ncpu,
             "nwlayers-factor": nwlayers_factor,
+            "threads": ncpu_img,
+            "absmem": absmem,
         }
         if maxuvl > 0.:
             image_opts.update({
@@ -556,8 +563,11 @@ def worker(pipeline, recipe, config):
             image_opts.update({
                 "auto-mask": config[key]['cleanmask_thr'][num-1 if len(config[key]['cleanmask_thr']) >= num else -1],
                 "local-rms": config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1],
-                "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
               })
+            if config[key]['cleanmask_localrms'][num-1 if len(config[key]['cleanmask_localrms']) >= num else -1]:
+                image_opts.update({
+                    "local-rms-window": config[key]['cleanmask_localrms_window'][num-1 if len(config[key]['cleanmask_localrms_window']) >= num else -1],
+                  })
         elif mask_key == 'sofia':
             fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
                 prefix,field, num)
@@ -2136,7 +2146,7 @@ def worker(pipeline, recipe, config):
                 calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             mask_key=config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1]
-            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
                 recipe.run()

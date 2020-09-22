@@ -169,7 +169,8 @@ mapping:
         example: '0'
       img_nwlayers_factor:
         type: int
-        desc: Increases the default number of w-layers by this factor. Note that based on experience this is only approximately true and if the number of cores available are larger, the number of w-layers is made equal to the number of cores irrespective of this factor.
+        desc: Use automatic calculation of the number of w-layers, but multiple that number by
+   the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
         required: false
         example: '3'
       img_sofia_settings:

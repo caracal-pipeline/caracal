@@ -439,7 +439,7 @@ mapping:
             example: 'False'
       
       sofia:
-        desc: Run SoFiA source-finder to produce a detection mask, moment images and catalogues.
+        desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.
         type: map
         mapping:
           enable:

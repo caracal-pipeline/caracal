@@ -513,7 +513,7 @@ def worker(pipeline, recipe, config):
                         "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
                         "threads": config["set_model"]['threads'],
                         "mode": "simulate",
-                        "tile-size": 128,
+                        "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
                 elif modelpoint:  # spectral model if specified in our standard

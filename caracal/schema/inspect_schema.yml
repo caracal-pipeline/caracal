@@ -91,7 +91,7 @@ mapping:
         type: str
         required: false
         desc: Set the U-V range for data selection, e.g. '>50'.
-        example: '' 
+        example: ''
 
       real_imag:
         type: map

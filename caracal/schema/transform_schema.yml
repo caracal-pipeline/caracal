@@ -95,9 +95,14 @@ mapping:
                 desc: Label of the calibration tables to be used.
                 type: str
                 required: false
-                example: '1gc1'
+                example: ''
               pol_callib:
                 desc: Label of the polarization callib file to be used. Please, specify the entire json file name or leave it empty if you don't want to calibrate polarization.
+                type: str
+                required: false
+                example: ''
+              label_pcal:
+                desc: Label of the polarization calibration tables to be used.
                 type: str
                 required: false
                 example: ''

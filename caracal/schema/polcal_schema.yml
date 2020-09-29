@@ -54,16 +54,11 @@ mapping:
         type: str
         required: false
         example: '1MHz'
-      make_diagnostic_plots:
-        desc: Plot solutions and save in <output>/diagnostic_plots/polcal/.
+      plotgains:
+        desc: Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
         type: bool
         required: false
         example: "True"
-      refant_for_plots:
-        desc: Reference antenna for plots.
-        type: str
-        required: false
-        example: 'm007'
       apply_pcal:
         desc: Apply the polcal solutions to the cross calibrated corrected MS. If this is set to 'False' the cross calibrated MS will be deleted.
         type: bool

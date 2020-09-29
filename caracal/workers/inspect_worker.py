@@ -121,13 +121,13 @@ def worker(pipeline, recipe, config):
     output_dir = os.path.join(pipeline.diagnostic_plots, subdir) if subdir else pipeline.diagnostic_plots
 
     if config['field'] == 'calibrators':
-        fields = ['bpcal', 'gcal', 'fcal']
+        fields = ['bpcal', 'gcal', 'fcal', 'xcal']
     elif config['field'] == 'target':
         fields = ['target']
     else:
         fields = config['field'].split(',')
-        if set(fields).difference(['fcal', 'bpcal', 'gcal']):
-            raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal' or 'gcal'. " \
+        if set(fields).difference(['fcal', 'bpcal', 'gcal', 'xcal']):
+            raise ValueError("Eligible values for 'field': 'target', 'calibrators', 'fcal', 'bpcal', 'gcal' or 'xcal'. " \
                              "User selected {}".format(",".join(fields)))
     log.info(f"plotting fields: {' '.join(fields)}")
 

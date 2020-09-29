@@ -4,11 +4,21 @@ general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['']
+  dataid: ['1576599977_fullpol_1318to1418MHZ']
   extension: ms
 
-obsconf: 
-  refant: '0'
+obsconf:
+  target:
+    - all
+  fcal:
+    - longest
+  bpcal:
+    - longest
+  gcal:
+    - all
+  xcal:
+    - 'J0521+1638'
+  refant: 'm008'
 
 transform:
   enable: true
@@ -50,35 +60,37 @@ crosscal:
   enable: true
   uvrange: '>150'
   label_in: 'cal'
+  label_cal: 1kgb
   set_model:
     enable: true
     meerkat_skymodel: true
   primary:
-    reuse_existing_gains: true
-    order: KGBAKGB
-    combine: ["", "", "", null, "","", scan]
-    solint: [inf, inf, inf, null, 60s, 60s, inf]
-    calmode: [a, ap, ap, null, a, ap, ap] 
+    reuse_existing_gains: false
+    order: KGBAKGBK
+    combine: ["","","",null,"", "", "scan","scan"]
+    solint: [inf, inf, inf, null, 60s, 60s, inf,inf]
+    calmode: [a, ap, ap, null, a, ap, ap, a]
     b_fillgaps: 70
     plotgains: true
   secondary:
-    reuse_existing_gains: true
-    order: KGAKF
-    apply: B
-    combine: ["", "", null, "", ""] 
-    solint: [inf, inf, null, inf, inf]
-    calmode: [a, ap, null, a, ap] 
+    reuse_existing_gains: false
+    order: GAF
+    apply: KB
+    combine: ["",null,""]
+    solint: [inf,null,inf]
+    calmode: [ap,null,ap]
     plotgains: true
-  apply_cal: 
-    applyto: 
+  apply_cal:
+    applyto:
       - gcal
       - bpcal
+      - xcal
 
 inspect: 
   enable: true
   label_in: 'cal'
   field: 'calibrators'
-  label_plot: '1gc'
+  label_plot: '1kgb'
   real_imag: 
     enable: true
     avgtime: '60'
@@ -98,13 +110,59 @@ inspect:
     enable: true
     avgtime: '60'
 
+polcal:
+  enable: true
+  uvrange: '>150'
+  label_in: 'cal'
+  label_cal: '1pcal'
+  crosscal_callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1kgb.json'
+  reuse_existing_tables: true
+  pol_calib: xcal
+  leakage_calib: fcal
+  avg_bw: '1MHz'
+  plotgains: true
+  feed_angle_rotation: '-90'
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
+
+inspect__2:
+  enable: true
+  label_in: 'cal'
+  field: 'calibrators'
+  label_plot: '1pcal'
+  real_imag:
+    enable: true
+    avgtime: '60'
+  amp_phase:
+    enable: true
+    avgtime: '60'
+  amp_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_ant:
+    enable: true
+    avgtime: '60'
+  phase_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_scan:
+    enable: true
+    avgtime: '60'
+
 transform__2:
   enable: true
+  label_out: corr
+  field: target
   split_field:
     enable: true
+    col: corrected
     otfcal:
       enable: true
-      label_cal: '1gc1'
+      callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1kgb.txt'
+      pol_callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1pcal.json'
 
 prep__2:
   enable: true
@@ -124,9 +182,6 @@ flag__2:
     flagger: aoflagger
     aoflagger:
       strategy: firstpass_QUV.rfis
-  inspect: 
-    enable: false
-    field: target
 
 mask: 
   enable: false

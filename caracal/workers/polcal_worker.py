@@ -14,6 +14,7 @@ import copy
 import re
 import json
 import glob
+import glob
 
 import shutil
 import numpy
@@ -37,9 +38,10 @@ def scan_length(msinfo, field):
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
 
-def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators):
+def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist):
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + 'Xf',
                   prefix + '.Dref', prefix + '.Df']
+    all_gaintables = caltablelist + gaintables
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
@@ -74,6 +76,7 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                    input=pipeline.input, output=pipeline.output,
                    label="set_model_%d" % 0)
         gaintables = []
+        all_gaintables=caltablelist+gaintables
 
         # Phaseup diagonal of crosshand cal if available
         recipe.add("cab/casa_gaincal",
@@ -89,11 +92,13 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "gaintype": "G",
                        "calmode": "p",
                        "spw": '',
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
+                       "gaintable": ["%s:output" % ct for ct in
+                                     all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phaseup")
         gaintables += [prefix + '.Gpol1']
+        all_gaintables=caltablelist+gaintables
 
         recipe.add("cab/casa_gaincal",
                    "crosshand_delay",
@@ -107,11 +112,12 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "parang": True,
                        "gaintype": "KCROSS",
                        "spw": '',
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
+                       "gaintable": ["%s:output" % ct for ct in all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_delay")
         gaintables += [prefix + '.Kcrs']
+        all_gaintables=caltablelist+gaintables
 
         if config["make_diagnostic_plots"]:
             recipe.add("cab/casa_plotms",
@@ -145,11 +151,12 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "combine": "",
                        "poltype": "Xf",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
+                       "gaintable": ["%s:output" % ct for ct in all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_ref")
         gaintables += [prefix + '.Xref']
+        all_gaintables=caltablelist+gaintables
 
         if config["make_diagnostic_plots"]:
             recipe.add("cab/casa_plotms",
@@ -175,11 +182,12 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "combine": "scan",
                        "poltype": "Xf",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
+                       "gaintable": ["%s:output" % ct for ct in all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
         gaintables += [prefix + '.Xf']
+        all_gaintables=caltablelist+gaintables
 
         if config["make_diagnostic_plots"]:
             recipe.add("cab/casa_plotms",
@@ -198,7 +206,6 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
         # if necessary to achieve desired SNR
-
         recipe.add("cab/casa_polcal",
                    "leakage_ref",
                    {
@@ -210,11 +217,12 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "poltype": "D",
                        "refant": ref,
                        "spw": '',
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
+                       "gaintable": ["%s:output" % ct for ct in all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_ref")
         gaintables += [prefix + '.Dref']
+        all_gaintables=caltablelist+gaintables
 
         if config["make_diagnostic_plots"]:
             recipe.add("cab/casa_plotms",
@@ -242,12 +250,12 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
                        "combine": "scan",
                        "poltype": "Df",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in gaintables],
-
+                       "gaintable": ["%s:output" % ct for ct in all_gaintables],
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
         gaintables += [prefix + '.Df']
+        all_gaintables=caltablelist+gaintables
 
         if config["make_diagnostic_plots"]:
             recipe.add("cab/casa_plotms",
@@ -295,6 +303,19 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
 
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    if config['apply_pcal']:
+        recipe.add("cab/casa_applycal", "apply_caltables", {
+            "vis": msname,
+            "field": config["applyto"],
+            "gaintable": all_gaintables,
+            "interp": interplist + ['linear', 'nearest', 'nearest', 'nearest'],
+            #"calwt": [True, False, False, False],
+            "gainfield": gainfieldlist + ['', '', '', ''],
+            "parang": True,
+        },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="Apply caltables")
 
 
 def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
@@ -641,6 +662,21 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix):
                    input=pipeline.input, output=pipeline.caltables,
                    label="Leakage terms")
 
+        if config["make_diagnostic_plots"]:
+            recipe.add("cab/casa_plotms",
+                       "leakage_ref_plot",
+                       {
+                           "vis": prefix + '.Df0gen:output',
+                           "xaxis": "time",
+                           "yaxis": "amp",
+                           "field": '',
+                           "antenna": ant,
+                           "plotfile": plotname + ".Df0gen.png",
+                           "overwrite": True
+                       },
+                       input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                       label="leakage_plot")
+
         # solve for global normalized gain amp (to get X/Y ratios) on pol calibrator (TO APPLY ON TARGET)
         # amp-only and normalized, so only X/Y amp ratios matter
         recipe.add("cab/casa_gaincal",
@@ -805,12 +841,13 @@ def worker(pipeline, recipe, config):
                         'XX', 'XY', 'YX', 'YY']))
 
         # prepare data (APPLY KGB AND SPLIT a NEW MSDIR)
+        msname=inmsname
         if config['crosscal_callib'] != '' and config['crosscal_callib'][-5:] == '.json':
-            msname = 'crosscalib_' + inmsname
-            if os.path.exists(os.path.join(pipeline.msdir, msname)) or os.path.exists(
-                    os.path.join(pipeline.msdir, msname) + ".flagversions"):
-                shutil.rmtree(os.path.join(pipeline.msdir, msname), ignore_errors=True)
-                shutil.rmtree(os.path.join(pipeline.msdir, msname) + '.flagversions', ignore_errors=True)
+            #msname = 'crosscalib_' + inmsname
+            # if os.path.exists(os.path.join(pipeline.msdir, msname)) or os.path.exists(
+            #         os.path.join(pipeline.msdir, msname) + ".flagversions"):
+            #     shutil.rmtree(os.path.join(pipeline.msdir, msname), ignore_errors=True)
+            #     shutil.rmtree(os.path.join(pipeline.msdir, msname) + '.flagversions', ignore_errors=True)
 
             calprefix = config['crosscal_callib'][:-5]
             callib_path = 'caltables/callibs/{}'.format(config['crosscal_callib'])
@@ -821,7 +858,7 @@ def worker(pipeline, recipe, config):
             # write calibration library txt file from json file to applycal
             caltablelist, gainfieldlist, interplist = [], [], []
 
-            callib = 'caltables/callibs/{}.txt'.format(calprefix)
+            #callib = 'caltables/callibs/{}.txt'.format(calprefix)
 
             with open(os.path.join(pipeline.output, callib_path)) as f:
                 callib_dict = json.load(f)
@@ -831,34 +868,35 @@ def worker(pipeline, recipe, config):
                 gainfieldlist.append(callib_dict[applyme]['fldmap'])
                 interplist.append(callib_dict[applyme]['interp'])
 
-            with open(os.path.join(pipeline.output, callib), 'w') as stdw:
-                for j in range(len(caltablelist)):
-                    stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                        stimela.recipe.CONT_IO["output"], 'caltables', caltablelist[j]))
-                    stdw.write(' calwt=False')
-                    stdw.write(' tinterp=\'' + str(interplist[j]) + '\'')
-                    stdw.write(' finterp=\'linear\'')
-                    stdw.write(' fldmap=\'' + str(gainfieldlist[j]) + '\'')
-                    stdw.write(' spwmap=0\n')
-
-            recipe.add("cab/casa_mstransform",
-                       "apply 0",
-                       {
-                           "vis": inmsname,
-                           "outputvis": msname,
-                           "keepflags": True,
-                           "docallib": True,
-                           "callib": callib + ':output',
-                           "field": "",
-                           "uvrange": config['uvrange'],
-                       },
-                       input=pipeline.input, output=pipeline.output,
-                       label="Apply crosscal")
-            recipe.run()
-            recipe.jobs = []
+            # with open(os.path.join(pipeline.output, callib), 'w') as stdw:
+            #     for j in range(len(caltablelist)):
+            #         stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
+            #             stimela.recipe.CONT_IO["output"], 'caltables', caltablelist[j]))
+            #         stdw.write(' calwt=False')
+            #         stdw.write(' tinterp=\'' + str(interplist[j]) + '\'')
+            #         stdw.write(' finterp=\'linear\'')
+            #         stdw.write(' fldmap=\'' + str(gainfieldlist[j]) + '\'')
+            #         stdw.write(' spwmap=0\n')
+            #
+            # recipe.add("cab/casa_mstransform",
+            #            "apply 0",
+            #            {
+            #                "vis": inmsname,
+            #                "outputvis": msname,
+            #                "keepflags": True,
+            #                "docallib": True,
+            #                "callib": callib + ':output',
+            #                "field": "",
+            #                "uvrange": config['uvrange'],
+            #            },
+            #            input=pipeline.input, output=pipeline.output,
+            #            label="Apply crosscal")
+            # recipe.run()
+            # recipe.jobs = []
 
         else:
-            msname = inmsname
+            caltablelist, gainfieldlist, interplist = [], [], []
+            #msname = inmsname
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if float(config['feed_angle_rotation']) != '':
@@ -877,7 +915,7 @@ def worker(pipeline, recipe, config):
             if pol_calib in set(polarized_calibrators):
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix_msbase, polarized_calibrators)
+                ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix_msbase, polarized_calibrators, caltablelist, gainfieldlist, interplist)
             else:
                 raise RuntimeError("Unknown pol_calib!"
                                    "Currently only these are known on caracal:\
@@ -894,13 +932,13 @@ def worker(pipeline, recipe, config):
                            prefix_msbase)  # it would be useful to check at the beginning of the task whether the parallactic angle is well covered
                 #       if pol_calib in set(polarized_calibrators):
                 #       compare_with_model()
-                if config['apply_pcal']:
-                    for field in config["applyto"]:
-                        applycal(msname, recipe, config, pipeline, i, prefix_msbase, field)
-                else:
-                    if msname == 'crosscalib_' + inmsname:
-                        shutil.rmtree(os.path.join(pipeline.msdir, msname), ignore_errors=True)
-                        shutil.rmtree(os.path.join(pipeline.msdir, msname) + '.flagversions', ignore_errors=True)
+                # if config['apply_pcal']:
+                #     for field in config["applyto"]:
+                #         applycal(msname, recipe, config, pipeline, i, prefix_msbase, field)
+                # else:
+                #     if msname == 'crosscalib_' + inmsname:
+                #         shutil.rmtree(os.path.join(pipeline.msdir, msname), ignore_errors=True)
+                #         shutil.rmtree(os.path.join(pipeline.msdir, msname) + '.flagversions', ignore_errors=True)
             else:
                 raise RuntimeError(
                     "Cannot calibrate polarization! Insufficient number of scans for the leakage/pol calibrators.")

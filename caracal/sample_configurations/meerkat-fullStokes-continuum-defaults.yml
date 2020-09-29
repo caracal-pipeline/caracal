@@ -1,0 +1,173 @@
+schema_version: 1.0.3
+
+general:
+  prefix: mypipelinerun
+
+getdata:
+  dataid: ['']
+  extension: ms
+
+obsconf: 
+  refant: '0'
+
+transform:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+  specweights:
+    enable: true
+    mode: uniform
+
+flag:
+  enable: true
+  field: calibrators
+  label_in: cal
+  flag_autocorr:
+    enable: true
+  flag_spw:
+    enable: true
+    chans: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
+    ensure_valid: false
+  flag_mask:
+    enable: true
+    mask: meerkat.rfimask.npy
+    uvrange: '0~1000'
+  flag_rfi:
+    enable: true
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+
+crosscal:
+  enable: true
+  uvrange: '>150'
+  label_in: 'cal'
+  set_model:
+    enable: true
+    meerkat_skymodel: true
+  primary:
+    reuse_existing_gains: true
+    order: KGBAKGB
+    combine: ["", "", "", null, "","", scan]
+    solint: [inf, inf, inf, null, 60s, 60s, inf]
+    calmode: [a, ap, ap, null, a, ap, ap] 
+    b_fillgaps: 70
+    plotgains: true
+  secondary:
+    reuse_existing_gains: true
+    order: KGAKF
+    apply: B
+    combine: ["", "", null, "", ""] 
+    solint: [inf, inf, null, inf, inf]
+    calmode: [a, ap, null, a, ap] 
+    plotgains: true
+  apply_cal: 
+    applyto: 
+      - gcal
+      - bpcal
+
+inspect: 
+  enable: true
+  label_in: 'cal'
+  field: 'calibrators'
+  label_plot: '1gc'
+  real_imag: 
+    enable: true
+    avgtime: '60'
+  amp_phase: 
+    enable: true
+    avgtime: '60'
+  amp_uvwave: 
+    enable: true
+    avgtime: '60'
+  amp_ant: 
+    enable: true
+    avgtime: '60'
+  phase_uvwave: 
+    enable: true
+    avgtime: '60'
+  amp_scan: 
+    enable: true
+    avgtime: '60'
+
+transform__2:
+  enable: true
+  split_field:
+    enable: true
+    otfcal:
+      enable: true
+      label_cal: '1gc1'
+
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  specweights:
+    enable: true
+    mode: uniform
+
+flag__2: 
+  enable: true
+  field: target
+  label_in: corr
+  flag_rfi: 
+    enable: true
+    col: DATA
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+  inspect: 
+    enable: false
+    field: target
+
+mask: 
+  enable: false
+
+selfcal:
+  enable: true
+  img_npix: 4096
+  img_cell: 1.3
+  cal_timeslots_chunk: 240
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    gsols_timeslots: [120]
+  transfer_model:
+    enable: false
+
+ddcal:
+  enable: false
+  label_in: 'corr'
+  use_pb: true
+  calibrate_dd:
+    enable: True
+    de_sources_mode: manual
+  copy_data:
+    enable: true
+  image_wsclean:
+    enable: true
+  transfer_model_dd:
+    enable: true
+
+line:
+  enable: false
+  restfreq: '1.420405752GHz'
+  make_cube:
+    enable: true
+    npix: [1800]
+    cell: 2
+  mstransform:
+    enable: true
+    doppler:
+      enable: true
+      telescope: meerkat
+

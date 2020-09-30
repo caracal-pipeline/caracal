@@ -690,7 +690,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
 
         for ix, gt in enumerate(gaintables):
             applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp'], [gt, fields[ix], interps[ix], calwt[ix]])))
+                ['caltable', 'fldmap', 'interp', 'calwt'], [gt, fields[ix], interps[ix], calwt[ix]])))
             if '.Gxyamp' in gt:
                 calmodes.append('cross_gain')
             elif '.Kcrs' in gt:

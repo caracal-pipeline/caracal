@@ -4,8 +4,7 @@ general:
   prefix: mypipelinerun
 
 getdata:
-  dataid: ['1576599977_fullpol_1318to1418MHZ']
-  extension: ms
+  dataid: ['MS']
 
 obsconf:
   target:
@@ -40,21 +39,13 @@ flag:
   enable: true
   field: calibrators
   label_in: cal
+  flag_shadow:
+    enable: true
   flag_autocorr:
     enable: true
-  flag_spw:
-    enable: true
-    chans: '*:856~880MHz , *:1658~1800MHz, *:1419.8~1421.3MHz'
-    ensure_valid: false
-  flag_mask:
-    enable: true
-    mask: meerkat.rfimask.npy
-    uvrange: '0~1000'
   flag_rfi:
     enable: true
-    flagger: aoflagger
-    aoflagger:
-      strategy: firstpass_QUV.rfis
+    flagger: tfcrop
 
 crosscal:
   enable: true
@@ -115,10 +106,10 @@ polcal:
   uvrange: '>150'
   label_in: 'cal'
   label_cal: '1pcal'
-  crosscal_callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1kgb.json'
+  crosscal_callib: 'callib_mypipelinerun-MS-1kgb.json'
   reuse_existing_tables: true
   pol_calib: xcal
-  leakage_calib: fcal
+  leakage_calib: xcal
   avg_bw: '1MHz'
   plotgains: true
   feed_angle_rotation: '-90'
@@ -161,8 +152,8 @@ transform__2:
     col: corrected
     otfcal:
       enable: true
-      callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1kgb.txt'
-      pol_callib: 'callib_mypipelinerun-1576599977_fullpol_1318to1418MHZ-1pcal.json'
+      label_cal: '1kgb'
+      label_pcal: '1pcal'
 
 prep__2:
   enable: true
@@ -190,39 +181,12 @@ selfcal:
   enable: true
   img_npix: 4096
   img_cell: 1.3
-  cal_timeslots_chunk: 240
+  cal_timeslots_chunk: 15
   image:
     enable: true
   calibrate:
     enable: true
-    gsols_timeslots: [120]
+    gsols_timeslots: [15]
   transfer_model:
     enable: false
-
-ddcal:
-  enable: false
-  label_in: 'corr'
-  use_pb: true
-  calibrate_dd:
-    enable: True
-    de_sources_mode: manual
-  copy_data:
-    enable: true
-  image_wsclean:
-    enable: true
-  transfer_model_dd:
-    enable: true
-
-line:
-  enable: false
-  restfreq: '1.420405752GHz'
-  make_cube:
-    enable: true
-    npix: [1800]
-    cell: 2
-  mstransform:
-    enable: true
-    doppler:
-      enable: true
-      telescope: meerkat
 

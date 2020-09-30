@@ -94,6 +94,7 @@ def worker(pipeline, recipe, config):
            if not from_target:
                from_mslist = from_mslist * len(target_ls)
 
+        do_pol_callib = False
         if pipeline.enable_task(config['split_field'], 'otfcal'):
             #callib = 'caltables/callibs/callib_{0:s}-{1:s}.txt'.format(prefix_msbase,wname)
             caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
@@ -183,7 +184,7 @@ def worker(pipeline, recipe, config):
             else:
                 do_pol_callib = False
 
-            
+
             all_gaintables = caltablelist + pcaltablelist
             all_interp = interplist + pinterplist
             all_fields = gainfieldlist + pgainfieldlist

@@ -288,7 +288,7 @@ def worker(pipeline, recipe, config):
       ncpu = psutil.cpu_count()
     else:
       ncpu = min(ncpu, psutil.cpu_count())
-
+    nwlayers_factor= config['img_nwlayers_factor']
     nrdeconvsubimg = ncpu if config['img_nrdeconvsubimg'] == 0 else config['img_nrdeconvsubimg']
     if nrdeconvsubimg == 1:
         wscl_parallel_deconv = None
@@ -469,6 +469,7 @@ def worker(pipeline, recipe, config):
             "savesourcelist": False,
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
+            "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem" : absmem,
         }
@@ -537,6 +538,7 @@ def worker(pipeline, recipe, config):
             "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
+            "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem": absmem,
         }

@@ -197,28 +197,39 @@ def worker(pipeline, recipe, config):
         # The order of fields here is important
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]
+            conf_fields_str = ','.join(conf_fields)
             label, fields = intents[term]
             label = ",".join(label)
-            # check if user set fields manually
-            if set(all_fields).intersection(conf_fields):
-                label = term
-                if term == 'target':
-                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in all_fields]
-            elif fields in [None, []]:
+            #  no fields set for this term -- make empty and continue
+            if not conf_fields:
                 getattr(pipeline, term)[i] = []
                 continue
-            elif "all" in conf_fields:
+                # check if user set fields manually
+            if conf_fields_str == "all":
                 getattr(pipeline, term)[i] = fields
-            elif "longest" in conf_fields:
+            elif conf_fields_str == "longest":
                 f = utils.observed_longest(msdict, fields)
+                if not f:
+                    raise RuntimeError(f"Can't determine field for obsinfo: {term}: {conf_fields_str}. "
+                                       "It is likely that your MS scan intents are not populated correctly. "
+                                       f"Please set {term} to a list of field names explicitly.")
                 getattr(pipeline, term)[i] = [f]
-            elif "nearest" in conf_fields:
+            elif conf_fields_str == "nearest":
                 f = utils.select_gcal(msdict, fields, mode="nearest")
+                if not f:
+                    raise RuntimeError(f"Can't determine field for obsinfo: {term}: {conf_fields_str}. "
+                                       "It is likely that your MS scan intents are not populated correctly. "
+                                       f"Please set {term} to a list of field names explicitly.")
                 getattr(pipeline, term)[i] = [f]
             else:
-                raise RuntimeError("Could not find field/selection {0}."\
-                        " Please check the [observation_config.{1}] "\
-                        "section of the config file".format(conf_fields, term))
+                found_fields = set(all_fields).intersection(conf_fields)
+                if found_fields:
+                    label = term
+                    if term == 'target':
+                        pipeline.target[i] = found_fields
+                else:
+                    raise RuntimeError(f"None of the fields specified by obsconf: {term}: {conf_fields_str} "
+                                        "were found in the MS.")
 
 #            caracal.log.info("    ====================================")
             caracal.log.info(f"  {label}:")

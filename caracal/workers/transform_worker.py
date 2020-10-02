@@ -3,14 +3,11 @@ import os
 import sys
 import caracal
 import stimela.dismissable as sdm
-import getpass
 import stimela.recipe
-import re
 import json
-import numpy as np
-from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_fields as manfields
 from caracal.workers.utils import manage_flagsets as manflags
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Transform Data by Splitting/Average/Applying calibration'
 LABEL = 'transform'
@@ -163,14 +160,20 @@ def worker(pipeline, recipe, config):
                         config, flags_before_worker, flags_after_worker)
 
             flagv = to_ms + '.flagversions'
+            if pipeline.enable_task(config, 'split_field'):
+                msbase = os.path.splitext(to_ms)[0]
+                obsinfo_msname = to_ms
+            else:
+                msbase = pipeline.msbasenames[i]
+                obsinfo_msname = from_ms
+
+            summary_file = f'{msbase}-summary.json'
+            obsinfo_file = f'{msbase}-obsinfo.txt'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
+                step = 'split_field-ms{0:d}-{1:d}'.format(i, target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
-                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-                    os.system(
-                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
+                remove_output_products((to_ms, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
                 recipe.add('cab/casa_mstransform', step,
                            {
@@ -219,16 +222,11 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
-                    if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
-                    else:
-                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
-
                     step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": listfile+":msfile",
+                                   "listfile": obsinfo_file+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -236,18 +234,13 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
                 if (config['obsinfo']['summary_json']):
-                    if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
-                    else:
-                        listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
-
                     step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": listfile+":msfile"
+                                   "outfile": summary_file+":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,

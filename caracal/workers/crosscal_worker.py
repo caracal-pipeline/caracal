@@ -327,7 +327,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
     params =  {
         "table"         : f"{gtab}:msfile",
-        "gaintype"     : term,
+        #"gaintype"     : term,
         "corr"         : '',
         "htmlname"     : gtab,
         }

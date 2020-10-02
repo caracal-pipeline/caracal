@@ -115,10 +115,10 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
             })
         # Phaseup diagonal of crosshand cal if available
         recipe.add("cab/casa_gaincal",
-                   "crosshand_phaseup",
+                   "gain_xcal",
                    gain_opts,
                    input=pipeline.input, output=pipeline.caltables,
-                   label="crosshand_phaseup")
+                   label="gain_xcal")
         gaintables += [prefix + '.Gpol1']
         interps += ['linear']
         fields += ['']
@@ -304,73 +304,73 @@ def ben_cal(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calib
             gfields = [field, field, field, field, leak_field, leak_field]
             terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Dref', 'Df']
             for ix, gt in enumerate(gfields):
-                if terms[ix] == 'KCROSS':
-                    recipe.add("cab/casa_plotms",
-                               "cross_delay_plot",
-                               {
-                                   "vis": prefix + '.Kcrs:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "delay",
-                                   "field": '',
-                                   "plotfile": plotname + ".Kcrs.png",
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="crosshand_delay_plot")
-                elif terms[ix] == 'Xref':
-                    recipe.add("cab/casa_plotms",
-                               "cross_phase_plot",
-                               {
-                                   "vis": prefix + '.Xref:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "phase",
-                                   "field": '',
-                                   "plotfile": plotname + ".Xref.png",
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="cross_phase_plot")
-                elif terms[ix] == 'Xf':
-                    recipe.add("cab/casa_plotms",
-                               "cross_phase_plot2",
-                               {
-                                   "vis": prefix + '.Xf:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "phase",
-                                   "field": '',
-                                   "plotfile": plotname + ".Xf.png",
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="cross_phase_plot2")
-                elif terms[ix] == 'Dref':
-                    recipe.add("cab/casa_plotms",
-                               "leakage_ref_plot",
-                               {
-                                   "vis": prefix + '.Dref:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "amp",
-                                   "field": '',
-                                   "plotfile": plotname + ".Dref.png",
-                                   "overwrite": True
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="leakage_ref_plot")
-                elif terms[ix] == 'Df':
-                    recipe.add("cab/casa_plotms",
-                               "leakage_freq_plot2",
-                               {
-                                   "vis": prefix + '.Df:msfile',
-                                   "xaxis": "freq",
-                                   "yaxis": "amp",
-                                   "field": '',
-                                   "plotfile": plotname + ".Df.png",
-                                   "overwrite": True
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="leakage_freq_plot2")
-                else:
-                    plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+                # if terms[ix] == 'KCROSS':
+                #     recipe.add("cab/casa_plotms",
+                #                "cross_delay_plot",
+                #                {
+                #                    "vis": prefix + '.Kcrs:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "delay",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Kcrs.png",
+                #                    "overwrite": True,
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="crosshand_delay_plot")
+                # elif terms[ix] == 'Xref':
+                #     recipe.add("cab/casa_plotms",
+                #                "cross_phase_plot",
+                #                {
+                #                    "vis": prefix + '.Xref:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "phase",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Xref.png",
+                #                    "overwrite": True,
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="cross_phase_plot")
+                # elif terms[ix] == 'Xf':
+                #     recipe.add("cab/casa_plotms",
+                #                "cross_phase_plot2",
+                #                {
+                #                    "vis": prefix + '.Xf:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "phase",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Xf.png",
+                #                    "overwrite": True,
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="cross_phase_plot2")
+                # elif terms[ix] == 'Dref':
+                #     recipe.add("cab/casa_plotms",
+                #                "leakage_ref_plot",
+                #                {
+                #                    "vis": prefix + '.Dref:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "amp",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Dref.png",
+                #                    "overwrite": True
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="leakage_ref_plot")
+                # elif terms[ix] == 'Df':
+                #     recipe.add("cab/casa_plotms",
+                #                "leakage_freq_plot2",
+                #                {
+                #                    "vis": prefix + '.Df:msfile',
+                #                    "xaxis": "freq",
+                #                    "yaxis": "amp",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Df.png",
+                #                    "overwrite": True
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="leakage_freq_plot2")
+                # else:
+                plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
     else:
         caracal.log.info("Reusing existing tables as requested")
 
@@ -421,7 +421,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
     if not docal:
         # G1
         recipe.add("cab/casa_gaincal",
-                   "first gaincal",
+                   "gain_xcal_1",
                    {
                        "vis": msname,
                        "field": field,
@@ -438,12 +438,12 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "interp": ["%s" % ct for ct in interplist],
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Gain xcal 1")
+                   label="gain_xcal_1")
 
         shutil.rmtree(os.path.join(pipeline.caltables, prefix + '.Gpol1a'), ignore_errors=True)
         # QU
         recipe.add("cab/casa_polfromgain",
-                   "QU from gain",
+                   "QU_from_gain",
                    {
                        "vis": msname,
                        "tablein": prefix + '.Gpol1:output',
@@ -451,7 +451,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "save_result": prefix + '_S1_from_QUfit:output',
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="QU from gain")
+                   label="QU_from_gain")
         recipe.run()
         recipe.jobs = []
 
@@ -479,7 +479,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
 
         # Kcross
         recipe.add("cab/casa_gaincal",
-                   "Kcross delay",
+                   "crosshand_delay",
                    {
                        "vis": msname,
                        "caltable": prefix + '.Kcrs:output',
@@ -496,7 +496,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "interp": ["%s" % ct for ct in set(interplist + ['linear'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Kcross delay")
+                   label="crosshand_delay")
 
         recipe.run()
         recipe.jobs = []
@@ -512,7 +512,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
 
         # QU abs delay
         recipe.add("cab/casa_polcal",
-                   "Abs phase and QU fit",
+                   "crosshand_phase_QU_fit",
                    {
                        "vis": msname,
                        "caltable": prefix + '.Xfparang:output',
@@ -529,7 +529,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Abs phase and QU fit")
+                   label="crosshand_phase_QU_fit")
         recipe.run()
         recipe.jobs = []
 
@@ -559,11 +559,11 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "interp": ["%s" % ct for ct in interplist],
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Gain polcal 2")
+                   label="gain_xcal_2")
 
         # LEAKAGE
         recipe.add("cab/casa_polcal",
-                   "leakage terms",
+                   "leakage",
                    {
                        "vis": msname,
                        "caltable": prefix + '.Df0gen:output',
@@ -580,12 +580,12 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest','nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Leakage terms")
+                   label="leakage")
 
         # solve for global normalized gain amp (to get X/Y ratios) on pol calibrator (TO APPLY ON TARGET)
         # amp-only and normalized, so only X/Y amp ratios matter
         recipe.add("cab/casa_gaincal",
-                   "normalize gain ampl for target",
+                   "norm_gain_for_target",
                    {
                        "vis": msname,
                        "caltable": prefix + '.Gxyamp:output',
@@ -604,7 +604,7 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
                        "parang": True,
                    },
                    input=pipeline.input, output=pipeline.caltables,
-                   label="Target norm")
+                   label="norm_gain_for_target")
         recipe.run()
         recipe.jobs = []
 
@@ -639,47 +639,47 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
             gfields = [field, field, field, field]
             terms = ['G', 'KCROSS', 'Xfparang+QU', 'Df0gen']
             for ix, gt in enumerate(gfields):
-                if terms[ix] == 'KCROSS':
-                    recipe.add("cab/casa_plotms",
-                               "cross_delay_plot",
-                               {
-                                   "vis": prefix + '.Kcrs:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "delay",
-                                   "field": '',
-                                   "plotfile": plotname + ".Kcrs.png",
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="crosshand_delay_plot")
-                elif terms[ix] == 'Xfparang+QU':
-                    recipe.add("cab/casa_plotms",
-                               "cross_phase_plot2",
-                               {
-                                   "vis": prefix + '.Xfparang:msfile',
-                                   "xaxis": "time",
-                                   "yaxis": "phase",
-                                   "field": '',
-                                   "plotfile": plotname + ".Xfparang.png",
-                                   "overwrite": True,
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="cross_phase_plot2")
-                elif terms[ix] == 'Df0gen':
-                    recipe.add("cab/casa_plotms",
-                               "leakage_freq_plot2",
-                               {
-                                   "vis": prefix + '.Df0gen:msfile',
-                                   "xaxis": "freq",
-                                   "yaxis": "amp",
-                                   "field": '',
-                                   "plotfile": plotname + ".Df0gen.png",
-                                   "overwrite": True
-                               },
-                               input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
-                               label="leakage_freq_plot2")
-                else:
-                    plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+                # if terms[ix] == 'KCROSS':
+                #     recipe.add("cab/casa_plotms",
+                #                "cross_delay_plot",
+                #                {
+                #                    "vis": prefix + '.Kcrs:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "delay",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Kcrs.png",
+                #                    "overwrite": True,
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="crosshand_delay_plot")
+                # elif terms[ix] == 'Xfparang+QU':
+                #     recipe.add("cab/casa_plotms",
+                #                "cross_phase_plot2",
+                #                {
+                #                    "vis": prefix + '.Xfparang:msfile',
+                #                    "xaxis": "time",
+                #                    "yaxis": "phase",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Xfparang.png",
+                #                    "overwrite": True,
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="cross_phase_plot2")
+                # elif terms[ix] == 'Df0gen':
+                #     recipe.add("cab/casa_plotms",
+                #                "leakage_freq_plot2",
+                #                {
+                #                    "vis": prefix + '.Df0gen:msfile',
+                #                    "xaxis": "freq",
+                #                    "yaxis": "amp",
+                #                    "field": '',
+                #                    "plotfile": plotname + ".Df0gen.png",
+                #                    "overwrite": True
+                #                },
+                #                input=pipeline.input, output=plotdir, msdir=pipeline.caltables,
+                #                label="leakage_freq_plot2")
+                # else:
+                plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
         applycal_recipes = []
         calmodes = []
@@ -707,6 +707,9 @@ def floi_calib(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist
 
         with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
+
+        if config['plotgains']:
+            plotgains(recipe, pipeline, plotdir, field, prefix + '.Gxyamp', i, 'G')
 
     else:
         caracal.log.info("Reusing existing tables as requested")
@@ -752,10 +755,9 @@ def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
     recipe.add('cab/ragavi', step,
                {
                    "table": gtab+":msfile",
-                   "gaintype": term,
                    "corr": '',
                    "htmlname": gtab,
-                   "field": ",".join(map(str, field_id)),
+                   "field": field_id,
                },
                input=pipeline.input, msdir=pipeline.caltables, output=plotdir,
                label='{0:s}:: Plot gaincal phase'.format(step))
@@ -765,18 +767,16 @@ def worker(pipeline, recipe, config):
     label = config["label_cal"]
     label_in = config["label_in"]
 
-    # define pol and unpol calibrators
+    # define pol and unpol calibrators, PB2013+PB207
     polarized_calibrators = {"3C138": {"standard": "manual",
                                        "fluxdensity": [8.40144],
-                                       "spix": [-0.54890527955337987, -0.069418066176041668,
-                                                -0.0018858519926001926],
+                                       "spix": [-0.4981, -0.1552, -0.0102, 0.0223],
                                        "reffreq": "1.45GHz",
                                        "polindex": [0.075],
                                        "polangle": [-0.19199]},
                              "3C286": {"standard": "manual",
-                                       "fluxdensity": [14.918703],
-                                       "spix": [-0.50593909976893958, -0.070580431627712076,
-                                                0.0067337240268301466],
+                                       "fluxdensity": [14.8197],
+                                       "spix": [-0.4507, -0.1798, 0.0357],
                                        "reffreq": "1.45GHz",
                                        "polindex": [0.095],
                                        "polangle": [0.575959]},

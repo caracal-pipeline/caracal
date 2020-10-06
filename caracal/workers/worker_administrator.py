@@ -360,7 +360,7 @@ class worker_administrator(object):
                 log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
                 raise
             if hasattr(worker, 'check_config'):
-                worker.check_config(config)
+                worker.check_config(config, name=_name)
             # check for cab specs
             cabspecs = cabspecs_general
             if config["cabs"]:

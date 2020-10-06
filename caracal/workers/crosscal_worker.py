@@ -19,6 +19,19 @@ from casacore.tables import table
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
 
+def check_config(config, name):
+    for primsec in "primary", "secondary":
+        order = config[primsec]["order"]
+        # check that all order steps are legal
+        invalid = [x for x in order if x not in RULES]
+        if invalid:
+            raise caracal.UserInputError(f"{name}: {primsec}: order: invalid steps {','.join(invalid)}")
+        # check that numbers match
+        for other in "calmode", "solint", "combine":
+            if len(config[primsec][other]) != len(order):
+                raise caracal.UserInputError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
+
+
 # E.g. to split out continuum/<dir> from output/continuum/dir
 def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]

@@ -5,6 +5,7 @@ import caracal
 import stimela.dismissable as sdm
 import stimela.recipe
 import json
+import caracal
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
@@ -36,10 +37,10 @@ table_suffix = {
 _target_fields = {'target'}
 _cal_fields = set("fcal bpcal gcal xcal".split())
 
-def get_fields_to_split(config):
+def get_fields_to_split(config, name):
     fields = config['field']
     if not fields:
-        raise ValueError("split_field: field cannot be empty")
+        raise caracal.UserInputError(f"{name}: split_field: field cannot be empty")
     elif fields == 'calibrators':
         return _cal_fields
     elif fields == 'target':
@@ -49,15 +50,15 @@ def get_fields_to_split(config):
         fields_to_split = set(fields.split(','))
         diff = fields_to_split.difference(_cal_fields)
         if diff:
-            raise ValueError(
-                "split_field: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
+            raise caracal.UserInputError(
+                "{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
                     ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
                 ))
         return fields_to_split
 
 
-def check_config(config):
-    get_fields_to_split(config)
+def check_config(config, name):
+    get_fields_to_split(config, name)
 
 
 def worker(pipeline, recipe, config):
@@ -67,7 +68,7 @@ def worker(pipeline, recipe, config):
     label_in = config['label_in']
     label_out = config['label_out']
     from_target = True if label_in and config['field'] == 'target' else False
-    field_to_split = get_fields_to_split(config)
+    field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
 

@@ -50,7 +50,7 @@ SOL_TERMS_INDEX = {
     "DD": 2,
 }
 
-def check_config(config):
+def check_config(config, name):
     """
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.

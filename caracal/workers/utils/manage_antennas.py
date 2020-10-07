@@ -59,11 +59,8 @@ def _get_core_antennas(flag_stats, min_baseline, max_dist):
             core_ants[i] = (name, flagged, position, array_centre_dist)
     for i, ant in core_ants.items():
         baselines = _baseline_calculator(flag_stats, i)
-        for baseline in baselines:
-            if baseline < min_baseline:
-                break
-            else:
-                min_base_ants[i] = ant
+        if all(baseline >= min_baseline for baseline in baselines):
+            min_base_ants[i] = ant
     return min_base_ants
 
 def _baseline_calculator(flag_stats, ant_id):
@@ -81,7 +78,6 @@ def _baseline_calculator(flag_stats, ant_id):
     baselines = []
     ant1_pos = flag_stats[ant_id]['position']
     for i, ant in flag_stats.items():
-        baselines.append(distance(ant1_pos, ant['position']))
+        if i != ant_id:
+            baselines.append(distance(ant1_pos, ant['position']))
     return baselines
-
-

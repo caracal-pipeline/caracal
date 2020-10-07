@@ -141,16 +141,41 @@ mapping:
                 type: bool
                 required: false
                 example: 'True'
-              fitspw:
-                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150:300'). If set to null, a fit to all unflagged visibilities will be performed.
-                type: str
-                required: false
-                example: ''
               fitorder:
                 desc: Polynomial order of the continuum fit.
                 type: int
                 required: false
                 example: '1'
+              fitspw:
+                desc: Selection of line-free channels using CASA syntax (e.g. '0:0~100;150~300'). If set to null, a fit to all unflagged visibilities will be performed.
+                type: str
+                required: false
+                example: ''
+              exclude_known_sources:
+                desc: Exclude from the UVLIN fit the channels corresponding to known line sources listed in a catalogue. The catalogue file has the name given by the parameter 'known_sources_cat' below and is located in the 'input' directory specified in the 'general' worker. The  resulting channel selection is combined with the one provided by the 'fitspw' parameter above.
+                type: bool
+                required: false
+                example: 'False'
+              known_sources_cat:
+                desc: Catalogue of known line sources. The catalogue is in ASCII format, one row per source, with columns (1) source ID, (2) RA (hhmmss.s), (3) Dec (ddmmss.s), (4) Vmin (km/s, optical convention), (5) Vmax (km/s, optical convention), (6) line flux (Jy km/s).
+                type: str
+                required: false
+                example: ''
+              known_sources_radius:
+                desc: Only line sources within this radius (in deg) from the pointing centre are excluded from the UVLIN fit.
+                type: float
+                required: false
+                example: '1.0'
+              known_sources_flux:
+                desc: Only line sources brighter than this flux (in Jy km/s) are excluded from the UVLIN fit (no primary beam correction included).
+                type: float
+                required: false
+                example: '0.0'
+              known_sources_dv:
+                desc: Remove (add) this velocity buffer from (to) the Vmin (Vmax) values in the catalogue to avoid errors caused by anoccounted-for Doppler shifts. This parameter is given in km/s.
+                type: float
+                required: false
+                example: '30.'
           obsinfo:
             desc: Create obsinfo.txt and obsinfo.json per .MS file created by CASA mstransform.
             type: bool

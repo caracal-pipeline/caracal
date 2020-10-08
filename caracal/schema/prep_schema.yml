@@ -28,7 +28,27 @@ mapping:
             desc: Enable the 'fixvis' segment.
             type: bool
             required: false
-            example: 'False'            
+            example: 'False'         
+      fixcalcoords:
+        desc: Fix the coordinates of the bandpass calibrators.
+        type: map
+        mapping: 
+          enable: 
+            desc: Enable fixing calibrator coodinate fixing segment.
+            type: bool
+            required: false
+            example: 'False'
+          tol: 
+            desc: Tolerance (in radians) for matching calibrator to database names.
+            type: float
+            required: false
+            example: '2.9E-3'
+          tol_diff:   
+            desc: Tolerance (in radiance) for checking if coordinates differ from those in the database.
+            type: float
+            required: false
+            example: '4.8481E-6'
+        
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.
         type: bool

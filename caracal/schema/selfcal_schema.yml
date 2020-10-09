@@ -105,7 +105,7 @@ mapping:
         type: bool
         desc: Enables MF weighting. Default is enabled.
         required: false
-        example: 'true'
+        example: 'false'
       img_taper:
         type: str
         desc: Gaussian taper for imaging (in units of arcsec).
@@ -148,7 +148,7 @@ mapping:
         example: 'True'
       img_specfit_nrcoeff:
         type: int
-        desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use -1 to disable fitting.
+        desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball. 
         required: false
         example: '2'
       img_stokes:

@@ -172,6 +172,11 @@ mapping:
         type: int
         required: false
         example: '0'
+      img_nwlayers_factor:
+        type: int
+        desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
+        required: false
+        example: '3'
       img_sofia_settings:
         desc: SoFiA source finder settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'sofia'. The resulting clean mask is located in <output>/masking.
         type: map

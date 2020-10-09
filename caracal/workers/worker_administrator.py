@@ -125,12 +125,17 @@ class worker_administrator(object):
         self.init_names([])
         self.init_pipeline(prep_input=config["general"]["prep_workspace"])
 
-        # save configuration file
-        configFileName = os.path.splitext(configFileName)[0]
-        outConfigName = '{0:s}_{1:s}.yml'.format(
-            configFileName, self.timeNow)
+        # save configuration files
 
-        with open(os.path.join(self.configFolder, outConfigName), 'w') as outfile:
+        config_base = os.path.splitext(configFileName)[0]
+        outConfigOrigName = f'{self.configFolder}/{config_base}-{self.timeNow}.orig.yml'
+        outConfigName = f'{self.configFolder}/{config_base}-{self.timeNow}.yml'
+
+        log.info(f"Saving original configuration file as {outConfigOrigName}")
+        shutil.copyfile(configFileName, outConfigOrigName)  # original config
+
+        log.info(f"Saving full configuration as {outConfigName}")
+        with open(outConfigName, 'w') as outfile:           # config+command line
             ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
 
     def init_names(self, dataid):

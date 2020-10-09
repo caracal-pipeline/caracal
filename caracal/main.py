@@ -227,6 +227,8 @@ def main(argv):
             parser.error("unknown worker '{}'".format(options.worker_help))
         return
 
+    caracal.log.info(f"Invoked as {' '.join(sys.argv)}")
+
     # User requests default config => dump and exit
     if options.get_default:
         sample_config = SAMPLE_CONFIGS.get(options.get_default_template)
@@ -278,6 +280,7 @@ def main(argv):
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
+        caracal
         caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version

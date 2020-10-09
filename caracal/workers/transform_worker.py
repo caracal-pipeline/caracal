@@ -116,11 +116,10 @@ def worker(pipeline, recipe, config):
             # write calibration library file for OTF cal
             elif config['split_field']['otfcal']['label_cal']:
                 ccalprefix = '{0:s}-{1:s}'.format(prefix_msbase,config['split_field']['otfcal']['label_cal'])
-                ccallib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix_msbase, ccalprefix)
+                ccallib = 'caltables/callibs/callib_{0:s}.txt'.format(ccalprefix)
 
                 with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                  'callib_{0:s}-{1:s}.json'.format(prefix_msbase,
-                                  config['split_field']['otfcal']['label_cal']))) as f:
+                                  'callib_{0:s}.json'.format(ccalprefix))) as f:
                     ccallib_dict = json.load(f)
 
                 for applyme in ccallib_dict:
@@ -151,6 +150,9 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(os.path.join(pipeline.output, pcallib)):
                     raise IOError(
                         "Callib file {0:s} does not exist. Please check that it is where it should be.".format(pcallib))
+                if not os.path.exists(os.path.join('{}/callibs'.format(pipeline.caltables),'{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))):
+                    raise IOError("json version of pol_callib file does not exist. Please provide it.")
+
                 with open(os.path.join('{}/callibs'.format(pipeline.caltables),'{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))) as f:
                     pcallib_dict = json.load(f)
 
@@ -163,9 +165,10 @@ def worker(pipeline, recipe, config):
             # write calibration library file for OTF cal
             elif config['split_field']['otfcal']['label_pcal']:
                 pcalprefix = '{0:s}-{1:s}'.format(prefix_msbase,config['split_field']['otfcal']['label_pcal'])
-                pcallib = 'caltables/callibs/callib_{1:s}.txt'.format(prefix_msbase, pcalprefix)
+                pcallib = 'caltables/callibs/callib_{0:s}.txt'.format(pcalprefix)
 
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),'callib_{0:s}-{1:s}.json'.format(prefix_msbase, config['split_field']['otfcal']['label_pcal']))) as f:
+                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
+                                       'callib_{0:s}.json'.format(pcalprefix))) as f:
                     pcallib_dict = json.load(f)
 
                 for applyme in pcallib_dict:

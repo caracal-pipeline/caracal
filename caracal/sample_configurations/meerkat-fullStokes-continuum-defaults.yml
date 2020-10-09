@@ -50,7 +50,7 @@ flag:
 crosscal:
   enable: true
   uvrange: '>150'
-  label_in: 'cal'
+  label_in: cal
   label_cal: 1kgb
   set_model:
     enable: true
@@ -79,9 +79,9 @@ crosscal:
 
 inspect: 
   enable: true
-  label_in: 'cal'
-  field: 'calibrators'
-  label_plot: '1kgb'
+  label_in: cal
+  field: calibrators
+  label_plot: 1kgb
   real_imag: 
     enable: true
     avgtime: '60'
@@ -104,12 +104,14 @@ inspect:
 polcal:
   enable: true
   uvrange: '>150'
-  label_in: 'cal'
-  label_cal: '1pcal'
-  crosscal_callib: 'callib_mypipelinerun-MS-1kgb.json'
+  label_in: cal
+  label_cal: 1pcal
+  otfcal:
+    enable: true
+    label_cal: 1kgb
   reuse_existing_tables: true
   pol_calib: xcal
-  leakage_calib: xcal
+  leakage_calib: fcal
   avg_bw: '1MHz'
   plotgains: true
   feed_angle_rotation: '-90'
@@ -121,9 +123,9 @@ polcal:
 
 inspect__2:
   enable: true
-  label_in: 'cal'
+  label_in: cal
   field: 'calibrators'
-  label_plot: '1pcal'
+  label_plot: 1pcal
   real_imag:
     enable: true
     avgtime: '60'

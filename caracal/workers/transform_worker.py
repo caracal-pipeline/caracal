@@ -40,7 +40,7 @@ _cal_fields = set("fcal bpcal gcal xcal".split())
 def get_fields_to_split(config, name):
     fields = config['field']
     if not fields:
-        raise caracal.UserInputError(f"{name}: split_field: field cannot be empty")
+        raise caracal.ConfigurationError(f"'{name}: field' cannot be empty")
     elif fields == 'calibrators':
         return _cal_fields
     elif fields == 'target':
@@ -50,8 +50,8 @@ def get_fields_to_split(config, name):
         fields_to_split = set(fields.split(','))
         diff = fields_to_split.difference(_cal_fields)
         if diff:
-            raise caracal.UserInputError(
-                "{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
+            raise caracal.ConfigurationError(
+                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
                     ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
                 ))
         return fields_to_split

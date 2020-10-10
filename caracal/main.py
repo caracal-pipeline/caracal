@@ -168,9 +168,6 @@ def execute_pipeline(options, config, block):
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            # Obtain some divine knowledge
-            cdb = mkct.calibrator_database()
-
             pipeline = worker_administrator(config,
                            workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
@@ -181,6 +178,9 @@ def execute_pipeline(options, config, block):
             if options.report:
                 pipeline.regenerate_reports()
             else:
+                ## OMS: I don't think this is necessary, as it is not used here directly, and loaded on-demand
+                # # Obtain some divine knowledge
+                # cdb = mkct.calibrator_database()
                 pipeline.run_workers()
         except SystemExit as e:
             # if e.code != 0:

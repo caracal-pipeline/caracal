@@ -25,11 +25,11 @@ def check_config(config, name):
         # check that all order steps are legal
         invalid = [x for x in order if x not in RULES]
         if invalid:
-            raise caracal.UserInputError(f"{name}: {primsec}: order: invalid steps {','.join(invalid)}")
+            raise caracal.ConfigurationError(f"{name}: {primsec}: order: invalid steps {','.join(invalid)}")
         # check that numbers match
         for other in "calmode", "solint", "combine":
             if len(config[primsec][other]) != len(order):
-                raise caracal.UserInputError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
+                raise caracal.ConfigurationError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
 
 
 # E.g. to split out continuum/<dir> from output/continuum/dir

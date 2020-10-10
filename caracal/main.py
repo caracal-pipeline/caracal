@@ -280,7 +280,6 @@ def main(argv):
         # populate parser with items from config
         parser.populate_parser(config)
         # reparse arguments
-        caracal
         caracal.log.info("Loading pipeline configuration from {}".format(config_file), extra=dict(color="GREEN"))
         options, config = parser.update_config_from_args(config, argv)
         # raise warning on schema version

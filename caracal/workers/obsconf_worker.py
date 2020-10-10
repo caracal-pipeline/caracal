@@ -209,7 +209,8 @@ def worker(pipeline, recipe, config):
                 getattr(pipeline, term)[i] = fields
             elif conf_fields_str == "longest":
                 f = utils.observed_longest(msdict, fields)
-                if not f:
+                # complain if not found, unless it's 'xcal', which is only for polcal, so let that worker complain
+                if not f and term != "xcal":
                     raise RuntimeError(f"Can't determine field for obsinfo: {term}: {conf_fields_str}. "
                                        "It is likely that your MS scan intents are not populated correctly. "
                                        f"Please set {term} to a list of field names explicitly.")

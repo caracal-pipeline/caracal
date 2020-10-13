@@ -120,8 +120,13 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
-          spw:
-            desc: Only use this subset(s) of the band to compute 'KGF' gains 
+          spw_k:
+            desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
+            example: ""
+            required: false 
+            type: str
+          spw_g:
+            desc: Only use this subset(s) of the band to compute 'GF' gains. Default uses full band
             example: ""
             required: false 
             type: str
@@ -224,8 +229,13 @@ mapping:
             type: int
             required: false
             example: "70"
-          spw:
-            desc: Only use this subset(s) of the band to compute 'KGF' gains
+          spw_k:
+            desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
+            example: ""
+            required: false 
+            type: str
+          spw_g:
+            desc: Only use this subset(s) of the band to compute 'GF' gains. Default uses full band
             example: ""
             required: false 
             type: str

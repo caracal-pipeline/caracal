@@ -507,7 +507,7 @@ def worker(pipeline, recipe, config):
                 fitspw = '0:{0:s}'.format(fitspw)
                 caracal.log.info('The UVLIN fit will be executed on the channels {0:s}'.format(fitspw))
 
-            elif pipeline.enable_task(config['mstransform'], 'uvlin'):
+            else:
                 fitspw = config['mstransform']['uvlin']['fitspw']
 
             col = config['mstransform']['col']

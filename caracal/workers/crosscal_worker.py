@@ -19,6 +19,19 @@ from casacore.tables import table
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
 
+def check_config(config, name):
+    for primsec in "primary", "secondary":
+        order = config[primsec]["order"]
+        # check that all order steps are legal
+        invalid = [x for x in order if x not in RULES]
+        if invalid:
+            raise caracal.ConfigurationError(f"{name}: {primsec}: order: invalid steps {','.join(invalid)}")
+        # check that numbers match
+        for other in "calmode", "solint", "combine":
+            if len(config[primsec][other]) != len(order):
+                raise caracal.ConfigurationError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
+
+
 # E.g. to split out continuum/<dir> from output/continuum/dir
 def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
@@ -139,9 +152,10 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
-        if term in "KGF":
-            params["spw"] = config[ftype]["spw"]
-
+        if term in "GF":
+            params["spw"] = config[ftype]["spw_g"]
+        elif term == "K":
+            params["spw"] = config[ftype]["spw_k"]
         if term == "B":
             params["bandtype"] = term
             params["solnorm"] = config[ftype]["b_solnorm"]
@@ -501,7 +515,7 @@ def worker(pipeline, recipe, config):
                         "field-id": utils.get_field_id(msinfo, fluxscale_field)[0],
                         "threads": config["set_model"]['threads'],
                         "mode": "simulate",
-                        "tile-size": 128,
+                        "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
                 elif modelpoint:  # spectral model if specified in our standard

@@ -3,15 +3,12 @@ import os
 import sys
 import caracal
 import stimela.dismissable as sdm
-import getpass
 import stimela.recipe
-import re
 import json
-import shutil
-import numpy as np
-from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_fields as manfields
+import caracal
 from caracal.workers.utils import manage_flagsets as manflags
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Transform Data by Splitting/Average/Applying calibration'
 LABEL = 'transform'
@@ -40,10 +37,10 @@ table_suffix = {
 _target_fields = {'target'}
 _cal_fields = set("fcal bpcal gcal xcal".split())
 
-def get_fields_to_split(config):
+def get_fields_to_split(config, name):
     fields = config['field']
     if not fields:
-        raise ValueError("split_field: field cannot be empty")
+        raise caracal.ConfigurationError(f"'{name}: field' cannot be empty")
     elif fields == 'calibrators':
         return _cal_fields
     elif fields == 'target':
@@ -53,15 +50,15 @@ def get_fields_to_split(config):
         fields_to_split = set(fields.split(','))
         diff = fields_to_split.difference(_cal_fields)
         if diff:
-            raise ValueError(
-                "split_field: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
+            raise caracal.ConfigurationError(
+                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
                     ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
                 ))
         return fields_to_split
 
 
-def check_config(config):
-    get_fields_to_split(config)
+def check_config(config, name):
+    get_fields_to_split(config, name)
 
 
 def worker(pipeline, recipe, config):
@@ -71,7 +68,7 @@ def worker(pipeline, recipe, config):
     label_in = config['label_in']
     label_out = config['label_out']
     from_target = True if label_in and config['field'] == 'target' else False
-    field_to_split = get_fields_to_split(config)
+    field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
 
@@ -215,18 +212,22 @@ def worker(pipeline, recipe, config):
                         config, flags_before_worker, flags_after_worker)
 
             flagv = to_ms + '.flagversions'
-            tmpflagv = 'tmp_' + to_ms + '.flagversions'
+            tmp_ms = 'tmp_' + to_ms
+            tmpflagv = tmp_ms + '.flagversions'
+            if pipeline.enable_task(config, 'split_field'):
+                msbase = os.path.splitext(to_ms)[0]
+                obsinfo_msname = to_ms
+            else:
+                msbase = pipeline.msbasenames[i]
+                obsinfo_msname = from_ms
+
+            summary_file = f'{msbase}-summary.json'
+            obsinfo_file = f'{msbase}-obsinfo.txt'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
+                step = 'split_field-ms{0:d}-{1:d}'.format(i, target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
-                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-                    os.system(
-                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, 'tmp_'+to_ms)) or \
-                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tmpflagv)):
-                        os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, 'tmp_'+to_ms, tmpflagv))
+                remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
                 if not do_pol_callib:
                     recipe.add('cab/casa_mstransform', step,{
@@ -331,16 +332,11 @@ def worker(pipeline, recipe, config):
 
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
-                    if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
-                    else:
-                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
-
                     step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": listfile+":msfile",
+                                   "listfile": obsinfo_file+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -348,18 +344,13 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
                 if (config['obsinfo']['summary_json']):
-                    if pipeline.enable_task(config, 'split_field'):
-                        listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
-                    else:
-                        listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
-
                     step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": listfile+":msfile"
+                                   "outfile": summary_file+":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,

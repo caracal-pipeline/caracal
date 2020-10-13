@@ -7,22 +7,22 @@ import stimela.dismissable as sdm
 import stimela.recipe
 import astropy
 import shutil
+import itertools
 from astropy.io import fits
-import caracal
 # Modules useful to calculate common barycentric frequency grid
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import EarthLocation
 from astropy import constants
-import astropy.units as asunits
+import psutil
 import re
 import datetime
 import numpy as np
-import yaml
+import caracal
 from caracal.dispatch_crew import utils
-import itertools
 from caracal.workers.utils import manage_flagsets as manflags
-import psutil
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -128,6 +128,9 @@ def fix_specsys(filename, specframe):
             headcube['specsys3'] = specsys3
 
 def make_pb_cube(filename, apply_corr, typ, dish_size):
+    C = 2.99792458e+8       # m/s
+    HI = 1.4204057517667e+9  # Hz
+    
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -140,11 +143,26 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
             datacube[1] -= (headcube['crpix1'] - 1)
             datacube = np.sqrt((datacube**2).sum(axis=0))
             datacube.resize((1, datacube.shape[0], datacube.shape[1]))
+
             datacube = np.repeat(datacube,
                                  headcube['naxis3'],
                                  axis=0) * np.abs(headcube['cdelt1'])
-            freq = (headcube['crval3'] + headcube['cdelt3'] * (
-                np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
+            
+            cdelt3 = float(headcube['cdelt3'])
+            crval3 = float(headcube['crval3'])
+            
+            # Convert radio velocity to frequency if required
+            if 'VRAD' in headcube['ctype3']:
+                if 'restfreq' in headcube:
+                    restfreq = float(headcube['restfreq'])
+                else:
+                    restfreq = HI
+                cdelt3 = - restfreq*cdelt3/C
+                crval3 = restfreq*(1-crval3/C)
+                
+            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3']) -
+                                       headcube['crpix3'] + 1))
+            
             if typ == 'gauss':
                sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
                sigma_pb.resize((sigma_pb.shape[0], 1, 1))
@@ -421,13 +439,14 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Add model column'.format(step))
 
         msname_mst = add_ms_label(msname, "mst")
+        msname_mst_base = os.path.splitext(msname_mst)[0]
+        flagv = msname_mst + ".flagversions"
+        summary_file = f'{msname_mst_base}-summary.json'
+        obsinfo_file = f'{msname_mst_base}-obsinfo.txt'
 
         if pipeline.enable_task(config, 'mstransform'):
             # If the output of this run of mstransform exists, delete it first
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
-                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
-                os.system(
-                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
+            remove_output_products((msname_mst, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
             col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)
@@ -453,7 +472,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
-            msname_mst_base = os.path.splitext(msname_mst)[0]
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',

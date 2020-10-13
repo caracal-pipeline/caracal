@@ -50,7 +50,7 @@ SOL_TERMS_INDEX = {
     "DD": 2,
 }
 
-def check_config(config):
+def check_config(config, name):
     """
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
@@ -58,10 +58,10 @@ def check_config(config):
     # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
     if config['calibrate_with'].lower() == 'meqtrees':
         if config['transfer_apply_gains']['enable']:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
         if int(config['start_iter']) != 1:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         if int(config['cal_cubical']['chan_chunk']) != -1:
             caracal.log.info("The channel chunk has no effect on MeqTrees.")
@@ -69,19 +69,19 @@ def check_config(config):
             caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
     else:
         if int(config['start_iter']) != 1:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
     # First check we are actually running a calibrate
     if config['calibrate']['enable']:
         # Running with a model shorter than the output type is dengerous with 'CORR_RES'
         if 'CORR_RES' in  config['calibrate']['output_data']:
             if len(config['calibrate']['model']) < config['cal_niter']:
-                raise caracal.UserInputError(
+                raise caracal.ConfigurationError(
                     "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
 
         # Make sure we are not using two_step with CubiCal
         if config['calibrate_with'].lower() == 'cubical' and config['cal_meqtrees']['two_step']:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
         #Then let's check that the solutions are reasonable and fit in our time chunks
         #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
@@ -128,14 +128,14 @@ def check_config(config):
                 caracal.log.error("You are using all timeslots in your solutions (i.e. 0) but have set cal_timeslots_chunk, please set it to 0 for using all timeslots.")
                 caracal.log.error("Your timeslots chunk = {}".format(time_chunk))
                 caracal.log.error("Your timeslots solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                raise caracal.UserInputError("Inconsistent selfcal chunking")
+                raise caracal.ConfigurationError("Inconsistent selfcal chunking")
             sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
             for val in sol_int_array:
                 if val != int(val):
                     caracal.log.error("Not all applied time solutions fit in the timeslot_chunk.")
                     caracal.log.error("Your timeslot chunk = {}".format(time_chunk))
                     caracal.log.error("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+                    raise caracal.ConfigurationError("Inconsistent selfcal chunking")
         # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
         # This is not an option for meqtrees
         if config['calibrate_with'].lower() == 'cubical':
@@ -177,14 +177,14 @@ def check_config(config):
                     caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set chan_chunk, please set it to 0 for using all channels.")
                     caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                     caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+                    raise caracal.ConfigurationError("Inconsistent selfcal chunking")
                 sol_int_array = float(chan_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
                         caracal.log.error("Not all applied channel solutions fit in the chan_chunk.")
                         caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                         caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        raise caracal.UserInputError("Inconsistent selfcal chunking")
+                        raise caracal.ConfigurationError("Inconsistent selfcal chunking")
     # Check some imaging stuff
     if config['image']['enable']:
         if config['img_maxuv_l'] > 0. and  config['img_taper'] > 0.:
@@ -288,7 +288,7 @@ def worker(pipeline, recipe, config):
       ncpu = psutil.cpu_count()
     else:
       ncpu = min(ncpu, psutil.cpu_count())
-
+    nwlayers_factor= config['img_nwlayers_factor']
     nrdeconvsubimg = ncpu if config['img_nrdeconvsubimg'] == 0 else config['img_nrdeconvsubimg']
     if nrdeconvsubimg == 1:
         wscl_parallel_deconv = None
@@ -452,6 +452,7 @@ def worker(pipeline, recipe, config):
             "column": 'DATA',
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(robust),
             "nmiter": sdm.dismissable(config['img_nmiter']),
+            "nomfsweighting": config['img_mfs_weighting'],
             "npix": config['img_npix'],
             "padding": config['img_padding'],
             "scale": config['img_cell'],
@@ -462,16 +463,19 @@ def worker(pipeline, recipe, config):
             "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
             "joinchannels": config['img_joinchans'],
-            "fit-spectral-pol":  config['img_specfit_nrcoeff'],
-            "local-rms": True,
+            "local-rms": False,
             "auto-mask": 6,
             "auto-threshold": config[key]['clean_cutoff'][0],
-            "savesourcelist": False,
             "fitbeam": False,
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
+            "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem" : absmem,
         }
+        if config['img_specfit_nrcoeff'] > 0:
+            fake_image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
+        if not config['img_mfs_weighting']:
+            fake_image_opts["nomfsweighting"] = True
         if maxuvl > 0.:
             fake_image_opts.update({
                 "maxuv-l": maxuvl,
@@ -533,13 +537,18 @@ def worker(pipeline, recipe, config):
             "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
             "joinchannels": config['img_joinchans'],
-            "fit-spectral-pol": config['img_specfit_nrcoeff'],
-            "savesourcelist": True if config['img_niter']>0 else False,
             "auto-threshold": config[key]['clean_cutoff'][num-1 if len(config[key]['clean_cutoff']) >= num else -1],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
+            "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem": absmem,
         }
+        if config['img_specfit_nrcoeff'] > 0:
+            image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
+            if config['img_niter'] > 0:
+                image_opts["savesourcelist"] = True
+        if not config['img_mfs_weighting']:
+            image_opts["nomfsweighting"] = True
         if maxuvl > 0.:
             image_opts.update({
                 "maxuv-l": maxuvl,
@@ -2144,7 +2153,7 @@ def worker(pipeline, recipe, config):
                 calibrate(target_iter, self_cal_iter_counter, selfcal_products,
                           get_dir_path(image_path, pipeline), mslist, field)
             mask_key=config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1]
-            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1:
+            if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
                 recipe.run()

@@ -63,6 +63,9 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'fixcalcoords'):
                tol = config["fixcalcoords"]["tol"]
                tol_diff = config["fixcalcoords"]["tol_diff"]
+               #Convert tolerance from arcseconds to radians:
+               tol = np.pi/(180.0*3600.0)
+               tol_diff = np.pi/(180.0*3600.0)
                db = mkct.calibrator_database()
                dbc = mkct.casa_calibrator_database()
                msdict = pipeline.get_msinfo(msname)

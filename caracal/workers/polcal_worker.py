@@ -152,7 +152,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "poltype": "Xf",
                        "refant": ref,
                        "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs'])],
-                       "gainfield": ["%s" % ct for ct in set(fields + ['',''])],
+                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['',''])],
                        "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
@@ -171,7 +171,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "refant": ref,
                        "gaintable": ["%s:output" % ct for ct in
                                      set(caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref'])],
-                       "gainfield": ["%s" % ct for ct in set(fields + ['', '', ''])],
+                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', ''])],
                        "interp": ["%s" % ct for ct in set(interplist + ['linear', 'nearest', 'nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
@@ -194,7 +194,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "spw": '',
                        "gaintable": ["%s:output" % ct for ct in
                                      set(caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf'])],
-                       "gainfield": ["%s" % ct for ct in set(fields + ['', '', ''])],
+                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', ''])],
                        "interp": ["%s" % ct for ct in set(interplist + ['nearest', 'nearest', 'nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
@@ -214,7 +214,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "refant": ref,
                        "gaintable": ["%s:output" % ct for ct in
                                      set(caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref'])],
-                       "gainfield": ["%s" % ct for ct in set(fields + ['', '', '', ''])],
+                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', '', ''])],
                        "interp": ["%s" % ct for ct in set(interplist + ['nearest', 'nearest', 'nearest', 'nearest'])],
                    },
                    input=pipeline.input, output=pipeline.caltables,
@@ -278,13 +278,16 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    label="Apply caltables on "+fld)
             else:
                 cc=calwtlist+calwt[1:]
+                ccal=caltablelist+gaintables[1:]
+                cfield=gainfieldlist+fields[1:]
+                cinter=interplist+interps[1:]
                 recipe.add("cab/casa_applycal", "apply_caltables_"+fld, {
                     "vis": msname,
                     "field": f,
                     "calwt": cc,
-                    "gaintable": ["%s:output" % ct for ct in set(caltablelist+gaintables[1:])],
-                    "gainfield": ["%s" % ct for ct in set(gainfieldlist+fields[1:])],
-                    "interp": ["%s" % ct for ct in set(interplist+interps[1:])],
+                    "gaintable": ["%s:output" % ct for ct in ccal],
+                    "gainfield": ["%s" % ct for ct in cfield],
+                    "interp": ["%s" % ct for ct in cinter],
                     "parang": True,
                 },
                            input=pipeline.input, output=pipeline.caltables,

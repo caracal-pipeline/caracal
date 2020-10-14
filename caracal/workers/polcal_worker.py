@@ -112,6 +112,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal")
 
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal",
                    "crosshand_delay",
                    {
@@ -125,9 +128,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "parang": True,
                        "gaintype": "KCROSS",
                        "spw": '',
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol1'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + [''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_delay")
@@ -140,6 +143,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
         # possibly joining scans to solve for per-frequency solutions
         # a strongly polarized source is needed with known properties
         # to limit the amount of PA coverage needed
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['','']
+        tmp_interp = interplist + ['linear','nearest']
         recipe.add("cab/casa_polcal",
                    "crosshand_phase_ref",
                    {
@@ -151,13 +157,16 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "combine": "",
                        "poltype": "Xf",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['',''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_ref")
 
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+        tmp_field = gainfieldlist + ['', '','']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal",
                    "crosshand_phase_freq",
                    {
@@ -169,10 +178,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "combine": "scan",
                        "poltype": "Xf",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in
-                                     set(caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', ''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear', 'nearest', 'nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
@@ -180,6 +188,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
         # if necessary to achieve desired SNR
+        tmp_gtab = caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal",
                    "leakage_ref",
                    {
@@ -192,14 +203,16 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "poltype": "D",
                        "refant": ref,
                        "spw": '',
-                       "gaintable": ["%s:output" % ct for ct in
-                                     set(caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', ''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['nearest', 'nearest', 'nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_ref")
 
+        tmp_gtab = caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref']
+        tmp_field = gainfieldlist + ['', '', '', '']
+        tmp_interp = interplist + ['nearest', 'nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal",
                    "leakage_freq",
                    {
@@ -212,10 +225,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "combine": "scan",
                        "poltype": "Df",
                        "refant": ref,
-                       "gaintable": ["%s:output" % ct for ct in
-                                     set(caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', '', ''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['nearest', 'nearest', 'nearest', 'nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
@@ -270,8 +282,8 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                     "field": f,
                     "calwt": all_calwt,
                     "gaintable": ["%s:output" % ct for ct in all_gaintables],
-                    "gainfield": ["%s" % ct for ct in all_fields],
-                    "interp": ["%s" % ct for ct in all_interp],
+                    "gainfield": all_fields,
+                    "interp": all_interp,
                     "parang": True,
                 },
                    input=pipeline.input, output=pipeline.caltables,
@@ -286,8 +298,8 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                     "field": f,
                     "calwt": cc,
                     "gaintable": ["%s:output" % ct for ct in ccal],
-                    "gainfield": ["%s" % ct for ct in cfield],
-                    "interp": ["%s" % ct for ct in cinter],
+                    "gainfield": cfield,
+                    "interp": cinter,
                     "parang": True,
                 },
                            input=pipeline.input, output=pipeline.caltables,
@@ -337,8 +349,8 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "parang": False,
                        "solint": 'int',
                        "gaintable": ["%s:output" % ct for ct in caltablelist],
-                       "gainfield": ["%s" % ct for ct in gainfieldlist],
-                       "interp": ["%s" % ct for ct in interplist],
+                       "gainfield": gainfieldlist,
+                       "interp": interplist,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal_1")
@@ -381,6 +393,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
         recipe.jobs = []
 
         # Kcross
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal",
                    "crosshand_delay",
                    {
@@ -394,9 +409,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "refantmode": 'strict',
                        "refant": ref,
                        "smodel": ['1', '0', '1', '0'],
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol1'])],
-                       #"gainfield": ["%s" % ct for ct in gainfieldlist],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_delay")
@@ -414,6 +429,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
             raise RuntimeError("Cannot find S1")  # prefix+'S1_from_QUfit:output'
 
         # QU abs delay
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['','']
+        tmp_interp = interplist + ['linear','nearest']
         recipe.add("cab/casa_polcal",
                    "crosshand_phase_QU_fit",
                    {
@@ -427,9 +445,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "preavg": scandur,
                        "smodel": S1,
                        "save_result": prefix + '_S2_from_polcal:output',
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs'])],
-                       # "gainfield": ["%s" % ct for ct in gainfieldlist],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_QU_fit")
@@ -458,13 +476,16 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "parang": True,
                        "solint": 'int',
                        "gaintable": ["%s:output" % ct for ct in caltablelist],
-                       "gainfield": ["%s" % ct for ct in gainfieldlist],
-                       "interp": ["%s" % ct for ct in interplist],
+                       "gainfield": gainfieldlist,
+                       "interp": interplist,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal_2")
 
         # LEAKAGE
+        tmp_gtab = caltablelist + [prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal",
                    "leakage",
                    {
@@ -478,15 +499,18 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "poltype": 'Dflls',
                        "refant": '',  # solve absolute D-term
                        "smodel": S2,
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['','',''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['linear','nearest','nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage")
 
         # solve for global normalized gain amp (to get X/Y ratios) on pol calibrator (TO APPLY ON TARGET)
         # amp-only and normalized, so only X/Y amp ratios matter
+        tmp_gtab = caltablelist + [prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_gaincal",
                    "norm_gain_for_target",
                    {
@@ -500,9 +524,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "gaintype": 'G',
                        "smodel": S2,
                        "calmode": 'a',
-                       "gaintable": ["%s:output" % ct for ct in set(caltablelist + [prefix + '.Kcrs' , prefix + '.Xfparang' , prefix + '.Df0gen'])],
-                       "gainfield": ["%s" % ct for ct in set(gainfieldlist + ['', '', ''])],
-                       "interp": ["%s" % ct for ct in set(interplist + ['nearest', 'nearest', 'nearest'])],
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
                        "solnorm": True,
                        "parang": True,
                    },
@@ -590,8 +614,8 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                     "field": f,
                     "calwt": all_calwt,
                     "gaintable": ["%s:output" % ct for ct in all_gaintables],
-                    "gainfield": ["%s" % ct for ct in all_fields],
-                    "interp": ["%s" % ct for ct in all_interp],
+                    "gainfield": all_fields,
+                    "interp": all_interp,
                     "parang": True,
                 },
                    input=pipeline.input, output=pipeline.caltables,
@@ -605,8 +629,8 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                         "field": f,
                         "calwt": all_calwt,
                         "gaintable": ["%s:output" % ct for ct in all_gaintables],
-                        "gainfield": ["%s" % ct for ct in all_fields],
-                        "interp": ["%s" % ct for ct in all_interp],
+                        "gainfield": all_fields,
+                        "interp": all_interp,
                         "parang": True,
                     },
                     input=pipeline.input, output=pipeline.caltables,

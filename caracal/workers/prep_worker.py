@@ -29,7 +29,6 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     """
 
     # Get position of field in msinfo
-    print("FIELD", field)
     ind = info['FIELD']['NAME'].index(field)
     firade = info['FIELD']['DELAY_DIR'][ind][0]
     firade[0] = np.mod(firade[0],2*np.pi)
@@ -49,7 +48,6 @@ def worker(pipeline, recipe, config):
     label = config['label_in']
     wname = pipeline.CURRENT_WORKER
     field_name = config["field"]
-    print("field_name", field_name) 
     msdir = pipeline.msdir
     for i in range(pipeline.nobs):
         prefix_msbase = pipeline.prefix_msbases[i]
@@ -67,7 +65,6 @@ def worker(pipeline, recipe, config):
             #Convert tolerance from arcseconds to radians:
             tol = tol*np.pi/(180.0*3600.0)
             tol_diff = tol_diff*np.pi/(180.0*3600.0)
-            print("tol,tol_diff=", tol, tol_diff)
             db = mkct.calibrator_database()
             dbc = mkct.casa_calibrator_database()
             msdict = pipeline.get_msinfo(msname)

@@ -1886,7 +1886,7 @@ def worker(pipeline, recipe, config):
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
             caracal.log.info(
-                'Number of iterations reached: {:d}'.format(cal_niter))
+                'Number of iterations to be done: {:d}'.format(cal_niter))
             return False
         # If no condition is met return true to continue
         return True

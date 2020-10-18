@@ -198,6 +198,7 @@ def worker(pipeline, recipe, config):
                                "spw": config['split_field']['spw'],
                                "datacolumn": dcol,
                                "correlation": config['split_field']['correlation'],
+                               "scan": config['split_field']['scan'],
                                "usewtspectrum": config['split_field']['create_specweights'],
                                "field": target,
                                "keepflags": True,

@@ -441,12 +441,7 @@ def worker(pipeline, recipe, config):
         msname_mst = add_ms_label(msname, "mst")
 
         if pipeline.enable_task(config, 'mstransform'):
-            # If the output of this run of mstransform exists, delete it first
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
-                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
-                os.system(
-                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
-
+            # Set UVLIN fit channel range
             if pipeline.enable_task(config['mstransform'], 'uvlin') and config['mstransform']['uvlin']['exclude_known_sources']:
                 C = 2.99792458e+5       # km/s
                 chanfreqs=np.arange(firstchanfreq_all[i][0],lastchanfreq_all[i][0]+chanw_all[i][0],chanw_all[i][0])
@@ -509,6 +504,12 @@ def worker(pipeline, recipe, config):
 
             else:
                 fitspw = config['mstransform']['uvlin']['fitspw']
+
+            # If the output of this run of mstransform exists, delete it first
+            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
+                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
+                os.system(
+                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
 
             col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)

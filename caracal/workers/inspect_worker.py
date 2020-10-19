@@ -298,7 +298,7 @@ def plotms(pipeline, recipe, basic, extras=None):
         "correlation": basic["corr"],
         "field": basic["field"],
         "iteraxis": basic["iterate"],
-        "coloraxis": basic["colour"],
+        "coloraxis": basic.get("colour", None),
         "plotfile": basic["output"],
         "expformat": 'png',
         "exprange": 'all',
@@ -423,7 +423,7 @@ def shadems(pipeline, recipe, basic, extras=None):
             "ms": basic["ms"],
             "corr": _corr,
             "field": basic["field"],
-            "colour-by": shade_cols(basic["colour"], col_names),
+            "colour-by": shade_cols(basic.get("colour", None), col_names),
             "png": f"{basic['output']}-corr-{_corr}.png",
             # "mem_limit": basic["mem_limit"],
             "num-parallel": basic["num_cores"]
@@ -467,7 +467,7 @@ def ragavi_vis(pipeline, recipe, basic, extras=None):
         "corr": basic["corr"],
         "field": basic["field"],
         "iter-axis": basic["iterate"],
-        "colour-axis": basic["colour"],
+        "colour-axis": basic.get("colour", None),
         "htmlname": f"{basic['output']}.html",
         # "cbin": basic["avgchan"],
         # "tbin": basic["avgtime"],
@@ -571,7 +571,7 @@ def worker(pipeline, recipe, config):
                 for fname, (ftype, fid) in fields.items():
                     plot_args.update({
                         "ms": ms,
-                        "data": check_data(plot_axes[axes].pop("col")),
+                        "data": check_data(plot_axes[axes].get("col")),
                         "corr": corrs,
                         "iterate": "corr",
                         # "colour": "scan",

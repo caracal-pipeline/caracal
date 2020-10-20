@@ -15,6 +15,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import EarthLocation
 from astropy import constants
 import psutil
+import astropy.units as units
 import re
 import datetime
 import numpy as np
@@ -445,6 +446,70 @@ def worker(pipeline, recipe, config):
         obsinfo_file = f'{msname_mst_base}-obsinfo.txt'
 
         if pipeline.enable_task(config, 'mstransform'):
+            # Set UVLIN fit channel range
+            if pipeline.enable_task(config['mstransform'], 'uvlin') and config['mstransform']['uvlin']['exclude_known_sources']:
+                C = 2.99792458e+5       # km/s
+                chanfreqs=np.arange(firstchanfreq_all[i][0],lastchanfreq_all[i][0]+chanw_all[i][0],chanw_all[i][0])
+                chanids=np.arange(chanfreqs.shape[0])
+                linechans=chanids<0 # Array of False's used to build the fitspw settings
+                line_id,line_ra,line_dec,line_vmin,line_vmax,line_flux=np.loadtxt('{0:s}/{1:s}'.format(pipeline.input, config['mstransform']['uvlin']['known_sources_cat']), dtype='str', unpack=True)
+                line_ra = astropy.coordinates.Angle(line_ra,unit='hour').degree
+                line_dec = astropy.coordinates.Angle(line_dec,unit='degree').degree
+                line_flux = line_flux.astype(float)
+                line_fmax = (units.Quantity(config['restfreq'])/((line_vmin.astype(float)-config['mstransform']['uvlin']['known_sources_dv'])/C+1)).to_value(units.hertz)
+                line_fmin = (units.Quantity(config['restfreq'])/((line_vmax.astype(float)+config['mstransform']['uvlin']['known_sources_dv'])/C+1)).to_value(units.hertz)
+                distance = 180/np.pi*np.arccos(np.sin(Dec[i]/180*np.pi)*np.sin(line_dec/180*np.pi)+
+                           np.cos(Dec[i]/180*np.pi)*np.cos(line_dec/180*np.pi)*np.cos((RA[i]-line_ra)/180*np.pi))
+                # Select line sources:
+                #     within the search radius;
+                #     above the line flux threashold (not PB-corrected);
+                #     and (at least partly) within the MS frequency range.
+                line_selected = (distance < config['mstransform']['uvlin']['known_sources_radius']) *\
+                                (line_flux >= config['mstransform']['uvlin']['known_sources_flux']) *\
+                                ( (line_fmin >= chanfreqs.min()) * (line_fmin <= chanfreqs.max()) +\
+                                (line_fmax >= chanfreqs.min()) * (line_fmax <= chanfreqs.max()))
+                line_id, line_fmin, line_fmax = line_id[line_selected], line_fmin[line_selected], line_fmax[line_selected]
+                line_chanmin, line_chanmax = [], []
+                caracal.log.info('Excluding the following line sources and channel intervals from the UVLIN fit:')
+                for ll in range(line_id.shape[0]):
+                    if line_fmin[ll] < chanfreqs[0]:
+                        line_chanmin.append(chanids[0])
+                    else:
+                        line_chanmin.append(chanids[chanfreqs < line_fmin[ll]].max())
+                    if line_fmax[ll] > chanfreqs[-1]:
+                        line_chanmax.append(chanids[-1])
+                    else:
+                        line_chanmax.append(chanids[chanfreqs > line_fmax[ll]].min())
+                    caracal.log.info('  {0:20s}:  {1:5d} - {2:5d}'.format(line_id[ll], line_chanmin[ll], line_chanmax[ll]))
+                    linechans += (chanids >= line_chanmin[ll]) * (chanids <= line_chanmax[ll])
+                autofitchans = ~linechans
+                if config['mstransform']['uvlin']['fitspw']:
+                    caracal.log.info('Combining the above channel intervals with the user input {0:s}'.format(config['mstransform']['uvlin']['fitspw']))
+                    userfitchans = [qq.split(';') for qq in config['mstransform']['uvlin']['fitspw'].split(':')[1::2]]
+                    while len(userfitchans) > 1:
+                        userfitchans[0] = userfitchans[0]+userfitchans[1]
+                        del(userfitchans[1])
+                    userfitchans = [list(map(int,qq.split('~'))) for qq in userfitchans[0]]
+                    userfitchans = np.array([(chanids >= qq[0])*(chanids <= qq[1]) for qq in userfitchans]).sum(axis=0).astype('bool')
+                    autofitchans *= userfitchans
+                fitspw = '0~' if autofitchans[0] else ''
+                for cc in chanids[1:]:
+                    if not autofitchans[cc-1] and autofitchans[cc] and (not fitspw or fitspw[-1]==';'):
+                        fitspw += '{0:d}~'.format(cc)
+                    elif autofitchans[cc-1] and not autofitchans[cc]:
+                        fitspw += '{0:d};'.format(cc-1)
+                if not fitspw:
+                    raise caracal.BadDataError('No channels available for UVLIN fit.')
+                elif fitspw[-1] == '~':
+                    fitspw += '{0:d}'.format(chanids[-1])
+                elif fitspw[-1] == ';':
+                    fitspw = fitspw[:-1]
+                fitspw = '0:{0:s}'.format(fitspw)
+                caracal.log.info('The UVLIN fit will be executed on the channels {0:s}'.format(fitspw))
+
+            else:
+                fitspw = config['mstransform']['uvlin']['fitspw']
+
             # If the output of this run of mstransform exists, delete it first
             remove_output_products((msname_mst, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
@@ -465,7 +530,7 @@ def worker(pipeline, recipe, config):
                         "outframe": config['mstransform']['doppler']['frame'],
                         "veltype": config['mstransform']['doppler']['veltype'],
                         "douvcontsub": pipeline.enable_task(config['mstransform'], 'uvlin'),
-                        "fitspw": sdm.dismissable(config['mstransform']['uvlin']['fitspw']),
+                        "fitspw": sdm.dismissable(fitspw),
                         "fitorder": config['mstransform']['uvlin']['fitorder'],
                         },
                        input=pipeline.input,

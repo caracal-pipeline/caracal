@@ -1603,6 +1603,7 @@ def worker(pipeline, recipe, config):
                 "sol-term-iters": ",".join(sol_terms_add),
                 "sel-diag": take_diag_terms,
                 "dist-ncpu": ncpu,
+                "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
                 "log-memory": True,
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
                                                                                            pipeline), prefix,
@@ -1886,7 +1887,7 @@ def worker(pipeline, recipe, config):
         # If we reach the number of iterations we want to stop.
         if n == cal_niter + 1:
             caracal.log.info(
-                'Number of iterations reached: {:d}'.format(cal_niter))
+                'Number of iterations to be done: {:d}'.format(cal_niter))
             return False
         # If no condition is met return true to continue
         return True

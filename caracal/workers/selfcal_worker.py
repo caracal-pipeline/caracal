@@ -50,7 +50,7 @@ SOL_TERMS_INDEX = {
     "DD": 2,
 }
 
-def check_config(config):
+def check_config(config, name):
     """
     Optional function to check consistency of config, invoked before the pipeline runs.
     its purpose is to log warnings, or raise exceptions on bad errors.
@@ -58,10 +58,10 @@ def check_config(config):
     # First let' check that we are not using transfer gains with meqtrees or not starting at the start with meqtrees
     if config['calibrate_with'].lower() == 'meqtrees':
         if config['transfer_apply_gains']['enable']:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 'Gains cannot be interpolated with MeqTrees, please switch to CubiCal. Exiting.')
         if int(config['start_iter']) != 1:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "We cannot reapply MeqTrees calibration at a given step. Hence you will need to do a full selfcal loop.")
         if int(config['cal_cubical']['chan_chunk']) != -1:
             caracal.log.info("The channel chunk has no effect on MeqTrees.")
@@ -69,19 +69,19 @@ def check_config(config):
             caracal.log.info("Delay selfcal does not work with MeqTrees, please switch to Cubical. Exiting.")
     else:
         if int(config['start_iter']) != 1:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "We cannot reapply Cubical calibration at a given step. Hence you will need to do a full selfcal loop.")
     # First check we are actually running a calibrate
     if config['calibrate']['enable']:
         # Running with a model shorter than the output type is dengerous with 'CORR_RES'
         if 'CORR_RES' in  config['calibrate']['output_data']:
             if len(config['calibrate']['model']) < config['cal_niter']:
-                raise caracal.UserInputError(
+                raise caracal.ConfigurationError(
                     "You did not set a model to use for every iteration while using residuals. This is too dangerous for CARACal to execute.")
 
         # Make sure we are not using two_step with CubiCal
         if config['calibrate_with'].lower() == 'cubical' and config['cal_meqtrees']['two_step']:
-            raise caracal.UserInputError(
+            raise caracal.ConfigurationError(
                 "Two_Step calibration is an experimental mode only available for meqtrees at the moment.")
         #Then let's check that the solutions are reasonable and fit in our time chunks
         #!!!!!! Remainder solutions are not checked to be a full solution block!!!!!!!!
@@ -128,14 +128,14 @@ def check_config(config):
                 caracal.log.error("You are using all timeslots in your solutions (i.e. 0) but have set cal_timeslots_chunk, please set it to 0 for using all timeslots.")
                 caracal.log.error("Your timeslots chunk = {}".format(time_chunk))
                 caracal.log.error("Your timeslots solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                raise caracal.UserInputError("Inconsistent selfcal chunking")
+                raise caracal.ConfigurationError("Inconsistent selfcal chunking")
             sol_int_array = float(time_chunk)/np.array(solutions,dtype=float)
             for val in sol_int_array:
                 if val != int(val):
                     caracal.log.error("Not all applied time solutions fit in the timeslot_chunk.")
                     caracal.log.error("Your timeslot chunk = {}".format(time_chunk))
                     caracal.log.error("Your time solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+                    raise caracal.ConfigurationError("Inconsistent selfcal chunking")
         # Then we repeat for the channels, as these arrays do not have to be the same length as the timeslots this can not be combined
         # This is not an option for meqtrees
         if config['calibrate_with'].lower() == 'cubical':
@@ -177,14 +177,14 @@ def check_config(config):
                     caracal.log.error("You are using all channels in your solutions (i.e. 0) but have set chan_chunk, please set it to 0 for using all channels.")
                     caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                     caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                    raise caracal.UserInputError("Inconsistent selfcal chunking")
+                    raise caracal.ConfigurationError("Inconsistent selfcal chunking")
                 sol_int_array = float(chan_chunk)/np.array(solutions,dtype=float)
                 for val in sol_int_array:
                     if val != int(val):
                         caracal.log.error("Not all applied channel solutions fit in the chan_chunk.")
                         caracal.log.error("Your channel chunk = {} \n".format(chan_chunk))
                         caracal.log.error("Your channel solutions to be applied are {}".format(', '.join([str(x) for x in solutions])))
-                        raise caracal.UserInputError("Inconsistent selfcal chunking")
+                        raise caracal.ConfigurationError("Inconsistent selfcal chunking")
     # Check some imaging stuff
     if config['image']['enable']:
         if config['img_maxuv_l'] > 0. and  config['img_taper'] > 0.:

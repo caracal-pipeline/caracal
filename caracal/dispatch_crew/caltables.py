@@ -23,7 +23,7 @@ def calibrator_database():
 
     # There isn't a Southern standard in CASA
     # so construct a little database of them for reference
-    caracal.log.info("Obtaining divine knowledge from: %s" % __DB_FILENAME)
+    caracal.log.info("Obtaining divine knowledge from %s" % __DB_FILENAME)
 
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
     #caracal.log.info("\n" + str(__CALIBRATOR_DB))
@@ -36,6 +36,6 @@ def casa_calibrator_database():
     global __CASA_CALIBRATOR_DB
     if __CASA_CALIBRATOR_DB is not None:
         return __CASA_CALIBRATOR_DB
-    caracal.log.info("Obtaining divine knowledge from: %s" % __DB_CASA_FILENAME)
+    caracal.log.info("Obtaining divine knowledge from %s" % __DB_CASA_FILENAME)
     __CASA_CALIBRATOR_DB = cp.catalog_parser(__DB_CASA_FILENAME)
     return __CASA_CALIBRATOR_DB

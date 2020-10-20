@@ -1603,6 +1603,7 @@ def worker(pipeline, recipe, config):
                 "sol-term-iters": ",".join(sol_terms_add),
                 "sel-diag": take_diag_terms,
                 "dist-ncpu": ncpu,
+                "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
                 "log-memory": True,
                 "out-name": '{0:s}/{1:s}-{2:s}_{3:d}_restored_cubical'.format(get_dir_path(prod_path,
                                                                                            pipeline), prefix,

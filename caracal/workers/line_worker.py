@@ -7,22 +7,23 @@ import stimela.dismissable as sdm
 import stimela.recipe
 import astropy
 import shutil
+import itertools
 from astropy.io import fits
-import caracal
 # Modules useful to calculate common barycentric frequency grid
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import EarthLocation
 from astropy import constants
+import psutil
 import astropy.units as units
 import re
 import datetime
 import numpy as np
-import yaml
+import caracal
 from caracal.dispatch_crew import utils
-import itertools
 from caracal.workers.utils import manage_flagsets as manflags
-import psutil
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -439,6 +440,10 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Add model column'.format(step))
 
         msname_mst = add_ms_label(msname, "mst")
+        msname_mst_base = os.path.splitext(msname_mst)[0]
+        flagv = msname_mst + ".flagversions"
+        summary_file = f'{msname_mst_base}-summary.json'
+        obsinfo_file = f'{msname_mst_base}-obsinfo.txt'
 
         if pipeline.enable_task(config, 'mstransform'):
             # Set UVLIN fit channel range
@@ -506,10 +511,7 @@ def worker(pipeline, recipe, config):
                 fitspw = config['mstransform']['uvlin']['fitspw']
 
             # If the output of this run of mstransform exists, delete it first
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
-                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
-                os.system(
-                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
+            remove_output_products((msname_mst, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
             col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)
@@ -535,7 +537,6 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
-            msname_mst_base = os.path.splitext(msname_mst)[0]
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',

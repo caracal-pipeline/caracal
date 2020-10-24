@@ -3,14 +3,12 @@ import os
 import sys
 import caracal
 import stimela.dismissable as sdm
-import getpass
 import stimela.recipe
-import re
 import json
-import numpy as np
-from caracal.dispatch_crew import utils
-from caracal.workers.utils import manage_fields as manfields
+import caracal
 from caracal.workers.utils import manage_flagsets as manflags
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Transform Data by Splitting/Average/Applying calibration'
 LABEL = 'transform'
@@ -39,10 +37,10 @@ table_suffix = {
 _target_fields = {'target'}
 _cal_fields = set("fcal bpcal gcal xcal".split())
 
-def get_fields_to_split(config):
+def get_fields_to_split(config, name):
     fields = config['field']
     if not fields:
-        raise ValueError("split_field: field cannot be empty")
+        raise caracal.ConfigurationError(f"'{name}: field' cannot be empty")
     elif fields == 'calibrators':
         return _cal_fields
     elif fields == 'target':
@@ -52,15 +50,15 @@ def get_fields_to_split(config):
         fields_to_split = set(fields.split(','))
         diff = fields_to_split.difference(_cal_fields)
         if diff:
-            raise ValueError(
-                "split_field: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(
+            raise caracal.ConfigurationError(
+                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
                     ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
                 ))
         return fields_to_split
 
 
-def check_config(config):
-    get_fields_to_split(config)
+def check_config(config, name):
+    get_fields_to_split(config, name)
 
 
 def worker(pipeline, recipe, config):
@@ -70,13 +68,28 @@ def worker(pipeline, recipe, config):
     label_in = config['label_in']
     label_out = config['label_out']
     from_target = True if label_in and config['field'] == 'target' else False
-    field_to_split = get_fields_to_split(config)
+    field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
+    if (pipeline.enable_task(config, 'split_field') or pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
+        raise ValueError("split_field/changecentre and concat cannot be enabled in the same run of the transform worker. The former need a single-valued label_in, the latter multiple comma-separated values.")
+    if ',' in label_in:
+        if pipeline.enable_task(config, 'split_field'):
+            raise ValueError("split_field cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
+        if pipeline.enable_task(config, 'changecentre'):
+            raise ValueError("changecentre cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
+        else: transform_mode = 'concat' # in this mode all .MS files from the same input .MS and with the same target, and with label inside the list label_in, are concatenated
+    else:
+        if pipeline.enable_task(config, 'concat'):
+            raise ValueError("concat cannot be enabled with a single entry in label_in")
+        else: transform_mode = 'split'
 
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
         # if splitting from target, we have multiple MSs to iterate over
-        from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
+        if transform_mode == 'split':
+            from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
+        elif transform_mode == 'concat':
+            from_mslist = pipeline.get_mslist(i, '', target=from_target)
         to_mslist  = pipeline.get_mslist(i, label_out, target=not splitting_cals)
 
         # if splitting cals, we'll split one (combined) target to one output MS
@@ -120,7 +133,7 @@ def worker(pipeline, recipe, config):
                                   config['split_field']['otfcal']['label_cal']))) as f:
                 callib_dict = json.load(f)
 
-            for applyme in callib_dict: 
+            for applyme in callib_dict:
                 caltablelist.append(callib_dict[applyme]['caltable'])
                 gainfieldlist.append(callib_dict[applyme]['fldmap'])
                 interplist.append(callib_dict[applyme]['interp'])
@@ -148,7 +161,7 @@ def worker(pipeline, recipe, config):
         for target_iter, (target, from_ms, to_ms) in enumerate(zip(target_ls, from_mslist, to_mslist)):
             # Rewind flags
             available_flagversions = manflags.get_flags(pipeline, from_ms)
-            if config['rewind_flags']['enable'] and label_in:
+            if config['rewind_flags']['enable'] and label_in and transform_mode == 'split':
                 version = config['rewind_flags']['version']
                 if version in available_flagversions:
                     substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
@@ -163,14 +176,20 @@ def worker(pipeline, recipe, config):
                         config, flags_before_worker, flags_after_worker)
 
             flagv = to_ms + '.flagversions'
+            if pipeline.enable_task(config, 'split_field'):
+                msbase = os.path.splitext(to_ms)[0]
+                obsinfo_msname = to_ms
+            else:
+                msbase = pipeline.msbasenames[i]
+                obsinfo_msname = from_ms
+
+            summary_file = f'{msbase}-summary.json'
+            obsinfo_file = f'{msbase}-obsinfo.txt'
 
             if pipeline.enable_task(config, 'split_field'):
-                step = 'split_field-ms{0:d}-{1:d}'.format(i,target_iter)
+                step = 'split_field-ms{0:d}-{1:d}'.format(i, target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
-                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
-                    os.system(
-                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
+                remove_output_products((to_ms, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
                 recipe.add('cab/casa_mstransform', step,
                            {
@@ -183,6 +202,7 @@ def worker(pipeline, recipe, config):
                                "spw": config['split_field']['spw'],
                                "datacolumn": dcol,
                                "correlation": config['split_field']['correlation'],
+                               "scan": config['split_field']['scan'],
                                "usewtspectrum": config['split_field']['create_specweights'],
                                "field": target,
                                "keepflags": True,
@@ -217,9 +237,53 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Change phase centre ms={1:s}'.format(step, to_ms))
 
+
+            if pipeline.enable_task(config, 'concat'):
+                concat_labels = label_in.split(',')
+
+                step = 'concat-ms{0:d}-{1:d}'.format(i,target_iter)
+                concat_ms = [from_ms.replace('.ms','-{0:s}.ms'.format(cl)) for cl in concat_labels]
+                recipe.add('cab/casa_concat', step,
+                           {
+                               "vis": concat_ms,
+                               "concatvis": 'tobedeleted-'+to_ms,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Concatenate {1:}'.format(step, concat_ms))
+
+                # If the output of this run of mstransform exists, delete it first
+                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
+                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
+                    os.system(
+                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
+
+                step = 'singlespw-ms{0:d}-{1:d}'.format(i,target_iter)
+                recipe.add('cab/casa_mstransform', step,
+                           {
+                               "vis": 'tobedeleted-'+to_ms,
+                               "outputvis": to_ms,
+                               "datacolumn": 'data',
+                               "combinespws": True,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Single SPW {1:}'.format(step, concat_ms))
+
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
+                    cab_name=substep, overwrite=False)
+
+                os.system(
+                    'rm -rf {0:s}/tobedeleted-{1:s}'.format(pipeline.msdir, to_ms))
+
+                obsinfo_msname = to_ms
+
+
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
-                    if pipeline.enable_task(config, 'split_field'):
+
+                    if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
                         listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
@@ -228,7 +292,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": listfile+":msfile",
+                                   "listfile": obsinfo_file+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -236,7 +300,8 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
                 if (config['obsinfo']['summary_json']):
-                    if pipeline.enable_task(config, 'split_field'):
+
+                    if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
                         listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
@@ -247,7 +312,7 @@ def worker(pipeline, recipe, config):
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": listfile+":msfile"
+                                   "outfile": summary_file+":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,

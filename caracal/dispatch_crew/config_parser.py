@@ -272,7 +272,7 @@ class config_parser(object):
             dtype = None
 
             def typecast(val):
-                """Helper function to cast value to excpected type.
+                """Helper function to cast value to expected type.
                 If string=True, bools are cast to string bools, so value is suitable for command-line parsing"""
                 if is_list and isinstance(val, list):
                     return [typecast(x) for x in val]
@@ -321,21 +321,21 @@ class config_parser(object):
             if options is not None:
                 if hasattr(options, attr_name):
                     optval = getattr(options, attr_name)
-                    # parse lists
-                    if is_list:
-                        optval = str2list(optval)
+                    # optval is always a string, so...
+                    # ...parse lists or dicts as yaml objects
+                    if is_list or dtype is dict:
+                        optval = yaml.safe_load(optval)
+                    # ...and typecast to expected type
                     option_value = typecast(optval)
                     if option_value != default_value:
                         caracal.log.info("  command line sets --{} = {}".format(option_name, option_value))
                     groups[key] = option_value
             # else populate parser with default value
             else:
-                # lists correspond to multiple arguments
-                if is_list:
-                    # no support for lists of dicts from the command line, for now
-                    if dtype is not dict:
-                        self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=str,
-                                                  default=",".join(map(value2str, default_value)))
+                # lists and dicts expressed via yaml
+                if is_list or dtype is dict:
+                    self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=str,
+                                                default=yaml.safe_dump(default_value))
                 # booleans have a choice
                 elif dtype is bool:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS,

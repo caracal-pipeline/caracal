@@ -197,36 +197,40 @@ def worker(pipeline, recipe, config):
         # The order of fields here is important
         for term in "target gcal fcal bpcal xcal".split():
             conf_fields = getattr(pipeline, term)[i]
+            conf_fields_str = ','.join(conf_fields)
             label, fields = intents[term]
-            label = ",".join(label)
-            # check if user set fields manually
-            if set(all_fields).intersection(conf_fields):
-                label = term
-                if term == 'target':
-                    pipeline.target[i] = [value for value in getattr(pipeline, term)[i] if value in all_fields]
-            elif fields in [None, []]:
-                getattr(pipeline, term)[i] = []
-                continue
-            elif "all" in conf_fields:
-                getattr(pipeline, term)[i] = fields
-            elif "longest" in conf_fields:
+            label = ",".join(label) or term
+            #  no fields set for this term -- make empty and continue
+            if not conf_fields:
+                found_fields = []
+                # check if user set fields manually
+            elif conf_fields_str == "all":
+                found_fields = fields
+            elif conf_fields_str == "longest":
                 f = utils.observed_longest(msdict, fields)
-                getattr(pipeline, term)[i] = [f]
-            elif "nearest" in conf_fields:
+                found_fields = [f] if f else []
+            elif conf_fields_str == "nearest":
                 f = utils.select_gcal(msdict, fields, mode="nearest")
-                getattr(pipeline, term)[i] = [f]
+                found_fields = [f] if f else []
             else:
-                raise RuntimeError("Could not find field/selection {0}."\
-                        " Please check the [observation_config.{1}] "\
-                        "section of the config file".format(conf_fields, term))
+                found_fields = set(all_fields).intersection(conf_fields)
+
+            getattr(pipeline, term)[i] = list(found_fields)
+            if not found_fields:
+            # complain if not found, unless it's 'xcal', which is only for polcal, so let that worker complain
+                if term != "xcal":
+                    raise RuntimeError(f"Can't find an appropriate FIELD for obsinfo: {term}: {conf_fields_str}. "
+                                        "Please check this config setting. It may also be that your MS scan intents "
+                                        f"are not pupulated correctly, in which case you must set {term} to a list of explicit field names.")
+                continue
 
 #            caracal.log.info("    ====================================")
-            caracal.log.info(f"  {label}:")
+            caracal.log.info(f"  {term} ({label}):")
 #            caracal.log.info("     ---------------------------------- ")
             _ra = []
             _dec = []
             _fid = []
-            for f in getattr(pipeline, term)[i]:
+            for f in found_fields:
                 fid = utils.get_field_id(msdict, f)[0]
                 targetpos = targetinfo['REFERENCE_DIR'][fid][0]
                 ra = targetpos[0]/np.pi*180

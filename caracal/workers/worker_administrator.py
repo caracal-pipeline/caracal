@@ -32,20 +32,23 @@ class worker_administrator(object):
         self.config = config
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
+        for key in "msdir input output".split():
+            if not self.config['general'].get(key):
+                raise caracal.ConfigurationError(f"'general: {key}' must be specified")
+
         self.msdir = self.config['general']['msdir']
         self.input = self.config['general']['input']
         self.output = self.config['general']['output']
-        self.obsinfo = self.config['general']['output'] + '/obsinfo'
-        self.reports = self.config['general']['output'] + '/reports'
-        self.diagnostic_plots = self.config['general']['output'] + \
-            '/diagnostic_plots'
-        self.configFolder = self.config['general']['output'] + '/cfgFiles'
-        self.caltables = self.config['general']['output'] + '/caltables'
-        self.masking = self.config['general']['output'] + '/masking'
-        self.continuum = self.config['general']['output'] + '/continuum'
-        self.crosscal_continuum = self.config['general']['output'] + '/continuum/crosscal'
-        self.cubes = self.config['general']['output'] + '/cubes'
-        self.mosaics = self.config['general']['output'] + '/mosaics'
+        self.obsinfo = f'{self.output}/obsinfo'
+        self.reports = f'{self.output}/reports'
+        self.diagnostic_plots = f'{self.output}/diagnostic_plots'
+        self.configFolder = f'{self.output}/cfgFiles'
+        self.caltables = f'{self.output}/caltables'
+        self.masking = f'{self.output}/masking'
+        self.continuum = f'{self.output}/continuum'
+        self.crosscal_continuum = f'{self.output}/continuum/crosscal'
+        self.cubes = f'{self.output}/cubes'
+        self.mosaics = f'{self.output}/mosaics'
         self.generate_reports = generate_reports
         self.timeNow = '{:%Y%m%d-%H%M%S}'.format(datetime.now())
         self.ms_extension = self.config["getdata"]["extension"]
@@ -53,13 +56,13 @@ class worker_administrator(object):
 
         self._msinfo_cache = {}
 
-        self.logs_symlink = self.config['general']['output'] + '/logs'
+        self.logs_symlink = f'{self.output}/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
-        if not self.config['general']['rawdatadir']:
+
+        self.rawdatadir = self.config['general']['rawdatadir']
+        if not self.rawdatadir:
             self.rawdatadir = self.config['general']['rawdatadir'] = self.msdir
-        else:
-            self.rawdatadir = self.config['general']['rawdatadir']
 
         self.virtconcat = False
         self.workers_directory = workers_directory
@@ -121,24 +124,8 @@ class worker_administrator(object):
         self.recipes = {}
         # Workers to skip
         self.skip = []
-        # Initialize empty lists for ddids, leave this up to get data worker to define
-        self.init_names([])
-        self.init_pipeline(prep_input=config["general"]["prep_workspace"])
-
-        # save configuration file
-        configFileName = os.path.splitext(configFileName)[0]
-        outConfigName = '{0:s}_{1:s}.yml'.format(
-            configFileName, self.timeNow)
-
-        with open(os.path.join(self.configFolder, outConfigName), 'w') as outfile:
-            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
-
-    def init_names(self, dataid):
-        """ iniitalize names to be used throughout the pipeline and associated
-            general fields that must be propagated
-        """
-        self.dataid = dataid
-
+        # Initialize empty lists for ddids, leave this up to getdata worker to define
+        self.dataid = []
         # names of all MSs
         self.msnames = []
         # basenames of all MSs (sans extension)
@@ -146,26 +133,55 @@ class worker_administrator(object):
         # filename prefixes for outputs (formed up as prefix-msbase)
         self.prefix_msbases = []
 
-        for item in 'rawdatadir input msdir output'.split():
-            value = getattr(self, item, None)
-            if value:
-                setattr(self, item, value)
+        ## OMS skipping this here, leave it to the getdata
+        # self.init_names([], allow_empty=True)
+        self.init_pipeline(prep_input=config["general"]["prep_workspace"])
 
-        if self.rawdatadir:
-            for dataid in self.dataid:
-                pattern = os.path.join(self.rawdatadir, f"{dataid}.{self.ms_extension}")
-                msnames = [os.path.basename(ms) for ms in glob.glob(pattern)]
-                if len(msnames) == 0 and not self.ignore_missing:
-                    raise RuntimeError(f"The pattern/path '{pattern}' did not "\
-                          f"return files. Please double check your"\
-                          " general: msdir, general: rawdatadir, and/or getdata: dataid "\
-                          "settings in your config file. However, if you wish to proceed regardless,"\
-                          " you can set getdata: ignore_missing: true")
-                msbases = [os.path.splitext(ms)[0] for ms in msnames]
-                self.msnames += msnames
-                self.msbasenames += msbases
-                self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
-            self.nobs = len(self.msnames)
+        # save configuration files
+
+        config_base = os.path.splitext(configFileName)[0]
+        outConfigOrigName = f'{self.configFolder}/{config_base}-{self.timeNow}.orig.yml'
+        outConfigName = f'{self.configFolder}/{config_base}-{self.timeNow}.yml'
+
+        log.info(f"Saving original configuration file as {outConfigOrigName}")
+        shutil.copyfile(configFileName, outConfigOrigName)  # original config
+
+        log.info(f"Saving full configuration as {outConfigName}")
+        with open(outConfigName, 'w') as outfile:           # config+command line
+            ruamel.yaml.dump(self.config, outfile, Dumper=ruamel.yaml.RoundTripDumper)
+
+    def init_names(self, dataids):
+        """ iniitalize names to be used throughout the pipeline and associated
+            general fields that must be propagated
+        """
+        ## OMS: this was a very elaborate no-op, away with it
+        # for item in 'rawdatadir input msdir output'.split():
+        #     value = getattr(self, item, None)
+        #     if value:
+        #         setattr(self, item, value)
+
+        self.dataid = list(filter(bool, dataids))
+        if not self.dataid:
+            raise caracal.ConfigurationError(f"Empty 'getdata: dataid' entry")
+        patterns =  [f"{dataid}.{self.ms_extension}" for dataid in self.dataid]
+
+        for pattern in patterns:
+            msnames = [os.path.basename(ms) for ms in glob.glob(os.path.join(self.rawdatadir, pattern))]
+            if not msnames:
+                if self.ignore_missing:
+                    log.warning(f"'{pattern}' did not match any files, but getdata: ignore_missing is set, proceeding anyway")
+                else:
+                    raise caracal.ConfigurationError(f"'{pattern}' did not match any files under {self.rawdatadir}. Check your "
+                            "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
+                            "set 'getdata: ignore_missing: true'")
+            msbases = [os.path.splitext(ms)[0] for ms in msnames]
+            self.msnames += msnames
+            self.msbasenames += msbases
+            self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
+        self.nobs = len(self.msnames)
+        if not self.nobs:
+            raise caracal.ConfigurationError(f"No matching input data found in {self.rawdatadir} for {','.join(patterns)}. Check your "
+                " 'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings.")
 
         for item in 'refant fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
@@ -274,7 +290,7 @@ class worker_administrator(object):
         if not os.path.exists(self.output):
             os.mkdir(self.output)
         if not os.path.exists(self.rawdatadir):
-            os.mkdir(self.rawdatadir)
+            raise caracal.ConfigurationError(f"{self.rawdatadir} does not exist, check your general config section")
         if not os.path.exists(self.obsinfo):
             os.mkdir(self.obsinfo)
         if not os.path.exists(self.logs):
@@ -360,7 +376,7 @@ class worker_administrator(object):
                 log.error('Error importing worker "{0:s}" from {1:s}'.format(_worker, self.workers_directory))
                 raise
             if hasattr(worker, 'check_config'):
-                worker.check_config(config)
+                worker.check_config(config, name=_name)
             # check for cab specs
             cabspecs = cabspecs_general
             if config["cabs"]:

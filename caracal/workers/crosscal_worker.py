@@ -568,6 +568,9 @@ def worker(pipeline, recipe, config):
             if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+            if "xcal" in config["apply_cal"]["applyto"]:
+                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
@@ -593,6 +596,9 @@ def worker(pipeline, recipe, config):
             if "gcal" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
                         gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
+            if "xcal" in config["apply_cal"]["applyto"]:
+                applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
                         "nearest", "target", pipeline, i, calmode=calmode, label=label)

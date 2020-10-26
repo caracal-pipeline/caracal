@@ -68,6 +68,21 @@ mapping:
         type: str
         required: false
         example: '1MHz'
+      timesol_solfreqsel:
+        type: str
+        required: false
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI.
+        example: ''
+      timesol_soltime:
+        type: str
+        required: false
+        desc: Time solution interval to be used whenever solving for the DC component of either X or D
+        example: 'inf'
+      freqsol_soltime:
+        type: str
+        required: false
+        desc: Time solution interval to be used when solving for per channel solutions for either X or D. This ought to be as long as possible
+        example: 'inf'
       plotgains:
         desc: Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
         type: bool

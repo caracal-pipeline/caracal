@@ -57,6 +57,11 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
     avgstring = ',' + config["avg_bw"]
     scandur = scan_length(msinfo, field)
     scandur_leak = scan_length(msinfo, leak_field)
+
+    time_solfreqsel = config.get("timesol_solfreqsel")
+    time_solint = config.get("timesol_soltime")  # default 1 per scan
+    freq_solint = config.get("freqsol_soltime")
+
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
         if not os.path.exists(plotdir):
@@ -92,12 +97,12 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
             "field": field,
             "uvrange": config["uvrange"],
             "refant": ref,
-            "solint": scandur,
+            "solint": time_solint,
             "combine": "",
             "parang": True,
             "gaintype": "G",
             "calmode": "p",
-            "spw": '',
+            "spw": time_solfreqsel,
         }
         if caltablelist != []:
             gain_opts.update({
@@ -123,11 +128,11 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "field": field,
                        "uvrange": config["uvrange"],
                        "refant": ref,
-                       "solint": scandur,
-                       "combine": "",
+                       "solint": time_solint,
+                       "combine": "", #scan?
                        "parang": True,
                        "gaintype": "KCROSS",
-                       "spw": '',
+                       "spw": time_solfreqsel,
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -153,10 +158,11 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "caltable": prefix + '.Xref:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": scandur,
+                       "solint": time_solint,
                        "combine": "",
                        "poltype": "Xf",
                        "refant": ref,
+                       "spw": time_solfreqsel, #added
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -174,7 +180,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "caltable": prefix + '.Xf:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": 'inf' + avgstring,  # solint to obtain SNR on solutions
+                       "solint": freq_solint,  # solint to obtain SNR on solutions
                        "combine": "scan",
                        "poltype": "Xf",
                        "refant": ref,
@@ -184,6 +190,25 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
+
+        # recipe.add("cab/casa_flagdata",
+        #            "flagging_crosshand_phase_freq",
+        #            {
+        #                "vis": prefix + '.Xf:output',
+        #                "field": '',
+        #                "mode": '',
+        #                "uvrange": config["uvrange"],
+        #                "solint": freq_solint,  # solint to obtain SNR on solutions
+        #                "combine": "scan",
+        #                "poltype": "Xf",
+        #                "refant": ref,
+        #                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+        #                "gainfield": tmp_field,
+        #                "interp": tmp_interp,
+        #            },
+        #            input=pipeline.caltables, output=pipeline.caltables,
+        #            label="crosshand_phase_freq")
+
 
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
@@ -198,11 +223,11 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "caltable": prefix + '.Dref:output',
                        "field": leak_field,
                        "uvrange": config["uvrange"],
-                       "solint": scandur_leak,
+                       "solint": time_solint,
                        "combine": "",
                        "poltype": "D",
                        "refant": ref,
-                       "spw": '',
+                       "spw": time_solfreqsel,
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -218,10 +243,9 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    {
                        "vis": msname,
                        "caltable": prefix + '.Df:output',
-                       "spw": '',
                        "field": leak_field,
                        "uvrange": config["uvrange"],
-                       "solint": 'inf' + avgstring,
+                       "solint": freq_solint,
                        "combine": "scan",
                        "poltype": "Df",
                        "refant": ref,

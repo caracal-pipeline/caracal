@@ -176,6 +176,11 @@ mapping:
            desc: Data column to use for initial imaging. Defaults to 'CORRECTED_DATA', the assumption being that self-calibration has already been done on the measurement set.
            required: False
            example: 'CORRECTED_DATA'
+         data_colname_postcal:
+           type: str
+           desc: Data column to use for imaging after dd-calibration. Defaults to 'SUBDD_DATA', so as to not overwrite the corrected data. If data size increase is a concern, switch to 'CORRECTED_DATA'
+           required: False
+           example: 'SUBDD_DATA'
          data_chunkhours:
            type: float
            desc: Chunk data into time bins of X hours to conserve memory, where X is this parameter.
@@ -486,11 +491,6 @@ mapping:
            desc: Name of the sky-model file. (Currently the only supported format is that of WSClean component lists.) When set to 'auto', the pipeline builds the file name from the input parameters of the selfcal loop. The file is assumed to be in the 'output' directory.
            required: false
            example: 'auto'
-         dd_spectra:
-           type: bool
-           desc: Model sources as non-flat spectra. The spectral coefficients and reference frequency must be present in the sky model.
-           required: false
-           example: 'True'
          dd_row_chunks:
            type: int
            desc: Number of rows of input .MS that are processed in a single chunk.
@@ -501,11 +501,6 @@ mapping:
            desc: Number of sky-model components that are processed in a single chunk.
            required: false
            example: '0'
-         dd_exp-sign-convention:
-           type: str
-           desc: Sign convention to use for the complex exponential. The default, 'casa', specifies the e^(2.pi.I) convention, while 'thompson' specifies the e^(-2.pi.I) convention in The White Book and Fourier analysis literature.
-           required: false
-           example: 'casa'
          dd_within:
            type: str
            desc: Give JS9 region file. Only sources within those regions will be included.

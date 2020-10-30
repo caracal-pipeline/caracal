@@ -274,6 +274,10 @@ def worker(pipeline, recipe, config):
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                     cab_name=substep, overwrite=False)
 
+                # Delete the tobedeleted file, but first we need to have created it, thus...
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []
                 os.system(
                     'rm -rf {0:s}/tobedeleted-{1:s}'.format(pipeline.msdir, to_ms))
 
@@ -292,7 +296,7 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": obsinfo_file+":msfile",
+                                   "listfile": listfile+":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
@@ -312,7 +316,7 @@ def worker(pipeline, recipe, config):
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": summary_file+":msfile"
+                                   "outfile": listfile+":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,

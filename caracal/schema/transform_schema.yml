@@ -125,7 +125,15 @@ mapping:
             type: str
             required: false
             example: '0d0m0.0s'
-
+      concat:
+        desc: For each input .MS and target, concatenate together all .MS files with the different labels included in label_in (comma-separated values). The MS files are concatenated along the frequency axis. This only works if the frequency ranges covered by the MS files are contiguous and if the number of channels is the same for all MS files.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'concat' segment.
+            type: bool
+            required: false
+            example: 'False'
       obsinfo:
         desc: Get observation information.
         type: map

@@ -54,18 +54,10 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
-    avgstring = ',' + config["avg_bw"]
-    scandur = scan_length(msinfo, field)
-    scandur_leak = scan_length(msinfo, leak_field)
 
     time_solfreqsel = config.get("timesol_solfreqsel")
     time_solint = config.get("timesol_soltime")  # default 1 per scan
     freq_solint = config.get("freqsol_soltime")
-
-    if config['plotgains']:
-        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
-        if not os.path.exists(plotdir):
-            os.mkdir(plotdir)
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -191,24 +183,6 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
 
-        # recipe.add("cab/casa_flagdata",
-        #            "flagging_crosshand_phase_freq",
-        #            {
-        #                "vis": prefix + '.Xf:output',
-        #                "field": '',
-        #                "mode": '',
-        #                "uvrange": config["uvrange"],
-        #                "solint": freq_solint,  # solint to obtain SNR on solutions
-        #                "combine": "scan",
-        #                "poltype": "Xf",
-        #                "refant": ref,
-        #                "gaintable": ["%s:output" % ct for ct in tmp_gtab],
-        #                "gainfield": tmp_field,
-        #                "interp": tmp_interp,
-        #            },
-        #            input=pipeline.caltables, output=pipeline.caltables,
-        #            label="crosshand_phase_freq")
-
 
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
@@ -256,6 +230,19 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
 
+        recipe.add("cab/casa_flagdata",
+                   "flag_leakage_freq",
+                   {
+                       "vis": prefix + '.Df:output',
+                       "field": '',
+                       "mode": 'clip',
+                       "clipminmax": [-0.1,0.1],
+                       "clipoutside": True,
+                       "datacolumn": 'CPARAM',
+                   },
+                   input=pipeline.caltables, output=pipeline.caltables,
+                   label="flag_leakage_freq")
+
         applycal_recipes = []
         calmodes = []
 
@@ -288,13 +275,19 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
         with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
             json.dump(target_callib_dict, json_file)
 
-        if config['plotgains']:
-            gfields = [field, field, field, field, leak_field, leak_field]
-            terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Dref', 'Df']
-            for ix, gt in enumerate(gfields):
-                plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    if config['plotgains']:
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
+        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
+                  prefix + '.Df']
+        gfields = [field, field, field, field, leak_field, leak_field]
+        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Dref', 'Df']
+        for ix, gt in enumerate(gfields):
+            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
     if config['apply_pcal']:
         for fld in config["applyto"]:
@@ -343,12 +336,10 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
 
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
-    avgstring = ',' + config["avg_bw"]
     scandur = scan_length(msinfo, field)
-    if config['plotgains']:
-        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
-        if not os.path.exists(plotdir):
-            os.mkdir(plotdir)
+    time_solfreqsel = config.get("timesol_solfreqsel") #''
+    time_solint = config.get("timesol_soltime")  #inf default 1 per scan
+    freq_solint = config.get("freqsol_soltime") #inf
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -363,13 +354,15 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                    "gain_xcal_1",
                    {
                        "vis": msname,
-                       "field": field,
                        "caltable": prefix + '.Gpol1:output',
-                       "smodel": ['1', '0', '0', '0'],
-                       "refantmode": 'strict',
+                       "field": field,
+                       "uvrange": config["uvrange"],
                        "refant": ref,
+                       "refantmode": 'strict',
+                       "smodel": ['1', '0', '0', '0'],
                        "gaintype": 'G',
                        "calmode": 'ap',
+                       "spw": time_solfreqsel,
                        "parang": False,
                        "solint": 'int',
                        "gaintable": ["%s:output" % ct for ct in caltablelist],
@@ -425,14 +418,16 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                    {
                        "vis": msname,
                        "caltable": prefix + '.Kcrs:output',
-                       "selectdata": True,
                        "field": field,
+                       "uvrange": config["uvrange"],
+                       "refant": ref,
+                       "refantmode": 'strict',
+                       "solint": time_solint, #'inf' + avgstring,
                        "scan": str(bestscan),
                        "gaintype": 'KCROSS',
-                       "solint": 'inf' + avgstring,
-                       "refantmode": 'strict',
-                       "refant": ref,
                        "smodel": ['1', '0', '1', '0'],
+                       "selectdata": True,
+                       "spw": time_solfreqsel,
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -462,9 +457,10 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "vis": msname,
                        "caltable": prefix + '.Xfparang:output',
                        "field": field,
-                       "spw": '',
+                       "uvrange": config["uvrange"],
+                       "spw": time_solfreqsel, #added
                        "poltype": 'Xfparang+QU',
-                       "solint": 'inf' + avgstring,
+                       "solint": time_solint, #'inf' + avgstring,
                        "combine": 'scan,obs',
                        "preavg": scandur,
                        "smodel": S1,
@@ -490,15 +486,16 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                    "second gaincal",
                    {
                        "vis": msname,
-                       "field": field,
                        "caltable": prefix + '.Gpol2:output',
+                       "field": field,
+                       "uvrange": config["uvrange"],
                        "smodel": S2,
                        "refantmode": 'strict',
                        "refant": ref,
                        "gaintype": 'G',
                        "calmode": 'ap',
                        "parang": True,
-                       "solint": 'int',
+                       "solint": time_solint, #'int',
                        "gaintable": ["%s:output" % ct for ct in caltablelist],
                        "gainfield": gainfieldlist,
                        "interp": interplist,
@@ -516,8 +513,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "vis": msname,
                        "caltable": prefix + '.Df0gen:output',
                        "field": field,
+                       "uvrange": config["uvrange"],
+                       "solint": freq_solint, #'inf' + avgstring,
                        "spw": '',
-                       "solint": 'inf' + avgstring,
                        "combine": 'obs,scan',
                        "preavg": scandur,
                        "poltype": 'Dflls',
@@ -541,10 +539,11 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "vis": msname,
                        "caltable": prefix + '.Gxyamp:output',
                        "field": field,
-                       "solint": 'inf',
-                       "combine": 'scan,obs',
+                       "uvrange": config["uvrange"],
                        "refant": ref,
                        "refantmode": 'strict',
+                       "solint": time_solint, #'inf',
+                       "combine": 'scan,obs',
                        "gaintype": 'G',
                        "smodel": S2,
                        "calmode": 'a',
@@ -586,12 +585,6 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
         with open(os.path.join(callib_dir, f'callib_{prefix}_xcal.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
-        if config['plotgains']:
-            gfields = [field, field, field, field]
-            terms = ['G', 'KCROSS', 'Xf', 'Df0gen']
-            for ix, gt in enumerate(gfields):
-                plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
-
         applycal_recipes = []
         calmodes = []
         gaintables = [prefix + '.Gxyamp', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
@@ -619,11 +612,18 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
         with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
             json.dump(callib_dict, json_file)
 
-        if config['plotgains']:
-            plotgains(recipe, pipeline, plotdir, field, prefix + '.Gxyamp', i, 'G')
-
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    if config['plotgains']:
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
+        gaintables = [prefix + '.Gxyamp', prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
+        gfields = [field, field, field, field, field]
+        terms = ['G', 'G', 'KCROSS', 'Xf', 'Df0gen']
+        for ix, gt in enumerate(gfields):
+            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
     if config['apply_pcal']:
         for fld in config["applyto"]:
@@ -748,29 +748,6 @@ def worker(pipeline, recipe, config):
 
             else:
                 caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
-
-        # if config['crosscal_callib'] != '' and config['crosscal_callib'][-5:] == '.json':
-        #     callib_path = 'caltables/callibs/{}'.format(config['crosscal_callib'])
-        #
-        #     if not os.path.exists(os.path.join(pipeline.output, callib_path)):
-        #         raise RuntimeError("Cannot find cross_cal callib, check crosscal_callib parameter in config file !")
-        #
-        #     # write calibration library txt file from json file to applycal
-        #     caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
-        #
-        #     with open(os.path.join(pipeline.output, callib_path)) as f:
-        #         callib_dict = json.load(f)
-        #
-        #     for applyme in callib_dict:
-        #         caltablelist.append(callib_dict[applyme]['caltable'])
-        #         gainfieldlist.append(callib_dict[applyme]['fldmap'])
-        #         interplist.append(callib_dict[applyme]['interp'])
-        #     for k in enumerate(caltablelist):
-        #         calwtlist.append(True)
-        # elif config['crosscal_callib'] != '' and config['crosscal_callib'][-5:] != '.json':
-        #     raise RuntimeError("Cross_cal callib must be a .json file!")
-        # else:
-        #     caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if float(config['feed_angle_rotation']) != '':

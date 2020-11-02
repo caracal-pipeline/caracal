@@ -71,10 +71,25 @@ def worker(pipeline, recipe, config):
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
+    if (pipeline.enable_task(config, 'split_field') or pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
+        raise ValueError("split_field/changecentre and concat cannot be enabled in the same run of the transform worker. The former need a single-valued label_in, the latter multiple comma-separated values.")
+    if ',' in label_in:
+        if pipeline.enable_task(config, 'split_field'):
+            raise ValueError("split_field cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
+        if pipeline.enable_task(config, 'changecentre'):
+            raise ValueError("changecentre cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
+        else: transform_mode = 'concat' # in this mode all .MS files from the same input .MS and with the same target, and with label inside the list label_in, are concatenated
+    else:
+        if pipeline.enable_task(config, 'concat'):
+            raise ValueError("concat cannot be enabled with a single entry in label_in")
+        else: transform_mode = 'split'
 
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
         # if splitting from target, we have multiple MSs to iterate over
-        from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
+        if transform_mode == 'split':
+            from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
+        elif transform_mode == 'concat':
+            from_mslist = pipeline.get_mslist(i, '', target=from_target)
         to_mslist  = pipeline.get_mslist(i, label_out, target=not splitting_cals)
 
         # if splitting cals, we'll split one (combined) target to one output MS
@@ -276,7 +291,7 @@ def worker(pipeline, recipe, config):
                                "calwt": pcalwtlist,
                                "gaintable": ["%s:output" % ct for ct in pcaltablelist],
                                "gainfield": pgainfieldlist,
-                               "interp": interplist,
+                               "interp": pinterplist,
                                "parang": True,
                            },
                            input=pipeline.input,
@@ -330,8 +345,55 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Change phase centre ms={1:s}'.format(step, to_ms))
 
+            if pipeline.enable_task(config, 'concat'):
+                concat_labels = label_in.split(',')
+
+                step = 'concat-ms{0:d}-{1:d}'.format(i, target_iter)
+                concat_ms = [from_ms.replace('.ms', '-{0:s}.ms'.format(cl)) for cl in concat_labels]
+                recipe.add('cab/casa_concat', step,
+                           {
+                               "vis": concat_ms,
+                               "concatvis": 'tobedeleted-' + to_ms,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Concatenate {1:}'.format(step, concat_ms))
+
+                # If the output of this run of mstransform exists, delete it first
+                if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, to_ms)) or \
+                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, flagv)):
+                    os.system(
+                        'rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, to_ms, flagv))
+
+                step = 'singlespw-ms{0:d}-{1:d}'.format(i, target_iter)
+                recipe.add('cab/casa_mstransform', step,
+                           {
+                               "vis": 'tobedeleted-' + to_ms,
+                               "outputvis": to_ms,
+                               "datacolumn": 'data',
+                               "combinespws": True,
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='{0:s}:: Single SPW {1:}'.format(step, concat_ms))
+
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
+                                    cab_name=substep, overwrite=False)
+
+                os.system(
+                    'rm -rf {0:s}/tobedeleted-{1:s}'.format(pipeline.msdir, to_ms))
+
+                obsinfo_msname = to_ms
+
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
+
+                    if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
+                        listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
+                    else:
+                        listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
+
                     step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
@@ -344,6 +406,12 @@ def worker(pipeline, recipe, config):
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
                 if (config['obsinfo']['summary_json']):
+
+                    if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
+                        listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
+                    else:
+                        listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
+
                     step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
                     recipe.add('cab/msutils', step,
                                {

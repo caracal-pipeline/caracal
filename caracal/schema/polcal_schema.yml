@@ -63,11 +63,6 @@ mapping:
         type: str
         required: false
         example: xcal
-      avg_bw:
-        desc: set the bandwidth average interval to increase SNR.
-        type: str
-        required: false
-        example: '1MHz'
       timesol_solfreqsel:
         type: str
         required: false

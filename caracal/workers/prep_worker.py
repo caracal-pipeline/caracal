@@ -40,7 +40,7 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
             if not closeby(carade, firade, tol=tol_diff):
                return key, dbcp[key]['ra'], dbcp[key]['decl']
             else :
-               return key, '', ''
+               return None, None, None
     return False
 
 
@@ -70,39 +70,37 @@ def worker(pipeline, recipe, config):
             msdict = pipeline.get_msinfo(msname)
             ra_corr = None
             dec_corr = None
-            for f in pipeline.bpcal[i]:
-                if field_name != 'target':
-                   if getfield_coords(msdict, f, db, tol = tol, tol_diff = tol_diff):
-                      fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db, tol = tol, tol_diff = tol_diff)
-                   if getfield_coords(msdict, f, dbc, tol = tol, tol_diff = tol_diff):
+            if field_name != 'target':
+                for f in pipeline.bpcal[i]:
+                    fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db, tol = tol, tol_diff = tol_diff)
+                    if fielddb is None:
                       fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, dbc, tol = tol, tol_diff = tol_diff)
-                if ra_corr:
+                    if fielddb is not None:
+                      caracal.log.info("The coordinates of calibrator {0:s} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.".format(f))
 
-                    caracal.log.info("The coordinates of calibrator {0:s} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.".format(f))
+                      if pipeline.enable_task(config, 'fixcalcoords'): 
 
-                    if pipeline.enable_task(config, 'fixcalcoords'): 
-
-                       caracal.log.info("We will now attempt to fix this by rephasing the visibilities using the CASA fixvis task.")
-                       ra_corr = float(ra_corr*180.0/np.pi)
-                       dec_corr = float(dec_corr*180.0/np.pi)
-                       c = SkyCoord(ra_corr, dec_corr, unit='deg')
-                       rahms = c.ra.hms
-                       decdms = c.dec.dms
-                       coordstring = 'J2000 '+c.to_string('hmsdms')
-                       step = 'fixuvw-ms{0:d}-{1:s}'.format(i,f)
-                       recipe.add('cab/casa_fixvis', step,
-                           {
-                               "vis": msname,
-                               "field": f,
-                               "phasecenter": coordstring,
-                               "reuse": False,
-                               "outputvis": msname,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Fix bpcal coordinates ms={1:s}'.format(step, msname))
-                    else:
-                      caracal.log.info("###### WE RECOMMEND SWITCHING ON THE fixcalcoords OPTION #######")
+                         caracal.log.info("We will now attempt to fix this by rephasing the visibilities using the CASA fixvis task.")
+                         ra_corr = float(ra_corr*180.0/np.pi)
+                         dec_corr = float(dec_corr*180.0/np.pi)
+                         c = SkyCoord(ra_corr, dec_corr, unit='deg')
+                         rahms = c.ra.hms
+                         decdms = c.dec.dms
+                         coordstring = 'J2000 '+c.to_string('hmsdms')
+                         step = 'fixuvw-ms{0:d}-{1:s}'.format(i,f)
+                         recipe.add('cab/casa_fixvis', step,
+                             {
+                                "vis": msname,
+                                "field": f,
+                                "phasecenter": coordstring,
+                                "reuse": False,
+                                "outputvis": msname,
+                             },
+                             input=pipeline.input,
+                             output=pipeline.output,
+                             label='{0:s}:: Fix bpcal coordinates ms={1:s}'.format(step, msname))
+                      else:
+                        caracal.log.error("###### WE RECOMMEND SWITCHING ON THE fixcalcoords OPTION #######")
                   
             if pipeline.enable_task(config, 'fixuvw'):
                 #fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db)

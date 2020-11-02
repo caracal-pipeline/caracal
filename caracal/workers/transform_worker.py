@@ -212,7 +212,7 @@ def worker(pipeline, recipe, config):
         for target_iter, (target, from_ms, to_ms) in enumerate(zip(target_ls, from_mslist, to_mslist)):
             # Rewind flags
             available_flagversions = manflags.get_flags(pipeline, from_ms)
-            if config['rewind_flags']['enable'] and label_in and transform_mode == 'split':
+            if config['rewind_flags']['enable'] and label_in:
                 version = config['rewind_flags']['version']
                 if version in available_flagversions:
                     substep = 'rewind-{0:s}-ms{1:d}'.format(version, target_iter)
@@ -255,7 +255,6 @@ def worker(pipeline, recipe, config):
                                "spw": config['split_field']['spw'],
                                "datacolumn": dcol,
                                "correlation": config['split_field']['correlation'],
-                               "scan": config['split_field']['scan'],
                                "usewtspectrum": config['split_field']['create_specweights'],
                                "field": target,
                                "keepflags": True,
@@ -322,9 +321,9 @@ def worker(pipeline, recipe, config):
                     if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, 'tmp_'+to_ms)) or \
                         os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tmpflagv)):
                         os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, 'tmp_'+to_ms, tmpflagv))
-                        
-                    substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
-                    manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
+
+                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                 cab_name=substep, overwrite=False)
             obsinfo_msname = to_ms if pipeline.enable_task(config, 'split_field') else from_ms
 
@@ -345,17 +344,16 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Change phase centre ms={1:s}'.format(step, to_ms))
-                
 
             if pipeline.enable_task(config, 'concat'):
                 concat_labels = label_in.split(',')
 
-                step = 'concat-ms{0:d}-{1:d}'.format(i,target_iter)
-                concat_ms = [from_ms.replace('.ms','-{0:s}.ms'.format(cl)) for cl in concat_labels]
+                step = 'concat-ms{0:d}-{1:d}'.format(i, target_iter)
+                concat_ms = [from_ms.replace('.ms', '-{0:s}.ms'.format(cl)) for cl in concat_labels]
                 recipe.add('cab/casa_concat', step,
                            {
                                "vis": concat_ms,
-                               "concatvis": 'tobedeleted-'+to_ms,
+                               "concatvis": 'tobedeleted-' + to_ms,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -380,7 +378,8 @@ def worker(pipeline, recipe, config):
                            label='{0:s}:: Single SPW {1:}'.format(step, concat_ms))
 
                 substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
-                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms, cab_name=substep, overwrite=False)
+                manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
+                                    cab_name=substep, overwrite=False)
 
                 # Delete the tobedeleted file, but first we need to have created it, thus...
                 recipe.run()
@@ -390,8 +389,7 @@ def worker(pipeline, recipe, config):
                     'rm -rf {0:s}/tobedeleted-{1:s}'.format(pipeline.msdir, to_ms))
 
                 obsinfo_msname = to_ms
-                
-                
+
             if pipeline.enable_task(config, 'obsinfo'):
                 if (config['obsinfo']['listobs']):
 

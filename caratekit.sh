@@ -3142,7 +3142,7 @@ runtest () {
 	    checkex ${WORKSPACE_ROOT}/${trname}/input || \
 		[[ -n ${KP} ]] || \
 		{ \
-		  echo "cp -r \${input_dir}/* ${workspace_root}/${trname}/input/"; \
+		  echo "cp -r \${input_dir}/* \${workspace_root}/${trname}/input/" >> ${SS_RUNTEST}; \
 		  cp -r ${CARATE_INPUT_DIR}/* ${WORKSPACE_ROOT}/${trname}/input/; \
 		}
 	fi
@@ -3167,7 +3167,7 @@ runtest () {
 	    checkex ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml || \
 	    { \
 	      [[ -n ${KD} ]] || sed "s/dataid: \[.*\]/$dataidstr/" ${configlocation} > ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
-	      [[ -z ${KD} ]] || cp ${configlocation} ${workspace_root}/${trname}/${configfilename}.yml; \
+	      [[ -z ${KD} ]] || cp ${configlocation} ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml; \
 	      [[ -z ${RO} ]] || \
 		  { \
 		    indentationgen=`awk 'BEGIN{b=1}{if (b==0){printf("%s",$0);b=1}; if(match($1,"general:")) {b=0}}' ${WORKSPACE_ROOT}/${trname}/${configfilename}.yml | awk -F'[^ ]' '{print $0}' | sed 's/^\(  *\).*/\1/'`; \
@@ -3518,7 +3518,7 @@ then
     confilename="minitestConfig"
     contarch="docker"
     caracalswitches="-ct docker ${stimela_ns}"
-    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\{workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
+    runtest "${greetings_line}" "${WORKSPACE_ROOT}" "${confilename}" "${contarch}" "${FORCE}" "${WORKSPACE_ROOT}/caracal/caracal/sample_configurations/${confilename}.yml" "\${workspace_root}/caracal/caracal/sample_configurations/${confilename}.yml" "${testrunnumber}" "${sya_docker}" "${ss_docker}" "${caracalswitches}"
 fi
 
 if [[ -n ${DA} ]]

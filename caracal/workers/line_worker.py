@@ -128,10 +128,10 @@ def fix_specsys(filename, specframe):
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
 
-def make_pb_cube(filename, apply_corr, typ, dish_size):
+def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     C = 2.99792458e+8       # m/s
     HI = 1.4204057517667e+9  # Hz
-    
+
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -148,10 +148,10 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
             datacube = np.repeat(datacube,
                                  headcube['naxis3'],
                                  axis=0) * np.abs(headcube['cdelt1'])
-            
+
             cdelt3 = float(headcube['cdelt3'])
             crval3 = float(headcube['crval3'])
-            
+
             # Convert radio velocity to frequency if required
             if 'VRAD' in headcube['ctype3']:
                 if 'restfreq' in headcube:
@@ -160,10 +160,10 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
                     restfreq = HI
                 cdelt3 = - restfreq*cdelt3/C
                 crval3 = restfreq*(1-crval3/C)
-                
-            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3']) -
+
+            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3'], dtype=np.float32) -
                                        headcube['crpix3'] + 1))
-            
+
             if typ == 'gauss':
                sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
                sigma_pb.resize((sigma_pb.shape[0], 1, 1))
@@ -173,6 +173,8 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
                FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
                datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
                            1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
+
+            datacube[datacube < cutoff] = np.nan
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 datacube, header=headcube, overwrite=True)
             if apply_corr:
@@ -1136,6 +1138,7 @@ def worker(pipeline, recipe, config):
                             'apply_corr': config['pb_cube']['apply_pb'],
                             'typ': config['pb_cube']['pb_type'],
                             'dish_size': config['pb_cube']['dish_size'],
+                            'cutoff': config['pb_cube']['cutoff'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,

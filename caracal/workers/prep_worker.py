@@ -33,16 +33,17 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
     firade = info['FIELD']['DELAY_DIR'][ind][0]
     firade[0] = np.mod(firade[0],2*np.pi)
     dbcp = db.db
+    print("Checking for crossmatch")
+    print("Database keys:", dbcp.keys())
     for key in dbcp.keys():
         carade = [dbcp[key]['ra'],dbcp[key]['decl']]
         if closeby(carade, firade, tol=tol):
-            print("Closeby source found")
             if not closeby(carade, firade, tol=tol_diff):
                return key, dbcp[key]['ra'], dbcp[key]['decl']
             else :
+               print("Calibrator coordinates match within the specified tolerance.")
                return None, None, None
-    return False
-
+        return None, None, None   
 
 def worker(pipeline, recipe, config):
     label = config['label_in']
@@ -72,8 +73,11 @@ def worker(pipeline, recipe, config):
             dec_corr = None
             if field_name != 'target':
                 for f in pipeline.bpcal[i]:
+                    print(f, tol, tol_diff)
                     fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db, tol = tol, tol_diff = tol_diff)
+                    print("fielddb", fielddb)
                     if fielddb is None:
+                      print("Checking the CASA database of calibrators.")
                       fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, dbc, tol = tol, tol_diff = tol_diff)
                     if fielddb is not None:
                       caracal.log.info("The coordinates of calibrator {0:s} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.".format(f))

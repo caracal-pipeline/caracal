@@ -447,6 +447,11 @@ mapping:
             type: float   
             required: false
             example: '13.5'
+          cutoff:
+            desc: Primary beam pixels below this value are set to NaN.
+            type: float
+            required: false
+            example: '0.1'
       
       freq_to_vel:
         desc: Convert the spectral axis' header keys of the line cube from frequency to velocity in the radio definition, v=c(1-obsfreq/restfreq). No change of spectra reference frame is performed.

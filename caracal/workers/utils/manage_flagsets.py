@@ -323,7 +323,6 @@ def flag_summary_plots(pipeline, json_flag_summary, prefix, wname, nob):
                          tools="hover,box_zoom,wheel_zoom,pan,save,reset")
 
         plotter.vbar(x=keys, top=flagged, width=0.9)
-
         plotter.xgrid.grid_line_color = None
         plotter.y_range.start = 0
         plotter.title.align = 'center'

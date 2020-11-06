@@ -106,7 +106,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
     # initialse things
-    for item in 'xcal fcal bpcal gcal target refant'.split():
+    for item in 'xcal fcal bpcal gcal target refant minbase maxdist'.split():
         val = config[item]
         for attr in ["", "_ra", "_dec", "_id"]:
             setattr(pipeline, item+attr, repeat_val(val, pipeline.nobs))

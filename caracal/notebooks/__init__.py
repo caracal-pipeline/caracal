@@ -16,7 +16,7 @@ SOURCE_NOTEBOOK_DIR = os.path.dirname(__file__)
 
 def setup_default_notebooks(notebooks, output_dir, prefix, config):
     # setup logos
-    logodir = os.path.join(output_dir, ".logo")
+    logodir = os.path.join(output_dir, "reports")
     if not os.path.exists(logodir):
         os.mkdir(logodir)
     for png in glob.glob(os.path.join(SOURCE_NOTEBOOK_DIR, "*.png")):

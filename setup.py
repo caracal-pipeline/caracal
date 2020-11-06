@@ -28,13 +28,13 @@ requirements = [
     'regions',
     'pandas',
     'nbconvert',
-    'radiopadre-client>=1.0rc12',
+    'radiopadre-client>=1.1',
     'jinja2',
     'psutil',
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.1.0'
+__version__ = '1.0.4'
 
 setup(name=PACKAGE_NAME,
       version=__version__,

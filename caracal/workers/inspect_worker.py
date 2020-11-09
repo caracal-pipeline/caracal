@@ -354,6 +354,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
             corrs = [shade_cfg["corrs"]]
         # for each list ed plot in this a category
         for plot in bares[plot_cat]:
+            plot = plot.replace("{msbase}", msbase, plot.count("{msbase}"))
             for _corr in corrs:
                 # convert argument list to dictionary for easy update
                 args = l2d(plot)

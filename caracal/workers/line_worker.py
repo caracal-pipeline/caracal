@@ -696,7 +696,7 @@ def worker(pipeline, recipe, config):
             else:
                 mslist = ms_dict[target]
             caracal.log.info('  Target #{0:d}: {1:}, files {2:}'.format(tt,target,mslist))
-            noisy.PredictNoise(['{0:s}/{1:s}'.format(pipeline.msdir,mm) for mm in mslist],str(tsyseff),diam,target,verbose=1)
+            noisy.PredictNoise(['{0:s}/{1:s}'.format(pipeline.msdir,mm) for mm in mslist],str(tsyseff),diam,target,verbose=2)
 
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='wsclean':
         nchans_all, specframe_all = [], []

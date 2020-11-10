@@ -689,7 +689,7 @@ def worker(pipeline, recipe, config):
         kB=1380.6                                   # Boltzmann constant (Jy m^2 / K)
         Aant=np.pi*(diam/2)**2                      # collecting area of 1 antenna (m^2)
         SEFD=2*kB*tsyseff/Aant                      # system equivalent flux density (Jy)
-        caracal.log.info('Predicting natural noise of line cubes (Stokes I, single channel) for Tsys/eff = {0:.1f} K, diam = {1:.1f} m -> SEFD = {2:.1f} Jy'.format(tsyseff, diam, SEFD))
+        caracal.log.info('Predicting natural noise of line cubes (Stokes I, single channel of MS file) for Tsys/eff = {0:.1f} K, diam = {1:.1f} m -> SEFD = {2:.1f} Jy'.format(tsyseff, diam, SEFD))
         for tt, target in enumerate(all_targets):
             if config['make_cube']['use_mstransform']:
                 mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]

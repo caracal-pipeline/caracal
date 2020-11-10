@@ -224,7 +224,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                 iobs, reference=pipeline.fluxscale_reference, label=label)
 
         # Assume gains were plotted when they were created
-        if config[ftype]["plotgains"] and not can_reuse:
+        if config[ftype]["plotgains"]["enable"] and not can_reuse:
             plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
 
         fields.append(",".join(field))
@@ -356,6 +356,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
         "gaintype"     : term,
         "corr"         : '',
         "htmlname"     : gtab,
+        "plotname"     : "{}.png".format(gtab) if config[ftype]["plotgains"]["savepng"] else None
         }
     if field_id is not None:
         params['field'] = ",".join(map(str,field_id))

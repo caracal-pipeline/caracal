@@ -136,10 +136,19 @@ mapping:
             required: false
             example: "70"
           plotgains:
+            type: map
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
-            type: bool
-            required: false
-            example: "True"
+            mapping:
+              enable:
+                desc: Execute the plotgains.
+                type: bool
+                required: false
+                example: "True"
+              savepng:
+                desc: Save plots in png format as well.
+                type: bool
+                required: false
+                example: "false"
           flag:
             type: map
             desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.
@@ -240,10 +249,19 @@ mapping:
             required: false 
             type: str
           plotgains:
+            type: map
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
-            type: bool
-            required: false
-            example: "True"
+            mapping:
+              enable:
+                desc: Execute the plotgains.
+                type: bool
+                required: false
+                example: "True"
+              savepng:
+                desc: Save plots in png format as well.
+                type: bool
+                required: false
+                example: "false"
           flag:
             type: map
             desc: Flagging settings used for all "A" (= auto-flagging) steps included in "order" above. These steps include applying the existing gains and flagging the corrected data.

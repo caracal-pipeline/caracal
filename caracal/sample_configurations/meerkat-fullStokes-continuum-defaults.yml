@@ -112,9 +112,10 @@ polcal:
   reuse_existing_tables: true
   pol_calib: xcal
   leakage_calib: fcal
-  avg_bw: '1MHz'
   plotgains: true
   feed_angle_rotation: '-90'
+  extendflags: True
+  timesol_solfreqsel: '0:1.45~1.50GHz'
   apply_pcal: true
   applyto:
     - gcal
@@ -154,8 +155,8 @@ transform__2:
     col: corrected
     otfcal:
       enable: true
-      label_cal: '1kgb'
-      label_pcal: '1pcal'
+      label_cal: 1kgb
+      label_pcal: 1pcal
 
 prep__2:
   enable: true

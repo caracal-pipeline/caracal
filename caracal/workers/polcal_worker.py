@@ -38,7 +38,7 @@ def scan_length(msinfo, field):
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
 
-def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist, gainfieldlist,
+def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist, gainfieldlist,
             interplist, calwtlist):
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
                   prefix + '.Df']
@@ -94,14 +94,14 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
             "parang": True,
             "gaintype": "G",
             "calmode": "p",
-            "spw": time_solfreqsel,
+            "spw": '',
         }
         if caltablelist != []:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in caltablelist],
-                "gainfield": gainfieldlist,#["%s" % ct for ct in gainfieldlist],
-                "interp": interplist,#["%s" % ct for ct in interplist],
-            })
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,#["%s" % ct for ct in gainfieldlist],
+                    "interp": interplist,#["%s" % ct for ct in interplist],
+                })
         # Phaseup diagonal of crosshand cal if available
         recipe.add("cab/casa_gaincal",
                    "gain_xcal",
@@ -124,7 +124,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                        "combine": "", #scan?
                        "parang": True,
                        "gaintype": "KCROSS",
-                       "spw": time_solfreqsel,
+                       "spw": '',
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -135,7 +135,6 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
         # Solve for the absolute angle (phase) between the feeds
         # (P Jones auto enabled)
         # of the form [e^{2pi.i.b} 0 0 1]
-
         # remove the DC of the frequency solutions before
         # possibly joining scans to solve for per-frequency solutions
         # a strongly polarized source is needed with known properties
@@ -183,6 +182,19 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_freq")
 
+        recipe.add("cab/casa_flagdata",
+                   "flag_phase",
+                   {
+                       "vis": prefix + '.Xf:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_phase_freq")
 
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
@@ -231,17 +243,19 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                    label="leakage_freq")
 
         recipe.add("cab/casa_flagdata",
-                   "flag_leakage_freq",
+                   "flag_leakage",
                    {
-                       "vis": prefix + '.Df:output',
-                       "field": '',
-                       "mode": 'clip',
-                       "clipminmax": [-0.1,0.1],
-                       "clipoutside": True,
+                       "vis": prefix + '.Df:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
                        "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
                    },
-                   input=pipeline.caltables, output=pipeline.caltables,
-                   label="flag_leakage_freq")
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_leakage")
+
 
         applycal_recipes = []
         calmodes = []
@@ -285,7 +299,276 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
         gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
                   prefix + '.Df']
         gfields = [field, field, field, field, leak_field, leak_field]
-        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Dref', 'Df']
+        terms = ['G', 'KCROSS', 'Xref', '.Xf', 'Dref', 'Df']
+        for ix, gt in enumerate(gfields):
+            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+
+    if config['apply_pcal']:
+        for fld in config["applyto"]:
+            f = ",".join(getattr(pipeline, fld)[i])
+            pcal = ",".join(getattr(pipeline, config["pol_calib"])[i])
+            if f == pcal:
+                recipe.add("cab/casa_applycal", "apply_caltables_"+fld, {
+                    "vis": msname,
+                    "field": f,
+                    "calwt": all_calwt,
+                    "gaintable": ["%s:output" % ct for ct in all_gaintables],
+                    "gainfield": all_fields,
+                    "interp": all_interp,
+                    "parang": True,
+                },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="Apply caltables on "+fld)
+            else:
+                cc=calwtlist+calwt[1:]
+                ccal=caltablelist+gaintables[1:]
+                cfield=gainfieldlist+fields[1:]
+                cinter=interplist+interps[1:]
+                recipe.add("cab/casa_applycal", "apply_caltables_"+fld, {
+                    "vis": msname,
+                    "field": f,
+                    "calwt": cc,
+                    "gaintable": ["%s:output" % ct for ct in ccal],
+                    "gainfield": cfield,
+                    "interp": cinter,
+                    "parang": True,
+                },
+                           input=pipeline.input, output=pipeline.caltables,
+                           label="Apply caltables on "+fld)
+
+def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix,  polarized_calibrators, caltablelist, gainfieldlist, interplist, calwtlist):
+    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
+    interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest']
+    fields = ['', '', '', '', '']
+    calwt = [True, False, False, False, False]
+
+    all_gaintables = caltablelist + gaintables
+    all_interp = interplist + interps
+    all_fields = gainfieldlist + fields
+    all_calwt = calwtlist + calwt
+
+    ref = pipeline.refant[i] or '0'
+    field = ",".join(getattr(pipeline, config["pol_calib"])[i])
+    scandur = scan_length(msinfo, field)
+
+    time_solfreqsel = config.get("timesol_solfreqsel") #''
+    time_solint = config.get("timesol_soltime")  #inf default 1 per scan
+    freq_solint = config.get("freqsol_soltime") #inf
+
+    docal = config['reuse_existing_tables']
+    if docal:
+        for cal in gaintables:
+            if not os.path.exists(os.path.join(pipeline.caltables, cal)):
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                docal = False
+
+    if not docal:
+        recipe.add("cab/casa_setjy",
+                   "set_model_%d" % 0,
+                   {
+                       "msname": msname,
+                       "usescratch": True,
+                       "field": field,
+                       "standard": polarized_calibrators[field]["standard"],
+                       "fluxdensity": polarized_calibrators[field]["fluxdensity"],
+                       "spix": polarized_calibrators[field]["spix"],
+                       "reffreq": polarized_calibrators[field]["reffreq"],
+                       "polindex": polarized_calibrators[field]["polindex"],
+                       "polangle": polarized_calibrators[field]["polangle"],
+                   },
+                   input=pipeline.input, output=pipeline.output,
+                   label="set_model_%d" % 0)
+
+        gain_opts ={
+            "vis": msname,
+            "caltable": prefix + '.Gpol1:output',
+            "field": field,
+            "uvrange": config["uvrange"],
+            "refant": ref,
+            "solint": time_solint,
+            "combine": "",
+            "parang": True,
+            "gaintype": "G",
+            "calmode": "p",
+            "spw": '',
+        }
+        if caltablelist != []:
+            gain_opts.update({
+                    "gaintable": ["%s:output" % ct for ct in caltablelist],
+                    "gainfield": gainfieldlist,#["%s" % ct for ct in gainfieldlist],
+                    "interp": interplist,#["%s" % ct for ct in interplist],
+                })
+        # Phaseup diagonal of crosshand cal if available
+        recipe.add("cab/casa_gaincal",
+                   "gain_xcal",
+                   gain_opts,
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="gain_xcal")
+
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
+        recipe.add("cab/casa_gaincal",
+                   "crosshand_delay",
+                   {
+                       "vis": msname,
+                       "caltable": prefix + '.Kcrs:output',
+                       "field": field,
+                       "uvrange": config["uvrange"],
+                       "refant": ref,
+                       "solint": time_solint,
+                       "combine": "", #scan?
+                       "parang": True,
+                       "gaintype": "KCROSS",
+                       "spw": '',
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
+                   },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="crosshand_delay")
+
+        # Solve for the absolute angle (phase) between the feeds
+        # (P Jones auto enabled)
+        # of the form [e^{2pi.i.b} 0 0 1]
+        # remove the DC of the frequency solutions before
+        # possibly joining scans to solve for per-frequency solutions
+        # a strongly polarized source is needed with known properties
+        # to limit the amount of PA coverage needed
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['','']
+        tmp_interp = interplist + ['linear','nearest']
+        recipe.add("cab/casa_polcal",
+                   "crosshand_phase_ref",
+                   {
+                       "vis": msname,
+                       "caltable": prefix + '.Xref:output',
+                       "field": field,
+                       "uvrange": config["uvrange"],
+                       "solint": time_solint,
+                       "combine": "",
+                       "poltype": "Xf",
+                       "refant": ref,
+                       "spw": time_solfreqsel, #added
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
+                   },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="crosshand_phase_ref")
+
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+        tmp_field = gainfieldlist + ['', '','']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
+        recipe.add("cab/casa_polcal",
+                   "crosshand_phase_freq",
+                   {
+                       "vis": msname,
+                       "caltable": prefix + '.Xf:output',
+                       "field": field,
+                       "uvrange": config["uvrange"],
+                       "solint": freq_solint,  # solint to obtain SNR on solutions
+                       "combine": "scan",
+                       "poltype": "Xf",
+                       "refant": ref,
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
+                   },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="crosshand_phase_freq")
+
+        recipe.add("cab/casa_flagdata",
+                   "flag_phase",
+                   {
+                       "vis": prefix + '.Xf:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_phase_freq")
+        # LEAKAGE
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
+        tmp_field = gainfieldlist + ['', '', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest', 'nearest']
+        recipe.add("cab/casa_polcal",
+                   "leakage",
+                   {
+                       "vis": msname,
+                       "caltable": prefix + '.Df0gen:output',
+                       "field": field,
+                       "uvrange": config["uvrange"],
+                       "solint": freq_solint, #'inf' + avgstring,
+                       "spw": '',
+                       "combine": 'obs,scan',
+                       "preavg": scandur,
+                       "poltype": 'Dflls',
+                       "refant": '',  # solve absolute D-term
+                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                       "gainfield": tmp_field,
+                       "interp": tmp_interp,
+                   },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="leakage")
+
+        recipe.add("cab/casa_flagdata",
+                   "flag_leakage",
+                   {
+                       "vis": prefix + '.Df0gen:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_leakage")
+
+        applycal_recipes = []
+        calmodes = []
+
+        for ix, gt in enumerate(gaintables):
+            applycal_recipes.append(dict(zip(
+                ['caltable', 'fldmap', 'interp', 'calwt'], [gt, fields[ix], interps[ix], bool(calwt[ix])])))
+            if '.Gpol1' in gt:
+                calmodes.append('xcal_gain')
+            elif '.Kcrs' in gt:
+                calmodes.append('cross_phase')
+            elif '.Xref' in gt:
+                calmodes.append('phase ref')
+            elif '.Xf' in gt:
+                calmodes.append('phase')
+            elif '.Df0gen' in gt:
+                calmodes.append('leakage')
+        callib_dir = "{}/callibs".format(pipeline.caltables)
+        if not os.path.exists(callib_dir):
+            os.mkdir(callib_dir)
+
+        callib_dict = dict(zip(calmodes, applycal_recipes))
+
+        with open(os.path.join(callib_dir, f'callib_{prefix}_xcal.json'), 'w') as json_file:
+            json.dump(callib_dict, json_file)
+
+        target_callib_dict = callib_dict
+        del target_callib_dict['xcal_gain']
+        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
+            json.dump(target_callib_dict, json_file)
+
+    else:
+        caracal.log.info("Reusing existing tables as requested")
+
+    if config['plotgains']:
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
+        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
+        gfields = [field, field, field, field, field]
+        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Df0gen']
         for ix, gt in enumerate(gfields):
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
@@ -323,7 +606,7 @@ def xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polar
                            label="Apply caltables on "+fld)
 
 
-def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist, gainfieldlist, interplist, calwtlist):
+def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist, gainfieldlist, interplist, calwtlist):
     gaintables = [prefix + '.Gxyamp', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
     interps = ['linear', 'nearest', 'nearest', 'nearest']
     fields = ['', '', '', '']
@@ -337,6 +620,7 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
+
     time_solfreqsel = config.get("timesol_solfreqsel") #''
     time_solint = config.get("timesol_soltime")  #inf default 1 per scan
     freq_solint = config.get("freqsol_soltime") #inf
@@ -349,26 +633,31 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                 docal = False
 
     if not docal:
-        # G1
+        # G1"
+        gain_opts = {
+            "vis": msname,
+            "caltable": prefix + '.Gpol1:output',
+            "field": field,
+            "uvrange": config["uvrange"],
+            "refant": ref,
+            "solint": 'int',
+            "combine": "",
+            "parang": False,
+            "gaintype": 'G',
+            "calmode": 'ap',
+            "spw": '',
+            "refantmode": 'strict',
+            "smodel": ['1', '0', '0', '0'],
+        }
+        if caltablelist != []:
+            gain_opts.update({
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,  # ["%s" % ct for ct in gainfieldlist],
+                "interp": interplist,  # ["%s" % ct for ct in interplist],
+            })
         recipe.add("cab/casa_gaincal",
                    "gain_xcal_1",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Gpol1:output',
-                       "field": field,
-                       "uvrange": config["uvrange"],
-                       "refant": ref,
-                       "refantmode": 'strict',
-                       "smodel": ['1', '0', '0', '0'],
-                       "gaintype": 'G',
-                       "calmode": 'ap',
-                       "spw": time_solfreqsel,
-                       "parang": False,
-                       "solint": 'int',
-                       "gaintable": ["%s:output" % ct for ct in caltablelist],
-                       "gainfield": gainfieldlist,
-                       "interp": interplist,
-                   },
+                   gain_opts,
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal_1")
 
@@ -409,31 +698,31 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
         recipe.run()
         recipe.jobs = []
 
-        # Kcross
+        # Kcross - this can be modified
         tmp_gtab = caltablelist + [prefix + '.Gpol1']
         tmp_field = gainfieldlist + ['']
         tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal",
-                   "crosshand_delay",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Kcrs:output',
-                       "field": field,
-                       "uvrange": config["uvrange"],
-                       "refant": ref,
-                       "refantmode": 'strict',
-                       "solint": time_solint, #'inf' + avgstring,
-                       "scan": str(bestscan),
-                       "gaintype": 'KCROSS',
-                       "smodel": ['1', '0', '1', '0'],
-                       "selectdata": True,
-                       "spw": time_solfreqsel,
-                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
-                       "gainfield": tmp_field,
-                       "interp": tmp_interp,
-                   },
-                   input=pipeline.input, output=pipeline.caltables,
-                   label="crosshand_delay")
+               "crosshand_delay",
+               {
+                   "vis": msname,
+                   "caltable": prefix + '.Kcrs:output',
+                   "field": field,
+                   "uvrange": config["uvrange"],
+                   "refant": ref,
+                   "refantmode": 'strict',
+                   "solint": time_solint, #'inf' + avgstring,
+                   "scan": str(bestscan),
+                   "gaintype": 'KCROSS',
+                   "smodel": ['1', '0', '1', '0'],
+                   "selectdata": True,
+                   "spw": '',
+                   "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                   "gainfield": tmp_field,
+                   "interp": tmp_interp,
+               },
+               input=pipeline.input, output=pipeline.caltables,
+               label="crosshand_delay")
 
         recipe.run()
         recipe.jobs = []
@@ -458,9 +747,9 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                        "caltable": prefix + '.Xfparang:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "spw": time_solfreqsel, #added
+                       "spw": '', #added
                        "poltype": 'Xfparang+QU',
-                       "solint": time_solint, #'inf' + avgstring,
+                       "solint": freq_solint, #'inf' + avgstring,
                        "combine": 'scan,obs',
                        "preavg": scandur,
                        "smodel": S1,
@@ -471,6 +760,21 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_QU_fit")
+
+        recipe.add("cab/casa_flagdata",
+                   "flag_phase",
+                   {
+                       "vis": prefix + '.Xfparang:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_phase_freq")
+
         recipe.run()
         recipe.jobs = []
 
@@ -482,24 +786,30 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
         else:
             raise RuntimeError("Cannot find " + pipeline.output + "/caltables/" + prefix + "_S2_from_polcal")
 
+        gain2_opts = {
+            "vis": msname,
+            "caltable": prefix + '.Gpol2:output',
+            "field": field,
+            "uvrange": config["uvrange"],
+            "refant": ref,
+            "solint": 'int',
+            "combine": "",
+            "parang": True,
+            "gaintype": 'G',
+            "calmode": 'ap',
+            "spw": '',
+            "refantmode": 'strict',
+            "smodel": S2,
+        }
+        if caltablelist != []:
+            gain2_opts.update({
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,  # ["%s" % ct for ct in gainfieldlist],
+                "interp": interplist,  # ["%s" % ct for ct in interplist],
+            })
         recipe.add("cab/casa_gaincal",
-                   "second gaincal",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Gpol2:output',
-                       "field": field,
-                       "uvrange": config["uvrange"],
-                       "smodel": S2,
-                       "refantmode": 'strict',
-                       "refant": ref,
-                       "gaintype": 'G',
-                       "calmode": 'ap',
-                       "parang": True,
-                       "solint": time_solint, #'int',
-                       "gaintable": ["%s:output" % ct for ct in caltablelist],
-                       "gainfield": gainfieldlist,
-                       "interp": interplist,
-                   },
+                   "gain_xcal_2",
+                   gain2_opts,
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal_2")
 
@@ -527,6 +837,21 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage")
+
+        recipe.add("cab/casa_flagdata",
+                   "flag_leakage",
+                   {
+                       "vis": prefix + '.Df0gen:msfile',
+                       "mode": 'tfcrop',
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "datacolumn": 'CPARAM',
+                       "usewindowstats": "both",
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_leakage")
+
 
         # solve for global normalized gain amp (to get X/Y ratios) on pol calibrator (TO APPLY ON TARGET)
         # amp-only and normalized, so only X/Y amp ratios matter
@@ -663,18 +988,25 @@ def pa_coverage_method(msname, msinfo, recipe, config, pipeline, i, prefix, calt
 
 def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, gtab)
-    recipe.add('cab/ragavi', step,
-               {
-                   "table": gtab+":msfile",
-                   "corr": '',
-                   "htmlname": gtab,
-                   "field": field_id,
-               },
+    opts = {
+             "table": gtab+":msfile",
+             "corr": '',
+             "htmlname": gtab,
+             "field": field_id,
+         }
+    if term == 'Xf' or term == 'Df0gen':
+        opts.update({
+            "xaxis": "channel",
+        })
+    recipe.add('cab/ragavi', step, opts,
                input=pipeline.input, msdir=pipeline.caltables, output=plotdir,
                label='{0:s}:: Plot gaincal phase'.format(step))
 
 
 def worker(pipeline, recipe, config):
+    wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     label = config["label_cal"]
     label_in = config["label_in"]
 
@@ -710,7 +1042,7 @@ def worker(pipeline, recipe, config):
                     [
                         'XX', 'XY', 'YX', 'YY']))
 
-        # check if cross_callib needs to be applyied
+        # check if cross_callib needs to be applied
         if config['otfcal']:
             caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
             if config['otfcal']['callib']:
@@ -761,12 +1093,78 @@ def worker(pipeline, recipe, config):
         pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
+        #save flags before and after
+        if {"xcal", "gcal", "fcal", "target"}.intersection(config["applyto"]):
+            # Write/rewind flag versions
+            available_flagversions = manflags.get_flags(pipeline, msname)
+            if config['rewind_flags']['enable']:
+                if config['rewind_flags']['mode'] == 'reset_worker':
+                    version = flags_before_worker
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(
+                            flags_before_worker) < available_flagversions.index(version) and not config[
+                        'overwrite_flagvers']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
+                                          flags_after_worker)
+                    substep = 'version-{0:s}-ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                                               available_flagversions[available_flagversions.index(version) + 1],
+                                               msname, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker,
+                                      flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+            else:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker,
+                                      flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+
+        #preliminary flags
+        if config['extendflags']:
+            recipe.add("cab/casa_flagdata",
+                   "extend_flags_polcal",
+                   {
+                       "vis": msname,
+                       "mode": 'extend',
+                       "field": pol_calib,
+                       "ntime": '60s',
+                       "combinescans": True,
+                       "growtime": 70.0,
+                       "growfreq": 70.0,
+                       "growaround": True,
+                       "flagnearfreq": True,
+                       "flagneartime": True,
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.output,
+                   label="extend_flags_polcal")
+
         # choose the strategy according to config parameters
         if leakage_calib in set(unpolarized_calibrators):
             if pol_calib in set(polarized_calibrators):
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                xcal_model_method(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist, calwtlist)
+                xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist, calwtlist)
             else:
                 raise RuntimeError("Unknown pol_calib!"
                                    "Currently only these are known on caracal:\
@@ -776,10 +1174,16 @@ def worker(pipeline, recipe, config):
                                    with a source observed at several parallactic angles")
         elif leakage_calib == pol_calib:
             caracal.log.info(
-                "You decided to calibrate the polarized angle and leakage with a polarized calibrator without assuming a model for the calibrator.")
+                "You decided to calibrate the polarized angle and leakage with a polarized calibrator.")
             idx = utils.get_field_id(msinfo, leakage_calib)[0]
             if len(msinfo['SCAN'][str(idx)]) >= 3:
-                pa_coverage_method(msname, msinfo, recipe, config, pipeline, i,
+                if config['use_model']:
+                    caracal.log.info("Using a known model for the polarized calibrator.")
+                    xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i,
+                           prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist, calwtlist)
+                else:
+                    caracal.log.info("The model for the polarized calibrator will be derived from data.")
+                    xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i,
                            prefix, caltablelist, gainfieldlist, interplist, calwtlist)
             else:
                 raise RuntimeError(
@@ -789,6 +1193,18 @@ def worker(pipeline, recipe, config):
                                1. Calibrate leakage with a unpolarized source (i.e. " + str(unpolarized_calibrators) + ") \
                                and polarized angle with a know polarized source (i.e. " + str(polarized_calibrators.keys()) + ") \
                                2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.")
+
+        if pipeline.enable_task(config, 'summary'):
+            step = 'summary-{0:s}-{1:d}'.format(label, i)
+            recipe.add('cab/casa_flagdata', step,
+                       {
+                           "vis" : msname,
+                           "mode" : 'summary',
+                           "field" : ",".join(set(pipeline.xcal[i])),
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
         recipe.run()
         recipe.jobs = []

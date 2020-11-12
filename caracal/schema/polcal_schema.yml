@@ -13,7 +13,7 @@ mapping:
         desc: Label of the .MS file(s) to work on.
         type: str
         required: false
-        example: 'cal'
+        example: ''
       label_cal:
         desc: Label for output files (calibration tables, images).
         type: str
@@ -38,11 +38,41 @@ mapping:
             type: str
             required: false
             example: ''
+      extendflags:
+        desc: use casa_flagdata with mode=extend to flag data which have been already flagged more than 70%. This can improve calibration.
+        type: bool
+        required: false
+        example: 'False'
       feed_angle_rotation:
         desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you don't want to rotate the feeds.
         type: str
         required: false
         example: ''
+      rewind_flags:
+        desc: Rewind flags to specified version.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the rewind_flags segement.
+            type: bool
+            required: False
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' below.
+            type: str
+            enum: [ 'reset_worker', 'rewind_to_version' ]
+            required: false
+            example: 'reset_worker'
+          version:
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+            type: str
+            required: false
+            example: 'auto'
+      overwrite_flagvers:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        required: false
+        example: 'False'
       uvrange:
         desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
         type: str
@@ -66,7 +96,7 @@ mapping:
       timesol_solfreqsel:
         type: str
         required: false
-        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI.
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if you calibrate only with an unknow polarized source.
         example: ''
       timesol_soltime:
         type: str
@@ -113,6 +143,20 @@ mapping:
                 required: false
                 example: ''
         example: ''
+      summary:
+        type: map
+        desc: Prints out the butcher's bill, i.e. data flagging summary at the end of pol calibration process.
+        mapping:
+          enable:
+            type: bool
+            desc: Execute printing flagging summary.
+            required: false
+            example: 'True'
+      use_model:
+        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired.
+        type: bool
+        required: false
+        example: 'True'
       report:
         type: bool
         required: false

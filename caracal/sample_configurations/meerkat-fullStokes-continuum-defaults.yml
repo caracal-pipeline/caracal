@@ -101,10 +101,23 @@ inspect:
     enable: true
     avgtime: '60'
 
+transform__2:
+  enable: true
+  field: calibrators
+  label_in: cal
+  label_out: kgb_cal
+  split_field:
+    enable: true
+    col: corrected
+      otfcal:
+      enable: true
+      label_cal: 1kgb
+      label_pcal: 1pcal
+  
 polcal:
   enable: true
   uvrange: '>150'
-  label_in: cal
+  label_in: kgb_cal
   label_cal: 1pcal
   otfcal:
     enable: true
@@ -124,7 +137,7 @@ polcal:
 
 inspect__2:
   enable: true
-  label_in: cal
+  label_in: kgb_cal
   field: 'calibrators'
   label_plot: 1pcal
   real_imag:
@@ -146,7 +159,7 @@ inspect__2:
     enable: true
     avgtime: '60'
 
-transform__2:
+transform__3:
   enable: true
   label_out: corr
   field: target

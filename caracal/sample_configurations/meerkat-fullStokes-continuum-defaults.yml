@@ -112,7 +112,6 @@ transform__2:
       otfcal:
       enable: true
       label_cal: 1kgb
-      label_pcal: 1pcal
   
 polcal:
   enable: true
@@ -120,8 +119,7 @@ polcal:
   label_in: kgb_cal
   label_cal: 1pcal
   otfcal:
-    enable: true
-    label_cal: 1kgb
+    enable: false
   reuse_existing_tables: true
   pol_calib: xcal
   leakage_calib: fcal

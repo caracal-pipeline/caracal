@@ -110,8 +110,7 @@ transform__2:
     enable: true
     col: corrected
     otfcal:
-      enable: true
-      label_cal: 1kgb
+      enable: false
 
 polcal:
   enable: true

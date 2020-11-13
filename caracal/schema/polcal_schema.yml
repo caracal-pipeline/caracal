@@ -93,6 +93,11 @@ mapping:
         type: str
         required: false
         example: xcal
+      use_model:
+        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+        type: bool
+        required: false
+        example: 'True'
       freqsel:
         type: str
         required: false
@@ -113,11 +118,6 @@ mapping:
         required: false
         desc: Time solution interval to be used when solving for per channel solutions for either X or D. This ought to be as long as possible
         example: 'inf'
-      use_model:
-        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
-        type: bool
-        required: false
-        example: 'True'
       plotgains:
         desc: Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
         type: bool

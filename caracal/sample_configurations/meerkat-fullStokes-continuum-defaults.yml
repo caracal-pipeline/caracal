@@ -101,21 +101,36 @@ inspect:
     enable: true
     avgtime: '60'
 
+transform__2:
+  enable: true
+  field: calibrators
+  label_in: cal
+  label_out: kgb_cal
+  split_field:
+    enable: true
+    col: corrected
+    otfcal:
+      enable: true
+      label_cal: 1kgb
+
 polcal:
   enable: true
   uvrange: '>150'
-  label_in: cal
+  label_in: kgb_cal
   label_cal: 1pcal
   otfcal:
-    enable: true
-    label_cal: 1kgb
-  reuse_existing_tables: true
-  pol_calib: xcal
-  leakage_calib: fcal
-  plotgains: true
+    enable: false
+  reuse_existing_tables: false
+  use_model: True
   feed_angle_rotation: '-90'
   extendflags: True
-  timesol_solfreqsel: '0:1.45~1.50GHz'
+  pol_calib: xcal
+  leakage_calib: fcal
+  gain_solint: 'inf'
+  time_solint: 'inf'
+  freq_solint: 'inf'
+  freqsel: '0:1.45~1.50GHz'
+  plotgains: true
   apply_pcal: true
   applyto:
     - gcal
@@ -124,7 +139,7 @@ polcal:
 
 inspect__2:
   enable: true
-  label_in: cal
+  label_in: kgb_cal
   field: 'calibrators'
   label_plot: 1pcal
   real_imag:
@@ -146,7 +161,7 @@ inspect__2:
     enable: true
     avgtime: '60'
 
-transform__2:
+transform__3:
   enable: true
   label_out: corr
   field: target

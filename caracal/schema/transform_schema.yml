@@ -15,7 +15,7 @@ mapping:
         required: false
         example: 'target'
       label_in:
-        desc: Label of the input dataset.
+        desc: Label of the input dataset. If split_field/changecentre below are enabled, label_in must be a single value. Else, if concat below is enabled, label_in must include at least two comma-separated values.
         type: str
         required: false
         example: ''
@@ -25,7 +25,7 @@ mapping:
         required: false
         example: 'corr' 
       rewind_flags:
-        desc: Rewind flags to specified version.
+        desc: Rewind flags to specified version. Only works with a single-valued label_in (i.e., it does not loop over multiple comma-separated values in label_in).
         type: map
         mapping:
           enable:
@@ -64,6 +64,11 @@ mapping:
             example: 'corrected'
           correlation:
             desc: Select the correlations, e.g. 'XX', 'YY'. Setting this to '' means that all correlations are selected. 
+            type: str
+            required: false
+            example: ''
+          scan:
+            desc: Select the scan(s), e.g. '0,2,5'. Setting this to '' means that all scans are selected.
             type: str
             required: false
             example: ''
@@ -117,7 +122,15 @@ mapping:
             type: str
             required: false
             example: '0d0m0.0s'
-
+      concat:
+        desc: For each input .MS and target, concatenate together all .MS files with the different labels included in label_in (comma-separated values). The MS files are concatenated along the frequency axis. This only works if the frequency ranges covered by the MS files are contiguous and if the number of channels is the same for all MS files.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'concat' segment.
+            type: bool
+            required: false
+            example: 'False'
       obsinfo:
         desc: Get observation information.
         type: map

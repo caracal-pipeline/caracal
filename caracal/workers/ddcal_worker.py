@@ -177,7 +177,7 @@ def worker(pipeline, recipe, config):
         if use_mask:
             dd_maskopt = {"Mask-External" : "mask_ddf_postcal_{0:s}.fits:output".format(field)}
             dd_image_opts_postcal.update(dd_maskopt)
-
+            dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
 
         dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRIPMRIikz'}
         dd_image_opts_postcal.update(dd_ms_list)
@@ -383,7 +383,7 @@ def worker(pipeline, recipe, config):
             "nmiter": sdm.dismissable(config[key]['img_ws_nmiter']),
             "npix": config[key]['img_ws_npix'],
             "padding": config[key]['img_ws_padding'],
-            "scale": config[key]['img_ws_cell', cell],
+            "scale": config[key]['img_ws_cell'],
             "prefix": '{0:s}_{1:s}'.format(pref, field),
             "niter": config[key]['img_ws_niter'],
             "mgain": config[key]['img_ws_mgain'],
@@ -415,10 +415,8 @@ def worker(pipeline, recipe, config):
            recipe.add('cab/crystalball', step, {
                "ms": ms,
                "sky-model": crystalball_model+':output',
-               "spectra": config[key]['dd_spectra'],
                "row-chunks": config[key]['dd_row_chunks'],
                "model-chunks": config[key]['dd_model_chunks'],
-               "exp-sign-convention": config[key]['dd_exp_sign_convention'],
                "within": sdm.dismissable(config[key]['dd_within'] or None),
                "points-only": config[key]['dd_points_only'],
                "num-sources": sdm.dismissable(config[key]['dd_num_sources']),
@@ -433,22 +431,20 @@ def worker(pipeline, recipe, config):
        mslist = ms_dict[target]
        field = utils.filter_name(target)
        print("Processing field",field,"for de calibration:")
-       print(mslist)
-#       print(field)
-#       if USEPB:
-#          make_primary_beam()
-#       if pipeline.enable_task(config,'image_dd'):
-#          dd_precal_image(field,mslist)
+       if USEPB:
+          make_primary_beam()
+       if pipeline.enable_task(config,'image_dd'):
+          dd_precal_image(field,mslist)
     #sfind_intrinsic()
-#       dagga(field)
-#       if pipeline.enable_task(config,'calibrate_dd'):
-#          dd_calibrate(field,mslist)
+       dagga(field)
+       if pipeline.enable_task(config,'calibrate_dd'):
+          dd_calibrate(field,mslist)
        if pipeline.enable_task(config,'image_dd'):
           dd_postcal_image(field,mslist)
        if pipeline.enable_task(config, 'copy_data'):
           cp_data_column(field,mslist)
        if pipeline.enable_task(config, 'image_wsclean'):
-          img_wsclean(mslist,field)
+        img_wsclean(mslist,field)
        if pipeline.enable_task(config,'transfer_model_dd'):
           run_crystalball(mslist,field)
 

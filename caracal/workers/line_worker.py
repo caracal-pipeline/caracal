@@ -7,22 +7,23 @@ import stimela.dismissable as sdm
 import stimela.recipe
 import astropy
 import shutil
+import itertools
 from astropy.io import fits
-import caracal
 # Modules useful to calculate common barycentric frequency grid
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import EarthLocation
 from astropy import constants
-import astropy.units as asunits
+import psutil
+import astropy.units as units
 import re
 import datetime
 import numpy as np
-import yaml
-from caracal.dispatch_crew import utils
-import itertools
+import caracal
+from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
-import psutil
+from caracal import log
+from caracal.workers.utils import remove_output_products
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -127,7 +128,10 @@ def fix_specsys(filename, specframe):
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
 
-def make_pb_cube(filename, apply_corr, typ, dish_size):
+def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
+    C = 2.99792458e+8       # m/s
+    HI = 1.4204057517667e+9  # Hz
+
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping primary beam cube for {0:s}. File does not exist.'.format(filename))
@@ -140,11 +144,26 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
             datacube[1] -= (headcube['crpix1'] - 1)
             datacube = np.sqrt((datacube**2).sum(axis=0))
             datacube.resize((1, datacube.shape[0], datacube.shape[1]))
+
             datacube = np.repeat(datacube,
                                  headcube['naxis3'],
                                  axis=0) * np.abs(headcube['cdelt1'])
-            freq = (headcube['crval3'] + headcube['cdelt3'] * (
-                np.arange(headcube['naxis3']) - headcube['crpix3'] + 1))
+
+            cdelt3 = float(headcube['cdelt3'])
+            crval3 = float(headcube['crval3'])
+
+            # Convert radio velocity to frequency if required
+            if 'VRAD' in headcube['ctype3']:
+                if 'restfreq' in headcube:
+                    restfreq = float(headcube['restfreq'])
+                else:
+                    restfreq = HI
+                cdelt3 = - restfreq*cdelt3/C
+                crval3 = restfreq*(1-crval3/C)
+
+            freq = (crval3 + cdelt3 * (np.arange(headcube['naxis3'], dtype=np.float32) -
+                                       headcube['crpix3'] + 1))
+
             if typ == 'gauss':
                sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
                sigma_pb.resize((sigma_pb.shape[0], 1, 1))
@@ -154,6 +173,8 @@ def make_pb_cube(filename, apply_corr, typ, dish_size):
                FWHM_pb.resize((FWHM_pb.shape[0], 1, 1))
                datacube = (np.cos(1.189 * np.pi * (datacube / FWHM_pb)) / (
                            1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
+
+            datacube[datacube < cutoff] = np.nan
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 datacube, header=headcube, overwrite=True)
             if apply_corr:
@@ -184,7 +205,6 @@ def calc_rms(filename, linemaskname):
             newmask = datamask[selchans]
             y2 = newcube[newmask == 0]
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
-
 
 
 def worker(pipeline, recipe, config):
@@ -223,7 +243,8 @@ def worker(pipeline, recipe, config):
         # performed by the split_data worker)
         msinfo = pipeline.get_msinfo(msfile)
         spw = msinfo['SPW']['NUM_CHAN']
-        caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
+        caracal.log.info('MS #{0:d}: {1:s}'.format(i, msfile))
+        caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(len(spw), ','.join(map(str, spw))))
 
         # Get first chan, last chan, chan width
         chfr = msinfo['SPW']['CHAN_FREQ']
@@ -233,7 +254,7 @@ def worker(pipeline, recipe, config):
         chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
         firstchanfreq_all.append(firstchanfreq), chanw_all.append(
             chanwidth), lastchanfreq_all.append(lastchanfreq)
-        caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+        caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
             ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
         tinfo = msinfo['FIELD']
@@ -244,7 +265,7 @@ def worker(pipeline, recipe, config):
         tDec = targetpos[1] / np.pi * 180.
         RA.append(tRA)
         Dec.append(tDec)
-        caracal.log.info('Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(RA[i], Dec[i]))
+        caracal.log.info('  Target RA, Dec for Doppler correction: {0:.3f} deg, {1:.3f} deg'.format(RA[i], Dec[i]))
 
     # Find common barycentric frequency grid for all input .MS, or set it as
     # requested in the config file
@@ -421,13 +442,78 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: Add model column'.format(step))
 
         msname_mst = add_ms_label(msname, "mst")
+        msname_mst_base = os.path.splitext(msname_mst)[0]
+        flagv = msname_mst + ".flagversions"
+        summary_file = f'{msname_mst_base}-summary.json'
+        obsinfo_file = f'{msname_mst_base}-obsinfo.txt'
 
         if pipeline.enable_task(config, 'mstransform'):
+            # Set UVLIN fit channel range
+            if pipeline.enable_task(config['mstransform'], 'uvlin') and config['mstransform']['uvlin']['exclude_known_sources']:
+                C = 2.99792458e+5       # km/s
+                chanfreqs=np.arange(firstchanfreq_all[i][0],lastchanfreq_all[i][0]+chanw_all[i][0],chanw_all[i][0])
+                chanids=np.arange(chanfreqs.shape[0])
+                linechans=chanids<0 # Array of False's used to build the fitspw settings
+                line_id,line_ra,line_dec,line_vmin,line_vmax,line_flux=np.loadtxt('{0:s}/{1:s}'.format(pipeline.input, config['mstransform']['uvlin']['known_sources_cat']), dtype='str', unpack=True)
+                line_ra = astropy.coordinates.Angle(line_ra,unit='hour').degree
+                line_dec = astropy.coordinates.Angle(line_dec,unit='degree').degree
+                line_flux = line_flux.astype(float)
+                line_fmax = (units.Quantity(config['restfreq'])/((line_vmin.astype(float)-config['mstransform']['uvlin']['known_sources_dv'])/C+1)).to_value(units.hertz)
+                line_fmin = (units.Quantity(config['restfreq'])/((line_vmax.astype(float)+config['mstransform']['uvlin']['known_sources_dv'])/C+1)).to_value(units.hertz)
+                distance = 180/np.pi*np.arccos(np.sin(Dec[i]/180*np.pi)*np.sin(line_dec/180*np.pi)+
+                           np.cos(Dec[i]/180*np.pi)*np.cos(line_dec/180*np.pi)*np.cos((RA[i]-line_ra)/180*np.pi))
+                # Select line sources:
+                #     within the search radius;
+                #     above the line flux threashold (not PB-corrected);
+                #     and (at least partly) within the MS frequency range.
+                line_selected = (distance < config['mstransform']['uvlin']['known_sources_radius']) *\
+                                (line_flux >= config['mstransform']['uvlin']['known_sources_flux']) *\
+                                ( (line_fmin >= chanfreqs.min()) * (line_fmin <= chanfreqs.max()) +\
+                                (line_fmax >= chanfreqs.min()) * (line_fmax <= chanfreqs.max()))
+                line_id, line_fmin, line_fmax = line_id[line_selected], line_fmin[line_selected], line_fmax[line_selected]
+                line_chanmin, line_chanmax = [], []
+                caracal.log.info('Excluding the following line sources and channel intervals from the UVLIN fit:')
+                for ll in range(line_id.shape[0]):
+                    if line_fmin[ll] < chanfreqs[0]:
+                        line_chanmin.append(chanids[0])
+                    else:
+                        line_chanmin.append(chanids[chanfreqs < line_fmin[ll]].max())
+                    if line_fmax[ll] > chanfreqs[-1]:
+                        line_chanmax.append(chanids[-1])
+                    else:
+                        line_chanmax.append(chanids[chanfreqs > line_fmax[ll]].min())
+                    caracal.log.info('  {0:20s}:  {1:5d} - {2:5d}'.format(line_id[ll], line_chanmin[ll], line_chanmax[ll]))
+                    linechans += (chanids >= line_chanmin[ll]) * (chanids <= line_chanmax[ll])
+                autofitchans = ~linechans
+                if config['mstransform']['uvlin']['fitspw']:
+                    caracal.log.info('Combining the above channel intervals with the user input {0:s}'.format(config['mstransform']['uvlin']['fitspw']))
+                    userfitchans = [qq.split(';') for qq in config['mstransform']['uvlin']['fitspw'].split(':')[1::2]]
+                    while len(userfitchans) > 1:
+                        userfitchans[0] = userfitchans[0]+userfitchans[1]
+                        del(userfitchans[1])
+                    userfitchans = [list(map(int,qq.split('~'))) for qq in userfitchans[0]]
+                    userfitchans = np.array([(chanids >= qq[0])*(chanids <= qq[1]) for qq in userfitchans]).sum(axis=0).astype('bool')
+                    autofitchans *= userfitchans
+                fitspw = '0~' if autofitchans[0] else ''
+                for cc in chanids[1:]:
+                    if not autofitchans[cc-1] and autofitchans[cc] and (not fitspw or fitspw[-1]==';'):
+                        fitspw += '{0:d}~'.format(cc)
+                    elif autofitchans[cc-1] and not autofitchans[cc]:
+                        fitspw += '{0:d};'.format(cc-1)
+                if not fitspw:
+                    raise caracal.BadDataError('No channels available for UVLIN fit.')
+                elif fitspw[-1] == '~':
+                    fitspw += '{0:d}'.format(chanids[-1])
+                elif fitspw[-1] == ';':
+                    fitspw = fitspw[:-1]
+                fitspw = '0:{0:s}'.format(fitspw)
+                caracal.log.info('The UVLIN fit will be executed on the channels {0:s}'.format(fitspw))
+
+            else:
+                fitspw = config['mstransform']['uvlin']['fitspw']
+
             # If the output of this run of mstransform exists, delete it first
-            if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, msname_mst)) or \
-                    os.path.exists('{0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst)):
-                os.system(
-                    'rm -rf {0:s}/{1:s} {0:s}/{1:s}.flagversions'.format(pipeline.msdir, msname_mst))
+            remove_output_products((msname_mst, flagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
 
             col = config['mstransform']['col']
             step = 'mstransform-ms{:d}'.format(i)
@@ -446,14 +532,13 @@ def worker(pipeline, recipe, config):
                         "outframe": config['mstransform']['doppler']['frame'],
                         "veltype": config['mstransform']['doppler']['veltype'],
                         "douvcontsub": pipeline.enable_task(config['mstransform'], 'uvlin'),
-                        "fitspw": sdm.dismissable(config['mstransform']['uvlin']['fitspw']),
+                        "fitspw": sdm.dismissable(fitspw),
                         "fitorder": config['mstransform']['uvlin']['fitorder'],
                         },
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
-            msname_mst_base = os.path.splitext(msname_mst)[0]
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
@@ -598,6 +683,21 @@ def worker(pipeline, recipe, config):
                 shutil.copy(plot, pipeline.diagnostic_plots)
                 os.remove(plot)
 
+    if pipeline.enable_task(config, 'predict_noise'):
+        tsyseff = config['predict_noise']['tsyseff']
+        diam = config['predict_noise']['diam']
+        kB=1380.6                                   # Boltzmann constant (Jy m^2 / K)
+        Aant=np.pi*(diam/2)**2                      # collecting area of 1 antenna (m^2)
+        SEFD=2*kB*tsyseff/Aant                      # system equivalent flux density (Jy)
+        caracal.log.info('Predicting natural noise of line cubes (Stokes I, single channel of MS file) for Tsys/eff = {0:.1f} K, diam = {1:.1f} m -> SEFD = {2:.1f} Jy'.format(tsyseff, diam, SEFD))
+        for tt, target in enumerate(all_targets):
+            if config['make_cube']['use_mstransform']:
+                mslist = [add_ms_label(ms, "mst") for ms in ms_dict[target]]
+            else:
+                mslist = ms_dict[target]
+            caracal.log.info('  Target #{0:d}: {1:}, files {2:}'.format(tt,target,mslist))
+            noisy.PredictNoise(['{0:s}/{1:s}'.format(pipeline.msdir,mm) for mm in mslist],str(tsyseff),diam,target,verbose=2)
+
     if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with']=='wsclean':
         nchans_all, specframe_all = [], []
         label = config['label_in']
@@ -606,6 +706,7 @@ def worker(pipeline, recipe, config):
         else:
             flabel = label
 
+        caracal.log.info('Collecting spectral info on MS files being imaged')
         if config['make_cube']['use_mstransform']:
             for i, msfile in enumerate(all_msfiles):
                 # Get channelisation of _mst.ms file
@@ -614,31 +715,34 @@ def worker(pipeline, recipe, config):
                 spw = msinfo['SPW']['NUM_CHAN']
                 nchans = spw
                 nchans_all.append(nchans)
-                caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
+                caracal.log.info('MS #{0:d}: {1:s}'.format(i, msfile.replace('.ms','_mst.ms')))
+                caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(
                     len(spw), ','.join(map(str, spw))))
                 # Get first chan, last chan, chan width
                 chfr = msinfo['SPW']['CHAN_FREQ']
                 firstchanfreq = [ss[0] for ss in chfr]
                 lastchanfreq = [ss[-1] for ss in chfr]
                 chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1) for ss in chfr]
-                caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+                caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                     ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
                 # Get spectral reference frame
                 specframe = msinfo['SPW']['MEAS_FREQ_REF']
                 specframe_all.append(specframe)
-                caracal.log.info('The spectral reference frame is {0:}'.format(specframe))
+                caracal.log.info('  The spectral reference frame is {0:}'.format(specframe))
 
         else:
-            msinfo = pipeline.get_msinfo(msfile)
-            spw = msinfo['SPW']['NUM_CHAN']
-            nchans = spw
-            nchans_all.append(nchans)
-            caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
-                len(spw), ','.join(map(str, spw))))
-            specframe = msinfo['SPW']['MEAS_FREQ_REF']
-            specframe_all.append(specframe)
-            caracal.log.info(
-                'The spectral reference frame is {0:}'.format(specframe))
+            for i, msfile in enumerate(all_msfiles):
+                msinfo = pipeline.get_msinfo(msfile)
+                spw = msinfo['SPW']['NUM_CHAN']
+                nchans = spw
+                nchans_all.append(nchans)
+                caracal.log.info('MS #{0:d}: {1:s}'.format(i, msfile))
+                caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(
+                    len(spw), ','.join(map(str, spw))))
+                specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                specframe_all.append(specframe)
+                caracal.log.info(
+                    '  The spectral reference frame is {0:}'.format(specframe))
 
         spwid = config['make_cube']['spwid']
         nchans = config['make_cube']['nchans']
@@ -922,6 +1026,8 @@ def worker(pipeline, recipe, config):
             flabel = '_' + label
         else:
             flabel = label
+
+        caracal.log.info('Collecting spectral info on MS files being imaged')
         if config['make_cube']['use_mstransform']:
             for i, msfile in enumerate(all_msfiles):
                 if not pipeline.enable_task(config, 'mstransform'):
@@ -929,7 +1035,8 @@ def worker(pipeline, recipe, config):
                     spw = msinfo['SPW']['NUM_CHAN']
                     nchans = spw
                     nchans_all.append(nchans)
-                    caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
+                    caracal.log.info('MS #{0:d}: {1:s}'.format(i, msfile))
+                    caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(
                         len(spw), ','.join(map(str, spw))))
 
                     # Get first chan, last chan, chan width
@@ -938,29 +1045,31 @@ def worker(pipeline, recipe, config):
                     lastchanfreq = [ss[-1] for ss in chfr]
                     chanwidth = [(ss[-1] - ss[0]) / (len(ss) - 1)
                                  for ss in chfr]
-                    caracal.log.info('CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
+                    caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                         ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
 
                     specframe = msinfo['SPW']['MEAS_FREQ_REF']
                     specframe_all.append(specframe)
                     caracal.log.info(
-                        'The spectral reference frame is {0:}'.format(specframe))
+                        '  The spectral reference frame is {0:}'.format(specframe))
 
                 elif pipeline.enable_task(config['mstransform'], 'doppler'):
                     nchans_all[i] = [nchan_dopp for kk in chanw_all[i]]
                     specframe_all.append([{'lsrd': 0, 'lsrk': 1, 'galacto': 2, 'bary': 3, 'geo': 4, 'topo': 5}[
                                          config['mstransform']['doppler']['frame']] for kk in chanw_all[i]])
         else:
-            msinfo = pipeline.get_msinfo(msfile)
-            spw = msinfo['SPW']['NUM_CHAN']
-            nchans = spw
-            nchans_all.append(nchans)
-            caracal.log.info('MS has {0:d} spectral windows, with NCHAN={1:s}'.format(
-                len(spw), ','.join(map(str, spw))))
-            specframe = msinfo['SPW']['MEAS_FREQ_REF']
-            specframe_all.append(specframe)
-            caracal.log.info(
-                'The spectral reference frame is {0:}'.format(specframe))
+            for i, msfile in enumerate(all_msfiles):
+                msinfo = pipeline.get_msinfo(msfile)
+                spw = msinfo['SPW']['NUM_CHAN']
+                nchans = spw
+                nchans_all.append(nchans)
+                caracal.log.info('MS {0:d}: {1:s}'.format(i, msfile))
+                caracal.log.info('  {0:d} spectral windows, with NCHAN={1:s}'.format(
+                    len(spw), ','.join(map(str, spw))))
+                specframe = msinfo['SPW']['MEAS_FREQ_REF']
+                specframe_all.append(specframe)
+                caracal.log.info(
+                    '  The spectral reference frame is {0:}'.format(specframe))
 
         spwid = config['make_cube']['spwid']
         nchans = config['make_cube']['nchans']
@@ -1053,6 +1162,7 @@ def worker(pipeline, recipe, config):
                             'apply_corr': config['pb_cube']['apply_pb'],
                             'typ': config['pb_cube']['pb_type'],
                             'dish_size': config['pb_cube']['dish_size'],
+                            'cutoff': config['pb_cube']['cutoff'],
                            },
                            input=pipeline.input,
                            output=pipeline.output,

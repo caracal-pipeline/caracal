@@ -52,17 +52,23 @@ mapping:
             required: false
             example: 'True'
       cutoff:
-         desc: The cutoff in the primary beam. It should be a number between 0 and 1.
-         type: float
-         required: false
-         example: '0.1'
+        desc: The cutoff in the primary beam. It should be a number between 0 and 1.
+        type: float
+        required: false
+        example: '0.1'
+      pb_type:
+        desc: If no continuum pb.fits are already in place, user needs to choose whether a rudimentary primary beam is created ('gaussian') or one that follows the model of Mauch et al. (2020), relevant for MeerKAT data ('mauchian').   
+        type: str
+        enum: ['gaussian', 'mauchian']
+        required: false
+        example: 'gaussian' 
       dish_diameter:
-        desc: If no continuum pb.fits are already in place, user needs to specify the dish diameter (in units of m) so that rudimentary primary beams can be created.
+        desc: If 'pb_type' has been set to 'gaussian', user needs to specify the dish diameter (in units of m).
         type: float
         required: false
         example: '13.5'
       ref_frequency:
-        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that rudimentary primary beams can be created.
+        desc: If no continuum pb.fits are already in place, user needs to specify the reference frequency (in units of Hz) so that primary beams can be created.
         type: float
         required: false
         example: '1383685546.875'

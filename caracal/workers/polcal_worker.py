@@ -55,9 +55,10 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
-    time_solfreqsel = config.get("timesol_solfreqsel")
-    time_solint = config.get("timesol_soltime")  # default 1 per scan
-    freq_solint = config.get("freqsol_soltime")
+    freqsel = config.get("freqsel")
+    gain_solint = config.get("gain_solint")
+    time_solint = config.get("time_solint")
+    freq_solint = config.get("freq_solint")
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -89,7 +90,7 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
             "field": field,
             "uvrange": config["uvrange"],
             "refant": ref,
-            "solint": time_solint,
+            "solint": gain_solint,
             "combine": "",
             "parang": True,
             "gaintype": "G",
@@ -153,7 +154,7 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                        "combine": "",
                        "poltype": "Xf",
                        "refant": ref,
-                       "spw": time_solfreqsel, #added
+                       "spw": freqsel, #added
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -213,7 +214,7 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                        "combine": "",
                        "poltype": "D",
                        "refant": ref,
-                       "spw": time_solfreqsel,
+                       "spw": freqsel,
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -351,9 +352,10 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix,  p
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
 
-    time_solfreqsel = config.get("timesol_solfreqsel") #''
-    time_solint = config.get("timesol_soltime")  #inf default 1 per scan
-    freq_solint = config.get("freqsol_soltime") #inf
+    freqsel = config.get("freqsel")
+    gain_solint = config.get("gain_solint")
+    time_solint = config.get("time_solint")
+    freq_solint = config.get("freq_solint")
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -385,7 +387,7 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix,  p
             "field": field,
             "uvrange": config["uvrange"],
             "refant": ref,
-            "solint": time_solint,
+            "solint": gain_solint,
             "combine": "",
             "parang": True,
             "gaintype": "G",
@@ -449,7 +451,7 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix,  p
                        "combine": "",
                        "poltype": "Xf",
                        "refant": ref,
-                       "spw": time_solfreqsel, #added
+                       "spw": freqsel, #added
                        "gaintable": ["%s:output" % ct for ct in tmp_gtab],
                        "gainfield": tmp_field,
                        "interp": tmp_interp,
@@ -621,9 +623,9 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
 
-    time_solfreqsel = config.get("timesol_solfreqsel") #''
-    time_solint = config.get("timesol_soltime")  #inf default 1 per scan
-    freq_solint = config.get("freqsol_soltime") #inf
+    gain_solint = config.get("gain_solint")
+    time_solint = config.get("time_solint")
+    freq_solint = config.get("freq_solint")
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -640,7 +642,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             "field": field,
             "uvrange": config["uvrange"],
             "refant": ref,
-            "solint": 'int',
+            "solint": gain_solint,
             "combine": "",
             "parang": False,
             "gaintype": 'G',
@@ -792,7 +794,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             "field": field,
             "uvrange": config["uvrange"],
             "refant": ref,
-            "solint": 'int',
+            "solint": gain_solint,
             "combine": "",
             "parang": True,
             "gaintype": 'G',
@@ -867,7 +869,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
                        "uvrange": config["uvrange"],
                        "refant": ref,
                        "refantmode": 'strict',
-                       "solint": time_solint, #'inf',
+                       "solint": 'inf',
                        "combine": 'scan,obs',
                        "gaintype": 'G',
                        "smodel": S2,

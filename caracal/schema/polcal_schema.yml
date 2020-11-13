@@ -93,21 +93,31 @@ mapping:
         type: str
         required: false
         example: xcal
-      timesol_solfreqsel:
+      freqsel:
         type: str
         required: false
-        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if you calibrate only with an unknow polarized source.
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if use_model is False.
         example: ''
-      timesol_soltime:
+      gain_solint:
+        type: str
+        required: false
+        desc: Time solution interval to be used for gaincal. Set to 'int' if use_model is False.
+        example: 'inf'
+      time_solint:
         type: str
         required: false
         desc: Time solution interval to be used whenever solving for the DC component of either X or D
         example: 'inf'
-      freqsol_soltime:
+      freq_solint:
         type: str
         required: false
         desc: Time solution interval to be used when solving for per channel solutions for either X or D. This ought to be as long as possible
         example: 'inf'
+      use_model:
+        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+        type: bool
+        required: false
+        example: 'True'
       plotgains:
         desc: Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
         type: bool
@@ -124,6 +134,20 @@ mapping:
         desc: Fields to apply calibration to.
         required: false
         example: "xcal, bpcal, gcal, target"
+      summary:
+        type: map
+        desc: Prints out the butcher's bill, i.e. data flagging summary at the end of pol calibration process.
+        mapping:
+          enable:
+            type: bool
+            desc: Execute printing flagging summary.
+            required: false
+            example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'
       cabs:
         desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
         required: false
@@ -143,22 +167,3 @@ mapping:
                 required: false
                 example: ''
         example: ''
-      summary:
-        type: map
-        desc: Prints out the butcher's bill, i.e. data flagging summary at the end of pol calibration process.
-        mapping:
-          enable:
-            type: bool
-            desc: Execute printing flagging summary.
-            required: false
-            example: 'True'
-      use_model:
-        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired.
-        type: bool
-        required: false
-        example: 'True'
-      report:
-        type: bool
-        required: false
-        desc: (Re)generate a full HTML report at the end of this worker.
-        example: 'False'

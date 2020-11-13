@@ -77,27 +77,27 @@ crosscal:
       - bpcal
       - xcal
 
-inspect: 
+inspect:
   enable: true
   label_in: cal
   field: calibrators
   label_plot: 1kgb
-  real_imag: 
+  real_imag:
     enable: true
     avgtime: '60'
-  amp_phase: 
+  amp_phase:
     enable: true
     avgtime: '60'
-  amp_uvwave: 
+  amp_uvwave:
     enable: true
     avgtime: '60'
-  amp_ant: 
+  amp_ant:
     enable: true
     avgtime: '60'
-  phase_uvwave: 
+  phase_uvwave:
     enable: true
     avgtime: '60'
-  amp_scan: 
+  amp_scan:
     enable: true
     avgtime: '60'
 
@@ -181,18 +181,18 @@ prep__2:
     enable: true
     mode: uniform
 
-flag__2: 
+flag__2:
   enable: true
   field: target
   label_in: corr
-  flag_rfi: 
+  flag_rfi:
     enable: true
     col: DATA
     flagger: aoflagger
     aoflagger:
       strategy: firstpass_QUV.rfis
 
-mask: 
+mask:
   enable: false
 
 selfcal:
@@ -207,4 +207,3 @@ selfcal:
     gsols_timeslots: [15]
   transfer_model:
     enable: false
-

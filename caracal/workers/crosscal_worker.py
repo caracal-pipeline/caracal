@@ -355,6 +355,7 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
         "table"         : f"{gtab}:msfile",
         "corr"         : '',
         "htmlname"     : gtab,
+        "plotname"     : "{}.png".format(gtab)
         }
     if field_id is not None:
         params['field'] = ",".join(map(str,field_id))

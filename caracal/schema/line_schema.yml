@@ -248,6 +248,26 @@ mapping:
             required: false
             example: '2000'
 
+      predict_noise:
+        desc: Print to log-caracal.txt the expected natural noise level of the line cube (Stokes I, single channel) based on Tsys/eff and dish diameter below.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'predict_noise' segment.
+            type: bool
+            required: false
+            example: 'True'
+          tsyseff:
+            desc: Value of Tsys/eff in K.
+            type: float
+            required: false
+            example: '20.5'
+          diam:
+            desc: Dish diameter in m.
+            type: float
+            required: false
+            example: '13.5'
+
       make_cube:
         desc: Make a line cube using either WSClean + SoFiA (optional for clean masks) or CASA Clean.
         type: map

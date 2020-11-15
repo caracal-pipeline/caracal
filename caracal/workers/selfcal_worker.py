@@ -340,7 +340,7 @@ def worker(pipeline, recipe, config):
                             m, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
-                else:
+                elif flag_main_ms:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         m, cab_name=substep, overwrite=config['overwrite_flagvers'])
@@ -2362,8 +2362,8 @@ def worker(pipeline, recipe, config):
 
     i = 0
     # Write and manage flag versions only if flagging tasks are being
-    # executed on these .MS files, or if the user asks to rewind flags
-    if flag_main_ms or rewind_main_ms:
+    # executed on these .MS files
+    if flag_main_ms:
         for i, m in enumerate(all_msfile):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, m,

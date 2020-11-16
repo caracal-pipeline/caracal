@@ -207,7 +207,7 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
 
     Parameters
     ----------
-    pipeline: 
+    pipeline:
         caracal pipeline object
     iobs: :obj:`int`
         Item number in observation list
@@ -239,13 +239,11 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
     fields = {}
     for f_type in f_types:
         fnames = getattr(pipeline, f_type)[iobs]
-        fids = getattr(pipeline, f"{f_type}_id")[iobs]
-
-        for _fid, _fname in zip(fids, fnames):
-            # set field id to 0 if the active MS is a target only split
-            if label_in != '' and f_type == "target":
-                _fid = 0
-            fields[_fname] = (f_type, _fid)
+        for _fname in fnames:
+            if _fname in fields.keys():
+                fields[_fname].append(f_type)
+            else:
+                fields[_fname] = [f_type]
 
     # return none if no items in field dict
     return fields or None
@@ -326,13 +324,21 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     msbase = shade_cfg.pop("ms_base")
     label = shade_cfg.pop("label")
 
-    fields = shade_cfg["fields"].keys()
-    fields = ",".join(set(fields))
+    fields = shade_cfg["fields"]
+
+    # some user facing substitutions for fields and ms name
+    basesubst = {}
+    for _f in fields.keys():
+        for _ft in fields[_f]:
+            basesubst[_ft] = _f
+
+    basesubst.update({"msbase": msbase,
+                      "all_fields": ",".join(fields.keys())})
 
     # groups of plots available
     plot_cats = {
         "plots_by_field": {"--iter-field": "",
-                           "--field": fields},
+                           "--field": basesubst["all_fields"]},
         "plots_by_corr": {},
         "plots": {}
     }
@@ -354,14 +360,14 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
             corrs = [shade_cfg["corrs"]]
         # for each list ed plot in this a category
         for plot in bares[plot_cat]:
-            plot = plot.replace("{msbase}", msbase, plot.count("{msbase}"))
+            plot = plot.format(**(basesubst))
             for _corr in corrs:
                 # convert argument list to dictionary for easy update
                 args = l2d(plot)
                 args.update({
                     "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
                     "--col": shade_cfg["default_column"],
-                    "--png": f"{msbase}-{label}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}-corr-{_corr.replace(',', '-')}.png",
+                    "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}-corr-{_corr.replace(',', '-')}.png",
                     "--corr": _corr,
                     **plot_cats[plot_cat]
                 })
@@ -569,7 +575,7 @@ def worker(pipeline, recipe, config):
 
                 plot_args = get_xy(axes)
 
-                for fname, (ftype, fid) in fields.items():
+                for fname, ftype in fields.items():
                     plot_args.update({
                         "ms": ms,
                         "data": check_data(plot_axes[axes].get("col")),
@@ -580,9 +586,9 @@ def worker(pipeline, recipe, config):
                         "mem_limit": plotter_params.mem_limit,
                         "uvrange": plotter_params.uvrange,
                         "field": fname,
-                        "output": f"{label}-{ms_base}-{ftype}-{fname}-{axes}",
+                        "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
                         "output_dir": output_dir,
-                        "step":  f"plot-{axes}-{iobs}-{fid}",
+                        "step":  f"plot-{axes}-{iobs}-{ftype[0]}",
                         "label": label,
                         **plot_axes[axes]})
 

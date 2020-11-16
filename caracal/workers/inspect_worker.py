@@ -240,10 +240,7 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
     for f_type in f_types:
         fnames = getattr(pipeline, f_type)[iobs]
         for _fname in fnames:
-            if _fname in fields.keys():
-                fields[_fname].append(f_type)
-            else:
-                fields[_fname] = [f_type]
+            fields.setdefault(_fname, []).append(f_type)
 
     # return none if no items in field dict
     return fields or None

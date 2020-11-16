@@ -2,29 +2,112 @@
 import os
 import sys
 import caracal
+from caracal.dispatch_crew.utils import closeby
+import caracal.dispatch_crew.caltables as mkct
 import numpy as np
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.dispatch_crew import utils
+from astropy.coordinates import SkyCoord
 
 NAME = "Prepare Data for Processing"
 LABEL = 'prep'
+
+def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
+    """
+    Shameless copy of the hetfield function to return field coordinates 
+    from the database.
+    Find match of fields in info
+    Parameters:
+    info (dict): dictionary of obsinfo as read by yaml
+    field (str): field name
+    db (dict):   calibrator data base as returned by
+                 calibrator_database()
+    Go through all calibrators in db and return the first that matches
+    the coordinates of field in msinfo. Return empty string if not
+    found.
+    If coordinates difference is larger than tol_diff, return the correct coordinates, else return empty string.
+    """
+
+    # Get position of field in msinfo
+    ind = info['FIELD']['NAME'].index(field)
+    firade = info['FIELD']['DELAY_DIR'][ind][0]
+    firade[0] = np.mod(firade[0],2*np.pi)
+    dbcp = db.db
+    print("Checking for crossmatch")
+    print("Database keys:", dbcp.keys())
+    for key in dbcp.keys():
+        carade = [dbcp[key]['ra'],dbcp[key]['decl']]
+        if closeby(carade, firade, tol=tol):
+            if not closeby(carade, firade, tol=tol_diff):
+               return key, dbcp[key]['ra'], dbcp[key]['decl']
+            else :
+               print("Calibrator coordinates match within the specified tolerance.")
+               return None, None, None
+        return None, None, None   
 
 def worker(pipeline, recipe, config):
     label = config['label_in']
     wname = pipeline.CURRENT_WORKER
     field_name = config["field"]
-
     msdir = pipeline.msdir
     for i in range(pipeline.nobs):
         prefix_msbase = pipeline.prefix_msbases[i]
         mslist  = pipeline.get_mslist(i, label, target=(field_name == "target"))
 
+
         for msname in mslist:
             if not os.path.exists(os.path.join(msdir, msname)):
                 caracal.log.error(f"MS file {msdir}/{msname} does not exist. Please check that is where it should be.")
                 raise IOError
+            
+            #if pipeline.enable_task(config, 'fixcalcoords'):
+            tol = config["tol"]
+            tol_diff = config["tol_diff"]
+            #Convert tolerance from arcseconds to radians:
+            tol = tol*np.pi/(180.0*3600.0)
+            tol_diff = tol_diff*np.pi/(180.0*3600.0)
+            db = mkct.calibrator_database()
+            dbc = mkct.casa_calibrator_database()
+            msdict = pipeline.get_msinfo(msname)
+            ra_corr = None
+            dec_corr = None
+            if field_name != 'target':
+                for f in pipeline.bpcal[i]:
+                    print(f, tol, tol_diff)
+                    fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db, tol = tol, tol_diff = tol_diff)
+                    print("fielddb", fielddb)
+                    if fielddb is None:
+                      print("Checking the CASA database of calibrators.")
+                      fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, dbc, tol = tol, tol_diff = tol_diff)
+                    if fielddb is not None:
+                      caracal.log.info("The coordinates of calibrator {0:s} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.".format(f))
 
+                      if pipeline.enable_task(config, 'fixcalcoords'): 
+
+                         caracal.log.info("We will now attempt to fix this by rephasing the visibilities using the CASA fixvis task.")
+                         ra_corr = float(ra_corr*180.0/np.pi)
+                         dec_corr = float(dec_corr*180.0/np.pi)
+                         c = SkyCoord(ra_corr, dec_corr, unit='deg')
+                         rahms = c.ra.hms
+                         decdms = c.dec.dms
+                         coordstring = 'J2000 '+c.to_string('hmsdms')
+                         step = 'fixuvw-ms{0:d}-{1:s}'.format(i,f)
+                         recipe.add('cab/casa_fixvis', step,
+                             {
+                                "vis": msname,
+                                "field": f,
+                                "phasecenter": coordstring,
+                                "reuse": False,
+                                "outputvis": msname,
+                             },
+                             input=pipeline.input,
+                             output=pipeline.output,
+                             label='{0:s}:: Fix bpcal coordinates ms={1:s}'.format(step, msname))
+                      else:
+                        caracal.log.error("###### WE RECOMMEND SWITCHING ON THE fixcalcoords OPTION #######")
+                  
             if pipeline.enable_task(config, 'fixuvw'):
+                #fielddb, ra_corr, dec_corr = getfield_coords(msdict, f, db)
                 step = 'fixuvw-ms{:d}'.format(i)
                 recipe.add('cab/casa_fixvis', step,
                            {

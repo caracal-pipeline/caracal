@@ -20,6 +20,16 @@ mapping:
         enum: ["target", "calibrators"]
         required: False
         example: 'calibrators'
+      tol: 
+        desc: Tolerance (in arcseconds) for matching calibrator to database names.
+        type: float
+        required: false
+        example: '360.0'
+      tol_diff:   
+        desc: Tolerance (in arcseconds) for checking if coordinates differ from those in the database so much that rephasing is required. Please keep the value less than 'tol' .
+        type: float
+        required: false
+        example: '1.0'
       fixuvw:
         desc: Fix the UVW coordinates through the CASA task 'fixvis'.
         type: map
@@ -28,7 +38,17 @@ mapping:
             desc: Enable the 'fixvis' segment.
             type: bool
             required: false
-            example: 'False'            
+            example: 'False'         
+      fixcalcoords:
+        desc: Fix the coordinates of the bandpass calibrators.
+        type: map
+        mapping: 
+          enable: 
+            desc: Enable fixing calibrator coodinate fixing segment.
+            type: bool
+            required: false
+            example: 'False'
+        
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.
         type: bool

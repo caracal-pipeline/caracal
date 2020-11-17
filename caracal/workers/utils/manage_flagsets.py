@@ -319,12 +319,14 @@ def flag_summary_plots(pipeline, json_flag_summary, prefix, wname, nob):
         y_label=plots[plot_key]['y_label']
         title=plots[plot_key]['title']
         plotter = figure(x_range=keys, x_axis_label=x_label, y_axis_label=y_label,
-                         plot_width=600, plot_height=400, title=title)
+                         plot_width=600, plot_height=400, title=title, y_range=(0, 100),
+                         tools="hover,box_zoom,wheel_zoom,pan,save,reset")
 
         plotter.vbar(x=keys, top=flagged, width=0.9)
         plotter.xgrid.grid_line_color = None
         plotter.y_range.start = 0
         plotter.title.align = 'center'
+        plotter.hover.tooltips = [(plot_key.title(), "@x"), ("%", "@top")]
         if rotate_xlabel:
             plotter.xaxis.major_label_orientation = math.pi/2
         plot_list.append(plotter)

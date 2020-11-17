@@ -70,7 +70,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
 _radiopadre_updated = False
 
 def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
-    opts = ["--non-interactive"]
+    opts = ["--non-interactive", "--auto-init"]
 
     if container_tech == "docker":
         opts.append("--docker")

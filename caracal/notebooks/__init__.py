@@ -16,7 +16,7 @@ SOURCE_NOTEBOOK_DIR = os.path.dirname(__file__)
 
 def setup_default_notebooks(notebooks, output_dir, prefix, config):
     # setup logos
-    logodir = os.path.join(output_dir, ".logo")
+    logodir = os.path.join(output_dir, "reports")
     if not os.path.exists(logodir):
         os.mkdir(logodir)
     for png in glob.glob(os.path.join(SOURCE_NOTEBOOK_DIR, "*.png")):
@@ -70,7 +70,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
 _radiopadre_updated = False
 
 def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
-    opts = ["--non-interactive"]
+    opts = ["--non-interactive", "--auto-init"]
 
     if container_tech == "docker":
         opts.append("--docker")

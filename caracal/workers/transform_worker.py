@@ -15,16 +15,17 @@ LABEL = 'transform'
 
 # Rules for interpolation mode to use when applying calibration solutions
 applycal_interp_rules = {
-    'target':  {
+    'target': {
         'delay_cal': 'linear',
         'bp_cal': 'linear',
-                  'transfer_fluxscale': 'linear',
-                  'gain_cal_gain': 'linear',
+        'transfer_fluxscale': 'linear',
+        'gain_cal_gain': 'linear',
     },
 }
 
 
 def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+
 
 table_suffix = {
     "delay_cal": 'K0',
@@ -36,6 +37,7 @@ table_suffix = {
 
 _target_fields = {'target'}
 _cal_fields = set("fcal bpcal gcal xcal".split())
+
 
 def get_fields_to_split(config, name):
     fields = config['field']
@@ -52,8 +54,12 @@ def get_fields_to_split(config, name):
         if diff:
             raise caracal.ConfigurationError(
                 "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
-                    ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)
-                ))
+                                                                                                      ', '.join(
+                                                                                                          [f"'{f}'" for
+                                                                                                           f in
+                                                                                                           _cal_fields]),
+                                                                                                      ','.join(diff)
+                                                                                                      ))
         return fields_to_split
 
 
@@ -71,18 +77,23 @@ def worker(pipeline, recipe, config):
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
-    if (pipeline.enable_task(config, 'split_field') or pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
-        raise ValueError("split_field/changecentre and concat cannot be enabled in the same run of the transform worker. The former need a single-valued label_in, the latter multiple comma-separated values.")
+    if (pipeline.enable_task(config, 'split_field') or pipeline.enable_task(config,
+                                                                            'changecentre')) and pipeline.enable_task(
+        config, 'concat'):
+        raise ValueError(
+            "split_field/changecentre and concat cannot be enabled in the same run of the transform worker. The former need a single-valued label_in, the latter multiple comma-separated values.")
     if ',' in label_in:
         if pipeline.enable_task(config, 'split_field'):
             raise ValueError("split_field cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
         if pipeline.enable_task(config, 'changecentre'):
             raise ValueError("changecentre cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
-        else: transform_mode = 'concat' # in this mode all .MS files from the same input .MS and with the same target, and with label inside the list label_in, are concatenated
+        else:
+            transform_mode = 'concat'  # in this mode all .MS files from the same input .MS and with the same target, and with label inside the list label_in, are concatenated
     else:
         if pipeline.enable_task(config, 'concat'):
             raise ValueError("concat cannot be enabled with a single entry in label_in")
-        else: transform_mode = 'split'
+        else:
+            transform_mode = 'split'
 
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
         # if splitting from target, we have multiple MSs to iterate over
@@ -90,28 +101,28 @@ def worker(pipeline, recipe, config):
             from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
         elif transform_mode == 'concat':
             from_mslist = pipeline.get_mslist(i, '', target=from_target)
-        to_mslist  = pipeline.get_mslist(i, label_out, target=not splitting_cals)
+        to_mslist = pipeline.get_mslist(i, label_out, target=not splitting_cals)
 
         # if splitting cals, we'll split one (combined) target to one output MS
         if splitting_cals:
-           calfields = set()
-           for fd in field_to_split:
-               for elem in getattr(pipeline, fd)[i]:
-                   calfields.add(elem)
-           target_ls = [','.join(calfields)]
+            calfields = set()
+            for fd in field_to_split:
+                for elem in getattr(pipeline, fd)[i]:
+                    calfields.add(elem)
+            target_ls = [','.join(calfields)]
         # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
-           target_ls = pipeline.target[i]
-           # repeat the from-ms once per target, if not splitting from the target MS
-           if not from_target:
-               from_mslist = from_mslist * len(target_ls)
+            target_ls = pipeline.target[i]
+            # repeat the from-ms once per target, if not splitting from the target MS
+            if not from_target:
+                from_mslist = from_mslist * len(target_ls)
 
         do_pol_callib = False
         if pipeline.enable_task(config['split_field'], 'otfcal'):
             do_cross_callib = True
             do_pol_callib = True
-            caltablelist, gainfieldlist, interplist, calwtlist = [], [], [], []
-            pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist = [], [], [], []
+            caltablelist, gainfieldlist, interplist, calwtlist, applyfield = [], [], [], [], []
+            pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield = [], [], [], [], []
             if config['split_field']['col'] != 'corrected':
                 caracal.log.info("Datacolumn was set to '{}'. by the user." \
                                  "Will be changed to 'corrected' for OTF calibration to work.".format(
@@ -121,36 +132,49 @@ def worker(pipeline, recipe, config):
             # use existing calibration library if user gives one
             if config['split_field']['otfcal']['callib']:
                 ccallib = 'caltables/callibs/{}'.format(config['split_field']['otfcal']['callib'])
-                if not os.path.exists(os.path.join(pipeline.output,ccallib)):
+                if not os.path.exists(os.path.join(pipeline.output, ccallib)):
                     raise IOError(
                         "Callib file {0:s} does not exist. Please check that it is where it should be.".format(ccallib))
 
             # write calibration library file for OTF cal
             elif config['split_field']['otfcal']['label_cal']:
-                ccalprefix = '{0:s}-{1:s}'.format(prefix_msbase,config['split_field']['otfcal']['label_cal'])
+                ccalprefix = '{0:s}-{1:s}'.format(prefix_msbase, config['split_field']['otfcal']['label_cal'])
                 ccallib = 'caltables/callibs/callib_{0:s}.txt'.format(ccalprefix)
 
                 with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                  'callib_{0:s}.json'.format(ccalprefix))) as f:
+                                       'callib_{0:s}.json'.format(ccalprefix))) as f:
                     ccallib_dict = json.load(f)
 
                 for applyme in ccallib_dict:
-                    caltablelist.append(ccallib_dict[applyme]['caltable'])
-                    gainfieldlist.append(ccallib_dict[applyme]['fldmap'])
-                    interplist.append(ccallib_dict[applyme]['interp'])
-                    calwtlist.append(False)
+                    if 'field' not in ccallib_dict[applyme] or ccallib_dict[applyme]['field'] == '':
+                        caltablelist.append(ccallib_dict[applyme]['caltable'])
+                        gainfieldlist.append(ccallib_dict[applyme]['fldmap'])
+                        interplist.append(ccallib_dict[applyme]['interp'])
+                        calwtlist.append(False)
+                        applyfield.append('')
+                    else:
+                        pfield = [x.strip() for x in ccallib_dict[applyme]['field'].split(',')]
+                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
+                        tmp_field = [x for x in tfield if x in pfield]
+                        if tmp_field:
+                            caltablelist.append(ccallib_dict[applyme]['caltable'])
+                            gainfieldlist.append(ccallib_dict[applyme]['fldmap'])
+                            interplist.append(ccallib_dict[applyme]['interp'])
+                            calwtlist.append(False)
+                            applyfield.append(",".join(tmp_field))
 
                 with open(os.path.join(pipeline.output, ccallib), 'w') as stdw:
                     for j in range(len(caltablelist)):
                         stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                            stimela.recipe.CONT_IO["output"], 'caltables',  caltablelist[j]))
+                            stimela.recipe.CONT_IO["output"], 'caltables', caltablelist[j]))
                         if bool(calwtlist[j]):
                             stdw.write(' calwt=True')
                         else:
                             stdw.write(' calwt=False')
-                        stdw.write(' tinterp=\''+str(interplist[j])+'\'')
+                        stdw.write(' tinterp=\'' + str(interplist[j]) + '\'')
                         stdw.write(' finterp=\'linear\'')
-                        stdw.write(' fldmap=\'' + str(gainfieldlist[j])+'\'')
+                        stdw.write(' fldmap=\'' + str(gainfieldlist[j]) + '\'')
+                        stdw.write(' field=\'' + str(applyfield[j]) + '\'')
                         stdw.write(' spwmap=0\n')
 
             else:
@@ -162,21 +186,35 @@ def worker(pipeline, recipe, config):
                 if not os.path.exists(os.path.join(pipeline.output, pcallib)):
                     raise IOError(
                         "Callib file {0:s} does not exist. Please check that it is where it should be.".format(pcallib))
-                if not os.path.exists(os.path.join('{}/callibs'.format(pipeline.caltables),'{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))):
+                if not os.path.exists(os.path.join('{}/callibs'.format(pipeline.caltables), '{0:s}.json'.format(
+                        config['split_field']['otfcal']['pol_callib'][:-4]))):
                     raise IOError("json version of pol_callib file does not exist. Please provide it.")
 
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),'{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))) as f:
+                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
+                                       '{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))) as f:
                     pcallib_dict = json.load(f)
 
                 for applyme in pcallib_dict:
-                    pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                    pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                    pinterplist.append(pcallib_dict[applyme]['interp'])
-                    pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                    if 'field' not in pcallib_dict[applyme] or pcallib_dict[applyme]['field'] == '':
+                        pcaltablelist.append(pcallib_dict[applyme]['caltable'])
+                        pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
+                        pinterplist.append(pcallib_dict[applyme]['interp'])
+                        pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                        papplyfield.append('')
+                    else:
+                        pfield = [x.strip() for x in pcallib_dict[applyme]['field'].split(',')]
+                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
+                        tmp_field = [x for x in tfield if x in pfield]
+                        if tmp_field:
+                            pcaltablelist.append(pcallib_dict[applyme]['caltable'])
+                            pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
+                            pinterplist.append(pcallib_dict[applyme]['interp'])
+                            pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                            papplyfield.append(",".join(tmp_field))
 
             # write calibration library file for OTF cal
             elif config['split_field']['otfcal']['label_pcal']:
-                pcalprefix = '{0:s}-{1:s}'.format(prefix_msbase,config['split_field']['otfcal']['label_pcal'])
+                pcalprefix = '{0:s}-{1:s}'.format(prefix_msbase, config['split_field']['otfcal']['label_pcal'])
                 pcallib = 'caltables/callibs/callib_{0:s}.txt'.format(pcalprefix)
 
                 with open(os.path.join('{}/callibs'.format(pipeline.caltables),
@@ -184,10 +222,22 @@ def worker(pipeline, recipe, config):
                     pcallib_dict = json.load(f)
 
                 for applyme in pcallib_dict:
-                    pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                    pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                    pinterplist.append(pcallib_dict[applyme]['interp'])
-                    pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                    if 'field' not in pcallib_dict[applyme] or pcallib_dict[applyme]['field'] == '':
+                        pcaltablelist.append(pcallib_dict[applyme]['caltable'])
+                        pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
+                        pinterplist.append(pcallib_dict[applyme]['interp'])
+                        pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                        papplyfield.append('')
+                    else:
+                        pfield = [x.strip() for x in pcallib_dict[applyme]['field'].split(',')]
+                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
+                        tmp_field = [x for x in tfield if x in pfield]
+                        if tmp_field:
+                            pcaltablelist.append(pcallib_dict[applyme]['caltable'])
+                            pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
+                            pinterplist.append(pcallib_dict[applyme]['interp'])
+                            pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
+                            papplyfield.append(",".join(tmp_field))
 
                 with open(os.path.join(pipeline.output, pcallib), 'w') as stdw:
                     for j in range(len(pcaltablelist)):
@@ -200,6 +250,7 @@ def worker(pipeline, recipe, config):
                         stdw.write(' tinterp=\'' + str(pinterplist[j]) + '\'')
                         stdw.write(' finterp=\'linear\'')
                         stdw.write(' fldmap=\'' + str(pgainfieldlist[j]) + '\'')
+                        stdw.write(' field=\'' + str(papplyfield[j]) + '\'')
                         stdw.write(' spwmap=0\n')
 
             else:
@@ -220,21 +271,19 @@ def worker(pipeline, recipe, config):
                     if available_flagversions[-1] != version:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, target_iter)
                         manflags.delete_cflags(pipeline, recipe,
-                            available_flagversions[available_flagversions.index(version)+1],
-                            from_ms, cab_name=substep)
+                                               available_flagversions[available_flagversions.index(version) + 1],
+                                               from_ms, cab_name=substep)
                 else:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, from_ms,
-                        config, flags_before_worker, flags_after_worker)
+                                      config, flags_before_worker, flags_after_worker)
 
             flagv = to_ms + '.flagversions'
             tmp_ms = 'tmp_' + to_ms
             tmpflagv = tmp_ms + '.flagversions'
             if pipeline.enable_task(config, 'split_field'):
                 msbase = os.path.splitext(to_ms)[0]
-                obsinfo_msname = to_ms
             else:
                 msbase = pipeline.msbasenames[i]
-                obsinfo_msname = from_ms
 
             summary_file = f'{msbase}-summary.json'
             obsinfo_file = f'{msbase}-obsinfo.txt'
@@ -242,89 +291,130 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'split_field'):
                 step = 'split_field-ms{0:d}-{1:d}'.format(i, target_iter)
                 # If the output of this run of mstransform exists, delete it first
-                remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file), directory=pipeline.msdir, log=log)
-
+                remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file),
+                                       directory=pipeline.msdir, log=log)
                 if not do_pol_callib:
-                    recipe.add('cab/casa_mstransform', step,{
-                               "vis": from_ms if label_in else from_ms + ":input",
-                               "outputvis": to_ms,
-                               "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
-                               "timebin": config['split_field']['time_avg'],
-                               "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
-                               "chanbin": config['split_field']['chan_avg'],
-                               "spw": config['split_field']['spw'],
-                               "datacolumn": dcol,
-                               "correlation": config['split_field']['correlation'],
-                               "usewtspectrum": config['split_field']['create_specweights'],
-                               "field": target,
-                               "keepflags": True,
-                               "docallib": do_cross_callib,
-                               "callib": sdm.dismissable(ccallib+':output' if pipeline.enable_task(config['split_field'], 'otfcal') else None),
-                           },
-                           input=pipeline.input if label_in else pipeline.rawdatadir,
-                           output=pipeline.output,
-                           label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(from_ms)))
-                #workaround because mstransform do not accept the polcal gaintypes such as Xfparang
+                    recipe.add('cab/casa_mstransform', step, {
+                        "vis": from_ms if label_in else from_ms + ":input",
+                        "outputvis": to_ms,
+                        "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field'][
+                            'time_avg'] != '0s') else False,
+                        "timebin": config['split_field']['time_avg'],
+                        "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
+                        "chanbin": config['split_field']['chan_avg'],
+                        "spw": config['split_field']['spw'],
+                        "datacolumn": dcol,
+                        "correlation": config['split_field']['correlation'],
+                        "usewtspectrum": config['split_field']['create_specweights'],
+                        "field": target,
+                        "keepflags": True,
+                        "docallib": do_cross_callib,
+                        "callib": sdm.dismissable(ccallib + ':output' if config['split_field']['otfcal']['callib'] or
+                                                                         config['split_field']['otfcal'][
+                                                                             'label_cal'] else None),
+                    },
+                               input=pipeline.input if label_in else pipeline.rawdatadir,
+                               output=pipeline.output,
+                               label='{0:s}:: Split and average data ms={1:s}'.format(step, "".join(from_ms)))
+                # workaround because mstransform do not accept the polcal gaintypes such as Xfparang
                 else:
-                    recipe.add('cab/casa_mstransform', step+'_tmp_split_crosscal_corrected',{
-                               "vis": from_ms if label_in else from_ms + ":input",
-                               "outputvis": 'tmp_'+to_ms,
-                               "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field']['time_avg'] != '0s') else False,
-                               "timebin": config['split_field']['time_avg'],
-                               "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
-                               "chanbin": config['split_field']['chan_avg'],
-                               "spw": config['split_field']['spw'],
-                               "datacolumn": dcol,
-                               "correlation": config['split_field']['correlation'],
-                               "usewtspectrum": config['split_field']['create_specweights'],
-                               "field": target,
-                               "keepflags": True,
-                               "docallib": do_cross_callib,
-                               "callib": sdm.dismissable(ccallib+':output' if pipeline.enable_task(config['split_field'], 'otfcal') else None),
-                           },
-                           input=pipeline.input if label_in else pipeline.rawdatadir,
-                           output=pipeline.output,
-                           label='{0:s}:: Split and average (cross_calib) data ms={1:s}'.format(step, "".join(from_ms)))
-                    recipe.add('cab/casa_applycal', step+'_apply_polcal',{
-                               "vis": 'tmp_'+to_ms,
-                               "docallib": False,
-                               "calwt": pcalwtlist,
-                               "gaintable": ["%s:output" % ct for ct in pcaltablelist],
-                               "gainfield": pgainfieldlist,
-                               "interp": pinterplist,
-                               "parang": True,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.caltables,
-                           label='{0:s}:: Apply pol callib ms={1:s}'.format(step, "".join(to_ms)))
+                    recipe.add('cab/casa_mstransform', step + '_tmp_split_crosscal_corrected', {
+                        "vis": from_ms if label_in else from_ms + ":input",
+                        "outputvis": 'tmp_' + to_ms,
+                        "timeaverage": True if (config['split_field']['time_avg'] != '' and config['split_field'][
+                            'time_avg'] != '0s') else False,
+                        "timebin": config['split_field']['time_avg'],
+                        "chanaverage": True if config['split_field']['chan_avg'] > 1 else False,
+                        "chanbin": config['split_field']['chan_avg'],
+                        "spw": config['split_field']['spw'],
+                        "datacolumn": sdm.dismissable(
+                            'corrected' if config['split_field']['otfcal']['callib'] or config['split_field']['otfcal'][
+                                'label_cal'] else 'data'),
+                        "correlation": config['split_field']['correlation'],
+                        "usewtspectrum": config['split_field']['create_specweights'],
+                        "field": target,
+                        "keepflags": True,
+                        "docallib": do_cross_callib,
+                        "callib": sdm.dismissable(ccallib + ':output' if config['split_field']['otfcal']['callib'] or
+                                                                         config['split_field']['otfcal'][
+                                                                             'label_cal'] else None),
+                    },
+                               input=pipeline.input if label_in else pipeline.rawdatadir,
+                               output=pipeline.output,
+                               label='{0:s}:: Split and average (cross_calib) data ms={1:s}'.format(step,
+                                                                                                    "".join(from_ms)))
+
+                    if not "".join(string for string in papplyfield):
+                        recipe.add('cab/casa_applycal', step + '_apply_polcal', {
+                            "vis": 'tmp_' + to_ms,
+                            "field": target,
+                            "docallib": False,
+                            "calwt": pcalwtlist,
+                            "gaintable": ["%s:output" % ct for ct in pcaltablelist],
+                            "gainfield": pgainfieldlist,
+                            "interp": pinterplist,
+                            "parang": True,
+                        },
+                                   input=pipeline.input,
+                                   output=pipeline.output,
+                                   label='{0:s}:: Apply pol callib ms={1:s}'.format(step, "".join(to_ms)))
+                    else:
+                        trgt = [x.strip() for x in target.split(',')]
+                        for ii, fld in enumerate(trgt):
+                            pcal = []
+                            pgain = []
+                            pinter = []
+                            pcalwt = []
+                            for idx, f in enumerate(papplyfield):
+                                if f == '' or f == fld:
+                                    if pcaltablelist[idx] not in pcal:
+                                        pcal.append(pcaltablelist[idx])
+                                        pgain.append(pgainfieldlist[idx])
+                                        pinter.append(pinterplist[idx])
+                                        pcalwt.append(pcalwtlist[idx])
+                            recipe.add('cab/casa_applycal', step + '_apply_polcal_' + str(ii), {
+                                "vis": 'tmp_' + to_ms,
+                                "field": fld,
+                                "docallib": False,
+                                "calwt": pcalwt,
+                                "gaintable": ["%s:output" % ct for ct in pcal],
+                                "gainfield": pgain,
+                                "interp": pinter,
+                                "parang": True,
+                            },
+                                       input=pipeline.input,
+                                       output=pipeline.caltables,
+                                       label='{0:s}:: Apply pol callib ms={1:s}, field={2:d}'.format(step,
+                                                                                                     "".join(to_ms),
+                                                                                                     ii))
                     recipe.run()
                     recipe.jobs = []
-                    recipe.add('cab/casa_mstransform', step+'_split_polcal_corrected',{
-                               "vis": 'tmp_'+to_ms,
-                               "outputvis": to_ms,
-                               "datacolumn": dcol,
-                               "timeaverage": False,
-                               "chanaverage": False,
-                               "spw": '',
-                               "correlation": '',
-                               "usewtspectrum": config['split_field']['create_specweights'],
-                               "field": '',
-                               "keepflags": True,
-                               "docallib": False,
-                           },
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
+                    recipe.add('cab/casa_mstransform', step + '_split_polcal_corrected', {
+                        "vis": 'tmp_' + to_ms,
+                        "outputvis": to_ms,
+                        "datacolumn": 'corrected',
+                        "timeaverage": False,
+                        "chanaverage": False,
+                        "spw": '',
+                        "correlation": '',
+                        "usewtspectrum": config['split_field']['create_specweights'],
+                        "field": '',
+                        "keepflags": True,
+                        "docallib": False,
+                    },
+                               input=pipeline.input if label_in else pipeline.rawdatadir,
+                               output=pipeline.output,
+                               label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
                     recipe.run()
                     recipe.jobs = []
                     # Delete tmp ms
-                    if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, 'tmp_'+to_ms)) or \
-                        os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tmpflagv)):
-                        os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, 'tmp_'+to_ms, tmpflagv))
+                    if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, 'tmp_' + to_ms)) or \
+                            os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tmpflagv)):
+                        os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, 'tmp_' + to_ms, tmpflagv))
 
                 substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
-                                cab_name=substep, overwrite=False)
+                                    cab_name=substep, overwrite=False)
             obsinfo_msname = to_ms if pipeline.enable_task(config, 'split_field') else from_ms
 
             if pipeline.enable_task(config, 'changecentre'):
@@ -334,12 +424,13 @@ def worker(pipeline, recipe, config):
                     caracal.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
                         config['changecentre']['ra'], config['changecentre']['dec']))
                     sys.exit(1)
-                step = 'changecentre-ms{0:d}-{1:d}'.format(i,target_iter)
+                step = 'changecentre-ms{0:d}-{1:d}'.format(i, target_iter)
                 recipe.add('cab/casa_fixvis', step,
                            {
                                "msname": to_ms,
                                "outputvis": to_ms,
-                               "phasecenter": 'J2000 {0:s} {1:s}'.format(config['changecentre']['ra'], config['changecentre']['dec']),
+                               "phasecenter": 'J2000 {0:s} {1:s}'.format(config['changecentre']['ra'],
+                                                                         config['changecentre']['dec']),
                            },
                            input=pipeline.input,
                            output=pipeline.output,
@@ -391,39 +482,40 @@ def worker(pipeline, recipe, config):
                 obsinfo_msname = to_ms
 
             if pipeline.enable_task(config, 'obsinfo'):
-                if (config['obsinfo']['listobs']):
+                if config['obsinfo']['listobs']:
 
                     if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
                         listfile = '{0:s}-obsinfo.txt'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-obsinfo.txt'.format(pipeline.msbasenames[i])
 
-                    step = 'listobs-ms{0:d}-{1:d}'.format(i,target_iter)
+                    step = 'listobs-ms{0:d}-{1:d}'.format(i, target_iter)
                     recipe.add('cab/casa_listobs', step,
                                {
                                    "vis": obsinfo_msname,
-                                   "listfile": listfile+":msfile",
+                                   "listfile": listfile + ":msfile",
                                    "overwrite": True,
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,
                                label='{0:s}:: Get observation information ms={1:s}'.format(step, obsinfo_msname))
 
-                if (config['obsinfo']['summary_json']):
+                if config['obsinfo']['summary_json']:
 
                     if pipeline.enable_task(config, 'split_field') or transform_mode == 'concat':
                         listfile = '{0:s}-summary.json'.format(os.path.splitext(to_ms)[0])
                     else:
                         listfile = '{0:s}-summary.json'.format(pipeline.msbasenames[i])
 
-                    step = 'summary_json-ms{0:d}-{1:d}'.format(i,target_iter)
+                    step = 'summary_json-ms{0:d}-{1:d}'.format(i, target_iter)
                     recipe.add('cab/msutils', step,
                                {
                                    "msname": obsinfo_msname,
                                    "command": 'summary',
                                    "display": False,
-                                   "outfile": listfile+":msfile"
+                                   "outfile": listfile + ":msfile"
                                },
                                input=pipeline.input,
                                output=pipeline.obsinfo,
-                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step, obsinfo_msname))
+                               label='{0:s}:: Get observation information as a json file ms={1:s}'.format(step,
+                                                                                                          obsinfo_msname))

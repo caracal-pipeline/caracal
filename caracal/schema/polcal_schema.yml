@@ -93,8 +93,37 @@ mapping:
         type: str
         required: false
         example: xcal
-      use_model:
-        desc: Use a model for xcal. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+      set_model_leakage:
+        desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. This can use CASA setjy for point-source models, or MeqTrees for available local sky models. It will be executed only if leakage_calib != pol_calib.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the set_model_leakage segment.
+            type: bool
+            required: false
+            example: 'True'
+          meerkat_skymodel:
+            desc: Use the MeerkAT local sky model (lsm) of the calibrator instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
+            type: bool
+            required: false
+            example: 'False'
+          no_verify:
+            desc: Enables setting standard manually [???].
+            type: bool
+            required: false
+            example: 'False'
+          tile_size:
+            type: int
+            desc: Size of tile (time bins) to process. Can be used to reduce memory footprint.
+            required: false
+            example: '128'
+          threads:
+            type: int
+            desc: Number of threads used by MeqTrees if meerkat_skymodel above is enabled.
+            required: false
+            example: '8'
+      set_model_pol:
+        desc: Fill in the MODEL column of the .MS file(s) for the polarized calibrator in preparation for polcalibration. This can be done only for 3C138 and 3C286 using the CASA setjy for point-source models. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
         type: bool
         required: false
         example: 'True'

@@ -358,12 +358,12 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
-    params = {
-        "table": f"{gtab}:msfile",
-        "corr": '',
-        "htmlname": gtab,
-        "plotname": "{}.png".format(gtab)
-    }
+    params =  {
+        "table"         : f"{gtab}:msfile",
+        "corr"         : '',
+        "htmlname"     : gtab,
+        "plotname"     : "{}.png".format(gtab)
+        }
     if field_id is not None:
         params['field'] = ",".join(map(str, field_id))
     recipe.add('cab/ragavi', step, params,
@@ -632,23 +632,6 @@ def worker(pipeline, recipe, config):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
                                 overwrite=config['overwrite_flagvers'])
-
-        # gt_final, itp_final, fd_final = get_caltab_final(primary_order if no_secondary else secondary_order,
-        #                copy.deepcopy(gaintables), interps, "nearest", "target")
-        #
-        # applycal_recipes = []
-        # calmodes = []
-        # for ix,gt in enumerate(gt_final):
-        #     applycal_recipes.append(dict(zip(
-        #         ['caltable', 'fldmap', 'interp'], [gt, fd_final[ix], itp_final[ix]])))
-        #     if '.K' in gt:
-        #         calmodes.append('delay_cal')
-        #     elif '.B' in gt:
-        #         calmodes.append('bp_cal')
-        #     elif '.F' in gt:
-        #         calmodes.append('transfer_fluxscale')
-        #     elif '.G' in gt:
-        #         calmodes.append('gain_cal')
 
         if no_secondary:
             interps = primary["interps"]

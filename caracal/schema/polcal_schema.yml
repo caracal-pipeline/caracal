@@ -2,7 +2,7 @@ type: map
 mapping:
   polcal:
     type: map
-    desc: Carry out polarization calibration of the data (leakage and polarized angle).
+    desc: Carry out polarization calibration of the data (leakage and polarization angle).
     mapping:
       enable:
         desc: Execute the polcal worker.
@@ -94,14 +94,14 @@ mapping:
         required: false
         example: xcal
       set_model_leakage:
-        desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. This can use CASA setjy for point-source models, or MeqTrees for available local sky models. It will be executed only if leakage_calib != pol_calib.
+        desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. Not necessary if you are using the same .MS file(s) of crosscal, it is if you splitted cross calibrated data to execute this worker and if leakage_calib != pol_calib.
         type: map
         mapping:
           enable:
             desc: Execute the set_model_leakage segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           meerkat_skymodel:
             desc: Use the MeerkAT local sky model (lsm) of the calibrator instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
             type: bool
@@ -130,12 +130,12 @@ mapping:
       freqsel:
         type: str
         required: false
-        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if use_model is False.
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if set_model_pol is False.
         example: ''
       gain_solint:
         type: str
         required: false
-        desc: Time solution interval to be used for gaincal. Set to 'int' if use_model is False.
+        desc: Time solution interval to be used for gaincal. Set to 'int' if set_model_pol is False.
         example: 'inf'
       time_solint:
         type: str
@@ -153,7 +153,7 @@ mapping:
         required: false
         example: "True"
       apply_pcal:
-        desc: Apply the polcal solutions to the cross calibrated corrected MS. If this is set to 'False' the cross calibrated MS will be deleted.
+        desc: Apply the polcal solutions (together with the otfcal solution if that segment is set to True) to the .MS file(s).
         type: bool
         required: false
         example: 'True'

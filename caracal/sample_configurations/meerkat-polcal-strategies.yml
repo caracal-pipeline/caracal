@@ -150,49 +150,104 @@ inspect__2:
     enable: true
     avgtime: '60'
 
-transform__2:
+polcal__2:
   enable: true
-  label_out: corr
-  field: target
-  split_field:
+  label_in: cal
+  label_cal: 2pcal
+  otfcal:
     enable: true
-    col: corrected
-    otfcal:
-      enable: true
-      label_cal: 1kgb
-      label_pcal: 1pcal
+    label_cal: 1kgb
+  extendflags: True
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: xcal
+  set_model_leakage: false
+  set_model_pol: true
+  gain_solint: '60s'
+  time_solint: 'inf'
+  freq_solint: 'inf'
+  freqsel: '0:1.45~1.50GHz'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
 
-prep__2:
+inspect__3:
   enable: true
-  label_in: corr
-  field: target
-  specweights:
+  label_in: cal
+  field: 'calibrators'
+  label_plot: 2pcal
+  real_imag:
     enable: true
-    mode: uniform
+    avgtime: '60'
+  amp_phase:
+    enable: true
+    avgtime: '60'
+  amp_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_ant:
+    enable: true
+    avgtime: '60'
+  phase_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_scan:
+    enable: true
+    avgtime: '60'
 
-flag__2:
+polcal__3:
   enable: true
-  field: target
-  label_in: corr
-  flag_rfi:
+  label_in: cal
+  label_cal: 3pcal
+  otfcal:
     enable: true
-    col: DATA
-    flagger: aoflagger
-    aoflagger:
-      strategy: firstpass_QUV.rfis
+    label_cal: 1kgb
+  extendflags: True
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: xcal
+  set_model_leakage: false
+  set_model_pol: false
+  gain_solint: 'int'
+  time_solint: 'inf'
+  freq_solint: 'inf'
+  freqsel: '0:1.45~1.50GHz'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
 
-mask:
-  enable: false
-
-selfcal:
+inspect__4:
   enable: true
-  img_npix: 4096
-  img_cell: 1.3
-  cal_timeslots_chunk: 15
-  image:
+  label_in: cal
+  field: 'calibrators'
+  label_plot: 3pcal
+  real_imag:
     enable: true
-  calibrate:
+    avgtime: '60'
+  amp_phase:
     enable: true
-    gsols_timeslots: [15]
-  transfer_model:
-    enable: false
+    avgtime: '60'
+  amp_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_ant:
+    enable: true
+    avgtime: '60'
+  phase_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_scan:
+    enable: true
+    avgtime: '60'
+
+

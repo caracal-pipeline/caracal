@@ -586,6 +586,6 @@ def worker(pipeline, recipe, config):
                         "step":  f"plot-{axes}-{iobs}-{ftype[0]}",
                         "label": label,
                         **plot_axes[axes]})
-
-                    globals()[plotter](pipeline, recipe, plot_args,
-                                       extras=None)
+                    if plotter and plotter != "none":
+                        globals()[plotter](pipeline, recipe, plot_args,
+                                           extras=None)

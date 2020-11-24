@@ -1219,19 +1219,19 @@ def worker(pipeline, recipe, config):
                        label="extend_flags_polcal")
 
         # choose the strategy according to config parameters
-        if leakage_calib in set(unpolarized_calibrators):
-            if pol_calib in set(polarized_calibrators):
+        if leakage_calib in unpolarized_calibrators:
+            if pol_calib in polarized_calibrators:
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
                 xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators,
                                      caltablelist, gainfieldlist, interplist, calwtlist, applylist)
+            elif not pol_calib:
+                raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?")
             else:
-                raise RuntimeError("Unknown pol_calib!"
-                                   "Currently only these are known on caracal:\
-                                   " + str(polarized_calibrators.keys()) + ". \
-                                   You can use one of these source to calibrate polarization \
-                                   or if none of them is available you can calibrate both leakage (leakage_calib) and polarization (pol_calib) \
-                                   with a source observed at several parallactic angles")
+                raise RuntimeError(f"""Your setting of pol_calib={config['pol_calib']} selects {pol_calib}, which is not a supported polarization calibrator.
+                    Supported calibrators are {', '.join(polarized_calibrators.keys())}.
+                    Alternatively, you can calibrate both leakage and polarization using a (known or unknown) polarized source
+                    observed at several parallactic angles. Configure this source as obsconf:xcal, and leakage_calib=pol_calib=xcal.""")
         elif leakage_calib == pol_calib:
             caracal.log.info(
                 "You decided to calibrate the polarized angle and leakage with a polarized calibrator.")
@@ -1250,11 +1250,12 @@ def worker(pipeline, recipe, config):
                 raise RuntimeError(
                     "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
         else:
-            raise RuntimeError("Cannot calibrate polarization! Allowed strategies are: \
-                               1. Calibrate leakage with a unpolarized source (i.e. " + str(unpolarized_calibrators) + ") \
-                               and polarized angle with a know polarized source (i.e. " + str(
-                polarized_calibrators.keys()) + ") \
-                               2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at different parallactic angles.")
+            raise RuntimeError(f"""Unable to determine a polariation calibration strategy. Supported strategies are: 
+                    1. Calibrate leakage using an unpolarized source ({', '.join(unpolarized_calibrators)}), and 
+                       polarization angle using a known polarized source ({', '.join(polarized_calibrators.keys())}).
+                       This is usually acheieved by setting leakage_cal=bpcal, pol_cal=xcal.
+                    2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at 
+                       different parallactic angles. This is usually acheieved by setting leakage_cal=bpcal, pol_cal=xcal.""")
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)

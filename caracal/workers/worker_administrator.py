@@ -409,11 +409,12 @@ class worker_administrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
-            log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
+            log_label =  "" if _name == label or _name.startswith(label + "__") else f" ({label})"
+            log.info(f"{_name}{log_label}: initializing", extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-            log.info("{0:s}: running".format(label))
+            log.info(f"{_name}{log_label}: running")
             recipe.run()
-            log.info("{0:s}: finished".format(label))
+            log.info(f"{_name}{log_label}: finished")
 
             # this should be in the cab cleanup code, no?
 

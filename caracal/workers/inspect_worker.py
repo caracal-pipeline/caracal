@@ -336,7 +336,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     plot_cats = {
         "plots_by_field": {"--iter-field": "",
                            "--field": basesubst["all_fields"]},
-        "plots_by_corr": {},
+        "plots_by_corr": {"--iter-corr": ""},
         "plots": {}
     }
 
@@ -351,29 +351,27 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
 
     # for each plot category i.e. plots, plot-by-field, plots-by-corr
     for plot_cat in bares:
-        if plot_cat == "plots_by_corr":
-            corrs = shade_cfg["corrs"].split(",")
-        else:
-            corrs = [shade_cfg["corrs"]]
         # for each list ed plot in this a category
         for plot in bares[plot_cat]:
             plot = plot.format(**(basesubst))
-            for _corr in corrs:
-                # convert argument list to dictionary for easy update
-                args = l2d(plot)
-                args.update({
-                    "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
-                    "--col": shade_cfg["default_column"],
-                    "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}-corr-{_corr.replace(',', '-')}.png",
-                    "--corr": _corr,
-                    **plot_cats[plot_cat]
-                })
+            # convert argument list to dictionary for easy update
+            args = l2d(plot)
+            defaults = {
+                "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
+                "--col": shade_cfg["default_column"],
+                "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
+                "--corr": shade_cfg["corrs"],
+                ** plot_cats[plot_cat]
+            }
 
-                if extras:
-                    args.update(extras)
+            for key, value in defaults.items():
+                args.setdefault(key, value)
 
-                args = list(itertools.chain.from_iterable(args.items()))
-                plot_args.append(" ".join(args))
+            if extras:
+                args.update(extras)
+
+            args = list(itertools.chain.from_iterable(args.items()))
+            plot_args.append(" ".join(args))
 
     if len(plot_args) == 0:
         log.warning(

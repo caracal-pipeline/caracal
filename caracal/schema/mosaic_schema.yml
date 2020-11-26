@@ -16,12 +16,11 @@ mapping:
         required: true
         example: 'continuum'
       target_images:
-        desc: List of images to be mosaicked, with suffix of image.fits being expected.
-        type: seq
+        desc: List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the working directory.
         seq:
           - type: str
         required: false
-        example: "directory/first_image.fits, directory/second_image.fits"
+        example: ''
       label_in:
         desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
         type: str

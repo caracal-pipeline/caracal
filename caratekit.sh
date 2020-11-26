@@ -1829,28 +1829,50 @@ then
     # Save them if they are present
     [[ -z ${SINGULARITY_CACHEDIR} ]] && CARACAL_SINGULARITY_CACHEDIR_del=1 || { \
 	ss+="CARATE_SINGULARITY_CACHEDIR_OLD=\${SINGULARITY_CACHEDIR}" ; \
-	ss+=$'\n'
+	ss+=$'\n' ; \
 	CARATE_SINGULARITY_CACHEDIR_OLD=${SINGULARITY_CACHEDIR} ; \
 	}
     [[ -z ${SINGULARITY_DISABLE_CACHE} ]] && CARACAL_SINGULARITY_DISABLE_CACHE_del=1 || { \
 	ss+="CARATE_SINGULARITY_DISABLE_CACHE_OLD=\${SINGULARITY_DISABLE_CACHE}" ; \
-	ss+=$'\n'
+	ss+=$'\n' ; \
 	CARATE_SINGULARITY_DISABLE_CACHE_OLD=${SINGULARITY_DISABLE_CACHE} ; \
 	}
     [[ -z ${SINGULARITY_LOCALCACHEDIR} ]] && CARACAL_SINGULARITY_LOCALCACHEDIR_del=1 || { \
 	ss+="CARATE_SINGULARITY_LOCALCACHEDIR_OLD=\${SINGULARITY_LOCALCACHEDIR}" ; \
-	ss+=$'\n'
+	ss+=$'\n' ; \
 	CARATE_SINGULARITY_LOCALCACHEDIR_OLD=${SINGULARITY_LOCALCACHEDIR} ; \
 	}
     [[ -z ${SINGULARITY_TMPDIR} ]] && CARACAL_SINGULARITY_TMPDIR_del=1 || { \
 	ss+="CARATE_SINGULARITY_TMPDIR_OLD=\${SINGULARITY_TMPDIR}" ; \
-	ss+=$'\n'
+	ss+=$'\n' ; \
         CARATE_SINGULARITY_TMPDIR_OLD=${SINGULARITY_TMPDIR} ; \
 	}
     [[ -z ${STIMELA_PULLFOLDER} ]]  && STIMELA_PULLFOLDER_del=1 || { \
 	ss+="CARATE_STIMELA_PULLFOLDER_OLD=\${STIMELA_PULLFOLDER}" ; \
-	ss+=$'\n'
+	ss+=$'\n' ; \
         CARATE_STIMELA_PULLFOLDER_OLD=${STIMELA_PULLFOLDER} ; \
+	}
+
+    # Report them if they are present
+    [[ -z ${CARATE_SINGULARITY_CACHEDIR} ]] || { \
+	ss+="CARATE_SINGULARITY_CACHEDIR=${CARATE_SINGULARITY_CACHEDIR}" ; \
+	ss+=$'\n' ; \
+	}
+    [[ -z ${CARATE_SINGULARITY_DISABLE_CACHE} ]] || { \
+	ss+="CARATE_SINGULARITY_DISABLE_CACHE=${CARATE_SINGULARITY_DISABLE_CACHE}" ; \
+	ss+=$'\n' ; \
+	}
+    [[ -z ${CARATE_SINGULARITY_LOCALCACHEDIR} ]] || { \
+	ss+="CARATE_SINGULARITY_LOCALCACHEDIR=${CARATE_SINGULARITY_LOCALCACHEDIR}" ; \
+	ss+=$'\n' ; \
+	}
+    [[ -z ${CARATE_SINGULARITY_TMPDIR} ]] || { \
+	ss+="CARATE_SINGULARITY_TMPDIR=${CARATE_SINGULARITY_TMPDIR}" ; \
+	ss+=$'\n' ; \
+	}
+    [[ -z ${CARATE_STIMELA_PULLFOLDER} ]] || { \
+	ss+="CARATE_STIMELA_PULLFOLDER=${CARATE_STIMELA_PULLFOLDER}" ; \
+	ss+=$'\n' ; \
 	}
 fi
 
@@ -3701,9 +3723,9 @@ then
     if [[ ! -e "${STIMELA_PULLFOLDER}" ]]
     then
         echo
-        echo "##################################"
-        echo " Creating Singularity pull folder "
-        echo "##################################"
+        echo "##############################"
+        echo " Creating Stimela pull folder "
+        echo "##############################"
         echo
 	
 	echo "Installing Stimela images in ${STIMELA_PULLFOLDERstring}"
@@ -3725,7 +3747,7 @@ then
         echo "#########################################"
         echo
 	echo "Installing Stimela images in ${STIMELA_PULLFOLDERstring}"
-	ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
+	# ss_sing+="mkdir -p ${STIMELA_PULLFOLDERstring}"; ss_sing+=$'\n'
 	ii=1
 	until (( ${ii} > ${IA} ))
 	do

@@ -9,6 +9,7 @@ import caracal
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from caracal.workers.utils.callibs import resolve_calibration_library
 
 NAME = 'Transform Data by Splitting/Average/Applying calibration'
 LABEL = 'transform'
@@ -109,154 +110,43 @@ def worker(pipeline, recipe, config):
             for fd in field_to_split:
                 for elem in getattr(pipeline, fd)[i]:
                     calfields.add(elem)
+            output_fields = calfields
             target_ls = [','.join(calfields)]
         # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
             target_ls = pipeline.target[i]
+            output_fields = [x.strip() for x in str(target_ls[0]).split(',')]
             # repeat the from-ms once per target, if not splitting from the target MS
             if not from_target:
                 from_mslist = from_mslist * len(target_ls)
 
+        dcol = config['split_field']['col']
+        
         # if these are set to not None below, this means OTF is enabled and a valid library is to be applied
         polcal_lib = crosscal_lib = None
+        pcaltablelist = pgainfieldlist = pinterplist = pcalwtlist = papplyfield = []
 
         if pipeline.enable_task(config['split_field'], 'otfcal'):
-            caltablelist, gainfieldlist, interplist, calwtlist, applyfield = [], [], [], [], []
-            pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield = [], [], [], [], []
-            dcol = config['split_field']['col']
             if dcol != 'corrected':
                 caracal.log.warning(f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
                 dcol = 'corrected'
-
-            # use existing calibration library if user gives one
-            if config['split_field']['otfcal']['callib']:
-                crosscal_lib = 'caltables/callibs/{}'.format(config['split_field']['otfcal']['callib'])
-                if not os.path.exists(os.path.join(pipeline.output, crosscal_lib)):
-                    raise IOError(
-                        "Callib file {0:s} does not exist. Please check that it is where it should be.".format(crosscal_lib))
-
-            # write calibration library file for OTF cal
-            elif config['split_field']['otfcal']['label_cal']:
-                ccalprefix = '{0:s}-{1:s}'.format(prefix_msbase, config['split_field']['otfcal']['label_cal'])
-                crosscal_lib = 'caltables/callibs/callib_{0:s}.txt'.format(ccalprefix)
-
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                       'callib_{0:s}.json'.format(ccalprefix))) as f:
-                    ccallib_dict = json.load(f)
-
-                for applyme in ccallib_dict:
-                    if 'field' not in ccallib_dict[applyme] or ccallib_dict[applyme]['field'] == '':
-                        caltablelist.append(ccallib_dict[applyme]['caltable'])
-                        gainfieldlist.append(ccallib_dict[applyme]['fldmap'])
-                        interplist.append(ccallib_dict[applyme]['interp'])
-                        calwtlist.append(False)
-                        applyfield.append('')
-                    else:
-                        pfield = [x.strip() for x in ccallib_dict[applyme]['field'].split(',')]
-                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
-                        tmp_field = [x for x in tfield if x in pfield]
-                        if tmp_field:
-                            caltablelist.append(ccallib_dict[applyme]['caltable'])
-                            gainfieldlist.append(ccallib_dict[applyme]['fldmap'])
-                            interplist.append(ccallib_dict[applyme]['interp'])
-                            calwtlist.append(False)
-                            applyfield.append(",".join(tmp_field))
-
-                with open(os.path.join(pipeline.output, crosscal_lib), 'w') as stdw:
-                    for j in range(len(caltablelist)):
-                        stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                            stimela.recipe.CONT_IO["output"], 'caltables', caltablelist[j]))
-                        if bool(calwtlist[j]):
-                            stdw.write(' calwt=True')
-                        else:
-                            stdw.write(' calwt=False')
-                        stdw.write(' tinterp=\'' + str(interplist[j]) + '\'')
-                        stdw.write(' finterp=\'linear\'')
-                        stdw.write(' fldmap=\'' + str(gainfieldlist[j]) + '\'')
-                        stdw.write(' field=\'' + str(applyfield[j]) + '\'')
-                        stdw.write(' spwmap=0\n')
-
+            crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = \
+                resolve_calibration_library(pipeline, prefix_msbase, config['split_field']['otfcal'], 
+                                            'callib', 'label_cal', output_fields)
+            if crosscal_lib:
+                caracal.log.info(f"applying OTF cross-cal from {os.path.basename(crosscal_lib)}")
             else:
-                caracal.log.info("OTF enabled but no crosscal lib specified: cross-calibration will not be applied")
+                caracal.log.info(f"no cross-cal lib specified for OTF, ignoring")
 
-            # use existing calibration library if user gives one
-            if config['split_field']['otfcal']['pol_callib']:
-                polcal_callib = 'caltables/callibs/{}'.format(config['split_field']['otfcal']['pol_callib'])
-                if not os.path.exists(os.path.join(pipeline.output, polcal_callib)):
-                    raise IOError(
-                        "Callib file {0:s} does not exist. Please check that it is where it should be.".format(polcal_callib))
-                if not os.path.exists(os.path.join('{}/callibs'.format(pipeline.caltables), '{0:s}.json'.format(
-                        config['split_field']['otfcal']['pol_callib'][:-4]))):
-                    raise IOError("json version of pol_callib file does not exist. Please provide it.")
-
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                       '{0:s}.json'.format(config['split_field']['otfcal']['pol_callib'][:-4]))) as f:
-                    pcallib_dict = json.load(f)
-
-                for applyme in pcallib_dict:
-                    if 'field' not in pcallib_dict[applyme] or pcallib_dict[applyme]['field'] == '':
-                        pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                        pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                        pinterplist.append(pcallib_dict[applyme]['interp'])
-                        pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
-                        papplyfield.append('')
-                    else:
-                        pfield = [x.strip() for x in pcallib_dict[applyme]['field'].split(',')]
-                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
-                        tmp_field = [x for x in tfield if x in pfield]
-                        if tmp_field:
-                            pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                            pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                            pinterplist.append(pcallib_dict[applyme]['interp'])
-                            pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
-                            papplyfield.append(",".join(tmp_field))
-
-            # write calibration library file for OTF cal
-            elif config['split_field']['otfcal']['label_pcal']:
-                pcalprefix = '{0:s}-{1:s}'.format(prefix_msbase, config['split_field']['otfcal']['label_pcal'])
-                polcal_callib = 'caltables/callibs/callib_{0:s}.txt'.format(pcalprefix)
-
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                       'callib_{0:s}.json'.format(pcalprefix))) as f:
-                    pcallib_dict = json.load(f)
-
-                for applyme in pcallib_dict:
-                    if 'field' not in pcallib_dict[applyme] or pcallib_dict[applyme]['field'] == '':
-                        pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                        pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                        pinterplist.append(pcallib_dict[applyme]['interp'])
-                        pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
-                        papplyfield.append('')
-                    else:
-                        pfield = [x.strip() for x in pcallib_dict[applyme]['field'].split(',')]
-                        tfield = [x.strip() for x in str(target_ls[0]).split(',')]
-                        tmp_field = [x for x in tfield if x in pfield]
-                        if tmp_field:
-                            pcaltablelist.append(pcallib_dict[applyme]['caltable'])
-                            pgainfieldlist.append(pcallib_dict[applyme]['fldmap'])
-                            pinterplist.append(pcallib_dict[applyme]['interp'])
-                            pcalwtlist.append(bool(pcallib_dict[applyme]['calwt']))
-                            papplyfield.append(",".join(tmp_field))
-
-                with open(os.path.join(pipeline.output, polcal_callib), 'w') as stdw:
-                    for j in range(len(pcaltablelist)):
-                        stdw.write('caltable="{0:s}/{1:s}/{2:s}"'.format(
-                            stimela.recipe.CONT_IO["output"], 'caltables', pcaltablelist[j]))
-                        if bool(pcalwtlist[j]):
-                            stdw.write(' calwt=True')
-                        else:
-                            stdw.write(' calwt=False')
-                        stdw.write(' tinterp=\'' + str(pinterplist[j]) + '\'')
-                        stdw.write(' finterp=\'linear\'')
-                        stdw.write(' fldmap=\'' + str(pgainfieldlist[j]) + '\'')
-                        stdw.write(' field=\'' + str(papplyfield[j]) + '\'')
-                        stdw.write(' spwmap=0\n')
-
+            # load/export if specified -- otherwise will be empty lists. Also converts to full filename.
+            polcal_lib, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield) = \
+                resolve_calibration_library(pipeline, prefix_msbase, config['split_field']['otfcal'], 
+                                            'pol_callib', 'label_pcal', output_fields)
+            if polcal_lib:
+                caracal.log.info(f"applying OTF polcal from {os.path.basename(polcal_lib)}")
             else:
-                caracal.log.info("OTF enabled but no polcal lib specified: polarization calibration will not be applied")
+                caracal.log.info(f"no polcal lib specified for OTF, ignoring")
 
-        else:
-            dcol = config['split_field']['col']
 
         for target_iter, (target, from_ms, to_ms) in enumerate(zip(target_ls, from_mslist, to_mslist)):
             # Rewind flags
@@ -291,7 +181,7 @@ def worker(pipeline, recipe, config):
                 # If the output of this run of mstransform exists, delete it first
                 remove_output_products((to_ms, tmp_ms, flagv, tmpflagv, summary_file, obsinfo_file),
                                        directory=pipeline.msdir, log=log)
-                if polcal_lib is None:
+                if not polcal_lib:
                     recipe.add('cab/casa_mstransform', step, {
                                     "vis": from_ms if label_in else from_ms + ":input",
                                     "outputvis": to_ms,
@@ -305,7 +195,7 @@ def worker(pipeline, recipe, config):
                                     "usewtspectrum": config['split_field']['create_specweights'],
                                     "field": target,
                                     "keepflags": True,
-                                    "docallib": crosscal_lib is not None,
+                                    "docallib": bool(crosscal_lib),
                                     "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
                                 },
                                input=pipeline.input if label_in else pipeline.rawdatadir,
@@ -326,7 +216,7 @@ def worker(pipeline, recipe, config):
                                     "usewtspectrum": config['split_field']['create_specweights'],
                                     "field": target,
                                     "keepflags": True,
-                                    "docallib": crosscal_lib is not None,
+                                    "docallib": bool(crosscal_lib),
                                     "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
                                 },
                                 input=pipeline.input if label_in else pipeline.rawdatadir,

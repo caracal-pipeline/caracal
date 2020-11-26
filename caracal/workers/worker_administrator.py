@@ -1,4 +1,5 @@
 # -*- coding: future_fstrings -*-
+import yaml
 import caracal
 from caracal import log, pckgdir, notebooks
 import sys
@@ -242,6 +243,29 @@ class worker_administrator(object):
         # collect into flat list of MSs
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))
         return list(target_msfiles.keys()), target_ms_ls, target_msfiles
+        
+    def get_callib_name(self, name, ext="yml"):
+        """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
+        name0, ext0 = os.path.splitext(name)
+        if not ext0 or ext0[1:] != ext:
+            name = f"{name0}.{ext}"
+        if not name.startswith("callib-"):
+            name = f"callib-{name}"
+        return os.path.join(self.caltables, name)
+
+    def load_callib(self, name):
+        """Loads calibration library specified by name""" 
+        filename = self.get_callib_name(name)
+        if not os.path.exists(filename):
+            raise IOError(f"Calibration library {filename} doesn't exist")
+        with open(filename, 'r') as f:
+            return ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+
+    def save_callib(self, caldict, name):
+        """Dumps caldict to calibration library specified by name"""
+        with open(self.get_callib_name(name), 'w') as f:
+            ruamel.yaml.dump(caldict, f, ruamel.yaml.RoundTripDumper)
+
 
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""

@@ -1,4 +1,5 @@
 # -*- coding: future_fstrings -*-
+from collections import OrderedDict
 import sys
 import os
 import caracal.dispatch_crew.utils as utils
@@ -7,6 +8,7 @@ import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_caltabs as manGtabs
 from caracal.workers.utils import manage_antennas as manants
+from caracal.workers.utils.callibs import add_callib_recipe
 import copy
 import re
 import json
@@ -633,58 +635,26 @@ def worker(pipeline, recipe, config):
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
                                 overwrite=config['overwrite_flagvers'])
 
+        applycal_recipes = OrderedDict()
         if no_secondary:
             interps = primary["interps"]
             gaintables = primary["gaintables"]
-            gt_final, itp_final, fd_final = get_caltab_final(primary_order, copy.deepcopy(gaintables), interps,
-                                                             "nearest", "target")
-            app_final = ['' for id in range(len(gt_final))]
+            for gt, itp, fd in zip(*get_caltab_final(primary_order, primary["gaintables"], primary["interps"], 
+                                                        "nearest", "target")):
+                add_callib_recipe(applycal_recipes, gt, itp, fd, '')
         else:
-            interps = primary["interps"]
-            gaintables = primary["gaintables"]
-            gt_final1, itp_final1, fd_final1 = get_caltab_final(primary_order, copy.deepcopy(gaintables), interps,
-                                                                "nearest", "target")
-            interps = secondary["interps"]
-            gaintables = secondary["gaintables"]
-            gt_final2, itp_final2, fd_final2 = get_caltab_final(secondary_order, copy.deepcopy(gaintables), interps,
-                                                                "nearest", "target")
-            gt_final, itp_final, fd_final = gt_final2, itp_final2, fd_final2
-            app_final = ['' for id in range(len(gt_final))]
-            for idx, f in enumerate(gt_final1):
-                if f not in gt_final:
-                    gt_final.append(gt_final1[idx])
-                    itp_final.append(itp_final1[idx])
-                    fd_final.append(fd_final1[idx])
-                    app_final.append(fluxscale_field)
-            # change applyfield for F0
-            for idx, f in enumerate(gt_final2):
-                if f not in gt_final1:
-                    app_final[idx] = ",".join(set(pipeline.xcal[i] + pipeline.gcal[i] + pipeline.target[i]))
+            # make list of primary recipes that apply specifically to primary
+            for gt, itp, fd in zip(*get_caltab_final(primary_order, primary["gaintables"], primary["interps"], 
+                                                        "nearest", "target")):
+                add_callib_recipe(applycal_recipes, gt, itp, fd, fluxscale_field)
+            targets = ",".join(set(pipeline.xcal[i] + pipeline.gcal[i] + pipeline.target[i]))
+            # add recipes from secondary
+            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], 
+                                                    "nearest", "target")):
+                # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
+                add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
 
-        applycal_recipes = []
-        calmodes = []
-
-        for ix, gt in enumerate(gt_final):
-            applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp', 'field'], [gt, fd_final[ix], itp_final[ix], app_final[ix]])))
-            if '.K' in gt:
-                calmodes.append('delay_cal')
-            elif '.B' in gt:
-                calmodes.append('bp_cal')
-            elif '.F' in gt:
-                calmodes.append('transfer_fluxscale')
-            elif '.G' in gt:
-                calmodes.append('gain_cal')
-
-        callib_dir = "{}/callibs".format(
-            pipeline.caltables)
-        if not os.path.exists(callib_dir):
-            os.mkdir(callib_dir)
-
-        callib_dict = dict(zip(calmodes, applycal_recipes))
-
-        with open(os.path.join(callib_dir, f'callib_{prefix_msbase}.json'), 'w') as json_file:
-            json.dump(callib_dict, json_file)
+        pipeline.save_callib(list(applycal_recipes.values()), prefix_msbase)
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)

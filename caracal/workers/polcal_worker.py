@@ -1,5 +1,5 @@
 # -*- coding: future_fstrings -*-
-import stimela
+from collections import OrderedDict
 import pickle
 import sys
 import os
@@ -8,8 +8,7 @@ import caracal
 import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.workers.utils import manage_fields as manfields
-from caracal.workers.utils import manage_caltabs as manGtabs
+from caracal.workers.utils.callibs import resolve_calibration_library, add_callib_recipe
 import copy
 import re
 import json
@@ -318,37 +317,13 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
 
         recipe.run()
         recipe.jobs = []
-
-        applycal_recipes = []
-        calmodes = []
-
-        for ix, gt in enumerate(gaintables):
-            applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp', 'calwt', 'field'],
-                [gt, fields[ix], interps[ix], bool(calwts[ix]), applyfields[ix]])))
-            if '.Gpol1' in gt:
-                calmodes.append('xcal_gain')
-            elif '.Kcrs' in gt:
-                calmodes.append('cross_phase')
-            elif '.Xref' in gt:
-                calmodes.append('phase ref')
-            elif '.Xf' in gt:
-                calmodes.append('phase')
-            elif '.Dref' in gt:
-                calmodes.append('leakage_ref')
-            elif '.Df' in gt:
-                calmodes.append('leakage_freq')
-        callib_dir = "{}/callibs".format(pipeline.caltables)
-        if not os.path.exists(callib_dir):
-            os.mkdir(callib_dir)
-
-        callib_dict = dict(zip(calmodes, applycal_recipes))
-
-        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
-            json.dump(callib_dict, json_file)
-
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    applycal_recipes = OrderedDict()
+    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    pipeline.save_callib(list(applycal_recipes.values()), prefix)
 
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -600,35 +575,13 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    },
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
                    label="flag_leakage")
-
-        applycal_recipes = []
-        calmodes = []
-
-        for ix, gt in enumerate(gaintables):
-            applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp', 'calwt', 'field'],
-                [gt, fields[ix], interps[ix], bool(calwts[ix]), applyfields[ix]])))
-            if '.Gpol1' in gt:
-                calmodes.append('xcal_gain')
-            elif '.Kcrs' in gt:
-                calmodes.append('cross_phase')
-            elif '.Xref' in gt:
-                calmodes.append('phase ref')
-            elif '.Xf' in gt:
-                calmodes.append('phase')
-            elif '.Df0gen' in gt:
-                calmodes.append('leakage')
-        callib_dir = "{}/callibs".format(pipeline.caltables)
-        if not os.path.exists(callib_dir):
-            os.mkdir(callib_dir)
-
-        callib_dict = dict(zip(calmodes, applycal_recipes))
-
-        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
-            json.dump(callib_dict, json_file)
-
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    applycal_recipes = OrderedDict()
+    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    pipeline.save_callib(list(applycal_recipes.values()), prefix)
 
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -955,34 +908,14 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
         recipe.run()
         recipe.jobs = []
 
-        applycal_recipes = []
-        calmodes = []
-
-        for ix, gt in enumerate(gaintables):
-            applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp', 'calwt', 'field'],
-                [gt, fields[ix], interps[ix], bool(calwts[ix]), applyfields[ix]])))
-            if '.Gpol2' in gt:
-                calmodes.append('xcal_gain')
-            elif '.Gxyamp' in gt:
-                calmodes.append('cross_gain')
-            elif '.Kcrs' in gt:
-                calmodes.append('cross_phase')
-            elif '.Xfparang' in gt:
-                calmodes.append('phase')
-            elif '.Df0gen' in gt:
-                calmodes.append('leakage')
-        callib_dir = "{}/callibs".format(pipeline.caltables)
-        if not os.path.exists(callib_dir):
-            os.mkdir(callib_dir)
-
-        callib_dict = dict(zip(calmodes, applycal_recipes))
-
-        with open(os.path.join(callib_dir, f'callib_{prefix}.json'), 'w') as json_file:
-            json.dump(callib_dict, json_file)
-
     else:
         caracal.log.info("Reusing existing tables as requested")
+
+    applycal_recipes = OrderedDict()
+    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    pipeline.save_callib(list(applycal_recipes.values()), prefix)
+
 
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -1089,56 +1022,11 @@ def worker(pipeline, recipe, config):
 
         # check if cross_callib needs to be applied
         if config['otfcal']:
-            caltablelist, gainfieldlist, interplist, calwtlist, applylist = [], [], [], [], []
-            if config['otfcal']['callib']:
-                callib = 'caltables/callibs/{}'.format(config['otfcal']['callib'])
-                if not os.path.exists(os.path.join(pipeline.output, callib)):
-                    raise IOError(
-                        "Callib file {0:s} does not exist. Please check that it is where it should be.".format(callib))
-                if not os.path.exists(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                                   '{0:s}.json'.format(config['otfcal']['callib'][:-4]))):
-                    raise IOError("json version of callib file does not exist. Please provide it.")
-
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                       '{0:s}.json'.format(config['otfcal']['callib'][:-4]))) as f:
-                    callib_dict = json.load(f)
-
-                for applyme in callib_dict:
-                    caltablelist.append(callib_dict[applyme]['caltable'])
-                    gainfieldlist.append(callib_dict[applyme]['fldmap'])
-                    interplist.append(callib_dict[applyme]['interp'])
-                    if 'calwt' in callib_dict[applyme]:
-                        calwtlist.append(bool(callib_dict[applyme]['calwt']))
-                    else:
-                        calwtlist.append(bool(False))
-                    if 'field' in callib_dict[applyme]:
-                        applylist.append(callib_dict[applyme]['field'])
-                    else:
-                        applylist.append('')
-
-            # write calibration library file for OTF cal
-            elif config['otfcal']['label_cal']:
-                calprefix = '{0:s}-{1:s}'.format(prefix_msbase, config['otfcal']['label_cal'])
-
-                with open(os.path.join('{}/callibs'.format(pipeline.caltables),
-                                       'callib_{0:s}.json'.format(calprefix))) as f:
-                    callib_dict = json.load(f)
-
-                for applyme in callib_dict:
-                    caltablelist.append(callib_dict[applyme]['caltable'])
-                    gainfieldlist.append(callib_dict[applyme]['fldmap'])
-                    interplist.append(callib_dict[applyme]['interp'])
-                    if 'calwt' in callib_dict[applyme]:
-                        calwtlist.append(bool(callib_dict[applyme]['calwt']))
-                    else:
-                        calwtlist.append(bool(False))
-                    if 'field' in callib_dict[applyme]:
-                        applylist.append(callib_dict[applyme]['field'])
-                    else:
-                        applylist.append('')
-
-            else:
-                caltablelist, gainfieldlist, interplist, calwtlist, applylist = [], [], [], [], []
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                resolve_calibration_library(pipeline, prefix_msbase, config['otfcal'], 'callib', 'label_cal')
+        else:
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                None, ([],)*5
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if float(config['feed_angle_rotation']) != '':

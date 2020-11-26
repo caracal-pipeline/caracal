@@ -562,30 +562,31 @@ def worker(pipeline, recipe, config):
                 direct_shadems(pipeline, recipe, shade_cfg)
 
             # the older plots
-            for axes in plot_axes:
-                if pipeline.enable_task(config, axes):
-                    del plot_axes[axes]["enable"]
-                else:
-                    continue
+            if plotter and plotter != "none":
+                for axes in plot_axes:
+                    if pipeline.enable_task(config, axes):
+                        del plot_axes[axes]["enable"]
+                    else:
+                        continue
 
-                plot_args = get_xy(axes)
+                    plot_args = get_xy(axes)
 
-                for fname, ftype in fields.items():
-                    plot_args.update({
-                        "ms": ms,
-                        "data": check_data(plot_axes[axes].get("col")),
-                        "corr": corrs,
-                        "iterate": "corr",
-                        # "colour": "scan",
-                        "num_cores": plotter_params.num_cores,
-                        "mem_limit": plotter_params.mem_limit,
-                        "uvrange": plotter_params.uvrange,
-                        "field": fname,
-                        "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
-                        "output_dir": output_dir,
-                        "step":  f"plot-{axes}-{iobs}-{ftype[0]}",
-                        "label": label,
-                        **plot_axes[axes]})
+                    for fname, ftype in fields.items():
+                        plot_args.update({
+                            "ms": ms,
+                            "data": check_data(plot_axes[axes].get("col")),
+                            "corr": corrs,
+                            "iterate": "corr",
+                            # "colour": "scan",
+                            "num_cores": plotter_params.num_cores,
+                            "mem_limit": plotter_params.mem_limit,
+                            "uvrange": plotter_params.uvrange,
+                            "field": fname,
+                            "output": f"{label}-{ms_base}-{ftype[0]}-{fname}-{axes}",
+                            "output_dir": output_dir,
+                            "step":  f"plot-{axes}-{iobs}-{ftype[0]}",
+                            "label": label,
+                            **plot_axes[axes]})
 
-                    globals()[plotter](pipeline, recipe, plot_args,
-                                       extras=None)
+                        globals()[plotter](pipeline, recipe, plot_args,
+                                        extras=None)

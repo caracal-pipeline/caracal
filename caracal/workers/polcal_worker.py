@@ -321,8 +321,8 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
         caracal.log.info("Reusing existing tables as requested")
 
     applycal_recipes = OrderedDict()
-    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
     pipeline.save_callib(list(applycal_recipes.values()), prefix)
 
     if config['plotgains']:
@@ -579,8 +579,8 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
         caracal.log.info("Reusing existing tables as requested")
 
     applycal_recipes = OrderedDict()
-    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
     pipeline.save_callib(list(applycal_recipes.values()), prefix)
 
     if config['plotgains']:
@@ -912,8 +912,8 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
         caracal.log.info("Reusing existing tables as requested")
 
     applycal_recipes = OrderedDict()
-    for gt, fldmap, interp, calwt, field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, gt, interp, fldmap, calwt=calwt, field=field)
+    for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
+        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
     pipeline.save_callib(list(applycal_recipes.values()), prefix)
 
 

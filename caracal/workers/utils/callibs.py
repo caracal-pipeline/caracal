@@ -28,7 +28,7 @@ def add_callib_recipe(recipes, gt, interp, fldmap, field='', calwt=False):
 
 def resolve_calibration_library(pipeline, msprefix, config, cfg_callib, cfg_prefix, output_fields=None):
     """Unified method to export a dict into a .txt library corresponding to the yml file"""
-    cal_lists = ([],)*5         # init 5 empty lists for output values
+    cal_lists = [], [], [], [], []         # init 5 empty lists for output values
 
     # get name from callib name and/or from prefix
     cal_lib = config[cfg_callib]

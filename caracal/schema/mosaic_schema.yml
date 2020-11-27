@@ -16,7 +16,7 @@ mapping:
         required: true
         example: 'continuum'
       target_images:
-        desc: List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the working directory.
+        desc: List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the current working directory. These images/cubes MUST be located within (sub-directories of) the current working directory.
         seq:
           - type: str
         required: false

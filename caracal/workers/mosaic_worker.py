@@ -308,33 +308,28 @@ def worker(pipeline, recipe, config):
     caracal.log.info(
         'Now creating symlinks to images and beams, in case they are distributed across multiple subdirectories')
     # To get the symlinks created in the correct directory
-    symlinkdir = pipeline.continuum if specified_mosaictype == 'continuum' else pipeline.cubes
-    symlinktrick = '/'.join(['..' for ss in symlinkdir.split('/')])
-    os.chdir(symlinkdir)
+    input_directory = pipeline.continuum if specified_mosaictype == 'continuum' else pipeline.cubes
+    os.chdir(input_directory)
 
     # Empty list to add filenames to, as we are not to pass 'image_1', etc, to the recipe
     image_filenames = []
 
     # Start by assuming that 'image' is of the form 'image_1/image_filename'
     for specified_image in specified_images:
-
         split_imagename = specified_image.split('/')
         subdirectory = '/'.join(split_imagename[:-1])
         image_filename = split_imagename[-1]
         image_filenames.append(image_filename)
+        specified_image = specified_image.replace(input_directory,'')
+        if specified_image[0] == '/':
+            specified_image = specified_image[1:]
 
-        #symlink_for_image_command = 'ln -sf {0:s}/{1:s} {2:s}/{3:s}'.format(symlinktrick,specified_image,symlinkdir,image_filename)
-        symlink_for_image_command = 'ln -sf {1:s} {3:s}'.format(symlinktrick,specified_image,symlinkdir,image_filename)
-        caracal.log.info(symlink_for_image_command)
+        symlink_for_image_command = 'ln -sf {0:s} {1:s}'.format(specified_image,image_filename)
         os.system(symlink_for_image_command)
-
-        # Also need a symlink for the corresponding pb file
         specified_beam = specified_image.replace('image.fits', 'pb.fits')
         beam_filename = image_filename.replace('image.fits', 'pb.fits')
 
-        #symlink_for_beam_command = 'ln -sf {0:s}/{1:s} {2:s}/{3:s}'.format(symlinktrick,specified_beam,symlinkdir,beam_filename)
-        symlink_for_beam_command = 'ln -sf {1:s} {3:s}'.format(symlinktrick,specified_beam,symlinkdir,beam_filename)
-        caracal.log.info(symlink_for_beam_command)
+        symlink_for_beam_command = 'ln -sf {0:s} {1:s}'.format(specified_beam,beam_filename)
         os.system(symlink_for_beam_command)
 
     # To get back to where we were before symlink creation
@@ -349,10 +344,6 @@ def worker(pipeline, recipe, config):
     # so now ready to add montage_mosaic to the caracal recipe
 
     if pipeline.enable_task(config, 'domontage'):
-
-        caracal.log.info(symlinkdir)
-        caracal.log.info(image_filenames)
-
         recipe.add('cab/mosaicsteward', 'mosaic-steward',
                    {
                        "mosaic-type": specified_mosaictype,
@@ -361,7 +352,7 @@ def worker(pipeline, recipe, config):
                        "name": mosaic_prefix,
                        "target-images": image_filenames,
                    },
-                   input=symlinkdir,
+                   input=input_directory,
                    output=pipeline.mosaics,
                    label='MosaicSteward:: Re-gridding {0:s} images before mosaicking them. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
 
@@ -374,6 +365,6 @@ def worker(pipeline, recipe, config):
                        "name": mosaic_prefix,
                        "target-images": image_filenames,
                    },
-                   input=symlinkdir,
+                   input=input_directory,
                    output=pipeline.mosaics,
                    label='MosaicSteward:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))

@@ -320,7 +320,11 @@ def worker(pipeline, recipe, config):
         subdirectory = '/'.join(split_imagename[:-1])
         image_filename = split_imagename[-1]
         image_filenames.append(image_filename)
-        specified_image = specified_image.replace(input_directory,'')
+
+        if not specified_image.split(input_directory)[0]:
+            specified_image = specified_image.replace(input_directory,'')
+        else:
+            specified_image = '{0:s}/{1:s}'.format('/'.join(['..' for ss in input_directory.split('/')]),specified_image)
         if specified_image[0] == '/':
             specified_image = specified_image[1:]
 
@@ -342,6 +346,9 @@ def worker(pipeline, recipe, config):
 
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the caracal recipe
+
+    image_filenames = ['{0:s}/{1:s}'.format(input_directory,ff) for ff in image_filenames]
+    input_directory = '.'
 
     if pipeline.enable_task(config, 'domontage'):
         recipe.add('cab/mosaicsteward', 'mosaic-steward',

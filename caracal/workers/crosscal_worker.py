@@ -8,7 +8,7 @@ import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_caltabs as manGtabs
 from caracal.workers.utils import manage_antennas as manants
-from caracal.workers.utils.callibs import add_callib_recipe
+from caracal.workers.utils import callibs 
 import copy
 import re
 import json
@@ -635,26 +635,23 @@ def worker(pipeline, recipe, config):
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
                                 overwrite=config['overwrite_flagvers'])
 
-        applycal_recipes = OrderedDict()
+        applycal_recipes = callibs.new_callib()
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], "nearest", "target")
         if no_secondary:
-            interps = primary["interps"]
-            gaintables = primary["gaintables"]
-            for gt, itp, fd in zip(*get_caltab_final(primary_order, primary["gaintables"], primary["interps"], 
-                                                        "nearest", "target")):
-                add_callib_recipe(applycal_recipes, gt, itp, fd, '')
+            for gt, itp, fd in zip(*primary_tables):
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
         else:
-            # make list of primary recipes that apply specifically to primary
-            for gt, itp, fd in zip(*get_caltab_final(primary_order, primary["gaintables"], primary["interps"], 
-                                                        "nearest", "target")):
-                add_callib_recipe(applycal_recipes, gt, itp, fd, fluxscale_field)
-            targets = ",".join(set(pipeline.xcal[i] + pipeline.gcal[i] + pipeline.target[i]))
-            # add recipes from secondary
+            # default recipes from secondary
             for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], 
                                                     "nearest", "target")):
                 # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
-                add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
+                # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
+            # make list of primary recipes that apply specifically to primary
+            for gt, itp, fd in zip(*primary_tables):
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd, field=fluxscale_field)
 
-        pipeline.save_callib(list(applycal_recipes.values()), prefix_msbase)
+        pipeline.save_callib(applycal_recipes, prefix_msbase)
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)

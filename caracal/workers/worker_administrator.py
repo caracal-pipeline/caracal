@@ -244,14 +244,14 @@ class worker_administrator(object):
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))
         return list(target_msfiles.keys()), target_ms_ls, target_msfiles
         
-    def get_callib_name(self, name, ext="yml"):
+    def get_callib_name(self, name, ext="yml", extra_label=None):
         """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
-        name0, ext0 = os.path.splitext(name)
-        if not ext0 or ext0[1:] != ext:
-            name = f"{name0}.{ext}"
+        name, _ = os.path.splitext(name)
         if not name.startswith("callib-"):
             name = f"callib-{name}"
-        return os.path.join(self.caltables, name)
+        if extra_label:
+            name = f"{name}-{extra_label}"
+        return os.path.join(self.caltables, f"{name}.{ext}")
 
     def load_callib(self, name):
         """Loads calibration library specified by name""" 
@@ -261,10 +261,10 @@ class worker_administrator(object):
         with open(filename, 'r') as f:
             return ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
-    def save_callib(self, caldict, name):
+    def save_callib(self, callib, name):
         """Dumps caldict to calibration library specified by name"""
         with open(self.get_callib_name(name), 'w') as f:
-            ruamel.yaml.dump(caldict, f, ruamel.yaml.RoundTripDumper)
+            ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
 
 
     def parse_cabspec_dict(self, cabspec_seq):
@@ -417,6 +417,9 @@ class worker_administrator(object):
             if label is None:
                 # if label is not set, take filename, and split off _worker.py
                 label =  os.path.basename(worker.__file__).rsplit("_", 1)[0]
+            # if worker name has a __suffix, add that to label
+            if "__" in _name:
+                label += "__" + _name.split("__", 1)[1]
 
             recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,

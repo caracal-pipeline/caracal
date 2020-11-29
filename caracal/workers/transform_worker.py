@@ -131,8 +131,10 @@ def worker(pipeline, recipe, config):
                 caracal.log.warning(f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
                 dcol = 'corrected'
             crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = \
-                resolve_calibration_library(pipeline, prefix_msbase, config['split_field']['otfcal'], 
-                                            'callib', 'label_cal', output_fields)
+                resolve_calibration_library(pipeline, prefix_msbase, 
+                                            config['split_field']['otfcal']['callib'], 
+                                            config['split_field']['otfcal']['label_cal'], 
+                                            output_fields=output_fields)
             if crosscal_lib:
                 caracal.log.info(f"applying OTF cross-cal from {os.path.basename(crosscal_lib)}")
             else:
@@ -140,8 +142,10 @@ def worker(pipeline, recipe, config):
 
             # load/export if specified -- otherwise will be empty lists. Also converts to full filename.
             polcal_lib, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield) = \
-                resolve_calibration_library(pipeline, prefix_msbase, config['split_field']['otfcal'], 
-                                            'pol_callib', 'label_pcal', output_fields)
+                resolve_calibration_library(pipeline, prefix_msbase, 
+                                            config['split_field']['otfcal']['pol_callib'], 
+                                            config['split_field']['otfcal']['label_pcal'], 
+                                            output_fields=output_fields)
             if polcal_lib:
                 caracal.log.info(f"applying OTF polcal from {os.path.basename(polcal_lib)}")
             else:

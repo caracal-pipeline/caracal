@@ -8,7 +8,7 @@ import caracal
 import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
-from caracal.workers.utils.callibs import resolve_calibration_library, add_callib_recipe
+from caracal.workers.utils import callibs
 import copy
 import re
 import json
@@ -47,7 +47,7 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
                   prefix + '.Df']
     interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest', 'nearest']
-    fields = ['', '', '', '', '', '']
+    fields = [field, '', '', '', '', '']
     calwts = [True, False, False, False, False, False]
     applyfields = [field, '', '', '', '', '']
 
@@ -320,10 +320,10 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
     else:
         caracal.log.info("Reusing existing tables as requested")
 
-    applycal_recipes = OrderedDict()
+    applycal_recipes = callibs.new_callib()
     for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
-    pipeline.save_callib(list(applycal_recipes.values()), prefix)
+        callibs.add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
+    pipeline.save_callib(applycal_recipes, prefix)
 
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -379,7 +379,7 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
 
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
     interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest']
-    fields = ['', '', '', '', '']
+    fields = [field, '', '', '', '']
     calwts = [True, False, False, False, False]
     applyfields = [field, '', '', '', '']
 
@@ -578,10 +578,10 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
     else:
         caracal.log.info("Reusing existing tables as requested")
 
-    applycal_recipes = OrderedDict()
+    applycal_recipes = callibs.new_callib()
     for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
-    pipeline.save_callib(list(applycal_recipes.values()), prefix)
+        callibs.add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
+    pipeline.save_callib(applycal_recipes, prefix)
 
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -911,10 +911,10 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
     else:
         caracal.log.info("Reusing existing tables as requested")
 
-    applycal_recipes = OrderedDict()
+    applycal_recipes = callibs.new_callib()
     for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
-        add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
-    pipeline.save_callib(list(applycal_recipes.values()), prefix)
+        callibs.add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
+    pipeline.save_callib(applycal_recipes, prefix)
 
 
     if config['plotgains']:
@@ -1023,7 +1023,9 @@ def worker(pipeline, recipe, config):
         # check if cross_callib needs to be applied
         if config['otfcal']:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
-                resolve_calibration_library(pipeline, prefix_msbase, config['otfcal'], 'callib', 'label_cal')
+                callibs.resolve_calibration_library(pipeline, prefix_msbase, 
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'])
         else:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 None, ([],)*5

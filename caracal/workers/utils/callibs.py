@@ -85,8 +85,8 @@ def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, worker_l
                 specific_fields = {}
                 default_fields = {""}  # this will turn into '' post-join below, which CASA recognizes as default
             else:
-                specific_fields = output_fields.intersection(cal_fields)
-                default_fields  = output_fields.difference(cal_fields)
+                specific_fields = set(output_fields).intersection(cal_fields)
+                default_fields  = set(output_fields).difference(cal_fields)
             # go through all tables, skip the ones that don't apply
             for field, entry in cal_entries.items():
                 if field == "default":

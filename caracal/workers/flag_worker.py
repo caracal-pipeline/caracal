@@ -520,8 +520,7 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob("{0:s}/log-flag-{1:s}-*.txt".format(pipeline.logs,
-                    step))[0]
+                summary_log = glob.glob(f"{pipeline.logs}/log-{wname}-{step}-*.txt")[0]
                 json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
                                                               prefix_msbase, wname)
                 manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)

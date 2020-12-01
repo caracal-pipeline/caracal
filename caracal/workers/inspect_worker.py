@@ -628,5 +628,5 @@ def worker(pipeline, recipe, config):
                             "label": label,
                             **plot_axes[axes]})
 
-                        globals()[plotter](pipeline, recipe, plot_args,
-                                        extras=None)
+                        globals()[plotter](pipeline, recipe, plot_args, extras=None)
+

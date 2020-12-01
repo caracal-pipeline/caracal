@@ -130,7 +130,7 @@ def worker(pipeline, recipe, config):
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             #    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
             #elif pbtype == 'mauchian':
-            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case 
+            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
                            1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
             fits.writeto(filename.replace('image.fits','pb.fits'),
@@ -138,6 +138,37 @@ def worker(pipeline, recipe, config):
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
                 filename.replace('image.fits', 'pb.fits')))
 
+
+    def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
+        cdelt3s = []
+        for ff in image_filenames:
+            cc = fits.getval(ff, 'cdelt3')
+            if cc not in cdelt3s:
+                cdelt3s.append(cc)
+        if len(cdelt3s)>1:
+            if nrdecimals:
+                caracal.log.warn('Not all input cubes have the same CDELT3. Values found:')
+                caracal.log.warn('    {0:}'.format(cdelt3s))
+                caracal.log.warn('Rounding up the CDELT3 values to {0:d} decimals:'.format(nrdecimals))
+                cdelt3s_r = []
+                for cc in cdelt3s:
+                    if round(cc,nrdecimals) not in cdelt3s_r:
+                        cdelt3s_r.append(round(cc,nrdecimals))
+                caracal.log.warn('    {0:}'.format(cdelt3s_r))
+                if len(cdelt3s_r)>1:
+                    caracal.log.error('Rounding was insufficient, cannot proceed.')
+                    raise caracal.BadDataError('Inconsistent CDELT3 values in input cubes.')
+                else:
+                    caracal.log.warn('Changing CDELT3 of all input image.fits and pb.fits cubes to {0:}'.format(cdelt3s_r[0]))
+                    for ff in image_filenames:
+                        fits.setval(ff, 'cdelt3', value=cdelt3s_r[0])
+                        fits.setval(ff.replace('image.fits','pb.fits'), 'cdelt3', value=cdelt3s_r[0])
+            else:
+                caracal.log.error('Not all input cubes have the same CDELT3. Values found:')
+                caracal.log.error('    {0:}'.format(cdelt3s))
+                caracal.log.error('To proceed Please set mosaic:round_cdelt3 to round the CDELT3 values to an adequate number of decimals.')
+                caracal.log.error('This will overwrite CDELT3 in the input cubes.')
+                raise caracal.BadDataError('Inconsistent CDELT3 values in input cubes.')
 
 
     ##########################################
@@ -349,6 +380,19 @@ def worker(pipeline, recipe, config):
 
     image_filenames = ['{0:s}/{1:s}'.format(input_directory,ff) for ff in image_filenames]
     input_directory = '.'
+
+    if specified_mosaictype == 'spectral':
+        recipe.add(consistent_cdelt3, 'cdelt3_check',
+                   {
+                       "image_filenames": image_filenames,
+                       "input_directory": input_directory,
+                       "nrdecimals":        config['round_cdelt3'],
+                   },
+                   input=input_directory,
+                   output=pipeline.mosaics,
+                   label='cdelt3_check')
+        recipe.run()
+        recipe.jobs = []
 
     if pipeline.enable_task(config, 'domontage'):
         recipe.add('cab/mosaicsteward', 'mosaic-steward',

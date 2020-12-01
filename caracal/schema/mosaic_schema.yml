@@ -71,6 +71,11 @@ mapping:
         type: float
         required: false
         example: '1383685546.875'
+      round_cdelt3:
+        desc: If mosaic_type is "spectral", round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value).
+        type: int
+        required: false
+        example: '0'
       report:
         type: bool
         required: false

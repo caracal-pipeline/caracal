@@ -45,7 +45,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
 
     cal_entries[field] = entry 
 
-def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, worker_label=None, output_fields=None):
+def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_fields=None):
     """
     Reads callib specified by configuration. Figures out how to apply it to the given set of output fields.
     Writes a CASA-compatible callib.txt file describing same.

@@ -37,9 +37,9 @@ def scan_length(msinfo, field):
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
 
-def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
-                         gainfieldlist,
-                         interplist, calwtlist, applylist):
+def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
+                         gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
+                         leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
@@ -64,25 +64,6 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                 docal = False
 
     if not docal:
-        xcal_caltablelist, xcal_gainfieldlist, xcal_interplist = [], [], []
-        if caltablelist:
-            for idx, f in enumerate(caltablelist):
-                afld = [x.strip() for x in applylist[idx].split(',')]
-                if applylist[idx] == '' or field in afld:
-                    xcal_caltablelist.append(caltablelist[idx])
-                    xcal_gainfieldlist.append(gainfieldlist[idx])
-                    xcal_interplist.append(interplist[idx])
-
-        leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist = [], [], [], []
-        if caltablelist:
-            for idx, f in enumerate(caltablelist):
-                afld = [x.strip() for x in applylist[idx].split(',')]
-                if applylist[idx] == '' or leak_field in afld:
-                    leak_caltablelist.append(caltablelist[idx])
-                    leak_gainfieldlist.append(gainfieldlist[idx])
-                    leak_interplist.append(interplist[idx])
-                    leak_calwtlist.append(bool(calwtlist[idx]))
-
         if pipeline.enable_task(config, 'set_model_leakage'):
             if config['set_model_leakage']['no_verify']:
                 opts = {
@@ -164,11 +145,11 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
             "calmode": "p",
             "spw": '',
         }
-        if xcal_caltablelist:
+        if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in xcal_caltablelist],
-                "gainfield": xcal_gainfieldlist,
-                "interp": xcal_interplist,
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,
+                "interp": interplist,
             })
 
         # Phaseup diagonal of crosshand cal if available
@@ -177,9 +158,9 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1']
-        tmp_field = xcal_gainfieldlist + ['']
-        tmp_interp = xcal_interplist + ['linear']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal", "crosshand_delay",
                    {
                        "vis": msname,
@@ -201,9 +182,9 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
 
         # Solve for the absolute angle (phase) between the feeds
         # Solve first in a subband free of RFIs and then over the whole bw
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
-        tmp_field = xcal_gainfieldlist + ['', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['', '']
+        tmp_interp = interplist + ['linear', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_ref",
                    {
                        "vis": msname,
@@ -222,9 +203,9 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_ref")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
-        tmp_field = xcal_gainfieldlist + ['', '', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_freq",
                    {
                        "vis": msname,
@@ -337,26 +318,20 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
     if config['apply_pcal']:
-        all_gaintables = caltablelist + gaintables
-        all_interp = interplist + interps
-        all_fields = gainfieldlist + fields
-        all_calwts = calwtlist + calwts
-        all_apply = applylist + applyfields
-
         for ff in config["applyto"]:
-            pcal = []
-            pgain = []
-            pinter = []
-            pcalwt = []
             fld = ",".join(getattr(pipeline, ff)[i])
-            for idx, f in enumerate(all_apply):
-                afld = [x.strip() for x in f.split(',')]
-                if afld == [''] or fld in afld:
-                    if all_gaintables[idx] not in pcal:
-                        pcal.append(all_gaintables[idx])
-                        pinter.append(all_interp[idx])
-                        pgain.append(all_fields[idx])
-                        pcalwt.append(all_calwts[idx])
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist)= \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    '',
+                                                    config['label_cal'], [fld])
+            pcal = caltablelist + pcaltablelist
+            pgain = gainfieldlist + pgainfieldlist
+            pinter = interplist + pinterplist
+            pcalwt = calwtlist + pcalwtlist
             recipe.add("cab/casa_applycal", "apply_caltables_" + str(ff),
                        {
                            "vis": msname,
@@ -371,7 +346,7 @@ def xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                        label="Apply_caltables_" + str(ff))
 
 
-def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
+def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist):
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
@@ -396,15 +371,6 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                 docal = False
 
     if not docal:
-        xcal_caltablelist, xcal_gainfieldlist, xcal_interplist = [], [], []
-        if caltablelist:
-            for idx, f in enumerate(caltablelist):
-                afld = [x.strip() for x in applylist[idx].split(',')]
-                if applylist[idx] == '' or field in afld:
-                    xcal_caltablelist.append(caltablelist[idx])
-                    xcal_gainfieldlist.append(gainfieldlist[idx])
-                    xcal_interplist.append(interplist[idx])
-
         msdict = pipeline.get_msinfo(msname)
         chfr = msdict['SPW']['CHAN_FREQ']
         firstchanfreq = [ss[0] for ss in chfr]
@@ -452,11 +418,11 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
             "calmode": "ap",
             "spw": '',
         }
-        if xcal_caltablelist:
+        if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in xcal_caltablelist],
-                "gainfield": xcal_gainfieldlist,
-                "interp": xcal_interplist,
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,
+                "interp": interplist,
             })
 
         recipe.add("cab/casa_gaincal", "gain_xcal",
@@ -464,9 +430,9 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables,
                    label="gain_xcal")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1']
-        tmp_field = xcal_gainfieldlist + ['']
-        tmp_interp = xcal_interplist + ['linear']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal", "crosshand_delay",
                    {
                        "vis": msname,
@@ -486,9 +452,9 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_delay")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
-        tmp_field = xcal_gainfieldlist + ['', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['', '']
+        tmp_interp = interplist + ['linear', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_ref",
                    {
                        "vis": msname,
@@ -507,9 +473,9 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables,
                    label="crosshand_phase_ref")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
-        tmp_field = xcal_gainfieldlist + ['', '', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_freq",
                    {
                        "vis": msname,
@@ -540,9 +506,9 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
                    label="flag_phase_freq")
 
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
-        tmp_field = xcal_gainfieldlist + ['', '', '', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
+        tmp_field = gainfieldlist + ['', '', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "leakage",
                    {
                        "vis": msname,
@@ -594,26 +560,20 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
     if config['apply_pcal']:
-        all_gaintables = caltablelist + gaintables
-        all_interp = interplist + interps
-        all_fields = gainfieldlist + fields
-        all_calwts = calwtlist + calwts
-        all_apply = applylist + applyfields
-
         for ff in config["applyto"]:
-            pcal = []
-            pgain = []
-            pinter = []
-            pcalwt = []
             fld = ",".join(getattr(pipeline, ff)[i])
-            for idx, f in enumerate(all_apply):
-                afld = [x.strip() for x in f.split(',')]
-                if afld == [''] or fld in afld:
-                    if all_gaintables[idx] not in pcal:
-                        pcal.append(all_gaintables[idx])
-                        pinter.append(all_interp[idx])
-                        pgain.append(all_fields[idx])
-                        pcalwt.append(all_calwts[idx])
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    '',
+                                                    config['label_cal'], [fld])
+            pcal = caltablelist + pcaltablelist
+            pgain = gainfieldlist + pgainfieldlist
+            pinter = interplist + pinterplist
+            pcalwt = calwtlist + pcalwtlist
             recipe.add("cab/casa_applycal", "apply_caltables_" + str(ff),
                        {
                            "vis": msname,
@@ -628,7 +588,7 @@ def xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, po
                        label="Apply_caltables_" + str(ff))
 
 
-def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, caltablelist, gainfieldlist, interplist,
+def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, caltablelist, gainfieldlist, interplist,
                            calwtlist, applylist):
     ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
@@ -653,14 +613,6 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
                 docal = False
 
     if not docal:
-        xcal_caltablelist, xcal_gainfieldlist, xcal_interplist = [], [], []
-        if caltablelist:
-            for idx, f in enumerate(caltablelist):
-                afld = [x.strip() for x in applylist[idx].split(',')]
-                if applylist[idx] == '' or field in afld:
-                    xcal_caltablelist.append(caltablelist[idx])
-                    xcal_gainfieldlist.append(gainfieldlist[idx])
-                    xcal_interplist.append(interplist[idx])
         gain_opts = {
             "vis": msname,
             "caltable": prefix + '.Gpol1:output',
@@ -676,11 +628,11 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             "refantmode": 'strict',
             "smodel": ['1', '0', '0', '0'],
         }
-        if xcal_caltablelist:
+        if caltablelist:
             gain_opts.update({
-                "gaintable": ["%s:output" % ct for ct in xcal_caltablelist],
-                "gainfield": xcal_gainfieldlist,
-                "interp": xcal_interplist,
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,
+                "interp": interplist,
             })
 
         recipe.add("cab/casa_gaincal", "gain_xcal_1",
@@ -727,9 +679,9 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
         recipe.jobs = []
 
         # Kcross
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1']
-        tmp_field = xcal_gainfieldlist + ['']
-        tmp_interp = xcal_interplist + ['linear']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1']
+        tmp_field = gainfieldlist + ['']
+        tmp_interp = interplist + ['linear']
         recipe.add("cab/casa_gaincal", "crosshand_delay",
                    {
                        "vis": msname,
@@ -765,9 +717,9 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             raise RuntimeError("Cannot find S1")
 
         # Calibrate the abs phase and a better smodel for xcal, saved in prefix + '_S2_from_polcal'
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
-        tmp_field = xcal_gainfieldlist + ['', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
+        tmp_field = gainfieldlist + ['', '']
+        tmp_interp = interplist + ['linear', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_QU_fit",
                    {
                        "vis": msname,
@@ -830,11 +782,11 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             "refantmode": 'strict',
             "smodel": S2,
         }
-        if xcal_caltablelist:
+        if caltablelist:
             gain2_opts.update({
-                "gaintable": ["%s:output" % ct for ct in xcal_caltablelist],
-                "gainfield": xcal_gainfieldlist,
-                "interp": xcal_interplist,
+                "gaintable": ["%s:output" % ct for ct in caltablelist],
+                "gainfield": gainfieldlist,
+                "interp": interplist,
             })
         recipe.add("cab/casa_gaincal", "gain_xcal_2",
                    gain2_opts,
@@ -842,9 +794,9 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
                    label="gain_xcal_2")
 
         # LEAKAGE
-        tmp_gtab = xcal_caltablelist + [prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang']
-        tmp_field = xcal_gainfieldlist + ['', '', '']
-        tmp_interp = xcal_interplist + ['linear', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol2', prefix + '.Kcrs', prefix + '.Xfparang']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "leakage",
                    {
                        "vis": msname,
@@ -881,9 +833,9 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
 
         # solve for global normalized gain amp (to get X/Y ratios) on xcal (TO APPLY ON TARGET)
         # amp-only and normalized, so only X/Y amp ratios matter
-        tmp_gtab = xcal_caltablelist + [prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
-        tmp_field = xcal_gainfieldlist + ['', '', '']
-        tmp_interp = xcal_interplist + ['nearest', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_gaincal", "norm_gain_for_target",
                    {
                        "vis": msname,
@@ -927,26 +879,20 @@ def xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, 
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
     if config['apply_pcal']:
-        all_gaintables = caltablelist + gaintables
-        all_interp = interplist + interps
-        all_fields = gainfieldlist + fields
-        all_calwts = calwtlist + calwts
-        all_apply = applylist + applyfields
-
         for ff in config["applyto"]:
-            pcal = []
-            pgain = []
-            pinter = []
-            pcalwt = []
             fld = ",".join(getattr(pipeline, ff)[i])
-            for idx, f in enumerate(all_apply):
-                afld = [x.strip() for x in f.split(',')]
-                if afld == [''] or fld in afld:
-                    if all_gaintables[idx] not in pcal:
-                        pcal.append(all_gaintables[idx])
-                        pinter.append(all_interp[idx])
-                        pgain.append(all_fields[idx])
-                        pcalwt.append(all_calwts[idx])
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    '',
+                                                    config['label_cal'], [fld])
+            pcal = caltablelist + pcaltablelist
+            pgain = gainfieldlist + pgainfieldlist
+            pinter = interplist + pinterplist
+            pcalwt = calwtlist + pcalwtlist
             recipe.add("cab/casa_applycal", "apply_caltables_" + str(ff),
                        {
                            "vis": msname,
@@ -1020,14 +966,24 @@ def worker(pipeline, recipe, config):
                     [
                         'XX', 'XY', 'YX', 'YY']))
 
+
+        pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
+        leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
+
         # check if cross_callib needs to be applied
         if config['otfcal']:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase, 
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'])
+                                                    config['otfcal']['label_cal'],[pol_calib])
+            _, (leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'], [leakage_calib])
         else:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                None, ([],)*5
+            _, (leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist) = \
                 None, ([],)*5
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
@@ -1038,9 +994,6 @@ def worker(pipeline, recipe, config):
                 ang[:, 1] = numpy.deg2rad(float(config['feed_angle_rotation']))
                 t.putcol("RECEPTOR_ANGLE", ang)
                 caracal.log.info('RECEPTOR_ANGLE has been rotated by %s degrees' % config['feed_angle_rotation'])
-
-        pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
-        leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
         # save flags before and after
         if {"xcal", "gcal", "fcal", "target"}.intersection(config["applyto"]):
@@ -1113,8 +1066,9 @@ def worker(pipeline, recipe, config):
             if pol_calib in polarized_calibrators:
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                xcal_model_fcal_leak(msname, msinfo, recipe, config, pipeline, i, prefix, polarized_calibrators,
-                                     caltablelist, gainfieldlist, interplist, calwtlist, applylist)
+                xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators,
+                                     caltablelist, gainfieldlist, interplist, calwtlist, applylist,
+                                     leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
             elif not pol_calib:
                 raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?")
             else:
@@ -1129,12 +1083,12 @@ def worker(pipeline, recipe, config):
             if len(msinfo['SCAN'][str(idx)]) >= 3:
                 if config['set_model_pol']:
                     caracal.log.info("Using a known model for the polarized calibrator.")
-                    xcal_model_xcal_leak(msname, msinfo, recipe, config, pipeline, i,
+                    xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
                                          prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist,
                                          calwtlist, applylist)
                 else:
                     caracal.log.info("The model for the polarized calibrator will be derived from data.")
-                    xcal_from_pa_xcal_leak(msname, msinfo, recipe, config, pipeline, i,
+                    xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
                                            prefix, caltablelist, gainfieldlist, interplist, calwtlist, applylist)
             else:
                 raise RuntimeError(

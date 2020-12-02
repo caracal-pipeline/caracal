@@ -1,7 +1,7 @@
 from os import pipe
 import stimela
 import os.path
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 
 _MODES = dict(
     K       = "delay_cal", 
@@ -35,15 +35,24 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     mode = _MODES.get(ext, "unknown")
     cal_entries = callib.setdefault(mode, {})
     entry = dict(caltable=gt, fldmap=fldmap, interp=interp, calwt=bool(calwt))
-    # if specific field is set and we have a default entry, check that this one is different
-    if field:
-        default = cal_entries.get("default")
-        if default and all(val == default.get(key) for key, val in entry.items()):
-            return
-    else: 
-        field = "default"
-
-    cal_entries[field] = entry 
+    # field can be a single entry or a list -- check
+    if type(field) is str:
+        fields = [x.strip() for x in field.split(",")]
+    elif type(field) is None:
+        fields = [None]
+    elif isinstance(field, Iterable):
+        fields = field
+    else:
+        raise TypeError(f"invalid 'field' argument of type {type(field)}")
+    # fields is now a list, so iterate
+    for field in fields:
+        if field:
+            default = cal_entries.get("default")
+            if default and all(val == default.get(key) for key, val in entry.items()):
+                return
+        else: 
+            field = "default"
+        cal_entries[field] = entry 
 
 def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_fields=None):
     """

@@ -120,3 +120,8 @@ stimela_parameter_files
 log-*.txt
 .last*.json
 
+*~
+
+.persistent_history
+caracal/.idea
+

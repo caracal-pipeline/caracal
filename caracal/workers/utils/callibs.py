@@ -38,7 +38,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     # field can be a single entry or a list -- check
     if type(field) is str:
         fields = [x.strip() for x in field.split(",")]
-    elif type(field) is None:
+    elif field is None:
         fields = [None]
     elif isinstance(field, Iterable):
         fields = field

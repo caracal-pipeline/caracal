@@ -321,6 +321,8 @@ def plotms(pipeline, recipe, basic, extras=None):
 def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, description, extras=None):
     """Processes a list of plots, recusing into dicts"""
     for entry in plotlist:
+        if not entry:
+            continue
         # if plot is specified as a dict, its keys will override category defaults                
         if isinstance(entry, Mapping):
             entry = entry.copy()

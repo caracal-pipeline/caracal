@@ -419,3 +419,8 @@ def worker(pipeline, recipe, config):
                    input=input_directory,
                    output=pipeline.mosaics,
                    label='MosaicSteward:: Re-gridding of images and beams is assumed to be already done, so straight to mosaicking {0:s} images. For this mode, the mosaic_worker is using *pb.fits files {1:s}.'.format(specified_mosaictype, pb_origin))
+
+    for ff in ['.fits','_noise.fits','_weights.fits']:
+        fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics,mosaic_prefix,ff)
+        for hh in 'crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2'.split(','):
+            fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))

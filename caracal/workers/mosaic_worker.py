@@ -381,6 +381,16 @@ def worker(pipeline, recipe, config):
     image_filenames = ['{0:s}/{1:s}'.format(input_directory,ff) for ff in image_filenames]
     input_directory = '.'
 
+    for ff in ['.fits','_noise.fits','_weights.fits']:
+        fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics,mosaic_prefix,ff)
+        for hh in 'crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2'.split(','):
+            try:
+                fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))
+                caracal.log.info('Header key {0:s} found and converted to float in file {1:s}'.format(hh,fitsfile))
+            except:
+                caracal.log.info('Header key {0:s} not found in file {1:s}'.format(hh,fitsfile))
+    sys.exit(0)
+
     if specified_mosaictype == 'spectral':
         recipe.add(consistent_cdelt3, 'cdelt3_check',
                    {
@@ -423,4 +433,8 @@ def worker(pipeline, recipe, config):
     for ff in ['.fits','_noise.fits','_weights.fits']:
         fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics,mosaic_prefix,ff)
         for hh in 'crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2'.split(','):
-            fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))
+            try:
+                fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))
+                caracal.log.info('Header key {0:s} found and converted to float in file {1:s}'.format(hh,fitsfile))
+            except:
+                caracal.log.info('Header key {0:s} not found in file {1:s}'.format(hh,fitsfile))

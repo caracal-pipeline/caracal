@@ -423,8 +423,29 @@ def worker(pipeline, recipe, config):
     recipe.run()
     recipe.jobs = []
 
+    # Set mosaic bunit, bmaj, bmin, bpa
+    bunits,bmajs,bmins,bpas = [],[],[],[]
+    for ff in image_filenames:
+        bunits.append(fits.getval(ff,'bunit'))
+        bmajs.append(fits.getval(ff,'bmaj'))
+        bmins.append(fits.getval(ff,'bmin'))
+        bpas.append(fits.getval(ff,'bpa'))
+    if np.unique(np.array(bunits)).shape[0] == 1:
+        mosbunit = bunits[0]
+    else:
+        raise caracal.BadDataError('Inconsistent BUNIT values in input cubes. Cannot proceed')
+    mosbmaj = np.median(np.array(bmajs))
+    mosbmin = np.median(np.array(bmins))
+    mosbpa = np.median(np.array(bpas))
+    caracal.log.info('Setting BUNIT = {0:}, BMAJ = {1:}, BMIN = {2:}, BPA = {3:} in mosaic FITS headers'.format(mosbunit,mosbmaj,mosbmin,mosbpa))
+
+    # Add missing keys and convert some keys from string to float in the mosaic FITS headers
     for ff in ['.fits','_noise.fits','_weights.fits']:
         fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics,mosaic_prefix,ff)
+        fits.setval(fitsfile,'bunit',value=mosbunit)
+        fits.setval(fitsfile,'bmaj',value=mosbmaj)
+        fits.setval(fitsfile,'bmin',value=mosbmin)
+        fits.setval(fitsfile,'bpa',value=mosbpa)
         for hh in 'crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2'.split(','):
             try:
                 fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))

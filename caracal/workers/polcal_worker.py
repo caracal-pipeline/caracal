@@ -8,6 +8,7 @@ import caracal
 import yaml
 import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
+from caracal.workers.utils import manage_antennas as manants
 from caracal.workers.utils import callibs
 import copy
 import re
@@ -37,10 +38,10 @@ def scan_length(msinfo, field):
     return float(utils.field_observation_length(msinfo, field)) / len(msinfo['SCAN'][str(idx)])
 
 
-def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
+def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
                          leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
-    ref = pipeline.refant[i] or '0'
+    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
@@ -346,9 +347,9 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        label="Apply_caltables_" + str(ff))
 
 
-def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators, caltablelist,
+def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist):
-    ref = pipeline.refant[i] or '0'
+    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
 
@@ -588,9 +589,9 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        label="Apply_caltables_" + str(ff))
 
 
-def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, caltablelist, gainfieldlist, interplist,
+def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, caltablelist, gainfieldlist, interplist,
                            calwtlist, applylist):
-    ref = pipeline.refant[i] or '0'
+    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
 
@@ -959,6 +960,21 @@ def worker(pipeline, recipe, config):
         msinfo = pipeline.get_msinfo(msname)
         prefix = f"{pipeline.prefix_msbases[i]}-{label}"
 
+        fields = []
+        if pipeline.refant[i] in ['auto']:
+            refant = manants.get_refant(pipeline, recipe,
+                                                  prefix, msname, fields,
+                                                  pipeline.minbase[i],
+                                                  pipeline.maxdist[i], i)
+            if refant:
+                caracal.log.info(f"Auto selected ref antenna(s): refant")
+            else:
+                caracal.log.error("Cannot auto-select ref antenna(s). Set it manually.")
+
+        else:
+            refant = pipeline.refant[i]
+
+
         # Check if feeds are linear
         if set(list(msinfo['CORR']['CORR_TYPE'])) & {'XX', 'XY', 'YX', 'YY'} == 0:
             raise RuntimeError(
@@ -1066,7 +1082,7 @@ def worker(pipeline, recipe, config):
             if pol_calib in polarized_calibrators:
                 caracal.log.info(
                     "You decided to calibrate the polarized angle with a polarized calibrator assuming a model for the calibrator and the leakage with an unpolarized calibrator.")
-                xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, polarized_calibrators,
+                xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, refant, polarized_calibrators,
                                      caltablelist, gainfieldlist, interplist, calwtlist, applylist,
                                      leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
             elif not pol_calib:
@@ -1084,12 +1100,12 @@ def worker(pipeline, recipe, config):
                 if config['set_model_pol']:
                     caracal.log.info("Using a known model for the polarized calibrator.")
                     xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                         prefix, polarized_calibrators, caltablelist, gainfieldlist, interplist,
+                                         prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
                                          calwtlist, applylist)
                 else:
                     caracal.log.info("The model for the polarized calibrator will be derived from data.")
                     xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                           prefix, caltablelist, gainfieldlist, interplist, calwtlist, applylist)
+                                           prefix, refant, caltablelist, gainfieldlist, interplist, calwtlist, applylist)
             else:
                 raise RuntimeError(
                     "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")

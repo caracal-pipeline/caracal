@@ -43,7 +43,7 @@ def getfield_coords(info, field, db, tol=2.9E-3, tol_diff=4.8481E-6):
             else :
                print("Calibrator coordinates match within the specified tolerance.")
                return None, None, None
-        return None, None, None   
+    return None, None, None   
 
 def worker(pipeline, recipe, config):
     label = config['label_in']

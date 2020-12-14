@@ -546,7 +546,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
             plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
             if not os.path.exists(plotdir):
                 os.mkdir(plotdir)
-            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df0gen', i, 'Df0gen')
+            plotgains(recipe, pipeline, plotdir, field, prefix + '.Df0gen', i, 'Df0gen')
             recipe.run()
             recipe.jobs = []
             if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.html')):
@@ -847,7 +847,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
             plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
             if not os.path.exists(plotdir):
                 os.mkdir(plotdir)
-            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df0gen', i, 'Df0gen')
+            plotgains(recipe, pipeline, plotdir, field, prefix + '.Df0gen', i, 'Df0gen')
             recipe.run()
             recipe.jobs = []
             if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.html')):

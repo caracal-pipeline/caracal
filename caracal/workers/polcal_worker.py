@@ -282,16 +282,28 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
 
-        # Smooth solutions
-        recipe.add("cab/casa_flagdata",
-                   "flag_leakage",
+
+        if config['plotgains']:
+            plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+            if not os.path.exists(plotdir):
+                os.mkdir(plotdir)
+            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df', i, 'Df')
+            recipe.run()
+            recipe.jobs = []
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df.html')):
+                os.rename(os.path.join(plotdir, prefix + '.Df.html'),
+                          os.path.join(plotdir, prefix + '.Df_before_flag.html'))
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df.png')):
+                os.rename(os.path.join(plotdir, prefix + '.Df.png'),
+                          os.path.join(plotdir, prefix + '.Df_before_flag.png'))
+
+        # Clip solutions
+        recipe.add("cab/casa_flagdata", "flag_leakage",
                    {
                        "vis": prefix + '.Df:msfile',
-                       "mode": 'tfcrop',
-                       "ntime": '60s',
-                       "combinescans": True,
+                       "mode": 'clip',
+                       "clipminmax": [-0.6, 0.6],
                        "datacolumn": 'CPARAM',
-                       "usewindowstats": "both",
                        "flagbackup": False,
                    },
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
@@ -530,14 +542,27 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage")
 
+        if config['plotgains']:
+            plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+            if not os.path.exists(plotdir):
+                os.mkdir(plotdir)
+            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df0gen', i, 'Df0gen')
+            recipe.run()
+            recipe.jobs = []
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.html')):
+                os.rename(os.path.join(plotdir, prefix + '.Df0gen.html'),
+                          os.path.join(plotdir, prefix + '.Df0gen_before_flag.html'))
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.png')):
+                os.rename(os.path.join(plotdir, prefix + '.Df0gen.png'),
+                          os.path.join(plotdir, prefix + '.Df0gen_before_flag.png'))
+
+        # Clip solutions
         recipe.add("cab/casa_flagdata", "flag_leakage",
                    {
                        "vis": prefix + '.Df0gen:msfile',
-                       "mode": 'tfcrop',
-                       "ntime": '60s',
-                       "combinescans": True,
+                       "mode": 'clip',
+                       "clipminmax": [-0.6,0.6],
                        "datacolumn": 'CPARAM',
-                       "usewindowstats": "both",
                        "flagbackup": False,
                    },
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
@@ -818,15 +843,27 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage")
 
-        # Smooth the solutions
+        if config['plotgains']:
+            plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+            if not os.path.exists(plotdir):
+                os.mkdir(plotdir)
+            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df0gen', i, 'Df0gen')
+            recipe.run()
+            recipe.jobs = []
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.html')):
+                os.rename(os.path.join(plotdir, prefix + '.Df0gen.html'),
+                          os.path.join(plotdir, prefix + '.Df0gen_before_flag.html'))
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df0gen.png')):
+                os.rename(os.path.join(plotdir, prefix + '.Df0gen.png'),
+                          os.path.join(plotdir, prefix + '.Df0gen_before_flag.png'))
+
+        # Clip solutions
         recipe.add("cab/casa_flagdata", "flag_leakage",
                    {
                        "vis": prefix + '.Df0gen:msfile',
-                       "mode": 'tfcrop',
-                       "ntime": '60s',
-                       "combinescans": True,
+                       "mode": 'clip',
+                       "clipminmax": [-0.6, 0.6],
                        "datacolumn": 'CPARAM',
-                       "usewindowstats": "both",
                        "flagbackup": False,
                    },
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
@@ -1067,8 +1104,8 @@ def worker(pipeline, recipe, config):
                            "field": pol_calib,
                            "ntime": '60s',
                            "combinescans": True,
-                           "growtime": 70.0,
-                           "growfreq": 70.0,
+                           "growtime": 80.0,
+                           "growfreq": 80.0,
                            "growaround": True,
                            "flagnearfreq": True,
                            "flagneartime": True,
@@ -1076,7 +1113,24 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input, output=pipeline.output,
                        label="extend_flags_polcal")
-
+            if leakage_calib != pol_calib:
+                recipe.add("cab/casa_flagdata",
+                           "extend_flags_leakagecal",
+                           {
+                               "vis": msname,
+                               "mode": 'extend',
+                               "field": leakage_calib,
+                               "ntime": '60s',
+                               "combinescans": True,
+                               "growtime": 80.0,
+                               "growfreq": 80.0,
+                               "growaround": True,
+                               "flagnearfreq": True,
+                               "flagneartime": True,
+                               "flagbackup": False,
+                           },
+                           input=pipeline.input, output=pipeline.output,
+                           label="extend_flags_leakagecal")
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
             if pol_calib in polarized_calibrators:
@@ -1110,12 +1164,13 @@ def worker(pipeline, recipe, config):
                 raise RuntimeError(
                     "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
         else:
-            raise RuntimeError(f"""Unable to determine a polariation calibration strategy. Supported strategies are: 
+            raise RuntimeError(f"""Unable to determine a polarization calibration strategy. Supported strategies are: 
                     1. Calibrate leakage using an unpolarized source ({', '.join(unpolarized_calibrators)}), and 
                        polarization angle using a known polarized source ({', '.join(polarized_calibrators.keys())}).
-                       This is usually acheieved by setting leakage_cal=bpcal, pol_cal=xcal.
+                       This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.
                     2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at 
-                       different parallactic angles. This is usually acheieved by setting leakage_cal=bpcal, pol_cal=xcal.""")
+                       different parallactic angles. This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.""")
+
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)
@@ -1123,7 +1178,7 @@ def worker(pipeline, recipe, config):
                        {
                            "vis": msname,
                            "mode": 'summary',
-                           "field": ",".join(set(pipeline.xcal[i])),
+                           "field": pol_calib + "," +leakage_calib,
                        },
                        input=pipeline.input,
                        output=pipeline.output,

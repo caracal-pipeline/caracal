@@ -638,7 +638,6 @@ def worker(pipeline, recipe, config):
             else:
                 msnamesb = msname
             step = 'sunblocker-ms{0:d}'.format(i)
-            prefix = pipeline.prefix[i]
             recipe.add("cab/sunblocker", step,
                        {
                            "command": "phazer",
@@ -652,7 +651,7 @@ def worker(pipeline, recipe, config):
                            "mode": 'all',
                            "radrange": 0,
                            "angle": 0,
-                           "show": prefix + '.sunblocker.svg',
+                           "show": pipeline.prefix + '.sunblocker.svg',
                            "verb": True,
                            "dryrun": False,
                            "uvmax": config['sunblocker']['uvmax'],

@@ -254,7 +254,7 @@ def main(argv):
             sys.exit(1)  # indicate failure
         log.info("Initializing {1} from config template '{0}' (schema version {2})".format(options.get_default_template,
                                                                                            options.get_default, version))
-        shutil.copy2(sample_config_path, options.get_default)
+        shutil.copyfile(sample_config_path, options.get_default)
         return
 
     if options.print_calibrator_standard:

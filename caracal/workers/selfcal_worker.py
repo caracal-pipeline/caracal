@@ -2184,9 +2184,9 @@ def worker(pipeline, recipe, config):
                 os.mkdir(plot_path)
 
             selfcal_plots = glob.glob(
-                "{0:s}/{1:s}".format(selfcal_products, '*.png'))
+                "{0:s}/{1:s}*.png".format(selfcal_products, pipeline.prefix))
             for plot in selfcal_plots:
-                shutil.copy(plot, plot_path)
+                shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path,os.path.basename(plot)))
 
         if pipeline.enable_task(config, 'transfer_apply_gains'):
             mslist_out = ms_dict_tgain[target]
@@ -2212,7 +2212,7 @@ def worker(pipeline, recipe, config):
                 aimfast_plots = glob.glob(
                     "{0:s}/{1:s}".format(pipeline.output, '*.html'))
                 for plot in aimfast_plots:
-                    shutil.copy(plot, plot_path)
+                    shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
                     os.remove(plot)
 
         if pipeline.enable_task(config, 'calibrate'):

@@ -677,9 +677,9 @@ def worker(pipeline, recipe, config):
         # Move the sunblocker plots to the diagnostic_plots
         if pipeline.enable_task(config, 'sunblocker'):
             sunblocker_plots = glob.glob(
-                "{0:s}/{1:s}".format(pipeline.output, '*.svg'))
+                "{0:s}/*_{1:s}.sunblocker.svg".format(pipeline.output, pipeline.prefix))
             for plot in sunblocker_plots:
-                shutil.copy(plot, pipeline.diagnostic_plots)
+                shutil.copyfile(plot, '{0:s}/{1:s}'.format(pipeline.diagnostic_plots,os.path.basename(plot)))
                 os.remove(plot)
 
     if pipeline.enable_task(config, 'predict_noise'):

@@ -1113,24 +1113,7 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input, output=pipeline.output,
                        label="extend_flags_polcal")
-            if leakage_calib != pol_calib:
-                recipe.add("cab/casa_flagdata",
-                           "extend_flags_leakagecal",
-                           {
-                               "vis": msname,
-                               "mode": 'extend',
-                               "field": leakage_calib,
-                               "ntime": '60s',
-                               "combinescans": True,
-                               "growtime": 80.0,
-                               "growfreq": 80.0,
-                               "growaround": True,
-                               "flagnearfreq": True,
-                               "flagneartime": True,
-                               "flagbackup": False,
-                           },
-                           input=pipeline.input, output=pipeline.output,
-                           label="extend_flags_leakagecal")
+
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
             if pol_calib in polarized_calibrators:
@@ -1178,7 +1161,7 @@ def worker(pipeline, recipe, config):
                        {
                            "vis": msname,
                            "mode": 'summary',
-                           "field": pol_calib + "," +leakage_calib,
+                           "field": pol_calib,
                        },
                        input=pipeline.input,
                        output=pipeline.output,

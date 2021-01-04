@@ -334,6 +334,7 @@ def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, descrip
                 raise ConfigurationError(f"{description}: expecting a 'plots' sequence")
             # skip enable=False entries
             if not enable:
+                log.info(f"shadems plot section '{desc}' is explicitly disabled in the config file")
                 continue
             # all other keys go into new defaults (with substitutions done)
             new_defaults = defaults.copy()
@@ -417,7 +418,7 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
 
     if len(plot_args) == 0:
         log.warning(
-            "The shadems section is enabled, but doesn't specify any plot_by_field or plot_by_corr or plots")
+            "The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
     else:
         recipe.add("cab/shadems_direct", step,
                    dict(ms=shade_cfg["ms"],

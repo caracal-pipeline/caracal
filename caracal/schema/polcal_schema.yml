@@ -84,15 +84,15 @@ mapping:
         required: false
         example: "True"
       pol_calib:
-        desc: calibrator for the polarized angle
+        desc: calibrator for the polarized angle. Please, notice that if xcal = None only leakages will be calibrated. This is an experimental mode.
         type: str
         required: false
         example: xcal
       leakage_calib:
-        desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles
+        desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles.
         type: str
         required: false
-        example: xcal
+        example: fcal
       set_model_leakage:
         desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. Not necessary if you are using the same .MS file(s) of crosscal, it is if you splitted cross calibrated data to execute this worker and if leakage_calib != pol_calib.
         type: map
@@ -130,7 +130,7 @@ mapping:
       freqsel:
         type: str
         required: false
-        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if set_model_pol is False.
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if not set or if set_model_pol is False.
         example: ''
       gain_solint:
         type: str

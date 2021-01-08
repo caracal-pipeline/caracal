@@ -41,21 +41,31 @@ def scan_length(msinfo, field):
 def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist, leak_caltablelist,
                          leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
-    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
-
-    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
-                  prefix + '.Df']
-    interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest', 'nearest']
-    fields = [field, '', '', '', '', '']
-    calwts = [True, False, False, False, False, False]
-    applyfields = [field, '', '', '', '', '']
 
     freqsel = config.get("freqsel")
     gain_solint = config.get("gain_solint")
     time_solint = config.get("time_solint")
     freq_solint = config.get("freq_solint")
+
+    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xf', prefix + '.Df']
+    interps = ['linear', 'nearest', 'nearest', 'nearest']
+    fields = [field, '', '', '']
+    calwts = [True, False, False, False]
+    applyfields = [field, '', '', '']
+    gfields = [field, field, field, leak_field]
+    terms = ['G', 'KCROSS', 'Xf', 'Df']
+
+    if freqsel != '':
+        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
+                  prefix + '.Df']
+        interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest', 'nearest']
+        fields = [field, '', '', '', '', '']
+        calwts = [True, False, False, False, False, False]
+        applyfields = [field, '', '', '', '', '']
+        gfields = [field, field, field, field, leak_field, leak_field]
+        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Dref', 'Df']
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -186,27 +196,28 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
         tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
         tmp_field = gainfieldlist + ['', '']
         tmp_interp = interplist + ['linear', 'nearest']
-        recipe.add("cab/casa_polcal", "crosshand_phase_ref",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Xref:output',
-                       "field": field,
-                       "uvrange": config["uvrange"],
-                       "solint": time_solint,
-                       "combine": "",
-                       "poltype": "Xf",
-                       "refant": ref,
-                       "spw": freqsel,
-                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
-                       "gainfield": tmp_field,
-                       "interp": tmp_interp,
-                   },
-                   input=pipeline.input, output=pipeline.caltables,
-                   label="crosshand_phase_ref")
+        if freqsel != '':
+            recipe.add("cab/casa_polcal", "crosshand_phase_ref",
+                       {
+                           "vis": msname,
+                           "caltable": prefix + '.Xref:output',
+                           "field": field,
+                           "uvrange": config["uvrange"],
+                           "solint": time_solint,
+                           "combine": "",
+                           "poltype": "Xf",
+                           "refant": ref,
+                           "spw": freqsel,
+                           "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                           "gainfield": tmp_field,
+                           "interp": tmp_interp,
+                       },
+                       input=pipeline.input, output=pipeline.caltables,
+                       label="crosshand_phase_ref")
 
-        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
-        tmp_field = gainfieldlist + ['', '', '']
-        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
+            tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+            tmp_field = gainfieldlist + ['', '', '']
+            tmp_interp = interplist + ['linear', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "crosshand_phase_freq",
                    {
                        "vis": msname,
@@ -241,30 +252,34 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
         # Solve for leakages (off-diagonal terms) using the unpolarized source
         # - first remove the DC of the frequency response and combine scans
         # if necessary to achieve desired SNR
-        tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
-        tmp_field = leak_gainfieldlist + ['', '', '']
-        tmp_interp = leak_interplist + ['nearest', 'nearest', 'nearest']
-        recipe.add("cab/casa_polcal", "leakage_ref",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Dref:output',
-                       "field": leak_field,
-                       "uvrange": config["uvrange"],
-                       "solint": time_solint,
-                       "combine": "",
-                       "poltype": "D",
-                       "refant": ref,
-                       "spw": freqsel,
-                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
-                       "gainfield": tmp_field,
-                       "interp": tmp_interp,
-                   },
-                   input=pipeline.input, output=pipeline.caltables,
-                   label="leakage_ref")
+        tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xf']
+        tmp_field = leak_gainfieldlist + ['', '']
+        tmp_interp = leak_interplist + ['nearest', 'nearest']
+        if freqsel != '':
+            tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
+            tmp_field = leak_gainfieldlist + ['', '', '']
+            tmp_interp = leak_interplist + ['nearest', 'nearest', 'nearest']
+            recipe.add("cab/casa_polcal", "leakage_ref",
+                       {
+                           "vis": msname,
+                           "caltable": prefix + '.Dref:output',
+                           "field": leak_field,
+                           "uvrange": config["uvrange"],
+                           "solint": time_solint,
+                           "combine": "",
+                           "poltype": "D",
+                           "refant": ref,
+                           "spw": freqsel,
+                           "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                           "gainfield": tmp_field,
+                           "interp": tmp_interp,
+                       },
+                       input=pipeline.input, output=pipeline.caltables,
+                       label="leakage_ref")
 
-        tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref']
-        tmp_field = leak_gainfieldlist + ['', '', '', '']
-        tmp_interp = leak_interplist + ['nearest', 'nearest', 'nearest', 'nearest']
+            tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref']
+            tmp_field = leak_gainfieldlist + ['', '', '', '']
+            tmp_interp = leak_interplist + ['nearest', 'nearest', 'nearest', 'nearest']
         recipe.add("cab/casa_polcal", "leakage_freq",
                    {
                        "vis": msname,
@@ -281,7 +296,6 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                    },
                    input=pipeline.input, output=pipeline.caltables,
                    label="leakage_freq")
-
 
         if config['plotgains']:
             plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -323,10 +337,6 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
-        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
-                      prefix + '.Df']
-        gfields = [field, field, field, field, leak_field, leak_field]
-        terms = ['G', 'KCROSS', 'Xref', '.Xf', 'Dref', 'Df']
         for ix, gt in enumerate(gfields):
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
@@ -361,20 +371,30 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
 
 def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
                          gainfieldlist, interplist, calwtlist, applylist):
-    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
-
-    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
-    interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest']
-    fields = [field, '', '', '', '']
-    calwts = [True, False, False, False, False]
-    applyfields = [field, '', '', '', '']
 
     freqsel = config.get("freqsel")
     gain_solint = config.get("gain_solint")
     time_solint = config.get("time_solint")
     freq_solint = config.get("freq_solint")
+
+    gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xf', prefix + '.Df0gen']
+    interps = ['linear', 'nearest', 'nearest', 'nearest']
+    fields = [field, '', '', '']
+    calwts = [True, False, False, False]
+    applyfields = [field, '', '', '']
+    gfields = [field, field, field, field]
+    terms = ['G', 'KCROSS', 'Xf', 'Df0gen']
+
+    if freqsel != '':
+        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
+        interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest']
+        fields = [field, '', '', '', '']
+        calwts = [True, False, False, False, False]
+        applyfields = [field, '', '', '', '']
+        gfields = [field, field, field, field, field]
+        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Df0gen']
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -468,27 +488,30 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
         tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs']
         tmp_field = gainfieldlist + ['', '']
         tmp_interp = interplist + ['linear', 'nearest']
-        recipe.add("cab/casa_polcal", "crosshand_phase_ref",
-                   {
-                       "vis": msname,
-                       "caltable": prefix + '.Xref:output',
-                       "field": field,
-                       "uvrange": config["uvrange"],
-                       "solint": time_solint,
-                       "combine": "",
-                       "poltype": "Xf",
-                       "refant": ref,
-                       "spw": freqsel,
-                       "gaintable": ["%s:output" % ct for ct in tmp_gtab],
-                       "gainfield": tmp_field,
-                       "interp": tmp_interp,
-                   },
-                   input=pipeline.input, output=pipeline.caltables,
-                   label="crosshand_phase_ref")
 
-        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
-        tmp_field = gainfieldlist + ['', '', '']
-        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
+        if freqsel != '':
+            recipe.add("cab/casa_polcal", "crosshand_phase_ref",
+                       {
+                           "vis": msname,
+                           "caltable": prefix + '.Xref:output',
+                           "field": field,
+                           "uvrange": config["uvrange"],
+                           "solint": time_solint,
+                           "combine": "",
+                           "poltype": "Xf",
+                           "refant": ref,
+                           "spw": freqsel,
+                           "gaintable": ["%s:output" % ct for ct in tmp_gtab],
+                           "gainfield": tmp_field,
+                           "interp": tmp_interp,
+                       },
+                       input=pipeline.input, output=pipeline.caltables,
+                       label="crosshand_phase_ref")
+
+            tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
+            tmp_field = gainfieldlist + ['', '', '']
+            tmp_interp = interplist + ['linear', 'nearest', 'nearest']
+
         recipe.add("cab/casa_polcal", "crosshand_phase_freq",
                    {
                        "vis": msname,
@@ -519,9 +542,14 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                    input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
                    label="flag_phase_freq")
 
-        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
-        tmp_field = gainfieldlist + ['', '', '', '']
-        tmp_interp = interplist + ['linear', 'nearest', 'nearest', 'nearest']
+        tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xf']
+        tmp_field = gainfieldlist + ['', '', '']
+        tmp_interp = interplist + ['linear', 'nearest', 'nearest']
+        if freqsel != '':
+            tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf']
+            tmp_field = gainfieldlist + ['', '', '', '']
+            tmp_interp = interplist + ['linear', 'nearest', 'nearest', 'nearest']
+
         recipe.add("cab/casa_polcal", "leakage",
                    {
                        "vis": msname,
@@ -579,9 +607,6 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
-        gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Df0gen']
-        gfields = [field, field, field, field, field]
-        terms = ['G', 'KCROSS', 'Xref', 'Xf', 'Df0gen']
         for ix, gt in enumerate(gfields):
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 
@@ -616,9 +641,12 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
 
 def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, caltablelist, gainfieldlist, interplist,
                            calwtlist, applylist):
-    #ref = pipeline.refant[i] or '0'
     field = ",".join(getattr(pipeline, config["pol_calib"])[i])
     scandur = scan_length(msinfo, field)
+
+    gain_solint = config.get("gain_solint")
+    time_solint = config.get("time_solint")
+    freq_solint = config.get("freq_solint")
 
     gaintables = [prefix + '.Gpol2', prefix + '.Gxyamp', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
     interps = ['linear', 'linear', 'nearest', 'nearest', 'nearest']
@@ -626,10 +654,8 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
     calwts = [True, True, False, False, False]
     applyfields = [field, ",".join(set(pipeline.fcal[i] + pipeline.bpcal[i] + pipeline.gcal[i] + pipeline.target[i])),
                    '', '', '']
-
-    gain_solint = config.get("gain_solint")
-    time_solint = config.get("time_solint")
-    freq_solint = config.get("freq_solint")
+    gfields = [field, field, field, field, field]
+    terms = ['G', 'G', 'KCROSS', 'Xf', 'Df0gen']
 
     docal = config['reuse_existing_tables']
     if docal:
@@ -911,8 +937,6 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
         if not os.path.exists(plotdir):
             os.mkdir(plotdir)
-        gfields = [field, field, field, field, field]
-        terms = ['G', 'G', 'KCROSS', 'Xf', 'Df0gen']
         for ix, gt in enumerate(gfields):
             plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
 

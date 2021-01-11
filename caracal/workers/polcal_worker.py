@@ -969,6 +969,171 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
                        label="Apply_caltables_" + str(ff))
 
 
+def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
+                                         prefix, ref, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
+    leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
+
+    freq_solint = config.get("freq_solint")
+
+    gaintables = [prefix + '.Df']
+    interps = ['nearest']
+    fields = ['']
+    calwts = [False]
+    applyfields = ['']
+    gfields = [leak_field]
+    terms = ['Df']
+
+    docal = config['reuse_existing_tables']
+    if docal:
+        for cal in gaintables:
+            if not os.path.exists(os.path.join(pipeline.caltables, cal)):
+                caracal.log.info("No polcal table found in %s" % str(os.path.join(pipeline.caltables, cal)))
+                docal = False
+
+    if not docal:
+        if pipeline.enable_task(config, 'set_model_leakage'):
+            if config['set_model_leakage']['no_verify']:
+                opts = {
+                    "vis": msname,
+                    "field": leak_field,
+                    "scalebychan": True,
+                    "usescratch": True,
+                }
+            else:
+                modelsky = utils.find_in_native_calibrators(msinfo, leak_field, mode='sky')
+                modelpoint = utils.find_in_native_calibrators(msinfo, leak_field, mode='mod')
+                standard = utils.find_in_casa_calibrators(msinfo, leak_field)
+                if config['set_model_leakage']['meerkat_skymodel'] and modelsky:
+                    # use local sky model of calibrator field if exists
+                    opts = {
+                        "skymodel": modelsky,
+                        "msname": msname,
+                        "field-id": utils.get_field_id(msinfo, leak_field)[0],
+                        "threads": config["set_model_leakage"]['threads'],
+                        "mode": "simulate",
+                        "tile-size": config["set_model_leakage"]["tile_size"],
+                        "column": "MODEL_DATA",
+                    }
+                elif modelpoint:  # spectral model if specified in our standard
+                    opts = {
+                        "vis": msname,
+                        "field": leak_field,
+                        "standard": "manual",
+                        "fluxdensity": modelpoint['I'],
+                        "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
+                        "spix": [modelpoint[a] for a in 'abcd'],
+                        "scalebychan": True,
+                        "usescratch": True,
+                    }
+                elif standard:  # NRAO model otherwise
+                    opts = {
+                        "vis": msname,
+                        "field": leak_field,
+                        "standard": standard,
+                        "usescratch": True,
+                        "scalebychan": True,
+                    }
+                else:
+                    raise RuntimeError('The flux calibrator field "{}" could not be '
+                                       'found in our database or in the CASA NRAO database'.format(leak_field))
+            step = 'set_model_cal-{0:d}'.format(i)
+            cabtouse = 'cab/casa_setjy'
+            recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
+                       opts,
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+
+        recipe.add("cab/casa_polcal", "leakage_freq",
+               {
+                   "vis": msname,
+                   "caltable": prefix + '.Df:output',
+                   "field": leak_field,
+                   "uvrange": config["uvrange"],
+                   "solint": freq_solint,
+                   "combine": "scan",
+                   "poltype": "Df",
+                   "refant": ref,
+                   "gaintable": ["%s:output" % ct for ct in leak_caltablelist],
+                   "gainfield": leak_gainfieldlist,
+                   "interp": leak_interplist,
+               },
+               input=pipeline.input, output=pipeline.caltables,
+               label="leakage_freq")
+
+        if config['plotgains']:
+            plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+            if not os.path.exists(plotdir):
+                os.mkdir(plotdir)
+            plotgains(recipe, pipeline, plotdir, leak_field, prefix + '.Df', i, 'Df')
+            recipe.run()
+            recipe.jobs = []
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df.html')):
+                os.rename(os.path.join(plotdir, prefix + '.Df.html'),
+                          os.path.join(plotdir, prefix + '.Df_before_flag.html'))
+            if os.path.exists(os.path.join(plotdir, prefix + '.Df.png')):
+                os.rename(os.path.join(plotdir, prefix + '.Df.png'),
+                          os.path.join(plotdir, prefix + '.Df_before_flag.png'))
+
+        # Clip solutions
+        recipe.add("cab/casa_flagdata", "flag_leakage",
+               {
+                   "vis": prefix + '.Df:msfile',
+                   "mode": 'clip',
+                   "clipminmax": [-0.6, 0.6],
+                   "datacolumn": 'CPARAM',
+                   "flagbackup": False,
+               },
+               input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+               label="flag_leakage")
+
+        recipe.run()
+        recipe.jobs = []
+    else:
+        caracal.log.info("Reusing existing tables as requested")
+
+    applycal_recipes = callibs.new_callib()
+    for _gt, _fldmap, _interp, _calwt, _field in zip(gaintables, fields, interps, calwts, applyfields):
+        callibs.add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
+    pipeline.save_callib(applycal_recipes, prefix)
+
+    if config['plotgains']:
+        plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
+        if not os.path.exists(plotdir):
+            os.mkdir(plotdir)
+        for ix, gt in enumerate(gfields):
+            plotgains(recipe, pipeline, plotdir, gfields[ix], gaintables[ix], i, terms[ix])
+
+    if config['apply_pcal']:
+        for ff in config["applyto"]:
+            fld = ",".join(getattr(pipeline, ff)[i])
+            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    config['otfcal']['callib'],
+                                                    config['otfcal']['label_cal'], [fld])
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist)= \
+                callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                    '',
+                                                    config['label_cal'], [fld])
+            pcal = caltablelist + pcaltablelist
+            pgain = gainfieldlist + pgainfieldlist
+            pinter = interplist + pinterplist
+            pcalwt = calwtlist + pcalwtlist
+            recipe.add("cab/casa_applycal", "apply_caltables_" + str(ff),
+                       {
+                           "vis": msname,
+                           "field": fld,
+                           "calwt": pcalwt,
+                           "gaintable": ["%s:output" % ct for ct in pcal],
+                           "gainfield": pgain,
+                           "interp": pinter,
+                           "parang": True,
+                       },
+                       input=pipeline.input, output=pipeline.caltables,
+                       label="Apply_caltables_" + str(ff))
+
+
+
 def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, gtab)
     opts = {
@@ -1148,6 +1313,12 @@ def worker(pipeline, recipe, config):
                                      leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
             elif not pol_calib:
                 raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?")
+            elif config['calib_only_leakage']:
+                caracal.log.info(
+                    "You decided to calibrate only the leakage with an unpolarized calibrator. This is experimental.")
+                calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
+                                         prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
+                                         calwtlist, applylist)
             else:
                 raise RuntimeError(f"""Your setting of pol_calib={config['pol_calib']} selects {pol_calib}, which is not a supported polarization calibrator.
                     Supported calibrators are {', '.join(polarized_calibrators.keys())}.

@@ -83,8 +83,13 @@ mapping:
         type: bool
         required: false
         example: "True"
+      calib_leakage_only:
+        desc: Calibrate only on-axis leakage with leakage_calib. This is experimental.
+          type: bool
+          required: false
+          example: 'False'
       pol_calib:
-        desc: calibrator for the polarized angle. Please, notice that if xcal = None only leakages will be calibrated. This is an experimental mode.
+        desc: calibrator for the polarized angle.
         type: str
         required: false
         example: xcal

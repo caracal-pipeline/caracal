@@ -11,9 +11,9 @@ import copy
 import re
 import json
 import glob
-
+from scipy import ndimage
 import shutil
-import numpy
+import numpy as np
 from casacore.tables import table
 
 
@@ -160,7 +160,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
         params["caltable"] = caltable + ":output"
         my_term = term
-        did_I = 'I' in order[:i+1] 
+        did_I = 'I' in order[:i+1]
         if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
@@ -215,13 +215,21 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                         "src" : caltable_path_original,
                         "dst": caltable_path,
                         }, label="{0}:: Copy parimary gains".format(step))
-            recipe.add(RULES[term]["cab"], step, 
+            recipe.add(RULES[term]["cab"], step,
                     copy.deepcopy(params),
                     input=pipeline.input, output=pipeline.caltables,
                     label="%s:: %s calibration" % (step, term))
             if term == "F":
-                transfer_fluxscale(msname, recipe, primary_G+":output", caltable+":output", pipeline, 
+                transfer_fluxscale(msname, recipe, primary_G+":output", caltable+":output", pipeline,
                 iobs, reference=pipeline.fluxscale_reference, label=label)
+            elif term == "B" and config[ftype]["b_smoothwindow"] > 1:
+                recipe.add(smooth_bandpass, 'smooth_bandpass', {
+                    "bptable"  : '{0:s}/{1:s}'.format(pipeline.caltables,caltable),
+                    "window" : config[ftype]["b_smoothwindow"],
+                  },
+                    input=pipeline.input,
+                    output=pipeline.output,
+                    label='smooth bandpass')
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
@@ -291,17 +299,17 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
     nterms = len(order)
 
-    # terms that need an apply 
+    # terms that need an apply
     groups_apply = list(filter(lambda g: g, re.findall("([AI]+)?", order)))
     # terms that need a solve
     groups_solve = list(filter(lambda g: g, re.findall("([KGBF]+)?", order)))
-    # Order has to start with solve group. 
+    # Order has to start with solve group.
     # TODO(sphe) in the philosophy of giving user enough roap to hang themselves
-    # Release II will allow both starting with I/A in case 
+    # Release II will allow both starting with I/A in case
     # someone wants to apply primary gains to the secondary
     n_apply = len(groups_apply)
     n_solve = len(groups_solve)
-    groups = [None] * (n_apply + n_solve) 
+    groups = [None] * (n_apply + n_solve)
     groups[::2] = groups_solve # even indices
     groups[1::2] = groups_apply # odd indices
 
@@ -335,7 +343,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             params["vis"] = msname
 
             step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
-            
+
             if even:
                 do_KGBF(i)
             else:
@@ -386,12 +394,12 @@ def get_caltab_final(order, gaintable, interp, gainfield, field):
     if "G" in order:
         gi = rorder.index("G")
     else:
-        gi = numpy.inf
+        gi = np.inf
 
     if "F" in order:
         fi = rorder.index("F")
-    else: 
-        fi = numpy.inf
+    else:
+        fi = np.inf
 
     # if both are not there (or = inf), then it does not matter
     if fi == gi: # ooh, very naughty
@@ -400,7 +408,7 @@ def get_caltab_final(order, gaintable, interp, gainfield, field):
         lidx = get_last_gain(gaintable, my_term="F")
     else:
         lidx = get_last_gain(gaintable, my_term="G")
-        
+
     gaintables = []
     interps = []
     fields = []
@@ -424,7 +432,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
       order: order in which to apply gains
     """
 
-    gaintables, interps, fields = get_caltab_final(order, gaintable, interp, 
+    gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
             gainfield, field)
 
     step = "apply_gains-%s-%s-%d" % (field, label, i)
@@ -441,6 +449,18 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
         },
             input=pipeline.input, output=pipeline.caltables,
             label="%s::Apply gain tables" % step)
+
+
+def smooth_bandpass(bptable, window, filter_type = 'mean'):
+    caracal.log.info('Smoothing {0:s} with {2:s} window of width {1:d} channels'.format(bptable,window,filter_type))
+    bp = table(bptable, ack=False).getcol('CPARAM')
+    bp = [np.real(bp), np.imag(bp)]
+    if  filter_type == 'median':
+        bp = [ndimage.median_filter(bb,size=(1,window,1)) for bb in bp]
+    elif filter_type == 'mean':
+        bp = [ndimage.uniform_filter(bb,size=(1,window,1)) for bb in bp]
+    table(bptable, ack=False, readonly=False).putcol('CPARAM', bp[0]+1j*bp[1])
+
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
@@ -567,7 +587,7 @@ def worker(pipeline, recipe, config):
         calmode = config["apply_cal"]["calmode"]
         primary_order = config["primary"]["order"]
         secondary_order = config["secondary"]["order"]
-        no_secondary = gcal_set == set() or len(gcal_set - fcal_set) == 0 
+        no_secondary = gcal_set == set() or len(gcal_set - fcal_set) == 0
         if no_secondary:
             primary_order = config["primary"]["order"]
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
@@ -612,7 +632,7 @@ def worker(pipeline, recipe, config):
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
-        
+
         gt_final, itp_final, fd_final = get_caltab_final(primary_order if no_secondary else secondary_order,
                        copy.deepcopy(gaintables), interps, "nearest", "target")
 

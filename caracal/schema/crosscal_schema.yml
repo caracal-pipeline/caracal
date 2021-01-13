@@ -97,11 +97,6 @@ mapping:
             type: str
             required: false
             example: KGB
-          b_solnorm:
-            type: bool
-            required: false
-            desc: Normalise average solution amplitude to 1.0
-            example: "False"
           calmode:
             desc: For each step in 'order' above, set whether to solve for phase ('p'), amplitude ('a') or both ('ap'). This is actually only relevant when solving for the gains, i.e., for the G steps in 'order' above. However, users should include an entry (even just an empty string) for all steps in 'order'.
             seq:
@@ -120,6 +115,21 @@ mapping:
               - type: str
             required: false
             example: "'', '', scan"
+          b_solnorm:
+            type: bool
+            required: false
+            desc: Normalise average solution amplitude to 1.0
+            example: "False"
+          b_fillgaps:
+            desc: Fill flagged channels in the bandpass solutions by interpolation.
+            type: int
+            required: false
+            example: "70"
+          b_smoothwindow:
+            desc: Size of the mean running window for smoothing of the bandpass (in channels). A size of 1 means no smoothing.
+            type: int
+            required: false
+            example: "1"
           spw_k:
             desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
             example: ""
@@ -130,11 +140,6 @@ mapping:
             example: ""
             required: false 
             type: str
-          b_fillgaps:
-            desc: Fill flagged solution channels by interpolation.
-            type: int
-            required: false
-            example: "70"
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool
@@ -225,10 +230,15 @@ mapping:
             desc: Normalise average solution amplitude to 1.0
             example: "False"
           b_fillgaps:
-            desc: Fill flagged solution channels by interpolation.
+            desc: Fill flagged channels in the bandpass solutions by interpolation.
             type: int
             required: false
             example: "70"
+          b_smoothwindow:
+            desc: Size of the mean running window for smoothing of the bandpass (in channels). A size of 1 means no smoothing.
+            type: int
+            required: false
+            example: "1"
           spw_k:
             desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
             example: ""

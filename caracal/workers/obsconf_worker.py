@@ -136,7 +136,7 @@ def worker(pipeline, recipe, config):
             src, dest = os.path.join(pipeline.msdir, filename), os.path.join(pipeline.obsinfo, filename)
             if os.path.exists(src) and (not os.path.exists(dest) or os.path.getmtime(dest) < os.path.getmtime(src)):
                 caracal.log.info(f"generated new obsinfo/{filename}")
-                shutil.copy2(src, dest)
+                shutil.copyfile(src, dest)
 
         # get the  actual date stamp for the start and end of the observations.
         # !!!!!!! This info appears to not be present in the json file just the totals and start times (without slew times) so we'll get it from the txt file

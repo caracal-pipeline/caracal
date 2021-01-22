@@ -8,6 +8,7 @@ import stimela.recipe
 import astropy
 import shutil
 import itertools
+import json
 from astropy.io import fits
 # Modules useful to calculate common barycentric frequency grid
 from astropy.time import Time
@@ -24,6 +25,8 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+#montage modules for regridding the user supplied clean mask
+from MontagePy.main import mProjectCube, mHdr
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -820,13 +823,53 @@ def worker(pipeline, recipe, config):
                 if j == 1:
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
+                        '''
+                        MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
+                        '''
+                        t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
+                        with open('{}/{}'.format(pipeline.msdir,t)) as f:
+                            obsDict = json.load(f)
+                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                        cubeHeight=config['make_cube']['npix'][0]
+                        cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
+                        mHdr('{},{}'.format(raTarget,decTarget),
+                              cubeHeight*config['make_cube']['cell']/3600.,
+                              cubeWidth*config['make_cube']['cell']/3600.,
+                              'output/masking/tmp.hdr',
+                              resolution = config['make_cube']['cell'])
+                        #with open('output/masking/tmp.hdr', 'r') as file:
+                        #    for line in file:
+                        #        print(line, end='')
+                        preGridMask = '{0:s}/{1:s}'.format(
+                            pipeline.masking, own_line_clean_mask)
+                        postGridMask = preGridMask.replace('.fits','_regrid.fits')
+                        print('Reprojecting the user supplied mask {}'.format(preGridMask))
+                        with fits.open(preGridMask) as hdul:
+                            testdata = hdul[0].data
+                            testhead = hdul[0].header
+                        badmask = np.where((testdata > 0) & (testdata < 1))[0]
+                        print(badmask.shape)
+                        print(testhead)
+                        mProjectCube(preGridMask, postGridMask, 'output/masking/tmp.hdr')
+                        with fits.open(postGridMask) as hdul:
+                            testdata = hdul[0].data
+                            testhead = hdul[0].header
+                        badmask = np.where((testdata > 0) & (testdata < 1))[0]
+                        print(badmask.shape)
+                        print(testhead)
+                        hdul = fits.open(postGridMask)
+                        hdul[0].data = np.around(hdul[0].data)
+                        badmask = np.where((hdul[0].data > 0) & (hdul[0].data < 1))[0]
+                        print(badmask.shape)
+                        hdul.writeto(pstGridMask) #need to clean up code and rename the new regridded mask to replace the user supplied mask
+                        sys.exit()
                         line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                             get_relative_path(pipeline.masking, pipeline), own_line_clean_mask)})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking'.format(line_name, tt, j)
-
                 else:
                     step = 'make_sofia_mask-field{0:d}-iter{1:d}'.format(tt, j - 1)
                     line_clean_mask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output'.format(

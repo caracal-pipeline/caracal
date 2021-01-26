@@ -881,7 +881,7 @@ def worker(pipeline, recipe, config):
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
                         else:
-                            ine_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:

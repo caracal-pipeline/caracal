@@ -823,9 +823,8 @@ def worker(pipeline, recipe, config):
                 if j == 1:
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
-                        '''
-                        MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
-                        '''
+
+                        doProj = False
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
@@ -833,39 +832,57 @@ def worker(pipeline, recipe, config):
                         decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
-                        mHdr('{},{}'.format(raTarget,decTarget),
-                              cubeHeight*config['make_cube']['cell']/3600.,
-                              cubeWidth*config['make_cube']['cell']/3600.,
-                              'output/masking/tmp.hdr',
-                              resolution = config['make_cube']['cell'])
-                        #with open('output/masking/tmp.hdr', 'r') as file:
-                        #    for line in file:
-                        #        print(line, end='')
+
                         preGridMask = '{0:s}/{1:s}'.format(
                             pipeline.masking, own_line_clean_mask)
-                        postGridMask = preGridMask.replace('.fits','_regrid.fits')
-                        print('Reprojecting the user supplied mask {}'.format(preGridMask))
                         with fits.open(preGridMask) as hdul:
-                            testdata = hdul[0].data
-                            testhead = hdul[0].header
-                        badmask = np.where((testdata > 0) & (testdata < 1))[0]
-                        print(badmask.shape)
-                        print(testhead)
-                        mProjectCube(preGridMask, postGridMask, 'output/masking/tmp.hdr')
-                        with fits.open(postGridMask) as hdul:
-                            testdata = hdul[0].data
-                            testhead = hdul[0].header
-                        badmask = np.where((testdata > 0) & (testdata < 1))[0]
-                        print(badmask.shape)
-                        print(testhead)
-                        hdul = fits.open(postGridMask)
-                        hdul[0].data = np.around(hdul[0].data)
-                        badmask = np.where((hdul[0].data > 0) & (hdul[0].data < 1))[0]
-                        print(badmask.shape)
-                        hdul.writeto(pstGridMask) #need to clean up code and rename the new regridded mask to replace the user supplied mask
-                        sys.exit()
-                        line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                            get_relative_path(pipeline.masking, pipeline), own_line_clean_mask)})
+                            doProj = True if hdul[0].header['CRPIX1'] != cubeWidth else None
+                            doProj = True if hdul[0].header['CRPIX2'] != cubeHeight else None
+                            doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
+                            doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
+
+                        if doProj:
+                            '''
+                            MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
+                            '''
+                            mHdr('{},{}'.format(raTarget,decTarget),
+                                  cubeHeight*config['make_cube']['cell']/3600.,
+                                  cubeWidth*config['make_cube']['cell']/3600.,
+                                  'output/masking/tmp.hdr',
+                                  resolution = config['make_cube']['cell'])
+                            with open('output/masking/tmp.hdr', 'r') as file:
+                                hdr = file.readlines()
+                            for i,line in enumerate(hdr):
+                                if 'NAXIS1' in line:
+                                    hdr[i] = line.replace(
+                                               line.split('= ',1)[1],
+                                               str(cubeWidth)+'\n')
+                                elif 'NAXIS2' in line:
+                                    hdr[i] = line.replace(
+                                               line.split('= ',1)[1],
+                                               str(cubeHeight)+'\n')
+                                elif 'CRPIX1' in line:
+                                    hdr[i] = line.replace(
+                                               line.split('= ',1)[1],
+                                               str(cubeWidth/2)+'\n')
+                                elif 'CRPIX2' in line:
+                                    hdr[i] = line.replace(
+                                               line.split('= ',1)[1],
+                                               str(cubeHeight/2)+'\n')
+                                elif '-TAN' in line:
+                                    hdr[i] = line.replace('-TAN','-SIN')
+                            with open('output/masking/tmp.hdr', 'w') as file:
+                                file.writelines(hdr)
+                            postGridMask = preGridMask.replace('.fits','_regrid.fits')
+                            mProjectCube(preGridMask, postGridMask, 'output/masking/tmp.hdr')
+                            with fits.open(postGridMask, mode='update') as hdul:
+                                hdul[0].data = np.around(hdul[0].data).astype(np.int16)
+                                hdul.flush()
+                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                               get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
+                        else:
+                            ine_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                               get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})

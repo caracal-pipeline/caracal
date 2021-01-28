@@ -870,7 +870,7 @@ def worker(pipeline, recipe, config):
                                  file.write('END')
 
                             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
-                            mProjectCube(preGridMask, postGridMask, 'output/masking/tmp.hdr')
+                            mProjectCube(preGridMask, postGridMask, '{}/masking/tmp.hdr'.format(pipeline.output))
                             with fits.open(postGridMask, mode='update') as hdul:
                                 hdul[0].data = np.around(hdul[0].data).astype(np.int16)
                                 for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):

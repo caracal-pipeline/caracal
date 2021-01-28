@@ -830,9 +830,11 @@ def worker(pipeline, recipe, config):
                             obsDict = json.load(f)
                         raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
                         decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+#                        print(raTarget,decTarget)
+#                        raTarget = 54.88
+#                        decTarget = -37.3
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
-
                         preGridMask = '{0:s}/{1:s}'.format(
                             pipeline.masking, own_line_clean_mask)
                         with fits.open(preGridMask) as hdul:
@@ -840,43 +842,47 @@ def worker(pipeline, recipe, config):
                             doProj = True if hdul[0].header['CRPIX2'] != cubeHeight else None
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
                             doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
+                            if doProj:
+                                ax3param = []
+                                for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
+                                    ax3param.append(hdul[0].header[key])
 
                         if doProj:
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
                             '''
-                            mHdr('{},{}'.format(raTarget,decTarget),
-                                  cubeHeight*config['make_cube']['cell']/3600.,
-                                  cubeWidth*config['make_cube']['cell']/3600.,
-                                  'output/masking/tmp.hdr',
-                                  resolution = config['make_cube']['cell'])
-                            with open('output/masking/tmp.hdr', 'r') as file:
-                                hdr = file.readlines()
-                            for i,line in enumerate(hdr):
-                                if 'NAXIS1' in line:
-                                    hdr[i] = line.replace(
-                                               line.split('= ',1)[1],
-                                               str(cubeWidth)+'\n')
-                                elif 'NAXIS2' in line:
-                                    hdr[i] = line.replace(
-                                               line.split('= ',1)[1],
-                                               str(cubeHeight)+'\n')
-                                elif 'CRPIX1' in line:
-                                    hdr[i] = line.replace(
-                                               line.split('= ',1)[1],
-                                               str(cubeWidth/2)+'\n')
-                                elif 'CRPIX2' in line:
-                                    hdr[i] = line.replace(
-                                               line.split('= ',1)[1],
-                                               str(cubeHeight/2)+'\n')
-                                elif '-TAN' in line:
-                                    hdr[i] = line.replace('-TAN','-SIN')
-                            with open('output/masking/tmp.hdr', 'w') as file:
-                                file.writelines(hdr)
-                            postGridMask = preGridMask.replace('.fits','_regrid.fits')
+                            with open('{}/masking/tmp.hdr'.format(pipeline.output), 'w') as file:
+                                 file.write('SIMPLE  =   T\n')
+                                 file.write('BITPIX  =   -64\n')
+                                 file.write('NAXIS   =   2\n')
+                                 file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                                 file.write('CTYPE1  =   \'RA---SIN\'\n')
+                                 file.write('CRVAL1  =   {}\n'.format(raTarget))
+                                 file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                                 file.write('CDELT1  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                 file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                                 file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                                 file.write('CRVAL2  =   {}\n'.format(decTarget))
+                                 file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                                 file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                 file.write('EXTEND  =   T\n')
+                                 file.write('EQUINOX =   2000.0\n')
+                                 file.write('END')
+
+                            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
                             mProjectCube(preGridMask, postGridMask, 'output/masking/tmp.hdr')
                             with fits.open(postGridMask, mode='update') as hdul:
                                 hdul[0].data = np.around(hdul[0].data).astype(np.int16)
+                                for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
+                                    hdul[0].header[key] = ax3param[i]
+#                                print(hdul[0].header)
+#                                print(hdul[0].data.shape)
+#                                for i,crpx in enumerate(['CRPIX1', 'CRPIX2']):
+#                                    if hdul[0].header[crpx] < [cubeWidth,cubeHeight][i]/2:
+#                                        print('missing data from the beginning of the axis')
+#                                    if hdul[0].header[crpx] > [cubeWidth,cubeHeight][i]/2:
+#                                        print('missing data from the end of the axis')
+                                del hdul[0].header['EN']
                                 hdul.flush()
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})

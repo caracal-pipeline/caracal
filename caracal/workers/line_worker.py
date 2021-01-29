@@ -884,8 +884,8 @@ def worker(pipeline, recipe, config):
                             with fits.open(postGridMask, mode='update') as hdul:
                                 for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                                     hdul[0].header[key] = ax3param[i]
-                                print(hdul[0].header)
-                                print(hdul[0].data.shape)
+  #                              print(hdul[0].header)
+  #                              print(hdul[0].data.shape)
                                 axDict = {'1' : [2,cubeWidth],
                                           '2' : [1,cubeHeight]}
                                 for i in ['1','2']:
@@ -920,8 +920,8 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-                            with fits.open(postGridMask, mode='update') as hdul:
-                                print(hdul[0].header)
+#                            with fits.open(postGridMask, mode='update') as hdul:
+ #                               print(hdul[0].header)
 
      #                       sys.exit()
 

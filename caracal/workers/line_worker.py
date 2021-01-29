@@ -859,7 +859,7 @@ def worker(pipeline, recipe, config):
                                  file.write('CTYPE1  =   \'RA---SIN\'\n')
                                  file.write('CRVAL1  =   {}\n'.format(raTarget))
                                  file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
-                                 file.write('CDELT1  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                 file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
                                  file.write('NAXIS2  =   {}\n'.format(cubeHeight))
                                  file.write('CTYPE2  =   \'DEC--SIN\'\n')
                                  file.write('CRVAL2  =   {}\n'.format(decTarget))

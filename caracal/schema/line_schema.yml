@@ -321,7 +321,7 @@ mapping:
             required: false
             example: '900 , 900'
           cell:
-            desc: Pixel size. The default unit is arcsec, but other units can be specified, e.g., 'scale 20asec'.
+            desc: Pixel size (arcsec).
             type: float
             required: false
             example: '2'

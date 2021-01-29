@@ -830,16 +830,17 @@ def worker(pipeline, recipe, config):
                             obsDict = json.load(f)
                         raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
                         decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
-#                        print(raTarget,decTarget)
 #                        raTarget = 54.88
-#                        decTarget = -37.3
+#                        decTarget = -37.62
+
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
+
                         preGridMask = '{0:s}/{1:s}'.format(
                             pipeline.masking, own_line_clean_mask)
                         with fits.open(preGridMask) as hdul:
-                            doProj = True if hdul[0].header['CRPIX1'] != cubeWidth else None
-                            doProj = True if hdul[0].header['CRPIX2'] != cubeHeight else None
+                            doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
+                            doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
                             doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
                             if doProj:
@@ -867,23 +868,63 @@ def worker(pipeline, recipe, config):
                                  file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
                                  file.write('EXTEND  =   T\n')
                                  file.write('EQUINOX =   2000.0\n')
-                                 file.write('END')
+                                 file.write('END\n')
 
                             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+
+                            if os.path.exists(postGridMask):
+                                os.remove(postGridMask)
+
+                            caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
                             mProjectCube(preGridMask, postGridMask, '{}/masking/tmp.hdr'.format(pipeline.output))
+                            if not os.path.exists(postGridMask):
+                                raise IOError(
+                                      "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
+
                             with fits.open(postGridMask, mode='update') as hdul:
-                                hdul[0].data = np.around(hdul[0].data).astype(np.int16)
                                 for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                                     hdul[0].header[key] = ax3param[i]
-#                                print(hdul[0].header)
-#                                print(hdul[0].data.shape)
-#                                for i,crpx in enumerate(['CRPIX1', 'CRPIX2']):
-#                                    if hdul[0].header[crpx] < [cubeWidth,cubeHeight][i]/2:
-#                                        print('missing data from the beginning of the axis')
-#                                    if hdul[0].header[crpx] > [cubeWidth,cubeHeight][i]/2:
-#                                        print('missing data from the end of the axis')
-                                del hdul[0].header['EN']
+                                print(hdul[0].header)
+                                print(hdul[0].data.shape)
+                                axDict = {'1' : [2,cubeWidth],
+                                          '2' : [1,cubeHeight]}
+                                for i in ['1','2']:
+ #                                   print('axis'+i)
+                                    cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
+                                    if cent < axDict[i][1]/2+1:
+                                        delt = int(axDict[i][1]/2+1 - cent)
+  #                                      print('missing data from the beginning of the axis')
+                                        if i == '1':
+                                            toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                                        else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                                        hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
+                                        hdul[0].header['CRPIX'+i] = int(cent + delt)
+                                    if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
+   #                                     print('missing data from the end of the axis')
+                                        delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
+                                        if i == '1':
+                                            toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                                        else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                                        hdul[0].data = np.concatenate([hdul[0].data,toAdd],axis=axDict[i][0])
+                                    if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
+                                        delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
+                                        hdul[0].data = hdul[0].data[:,:,-delt] if i == '1' else hdul[0].data[:,-delt,:]
+                                        if cent > axDict[i][1]/2+1:
+                                            hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
+
+    #                            print(hdul[0].data.shape)
+                                hdul[0].data = np.around(hdul[0].data).astype(np.int16)
+                                try:
+                                    del hdul[0].header['EN']
+                                except KeyError:
+                                    pass
                                 hdul.flush()
+
+                            with fits.open(postGridMask, mode='update') as hdul:
+                                print(hdul[0].header)
+
+     #                       sys.exit()
+
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
                         else:

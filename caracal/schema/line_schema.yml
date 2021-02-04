@@ -256,7 +256,7 @@ mapping:
             desc: Enable the 'predict_noise' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           tsyseff:
             desc: Value of Tsys/eff in K.
             type: float

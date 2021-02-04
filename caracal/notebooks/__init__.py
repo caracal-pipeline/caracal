@@ -20,7 +20,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
     if not os.path.exists(logodir):
         os.mkdir(logodir)
     for png in glob.glob(os.path.join(SOURCE_NOTEBOOK_DIR, "*.png")):
-        shutil.copy2(png, logodir)
+        shutil.copyfile(png, os.path.join(logodir,os.path.basename(png)))
 
     for notebook in notebooks:
         nbfile = notebook + ".ipynb"

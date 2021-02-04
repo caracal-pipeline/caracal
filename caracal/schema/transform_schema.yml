@@ -82,6 +82,11 @@ mapping:
             type: str
             required: false
             example: ''
+          nthreads:
+            desc: Number of OMP threads to use (currently maximum limited by number of polarizations)
+            type: int
+            required: false
+            example: '1'
           otfcal:
             desc: Apply on-the-fly (OTF) calibration.
             type: map

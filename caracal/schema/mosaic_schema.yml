@@ -16,12 +16,11 @@ mapping:
         required: true
         example: 'continuum'
       target_images:
-        desc: List of images to be mosaicked, with suffix of image.fits being expected.
-        type: seq
+        desc: List of .FITS images/cubes to be mosaicked. Their file names must end with "image.fits" and must include the path relative to the current working directory. These images/cubes MUST be located within (sub-directories of) the current working directory.
         seq:
           - type: str
         required: false
-        example: "directory/first_image.fits, directory/second_image.fits"
+        example: ''
       label_in:
         desc: For autoselection of images, this needs to match the label/label_cal setting used for the selfcal/crosscal worker (when mosaicking continuum images) or the label setting used for the line worker (when mosaicking cubes).
         type: str
@@ -72,6 +71,11 @@ mapping:
         type: float
         required: false
         example: '1383685546.875'
+      round_cdelt3:
+        desc: If mosaic_type is "spectral", round CDELT3 in the header of the input cubes to the number of decimal digits given by this parameter (0 means do not round). This is useful when the CDELT3 values of the input cubes are not identical (which would make the mosaicking algorithm crash) but the differences are small and can be ignored. Note that the CDELT3 values of the input cubes are overwritten with the common, rounded value (if the rounding is sufficient to find a common value).
+        type: int
+        required: false
+        example: '0'
       report:
         type: bool
         required: false

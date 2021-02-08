@@ -38,6 +38,28 @@ mapping:
             type: str
             required: false
             example: ''
+          interpolation:
+            desc: Overrides interpolations settings for OTF calibration
+            type: map
+            mapping:
+              delay_cal: 
+                desc: Interpolation type (in time) for K-Jones (delay) solutions. 'nearest' is recommended for CASA, as 'linear' can produce unexpected results.
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'nearest'
+              gain_cal: 
+                desc: Interpolation type (in time) for G-Jones (gain) solutions. 
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'linear'
+              bp_cal: 
+                desc: Interpolation type (in time) for B-Jones (bandpass) solutions. 
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'linear'
       extendflags:
         desc: use casa_flagdata with mode=extend to flag data which have been already flagged more than 70%. This can improve calibration.
         type: bool
@@ -84,10 +106,10 @@ mapping:
         required: false
         example: "True"
       calib_leakage_only:
-        desc: Calibrate only on-axis leakage with leakage_calib. This is experimental.
-          type: bool
-          required: false
-          example: 'False'
+        desc: Calibrate only on-axis leakage with leakage_calib, omitting crosshand phases. This is experimental.
+        type: bool
+        required: false
+        example: 'False'
       pol_calib:
         desc: calibrator for the polarized angle.
         type: str

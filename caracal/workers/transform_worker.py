@@ -134,7 +134,8 @@ def worker(pipeline, recipe, config):
                 resolve_calibration_library(pipeline, prefix_msbase, 
                                             config['split_field']['otfcal']['callib'], 
                                             config['split_field']['otfcal']['label_cal'], 
-                                            output_fields=output_fields)
+                                            output_fields=output_fields, 
+                                            default_interpolation_types=config['split_field']['otfcal']['interpolation'])
             if crosscal_lib:
                 caracal.log.info(f"applying OTF cross-cal from {os.path.basename(crosscal_lib)}")
             else:
@@ -145,7 +146,8 @@ def worker(pipeline, recipe, config):
                 resolve_calibration_library(pipeline, prefix_msbase, 
                                             config['split_field']['otfcal']['pol_callib'], 
                                             config['split_field']['otfcal']['label_pcal'], 
-                                            output_fields=output_fields)
+                                            output_fields=output_fields,
+                                            default_interpolation_types=config['split_field']['otfcal']['interpolation'])
             if polcal_lib:
                 caracal.log.info(f"applying OTF polcal from {os.path.basename(polcal_lib)}")
             else:
@@ -236,7 +238,7 @@ def worker(pipeline, recipe, config):
                                     "gaintable": [f"{ct}:output" for ct in pcaltablelist],
                                     "gainfield": pgainfieldlist,
                                     "interp": pinterplist,
-                                    "parang": True,
+                                    "parang": config['split_field']['otfcal']['derotate_pa'],
                                 },
                                 input=pipeline.input,
                                 output=pipeline.caltables,
@@ -263,7 +265,7 @@ def worker(pipeline, recipe, config):
                                             "gaintable": ["%s:output" % ct for ct in pcal],
                                             "gainfield": pgain,
                                             "interp": pinter,
-                                            "parang": True,
+                                            "parang": config['split_field']['otfcal']['derotate_pa'],
                                         },
                                         input=pipeline.input,
                                         output=pipeline.caltables,

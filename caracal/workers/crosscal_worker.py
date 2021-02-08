@@ -53,14 +53,14 @@ def exists(outdir, path):
 RULES = {
     "K": {
         "name": "delay_cal",
-        "interp": "nearest",
+        "interp": "linear",
         "cab": "cab/casa_gaincal",
         "gaintype": "K",
         "field": "bpcal",
     },
     "G": {
         "name": "gain_cal",
-        "interp": "nearest",
+        "interp": "linear",
         "cab": "cab/casa_gaincal",
         "gaintype": "G",
         "mode": "ap",
@@ -68,7 +68,7 @@ RULES = {
     },
     "F": {
         "name": "gaincal_for_Ftable",
-        "interp": "nearest",
+        "interp": "linear",
         "cab": "cab/casa_gaincal",
         "gaintype": "F",
         "mode": "ap",

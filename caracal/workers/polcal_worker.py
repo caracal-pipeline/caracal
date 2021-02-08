@@ -346,7 +346,9 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'], [fld])
+                                                    config['otfcal']['label_cal'], [fld],
+                                                    default_interpolation_types=config['split_field']['otfcal']['interpolation'])
+
             _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist)= \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     '',
@@ -616,7 +618,8 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'], [fld])
+                                                    config['otfcal']['label_cal'], [fld],
+                                                    default_interpolation_types=config['split_field']['otfcal']['interpolation'])
             _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     '',
@@ -946,7 +949,8 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'], [fld])
+                                                    config['otfcal']['label_cal'], [fld],
+                                                    default_interpolation_types=config['split_field']['otfcal']['interpolation'])
             _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     '',
@@ -1217,11 +1221,13 @@ def worker(pipeline, recipe, config):
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase, 
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'],[pol_calib])
+                                                    config['otfcal']['label_cal'],[pol_calib],
+                                                    default_interpolation_types=config['split_field']['otfcal']['interpolation'])
             _, (leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'], [leakage_calib])
+                                                    config['otfcal']['label_cal'], [leakage_calib],
+                                                    default_interpolation_types=config['split_field']['otfcal']['interpolation'])
         else:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
                 None, ([],)*5

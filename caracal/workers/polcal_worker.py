@@ -1334,27 +1334,27 @@ def worker(pipeline, recipe, config):
             caracal.log.info(
                 "You decided to calibrate the polarized angle and leakage with a polarized calibrator.")
             idx = utils.get_field_id(msinfo, leakage_calib)[0]
-            if len(msinfo['SCAN'][str(idx)]) >= 3:
-                if config['set_model_pol']:
-                    caracal.log.info("Using a known model for the polarized calibrator.")
-                    xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
+            if config['set_model_pol']:
+                caracal.log.info("Using a known model for the polarized calibrator.")
+                xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
                                          prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
                                          calwtlist, applylist)
-                else:
+            else:
+                if len(msinfo['SCAN'][str(idx)]) >= 3:
                     caracal.log.info("The model for the polarized calibrator will be derived from data.")
                     xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
                                            prefix, refant, caltablelist, gainfieldlist, interplist, calwtlist, applylist)
-            else:
-                raise RuntimeError(
-                    "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
+                else:
+                    raise RuntimeError(
+                        "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
         else:
             raise RuntimeError(f"""Unable to determine a polarization calibration strategy. Supported strategies are: 
                     1. Calibrate leakage using an unpolarized source ({', '.join(unpolarized_calibrators)}), and 
                        polarization angle using a known polarized source ({', '.join(polarized_calibrators.keys())}).
                        This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.
                     2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at 
-                       different parallactic angles. This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.""")
-
+                       different parallactic angles. This is usually achieved by setting leakage_cal=xcal, pol_cal=xcal. 
+                       If the polarized source is unknown at least three scans are required.""")
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)

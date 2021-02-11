@@ -26,7 +26,7 @@ from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
 #montage modules for regridding the user supplied clean mask
-from MontagePy.main import mProjectCube, mHdr
+from MontagePy.main import mProjectCube
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -830,8 +830,6 @@ def worker(pipeline, recipe, config):
                             obsDict = json.load(f)
                         raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
                         decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
-#                        raTarget = 54.88
-#                        decTarget = -37.62
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
@@ -884,23 +882,18 @@ def worker(pipeline, recipe, config):
                             with fits.open(postGridMask, mode='update') as hdul:
                                 for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                                     hdul[0].header[key] = ax3param[i]
-  #                              print(hdul[0].header)
-  #                              print(hdul[0].data.shape)
                                 axDict = {'1' : [2,cubeWidth],
                                           '2' : [1,cubeHeight]}
                                 for i in ['1','2']:
- #                                   print('axis'+i)
                                     cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
                                     if cent < axDict[i][1]/2+1:
                                         delt = int(axDict[i][1]/2+1 - cent)
-  #                                      print('missing data from the beginning of the axis')
                                         if i == '1':
                                             toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
                                         else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
                                         hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
                                         hdul[0].header['CRPIX'+i] = int(cent + delt)
                                     if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
-   #                                     print('missing data from the end of the axis')
                                         delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
                                         if i == '1':
                                             toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
@@ -912,18 +905,12 @@ def worker(pipeline, recipe, config):
                                         if cent > axDict[i][1]/2+1:
                                             hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
-    #                            print(hdul[0].data.shape)
                                 hdul[0].data = np.around(hdul[0].data).astype(np.int16)
                                 try:
                                     del hdul[0].header['EN']
                                 except KeyError:
                                     pass
                                 hdul.flush()
-
-#                            with fits.open(postGridMask, mode='update') as hdul:
- #                               print(hdul[0].header)
-
-     #                       sys.exit()
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})

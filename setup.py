@@ -31,6 +31,7 @@ requirements = [
     'radiopadre-client>=1.1',
     'jinja2',
     'psutil',
+    'montagepy',
 ]
 
 PACKAGE_NAME = 'caracal'

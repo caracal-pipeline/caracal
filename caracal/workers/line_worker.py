@@ -873,6 +873,14 @@ def worker(pipeline, recipe, config):
                             if os.path.exists(postGridMask):
                                 os.remove(postGridMask)
 
+                            with fits.open(preGridMask) as hdul:
+                                if np.amax(hdul[0].data) > 1:
+                                    mask = np.where(hdul[0].data > 0)[0]
+                                    hdul[0].data[mask] = 1
+                                    preGridMaskNew = preGridMask.replace('.fits','_01.fits')
+                                    hdul.writeto('{}'.format(preGridMaskNew), overwrite = True)
+                                    preGridMask = preGridMaskNew
+
                             caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
                             mProjectCube(preGridMask, postGridMask, '{}/masking/tmp.hdr'.format(pipeline.output))
                             if not os.path.exists(postGridMask):

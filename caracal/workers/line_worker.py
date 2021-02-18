@@ -913,7 +913,7 @@ def worker(pipeline, recipe, config):
                                         if cent > axDict[i][1]/2+1:
                                             hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
-                                hdul[0].data = np.around(hdul[0].data).astype(np.int16)
+                                hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                                 try:
                                     del hdul[0].header['EN']
                                 except KeyError:

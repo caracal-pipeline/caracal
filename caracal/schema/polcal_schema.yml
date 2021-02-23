@@ -67,7 +67,7 @@ mapping:
         example: 'False'
       feed_angle_rotation:
         desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you don't want to rotate the feeds.
-        type: str
+        type: float
         required: false
         example: ''
       rewind_flags:
@@ -105,20 +105,17 @@ mapping:
         type: bool
         required: false
         example: "True"
-      calib_leakage_only:
-        desc: Calibrate only on-axis leakage with leakage_calib, omitting crosshand phases. This is experimental.
-        type: bool
-        required: false
-        example: 'False'
       pol_calib:
         desc: calibrator for the polarized angle.
         type: str
         required: false
+        enum: ['xcal', 'none']
         example: xcal
       leakage_calib:
         desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles.
         type: str
         required: false
+        enum: ['fcal','bpcal','xcal','gcal']
         example: fcal
       set_model_leakage:
         desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. Not necessary if you are using the same .MS file(s) of crosscal, it is if you splitted cross calibrated data to execute this worker and if leakage_calib != pol_calib.

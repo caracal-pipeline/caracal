@@ -1182,7 +1182,8 @@ def worker(pipeline, recipe, config):
                              }
     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
-    unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63", "PKS1934-638"]
+    unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63", "PKS1934-638",
+                               "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658","PKS 0408-658", ]
 
     # loop over all MSs for this label
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
@@ -1317,18 +1318,17 @@ def worker(pipeline, recipe, config):
                 xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, refant, polarized_calibrators,
                                      caltablelist, gainfieldlist, interplist, calwtlist, applylist,
                                      leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
-            elif not pol_calib:
-                raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?")
-            elif config['calib_only_leakage']:
+            elif pol_calib == 'none':
                 caracal.log.info(
                     "You decided to calibrate only the leakage with an unpolarized calibrator. This is experimental.")
                 calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                         prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
-                                         calwtlist, applylist)
+                                   prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
+                                   calwtlist, applylist)
             else:
-                raise RuntimeError(f"""Your setting of pol_calib={config['pol_calib']} selects {pol_calib}, which is not a supported polarization calibrator.
-                    Supported calibrators are {', '.join(polarized_calibrators.keys())}.
-                    Alternatively, you can calibrate both leakage and polarization using a (known or unknown) polarized source
+                raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?"
+                                   f"""Your setting of pol_calib={config['pol_calib']} selects {pol_calib}.
+                                    Supported calibrators are {', '.join(polarized_calibrators.keys())}.
+                                    Alternatively, you can calibrate both leakage and polarization using a (known or unknown) polarized source
                     observed at several parallactic angles. Configure this source as obsconf:xcal, and leakage_calib=pol_calib=xcal.""")
         elif leakage_calib == pol_calib:
             caracal.log.info(

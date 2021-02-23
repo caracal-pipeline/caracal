@@ -1359,7 +1359,7 @@ def worker(pipeline, recipe, config):
                        different parallactic angles. This is usually achieved by setting leakage_cal=xcal, pol_cal=xcal. 
                        If the polarized source is unknown at least three scans are required.""")
 
-        if pipeline.enable_task(config, 'summary'):
+        if pipeline.enable_task(config, 'summary') and pol_calib !='none':
             step = 'summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {

@@ -1214,13 +1214,17 @@ def worker(pipeline, recipe, config):
                         'XX', 'XY', 'YX', 'YY']))
 
 
-        pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
+        if config["pol_calib"] != 'none':
+            pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
+        else:
+            pol_calib = 'none'
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
         # check if cross_callib needs to be applied
         if config['otfcal']:
-            _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
-                callibs.resolve_calibration_library(pipeline, prefix_msbase, 
+            if pol_calib != 'none':
+                _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
+                                                    callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
                                                     config['otfcal']['label_cal'],[pol_calib],
                                                     default_interpolation_types=config['otfcal']['interpolation'])
@@ -1291,7 +1295,7 @@ def worker(pipeline, recipe, config):
                                         msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         # preliminary flags
-        if config['extendflags']:
+        if config['extendflags'] and pol_calib != 'none':
             recipe.add("cab/casa_flagdata",
                        "extend_flags_polcal",
                        {
@@ -1322,8 +1326,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.info(
                     "You decided to calibrate only the leakage with an unpolarized calibrator. This is experimental.")
                 calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                   prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
-                                   calwtlist, applylist)
+                                   prefix, refant, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist)
             else:
                 raise RuntimeError(f"Unable to determine pol_calib={config['pol_calib']}. Is your obsconf section configured properly?"
                                    f"""Your setting of pol_calib={config['pol_calib']} selects {pol_calib}.

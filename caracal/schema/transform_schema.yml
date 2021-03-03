@@ -116,6 +116,12 @@ mapping:
                 type: str
                 required: false
                 example: ''
+              output_pcal_ms:
+                desc: Controls which MSs are produced with polcal in effect. 'final' will have polcal-corrected data in DATA. 'tmp' will have KGB-corrected data in DATA and polcal-corrected data in CORRECTED_DATA. 'both' will produce both.
+                type: str
+                required: false
+                enum: [final, intermediate, both]
+                example: 'final'
               derotate_pa:
                 desc: Apply parallactic angle derotation, to put QU into the sky polarization frame.
                 type: bool

@@ -155,6 +155,8 @@ flag__2:
   enable: true
   field: target
   label_in: corr
+  flag_spw:
+    enable: true
   flag_rfi: 
     enable: true
     col: DATA

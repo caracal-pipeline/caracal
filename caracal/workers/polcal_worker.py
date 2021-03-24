@@ -1183,7 +1183,7 @@ def worker(pipeline, recipe, config):
     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
     unpolarized_calibrators = ["PKS1934-63", "J1939-6342", "J1938-6341", "PKS 1934-638", "PKS 1934-63", "PKS1934-638",
-                               "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658","PKS 0408-658", ]
+                               "PKS0408-65", "J0408-6545", "J0408-6544", "PKS 0408-65", "0407-658", "0408-658", "PKS 0408-658", "0408-65"]
 
     # loop over all MSs for this label
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):

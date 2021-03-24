@@ -210,9 +210,16 @@ def worker(pipeline, recipe, config):
                                label=f'{step}:: Split and average data ms={"".join(from_ms)}')
                 # workaround because mstransform do not accept the polcal gaintypes such as Xfparang
                 else:
+                    output_pcal_ms = config['split_field']['otfcal']['output_pcal_ms']
+                    # in intermediate-output mode, do transform directly to the output MS
+                    if output_pcal_ms == 'intermediate':
+                        tmp_ms = to_ms
+                        tmpflagv = flagv
+                        log.warning("otfcal: output_pcal_ms is 'intermediate', output will be an intermediate MS only with DATA and CORRECTED_DATA columns. This is experimenatal.")
+
                     recipe.add('cab/casa_mstransform', step + '_tmp_split_crosscal_corrected', {
                                     "vis": from_ms if label_in else from_ms + ":input",
-                                    "outputvis": 'tmp_' + to_ms,
+                                    "outputvis": tmp_ms,
                                     "timeaverage": config['split_field']['time_avg'] not in ('', '0s'),
                                     "timebin": config['split_field']['time_avg'],
                                     "chanaverage": config['split_field']['chan_avg'] > 1,
@@ -233,7 +240,7 @@ def worker(pipeline, recipe, config):
 
                     if any(papplyfield):
                         recipe.add('cab/casa_applycal', step + '_apply_polcal', {
-                                    "vis": 'tmp_' + to_ms,
+                                    "vis": tmp_ms,
                                     "field": target,
                                     "docallib": False,
                                     "calwt": pcalwtlist,
@@ -260,7 +267,7 @@ def worker(pipeline, recipe, config):
                                         pinter.append(pinterplist[idx])
                                         pcalwt.append(pcalwtlist[idx])
                             recipe.add('cab/casa_applycal', step + '_apply_polcal_' + str(ii), {
-                                            "vis": 'tmp_' + to_ms,
+                                            "vis": tmp_ms,
                                             "field": fld,
                                             "docallib": False,
                                             "calwt": pcalwt,
@@ -274,32 +281,35 @@ def worker(pipeline, recipe, config):
                                         label=f'{step}:: Apply pol callib ms={"".join(to_ms)}, field={ii}')
                     recipe.run()
                     recipe.jobs = []
-                    recipe.add('cab/casa_mstransform', step + '_split_polcal_corrected', {
-                                        "vis": 'tmp_' + to_ms,
-                                        "outputvis": to_ms,
-                                        "datacolumn": 'corrected',
-                                        "timeaverage": False,
-                                        "chanaverage": False,
-                                        "spw": '',
-                                        "correlation": '',
-                                        "usewtspectrum": config['split_field']['create_specweights'],
-                                        "field": '',
-                                        "keepflags": True,
-                                        "docallib": False,
-                                    },
-                                input=pipeline.input if label_in else pipeline.rawdatadir,
-                                output=pipeline.output,
-                                label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
-                    recipe.run()
-                    recipe.jobs = []
-                    # Delete tmp ms
-                    if os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, 'tmp_' + to_ms)) or \
-                            os.path.exists('{0:s}/{1:s}'.format(pipeline.msdir, tmpflagv)):
-                        os.system('rm -rf {0:s}/{1:s} {0:s}/{2:s}'.format(pipeline.msdir, 'tmp_' + to_ms, tmpflagv))
+                    # generate final MS, unless we're only asked to produce the intermediate one
+                    if tmp_ms != to_ms:
+                        recipe.add('cab/casa_mstransform', step + '_split_polcal_corrected', {
+                                            "vis": tmp_ms,
+                                            "outputvis": to_ms,
+                                            "datacolumn": 'corrected',
+                                            "timeaverage": False,
+                                            "chanaverage": False,
+                                            "spw": '',
+                                            "correlation": '',
+                                            "usewtspectrum": config['split_field']['create_specweights'],
+                                            "field": '',
+                                            "keepflags": True,
+                                            "docallib": False,
+                                        },
+                                    input=pipeline.input if label_in else pipeline.rawdatadir,
+                                    output=pipeline.output,
+                                    label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
+                        recipe.run()
+                        recipe.jobs = []
+
+                        # Delete intermediate ms
+                        if output_pcal_ms == 'final':
+                            remove_output_products((tmp_ms, tmpflagv), directory=pipeline.msdir, log=log)
 
                 substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                     cab_name=substep, overwrite=False)
+
             obsinfo_msname = to_ms if pipeline.enable_task(config, 'split_field') else from_ms
 
             if pipeline.enable_task(config, 'changecentre'):

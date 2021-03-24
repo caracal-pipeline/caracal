@@ -81,6 +81,41 @@ If using [Singularity](https://github.com/sylabs/singularity):
 caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 ```
 
+## Installation on ILIFU slurm environment
+
+The installation of CARACal on the Slurm environment of ILIFU may be done via an sbatch script; in which a virtual environment can be created in the user work space in which CARACal can be installed following the instructions above. An example sbatch script is given below:
+
+```
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --job-name=install_caracal
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=10GB
+#SBATCH --output=install_caracal_-%j-out.log
+#SBATCH --error=install_caracal_-%j-err.log
+#SBATCH --time=10:00:00
+echo "Submitting single node SLURM job"
+echo "Running on node $HOSTNAME"
+echo "Current time is: $now"
+cd /scratch/users/username
+venv=caracal_venv
+module load anaconda3/2020.07
+python3 -m venv $venv
+source /scratch/users/username/$venv/bin/activate
+pip install caracal
+deactivate
+```
+
+
+In the above script substitute your actual username on the ILIFU system for the dummy "username". The name of the virtual environment can be changed to that of your choice by altering the statement:
+```
+venv=caracal_venv
+
+```
+and replacing caracal_venv by your preferred name for the virtual environment.
+
+
 ## Run
 
 If you installed CARACal manually, activate the virtual environment with:

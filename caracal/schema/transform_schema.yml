@@ -25,7 +25,7 @@ mapping:
         required: false
         example: 'corr'
       rewind_flags:
-        desc: Rewind flags to specified version.
+        desc: Rewind flags to specified version. Only works with a single-valued label_in (i.e., it does not loop over multiple comma-separated values in label_in).
         type: map
         mapping:
           enable:

@@ -15,7 +15,7 @@ mapping:
         required: false
         example: 'target'
       label_in:
-        desc: Label of the input dataset.
+        desc: Label of the input dataset. If split_field/changecentre below are enabled, label_in must be a single value. Else, if concat below is enabled, label_in must include at least two comma-separated values.
         type: str
         required: false
         example: ''

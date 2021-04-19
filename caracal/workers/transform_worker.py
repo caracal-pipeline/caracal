@@ -53,14 +53,9 @@ def get_fields_to_split(config, name):
         fields_to_split = set(fields.split(','))
         diff = fields_to_split.difference(_cal_fields)
         if diff:
-            raise caracal.ConfigurationError(
-                "'{}: field: expected 'target', 'calibrators', or one or more of {}. Got '{}'".format(name,
-                                                                                                      ', '.join(
-                                                                                                          [f"'{f}'" for
-                                                                                                           f in
-                                                                                                           _cal_fields]),
-                                                                                                      ','.join(diff)
-                                                                                                      ))
+            raise caracal.ConfigurationError("'{}: field: expected 'target', "
+                                             "'calibrators', or one or more of {}. Got '{}'"
+                                             "".format(name, ', '.join([f"'{f}'" for f in _cal_fields]), ','.join(diff)))
         return fields_to_split
 
 
@@ -78,11 +73,11 @@ def worker(pipeline, recipe, config):
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
-    if (pipeline.enable_task(config, 'split_field') or pipeline.enable_task(config,
-                                                                            'changecentre')) and pipeline.enable_task(
-        config, 'concat'):
+    if (pipeline.enable_task(config, 'split_field') or \
+        pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
         raise ValueError(
-            "split_field/changecentre and concat cannot be enabled in the same run of the transform worker. The former need a single-valued label_in, the latter multiple comma-separated values.")
+            "split_field/changecentre and concat cannot be enabled in the same run of the transform worker. "
+            "The former need a single-valued label_in, the latter multiple comma-separated values.")
     if ',' in label_in:
         if pipeline.enable_task(config, 'split_field'):
             raise ValueError("split_field cannot be enabled with multiple (i.e., comma-separated) entries in label_in")
@@ -121,21 +116,23 @@ def worker(pipeline, recipe, config):
                 from_mslist = from_mslist * len(target_ls)
 
         dcol = config['split_field']['col']
-        
+
         # if these are set to not None below, this means OTF is enabled and a valid library is to be applied
         polcal_lib = crosscal_lib = None
         pcaltablelist = pgainfieldlist = pinterplist = pcalwtlist = papplyfield = []
 
         if pipeline.enable_task(config['split_field'], 'otfcal'):
             if dcol != 'corrected':
-                caracal.log.warning(f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
+                caracal.log.warning(
+                    f"split_field: col set to '{dcol}' but OTF calibration is enabled. Forcing to 'corrected'")
                 dcol = 'corrected'
             crosscal_lib, (caltablelist, gainfieldlist, interplist, calwtlist, applyfield) = \
-                resolve_calibration_library(pipeline, prefix_msbase, 
-                                            config['split_field']['otfcal']['callib'], 
-                                            config['split_field']['otfcal']['label_cal'], 
-                                            output_fields=output_fields, 
-                                            default_interpolation_types=config['split_field']['otfcal']['interpolation'])
+                resolve_calibration_library(pipeline, prefix_msbase,
+                                            config['split_field']['otfcal']['callib'],
+                                            config['split_field']['otfcal']['label_cal'],
+                                            output_fields=output_fields,
+                                            default_interpolation_types=config['split_field']['otfcal'][
+                                                'interpolation'])
             if crosscal_lib:
                 caracal.log.info(f"applying OTF cross-cal from {os.path.basename(crosscal_lib)}")
             else:
@@ -143,16 +140,16 @@ def worker(pipeline, recipe, config):
 
             # load/export if specified -- otherwise will be empty lists. Also converts to full filename.
             polcal_lib, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplyfield) = \
-                resolve_calibration_library(pipeline, prefix_msbase, 
-                                            config['split_field']['otfcal']['pol_callib'], 
-                                            config['split_field']['otfcal']['label_pcal'], 
+                resolve_calibration_library(pipeline, prefix_msbase,
+                                            config['split_field']['otfcal']['pol_callib'],
+                                            config['split_field']['otfcal']['label_pcal'],
                                             output_fields=output_fields,
-                                            default_interpolation_types=config['split_field']['otfcal']['interpolation'])
+                                            default_interpolation_types=config['split_field']['otfcal'][
+                                                'interpolation'])
             if polcal_lib:
                 caracal.log.info(f"applying OTF polcal from {os.path.basename(polcal_lib)}")
             else:
                 caracal.log.info(f"no polcal lib specified for OTF, ignoring")
-
 
         for target_iter, (target, from_ms, to_ms) in enumerate(zip(target_ls, from_mslist, to_mslist)):
             # Rewind flags
@@ -189,22 +186,22 @@ def worker(pipeline, recipe, config):
                                        directory=pipeline.msdir, log=log)
                 if not polcal_lib:
                     recipe.add('cab/casa_mstransform', step, {
-                                    "vis": from_ms if label_in else from_ms + ":input",
-                                    "outputvis": to_ms,
-                                    "timeaverage": config['split_field']['time_avg'] not in ('', '0s'),
-                                    "timebin": config['split_field']['time_avg'],
-                                    "chanaverage": config['split_field']['chan_avg'] > 1,
-                                    "chanbin": config['split_field']['chan_avg'],
-                                    "spw": config['split_field']['spw'],
-                                    "datacolumn": dcol,
-                                    "correlation": config['split_field']['correlation'],
-                                    "usewtspectrum": config['split_field']['create_specweights'],
-                                    "field": target,
-                                    "keepflags": True,
-                                    "docallib": bool(crosscal_lib),
-                                    "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
-                                    "nthreads": config['split_field']['nthreads'],
-                                },
+                        "vis": from_ms if label_in else from_ms + ":input",
+                        "outputvis": to_ms,
+                        "timeaverage": config['split_field']['time_avg'] not in ('', '0s'),
+                        "timebin": config['split_field']['time_avg'],
+                        "chanaverage": config['split_field']['chan_avg'] > 1,
+                        "chanbin": config['split_field']['chan_avg'],
+                        "spw": config['split_field']['spw'],
+                        "datacolumn": dcol,
+                        "correlation": config['split_field']['correlation'],
+                        "usewtspectrum": config['split_field']['create_specweights'],
+                        "field": target,
+                        "keepflags": True,
+                        "docallib": bool(crosscal_lib),
+                        "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
+                        "nthreads": config['split_field']['nthreads'],
+                    },
                                input=pipeline.input if label_in else pipeline.rawdatadir,
                                output=pipeline.output,
                                label=f'{step}:: Split and average data ms={"".join(from_ms)}')
@@ -215,43 +212,44 @@ def worker(pipeline, recipe, config):
                     if output_pcal_ms == 'intermediate':
                         tmp_ms = to_ms
                         tmpflagv = flagv
-                        log.warning("otfcal: output_pcal_ms is 'intermediate', output will be an intermediate MS only with DATA and CORRECTED_DATA columns. This is experimenatal.")
+                        log.warning(
+                            "otfcal: output_pcal_ms is 'intermediate', output will be an intermediate MS only with DATA and CORRECTED_DATA columns. This is experimenatal.")
 
                     recipe.add('cab/casa_mstransform', step + '_tmp_split_crosscal_corrected', {
-                                    "vis": from_ms if label_in else from_ms + ":input",
-                                    "outputvis": tmp_ms,
-                                    "timeaverage": config['split_field']['time_avg'] not in ('', '0s'),
-                                    "timebin": config['split_field']['time_avg'],
-                                    "chanaverage": config['split_field']['chan_avg'] > 1,
-                                    "chanbin": config['split_field']['chan_avg'],
-                                    "spw": config['split_field']['spw'],
-                                    "datacolumn": sdm.dismissable('corrected' if crosscal_lib is not None else 'data'),
-                                    "correlation": config['split_field']['correlation'],
-                                    "usewtspectrum": config['split_field']['create_specweights'],
-                                    "field": target,
-                                    "keepflags": True,
-                                    "docallib": bool(crosscal_lib),
-                                    "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
-                                    "nthreads": config['split_field']['nthreads'],
-                                },
-                                input=pipeline.input if label_in else pipeline.rawdatadir,
-                                output=pipeline.output,
-                                label=f'{step}:: Split and average data ms={"".join(from_ms)}')
+                        "vis": from_ms if label_in else from_ms + ":input",
+                        "outputvis": tmp_ms,
+                        "timeaverage": config['split_field']['time_avg'] not in ('', '0s'),
+                        "timebin": config['split_field']['time_avg'],
+                        "chanaverage": config['split_field']['chan_avg'] > 1,
+                        "chanbin": config['split_field']['chan_avg'],
+                        "spw": config['split_field']['spw'],
+                        "datacolumn": sdm.dismissable('corrected' if crosscal_lib is not None else 'data'),
+                        "correlation": config['split_field']['correlation'],
+                        "usewtspectrum": config['split_field']['create_specweights'],
+                        "field": target,
+                        "keepflags": True,
+                        "docallib": bool(crosscal_lib),
+                        "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
+                        "nthreads": config['split_field']['nthreads'],
+                    },
+                               input=pipeline.input if label_in else pipeline.rawdatadir,
+                               output=pipeline.output,
+                               label=f'{step}:: Split and average data ms={"".join(from_ms)}')
 
                     if any(papplyfield):
                         recipe.add('cab/casa_applycal', step + '_apply_polcal', {
-                                    "vis": tmp_ms,
-                                    "field": target,
-                                    "docallib": False,
-                                    "calwt": pcalwtlist,
-                                    "gaintable": [f"{ct}:output" for ct in pcaltablelist],
-                                    "gainfield": pgainfieldlist,
-                                    "interp": pinterplist,
-                                    "parang": config['split_field']['otfcal']['derotate_pa'],
-                                },
-                                input=pipeline.input,
-                                output=pipeline.caltables,
-                                label=f'{step}:: Apply pol callib ms={"".join(to_ms)}')
+                            "vis": tmp_ms,
+                            "field": target,
+                            "docallib": False,
+                            "calwt": pcalwtlist,
+                            "gaintable": [f"{ct}:output" for ct in pcaltablelist],
+                            "gainfield": pgainfieldlist,
+                            "interp": pinterplist,
+                            "parang": config['split_field']['otfcal']['derotate_pa'],
+                        },
+                                   input=pipeline.input,
+                                   output=pipeline.caltables,
+                                   label=f'{step}:: Apply pol callib ms={"".join(to_ms)}')
                     else:
                         trgt = [x.strip() for x in target.split(',')]
                         for ii, fld in enumerate(trgt):
@@ -267,38 +265,38 @@ def worker(pipeline, recipe, config):
                                         pinter.append(pinterplist[idx])
                                         pcalwt.append(pcalwtlist[idx])
                             recipe.add('cab/casa_applycal', step + '_apply_polcal_' + str(ii), {
-                                            "vis": tmp_ms,
-                                            "field": fld,
-                                            "docallib": False,
-                                            "calwt": pcalwt,
-                                            "gaintable": ["%s:output" % ct for ct in pcal],
-                                            "gainfield": pgain,
-                                            "interp": pinter,
-                                            "parang": config['split_field']['otfcal']['derotate_pa'],
-                                        },
-                                        input=pipeline.input,
-                                        output=pipeline.caltables,
-                                        label=f'{step}:: Apply pol callib ms={"".join(to_ms)}, field={ii}')
+                                "vis": tmp_ms,
+                                "field": fld,
+                                "docallib": False,
+                                "calwt": pcalwt,
+                                "gaintable": ["%s:output" % ct for ct in pcal],
+                                "gainfield": pgain,
+                                "interp": pinter,
+                                "parang": config['split_field']['otfcal']['derotate_pa'],
+                            },
+                                       input=pipeline.input,
+                                       output=pipeline.caltables,
+                                       label=f'{step}:: Apply pol callib ms={"".join(to_ms)}, field={ii}')
                     recipe.run()
                     recipe.jobs = []
                     # generate final MS, unless we're only asked to produce the intermediate one
                     if tmp_ms != to_ms:
                         recipe.add('cab/casa_mstransform', step + '_split_polcal_corrected', {
-                                            "vis": tmp_ms,
-                                            "outputvis": to_ms,
-                                            "datacolumn": 'corrected',
-                                            "timeaverage": False,
-                                            "chanaverage": False,
-                                            "spw": '',
-                                            "correlation": '',
-                                            "usewtspectrum": config['split_field']['create_specweights'],
-                                            "field": '',
-                                            "keepflags": True,
-                                            "docallib": False,
-                                        },
-                                    input=pipeline.input if label_in else pipeline.rawdatadir,
-                                    output=pipeline.output,
-                                    label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
+                            "vis": tmp_ms,
+                            "outputvis": to_ms,
+                            "datacolumn": 'corrected',
+                            "timeaverage": False,
+                            "chanaverage": False,
+                            "spw": '',
+                            "correlation": '',
+                            "usewtspectrum": config['split_field']['create_specweights'],
+                            "field": '',
+                            "keepflags": True,
+                            "docallib": False,
+                        },
+                                   input=pipeline.input if label_in else pipeline.rawdatadir,
+                                   output=pipeline.output,
+                                   label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
                         recipe.run()
                         recipe.jobs = []
 
@@ -315,7 +313,8 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'changecentre'):
                 if config['changecentre']['ra'] == '' or config['changecentre']['dec'] == '':
                     caracal.log.error(
-                        'Wrong format for RA and/or Dec you want to change to. Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
+                        'Wrong format for RA and/or Dec you want to change to. '
+                        'Check your settings of split_target:changecentre:ra and split_target:changecentre:dec')
                     caracal.log.error('Current settings for ra,dec are {0:s},{1:s}'.format(
                         config['changecentre']['ra'], config['changecentre']['dec']))
                     sys.exit(1)

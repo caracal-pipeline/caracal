@@ -195,6 +195,7 @@ def worker(pipeline, recipe, config):
                         "spw": config['split_field']['spw'],
                         "datacolumn": dcol,
                         "correlation": config['split_field']['correlation'],
+                        "scan": config['split_field']['scan'],
                         "usewtspectrum": config['split_field']['create_specweights'],
                         "field": target,
                         "keepflags": True,
@@ -205,7 +206,7 @@ def worker(pipeline, recipe, config):
                                input=pipeline.input if label_in else pipeline.rawdatadir,
                                output=pipeline.output,
                                label=f'{step}:: Split and average data ms={"".join(from_ms)}')
-                # workaround because mstransform do not accept the polcal gaintypes such as Xfparang
+                # workaround because mstransform does not accept the polcal gaintypes such as Xfparang
                 else:
                     output_pcal_ms = config['split_field']['otfcal']['output_pcal_ms']
                     # in intermediate-output mode, do transform directly to the output MS
@@ -225,6 +226,7 @@ def worker(pipeline, recipe, config):
                         "spw": config['split_field']['spw'],
                         "datacolumn": sdm.dismissable('corrected' if crosscal_lib is not None else 'data'),
                         "correlation": config['split_field']['correlation'],
+                        "scan": config['split_field']['scan'],
                         "usewtspectrum": config['split_field']['create_specweights'],
                         "field": target,
                         "keepflags": True,

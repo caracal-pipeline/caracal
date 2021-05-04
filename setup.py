@@ -23,7 +23,6 @@ requirements = [
     'ipdb',
     'astropy',
     'matplotlib',
-    'bokeh',
     'aplpy',
     'regions',
     'pandas',

@@ -50,7 +50,8 @@ def _get_core_antennas(flag_stats, min_baseline, max_dist):
        and baseline lengths greater than min_baseline"""
     core_ants = {}
     min_base_ants = {}
-    for i, ant in flag_stats.items():
+    antenna_stats = flag_stats['Flag stats'][1]['antennas']
+    for i, ant in antenna_stats.items():
         name = ant['name']
         flagged = ant['frac']
         array_centre_dist = ant['array_centre_dist']

@@ -103,6 +103,7 @@ venv=caracal_venv
 module load anaconda3/2020.07
 python3 -m venv $venv
 source /scratch/users/username/$venv/bin/activate
+python -m pip install --upgrade pip
 pip install caracal
 deactivate
 ```

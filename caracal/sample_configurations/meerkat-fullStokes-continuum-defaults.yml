@@ -108,17 +108,14 @@ polcal:
   otfcal:
     enable: true
     label_cal: 1kgb
-  extendflags: True
+  extendflags: true
   feed_angle_rotation: '-90'
   uvrange: '>150'
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: fcal
-  set_model_leakage: false
   gain_solint: '60s'
   time_solint: 'inf'
-  freq_solint: 'inf'
-  freqsel: '0:1.45~1.50GHz'
   plotgains: true
   apply_pcal: true
   applyto:

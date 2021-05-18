@@ -47,7 +47,6 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
     freqsel = config.get("freqsel")
     gain_solint = config.get("gain_solint")
     time_solint = config.get("time_solint")
-    freq_solint = config.get("freq_solint")
 
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xf', prefix + '.Df']
     interps = ['linear', 'nearest', 'nearest', 'nearest']
@@ -214,7 +213,6 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        },
                        input=pipeline.input, output=pipeline.caltables,
                        label="crosshand_phase_ref")
-
             tmp_gtab = caltablelist + [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref']
             tmp_field = gainfieldlist + ['', '', '']
             tmp_interp = interplist + ['linear', 'nearest', 'nearest']
@@ -224,7 +222,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "caltable": prefix + '.Xf:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "combine": "scan",
                        "poltype": "Xf",
                        "refant": ref,
@@ -276,7 +274,6 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        },
                        input=pipeline.input, output=pipeline.caltables,
                        label="leakage_ref")
-
             tmp_gtab = leak_caltablelist + [prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref']
             tmp_field = leak_gainfieldlist + ['', '', '', '']
             tmp_interp = leak_interplist + ['nearest', 'nearest', 'nearest', 'nearest']
@@ -286,7 +283,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "caltable": prefix + '.Df:output',
                        "field": leak_field,
                        "uvrange": config["uvrange"],
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "combine": "scan",
                        "poltype": "Df",
                        "refant": ref,
@@ -379,7 +376,6 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
     freqsel = config.get("freqsel")
     gain_solint = config.get("gain_solint")
     time_solint = config.get("time_solint")
-    freq_solint = config.get("freq_solint")
 
     gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xf', prefix + '.Df0gen']
     interps = ['linear', 'nearest', 'nearest', 'nearest']
@@ -520,7 +516,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "caltable": prefix + '.Xf:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "combine": "scan",
                        "poltype": "Xf",
                        "refant": ref,
@@ -558,7 +554,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "caltable": prefix + '.Df0gen:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "spw": '',
                        "combine": 'obs,scan',
                        "preavg": scandur,
@@ -649,7 +645,6 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
 
     gain_solint = config.get("gain_solint")
     time_solint = config.get("time_solint")
-    freq_solint = config.get("freq_solint")
 
     gaintables = [prefix + '.Gpol2', prefix + '.Gxyamp', prefix + '.Kcrs', prefix + '.Xfparang', prefix + '.Df0gen']
     interps = ['linear', 'linear', 'nearest', 'nearest', 'nearest']
@@ -783,7 +778,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
                        "uvrange": config["uvrange"],
                        "spw": '',
                        "poltype": 'Xfparang+QU',
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "combine": 'scan,obs',
                        "preavg": scandur,
                        "smodel": S1,
@@ -858,7 +853,7 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
                        "caltable": prefix + '.Df0gen:output',
                        "field": field,
                        "uvrange": config["uvrange"],
-                       "solint": freq_solint,
+                       "solint": time_solint,
                        "spw": '',
                        "combine": 'obs,scan',
                        "preavg": scandur,
@@ -977,8 +972,6 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                                          prefix, ref, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
-    freq_solint = config.get("freq_solint")
-
     gaintables = [prefix + '.Df']
     interps = ['nearest']
     fields = ['']
@@ -1054,7 +1047,7 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                    "caltable": prefix + '.Df:output',
                    "field": leak_field,
                    "uvrange": config["uvrange"],
-                   "solint": freq_solint,
+                   "solint": time_solint,
                    "combine": "scan",
                    "poltype": "Df",
                    "refant": ref,
@@ -1146,7 +1139,7 @@ def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
         "htmlname": gtab,
         "field": field_id,
     }
-    if term == 'Xf' or term == 'Df0gen':
+    if term in ['Xf', 'Df0gen', 'Dffls']:
         opts.update({
             "xaxis": "channel",
         })
@@ -1313,6 +1306,24 @@ def worker(pipeline, recipe, config):
                        },
                        input=pipeline.input, output=pipeline.output,
                        label="extend_flags_polcal")
+            if pol_calib != leakage_calib:
+                       recipe.add("cab/casa_flagdata",
+                                  "extend_flags_polcal",
+                                  {
+                                      "vis": msname,
+                                      "mode": 'extend',
+                                      "field": leakage_calib,
+                                      "ntime": '60s',
+                                      "combinescans": True,
+                                      "growtime": 80.0,
+                                      "growfreq": 80.0,
+                                      "growaround": True,
+                                      "flagnearfreq": True,
+                                      "flagneartime": True,
+                                      "flagbackup": False,
+                                  },
+                                  input=pipeline.input, output=pipeline.output,
+                                  label="extend_flags_polcal")
 
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:

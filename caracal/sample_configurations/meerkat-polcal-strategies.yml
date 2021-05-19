@@ -77,30 +77,8 @@ crosscal:
       - bpcal
       - xcal
 
-inspect:
-  enable: true
-  label_in: cal
-  field: calibrators
-  label_plot: 1kgb
-  real_imag:
-    enable: true
-    avgtime: '60'
-  amp_phase:
-    enable: true
-    avgtime: '60'
-  amp_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_ant:
-    enable: true
-    avgtime: '60'
-  phase_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_scan:
-    enable: true
-    avgtime: '60'
-
+# regardless the polcal strategy, the set_model_leakage section is necessary if the input MS has been splitted after crosscal (MODEL COL. MUST BE FILLED) otherwise you can remove it and save time
+# first one is when you have a good unpolarized calibrator and 3C138 or 3C286 for the phase and delay
 polcal:
   enable: true
   label_in: cal
@@ -114,11 +92,12 @@ polcal:
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: fcal
-  set_model_leakage: false
+  set_model_leakage:
+    enable: true
+    meerkat_skymodel: true
+  set_model_pol: true
   gain_solint: '60s'
   time_solint: 'inf'
-  freq_solint: 'inf'
-  freqsel: '0:1.45~1.50GHz'
   plotgains: true
   apply_pcal: true
   applyto:
@@ -126,30 +105,7 @@ polcal:
     - bpcal
     - xcal
 
-inspect__2:
-  enable: true
-  label_in: cal
-  field: 'calibrators'
-  label_plot: 1pcal
-  real_imag:
-    enable: true
-    avgtime: '60'
-  amp_phase:
-    enable: true
-    avgtime: '60'
-  amp_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_ant:
-    enable: true
-    avgtime: '60'
-  phase_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_scan:
-    enable: true
-    avgtime: '60'
-
+#second one is when you don't have a good unpolarized calibrator but you still have 3C138 or 3C286
 polcal__2:
   enable: true
   label_in: cal
@@ -163,12 +119,9 @@ polcal__2:
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: xcal
-  set_model_leakage: false
   set_model_pol: true
   gain_solint: '60s'
   time_solint: 'inf'
-  freq_solint: 'inf'
-  freqsel: '0:1.45~1.50GHz'
   plotgains: true
   apply_pcal: true
   applyto:
@@ -176,30 +129,7 @@ polcal__2:
     - bpcal
     - xcal
 
-inspect__3:
-  enable: true
-  label_in: cal
-  field: 'calibrators'
-  label_plot: 2pcal
-  real_imag:
-    enable: true
-    avgtime: '60'
-  amp_phase:
-    enable: true
-    avgtime: '60'
-  amp_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_ant:
-    enable: true
-    avgtime: '60'
-  phase_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_scan:
-    enable: true
-    avgtime: '60'
-
+# third one is when you only have an unknown polarized calibrator. You will derive it's polarization properties thanks to the parallactic angle coverage (at least 3 scans are needed)
 polcal__3:
   enable: true
   label_in: cal
@@ -213,41 +143,13 @@ polcal__3:
   reuse_existing_tables: false
   pol_calib: xcal
   leakage_calib: xcal
-  set_model_leakage: false
   set_model_pol: false
   gain_solint: 'int'
   time_solint: 'inf'
-  freq_solint: 'inf'
-  freqsel: '0:1.45~1.50GHz'
   plotgains: true
   apply_pcal: true
   applyto:
     - gcal
     - bpcal
     - xcal
-
-inspect__4:
-  enable: true
-  label_in: cal
-  field: 'calibrators'
-  label_plot: 3pcal
-  real_imag:
-    enable: true
-    avgtime: '60'
-  amp_phase:
-    enable: true
-    avgtime: '60'
-  amp_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_ant:
-    enable: true
-    avgtime: '60'
-  phase_uvwave:
-    enable: true
-    avgtime: '60'
-  amp_scan:
-    enable: true
-    avgtime: '60'
-
 

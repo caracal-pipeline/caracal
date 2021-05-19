@@ -972,6 +972,8 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                                          prefix, ref, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
+    time_solint = config.get("time_solint")
+
     gaintables = [prefix + '.Df']
     interps = ['nearest']
     fields = ['']

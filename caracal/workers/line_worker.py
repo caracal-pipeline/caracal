@@ -790,6 +790,8 @@ def worker(pipeline, recipe, config):
         if config['make_cube']['wscl_multiscale_scales']:
             line_image_opts.update({"multiscale-scales": list(map(int,config['make_cube']['wscl_multiscale_scales'].split(',')))})
 
+        if config['make_cube']['wscl_beam'] != [0, 0, 0]:
+            line_image_opts.update({"beamshape": config['make_cube']['wscl_beam']})
 
         for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))

@@ -2329,10 +2329,10 @@ def worker(pipeline, recipe, config):
                                "plot": True,
                                "outfile": ('{0:s}-{1:s}-'
                                            'slefcal-summary-{2:d}.json').format(
-                                           prefix_msbase, wname, i),
+                                           prefix, wname, i),
                                "htmlfile" : ('{0:s}-{1:s}-'
                                              'selfcal-summary-plots-{2:d}.html').format(
-                                             prefix_msbase, wname, i)
+                                             prefix, wname, i)
                            },
                            input=pipeline.input,
                            output=pipeline.diagnostic_plots,

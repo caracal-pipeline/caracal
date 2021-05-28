@@ -543,10 +543,10 @@ def worker(pipeline, recipe, config):
                                     label_in)
 
             if fields is None:
-                raise ValueError(f"""
-                    Eligible values for 'field': 'target', \
-                    'calibrators', 'fcal', 'bpcal' or 'gcal'. \
-                    User selected {",".join(fields)}""")
+                raise ValueError(
+                    "Eligible values for 'field': 'target', " +
+                    "'calibrators', 'fcal', 'bpcal' or 'gcal'. " +
+                    f"User selected {plotter_params.field}.")
 
             # for the newer plots to shadems
             if pipeline.enable_task(config, "shadems"):

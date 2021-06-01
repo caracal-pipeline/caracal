@@ -48,7 +48,7 @@ setup(name=PACKAGE_NAME,
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in
       scripts=["bin/" + j for j in os.listdir("bin")],
-      license=["GNU GPL v2"],
+      license="GNU GPL v2",
       classifiers=[
           "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Science/Research",

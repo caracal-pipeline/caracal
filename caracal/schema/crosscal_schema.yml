@@ -58,6 +58,12 @@ mapping:
             type: bool
             required: false
             example: 'True'
+          meerkat_band: 
+            desc: Select the MeerKAT observation band (only 'L 'or 'UHF' accepted for now). Set to 'L' by default. If both "meerkat_skymodel" and "meerkat_band" are enabled, then custom models of calibrator fields are used. For UHF band only models for PKS 1934-638 and PKS 408-65 are currently available. It is adviced to use them to avoid effects of calibrator field substructure.
+            type: str
+            enum: ['L','UHF']
+            required: False
+            example: 'L'
           meerkat_skymodel:
             desc: Use the MeerkAT local sky model (lsm) of the calibrator field instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
             type: bool

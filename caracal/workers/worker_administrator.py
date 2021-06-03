@@ -1,4 +1,5 @@
 # -*- coding: future_fstrings -*-
+import yaml
 import caracal
 from caracal import log, pckgdir, notebooks
 import sys
@@ -242,6 +243,29 @@ class worker_administrator(object):
         # collect into flat list of MSs
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))
         return list(target_msfiles.keys()), target_ms_ls, target_msfiles
+        
+    def get_callib_name(self, name, ext="yml", extra_label=None):
+        """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
+        name, _ = os.path.splitext(name)
+        if not name.startswith("callib-"):
+            name = f"callib-{name}"
+        if extra_label:
+            name = f"{name}-{extra_label}"
+        return os.path.join(self.caltables, f"{name}.{ext}")
+
+    def load_callib(self, name):
+        """Loads calibration library specified by name""" 
+        filename = self.get_callib_name(name)
+        if not os.path.exists(filename):
+            raise IOError(f"Calibration library {filename} doesn't exist")
+        with open(filename, 'r') as f:
+            return ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
+
+    def save_callib(self, callib, name):
+        """Dumps caldict to calibration library specified by name"""
+        with open(self.get_callib_name(name), 'w') as f:
+            ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
+
 
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""
@@ -393,6 +417,9 @@ class worker_administrator(object):
             if label is None:
                 # if label is not set, take filename, and split off _worker.py
                 label =  os.path.basename(worker.__file__).rsplit("_", 1)[0]
+            # if worker name has a __suffix, add that to label
+            if "__" in _name:
+                label += "__" + _name.split("__", 1)[1]
 
             recipe = stimela.Recipe(label,
                                     ms_dir=self.msdir,
@@ -409,11 +436,12 @@ class worker_administrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
-            log.info("{0:s}: initializing".format(label), extra=dict(color="GREEN"))
+            log_label =  "" if _name == label or _name.startswith(label + "__") else f" ({label})"
+            log.info(f"{_name}{log_label}: initializing", extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
-            log.info("{0:s}: running".format(label))
+            log.info(f"{_name}{log_label}: running")
             recipe.run()
-            log.info("{0:s}: finished".format(label))
+            log.info(f"{_name}{log_label}: finished")
 
             # this should be in the cab cleanup code, no?
 

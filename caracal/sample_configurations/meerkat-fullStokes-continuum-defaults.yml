@@ -1,0 +1,195 @@
+schema_version: 1.0.3
+
+general:
+  prefix: mypipelinerun
+
+getdata:
+  dataid: ['MS']
+
+obsconf:
+  target:
+    - all
+  fcal:
+    - longest
+  bpcal:
+    - longest
+  gcal:
+    - all
+  xcal:
+    - 'J0521+1638'
+  refant: 'm008'
+
+transform:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+  specweights:
+    enable: true
+    mode: uniform
+
+flag:
+  enable: true
+  field: calibrators
+  label_in: cal
+  flag_shadow:
+    enable: true
+  flag_autocorr:
+    enable: true
+  flag_rfi:
+    enable: true
+    flagger: tfcrop
+
+crosscal:
+  enable: true
+  uvrange: '>150'
+  label_in: cal
+  label_cal: 1kgb
+  set_model:
+    enable: true
+    meerkat_skymodel: true
+  primary:
+    reuse_existing_gains: false
+    order: KGBAKGBK
+    combine: ["","","",null,"", "", "scan","scan"]
+    solint: [inf, inf, inf, null, 60s, 60s, inf,inf]
+    calmode: [a, ap, ap, null, a, ap, ap, a]
+    b_fillgaps: 70
+    plotgains: true
+  secondary:
+    reuse_existing_gains: false
+    order: GAF
+    apply: KB
+    combine: ["",null,""]
+    solint: [inf,null,inf]
+    calmode: [ap,null,ap]
+    plotgains: true
+  apply_cal:
+    applyto:
+      - gcal
+      - bpcal
+      - xcal
+
+inspect:
+  enable: true
+  label_in: cal
+  field: calibrators
+  label_plot: 1kgb
+  real_imag:
+    enable: true
+    avgtime: '60'
+  amp_phase:
+    enable: true
+    avgtime: '60'
+  amp_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_ant:
+    enable: true
+    avgtime: '60'
+  phase_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_scan:
+    enable: true
+    avgtime: '60'
+
+polcal:
+  enable: true
+  label_in: cal
+  label_cal: 1pcal
+  otfcal:
+    enable: true
+    label_cal: 1kgb
+  extendflags: true
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: fcal
+  gain_solint: '60s'
+  time_solint: 'inf'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
+
+inspect__2:
+  enable: true
+  label_in: cal
+  field: 'calibrators'
+  label_plot: 1pcal
+  real_imag:
+    enable: true
+    avgtime: '60'
+  amp_phase:
+    enable: true
+    avgtime: '60'
+  amp_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_ant:
+    enable: true
+    avgtime: '60'
+  phase_uvwave:
+    enable: true
+    avgtime: '60'
+  amp_scan:
+    enable: true
+    avgtime: '60'
+
+transform__2:
+  enable: true
+  label_out: corr
+  field: target
+  split_field:
+    enable: true
+    col: corrected
+    otfcal:
+      enable: true
+      label_cal: 1kgb
+      label_pcal: 1pcal
+
+prep__2:
+  enable: true
+  label_in: corr
+  field: target
+  specweights:
+    enable: true
+    mode: uniform
+
+flag__2:
+  enable: true
+  field: target
+  label_in: corr
+  flag_rfi:
+    enable: true
+    col: DATA
+    flagger: aoflagger
+    aoflagger:
+      strategy: firstpass_QUV.rfis
+
+mask:
+  enable: false
+
+selfcal:
+  enable: true
+  img_npix: 4096
+  img_cell: 1.3
+  cal_timeslots_chunk: 15
+  image:
+    enable: true
+  calibrate:
+    enable: true
+    gsols_timeslots: [15]
+  transfer_model:
+    enable: false

@@ -78,7 +78,8 @@ crosscal:
       - xcal
 
 # regardless the polcal strategy, the set_model_leakage section is necessary if the input MS has been splitted after crosscal (MODEL COL. MUST BE FILLED) otherwise you can remove it and save time
-# first one is when you have a good unpolarized calibrator and 3C138 or 3C286 for the phase and delay
+#
+# first polcal strategy is when you have a good unpolarized calibrator and 3C138 or 3C286 for the phase and delay
 polcal:
   enable: true
   label_in: cal
@@ -105,7 +106,7 @@ polcal:
     - bpcal
     - xcal
 
-#second one is when you don't have a good unpolarized calibrator but you still have 3C138 or 3C286
+#second polcal strategy is when you don't have a good unpolarized calibrator but you still have 3C138 or 3C286
 polcal__2:
   enable: true
   label_in: cal
@@ -129,7 +130,7 @@ polcal__2:
     - bpcal
     - xcal
 
-# third one is when you only have an unknown polarized calibrator. You will derive it's polarization properties thanks to the parallactic angle coverage (at least 3 scans are needed)
+# third polcal strategy is when you only have an unknown polarized calibrator. You will derive it's polarization properties thanks to the parallactic angle coverage (at least 3 scans are needed)
 polcal__3:
   enable: true
   label_in: cal

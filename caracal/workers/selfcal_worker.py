@@ -2328,7 +2328,7 @@ def worker(pipeline, recipe, config):
                                "msname"  : msname,
                                "plot": True,
                                "outfile": ('{0:s}-{1:s}-'
-                                           'slefcal-summary-{2:d}.json').format(
+                                           'selfcal-summary-{2:d}.json').format(
                                            prefix, wname, i),
                                "htmlfile" : ('{0:s}-{1:s}-'
                                              'selfcal-summary-plots-{2:d}.html').format(

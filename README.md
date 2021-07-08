@@ -115,7 +115,11 @@ venv=caracal_venv
 ```
 and replacing caracal_venv by your preferred name for the virtual environment.
 
-
+NB: The stimela singularity images needed for CARACal are stored in this location:
+```
+/software/astro/caracal/
+```
+where you can access the latest version of the images, for example, ` /software/astro/caracal/STIMELA_IMAGES_1.6.9 `. 
 ## Run
 
 If you installed CARACal manually, activate the virtual environment with:

@@ -507,23 +507,22 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'summary'):
                 __label = config['label_in']
                 step = '{0:s}-summary-ms{1:d}'.format(wname,msiter)
-                recipe.add('cab/casa_flagdata', step,
-                           {
-                               "vis": msname,
-                               "mode": 'summary',
-                               "field": fields,
-                               "flagbackup": False,
+                recipe.add('cab/flagstats', step, {
+                           "msname"  : msname,
+                           "plot": True,
+                           "outfile": ('{0:s}-{1:s}-'
+                                       'flagging-summary-{2:d}.json').format(
+                                       prefix, wname, i),
+                           "htmlfile" : ('{0:s}-{1:s}-'
+                                         'flagging-summary-plots-{2:d}.html').format(
+                                         prefix, wname, i)
                            },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.diagnostic_plots,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                summary_log = glob.glob(f"{pipeline.logs}/log-{wname}-{step}-*.txt")[0]
-                json_summary = manflags.get_json_flag_summary(pipeline, summary_log,
-                                                              prefix_msbase, wname)
-                manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)
 
 
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, msiter)

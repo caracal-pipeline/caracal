@@ -45,22 +45,28 @@ mapping:
             example: 'CORRECTED_DATA'
           plots_by_field:
             seq:
-              - type: str
+              - type: any
             required: false
             desc: Sequence of shadems plot specifications, made per each field
             example: ''
           plots_by_corr:
             seq:
-              - type: str
+              - type: any
             required: false
             desc: Sequence of shadems plot specifications, made per each correlation
             example: ''
           plots:
             seq:
-              - type: str
+              - type: any
             required: false
             desc: Sequence of freeform shadems plot specifications
             example: ''
+          # freeform_plots:
+          #   seq:
+          #     - type: any
+          #   required: false
+          #   desc: Sequence of freeform shadems plot specifications
+          #   example: ''
           ignore_errors:
             type: bool
             desc: Don't halt the pipeline for shadems plotting errors.
@@ -69,7 +75,7 @@ mapping:
       standard_plotter:
         type: str
         desc: Application to use for making "standard" plots. Use "none" to disable.
-        enum: [plotms, shadems, ragavi_vis, none]
+        enum: [plotms, shadems, ragavi_vis, none, None]
         example: ragavi_vis
         required: false
       correlation: 

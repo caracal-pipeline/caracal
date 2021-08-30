@@ -139,8 +139,8 @@ class worker_administrator(object):
         self.init_pipeline(prep_input=config["general"]["prep_workspace"])
 
         # save configuration files
-
-        config_base = os.path.splitext(configFileName)[0]
+            
+        config_base = os.path.splitext( os.path.basename(configFileName) )[0]
         outConfigOrigName = f'{self.configFolder}/{config_base}-{self.timeNow}.orig.yml'
         outConfigName = f'{self.configFolder}/{config_base}-{self.timeNow}.yml'
 

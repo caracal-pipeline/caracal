@@ -9,7 +9,7 @@ except ImportError as e:
 
 requirements = [
     'ruamel.yaml',
-    'decorator',
+    'decorator<5',
     'numpy>=1.14',
     'stimela>=1.6.5',
     'python-casacore',

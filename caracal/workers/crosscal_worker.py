@@ -286,7 +286,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             for fid in field_id:
                 step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)
                 calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)
-                recipe.add(RULES[term]["cab"], step, {
+                cab_params = {
                     "msname": msname,
                     "name": calimage,
                     "size": config[ftype]["image"]['npix'],
@@ -302,8 +302,13 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "niter": config[ftype]["image"]['niter'],
                     "weight": config[ftype]["image"]["weight"],
                     "mgain": config[ftype]["image"]['mgain'],
-                    "field": fid,
-                },
+                    "field": fid}
+                if config[ftype]["image"]['external_fits_mask']:
+                    cab_params.update({"fits-mask": config[ftype]["image"]['external_fits_masks'][fid]})
+                else:
+                    cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})
+                recipe.add(RULES[term]["cab"], step,
+                           cab_params,
                            input=pipeline.input, output=pipeline.crosscal_continuum,
                            label="%s:: Image %s field" % (step, ftype))
 

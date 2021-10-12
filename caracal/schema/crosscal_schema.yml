@@ -331,6 +331,12 @@ mapping:
                 desc: Auto masking threshold
                 required: false
                 example: '10'
+              external_fits_masks:
+                seq:
+                  - type: str
+                desc: List of fits mask to use
+                required: false
+                example: ''
               auto_threshold:
                 type: float
                 desc: Auto clean threshold

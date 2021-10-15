@@ -303,7 +303,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "weight": config[ftype]["image"]["weight"],
                     "mgain": config[ftype]["image"]['mgain'],
                     "field": fid}
-                if config[ftype]["image"]['external_fits_mask']:
+                if config[ftype]["image"]['external_fits_masks']:
                     cab_params.update({"fits-mask": config[ftype]["image"]['external_fits_masks'][fid]})
                 else:
                     cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})

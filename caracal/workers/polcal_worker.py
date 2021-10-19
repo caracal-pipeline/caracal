@@ -138,6 +138,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                        "reffreq": polarized_calibrators[field]["reffreq"],
                        "polindex": polarized_calibrators[field]["polindex"],
                        "polangle": polarized_calibrators[field]["polangle"],
+                       "rotmeas": polarized_calibrators[field]["rotmeas"],
                    },
                    input=pipeline.input, output=pipeline.output,
                    label="set_model_%d" % 0)
@@ -1167,13 +1168,22 @@ def worker(pipeline, recipe, config):
                                        "spix": [-0.4981, -0.1552, -0.0102, 0.0223],
                                        "reffreq": "1.47GHz",
                                        "polindex": [0.078],
-                                       "polangle": [-0.16755]},
+                                       "polangle": [-0.16755],
+                                       "rotmeas": 0.0},
                              "3C286": {"standard": "manual",
                                        "fluxdensity": [14.7172],
                                        "spix": [-0.4507, -0.1798, 0.0357],
                                        "reffreq": "1.47GHz",
                                        "polindex": [0.098],
-                                       "polangle": [0.575959]},
+                                       "polangle": [0.575959],
+                                       "rotmeas": 0.0},
+                             "J1130-1449": {"standard": "manual",
+                                       "fluxdensity": [4.940],
+                                       "spix": 0,
+                                       "reffreq": "1.35GHz",
+                                       "polindex": [0.03],
+                                       "polangle": [-0.202893],
+                                       "rotmeas": 33},
                              }
     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
@@ -1211,6 +1221,8 @@ def worker(pipeline, recipe, config):
 
         if config["pol_calib"] != 'none':
             pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
+            if pol_calib == 'J1130-1449':
+                caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
         else:
             pol_calib = 'none'
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])

@@ -25,8 +25,6 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
-#montage modules for regridding the user supplied clean mask
-from MontagePy.main import mProjectCube
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -793,6 +791,8 @@ def worker(pipeline, recipe, config):
         if config['make_cube']['wscl_multiscale_scales']:
             line_image_opts.update({"multiscale-scales": list(map(int,config['make_cube']['wscl_multiscale_scales'].split(',')))})
 
+        if config['make_cube']['wscl_beam'] != [0, 0, 0]:
+            line_image_opts.update({"beamshape": config['make_cube']['wscl_beam']})
 
         for tt, target in enumerate(all_targets):
             caracal.log.info('Starting to make line cube for target {0:}'.format(target))
@@ -824,7 +824,9 @@ def worker(pipeline, recipe, config):
                 if j == 1:
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
-
+                        '''
+                        MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
+                        '''
                         doProj = False
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
@@ -835,9 +837,9 @@ def worker(pipeline, recipe, config):
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
-                        preGridMask = '{0:s}/{1:s}'.format(
-                            pipeline.masking, own_line_clean_mask)
-                        with fits.open(preGridMask) as hdul:
+                        preGridMask = own_line_clean_mask
+
+                        with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
                             doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
                             doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
@@ -851,7 +853,7 @@ def worker(pipeline, recipe, config):
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
                             '''
-                            with open('{}/masking/tmp.hdr'.format(pipeline.output), 'w') as file:
+                            with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                                  file.write('SIMPLE  =   T\n')
                                  file.write('BITPIX  =   -64\n')
                                  file.write('NAXIS   =   2\n')
@@ -871,23 +873,40 @@ def worker(pipeline, recipe, config):
 
                             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
-                            if os.path.exists(postGridMask):
-                                os.remove(postGridMask)
+                            if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                                os.remove('{}/{}'.format(pipeline.masking,postGridMask))
 
-                            with fits.open(preGridMask) as hdul:
+                            with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
                                 if np.amax(hdul[0].data) > 1:
                                     mask = np.where(hdul[0].data > 0)
                                     hdul[0].data[mask] = 1
                                     preGridMaskNew = preGridMask.replace('.fits','_01.fits')
-                                    hdul.writeto('{}'.format(preGridMaskNew), overwrite = True)
+                                    hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
                                     preGridMask = preGridMaskNew
                             caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
-                            mProjectCube(preGridMask, postGridMask, '{}/masking/tmp.hdr'.format(pipeline.output))
-                            if not os.path.exists(postGridMask):
+
+                            step = 'reprojectMask-field{}'.format(tt)
+                            recipe.add('cab/mProjectCube', step,
+                                       {
+                                           "in.fits": preGridMask,
+                                           "out.fits": postGridMask,
+                                           "hdr.template" : 'tmp.hdr',
+                                        },
+                                        input=pipeline.masking,
+                                        output=pipeline.masking,
+                                        label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
+
+
+                            #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                            recipe.run()
+                            # Empty job que after execution
+                            recipe.jobs = []
+
+                            if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                                 raise IOError(
                                       "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
-                            with fits.open(postGridMask, mode='update') as hdul:
+                            with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
                                 for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                                     hdul[0].header[key] = ax3param[i]
                                 axDict = {'1' : [2,cubeWidth],
@@ -922,6 +941,7 @@ def worker(pipeline, recipe, config):
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
+
                         else:
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})

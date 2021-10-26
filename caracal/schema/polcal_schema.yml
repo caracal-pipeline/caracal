@@ -1,0 +1,217 @@
+type: map
+mapping:
+  polcal:
+    type: map
+    desc: Carry out polarization calibration of the data (leakage and polarization angle).
+    mapping:
+      enable:
+        desc: Execute the polcal worker.
+        type: bool
+        required: false
+        example: 'True'
+      label_in:
+        desc: Label of the .MS file(s) to work on.
+        type: str
+        required: false
+        example: ''
+      label_cal:
+        desc: Label for output files (calibration tables, images).
+        type: str
+        required: false
+        example: '1pcal'
+      otfcal:
+        desc: Apply on-the-fly (OTF) calibration.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'otfcal' segment.
+            type: bool
+            required: false
+            example: 'False'
+          callib:
+            desc: Name of the callib file to be used, if user has their own. A corresponding .json file must exist.
+            type: str
+            required: false
+            example: ''
+          label_cal:
+            desc: Label of the calibration tables to be used.
+            type: str
+            required: false
+            example: ''
+          interpolation:
+            desc: Overrides interpolations settings for OTF calibration
+            type: map
+            mapping:
+              delay_cal: 
+                desc: Interpolation type (in time) for K-Jones (delay) solutions. 'nearest' is recommended for CASA, as 'linear' can produce unexpected results.
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'nearest'
+              gain_cal: 
+                desc: Interpolation type (in time) for G-Jones (gain) solutions. 
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'linear'
+              bp_cal: 
+                desc: Interpolation type (in time) for B-Jones (bandpass) solutions. 
+                type: str
+                enum: [default, nearest, linear, nearestPD, linearPD]
+                required: False
+                example: 'linear'
+      extendflags:
+        desc: use casa_flagdata with mode=extend to flag data which have been already flagged more than 70%. This can improve calibration.
+        type: bool
+        required: false
+        example: 'False'
+      feed_angle_rotation:
+        desc: Set the rotation angle for feeds. For MeerKAT data it is suggested to rotate the feeds by -90 degrees to agree with the convention assumed in the CASA software which is used to do the polarization calibration. Leave it empty if you don't want to rotate the feeds.
+        type: float
+        required: false
+        example: ''
+      rewind_flags:
+        desc: Rewind flags to specified version.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the rewind_flags segement.
+            type: bool
+            required: False
+            example: 'True'
+          mode:
+            desc: If mode = 'reset_worker' rewind to the flag version before this worker if it exists, or continue if it does not exist; if mode = 'rewind_to_version' rewind to the flag version given by 'version' below.
+            type: str
+            enum: [ 'reset_worker', 'rewind_to_version' ]
+            required: false
+            example: 'reset_worker'
+          version:
+            desc: Flag version to rewind to. If 'auto' it will rewind to the version prefix_workername_before, where 'prefix' is set in the 'general' worker, and 'workername' is the name of this worker including the suffix '__X' if it is a repeated instance of this worker in the configuration file. Note that all flag versions that had been saved after this version will be deleted.
+            type: str
+            required: false
+            example: 'auto'
+      overwrite_flagvers:
+        desc: Allow Caracal to overwrite existing flag versions. Not recommended. Only enable this if you know what you are doing.
+        type: bool
+        required: false
+        example: 'False'
+      uvrange:
+        desc: Select what UV range should be used throughout this worker following the CASA notation (e.g., ">100"). The default units are metres but other units can be used (e.g., ">0.5klambda").
+        type: str
+        required: false
+        example: '>50'
+      reuse_existing_tables:
+        desc: Use existing pcal tables
+        type: bool
+        required: false
+        example: "True"
+      pol_calib:
+        desc: calibrator for the polarized angle.
+        type: str
+        required: false
+        enum: ['xcal', 'none']
+        example: xcal
+      leakage_calib:
+        desc: leakage calibrator. It could be either a known unpolarized calibrator or a polarized calibrator observed at several parallactic angles.
+        type: str
+        required: false
+        enum: ['fcal','bpcal','xcal','gcal']
+        example: fcal
+      set_model_leakage:
+        desc: Fill in the MODEL column of the .MS file(s) for the leakage calibrator in preparation for polcalibration. Not necessary if you are using the same .MS file(s) of crosscal, it is if you splitted cross calibrated data to execute this worker and if leakage_calib != pol_calib.
+        type: map
+        mapping:
+          enable:
+            desc: Execute the set_model_leakage segment.
+            type: bool
+            required: false
+            example: 'False'
+          meerkat_skymodel:
+            desc: Use the MeerkAT local sky model (lsm) of the calibrator instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
+            type: bool
+            required: false
+            example: 'False'
+          no_verify:
+            desc: Enables setting standard manually [???].
+            type: bool
+            required: false
+            example: 'False'
+          tile_size:
+            type: int
+            desc: Size of tile (time bins) to process. Can be used to reduce memory footprint.
+            required: false
+            example: '128'
+          threads:
+            type: int
+            desc: Number of threads used by MeqTrees if meerkat_skymodel above is enabled.
+            required: false
+            example: '8'
+      set_model_pol:
+        desc: Fill in the MODEL column of the .MS file(s) for the polarized calibrator in preparation for polcalibration. This can be done only for 3C138 and 3C286 using the CASA setjy for point-source models. If False it will derive the model by fitting the PA coverage. This can be done only if more than 3 scans have been acquired. Not recomended for small PAs coverage.
+        type: bool
+        required: false
+        example: 'True'
+      freqsel:
+        type: str
+        required: false
+        desc: Subband selection to be used whenever solving for the DC component of either X or D. This could be picked to avoid RFI. Not used if not set or if set_model_pol is False.
+        example: ''
+      gain_solint:
+        type: str
+        required: false
+        desc: Time solution interval to be used for gaincal. Set to 'int' if set_model_pol is False.
+        example: 'inf'
+      time_solint:
+        type: str
+        required: false
+        desc: Time solution interval to be used whenever solving for the DC component of either X or D
+        example: 'inf'
+      plotgains:
+        desc: Plot solutions with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/polcal/.
+        type: bool
+        required: false
+        example: "True"
+      apply_pcal:
+        desc: Apply the polcal solutions (together with the otfcal solution if that segment is set to True) to the .MS file(s).
+        type: bool
+        required: false
+        example: 'True'
+      applyto:
+        seq:
+          - type: str
+        desc: Fields to apply calibration to.
+        required: false
+        example: "xcal, bpcal, gcal, target"
+      summary:
+        type: map
+        desc: Prints out the butcher's bill, i.e. data flagging summary at the end of pol calibration process.
+        mapping:
+          enable:
+            type: bool
+            desc: Execute printing flagging summary.
+            required: false
+            example: 'True'
+      report:
+        type: bool
+        required: false
+        desc: (Re)generate a full HTML report at the end of this worker.
+        example: 'False'
+      cabs:
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
+        required: false
+        seq:
+          - type: map
+            mapping:
+              name:
+                type: str
+                required: true
+                example: 'cabname'
+              version:
+                type: str
+                required: false
+                example: ''
+              tag:
+                type: str
+                required: false
+                example: ''
+        example: ''

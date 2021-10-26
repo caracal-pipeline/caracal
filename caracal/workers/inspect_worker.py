@@ -1,14 +1,21 @@
 # -*- coding: future_fstrings -*-
 import os
 import sys
-from collections import OrderedDict, namedtuple
+from collections import Mapping, Sequence, OrderedDict, namedtuple
 import itertools
 import yaml
 from stimela.dismissable import dismissable as sdm
-from caracal import log
+from caracal import log, ConfigurationError
 import caracal.dispatch_crew.utils as utils
 import numpy as np
 import json
+
+def check_config(config, name):
+    shadems_cfg = config["shadems"]
+    # dummy-process each plots sequence to catch any config errors
+    basesubst = dict(msbase="", all_fields="", all_corrs="", bpcal="", gcal="", fcal="", xcal="")
+    for plot_cat in "plots", "plot_by_field", "plots_by_corr":
+        _process_shadems_plot_list([], basesubst, shadems_cfg.get(plot_cat, []), {}, plot_cat)
 
 
 # Miscellaneous functions
@@ -224,7 +231,7 @@ def get_cfg_fields(pipeline, iobs, cfg_field, label_in):
         selected fields were invalid/not available
     """
     cases = {
-        "calibrators": ['bpcal', 'gcal', 'fcal'],
+        "calibrators": ['bpcal', 'gcal', 'fcal', 'xcal'],
         "target": ["target"]
     }
 
@@ -311,6 +318,52 @@ def plotms(pipeline, recipe, basic, extras=None):
                input=pipeline.input, output=output_dir,
                label=label, memory_limit=None, cpus=None)
 
+def _process_shadems_plot_list(plot_args, basesubst, plotlist, defaults, description, extras=None):
+    """Processes a list of plots, recusing into dicts"""
+    for entry in plotlist:
+        if not entry:
+            continue
+        # if plot is specified as a dict, its keys will override category defaults                
+        if isinstance(entry, Mapping):
+            entry = entry.copy()
+            desc = entry.pop("desc", "")
+            comment = entry.pop("comment", "")
+            enable = entry.pop("enable", True)
+            plots  = entry.pop("plots", None)
+            if not isinstance(plots, Sequence):
+                raise ConfigurationError(f"{description}: expecting a 'plots' sequence")
+            # skip enable=False entries
+            if not enable:
+                log.info(f"shadems plot section '{desc}' is explicitly disabled in the config file")
+                continue
+            # all other keys go into new defaults (with substitutions done)
+            new_defaults = defaults.copy()
+            new_defaults.update(**{"--" + key.replace("_", "-"): val.format(**basesubst) if type(val) is str else val
+                                    for key, val in entry.items()})
+            # and ecurse into new plot list
+            _process_shadems_plot_list(plot_args, basesubst, plots, new_defaults, f"{description}: {desc or comment}", extras=extras)
+        elif type(entry) is str:
+            # add user-defined substitutions
+            plot = entry.format(**basesubst)
+            # convert argument list to dictionary for easy update
+            args = l2d(plot)
+            # add in defaults
+            for key, value in defaults.items():
+                args.setdefault(key, value)
+            # add in extras, if any
+            if extras:
+                args.update(extras)
+            # convert to list of arguments and add to plotlist
+            # arg values of None and True and "" represent command-line arguments without a value
+            cmdline_args = []
+            for option, value in args.items():
+                cmdline_args.append(option)
+                if value not in (None, True, ""):
+                    cmdline_args.append(str(value))
+            plot_args.append(" ".join(cmdline_args))
+        else:
+            raise ConfigurationError(f"{description}: unexpected 'plots' entry of type {type(entry)}")
+
 
 def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     """
@@ -323,14 +376,15 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
 
     fields = shade_cfg["fields"]
 
-    # some user facing substitutions for fields and ms name
-    basesubst = {}
+    # some user facing substitutions for fields, corrs, and base MS name
+    basesubst = dict(
+        msbase = msbase,
+        all_fields = ",".join(fields.keys()),
+        all_corrs = shade_cfg["corrs"]
+    )
     for _f in fields.keys():
         for _ft in fields[_f]:
             basesubst[_ft] = _f
-
-    basesubst.update({"msbase": msbase,
-                      "all_fields": ",".join(fields.keys())})
 
     # groups of plots available
     plot_cats = {
@@ -344,38 +398,27 @@ def direct_shadems(pipeline, recipe, shade_cfg, extras=None):
     bares = {k: v for k, v in shade_cfg.items()
              if k in ("plots_by_field", "plots_by_corr", "plots")}
 
-    # remove plot categories that have not been specified
-    bares = {k: v for k, v in bares.items() if v[0] != ""}
+    # # remove plot categories that have not been specified
+    # bares = {k: v for k, v in bares.items() if len(v) > 1 or (v and v[0])}
+    ## I just skip them below as that's easier with the new logic
 
     plot_args = []
 
     # for each plot category i.e. plots, plot-by-field, plots-by-corr
-    for plot_cat in bares:
-        # for each list ed plot in this a category
-        for plot in bares[plot_cat]:
-            plot = plot.format(**(basesubst))
-            # convert argument list to dictionary for easy update
-            args = l2d(plot)
-            defaults = {
-                "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
-                "--col": shade_cfg["default_column"],
-                "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
-                "--corr": shade_cfg["corrs"],
-                ** plot_cats[plot_cat]
-            }
-
-            for key, value in defaults.items():
-                args.setdefault(key, value)
-
-            if extras:
-                args.update(extras)
-
-            args = list(itertools.chain.from_iterable(args.items()))
-            plot_args.append(" ".join(args))
+    for plot_cat, plotlist in bares.items():
+        # make dict of default arguments for this plot type
+        category_defaults = {
+            "--title": "'{ms} {_field}{_Spw}{_Scan}{_Ant}{_title}{_Alphatitle}{_Colortitle}'",
+            "--col": shade_cfg["default_column"],
+            "--png": f"{label}-{msbase}-{{field}}{{_Spw}}{{_Scan}}{{_Ant}}-{{label}}{{_alphalabel}}{{_colorlabel}}{{_suffix}}.png",
+            "--corr": shade_cfg["corrs"],
+            ** plot_cats[plot_cat]
+        }
+        _process_shadems_plot_list(plot_args, basesubst, plotlist, category_defaults, plot_cat)
 
     if len(plot_args) == 0:
         log.warning(
-            "The shadems section is enabled, but doesn't specify any plot_by_field or plot_by_corr or plots")
+            "The shadems section doesn't contain any enabled 'plot_by_field' or 'plot_by_corr' or 'plots' entries.")
     else:
         recipe.add("cab/shadems_direct", step,
                    dict(ms=shade_cfg["ms"],
@@ -545,7 +588,7 @@ def worker(pipeline, recipe, config):
             if fields is None:
                 raise ValueError(f"""
                     Eligible values for 'field': 'target', \
-                    'calibrators', 'fcal', 'bpcal' or 'gcal'. \
+                    'calibrators', 'fcal', 'bpcal', 'xcal' or 'gcal'. \
                     User selected {",".join(fields)}""")
 
             # for the newer plots to shadems
@@ -588,5 +631,5 @@ def worker(pipeline, recipe, config):
                             "label": label,
                             **plot_axes[axes]})
 
-                        globals()[plotter](pipeline, recipe, plot_args,
-                                           extras=None)
+                        globals()[plotter](pipeline, recipe, plot_args, extras=None)
+

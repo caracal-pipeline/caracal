@@ -9,7 +9,7 @@ except ImportError as e:
 
 requirements = [
     'ruamel.yaml',
-    'decorator',
+    'decorator<5',
     'numpy>=1.14',
     'stimela>=1.6.5',
     'python-casacore',
@@ -23,7 +23,6 @@ requirements = [
     'ipdb',
     'astropy',
     'matplotlib',
-    'bokeh',
     'aplpy',
     'regions',
     'pandas',
@@ -49,7 +48,7 @@ setup(name=PACKAGE_NAME,
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in
       scripts=["bin/" + j for j in os.listdir("bin")],
-      license=["GNU GPL v2"],
+      license="GNU GPL v2",
       classifiers=[
           "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Science/Research",

@@ -140,15 +140,16 @@ def worker(pipeline, recipe, config):
                     label="ddf_image-{0:s}:: DDFacet initial image for DD calibration".format(field),shared_memory=shared_mem)
         recipe.run()
         recipe.jobs = []
+
     def dd_postcal_image(field,ms_list):
         dd_image_opts_postcal = copy.deepcopy(dd_image_opts)
         outdir = field+"_ddcal/"
         image_prefix_postcal = "/"+outdir+"/"+prefix+"_"+field
         dd_ms_list = {"Data-MS" : ms_list}
+        dd_image_opts_postcal.update(dd_ms_list)
         print("Imaging",ms_list)
         postcal_datacol = config['image_dd']['data_colname_postcal']
         dd_imagecol = {"Data-ColName": postcal_datacol}
-        dd_image_opts_postcal.update(dd_ms_list)
         dd_image_opts_postcal.update(dd_imagecol)
         if (use_mask):
             dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-masking"}
@@ -161,9 +162,8 @@ def worker(pipeline, recipe, config):
             imname = '{0:s}{1:s}.app.restored.fits'.format(image_prefix_postcal,"-DD-masking")
             output_folder = "/"+outdir
             recipe.add("cab/cleanmask", "mask_ddf-postcal-{0:s}".format(field),{
-                 #'image' : '{0:s}:output'.format(imagename),
                  'image' : '{0:s}:output'.format(imname),
-                 'output' : '{0:s}mask_ddf_precal_{1:s}.fits:output'.format(output_folder,field),
+                 'output' : '{0:s}mask_ddf_postcal_{1:s}.fits:output'.format(output_folder,field),
                  'sigma' : config['image_dd']['mask_sigma'],
                  'boxes' : config['image_dd']['mask_boxes'],
                  'iters' : config['image_dd']['mask_niter'],
@@ -174,16 +174,14 @@ def worker(pipeline, recipe, config):
             recipe.run()
             recipe.jobs = []
 
-        if use_mask:
-            dd_maskopt = {"Mask-External" : "mask_ddf_postcal_{0:s}.fits:output".format(field)}
-            dd_image_opts_postcal.update(dd_maskopt)
-            dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
-
-        dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRIPMRIikz'}
-        dd_image_opts_postcal.update(dd_ms_list)
         dd_imagename = {"Output-Name": image_prefix_postcal+"-DD-postcal"}
         dd_image_opts_postcal.update(dd_imagename)
-        dd_image_opts_postcal.update(dd_imagecol)
+
+        if use_mask:
+            dd_maskopt = {"Mask-External" : "{0:s}mask_ddf_postcal_{1:s}.fits:output".format(output_folder,field)}
+            dd_image_opts_postcal.update(dd_maskopt)
+
+        dd_beamopts = {"Beam-Model": "FITS", "Beam-FITSFile":prefix+"'_$(corr)_$(reim).fits':output", "Beam-FITSLAxis": 'px', "Beam-FITSMAxis":"py", "Output-Images": 'dmcriDMCRIPMRIikz'}
         if USEPB:
             dd_image_opts_postcal.update(dd_beamopts)
 

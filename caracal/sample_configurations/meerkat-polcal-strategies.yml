@@ -1,0 +1,156 @@
+schema_version: 1.0.3
+
+general:
+  prefix: mypipelinerun
+
+getdata:
+  dataid: ['MS']
+
+obsconf:
+  target:
+    - all
+  fcal:
+    - longest
+  bpcal:
+    - longest
+  gcal:
+    - all
+  xcal:
+    - 'J0521+1638'
+  refant: 'm008'
+
+transform:
+  enable: true
+  field: calibrators
+  label_out: cal
+  split_field:
+    enable: true
+    col: data
+
+prep:
+  enable: true
+  label_in: cal
+  field: calibrators
+  specweights:
+    enable: true
+    mode: uniform
+
+flag:
+  enable: true
+  field: calibrators
+  label_in: cal
+  flag_shadow:
+    enable: true
+  flag_autocorr:
+    enable: true
+  flag_rfi:
+    enable: true
+    flagger: tfcrop
+
+crosscal:
+  enable: true
+  uvrange: '>150'
+  label_in: cal
+  label_cal: 1kgb
+  set_model:
+    enable: true
+    meerkat_skymodel: true
+  primary:
+    reuse_existing_gains: false
+    order: KGBAKGBK
+    combine: ["","","",null,"", "", "scan","scan"]
+    solint: [inf, inf, inf, null, 60s, 60s, inf,inf]
+    calmode: [a, ap, ap, null, a, ap, ap, a]
+    b_fillgaps: 70
+    plotgains: true
+  secondary:
+    reuse_existing_gains: false
+    order: GAF
+    apply: KB
+    combine: ["",null,""]
+    solint: [inf,null,inf]
+    calmode: [ap,null,ap]
+    plotgains: true
+  apply_cal:
+    applyto:
+      - gcal
+      - bpcal
+      - xcal
+
+# regardless the polcal strategy, the set_model_leakage section is necessary if the input MS has been splitted after crosscal (MODEL COL. MUST BE FILLED) otherwise you can remove it and save time
+#
+# first polcal strategy is when you have a good unpolarized calibrator and 3C138 or 3C286 for the phase and delay
+polcal:
+  enable: true
+  label_in: cal
+  label_cal: 1pcal
+  otfcal:
+    enable: true
+    label_cal: 1kgb
+  extendflags: True
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: fcal
+  set_model_leakage:
+    enable: true
+    meerkat_skymodel: true
+  set_model_pol: true
+  gain_solint: '60s'
+  time_solint: 'inf'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
+
+#second polcal strategy is when you don't have a good unpolarized calibrator but you still have 3C138 or 3C286
+polcal__2:
+  enable: true
+  label_in: cal
+  label_cal: 2pcal
+  otfcal:
+    enable: true
+    label_cal: 1kgb
+  extendflags: True
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: xcal
+  set_model_pol: true
+  gain_solint: '60s'
+  time_solint: 'inf'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
+
+# third polcal strategy is when you only have an unknown polarized calibrator. You will derive it's polarization properties thanks to the parallactic angle coverage (at least 3 scans are needed)
+polcal__3:
+  enable: true
+  label_in: cal
+  label_cal: 3pcal
+  otfcal:
+    enable: true
+    label_cal: 1kgb
+  extendflags: True
+  feed_angle_rotation: '-90'
+  uvrange: '>150'
+  reuse_existing_tables: false
+  pol_calib: xcal
+  leakage_calib: xcal
+  set_model_pol: false
+  gain_solint: 'int'
+  time_solint: 'inf'
+  plotgains: true
+  apply_pcal: true
+  applyto:
+    - gcal
+    - bpcal
+    - xcal
+

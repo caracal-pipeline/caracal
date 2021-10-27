@@ -83,39 +83,24 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 ## Installation on ILIFU slurm environment
 
-The installation of CARACal on the Slurm environment of ILIFU may be done via an sbatch script; in which a virtual environment can be created in the user work space in which CARACal can be installed following the instructions above. An example sbatch script is given below:
+The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instuctions:
 
 ```
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --job-name=install_caracal
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=10GB
-#SBATCH --output=install_caracal_-%j-out.log
-#SBATCH --error=install_caracal_-%j-err.log
-#SBATCH --time=10:00:00
-echo "Submitting single node SLURM job"
-echo "Running on node $HOSTNAME"
-echo "Current time is: $now"
-cd /scratch/users/username
-venv=caracal_venv
-module load anaconda3/2020.07
-python3 -m venv $venv
-source /scratch/users/username/$venv/bin/activate
-pip install caracal
+module add python/3.9.4
+python3 -m venv <venv-name>
+source <venv-name>/bin/activate
+pip install -U pip setuptools wheel
+pip install -U -e caracal
 deactivate
 ```
 
+In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
 
-In the above script substitute your actual username on the ILIFU system for the dummy "username". The name of the virtual environment can be changed to that of your choice by altering the statement:
+NB: The stimela singularity images needed for CARACal are stored in this location:
 ```
-venv=caracal_venv
-
+/software/astro/caracal/
 ```
-and replacing caracal_venv by your preferred name for the virtual environment.
-
-
+where you can access the latest version of the images, for example, ` /software/astro/caracal/STIMELA_IMAGES_1.7.0 `. 
 ## Run
 
 If you installed CARACal manually, activate the virtual environment with:

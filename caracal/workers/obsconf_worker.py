@@ -23,11 +23,26 @@ def worker(pipeline, recipe, config):
     step = None
 
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
+        
+        #look ms file is where it should be
+        in_dir = pipeline.rawdatadir
+        if in_dir[-1] != "/":
+            in_dir += "/"
+        if not os.path.exists(in_dir+msname):
+            if pipeline.ignore_missing:
+                log.warning(f"'{msname}' did not match any files, but getdata: ignore_missing is set, proceeding anyway")
+                continue
+            else:
+                raise caracal.ConfigurationError(f"'{msname}' did not match any files under {pipeline.rawdatadir}. Check your "
+                    "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
+                    "set 'getdata: ignore_missing: true'")
+
+        
         # filenames generated
         obsinfo  = f'{msroot}-obsinfo.txt'
         summary  = f'{msroot}-summary.json'
         elevplot = f'{msroot}-elevation-tracks.png'
-
+        
         if pipeline.enable_task(config, 'obsinfo'):
             if config['obsinfo']['listobs']:
                 if os.path.exists(os.path.join(pipeline.msdir, obsinfo)):
@@ -105,6 +120,24 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
+    #check if json files are there
+    missingSummary=[]
+    counter=0
+    for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
+        # filenames generated
+        summary  = f'/{msroot}-summary.json'
+        if not os.path.exists(pipeline.msdir+summary):
+            missingSummary.append(counter)
+        counter+=1
+
+    #update file list
+    if missingSummary:
+        for kk in range (0, len(missingSummary)):
+            del pipeline.msnames[missingSummary[kk]]
+            del pipeline.msbasenames[missingSummary[kk]]
+            del pipeline.prefix_msbases[missingSummary[kk]]
+    pipeline.nobs=len(pipeline.msnames)
+
     # initialse things
     for item in 'xcal fcal bpcal gcal target refant minbase maxdist'.split():
         val = config[item]
@@ -122,7 +155,6 @@ def worker(pipeline, recipe, config):
     # Set antenna properties
     #pipeline.Tsys_eta = config['Tsys_eta']
     #pipeline.dish_diameter = config['dish_diameter']
-
     for i, (msname, msroot, prefix) in enumerate(zip(pipeline.msnames, pipeline.msbasenames, pipeline.prefix_msbases)):
         caracal.log.info(f"MS #{i}: {msname}")
 
@@ -182,6 +214,7 @@ def worker(pipeline, recipe, config):
         pipeline.chanwidth[i] = chanwidth
         caracal.log.info('  CHAN_FREQ from {0:s} Hz to {1:s} Hz with average channel width of {2:s} Hz'.format(
                 ','.join(map(str, firstchanfreq)), ','.join(map(str, lastchanfreq)), ','.join(map(str, chanwidth))))
+        
         if i == pipeline.nobs-1 and np.max(pipeline.chanwidth) > 0 and np.min(pipeline.chanwidth) < 0:
             caracal.log.err('Some datasets have a positive channel increment, some negative. This will lead to errors. Exiting')
             raise caracal.BadDataError("MSs with mixed channel ordering not supported")

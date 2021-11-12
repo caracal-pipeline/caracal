@@ -92,12 +92,36 @@ def worker(pipeline, recipe, config):
             transform_mode = 'split'
 
     for i, (msbase, prefix_msbase) in enumerate(zip(pipeline.msbasenames, pipeline.prefix_msbases)):
+
+        
+        
         # if splitting from target, we have multiple MSs to iterate over
         if transform_mode == 'split':
             from_mslist = pipeline.get_mslist(i, label_in, target=from_target)
         elif transform_mode == 'concat':
             from_mslist = pipeline.get_mslist(i, '', target=from_target)
         to_mslist = pipeline.get_mslist(i, label_out, target=not splitting_cals)
+        print(from_mslist) 
+
+        #look if input files are actually where they should be
+        in_dir = pipeline.input if label_in else pipeline.rawdatadir
+        if in_dir[-1] != "/":
+            in_dir += "/"
+        
+        if len(from_mslist) ==1 and os.path.exists(in_dir+'/'+from_mslist[0]) == False:
+            raise caracal.ConfigurationError(f"'{from_mslist}' did not match any files under {pipeline.rawdatadir}. Check your "
+                            "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
+                            "set 'getdata: ignore_missing: true'")
+        elif len(from_mslist) >1:
+            ms_list_tmp=[]
+            for jj in range (0,len(from_mslist)):
+                if not os.path.exists(in_dir+from_mslist[jj]):
+                    log.warning(f"'{from_mslist[jj]}' did not match any files, but getdata: ignore_missing is set, and multiple dataIDs are given. CARACal assumes you know what you are doing, this dataset is skipped, proceeding anyway")
+
+                else:
+                    ms_list_tmp.append(from_mslist[jj])
+                    from_mslist = ms_list_tmp.copy()
+        print(from_mslist)
 
         # if splitting cals, we'll split one (combined) target to one output MS
         if splitting_cals:

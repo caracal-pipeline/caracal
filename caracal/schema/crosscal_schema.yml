@@ -326,17 +326,17 @@ mapping:
                 desc: Image weighting type. If Briggs, set the img robust parameter
                 required: false
                 example: 'briggs -1.0'
+              external_fits_masks:
+                seq:
+                  - type: str
+                desc: List of prefix strings to use an existing .FITS mask located in input/. NB: the masks need to be on the same WCS grid as the images being made and the naming must have the field ID in the prefix. e.g. prefix-<fid>. Otherwise a WSClean's auto-masking will be used (threshold set by auto_mask below)
+                required: false
+                example: ''
               auto_mask:
                 type: float
                 desc: Auto masking threshold
                 required: false
                 example: '10'
-              external_fits_masks:
-                seq:
-                  - type: str
-                desc: List of fits mask to use
-                required: false
-                example: ''
               auto_threshold:
                 type: float
                 desc: Auto clean threshold

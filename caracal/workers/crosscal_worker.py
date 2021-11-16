@@ -294,7 +294,6 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "join-channels": False if config[ftype]["image"]["nchans"] == 1 else True,
                     "fit-spectral-pol": config[ftype]["image"]["fit_spectral_pol"],
                     "channels-out": config[ftype]["image"]['nchans'],
-                    "auto-mask": config[ftype]["image"]['auto_mask'],
                     "auto-threshold": config[ftype]["image"]['auto_threshold'],
                     "local-rms-window": config[ftype]["image"]['rms_window'],
                     "local-rms": config[ftype]["image"]['local_rms'],
@@ -304,7 +303,14 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "mgain": config[ftype]["image"]['mgain'],
                     "field": fid}
                 if config[ftype]["image"]['external_fits_masks']:
-                    cab_params.update({"fits-mask": config[ftype]["image"]['external_fits_masks'][fid]})
+                    mask_file = ''
+                    for mask in config[ftype]["image"]['external_fits_masks']:
+                        if fid in mask:
+                            mask_file = mask
+                    if mask_file:
+                        cab_params.update({"fits-mask": mask_file})
+                    else:
+                        cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})
                 else:
                     cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})
                 recipe.add(RULES[term]["cab"], step,

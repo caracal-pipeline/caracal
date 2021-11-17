@@ -86,15 +86,28 @@ caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instuctions:
 
 ```
+cd /path/to/working/area
 module add python/3.9.4
 python3 -m venv <venv-name>
 source <venv-name>/bin/activate
 pip install -U pip setuptools wheel
+git clone https://github.com/caracal-pipeline/caracal.git
 pip install -U -e caracal
 deactivate
 ```
+where `/path/to/working/area` is the actual path to the directory where you wish to install CARACal.
+In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script. If you prefer working with the released version of CARACal, please skip the step: 
 
-In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
+```
+git clone https://github.com/caracal-pipeline/caracal.git
+
+```
+and modify the next step to:
+
+```
+pip install -U caracal
+
+```
 
 NB: The stimela singularity images needed for CARACal are stored in this location:
 ```

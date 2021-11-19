@@ -2323,13 +2323,19 @@ def worker(pipeline, recipe, config):
         for i, msname in enumerate(mslist):
             if pipeline.enable_task(config, 'flagging_summary'):
                 step = 'flagging_summary-selfcal-ms{0:d}'.format(i)
-                recipe.add('cab/casa_flagdata', step,
+                recipe.add('cab/flagstats', step,
                            {
-                               "vis": msname,
-                               "mode": 'summary',
+                               "msname"  : msname,
+                               "plot": True,
+                               "outfile": ('{0:s}-{1:s}-'
+                                           'selfcal-summary-{2:d}.json').format(
+                                           prefix, wname, i),
+                               "htmlfile" : ('{0:s}-{1:s}-'
+                                             'selfcal-summary-plots-{2:d}.html').format(
+                                             prefix, wname, i)
                            },
                            input=pipeline.input,
-                           output=pipeline.output,
+                           output=pipeline.diagnostic_plots,
                            label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
 
         if pipeline.enable_task(config, 'transfer_model'):

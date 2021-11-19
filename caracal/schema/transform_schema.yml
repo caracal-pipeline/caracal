@@ -23,7 +23,7 @@ mapping:
         desc: Label of the output dataset.
         type: str
         required: false
-        example: 'corr' 
+        example: 'corr'
       rewind_flags:
         desc: Rewind flags to specified version. Only works with a single-valued label_in (i.e., it does not loop over multiple comma-separated values in label_in).
         type: map
@@ -33,7 +33,7 @@ mapping:
             type: bool
             required: false
             example: 'False'
-          version: 
+          version:
             desc: Flag version to restore. Note that all flag versions saved after this version will be deleted.
             type: str
             required: false
@@ -48,7 +48,7 @@ mapping:
             required: false
             example: 'True'
           time_avg:
-            desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied. 
+            desc: Time averaging to apply to the data, in units of seconds. If this parameter is instead set to '' or '0s' then no time averaging is applied.
             type: str
             required: false
             example: ''
@@ -58,12 +58,12 @@ mapping:
             required: false
             example: '1'
           col:
-            desc: Column to be split, where the default is 'corrected'. 
+            desc: Column to be split, where the default is 'corrected'.
             type: str
             required: false
             example: 'corrected'
           correlation:
-            desc: Select the correlations, e.g. 'XX', 'YY'. Setting this to '' means that all correlations are selected. 
+            desc: Select the correlations, e.g. 'XX', 'YY'. Setting this to '' means that all correlations are selected.
             type: str
             required: false
             example: ''
@@ -82,7 +82,11 @@ mapping:
             type: str
             required: false
             example: ''
-
+          nthreads:
+            desc: Number of OMP threads to use (currently maximum limited by number of polarizations)
+            type: int
+            required: false
+            example: '1'
           otfcal:
             desc: Apply on-the-fly (OTF) calibration.
             type: map
@@ -101,8 +105,50 @@ mapping:
                 desc: Label of the calibration tables to be used.
                 type: str
                 required: false
-                example: '1gc1'
-
+                example: ''
+              pol_callib:
+                desc: Name of the polarization callib file to be used. A corresponding .json file must exist.
+                type: str
+                required: false
+                example: ''
+              label_pcal:
+                desc: Label of the polarization calibration tables to be used.
+                type: str
+                required: false
+                example: ''
+              output_pcal_ms:
+                desc: Controls which MSs are produced with polcal in effect. 'final' will have polcal-corrected data in DATA. 'intermediate' will have KGB-corrected data in DATA and polcal-corrected data in CORRECTED_DATA. 'both' will produce both (second one, the 'intermediate', will be labelled 'tmp_'+label_out).
+                type: str
+                required: false
+                enum: [final, intermediate, both]
+                example: 'final'
+              derotate_pa:
+                desc: Apply parallactic angle derotation, to put QU into the sky polarization frame.
+                type: bool
+                required: false
+                example: 'True'
+              interpolation:
+                desc: Overrides interpolations settings for OTF calibration
+                type: map
+                mapping:
+                  delay_cal: 
+                    desc: Interpolation type (in time) for K-Jones (delay) solutions. 'nearest' is recommended for CASA, as 'linear' can produce unexpected results.
+                    type: str
+                    enum: [default, nearest, linear, nearestPD, linearPD]
+                    required: False
+                    example: 'nearest'
+                  gain_cal: 
+                    desc: Interpolation type (in time) for G-Jones (gain) solutions. 
+                    type: str
+                    enum: [default, nearest, linear, nearestPD, linearPD]
+                    required: False
+                    example: 'linear'
+                  bp_cal: 
+                    desc: Interpolation type (in time) for B-Jones (bandpass) solutions. 
+                    type: str
+                    enum: [default, nearest, linear, nearestPD, linearPD]
+                    required: False
+                    example: 'linear'
       changecentre:
         desc: Change the phase centre.
         type: map

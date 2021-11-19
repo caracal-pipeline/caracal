@@ -202,7 +202,7 @@ class catalog_parser:
         """
         Coverts between the different conventions:
         PB: 10 ** [a + b * log10(v) + c * log10(v) ** 2 + d * log10(v) ** 3]
-        CASA/Meqtrees SPI: S(v0) * (v/v0) ** [a' + b'*ln(v/v0) + c'*ln(v/v0) ** 2 + d'*ln(v/v0) ** 3]
+        CASA/Meqtrees SPI: S(v0) * (v/v0) ** [a' + b'*log10(v/v0) + c'*log10(v/v0) ** 2 + d'*log10(v/v0) ** 3]
 
         args:
         :vlower, vupper: range (same unit as a, b, c, d coefficients!) to fit for a',b',c',d'
@@ -218,7 +218,7 @@ class catalog_parser:
             return 10 ** (a + b * np.log10(v) + c * np.log10(v) ** 2 + d * np.log10(v) ** 3)
 
         def casaspi(v, v0, I, a, b, c, d):
-            return I * (v/v0) ** (a + b * np.log(v/v0) + c * np.log(v/v0) ** 2 + d * np.log(v/v0) ** 3)
+            return I * (v/v0) ** (a + b * np.log10(v/v0) + c * np.log10(v/v0) ** 2 + d * np.log10(v/v0) ** 3)
 
         I = pbspi(v0, a, b, c, d)
 

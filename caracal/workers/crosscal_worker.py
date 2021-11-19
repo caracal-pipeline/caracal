@@ -1,4 +1,5 @@
 # -*- coding: future_fstrings -*-
+from collections import OrderedDict
 import sys
 import os
 import caracal.dispatch_crew.utils as utils
@@ -7,6 +8,7 @@ import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_caltabs as manGtabs
 from caracal.workers.utils import manage_antennas as manants
+from caracal.workers.utils import callibs 
 import copy
 import re
 import json
@@ -16,9 +18,9 @@ import shutil
 import numpy as np
 from casacore.tables import table
 
-
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
+
 
 def check_config(config, name):
     for primsec in "primary", "secondary":
@@ -30,70 +32,75 @@ def check_config(config, name):
         # check that numbers match
         for other in "calmode", "solint", "combine":
             if len(config[primsec][other]) != len(order):
-                raise caracal.ConfigurationError(f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
+                raise caracal.ConfigurationError(
+                    f"{name}: {primsec}: {other}: expected {len(order)} elements, found {len(config[primsec][other])}")
 
 
 # E.g. to split out continuum/<dir> from output/continuum/dir
 def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
 
+
 FLAG_NAMES = [""]
+
 
 def exists(outdir, path):
     _path = os.path.join(outdir, path)
     return os.path.exists(_path)
 
+
 # Rules for interpolation mode to use when applying calibration solutions
 RULES = {
-        "K" : {
-            "name" : "delay_cal",
-            "interp" : "nearest",
-            "cab" : "cab/casa_gaincal",
-            "gaintype" : "K",
-            "field" : "bpcal",
-            },
-        "G" : {
-            "name" : "gain_cal",
-            "interp" : "nearest",
-            "cab" : "cab/casa_gaincal",
-            "gaintype" : "G",
-            "mode" : "ap",
-            "field" : "gcal",
-            },
-        "F" : {
-            "name" : "gaincal_for_Ftable",
-            "interp" : "nearest",
-            "cab" : "cab/casa_gaincal",
-            "gaintype" : "F",
-            "mode" : "ap",
-            "field" : "gcal",
-            },
-        "B" : {
-            "name" : "bp_cal",
-            "interp" : "linear",
-            "cab" : "cab/casa_bandpass",
-            "field" : "bpcal",
-            },
-        "A" : {
-            "name" : "auto_flagging",
-            "cab" : "cab/casa_flagdata",
-            "mode" : "tfcrop",
-            },
-        "I" : {
-            "name" : "image",
-            "cab" : "cab/wsclean",
-            },
-        "S": {
-            "name" : "slope_freq_delay",
-            "cab" : "cab/casa_fringefit",
-            },
-        }
+    "K": {
+        "name": "delay_cal",
+        "interp": "linear",
+        "cab": "cab/casa_gaincal",
+        "gaintype": "K",
+        "field": "bpcal",
+    },
+    "G": {
+        "name": "gain_cal",
+        "interp": "linear",
+        "cab": "cab/casa_gaincal",
+        "gaintype": "G",
+        "mode": "ap",
+        "field": "gcal",
+    },
+    "F": {
+        "name": "gaincal_for_Ftable",
+        "interp": "linear",
+        "cab": "cab/casa_gaincal",
+        "gaintype": "F",
+        "mode": "ap",
+        "field": "gcal",
+    },
+    "B": {
+        "name": "bp_cal",
+        "interp": "linear",
+        "cab": "cab/casa_bandpass",
+        "field": "bpcal",
+    },
+    "A": {
+        "name": "auto_flagging",
+        "cab": "cab/casa_flagdata",
+        "mode": "tfcrop",
+    },
+    "I": {
+        "name": "image",
+        "cab": "cab/wsclean",
+    },
+    "S": {
+        "name": "slope_freq_delay",
+        "cab": "cab/casa_fringefit",
+    },
+}
 
 CALS = {
-        "primary": "fcal",
-        "secondary": "gcal",
-        "bandpass_cal": "bpcal",
-        }
+    "primary": "fcal",
+    "secondary": "gcal",
+    "bandpass_cal": "bpcal",
+}
+
 
 def first_if_single(items, i):
     try:
@@ -101,24 +108,26 @@ def first_if_single(items, i):
     except IndexError:
         return items[0]
 
+
 def get_last_gain(gaintables, my_term="dummy"):
     if isinstance(my_term, str):
         my_term = [my_term]
     if gaintables:
-        gtype = [tab[-2]  for tab in gaintables]
+        gtype = [tab[-2] for tab in gaintables]
         gtype.reverse()
         last_indices = []
         N = len(gtype)
         for term in set(gtype):
-            idx = N-1-gtype.index(term)
+            idx = N - 1 - gtype.index(term)
             if gtype[gtype.index(term)] not in my_term:
                 last_indices.append(idx)
         return last_indices
     else:
         return []
 
-def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
-        append_last_secondary=None, prev=None, prev_name=None, smodel=False):
+
+def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
+          append_last_secondary=None, prev=None, prev_name=None, smodel=False):
     """
     """
     gaintables = []
@@ -136,7 +145,6 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
     field = getattr(pipeline, CALS[ftype])[iobs]
     order = config[ftype]["order"]
     field_id = utils.get_field_id(msinfo, field)
-
 
     def do_KGBF(i):
         gtable_ = None
@@ -160,7 +168,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         caltable = "%s_%s.%s%d" % (prefix, ftype, term, itern)
         params["caltable"] = caltable + ":output"
         my_term = term
-        did_I = 'I' in order[:i+1]
+        did_I = 'I' in order[:i + 1]
         if not did_I and smodel and term in "KGF":
             params["smodel"] = ["1", "0", "0", "0"]
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
@@ -180,7 +188,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             if term == "F":
                 # Never append to the original. Make a copy for each F that is needed
                 caltable_original = "%s_%s.G%d" % (prefix, prev_name, prev["iters"]["G"])
-                primary_G = "%s_%s_append-%d.G%d" % (prefix, prev_name, itern,prev["iters"]["G"])
+                primary_G = "%s_%s_append-%d.G%d" % (prefix, prev_name, itern, prev["iters"]["G"])
                 caltable_path_original = os.path.join(pipeline.caltables, caltable_original)
                 caltable_path = os.path.join(pipeline.caltables, primary_G)
                 params["append"] = True
@@ -193,7 +201,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
         otf_apply = get_last_gain(gaintables, my_term=my_term)
         if otf_apply:
-            params["gaintable"] = [gaintables[count]+":output" for count in otf_apply]
+            params["gaintable"] = [gaintables[count] + ":output" for count in otf_apply]
             params["interp"] = [interps[count] for count in otf_apply]
             params["gainfield"] = [fields[count] for count in otf_apply]
 
@@ -231,6 +239,7 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
                     output=pipeline.output,
                     label='smooth bandpass')
 
+
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
             plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
@@ -239,23 +248,24 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
         interps.append(interp)
         gaintables.append(caltable)
 
-
     def do_IA(i):
-        if i==0:
-            raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed."\
-                    "an I only makes sense after a G or K (usually both)."
-                    "Please review your 'order' option in the self_cal:secondary section")
+        if i == 0:
+            raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed." \
+                               "an I only makes sense after a G or K (usually both)."
+                               "Please review your 'order' option in the self_cal:secondary section")
 
         if not applied:
             applycal(latest_KGBF_group, msname, recipe, gaintables,
-                    interps, fields, CALS[ftype], pipeline, iobs,
-                    calmode="calflag")
+                     interps, fields, CALS[ftype], pipeline, iobs,
+                     calmode="calflag")
         else:
-            caracal.log.info("Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
+            caracal.log.info(
+                "Gains have already been applied using this exact set of gain tables and fields. Skipping unnecessary applycal step")
 
         if term == "A":
             if not set("KGBF").intersection(order[:i]):
-                raise RuntimeError("Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
+                raise RuntimeError(
+                    "Have encountered a request to flag the secondary calibrator without any gain, bandpass or delay tables to apply first.")
             step = "%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
             params["mode"] = RULES[term]["mode"]
             params["field"] = ",".join(field)
@@ -268,34 +278,34 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             params["freqcutoff"] = config[ftype]["flag"]["freqcutoff"]
             params["correlation"] = config[ftype]["flag"]["correlation"]
             recipe.add(RULES[term]["cab"], step,
-                    copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.output,
-                    label="%s::" % step)
+                       copy.deepcopy(params),
+                       input=pipeline.input, output=pipeline.output,
+                       label="%s::" % step)
 
         else:
             for fid in field_id:
                 step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)
-                calimage = "%s-%s-I%d-%d-field%d:output" %(prefix, ftype, itern, iobs, fid)
+                calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)
                 recipe.add(RULES[term]["cab"], step, {
-                        "msname" : msname,
-                        "name" : calimage,
-                        "size" : config[ftype]["image"]['npix'],
-                        "scale" : config[ftype]["image"]['cell'],
-                        "join-channels" : False if config[ftype]["image"]["nchans"]==1 else True,
-                        "fit-spectral-pol" : config[ftype]["image"]["fit_spectral_pol"],
-                        "channels-out" : config[ftype]["image"]['nchans'],
-                        "auto-mask" : config[ftype]["image"]['auto_mask'],
-                        "auto-threshold" : config[ftype]["image"]['auto_threshold'],
-                        "local-rms-window" : config[ftype]["image"]['rms_window'],
-                        "local-rms" : config[ftype]["image"]['local_rms'],
-                        "padding" : config[ftype]["image"]['padding'],
-                        "niter" : config[ftype]["image"]['niter'],
-                        "weight" : config[ftype]["image"]["weight"],
-                        "mgain" : config[ftype]["image"]['mgain'],
-                        "field" : fid,
-                    },
-                        input=pipeline.input, output=pipeline.crosscal_continuum,
-                        label="%s:: Image %s field" % (step, ftype))
+                    "msname": msname,
+                    "name": calimage,
+                    "size": config[ftype]["image"]['npix'],
+                    "scale": config[ftype]["image"]['cell'],
+                    "join-channels": False if config[ftype]["image"]["nchans"] == 1 else True,
+                    "fit-spectral-pol": config[ftype]["image"]["fit_spectral_pol"],
+                    "channels-out": config[ftype]["image"]['nchans'],
+                    "auto-mask": config[ftype]["image"]['auto_mask'],
+                    "auto-threshold": config[ftype]["image"]['auto_threshold'],
+                    "local-rms-window": config[ftype]["image"]['rms_window'],
+                    "local-rms": config[ftype]["image"]['local_rms'],
+                    "padding": config[ftype]["image"]['padding'],
+                    "niter": config[ftype]["image"]['niter'],
+                    "weight": config[ftype]["image"]["weight"],
+                    "mgain": config[ftype]["image"]['mgain'],
+                    "field": fid,
+                },
+                           input=pipeline.input, output=pipeline.crosscal_continuum,
+                           label="%s:: Image %s field" % (step, ftype))
 
     nterms = len(order)
 
@@ -315,13 +325,13 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
 
     # no need to apply gains multiple when encountering consecutive terms that need to apply
     applied = False
-    i = -1 #
+    i = -1  #
     for jj, group in enumerate(groups):
         for g, term in enumerate(group):
             i += 1
             # if this is not the case, then something has gone horribly wrong
             assert term == order[i]
-            if (jj % 2) == 0: # even counter is solve group
+            if (jj % 2) == 0:  # even counter is solve group
                 even = True
                 latest_KGBF_group = group
             else:
@@ -349,12 +359,12 @@ def solve(msname, msinfo,  recipe, config, pipeline, iobs, prefix, label, ftype,
             else:
                 do_IA(i)
 
-    return  {
-                "gaintables" : gaintables,
-                "interps" : interps,
-                "iters" : iters,
-                "gainfield" : fields,
-            }
+    return {
+        "gaintables": gaintables,
+        "interps": interps,
+        "iters": iters,
+        "gainfield": fields,
+    }
 
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
@@ -366,12 +376,13 @@ def plotgains(recipe, pipeline, field_id, gtab, i, term):
         "plotname"     : "{}.png".format(gtab)
         }
     if field_id is not None:
-        params['field'] = ",".join(map(str,field_id))
+        params['field'] = ",".join(map(str, field_id))
     recipe.add('cab/ragavi', step, params,
-        input=pipeline.input,
-        msdir=pipeline.caltables,
-        output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
-        label='{0:s}:: Plot gaincal phase'.format(step))
+               input=pipeline.input,
+               msdir=pipeline.caltables,
+               output=os.path.join(pipeline.diagnostic_plots, "crosscal"),
+               label='{0:s}:: Plot gaincal phase'.format(step))
+
 
 def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, reference, label=""):
     """
@@ -379,17 +390,17 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
     """
     step = "transfer_fluxscale-%s-%d" % (label, i)
     recipe.add("cab/casa_fluxscale", step, {
-        "vis" : msname,
-        "caltable" : gaintable,
-        "fluxtable" : fluxtable,
-        "reference" : reference,
-        "transfer" : "",
-        },
-        input=pipeline.input, output=pipeline.caltables,
-        label="Transfer fluxscale")
+        "vis": msname,
+        "caltable": gaintable,
+        "fluxtable": fluxtable,
+        "reference": reference,
+        "transfer": "",
+    },
+               input=pipeline.input, output=pipeline.caltables,
+               label="Transfer fluxscale")
+
 
 def get_caltab_final(order, gaintable, interp, gainfield, field):
-
     rorder = list(reversed(order))
     if "G" in order:
         gi = rorder.index("G")
@@ -402,7 +413,7 @@ def get_caltab_final(order, gaintable, interp, gainfield, field):
         fi = np.inf
 
     # if both are not there (or = inf), then it does not matter
-    if fi == gi: # ooh, very naughty
+    if fi == gi:  # ooh, very naughty
         lidx = get_last_gain(gaintable)
     elif gi < fi:
         lidx = get_last_gain(gaintable, my_term="F")
@@ -422,8 +433,9 @@ def get_caltab_final(order, gaintable, interp, gainfield, field):
 
     return gaintables, interps, fields
 
+
 def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipeline, i,
-        calmode="calflag", label=""):
+             calmode="calflag", label=""):
     """
     Apply gains
     -----------------
@@ -434,21 +446,22 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
             gainfield, field)
-
+                                 
     step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
-        "vis" : msname,
-        "field" : ",".join(getattr(pipeline, field)[i]),
-        "applymode" : calmode,
-        "gaintable" : [tab+":output" for tab in gaintables],
-        "interp" : interps,
-        "calwt" : [False],
-        "gainfield" : fields,
-        "parang" : False,
-        "flagbackup" : False,
-        },
-            input=pipeline.input, output=pipeline.caltables,
-            label="%s::Apply gain tables" % step)
+        "vis": msname,
+        "field": ",".join(getattr(pipeline, field)[i]),
+        "applymode": calmode,
+        "gaintable": [tab + ":output" for tab in gaintables],
+        "interp": interps,
+        "calwt": [False],
+        "gainfield": fields,
+        "parang": False,
+        "flagbackup": False,
+    },
+               input=pipeline.input, output=pipeline.caltables,
+               label="%s::Apply gain tables" % step)
+
 
 
 def smooth_bandpass(bptable, window, filter_type = 'mean'):
@@ -488,38 +501,43 @@ def worker(pipeline, recipe, config):
                         version = flags_before_worker
                     stop_if_missing = True
                 if version in available_flagversions:
-                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
-                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    if flags_before_worker in available_flagversions and available_flagversions.index(
+                            flags_before_worker) < available_flagversions.index(version) and not config[
+                        'overwrite_flagvers']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
+                                          flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
                     manflags.restore_cflags(pipeline, recipe, version, msname, cab_name=substep)
                     if version != available_flagversions[-1]:
                         substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
                         manflags.delete_cflags(pipeline, recipe,
-                            available_flagversions[available_flagversions.index(version)+1],
-                            msname, cab_name=substep)
+                                               available_flagversions[available_flagversions.index(version) + 1],
+                                               msname, cab_name=substep)
                     if version != flags_before_worker:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                                            msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
-                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker,
+                                      flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
             else:
                 if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
-                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, msname, config, flags_before_worker,
+                                      flags_after_worker)
                 else:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
-                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                                        msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
-            caracal.log.info("Found more than one flux calibrator."\
-                               "Will use the one observed the logest (%s)." % fluxscale_field)
+            caracal.log.info("Found more than one flux calibrator." \
+                             "Will use the one observed the logest (%s)." % fluxscale_field)
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
@@ -540,7 +558,6 @@ def worker(pipeline, recipe, config):
                 modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
                 standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
                 if config['set_model']['meerkat_skymodel'] and modelsky:
-
                     # use local sky model of calibrator field if exists
                     opts = {
                         "skymodel": modelsky,
@@ -566,7 +583,7 @@ def worker(pipeline, recipe, config):
                         "field": fluxscale_field,
                         "standard": "manual",
                         "fluxdensity": modelpoint['I'],
-                        "reffreq": '{0:f}GHz'.format(modelpoint['ref']/1e9),
+                        "reffreq": '{0:f}GHz'.format(modelpoint['ref'] / 1e9),
                         "spix": [modelpoint[a] for a in 'abcd'],
                         "scalebychan": True,
                         "usescratch": True,
@@ -597,6 +614,7 @@ def worker(pipeline, recipe, config):
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
 
+
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
@@ -606,7 +624,7 @@ def worker(pipeline, recipe, config):
         if no_secondary:
             primary_order = config["primary"]["order"]
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix_msbase, label=label, ftype="primary")
+                            prefix_msbase, label=label, ftype="primary")
             caracal.log.info("Secondary calibrator is the same as the primary. Skipping fluxscale")
             interps = primary["interps"]
             gainfields = primary["gainfield"]
@@ -614,24 +632,27 @@ def worker(pipeline, recipe, config):
 
             if "bpcal" in config["apply_cal"]["applyto"] or "gcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+            if "xcal" in config["apply_cal"]["applyto"]:
+                applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix_msbase, label=label, ftype="primary")
+                            prefix_msbase, label=label, ftype="primary")
 
             secondary = solve(msname, msinfo, recipe, config, pipeline, i,
-                    prefix_msbase, label=label, ftype="secondary",
-                    prev=primary, prev_name="primary", smodel=True)
+                              prefix_msbase, label=label, ftype="secondary",
+                              prev=primary, prev_name="primary", smodel=True)
 
             interps = primary["interps"]
             gaintables = primary["gaintables"]
 
             if "bpcal" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                        "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
+                         "nearest", "bpcal", pipeline, i, calmode=calmode, label=label)
 
             interps = secondary["interps"]
             gainfields = secondary["gainfield"]
@@ -639,58 +660,54 @@ def worker(pipeline, recipe, config):
 
             if "gcal" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                        gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
+                         gainfields, "gcal", pipeline, i, calmode=calmode, label=label)
+            if "xcal" in config["apply_cal"]["applyto"]:
+                applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+                         "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                        "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
-            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
+            manflags.add_cflags(pipeline, recipe, flags_after_worker, msname, cab_name=substep,
+                                overwrite=config['overwrite_flagvers'])
 
-        gt_final, itp_final, fd_final = get_caltab_final(primary_order if no_secondary else secondary_order,
-                       copy.deepcopy(gaintables), interps, "nearest", "target")
+        applycal_recipes = callibs.new_callib()
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], "nearest", "target")
+        if no_secondary:
+            for gt, itp, fd in zip(*primary_tables):
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
+        else:
+            # default recipes from secondary
+            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], 
+                                                    "nearest", "target")):
+                # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
+                # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
+            # make list of primary recipes that apply specifically to primary
+            for gt, itp, fd in zip(*primary_tables):
+                callibs.add_callib_recipe(applycal_recipes, gt, itp, fd, field=fluxscale_field)
 
-        applycal_recipes = []
-        calmodes = []
-        for ix,gt in enumerate(gt_final):
-            applycal_recipes.append(dict(zip(
-                ['caltable', 'fldmap', 'interp'], [gt, fd_final[ix], itp_final[ix]])))
-            if '.K' in gt:
-                calmodes.append('delay_cal')
-            elif '.B' in gt:
-                calmodes.append('bp_cal')
-            elif '.F' in gt:
-                calmodes.append('transfer_fluxscale')
-            elif '.G' in gt:
-                calmodes.append('gain_cal')
+        pipeline.save_callib(applycal_recipes, prefix_msbase)
 
-        callib_dir = "{}/callibs".format(
-            pipeline.caltables)
-        if not os.path.exists(callib_dir):
-            os.mkdir(callib_dir)
-
-        callib_dict = dict(zip(calmodes, applycal_recipes))
-
-        with open(os.path.join(callib_dir, f'callib_{prefix_msbase}.json'), 'w') as json_file:
-            json.dump(callib_dict, json_file)
 
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)
-            recipe.add('cab/casa_flagdata', step,
+            recipe.add('cab/flagstats', step,
                        {
-                           "vis" : msname,
-                           "mode" : 'summary',
-                           "field" : ",".join(set(pipeline.bpcal[i]+pipeline.fcal[i]+pipeline.gcal[i]))
+                           "msname"  : msname,
+                           "plot": True,
+                           "outfile": ('{0:s}-{1:s}-'
+                                       'crosscal-summary-{2:d}.json').format(
+                                       prefix_msbase, wname, i),
+                           "htmlfile" : ('{0:s}-{1:s}-'
+                                         'crosscal-summary-plots-{2:d}.html').format(
+                                         prefix_msbase, wname, i)
                        },
                        input=pipeline.input,
-                       output=pipeline.output,
+                       output=pipeline.diagnostic_plots,
                        label='{0:s}:: Flagging summary  ms={1:s}'.format(step, msname))
             recipe.run()
             # Empty job que after execution
             recipe.jobs = []
-
-            summary_log = glob.glob("{0:s}/log-{1:s}-{2:s}-*"
-                                    ".txt".format(pipeline.logs, wname, step))[0]
-            json_summary = manflags.get_json_flag_summary(pipeline, summary_log, prefix_msbase, wname )
-            manflags.flag_summary_plots(pipeline, json_summary, prefix_msbase, wname, i)

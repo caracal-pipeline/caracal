@@ -10,5 +10,4 @@ recursive-include caracal/data *.npy
 recursive-include caracal/data *.lsm
 recursive-include caracal/dispatch_crew *.py
 recursive-include caracal/workers *.py
-recursive-include caracal/scripts *.py *.html *.css *.js *.ipynb
 recursive-include caracal/notebooks *.ipynb *.ipynb.j2 *.png

@@ -276,6 +276,8 @@ class config_parser(object):
                 If string=True, bools are cast to string bools, so value is suitable for command-line parsing"""
                 if is_list and isinstance(val, list):
                     return [typecast(x) for x in val]
+                if dtype is any:  # "any" type is uncast
+                    return val
                 if dtype is bool and type(val) is str:
                     return val.lower() in {"true", "yes", "1"}
                 return dtype(val)
@@ -323,7 +325,7 @@ class config_parser(object):
                     optval = getattr(options, attr_name)
                     # optval is always a string, so...
                     # ...parse lists or dicts as yaml objects
-                    if is_list or dtype is dict:
+                    if type(optval) is str and (is_list or dtype is dict):
                         optval = yaml.safe_load(optval)
                     # ...and typecast to expected type
                     option_value = typecast(optval)
@@ -332,8 +334,8 @@ class config_parser(object):
                     groups[key] = option_value
             # else populate parser with default value
             else:
-                # lists and dicts expressed via yaml
-                if is_list or dtype is dict:
+                # lists and dicts expressed via yaml, except the any-type lists
+                if (is_list and dtype is not any) or dtype is dict:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=str,
                                                 default=yaml.safe_dump(default_value))
                 # booleans have a choice

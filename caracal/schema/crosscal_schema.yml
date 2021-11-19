@@ -65,10 +65,30 @@ mapping:
             required: False
             example: 'L'
           meerkat_skymodel:
-            desc: Use the MeerkAT local sky model (lsm) of the calibrator field instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
+            desc: Use the MeerKAT local sky model (lsm) of the calibrator field instead of a point source model. At the moment a MeerKAT lsm is only available for the calibrator PKS 1934-638. For the calibrator 0408-6545 a model is available but is not well tested yet and we do not recommend using it.
             type: bool
             required: false
             example: 'False'
+          meerkat_crystalball_skymodel:
+            desc: Use the MeerKAT sky model of the calibrator field made for Crystalball.
+            type: bool
+            required: false
+            example: 'False'
+          meerkat_crystalball_memory_fraction: 
+            desc: Fraction of system RAM that can be used when using Crystalball to predict calibrator visibilities in the model column. Used when setting automatically the chunk size.
+            type: float
+            required: false
+            example: '0.5'
+          meerkat_crystalball_num_sources:
+            desc: Select only N brightest sources when using Crystalball to predict calibrator visibilities in the model column.
+            type: int
+            required: false
+            example: '0'
+          meerkat_crystalball_row_chunks:
+            desc: Number of rows of input .MS that are processed in a single chunk when using Crystalball to predict calibrator visibilities in the model column. If zero, it will be set automatically.
+            type: int
+            required: false
+            example: '0'
           no_verify:
             desc: Enables setting standard manually [???].
             type: bool

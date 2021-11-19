@@ -94,10 +94,18 @@ class catalog_parser:
                                           r"(?P<lsmname>[0-9a-zA-Z\-.]+)$",
                                           command)
                         if not valset:
-                            raise RuntimeError("Illegal line encountered while parsing"
+                            valset = re.match(r"^crystal name=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
+                                     r"epoch=(?P<epoch>[0-9]+)[ ]+"
+                                     r"(?P<lsmname>[0-9a-zA-Z\-.]+)$",
+                                     command)
+
+                            if not valset:
+                                 raise RuntimeError("Illegal line encountered while parsing"
                                                "southern standard at line %d:'%s'" %
                                                (ln_no, line))
-                        else:
+                            else:
+                                 cmd = "crystal"
+                        else: 
                             cmd = "lsm"
                     else:
                         cmd = "alias"
@@ -155,7 +163,7 @@ class catalog_parser:
                     src = valset.group("src")
                     dest = valset.group("dest")
                     if not src in calibrator_db:
-                        raise RuntimeError("%s has not been defined. cannot alias "
+                        raise RuntimeError("%s has not been defined. Cannot alias "
                                            "%s to %s in line %d" %
                                            (src, dest, src, ln_no))
                     calibrator_db[dest] = calibrator_db[src]
@@ -168,6 +176,16 @@ class catalog_parser:
                                            "%s to %s in line %d" %
                                            (src, lsm, ln_no))
                     calibrator_db[name]["lsm"] = lsm
+                    calibrator_db[name]["lsm_epoch"] = int(epoch)
+                elif cmd == "crystal":
+                    src = valset.group("src")
+                    epoch = valset.group("epoch")
+                    crystal = valset.group("lsmname")
+                    if not src in calibrator_db:
+                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model" 
+                                           "%s to %s in line %d" %
+                                           (src, crystal, ln_no))
+                    calibrator_db[name]["crystal"] = crystal
                     calibrator_db[name]["lsm_epoch"] = int(epoch)
                 else:
                     raise RuntimeError(

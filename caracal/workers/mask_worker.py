@@ -8,16 +8,17 @@ import yaml
 import numpy as np
 from caracal.dispatch_crew import utils
 from caracal.utils.requirements import requires
+from astropy import units as u
+import astropy.coordinates as coord
+from astropy import wcs
+from astropy.io import fits, ascii
+from astropy.table import Table, Column, MaskedColumn
+
 
 # Import Optional dependencies
-require_msg = "pip install astropy, astroquery"
+require_msg = "pip install astroquery"
 
 try:
-    from astropy import units as u
-    import astropy.coordinates as coord
-    from astropy import wcs
-    from astropy.io import fits, ascii
-    from astropy.table import Table, Column, MaskedColumn
     from astroquery.vizier import Vizier
 except ImportError as e:
     opt_import_error = e

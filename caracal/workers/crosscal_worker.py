@@ -305,8 +305,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                 if config[ftype]["image"]['external_fits_masks']:
                     mask_file = ''
                     for mask in config[ftype]["image"]['external_fits_masks']:
-                        if fid in mask:
-                            mask_file = mask
+                        if str(fid) in [mask.split('-')[-1]]:
+                            mask_file = f"{mask}.fits"
                     if mask_file:
                         cab_params.update({"fits-mask": mask_file})
                     else:

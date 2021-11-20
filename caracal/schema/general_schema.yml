@@ -56,6 +56,12 @@ mapping:
         required: false
         type: bool
         example: 'False'
+      backend:
+        desc: Which container backend to use (docker, udocker, singularity, podman)
+        required: false
+        type: str
+        enum: [docker, udocker, singularity, podman]
+        example: 'docker'
       cabs:
         desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
         required: false

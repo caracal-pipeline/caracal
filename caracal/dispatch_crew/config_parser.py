@@ -74,9 +74,9 @@ then edit the file to suit your needs.
     add('-ew', '--end-worker', metavar="WORKER",
         help='stop pipeline after this worker')
 
-    add('-ct', '--container-tech', choices=["docker", "udocker", "singularity", "podman"],
-        default="docker",
-        help='Container technology to use')
+    add('-ct', '--container-tech', choices=["default", "docker", "udocker", "singularity", "podman"],
+        default="default",
+        help='Containerization backend to use. Default falls back on "general: backend" config setting, or docker if not set.')
 
     add('-wh', '--worker-help', metavar="WORKER",
         help='prints help for a particular worker, then exits')

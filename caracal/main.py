@@ -162,6 +162,10 @@ def log_logo():
 def execute_pipeline(options, config, block):
     # setup piping infractructure to send messages to the parent
     workers_directory = os.path.join(caracal.pckgdir, "workers")
+    backend = config['general']['backend']
+    if options.container_tech and options.container_tech != 'default':
+        backend = options.container_tech
+
     def __run(debug=False):
         """ Executes pipeline """
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
@@ -171,7 +175,7 @@ def execute_pipeline(options, config, block):
                            workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
                            configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-                           container_tech=options.container_tech, start_worker=options.start_worker,
+                           container_tech=backend, start_worker=options.start_worker,
                            end_worker=options.end_worker, generate_reports=not options.no_reports)
 
             if options.report:

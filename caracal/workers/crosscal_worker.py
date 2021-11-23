@@ -554,6 +554,7 @@ def worker(pipeline, recipe, config):
                 }
             else:
                 modelsky = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='sky')
+                modelcrystal = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='crystal')
                 modelpoint = utils.find_in_native_calibrators(msinfo, fluxscale_field, mode='mod')
                 standard = utils.find_in_casa_calibrators(msinfo, fluxscale_field)
                 if config['set_model']['meerkat_skymodel'] and modelsky:
@@ -567,6 +568,15 @@ def worker(pipeline, recipe, config):
                         "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
+                elif config['set_model']['meerkat_crystalball_skymodel'] and modelcrystal: # Use Ben's crystalball models    
+                    opts = {
+                        "ms" : msname,
+                        "sky-model": modelcrystal,
+                        "field": fluxscale_field,
+                        "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
+                        "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
+                        "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
+                   }    
                 elif modelpoint:  # spectral model if specified in our standard
                     opts = {
                         "vis": msname,
@@ -591,12 +601,19 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError('The flux calibrator field "{}" could not be '
                                        'found in our database or in the CASA NRAO database'.format(fluxscale_field))
             step = 'set_model_cal-{0:d}'.format(i)
-            cabtouse = 'cab/casa_setjy'
-            recipe.add(cabtouse if "skymodel" not in opts else 'cab/simulator', step,
-                       opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+            if "skymodel" in opts:
+                cabtouse = 'cab/simulator'
+            elif "sky-model" in opts:
+                cabtouse = 'cab/crystalball'
+            else: 
+                cabtouse = 'cab/casa_setjy'
+            recipe.add(cabtouse, step,
+               opts,
+               input=pipeline.input,
+               output=pipeline.output,
+               label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+
+
 
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])

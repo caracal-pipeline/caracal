@@ -229,6 +229,7 @@ def hetfield(info, field, db, tol=2.9E-3):
 def find_in_native_calibrators(info, field, mode = 'both'):
     """Check if field is in the South Calibrators database.
        Return model if it is. Return lsm if an lsm is available.
+       Return a crystalball model if specified and available.
        Otherwise, return False.
     """
     if type(info) is str:
@@ -237,13 +238,17 @@ def find_in_native_calibrators(info, field, mode = 'both'):
 
     returnsky = False
     returnmod = False
+    returncrystal = False
     if mode == 'both':
         returnsky = True
         returnmod = True
+        returncrystal = True
     if mode == 'sky':
         returnsky = True
     if mode == 'mod':
         returnmod = True
+    if mode == 'crystal':
+        returncrystal = True
 
     db = mkct.calibrator_database()
 
@@ -263,6 +268,8 @@ def find_in_native_calibrators(info, field, mode = 'both'):
     dghz = src["d_casa"]
     if "lsm" in src and returnsky:
         return src["lsm"]
+    if "crystal" in src and returncrystal:
+        return src["crystal"]
     elif returnmod:
         return dict(I=src['S_v0'],
                     a=src['a_casa'],

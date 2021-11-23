@@ -1,5 +1,4 @@
 import yaml
-import yamlordereddictloader
 import sys
 from argparse import ArgumentParser
 

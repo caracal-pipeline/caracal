@@ -30,12 +30,10 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
                                                          -ct ${pull_request_name} \
-							 -sm \
-							 -dm \
+                                                         -dm \
                                                          -or \
                                                          -f \
                                                          -op \
-							 -ro \
-							 -spf $WORKSPACE/singularity_pullfolder \
-							 -hf $WORKSPACE/home \
+                                                         -ro \
+                                                         -hf $WORKSPACE/home \
                                                          -hn

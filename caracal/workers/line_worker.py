@@ -8,6 +8,7 @@ import stimela.recipe
 import astropy
 import shutil
 import itertools
+import json
 from astropy.io import fits
 # Modules useful to calculate common barycentric frequency grid
 from astropy.time import Time
@@ -823,13 +824,131 @@ def worker(pipeline, recipe, config):
                 if j == 1:
                     own_line_clean_mask = config['make_cube']['wscl_user_clean_mask']
                     if own_line_clean_mask:
-                        line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                            get_relative_path(pipeline.masking, pipeline), own_line_clean_mask)})
+                        '''
+                        MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
+                        '''
+                        doProj = False
+                        t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
+                        with open('{}/{}'.format(pipeline.msdir,t)) as f:
+                            obsDict = json.load(f)
+                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+
+                        cubeHeight=config['make_cube']['npix'][0]
+                        cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
+
+                        preGridMask = own_line_clean_mask
+
+                        with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                            doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
+                            doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
+                            doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
+                            doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
+                            if doProj:
+                                ax3param = []
+                                for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
+                                    ax3param.append(hdul[0].header[key])
+
+                        if doProj:
+                            '''
+                            MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
+                            '''
+                            with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                                 file.write('SIMPLE  =   T\n')
+                                 file.write('BITPIX  =   -64\n')
+                                 file.write('NAXIS   =   2\n')
+                                 file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                                 file.write('CTYPE1  =   \'RA---SIN\'\n')
+                                 file.write('CRVAL1  =   {}\n'.format(raTarget))
+                                 file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                                 file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
+                                 file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                                 file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                                 file.write('CRVAL2  =   {}\n'.format(decTarget))
+                                 file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                                 file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                 file.write('EXTEND  =   T\n')
+                                 file.write('EQUINOX =   2000.0\n')
+                                 file.write('END\n')
+
+                            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+
+                            if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                                os.remove('{}/{}'.format(pipeline.masking,postGridMask))
+
+                            with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                                if np.amax(hdul[0].data) > 1:
+                                    mask = np.where(hdul[0].data > 0)
+                                    hdul[0].data[mask] = 1
+                                    preGridMaskNew = preGridMask.replace('.fits','_01.fits')
+                                    hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
+                                    preGridMask = preGridMaskNew
+                            caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
+
+                            step = 'reprojectMask-field{}'.format(tt)
+                            recipe.add('cab/mProjectCube', step,
+                                       {
+                                           "in.fits": preGridMask,
+                                           "out.fits": postGridMask,
+                                           "hdr.template" : 'tmp.hdr',
+                                        },
+                                        input=pipeline.masking,
+                                        output=pipeline.masking,
+                                        label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
+
+
+                            #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                            recipe.run()
+                            # Empty job que after execution
+                            recipe.jobs = []
+
+                            if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                                raise IOError(
+                                      "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
+
+                            with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+                                for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
+                                    hdul[0].header[key] = ax3param[i]
+                                axDict = {'1' : [2,cubeWidth],
+                                          '2' : [1,cubeHeight]}
+                                for i in ['1','2']:
+                                    cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
+                                    if cent < axDict[i][1]/2+1:
+                                        delt = int(axDict[i][1]/2+1 - cent)
+                                        if i == '1':
+                                            toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                                        else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                                        hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
+                                        hdul[0].header['CRPIX'+i] = int(cent + delt)
+                                    if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
+                                        delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
+                                        if i == '1':
+                                            toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                                        else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                                        hdul[0].data = np.concatenate([hdul[0].data,toAdd],axis=axDict[i][0])
+                                    if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
+                                        delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
+                                        hdul[0].data = hdul[0].data[:,:,-delt] if i == '1' else hdul[0].data[:,-delt,:]
+                                        if cent > axDict[i][1]/2+1:
+                                            hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
+
+                                hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                                try:
+                                    del hdul[0].header['EN']
+                                except KeyError:
+                                    pass
+                                hdul.flush()
+
+                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                               get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
+
+                        else:
+                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                               get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_automasking'.format(line_name, tt, j)
-
                 else:
                     step = 'make_sofia_mask-field{0:d}-iter{1:d}'.format(tt, j - 1)
                     line_clean_mask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean_mask.fits:output'.format(

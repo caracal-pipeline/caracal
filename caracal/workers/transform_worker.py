@@ -104,14 +104,14 @@ def worker(pipeline, recipe, config):
         print(from_mslist) 
 
         #look if input files are actually where they should be
-        in_dir = pipeline.input if label_in else pipeline.rawdatadir
+        in_dir = pipeline.msdir if label_in else pipeline.rawdatadir
         if in_dir[-1] != "/":
             in_dir += "/"
+        print(in_dir)
+        #sys.exit(0)
         
         if len(from_mslist) ==1 and os.path.exists(in_dir+'/'+from_mslist[0]) == False:
-            raise caracal.ConfigurationError(f"'{from_mslist}' did not match any files under {pipeline.rawdatadir}. Check your "
-                            "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
-                            "set 'getdata: ignore_missing: true'")
+            raise caracal.ConfigurationError(f"'{from_mslist} did not match any files, but these MS files are required for this worker to continue. Check your 'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings.'")
         elif len(from_mslist) >1:
             ms_list_tmp=[]
             for jj in range (0,len(from_mslist)):

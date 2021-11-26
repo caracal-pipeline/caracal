@@ -17,15 +17,9 @@ requirements = [
     'pysolr',
     'progressbar2',
     'pykwalify',
-    'yamlordereddictloader',
-    'astroquery',
-    'npyscreen',
-    'ipdb',
     'astropy',
     'matplotlib',
-    'aplpy',
-    'regions',
-    'pandas',
+    'regions>=0.5',
     'nbconvert',
     'radiopadre-client>=1.1',
     'jinja2',
@@ -33,7 +27,7 @@ requirements = [
 ]
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
@@ -44,6 +38,7 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',
       install_requires=requirements,
+      extras_require=dict(astroquery=["astroquery"]),
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in
       scripts=["bin/" + j for j in os.listdir("bin")],

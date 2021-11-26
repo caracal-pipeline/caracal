@@ -11,9 +11,28 @@ import sys
 import glob
 import fnmatch
 import numpy as np
+import casacore.tables as tables
 
 NAME = 'Flag'
 LABEL = 'flag'
+
+
+def flagUzeros(filename,cutoff):
+
+        t=tables.table(filename,readonly=False)
+        flag=t.getcol('FLAG')
+        uvw=t.getcol('UVW')
+
+        index=np.where(np.abs(uvw[:,0]) < float(cutoff))[0]
+
+        visTot=uvw.shape[0]
+        percent=float(len(index))/float(visTot)*100.
+        flag[index,:,:] = True
+        t.putcol('FLAG',flag)
+        t.close()
+        caracal.log.info('Visibilities flagged between -{0:f} < U < {0:f} = {1:d} ({2:.2f}%)'.format(float(cutoff),visTot,percent))
+        return 0
+
 
 def worker(pipeline, recipe, config):
     label = config['label_in']
@@ -161,6 +180,15 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
+            
+            if pipeline.enable_task(config, 'flag_Urange'):
+                step = '{0:s}-flag-Urange{1:d}'.format(wname,msiter)
+                recipe.add(flagUzeros,step,
+                           {'filename': os.path.join(pipeline.msdir, msname),
+                            'cutoff': config['flag_Urange']['cutoff'],},
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Flag visibilities with {0:f}<U<{0:f} msfile {1:s}'.format(config['flag_Urange']['cutoff'],msname))
 
             if pipeline.enable_task(config, 'flag_elevation'):
                 step = '{0:s}-elevation-ms{1:d}'.format(wname, msiter)

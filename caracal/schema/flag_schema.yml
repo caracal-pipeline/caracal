@@ -10,7 +10,7 @@ mapping:
         required: True
         example: 'False'
       field:
-        desc: Fields that should be flagged. It can be set to either 'target' or 'calibrators' (i.e., all calibrators) as defined in the obsconf worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging step 'flag_mask' (see below). If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calfields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as explained in 'label_in' below.
+        desc: Fields that should be flagged. It can be set to either 'target' or 'calibrators' (i.e., all calibrators) as defined in the obsconf worker. Note that this selection is ignored -- i.e., all fields in the selected .MS file(s) are flagged -- in the flagging steps 'flag_mask' and 'flag_Urange' (see below). If a user wants to only flag a subset of the calibrators the selection can be further refined using 'calfields' below. The value of 'field' is also used to compose the name of the .MS file(s) that should be flagged, as explained in 'label_in' below.
         type: str
         enum: ["target", "calibrators"]
         required: False
@@ -118,7 +118,7 @@ mapping:
             required: False
             example: 'beg'
       flag_Urange:
-        desc: Flag visibilities within a given range of U values and all V values
+        desc: Flag visibilities within a given range of U values and all V values in all fields of the selected MS file(s).
         type: map
         mapping:
           enable:
@@ -127,7 +127,7 @@ mapping:
             required: False
             example: 'False'
           cutoff:
-            desc: Visibilities with abs(U) within cutoff are flagged.
+            desc: Visibilities with abs(U) within cutoff (in units of lambda) are flagged.
             type: float
             required: False
             example: '1.'
@@ -246,7 +246,7 @@ mapping:
             required: False
             example: 'False'
       flag_mask:
-        desc: Apply a static mask to flag known RFI.
+        desc: Apply a static mask to flag known RFI in all fields of the selected MS file(s).
         type: map
         mapping:
           enable:

@@ -174,15 +174,19 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
         if term in "GF":
             params["spw"] = config[ftype]["spw_g"]
+            params["scan"] = config[ftype]["scanselection"]
         elif term == "K":
             params["spw"] = config[ftype]["spw_k"]
+            params["scan"] = config[ftype]["scanselection"]
         if term == "B":
             params["bandtype"] = term
             params["solnorm"] = config[ftype]["b_solnorm"]
             params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
+            params["scan"] = config[ftype]["scanselection"]
         elif term == "K":
             params["gaintype"] = term
+            params["scan"] = config[ftype]["scanselection"]
         elif term in "FG":
             my_term = ["F", "G"]
             if term == "F":
@@ -194,7 +198,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                 params["append"] = True
                 caltable = "%s_%s.F%d" % (prefix, ftype, itern)
                 params["caltable"] = primary_G + ":output"
-
+            else:
+                params["scan"] = config[ftype]["scanselection"]
             params["gaintype"] = "G"
             params["uvrange"] = config["uvrange"]
             params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")

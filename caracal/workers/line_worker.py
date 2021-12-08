@@ -779,14 +779,15 @@ def worker(pipeline, recipe, config):
             "scale": config['make_cube']['cell'],
             "channelsout": nchans,
             "channelrange": channelrange,
-            "niter": config['make_cube']['niter'],
+            "niter": config['make_cube']['niter'] if not config['make_cube']['wscl_onlypsf'] else 1,
             "gain": config['make_cube']['gain'],
             "mgain": config['make_cube']['wscl_mgain'],
             "auto-threshold": config['make_cube']['wscl_auto_thr'],
             "multiscale": config['make_cube']['wscl_multiscale'],
             "multiscale-scale-bias": config['make_cube']['wscl_multiscale_bias'],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
-            "no-update-model-required": config['make_cube']['wscl_noupdatemod']
+            "no-update-model-required": config['make_cube']['wscl_noupdatemod'],
+            "make-psf-only": config['make_cube']['wscl_onlypsf'],
         }
         if config['make_cube']['wscl_multiscale_scales']:
             line_image_opts.update({"multiscale-scales": list(map(int,config['make_cube']['wscl_multiscale_scales'].split(',')))})
@@ -1019,7 +1020,9 @@ def worker(pipeline, recipe, config):
 
                 # Stack channels together into cubes and fix spectral frame
                 if config['make_cube']['wscl_make_cube']:
-                    if not config['make_cube']['niter']:
+                    if config['make_cube']['wscl_onlypsf']:
+                        imagetype = ['psf',]
+                    elif not config['make_cube']['niter']:
                         imagetype = ['dirty', 'image']
                     else:
                         imagetype = ['dirty', 'image', 'psf', 'residual', 'model']
@@ -1057,14 +1060,15 @@ def worker(pipeline, recipe, config):
 
                             # Replace channels that are single-valued (usually zero-ed) in the dirty cube with blanks
                             #   in all cubes assuming that channels run along numpy axis 1 (axis 0 is for Stokes)
-                            with fits.open('{0:s}/{1:s}'.format(pipeline.output, stacked_cube)) as stck:
-                                cubedata=stck[0].data
-                                cubehead=stck[0].header
-                                if mm == 'dirty':
-                                    tobeblanked = (cubedata == np.nanmean(cubedata,axis = (0, 2, 3)).reshape((
-                                        1, cubedata.shape[1], 1, 1))).all(axis = (0, 2, 3))
-                                cubedata[:, tobeblanked] = np.nan
-                                fits.writeto('{0:s}/{1:s}'.format(pipeline.output, stacked_cube), cubedata, header = cubehead, overwrite = True)
+                            if not config['make_cube']['wscl_onlypsf']:
+                                with fits.open('{0:s}/{1:s}'.format(pipeline.output, stacked_cube)) as stck:
+                                    cubedata=stck[0].data
+                                    cubehead=stck[0].header
+                                    if mm == 'dirty':
+                                        tobeblanked = (cubedata == np.nanmean(cubedata,axis = (0, 2, 3)).reshape((
+                                            1, cubedata.shape[1], 1, 1))).all(axis = (0, 2, 3))
+                                    cubedata[:, tobeblanked] = np.nan
+                                    fits.writeto('{0:s}/{1:s}'.format(pipeline.output, stacked_cube), cubedata, header = cubehead, overwrite = True)
 
                     caracal.log.info('Fixing the spectral system of all cubes for target {0:d}, iteration {1:d}'.format(tt, j))
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
@@ -1081,10 +1085,11 @@ def worker(pipeline, recipe, config):
                     recipe.run()
                     recipe.jobs = []
 
-                cubename_file = '{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits'.format(
-                    pipeline.cubes, j, pipeline.prefix, field, line_name)
-                rms_values.append(calc_rms(cubename_file, line_clean_mask_file))
-                caracal.log.info('RMS = {0:.3e} Jy/beam for {1:s}'.format(rms_values[-1],cubename_file))
+                if not config['make_cube']['wscl_onlypsf']:
+                    cubename_file = '{0:s}/cube_{1:d}/{2:s}_{3:s}_{4:s}_{1:d}.image.fits'.format(
+                        pipeline.cubes, j, pipeline.prefix, field, line_name)
+                    rms_values.append(calc_rms(cubename_file, line_clean_mask_file))
+                    caracal.log.info('RMS = {0:.3e} Jy/beam for {1:s}'.format(rms_values[-1],cubename_file))
 
                 # if the RMS has decreased by a factor < wscl_tol compared to the previous cube then cleaning is no longer improving the cube and we can stop
                 if len(rms_values) > 1 and wscl_tol and rms_values[-2] / rms_values[-1] <= wscl_tol:

@@ -362,6 +362,12 @@ mapping:
                 desc: Image weighting type. If Briggs, set the img robust parameter
                 required: false
                 example: 'briggs -1.0'
+              external_fits_masks:
+                desc: List of file names (without .FITS extension) located in input/. The naming must have the field ID in the file name. e.g. specify as "mask-image-4" for a file called "mask-image-4.fits" in input/ where "4" is the field ID. NB - the masks need to be on the same WCS grid as the images being made. Otherwise a WSCleans auto-masking will be used (threshold set by auto_mask below)
+                seq:
+                  - type: str
+                required: false
+                example: ''
               auto_mask:
                 type: float
                 desc: Auto masking threshold

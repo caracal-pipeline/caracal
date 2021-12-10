@@ -2042,7 +2042,7 @@ def worker(pipeline, recipe, config):
             if model_file:
                 model_files.append(model_file[0])
 
-        online_campare = model_files = sorted(model_files)
+        online_campare = sorted(model_files)
 
         if online_campare:
             step = "aimfast-compare-online_catalog"

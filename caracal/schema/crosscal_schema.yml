@@ -160,7 +160,7 @@ mapping:
             desc: String specifying (in CASA format) which scans to select during solving on primary
             type: str
             required: false
-            example: "1~5"
+            example: ""
           spw_k:
             desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
             example: ""
@@ -274,7 +274,7 @@ mapping:
             desc: String specifying (in CASA format) which scans to select during solving on secondary
             type: str
             required: false
-            example: "1~5"
+            example: ""
           spw_k:
             desc: Only use this subset(s) of the band to compute 'K' gains. Default uses full band 
             example: ""

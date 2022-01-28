@@ -401,7 +401,7 @@ def worker(pipeline, recipe, config):
                             msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname, config, flags_before_worker, flags_after_worker)
-                else:
+                elif flag_main_ms:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
@@ -540,6 +540,10 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Doppler tracking corrections'.format(step))
 
+            substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', i)
+            manflags.add_cflags(pipeline, recipe, 'caracal_legacy', msname_mst,
+                                    cab_name=substep, overwrite=False)
+
             if config['mstransform']['obsinfo']:
                 step = 'listobs-ms{:d}'.format(i)
                 recipe.add('cab/casa_listobs',
@@ -606,7 +610,7 @@ def worker(pipeline, recipe, config):
                             msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])
                 elif stop_if_missing:
                     manflags.conflict('rewind_to_non_existing', pipeline, wname, msname_mst, config, flags_before_worker, flags_after_worker, read_version = 'mstransform_version')
-                else:
+                elif flag_mst_ms:
                     substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                     manflags.add_cflags(pipeline, recipe, flags_before_worker,
                         msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])
@@ -664,12 +668,12 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Block out sun'.format(step))
 
-        if flag_main_ms or rewind_main_ms:
+        if flag_main_ms:
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname,
                 cab_name=substep, overwrite=config['overwrite_flagvers'])
 
-        if mst_exist and (pipeline.enable_task(config, 'mstransform') or flag_mst_ms or rewind_mst_ms):
+        if mst_exist and flag_mst_ms:
             substep = 'save-{0:s}-mst{1:d}'.format(flags_after_worker, i)
             manflags.add_cflags(pipeline, recipe, flags_after_worker, msname_mst,
                 cab_name=substep, overwrite=config['overwrite_flagvers'])

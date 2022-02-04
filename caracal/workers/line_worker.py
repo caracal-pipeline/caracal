@@ -395,7 +395,7 @@ def worker(pipeline, recipe, config):
                         manflags.delete_cflags(pipeline, recipe,
                             available_flagversions[available_flagversions.index(version)+1],
                             msname, cab_name=substep)
-                    if version != flags_before_worker:
+                    if version != flags_before_worker and flag_main_ms:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
                             msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
@@ -604,7 +604,7 @@ def worker(pipeline, recipe, config):
                         manflags.delete_cflags(pipeline, recipe,
                             available_flagversions[available_flagversions.index(version)+1],
                             msname_mst, cab_name=substep)
-                    if version != flags_before_worker:
+                    if version != flags_before_worker and flag_mst_ms:
                         substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
                         manflags.add_cflags(pipeline, recipe, flags_before_worker,
                             msname_mst, cab_name=substep, overwrite=config['overwrite_flagvers'])

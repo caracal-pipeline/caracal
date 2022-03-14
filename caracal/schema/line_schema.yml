@@ -435,7 +435,7 @@ mapping:
             desc: Set Bmaj,Bmin,PA of the beam to be used for restoring the clean components. The units are arcsec for Bmaj and Bmin, degrees for PA. Bmaj and Bmin are FWHM. The default values of [0, 0, 0] mean that WSClean chooses the restoring beam based on a 2d Gaussian fit to the dirty beam.
             type: seq
             seq:
-              - type: int
+              - type: float
             required: false
             example: '0, 0, 0'
           casa_thr:

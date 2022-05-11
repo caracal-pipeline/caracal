@@ -80,6 +80,12 @@ RULES = {
         "cab": "cab/casa_bandpass",
         "field": "bpcal",
     },
+    "P": {
+        "name": "bpoly_cal",
+        "interp": "linear",
+        "cab": "cab/casa_bandpass",
+        "field": "bpcal",
+    },
     "A": {
         "name": "auto_flagging",
         "cab": "cab/casa_flagdata",
@@ -184,6 +190,21 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
             params["scan"] = config[ftype]["scanselection"]
+        elif term == "P":
+            # gain plots break for new table format, need to be set to FALSE
+            if config[ftype]["plotgains"]:
+                raise RuntimeError("Ragavi gain plots not yet supported for BPOLY cal, ",
+                                   "set plotgains to false")
+            params["bandtype"] = 'BPOLY'
+            params["solnorm"] = config[ftype]["b_solnorm"]
+            params["fillgaps"] = config[ftype]["b_fillgaps"]
+            params["uvrange"] = config["uvrange"]
+            params["scan"] = config[ftype]["scanselection"]
+            params["degamp"] = config[ftype]["degamp"]
+            params["degphase"] = config[ftype]["degphase"]
+            params["visnorm"] = config[ftype]["visnorm"]
+            params["maskcenter"] = config[ftype]["maskcenter"]
+            params["maskedge"] = config[ftype]["maskedge"]
         elif term == "K":
             params["gaintype"] = term
             params["scan"] = config[ftype]["scanselection"]
@@ -243,7 +264,6 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     input=pipeline.input,
                     output=pipeline.output,
                     label='smooth bandpass')
-
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
@@ -328,7 +348,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     # terms that need an apply
     groups_apply = list(filter(lambda g: g, re.findall("([AI]+)?", order)))
     # terms that need a solve
-    groups_solve = list(filter(lambda g: g, re.findall("([KGBF]+)?", order)))
+    groups_solve = list(filter(lambda g: g, re.findall("([KGBPF]+)?", order)))
     # Order has to start with solve group.
     # TODO(sphe) in the philosophy of giving user enough roap to hang themselves
     # Release II will allow both starting with I/A in case
@@ -462,7 +482,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
             gainfield, field)
-                                 
+
     step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
         "vis": msname,
@@ -592,7 +612,7 @@ def worker(pipeline, recipe, config):
                         "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
-                   }    
+                   }
                 elif modelpoint:  # spectral model if specified in our standard
                     opts = {
                         "vis": msname,
@@ -621,7 +641,7 @@ def worker(pipeline, recipe, config):
                 cabtouse = 'cab/simulator'
             elif "sky-model" in opts:
                 cabtouse = 'cab/crystalball'
-            else: 
+            else:
                 cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse, step,
                opts,

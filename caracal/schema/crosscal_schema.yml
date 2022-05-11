@@ -171,6 +171,31 @@ mapping:
             example: ""
             required: false 
             type: str
+          degamp:
+            desc: Polynomial degree for BPOLY amplitude solution
+            type: int
+            required: false
+            example: "3"
+          degphase:
+            desc: Polynomial degree for BPOLY phase solution
+            type: int
+            required: false
+            example: "3"
+          visnorm:
+            desc: Normalize data prior to BPOLY solution
+            type: bool
+            required: false
+            example: "False"
+          maskcenter:
+            desc: Number of channels in BPOLY to avoid in center of band
+            type: int
+            required: false
+            example: "0"
+          maskedge:
+            desc: Percent of channels in BPOLY to avoid at each band edge
+            type: int
+            required: false
+            example: "0"
           plotgains:
             desc: Plot gains with ragavi-gains. The .html plots are located in <output>/diagnostic_plots/crosscal/.
             type: bool

@@ -41,5 +41,5 @@ jobs:
         pytest
     - name: Test caracal command
       run: |
-        caracal --help
+        caracal --help >> $GITHUB_STEP_SUMMARY
         caracal -gd test.yml

@@ -1,4 +1,4 @@
-language: python
+language: python3
 matrix:
   include:
   - env: TARGET=py3

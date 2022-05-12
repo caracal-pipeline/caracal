@@ -41,6 +41,6 @@ jobs:
         pytest
     - name: Test caracal command
       run: |
-        rm $GITHUB_STEP_SUMMARY
-        caracal --help >> $GITHUB_STEP_SUMMARY
+        caracal --help
         caracal -gd test.yml
+        caracal -gdt meerkat -gd config.yml

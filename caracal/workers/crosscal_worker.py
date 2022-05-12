@@ -174,15 +174,19 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
         # allow selection of band subset(s) for gaincal see #1204 on github issue tracker
         if term in "GF":
             params["spw"] = config[ftype]["spw_g"]
+            params["scan"] = config[ftype]["scanselection"]
         elif term == "K":
             params["spw"] = config[ftype]["spw_k"]
+            params["scan"] = config[ftype]["scanselection"]
         if term == "B":
             params["bandtype"] = term
             params["solnorm"] = config[ftype]["b_solnorm"]
             params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
+            params["scan"] = config[ftype]["scanselection"]
         elif term == "K":
             params["gaintype"] = term
+            params["scan"] = config[ftype]["scanselection"]
         elif term in "FG":
             my_term = ["F", "G"]
             if term == "F":
@@ -194,7 +198,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                 params["append"] = True
                 caltable = "%s_%s.F%d" % (prefix, ftype, itern)
                 params["caltable"] = primary_G + ":output"
-
+            else:
+                params["scan"] = config[ftype]["scanselection"]
             params["gaintype"] = "G"
             params["uvrange"] = config["uvrange"]
             params["calmode"] = first_if_single(config[ftype]["calmode"], i).strip("'")
@@ -286,7 +291,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             for fid in field_id:
                 step = "%s-%s-%d-%d-%s-field%d" % (name, label, itern, iobs, ftype, fid)
                 calimage = "%s-%s-I%d-%d-field%d:output" % (prefix, ftype, itern, iobs, fid)
-                recipe.add(RULES[term]["cab"], step, {
+                cab_params = {
                     "msname": msname,
                     "name": calimage,
                     "size": config[ftype]["image"]['npix'],
@@ -294,7 +299,6 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "join-channels": False if config[ftype]["image"]["nchans"] == 1 else True,
                     "fit-spectral-pol": config[ftype]["image"]["fit_spectral_pol"],
                     "channels-out": config[ftype]["image"]['nchans'],
-                    "auto-mask": config[ftype]["image"]['auto_mask'],
                     "auto-threshold": config[ftype]["image"]['auto_threshold'],
                     "local-rms-window": config[ftype]["image"]['rms_window'],
                     "local-rms": config[ftype]["image"]['local_rms'],
@@ -302,8 +306,20 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     "niter": config[ftype]["image"]['niter'],
                     "weight": config[ftype]["image"]["weight"],
                     "mgain": config[ftype]["image"]['mgain'],
-                    "field": fid,
-                },
+                    "field": fid}
+                if config[ftype]["image"]['external_fits_masks']:
+                    mask_file = ''
+                    for mask in config[ftype]["image"]['external_fits_masks']:
+                        if str(fid) in [mask.split('-')[-1]]:
+                            mask_file = f"{mask}.fits"
+                    if mask_file:
+                        cab_params.update({"fits-mask": mask_file})
+                    else:
+                        cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})
+                else:
+                    cab_params.update({"auto-mask": config[ftype]["image"]['auto_mask']})
+                recipe.add(RULES[term]["cab"], step,
+                           cab_params,
                            input=pipeline.input, output=pipeline.crosscal_continuum,
                            label="%s:: Image %s field" % (step, ftype))
 

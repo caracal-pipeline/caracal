@@ -330,7 +330,7 @@ def worker(pipeline, recipe, config):
                         if output_pcal_ms == 'final':
                             remove_output_products((tmp_ms, tmpflagv), directory=pipeline.msdir, log=log)
 
-                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                     cab_name=substep, overwrite=False)
 
@@ -388,7 +388,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Single SPW {1:}'.format(step, concat_ms))
 
-                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                     cab_name=substep, overwrite=False)
 

@@ -361,6 +361,11 @@ mapping:
             type: float
             required: false
             example: '0.1'
+          wscl_onlypsf:
+            desc: If set to true, WSClean will only make the dirty PSF cube, adding the best-fitting Gaussian parameter of each channel to the header. No other cube is made, and the parameter niter is ignored.
+            type: bool
+            required: false
+            example: 'False'
           wscl_mgain:
             desc: Gain value for major iterations in WSClean. I.e., the maximum fraction of the image peak that is cleaned in each major iteration. A value of 1 means that all cleaning happens in the image plane and no major cycle is performed.
             type: float
@@ -425,12 +430,12 @@ mapping:
             desc: Speed-up deconvolution by splitting each channel into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the line worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
             type: int
             required: false
-            example: '0'
+            example: '1'
           wscl_beam:
             desc: Set Bmaj,Bmin,PA of the beam to be used for restoring the clean components. The units are arcsec for Bmaj and Bmin, degrees for PA. Bmaj and Bmin are FWHM. The default values of [0, 0, 0] mean that WSClean chooses the restoring beam based on a 2d Gaussian fit to the dirty beam.
             type: seq
             seq:
-              - type: int
+              - type: float
             required: false
             example: '0, 0, 0'
           casa_thr:

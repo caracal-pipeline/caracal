@@ -574,10 +574,10 @@ def run_flagUzeros(msname,config):
     datapath += "/"
     mfsOb = msname
 
-    lws = ['1','2','3'] 
+    lws = config['flagUzeros']['tranferto'] 
 
     setDirs(config)
-    
+
 
     if makePlots ==True or makeSunblockPlots==True:
         font=16
@@ -613,7 +613,6 @@ def run_flagUzeros(msname,config):
     superArr = np.empty((0,7))
 
     comvmax_tot, comvmax_scan = 0, 0
-    galaxy = galaxies[jj]
     runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
     # logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
     # logging.captureWarnings(True)
@@ -629,7 +628,7 @@ def run_flagUzeros(msname,config):
     caracal.log.warn(
             'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(filename))
     caracal.log.info("====================================================")
-    caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
+    # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
     obsIDs=[]
     for lw in lws:

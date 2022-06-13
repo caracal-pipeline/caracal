@@ -641,11 +641,11 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config,'flagUzeros'):
             
             if config['flagUzeros']['use_mstransform']:
-                msnamesb = msname_mst
+                msnameFl = msname_mst
             else:
-                msnamesb = msname
+                msnameFl = msname
 
-            uZeros.flagUZeros(msname)
+            uZeros.flagUZeros(msname,config)
 
 
         if pipeline.enable_task(config, 'sunblocker'):

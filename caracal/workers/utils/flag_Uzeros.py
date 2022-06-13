@@ -40,7 +40,7 @@ import matplotlib.dates as mdat
 # import bisect
 from collections import OrderedDict
 
-import logging, time
+import time
 import argparse
 import shutil
 
@@ -54,92 +54,38 @@ dm = measures.measures()
 timeInit = time.time()
 
 
+def setDirs(config):
 
-def definePars(msname,workdir,config):
-    # parser = argparse.ArgumentParser("Stripe Analysis")
-    # parser.add_argument("-g", "--galaxy", dest='galaxy', help='Galaxy name')
-    # parser.add_argument("-m", "--method", dest='method', help='Define flagging method: either q99 or sunblock (median+threshold*mad)')
-    # parser.add_argument("-mPl", "--makePlots", action='store_true', dest='makePlots', help='Make Plots or not')
-    # parser.add_argument("-mPLsun", "--makeSunblockPlots", action='store_true', dest='makeSunblockPlots', help='Make sunblocker Plots or not')
-    # parser.add_argument("-o", "--obsid", dest='obsid', help='Obsid of MS file')
-    # parser.add_argument("-f", "--flags", dest='flagCommand',action='store_true', help='Flag visibilities')
-    # parser.add_argument("-clUp", "--cleanup", dest='doCleanUp',action='store_true', help='Remove intermediate ms files, images and FFTs')
-    # parser.add_argument("-r", "--robust", dest='robust', help='robust weighting for the images, default=1.5',default='1.5')
-    # parser.add_argument("-i", "--imsize", dest='imsize', help='size of the images in pixel, default=400',default=400)
-    # parser.add_argument("-c", "--cell", dest='cell', help='size of pixel in arcseconds. In the FFT the pixel size in lambda is given by:duv = 1./(imsize*cell*pi/(3600.*180.)) # UV cell in lambda; default=20.',default='20.')
-    # parser.add_argument("-chMin", "--chanMin", dest='chanMin', help='lowest channel of the spw to consider for imaging, default=0',default=0)
-    # parser.add_argument("-chMax", "--chanMax", dest='chanMax', help='highest channel of the spw to consider for imaging, default=100',default=100)
-    # parser.add_argument("-ta", "--taper", dest='taper', help='size of gaussian tapering in arcseconds')
-    # parser.add_argument("-tr", "--thresholds", dest='thresholds', help='threshold for cutoff of amplitudes in the FFT, default=300',default=[300.], type=float, nargs='*')
-    # parser.add_argument("-du", "--dilateU", type=int, default=0, help='extend flag selection to N nearby cells along the U axis in both directions; default=0.')
-    # parser.add_argument("-dv", "--dilateV", type=int, default=0, help='extend flag selection to N nearby cells along the V axis in both directions; default=0.')
+    config['flagUzeros']['stripeDir']=pipeline.output+'stripeAnalysis/'
+    if not os.path.exists(config['flagUzeros']['stripeDir']):
+        os.mkdir(config['flagUzeros']['stripeDir'])
 
+    config['flagUzeros']['stripeMSDir']=config['flagUzeros']['stripeDir']+'msdir/'
+    if not os.path.exists(config['flagUzeros']['stripeMSDir']):
+        os.mkdir(config['flagUzeros']['stripeMSDir'])
 
-    # args = parser.parse_args()
-    # gal=args.galaxy
-    # galaxies = gal.split(',')
+    config['flagUzeros']['stripeCubeDir']=config['flagUzeros']['stripeDir']+'cubes/'
+    if not os.path.exists(config['flagUzeros']['stripeCubeDir']):
+        os.mkdir(config['flagUzeros']['stripeCubeDir'])
 
+    config['flagUzeros']['stripeFFTDir']=config['flagUzeros']['stripeDir']+'fft/'
+    if not os.path.exists(config['flagUzeros']['fftDir']):
+        os.mkdir(config['flagUzeros']['fftDir'])
 
-    datapath=workdir
-    datapath += "/"
-    mfsOb = args.obsid
+    config['flagUzeros']['stripePlotDir']=config['flagUzeros']['stripeDir']+'plots/'
+    if not os.path.exists(config['flagUzeros']['stripePlotDir']):
+        os.mkdir(config['flagUzeros']['stripePlotDir'])
 
-    lws = ['1','2','3']  # Last digit of the "lw1?" name. So, "1" is lw11, and so on. The first lw is used to calculate the flags. The other lws get their flags fromt he first.
-    
-    outPath=datapath
-    
-    flagCmd = True
-    method = config['flagUzeros']['method']
-    makePlots=config['flagUzeros']['makePlots']
+    config['flagUzeros']['stripeTableDir']=config['flagUzeros']['stripeDir']+'tables/'
+    if not os.path.exists(config['flagUzeros']['stripeTableDir']):
+        os.mkdir(config['flagUzeros']['stripeTableDir'])
 
-    makeSunblockPlots=config['flagUzeros']['subblockPlots']
-    
-    doCleanUp =config['flagUzeros']['method']
-    robust = config['flagUzeros']['robust']
-    imsize = int(config['flagUzeros']['imsize'])
-    cell = config['flagUzeros']['cell']
-    chanMin = int(config['flagUzeros']['chanMin'])
-    chanMax = int(config['flagUzeros']['chanMax'])
-    taper = onfig['flagUzeros']['taper']
-    thresholds = onfig['flagUzeros']['thresholds']
+    config['flagUzeros']['stripeSofiaDir']=config['flagUzeros']['stripeDir']+'sofiaOut/'
+    if not os.path.exists(config['flagUzeros']['stripeSofiaDir']):
+        os.mkdir(config['flagUzeros']['stripeSofiaDir'])
 
 
-    msDirOr=outPath+'msdir/'
-    if not os.path.exists(msDirOr):
-        os.mkdir(msDirOr)
-
-    outDir=outPath+'output/'
-    if not os.path.exists(outDir):
-        os.mkdir(outDir)
-
-    stripeDir=outDir+'stripeAnalysis/'
-    if not os.path.exists(stripeDir):
-        os.mkdir(stripeDir)
-
-    msDir=stripeDir+'msdir/'
-    if not os.path.exists(msDir):
-        os.mkdir(msDir)
-
-    cubeDir=stripeDir+'cubes/'
-    if not os.path.exists(cubeDir):
-        os.mkdir(cubeDir)
-
-    fftDir=stripeDir+'fft/'
-    if not os.path.exists(fftDir):
-        os.mkdir(fftDir)
-
-    plotDir=stripeDir+'plots/'
-    if not os.path.exists(plotDir):
-        os.mkdir(plotDir)
-
-    tableDir=stripeDir+'tables/'
-    if not os.path.exists(tableDir):
-        os.mkdir(tableDir)
-
-    sofiaDir=stripeDir+'sofiaOut/'
-    if not os.path.exists(sofiaDir):
-        os.mkdir(sofiaDir)
-
+    return 
 
 def splitScans(inVis,scanNums):
 
@@ -156,7 +102,7 @@ def splitScans(inVis,scanNums):
         scanVisList.append(outVis)
 
 
-    logger.info("All Scans splitted")
+    caracal.log.info("All Scans splitted")
 
 
     return scanVisList
@@ -206,17 +152,17 @@ def makeCube(inVis,outCubePrefix,kind='scan'):
                   outCubePrefix=outCubePrefix,robust=robust,
                   taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
 #        os.system("singularity exec /idia/software/containers/wsclean-v3.0-idg.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}".format(outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis))
-        logger.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
+        caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
         os.system(cmd)
     else:    #cell =2.asec imsize=3600
         cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(
                  outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
-        logger.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
+        caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
         os.system(cmd)
 #        os.system("singularity exec /idia/software/containers/wsclean-v3.0-idg.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}".format(outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chanMin,chanmax=chanMax,inVis=inVis))
 
-    logger.info("Image Done")
-    #logger.info("----------------------------------------------------")
+    caracal.log.info("Image Done")
+    #caracal.log.info("----------------------------------------------------")
 
     return 0
 
@@ -241,8 +187,8 @@ def makeFFT(inCube,outFFT):
     hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
     hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
     hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
-    logger.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
-    logger.info("FFT Done")
+    caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
+    caracal.log.info("FFT Done")
     gc.collect()
 
     return dFFT,hdr
@@ -333,26 +279,26 @@ def plotAll(fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,per
 
 def cleanUp(galaxy):
 
-    logger.info("====================================================")
-    logger.info("Cleanup")
+    caracal.log.info("====================================================")
+    caracal.log.info("Cleanup")
 
-    logger.info("Deleting images")
+    caracal.log.info("Deleting images")
 
     if os.path.exists(cubeDir):
         shutil.rmtree(cubeDir)
 
-    logger.info("Deleting FFTs")
+    caracal.log.info("Deleting FFTs")
 
 
     if os.path.exists(fftDir):
         shutil.rmtree(fftDir)
 
-    logger.info("Deleting .ms scans")
+    caracal.log.info("Deleting .ms scans")
 
     if os.path.exists(msDir):
         shutil.rmtree(msDir)
 
-    logger.info("Cleanup done")
+    caracal.log.info("Cleanup done")
 
     return 0
 
@@ -399,7 +345,7 @@ def saveFFTTable(inFFT, U, V, galaxy, msid, track, scan, el, az, method, thresho
 
     if cutoff>np.nanmax(tabArr['Amp']):
         willflag = False
-        logger.warning("Cutoff is larger than max amplitude. Notihng will be flagged.")
+        caracal.log.warn("Cutoff is larger than max amplitude. Notihng will be flagged.")
         #cutoff = tabArr['Amp'].max()
     else:
         willflag = True
@@ -415,8 +361,8 @@ def saveFFTTable(inFFT, U, V, galaxy, msid, track, scan, el, az, method, thresho
         statsArray = [galaxy,track,scan,len(np.where(newtab['u']<=60.0)[0])/len(newtab['u']),cutoff,el,az]
     else:
         statsArray = [galaxy,track,scan,0.,cutoff,el,az]
-    logger.info("FFT Table saved")
-    logger.info("Flagging scan".format(scanNumber=str(scan), galaxy=galaxy, track=track))
+    caracal.log.info("FFT Table saved")
+    caracal.log.info("Flagging scan".format(scanNumber=str(scan), galaxy=galaxy, track=track))
 
     # the following scanFlags are the stripe flags for this scan
     scanFlags, percent = flagQuartile(visName,newtab,inFFTHeader,method,dilateU,dilateV,qrtdebug=False)
@@ -426,7 +372,7 @@ def saveFFTTable(inFFT, U, V, galaxy, msid, track, scan, el, az, method, thresho
 
 def plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,cut):
 
-    logger.info("\tPlotting Sunblocker stats")
+    caracal.log.info("\tPlotting Sunblocker stats")
 
     figS=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
     figS.set_tight_layout(False)
@@ -460,7 +406,7 @@ def plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,p
     plt.close(figS)
 
 
-    logger.info("\tPlot Done")
+    caracal.log.info("\tPlot Done")
 
     return 0
 
@@ -471,9 +417,9 @@ def sunBlockStats(inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold
     # av = np.nanmean(ampar,axis=1)
     npoints = inFFTData[np.isfinite(inFFTData)].size
     if verb:
-        logger.info('\tSunblocker: grid has {:d} nonzero points.'.format(npoints))
+        caracal.log.info('\tSunblocker: grid has {:d} nonzero points.'.format(npoints))
     if npoints < 3:
-        logger.info('\t Sunblocker: This is not sufficient for any statistics, returning no flags.')
+        caracal.log.info('\t Sunblocker: This is not sufficient for any statistics, returning no flags.')
         return np.zeros(av.shape, dtype = bool)
 
   # Find average and standard deviation
@@ -481,11 +427,11 @@ def sunBlockStats(inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold
     stdev  = np.nanstd(inFFTData)
 
     if average == np.nan:
-        logger.info('Sunblocker: cannot calculate average, returing no flags')
+        caracal.log.info('Sunblocker: cannot calculate average, returing no flags')
         return np.zeros(av.shape, dtype = bool)
 
     if stdev == np.nan:
-        logger.info('Sunblocker: cannot calculate standard deviation, returing no flags')
+        caracal.log.info('Sunblocker: cannot calculate standard deviation, returing no flags')
         return np.zeros(av.shape, dtype = bool)
 
     med = np.nanmedian(inFFTData)
@@ -525,7 +471,7 @@ def sunBlockStats(inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold
     if makeSunblockPlots == True:
         plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
 
-    logger.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
+    caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
 
     return ave+float(threshold)*std
 
@@ -542,20 +488,20 @@ def flagQuartile(inVis,tableFlags,inFFTHeader,method,dilateU,dilateV,qrtdebug=Fa
     percTot=np.nansum(flags)/float(flags.shape[0]*flags.shape[1]*flags.shape[2])*100.
     # Reset to no flags and build up stripe flags
     flags = np.zeros(flags.shape, bool)
-    logger.info("Scan flags before stripe-flagging: {percent:.3f}%".format(percent=percTot))
+    caracal.log.info("Scan flags before stripe-flagging: {percent:.3f}%".format(percent=percTot))
     #uvw=np.array(t.getcol('UVW'),dtype=float) # This is never used
     spw=tables.table(inVis+'/SPECTRAL_WINDOW',ack=False)
     avspecchan = np.average(spw.getcol('CHAN_FREQ'))
     uv = t.getcol('UVW')[:,:2]*avspecchan/scconstants.c
 
-    logger.info('{0:d} UV cells in the FFT image selected for flagging'.format(U.shape[0]))
+    caracal.log.info('{0:d} UV cells in the FFT image selected for flagging'.format(U.shape[0]))
 
     if qrtdebug and U.shape[0]:
-        logger.info('\tamplitude of selected cells in range {0:.3f} - {1:.3f}'.format(np.nanmin(tableFlags['amp']),np.nanmax(tableFlags['amp'])))
-        logger.info('\t{0} total rows in scan MS'.format(flags.shape))
+        caracal.log.info('\tamplitude of selected cells in range {0:.3f} - {1:.3f}'.format(np.nanmin(tableFlags['amp']),np.nanmax(tableFlags['amp'])))
+        caracal.log.info('\t{0} total rows in scan MS'.format(flags.shape))
 
     if U.shape[0]:
-        logger.info('Finding MS rows within flagged cells +/- {0:d} U cell(s) and +/- {1:d} V cell(s)'.format(dilateU, dilateV))
+        caracal.log.info('Finding MS rows within flagged cells +/- {0:d} U cell(s) and +/- {1:d} V cell(s)'.format(dilateU, dilateV))
 
     percent=0.
     for i in range(0,UV.shape[1]):
@@ -563,19 +509,19 @@ def flagQuartile(inVis,tableFlags,inFFTHeader,method,dilateU,dilateV,qrtdebug=Fa
         indexV=np.where( np.logical_and( uv[:,1] > UV[1,i] - (1/2 + dilateV) * inFFTHeader['CDELT2'], uv[:,1]<=UV[1,i] + (1/2 + dilateV) * inFFTHeader['CDELT2'] ) )[0]
 
         if qrtdebug:
-            logger.info('\tcell {0:d}, [U,V] = {1}'.format(i,UV[:,i]))
-            logger.info('\t\tflagging u range = {0:.3f} - {1:.3f}'.format(UV[0,i] - (1/2 + dilateU) * inFFTHeader['CDELT2'], UV[0,i] + (1/2 + dilateU) * inFFTHeader['CDELT2']))
-            logger.info('\t\tflagging v range = {0:.3f} - {1:.3f}'.format(UV[1,i] - (1/2 + dilateV) * inFFTHeader['CDELT2'], UV[1,i] + (1/2 + dilateV) * inFFTHeader['CDELT2']))
+            caracal.log.info('\tcell {0:d}, [U,V] = {1}'.format(i,UV[:,i]))
+            caracal.log.info('\t\tflagging u range = {0:.3f} - {1:.3f}'.format(UV[0,i] - (1/2 + dilateU) * inFFTHeader['CDELT2'], UV[0,i] + (1/2 + dilateU) * inFFTHeader['CDELT2']))
+            caracal.log.info('\t\tflagging v range = {0:.3f} - {1:.3f}'.format(UV[1,i] - (1/2 + dilateV) * inFFTHeader['CDELT2'], UV[1,i] + (1/2 + dilateV) * inFFTHeader['CDELT2']))
 
         # Combine U and V selection into final selection
         indexTot= np.intersect1d(indexU,indexV)
 
         if qrtdebug:
-            logger.info('\t\t{0:d} rows found'.format(indexTot.shape[0]))
+            caracal.log.info('\t\t{0:d} rows found'.format(indexTot.shape[0]))
             if indexTot.shape[0]:
-                logger.info('\t\tSelected rows have uv in the following ranges')
-                logger.info('\t\tu: {0:.3f} - {1:.3f}'.format(np.nanmin(uv[indexTot,0]),np.nanmax(uv[indexTot,0])))
-                logger.info('\t\tv: {0:.3f} - {1:.3f}'.format(np.nanmin(uv[indexTot,1]),np.nanmax(uv[indexTot,1])))
+                caracal.log.info('\t\tSelected rows have uv in the following ranges')
+                caracal.log.info('\t\tu: {0:.3f} - {1:.3f}'.format(np.nanmin(uv[indexTot,0]),np.nanmax(uv[indexTot,0])))
+                caracal.log.info('\t\tv: {0:.3f} - {1:.3f}'.format(np.nanmin(uv[indexTot,1]),np.nanmax(uv[indexTot,1])))
 
         # Add to stripe flags of this scan
         flags[indexTot,:,:] = True
@@ -584,111 +530,136 @@ def flagQuartile(inVis,tableFlags,inFFTHeader,method,dilateU,dilateV,qrtdebug=Fa
     # Save modified flags to MS of this scan
     t.putcol('FLAG', t.getcol('FLAG') + flags)
     t.close()
-    logger.info("Flag scan done")
+    caracal.log.info("Flag scan done")
     return flags, percent
 
 
 def putFlags(pf_inVis, pf_inVisName, pf_stripeFlags):
-    logger.info("Opening full MS file to add stripe flags".format(pf_inVisName))
+    caracal.log.info("Opening full MS file to add stripe flags".format(pf_inVisName))
     t=tables.table(pf_inVis,readonly=False,ack=False)
     flagOld = t.getcol('FLAG')
     percTotBefore = np.nansum(flagOld)/float(flagOld.shape[0]*flagOld.shape[1]*flagOld.shape[2])*100.
-    logger.info("Total Flags Before: {percent:.3f} %".format(percent=percTotBefore))
+    caracal.log.info("Total Flags Before: {percent:.3f} %".format(percent=percTotBefore))
     flagNew = np.sum([pf_stripeFlags, flagOld], axis=0)
     percTotAfter=np.nansum(flagNew)/float(flagNew.shape[0]*flagNew.shape[1]*flagNew.shape[2])*100.
-    logger.info("Total Flags After: {percent:.3f} %".format(percent=percTotAfter))
+    caracal.log.info("Total Flags After: {percent:.3f} %".format(percent=percTotAfter))
     t.putcol('FLAG', flagNew)
     del flagOld
     del flagNew
     gc.collect()
     t.close()
-    logger.info("MS flagged")
-    logger.info("Before we close, save flag version 'stripe_flag_after'")
+    caracal.log.info("MS flagged")
+    caracal.log.info("Before we close, save flag version 'stripe_flag_after'")
     flg(vis=pf_inVis, mode='save', versionname='stripe_flag_after')
     return 0
 
 
-if makePlots ==True or makeSunblockPlots==True:
-    font=16
-    params = {'figure.autolayout' : True,
-        'font.family'         :'serif',
-        'figure.facecolor': 'white',
-        'pdf.fonttype'        : 3,
-        'font.serif'          :'times',
-        'font.style'          : 'normal',
-        'font.weight'         : 'book',
-        'font.size'           : font,
-        'axes.linewidth'      : 1.5,
-        'lines.linewidth'     : 1,
-        'xtick.labelsize'     : font,
-        'ytick.labelsize'     : font,
-        'legend.fontsize'     : font,
-        'xtick.direction'     :'in',
-        'ytick.direction'     :'in',
-        'xtick.major.size'    : 3,
-        'xtick.major.width'   : 1.5,
-        'xtick.minor.size'    : 2.5,
-        'xtick.minor.width'   : 1.,
-        'ytick.major.size'    : 3,
-        'ytick.major.width'   : 1.5,
-        'ytick.minor.size'    : 2.5,
-        'ytick.minor.width'   : 1.,
-        'text.usetex' : False
-     }
-    plt.rcParams.update(params)
+def run_flagUzeros(msname,config):
+
+    method = config['flagUzeros']['method']
+    makePlots=config['flagUzeros']['makePlots']
+
+    makeSunblockPlots=config['flagUzeros']['subblockPlots']
+    
+    doCleanUp =config['flagUzeros']['method']
+    robust = config['flagUzeros']['robust']
+    imsize = int(config['flagUzeros']['imsize'])
+    cell = config['flagUzeros']['cell']
+    chanMin = int(config['flagUzeros']['chanMin'])
+    chanMax = int(config['flagUzeros']['chanMax'])
+    taper = config['flagUzeros']['taper']
+    thresholds = config['flagUzeros']['thresholds']
+
+    datapath=workdir
+    datapath += "/"
+    mfsOb = msname
+
+    lws = ['1','2','3'] 
+
+    setDirs(config)
+    
+
+    if makePlots ==True or makeSunblockPlots==True:
+        font=16
+        params = {'figure.autolayout' : True,
+            'font.family'         :'serif',
+            'figure.facecolor': 'white',
+            'pdf.fonttype'        : 3,
+            'font.serif'          :'times',
+            'font.style'          : 'normal',
+            'font.weight'         : 'book',
+            'font.size'           : font,
+            'axes.linewidth'      : 1.5,
+            'lines.linewidth'     : 1,
+            'xtick.labelsize'     : font,
+            'ytick.labelsize'     : font,
+            'legend.fontsize'     : font,
+            'xtick.direction'     :'in',
+            'ytick.direction'     :'in',
+            'xtick.major.size'    : 3,
+            'xtick.major.width'   : 1.5,
+            'xtick.minor.size'    : 2.5,
+            'xtick.minor.width'   : 1.,
+            'ytick.major.size'    : 3,
+            'ytick.major.width'   : 1.5,
+            'ytick.minor.size'    : 2.5,
+            'ytick.minor.width'   : 1.,
+            'text.usetex' : False
+         }
+        plt.rcParams.update(params)
 
 
-##### MAIN MAIN MAIN
-superArr = np.empty((0,7))
+    ##### MAIN MAIN MAIN
+    superArr = np.empty((0,7))
 
-for jj in range(0,len(galaxies)):
     comvmax_tot, comvmax_scan = 0, 0
     galaxy = galaxies[jj]
     runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
-    logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
-    logging.captureWarnings(True)
+    # logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
+    # logging.captureWarnings(True)
 
-    logging.disable(logging.DEBUG)
-    logger = logging.getLogger(__name__)
+    # logging.disable(logging.DEBUG)
+    # caracal.log = logging.getcaracal.log(__name__)
 
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    logFormatter = logging.Formatter("%(asctime)s [%(name)-17s] %(levelname)-5.5s:  %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
-    consoleHandler.setFormatter(logFormatter)
+    # consoleHandler = logging.StreamHandler(sys.stdout)
+    # logFormatter = logging.Formatter("%(asctime)s [%(name)-17s] %(levelname)-5.5s:  %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
+    # consoleHandler.setFormatter(logFormatter)
 
-    logger.addHandler(consoleHandler)
-
-    logger.info("====================================================")
-    logger.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
+    # caracal.log.addHandler(consoleHandler)
+    caracal.log.warn(
+            'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(filename))
+    caracal.log.info("====================================================")
+    caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
     obsIDs=[]
     for lw in lws:
         obsIDs.append('{}_sdp_l0-{}-lw1{}'.format(mfsOb,galaxy,lw))
 
     for obb in obsIDs:
-        logger.info("\t{}".format(obb))
+        caracal.log.info("\t{}".format(obb))
 
     for ii in range (0,len(obsIDs)):
         galNameVis=galaxy.replace('-','_')
         track = lws[ii]
         inVis=msDirOr+obsIDs[ii]+'_mst.ms'
         inVisName=obsIDs[ii]+'_mst.ms'
-        logger.info("====================================================")
-        logger.info("\tWorking on {}".format(inVisName))
-        logger.info("====================================================")
+        caracal.log.info("====================================================")
+        caracal.log.info("\tWorking on {}".format(inVisName))
+        caracal.log.info("====================================================")
 
         if os.path.exists(inVis+'.flagversions'):
             fvers = [ii.split(' :')[0] for ii in open(inVis+'.flagversions/FLAG_VERSION_LIST').readlines()]
             if 'stripe_flag_before' in fvers:
-                logger.info("Before we start, restore existing flag version 'stripe_flag_before'")
+                caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
                 flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
                 while fvers[-1] != 'stripe_flag_before':
                     flg(vis=inVis, mode='delete', versionname=fvers[-1])
                     fvers = fvers[:-1]
             else:
-                logger.info("Before we start, save flag version 'stripe_flag_before'")
+                caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
                 flg(vis=inVis, mode='save', versionname='stripe_flag_before')
         else:
-            logger.info("Before we start, save flag version 'stripe_flag_before'")
+            caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
             flg(vis=inVis, mode='save', versionname='stripe_flag_before')
 
         # For lw's other than the first one, just copy the flags and skip the rest of the for loop
@@ -697,7 +668,7 @@ for jj in range(0,len(galaxies)):
             continue
 
         # For the first lw, do all that follows
-        logger.info("Opening full MS file".format(inVisName))
+        caracal.log.info("Opening full MS file".format(inVisName))
         t=tables.table(inVis,readonly=True,ack=False)
         scans=t.getcol('SCAN_NUMBER')
         FlagTot=t.getcol('FLAG')
@@ -707,21 +678,21 @@ for jj in range(0,len(galaxies)):
         t.close()
 
         percTot=np.nansum(FlagTot)/float(FlagTot.shape[0]*FlagTot.shape[1]*FlagTot.shape[2])*100.
-        logger.info("Flagged visibilites so far: {percTot:.3f} %".format(percTot=percTot))
+        caracal.log.info("Flagged visibilites so far: {percTot:.3f} %".format(percTot=percTot))
 
         anttab = tables.table(inVis+"::ANTENNA", ack=False)
         ant_xyz = anttab.getcol("POSITION", 0 , 1)[0]
         anttab.close()
 
-        logger.info("----------------------------------------------------")
-        logger.info("Imaging full MS for stripe analysis".format(track=track))
+        caracal.log.info("----------------------------------------------------")
+        caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
         outCubePrefix = cubeDir+galaxy+'_1'+track+'_tot'
         outCubeName=outCubePrefix+'-dirty.fits'
         if os.path.exists(outCubeName):
             os.remove(outCubeName)
         makeCube(inVis,outCubePrefix)
 
-        logger.info("Making FFT of image")
+        caracal.log.info("Making FFT of image")
         outFFT=fftDir+galaxy+'_'+track+'_tot.im'
         if os.path.exists(outFFT):
             shutil.rmtree(outFFT)
@@ -748,9 +719,9 @@ for jj in range(0,len(galaxies)):
                 fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
                 plt.close(fig0)
 
-        logger.info("----------------------------------------------------")
+        caracal.log.info("----------------------------------------------------")
 
-        logger.info("Splitting scans".format(galaxy=galaxy, track=track))
+        caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
         scanVisList = splitScans(inVis,scanNums)
 
@@ -775,22 +746,22 @@ for jj in range(0,len(galaxies)):
         for kk in range(len(scanNums)):
 
             scan=scanNums[kk]
-            logger.info("----------------------------------------------------")
-            logger.info("\tWorking on scan {}".format(str(scan)))
+            caracal.log.info("----------------------------------------------------")
+            caracal.log.info("\tWorking on scan {}".format(str(scan)))
             visName=scanVisList[kk]
-            logger.info("----------------------------------------------------")
+            caracal.log.info("----------------------------------------------------")
 
             # Save flag version before start iterating over all thresholds
             flg(vis=visName, mode='save', versionname='scan_flags_start')
 
-            logger.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
+            caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
             outCubePrefix_0 = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)
             outCubeName_0 = outCubePrefix_0+'-dirty.fits'
             if os.path.exists(outCubeName_0):
                 os.remove(outCubeName_0)
             makeCube(visName,outCubePrefix_0)
 
-            logger.info("Making FFT of image")
+            caracal.log.info("Making FFT of image")
             outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
@@ -808,11 +779,11 @@ for jj in range(0,len(galaxies)):
             rms_thresh = []
 
             if len(thresholds) > 1:
-                logger.info('Start iterating over all requested thresholds {} to find the optimal one'.format(thresholds))
+                caracal.log.info('Start iterating over all requested thresholds {} to find the optimal one'.format(thresholds))
             # iterate over all thresholds
             for threshold in thresholds:
                 if len(thresholds) > 1:
-                    logger.info('New iter')
+                    caracal.log.info('New iter')
                 # Rewind flags of this scan to their initial state
                 fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
                 flg(vis=visName, mode='restore', versionname='scan_flags_start')
@@ -821,26 +792,26 @@ for jj in range(0,len(galaxies)):
                     flg(vis=visName, mode='delete', versionname=fvers[-1])
                     fvers = fvers[:-1]
 
-                logger.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                 # scanFlags below are the stripe flags for this scan
                 statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
-                logger.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
-                logger.info("Making post-flagging image")
+                caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                caracal.log.info("Making post-flagging image")
                 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
                 makeCube(visName,outCubePrefix)
                 fitsdata = fits.open(outCubeName)
                 rms_thresh.append(np.std(fitsdata[0].data[0,0]))
-                logger.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
+                caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
                 fitsdata.close()
 
             # Select best threshold (minimum noise), re-flag and re-image
             if len(thresholds) > 1:
-                logger.info('Done iterating over all requested thresholds')
+                caracal.log.info('Done iterating over all requested thresholds')
                 threshold = thresholds[rms_thresh.index(min(rms_thresh))]
-                logger.info('\tThe threshold that minimises the image noise is {}'.format(threshold))
-                logger.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
+                caracal.log.info('\tThe threshold that minimises the image noise is {}'.format(threshold))
+                caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
                 # Rewind flags of this scan to their initial state
                 fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
                 flg(vis=visName, mode='restore', versionname='scan_flags_start')
@@ -848,11 +819,11 @@ for jj in range(0,len(galaxies)):
                     flg(vis=visName, mode='delete', versionname=fvers[-1])
                     fvers = fvers[:-1]
                 # Re-flag with selected threshold
-                logger.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                 statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
-                logger.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                 # Re-image
-                logger.info("Making post-flagging image")
+                caracal.log.info("Making post-flagging image")
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
                 makeCube(visName,outCubePrefix)
@@ -867,7 +838,7 @@ for jj in range(0,len(galaxies)):
             if makePlots == True:
                 fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
 
-            logger.info("Making FFT of post-flagging image")
+            caracal.log.info("Making FFT of post-flagging image")
             outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
@@ -877,8 +848,8 @@ for jj in range(0,len(galaxies)):
                 fig2, comvmax_scan = plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
 
         if makePlots == True:
-            logger.info("----------------------------------------------------")
-            logger.info("Saving scans diagnostic plots")
+            caracal.log.info("----------------------------------------------------")
+            caracal.log.info("Saving scans diagnostic plots")
             outPlot="{0}{1}_{2}_perscan_preFlag.png".format(plotDir,galaxy,mfsOb)
             outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(plotDir,galaxy,mfsOb)
 
@@ -890,18 +861,18 @@ for jj in range(0,len(galaxies)):
             plt.close(fig2)
 
         superArr = np.vstack((superArr, arr))
-        logger.info("Saving stats table")
+        caracal.log.info("Saving stats table")
         newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
         outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=tableDir,galaxy=galaxy,track=track)
         ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
 
         if flagCmd==True:
-            logger.info("====================================================")
-            logger.info("\tWorking on {}".format(inVisName))
-            logger.info("====================================================")
+            caracal.log.info("====================================================")
+            caracal.log.info("\tWorking on {}".format(inVisName))
+            caracal.log.info("====================================================")
 
             putFlags(inVis, inVisName, stripeFlags)
-            logger.info("Making post-flagging image")
+            caracal.log.info("Making post-flagging image")
 
             outCubePrefix = cubeDir+galaxy+'_'+track+'_tot_stripeFlag'
             outCubeName=outCubePrefix+'-dirty.fits'
@@ -910,7 +881,7 @@ for jj in range(0,len(galaxies)):
                 os.remove(outCubeName)
             makeCube(inVis,outCubePrefix)
 
-            logger.info("Making FFT of post-flagging image")
+            caracal.log.info("Making FFT of post-flagging image")
 
             outFFT=fftDir+galaxy+'_'+track+'_tot_stripeFlag.im'
             if os.path.exists(outFFT):
@@ -920,12 +891,12 @@ for jj in range(0,len(galaxies)):
             U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
             V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
 
-            logger.info("Saving total stripe flagging diagnostic plots".format(galaxy=galaxy, track=track))
+            caracal.log.info("Saving total stripe flagging diagnostic plots".format(galaxy=galaxy, track=track))
 
             percTotAfter=np.nansum(stripeFlags)/float(stripeFlags.shape[0]*stripeFlags.shape[1]*stripeFlags.shape[2])*100.
-            logger.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
+            caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
             percRel = percTotAfter-percTot
-            logger.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
+            caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
 
             if makePlots==True:
                 outPlot="{0}{1}_{2}_fullMS.png".format(plotDir,galaxy,mfsOb)
@@ -935,12 +906,12 @@ for jj in range(0,len(galaxies)):
                 plt.close(fig0)
 
             timeFlag = (time.time()-timeInit)/60.
-            #logger.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
+            #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
 
-if doCleanUp is True:
-    cleanUp(galaxy)
+    if doCleanUp is True:
+        cleanUp(galaxy)
 
-timeEnd = (time.time()-timeInit)/60.
-#logger.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
-logger.info("Done")
+    timeEnd = (time.time()-timeInit)/60.
+    #caracal.log.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
+    caracal.log.info("Done")

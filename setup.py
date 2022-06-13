@@ -24,7 +24,7 @@ requirements = [
     'radiopadre-client>=1.1',
     'jinja2',
     'psutil',
-    'gc',
+    'gc-python-utils',
     'casatasks',
     'casatools',
 ]

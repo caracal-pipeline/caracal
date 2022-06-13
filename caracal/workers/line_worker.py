@@ -25,6 +25,7 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from caracal.workers.utils import flag_Uzeros as uZeros
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -636,6 +637,16 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+
+        if pipeline.enable_task(config,'flagUzeros'):
+            
+            if config['flagUzeros']['use_mstransform']:
+                msnamesb = msname_mst
+            else:
+                msnamesb = msname
+
+            uZeros.flagUZeros(msname)
+
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

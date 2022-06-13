@@ -203,6 +203,67 @@ mapping:
             required: False
             example: 'auto'
 
+      flagUzeros:
+        desc: flag RFI at u=0
+        type: map
+        mapping:
+          enable: 
+            desc: Enable the flagUZeros segment
+            type: bool
+            required: false
+            example: 'False'
+          method:
+            desc: Define flagging method. Either q99 or sunblock (median+threshold*mad)
+            type: str
+            enum: ['sunblock', 'q99']
+            required: false
+            example: 'sunblock'
+          makePlots:
+            desc: Make Plots or not
+            type: bool
+            required: false
+            example: 'True'
+          makeSunblockPlots:
+            desc: Make sunblocker Plots or not
+            type: bool
+            required: false
+            example: 'False'
+          doCleanup:
+            desc: Remove intermediate ms files, images and FFTs
+            type: bool
+            required: false
+            example: 'True'
+          robust:
+            desc: robust weighting for the images
+            type: float
+            required: false
+            example: '1.5'
+          taper:
+            desc: size of gaussian tapering in arcseconds
+            type: float
+            required: false
+            example: '60'
+          imsize:
+            desc: size of the images in pixel,
+            type: int
+            required: false
+            example: '400'
+          cell:
+            desc: size of pixel in arcseconds. In the FFT the pixel size in lambda is given by:duv = 1./(imsize*cell*pi/(3600.*180.)), uv cell is in lambda
+            type: float
+            required: false
+            example: '20.'
+          chanRange:
+            desc: lowest and highest channel of the spw to consider for imaging
+            seq:
+              - type: int
+            required: false
+            example: '0,100'
+          thresholds:
+            desc: threshold for cutoff of amplitudes in the FFT, default=300
+            type: float
+            required: false
+            example: '300'
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map

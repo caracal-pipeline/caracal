@@ -24,6 +24,9 @@ requirements = [
     'radiopadre-client>=1.1',
     'jinja2',
     'psutil',
+    'gc',
+    'casatasks',
+    'casatools',
 ]
 
 PACKAGE_NAME = 'caracal'

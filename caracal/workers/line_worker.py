@@ -849,10 +849,13 @@ def worker(pipeline, recipe, config):
                             doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
                             doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
-                            if doProj:
-                                ax3param = []
-                                for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
-                                    ax3param.append(hdul[0].header[key])
+                            doProj = True if hdul[0].header['NAXIS3'] > nchans ## this should work in both a request for a subset, and if the cube is to be binned.
+
+                            ### since we will do "3D" gridding, this likely is not necessary
+                            # if doProj:
+                            #     ax3param = []
+                            #     for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
+                            #         ax3param.append(hdul[0].header[key])
 
                         if doProj:
                             '''
@@ -861,7 +864,7 @@ def worker(pipeline, recipe, config):
                             with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                                  file.write('SIMPLE  =   T\n')
                                  file.write('BITPIX  =   -64\n')
-                                 file.write('NAXIS   =   2\n')
+                                 file.write('NAXIS   =   3\n')
                                  file.write('NAXIS1  =   {}\n'.format(cubeWidth))
                                  file.write('CTYPE1  =   \'RA---SIN\'\n')
                                  file.write('CRVAL1  =   {}\n'.format(raTarget))
@@ -872,6 +875,10 @@ def worker(pipeline, recipe, config):
                                  file.write('CRVAL2  =   {}\n'.format(decTarget))
                                  file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
                                  file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                 file.write('NAXIS3  =   {}\n'.format(nchans))
+                                 file.write('CTYPE3  =   {}\n'.format(hdu['CTYPE3']))
+                                 file.write('CRVAL3  =   {}\n'.format())
+                                 file.write('CRPIX3  =   {}\n'.format())
                                  file.write('EXTEND  =   T\n')
                                  file.write('EQUINOX =   2000.0\n')
                                  file.write('END\n')
@@ -912,8 +919,8 @@ def worker(pipeline, recipe, config):
                                       "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
                             with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
-                                for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
-                                    hdul[0].header[key] = ax3param[i]
+                                # for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
+                                #     hdul[0].header[key] = ax3param[i]
                                 axDict = {'1' : [2,cubeWidth],
                                           '2' : [1,cubeHeight]}
                                 for i in ['1','2']:

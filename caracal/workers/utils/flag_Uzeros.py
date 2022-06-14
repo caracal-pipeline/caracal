@@ -565,8 +565,8 @@ def run_flagUzeros(msname,config):
     robust = config['flagUzeros']['robust']
     imsize = int(config['flagUzeros']['imsize'])
     cell = config['flagUzeros']['cell']
-    chanMin = int(config['flagUzeros']['chanMin'])
-    chanMax = int(config['flagUzeros']['chanMax'])
+    chanMin = int(config['flagUzeros']['chanRange'][0])
+    chanMax = int(config['flagUzeros']['chanRange'][1])
     taper = config['flagUzeros']['taper']
     thresholds = config['flagUzeros']['thresholds']
 

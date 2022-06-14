@@ -157,7 +157,6 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
     chanMax = int(config['flagUzeros']['chanRange'][1])
     taper = config['flagUzeros']['taper']
 
-    print(inVis)
     recipe = stimela.Recipe('flagUzeros',
                                     ms_dir=msdir,
                                     singularity_image_dir=pipeline.singularity_image_dir,

@@ -178,7 +178,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
         "msname": inVis,
         "npix": imsize,
         "scale": cell,
-        "briggs": robust,
+        "weight": 'briggs {0:.3f}'.format(robust),
         "channelsout": 1,
         "channelrange": [chanMin,chanMax],
         "niter": 0,

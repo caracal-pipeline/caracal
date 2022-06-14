@@ -756,6 +756,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
+            print(outCubePrefix)
+            sys.exit(0)
             makeCube(pipeline,inVisName,outCubePrefix,config)
 
             caracal.log.info("Making FFT of image")

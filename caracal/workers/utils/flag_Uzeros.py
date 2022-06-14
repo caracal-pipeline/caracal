@@ -136,7 +136,7 @@ def convToStokesI(data,flags):
     return data, flags
 
 
-def makeCube(inVis,outCubePrefix,chanMin,chanMax,kind='scan'):
+def makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,kind='scan'):
 
     # print(inVis,outCubePrefix)
 
@@ -703,7 +703,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(inVis,outCubePrefix,chanMin,chanMax)
+            makeCube(inVis,outCubePrefix,chanMin,chanMax,taber,robust)
 
             caracal.log.info("Making FFT of image")
             outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'

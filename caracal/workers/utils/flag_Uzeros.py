@@ -575,8 +575,7 @@ def run_flagUzeros(pipeline,msname,config):
     mfsOb = msname
 
     lws = config['flagUzeros']['transferto'] 
-    print(lws)
-    sys.exit(0)
+
 
     setDirs(pipeline.output,config)
 
@@ -634,11 +633,9 @@ def run_flagUzeros(pipeline,msname,config):
 
     obsIDs=[]
     rootMS = str.split(mfsOb,'.ms')[0]
-    print(rootMS)
+
     for lw in lws:
         obsIDs.append('{}{}.ms'.format(rootMS,lw))
-        print(obsIDs)
-        sys.exit(0)
 
     for obb in obsIDs:
         caracal.log.info("\t{}".format(obb))

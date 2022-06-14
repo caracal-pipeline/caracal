@@ -856,10 +856,10 @@ def run_flagUzeros(pipeline,targets,msname,config):
                         caracal.log.info('New iter')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    flg(vis=visName, mode='restore', versionname='scan_flags_start')
+                    flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
 
                     while fvers[-1] != 'scan_flags_start':
-                        flg(vis=visName, mode='delete', versionname=fvers[-1])
+                        flg(vis=visAddress, mode='delete', versionname=fvers[-1])
                         fvers = fvers[:-1]
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
@@ -884,9 +884,9 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    flg(vis=visName, mode='restore', versionname='scan_flags_start')
+                    flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
                     while fvers[-1] != 'scan_flags_start':
-                        flg(vis=visName, mode='delete', versionname=fvers[-1])
+                        flg(vis=visAddress, mode='delete', versionname=fvers[-1])
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))

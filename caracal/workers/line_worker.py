@@ -959,14 +959,16 @@ def worker(pipeline, recipe, config):
 
 ##################
                         if doSpec == True:
+                            femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
+                            femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value
                             gridMask = postGridMask if doProj == True else preGridMask
                             hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
                             if 'FREQ' in hdul[0].header['CTYPE3']:
-                                crval = firstchanfreq+chanwidth*firstchan
-                                cdelt = chanwidth*binchans
+                                crval = firstchanfreq[0]+chanwidth[0]*firstchan
+                                cdelt = chanwidth[0]*binchans
                             else:
-                                crval = C*(restfreq - (firstchan+chanwidth*firstchan))/restfreq
-                                cdelt = -C*chanwidth*binchans/restfreq
+                                crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
+                                cdelt = -C*chanwidth[0]*binchans/femit
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
                             idx = np.argmin(abs(ax3-crval))
@@ -974,12 +976,14 @@ def worker(pipeline, recipe, config):
                             hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
                             hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
                             hdul[0].header['NAXIS3'] = nchans
+                            hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
                             if binchans > 1:
                                 rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
                                 rdata = np.nansum(rdata, axis=1)
                                 rdata[rdata > 0] = 1
                                 hdul[0].data = rdata
                             else: pass
+                            hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                             hdul.flush()
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(

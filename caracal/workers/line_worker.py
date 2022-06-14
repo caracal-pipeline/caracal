@@ -875,11 +875,6 @@ def worker(pipeline, recipe, config):
                                 file.write('CRVAL2  =   {}\n'.format(decTarget))
                                 file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
                                 file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
-                                #file.write('NAXIS3  =   {}\n'.format(nchans))
-                                #file.write('CTYPE3  =   \'{}\'\n'.format(ax3param['CTYPE3']))
-                                #file.write('CRVAL3  =   {}\n'.format(ax3param['CRVAL3']))
-                                #file.write('CUNIT3  =   {}\n'.format(ax3param['CUNIT3']))
-                                #file.write('CRPIX3  =   {}\n'.format(ax3param['CRPIX3']-firstchan))
                                 file.write('EXTEND  =   T\n')
                                 file.write('EQUINOX =   2000.0\n')
                                 file.write('END\n')
@@ -920,8 +915,8 @@ def worker(pipeline, recipe, config):
                                       "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
                             with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
-                                # for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
-                                #     hdul[0].header[key] = ax3param[i]
+                                for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
+                                    hdul[0].header[key] = ax3param[i]
                                 axDict = {'1' : [2,cubeWidth],
                                           '2' : [1,cubeHeight]}
                                 for i in ['1','2']:
@@ -952,7 +947,7 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-
+##################
                             if doSpec == True:
                                 gridMask = postGridMask if doProj == True else preGridMask
                                 hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
@@ -977,7 +972,7 @@ def worker(pipeline, recipe, config):
                                 hdul.flush()
 
                             else: pass
-
+###########################
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})

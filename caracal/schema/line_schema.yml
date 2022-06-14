@@ -277,7 +277,8 @@ mapping:
             example: '0,100'
           thresholds:
             desc: threshold for cutoff of amplitudes in the FFT, default=300
-            type: float
+            seq:
+              - type: float
             required: false
             example: '300'
       sunblocker:

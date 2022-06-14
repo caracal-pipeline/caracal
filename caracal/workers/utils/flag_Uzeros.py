@@ -459,7 +459,7 @@ def plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,p
     ax.set_ylim(0.5,)
     plt.yscale('log')
 
-    outPlot="{0}{1}_{2}_{3}_sblck.png".format(plotDir,galaxy,msid,scan)
+    outPlot="{0}{1}_{2}_{3}_sblck.png".format(config['flagUzeros']['stripePlotDir'],galaxy,msid,scan)
 
     figS.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
     plt.close(figS)
@@ -783,7 +783,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
                     fig0, comvmax_tot = plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
                 else:
-                    outPlot="{0}{1}_{2}_tot.png".format(plotDir,galaxy,mfsOb)
+                    outPlot="{0}{1}_{2}_tot.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
                     fig0.set_tight_layout(False)
                     gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
@@ -924,8 +924,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
             if makePlots == True:
                 caracal.log.info("----------------------------------------------------")
                 caracal.log.info("Saving scans diagnostic plots")
-                outPlot="{0}{1}_{2}_perscan_preFlag.png".format(plotDir,galaxy,mfsOb)
-                outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(plotDir,galaxy,mfsOb)
+                outPlot="{0}{1}_{2}_perscan_preFlag.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
 
                 fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                 fig1.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
@@ -973,7 +973,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
 
                 if makePlots==True:
-                    outPlot="{0}{1}_{2}_fullMS.png".format(plotDir,galaxy,mfsOb)
+                    outPlot="{0}{1}_{2}_fullMS.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0, comvmax_tot = plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                     fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file

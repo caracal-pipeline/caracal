@@ -631,7 +631,7 @@ def run_flagUzeros(pipeline,msname,config):
     # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
     obsIDs=[]
-    rootMS = split(mfsOb,'.ms')
+    rootMS = sstr.plit(mfsOb,'.ms')
     for lw in lws:
         obsIDs.append('{}{}.ms'.format(rootMS,lw))
         print(obsIDs)

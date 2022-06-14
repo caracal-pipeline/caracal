@@ -847,6 +847,7 @@ def worker(pipeline, recipe, config):
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
+                        postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
                             doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
@@ -889,7 +890,7 @@ def worker(pipeline, recipe, config):
                                 file.write('EQUINOX =   2000.0\n')
                                 file.write('END\n')
 
-                            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+                            #postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                             if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                                 os.remove('{}/{}'.format(pipeline.masking,postGridMask))
@@ -970,23 +971,32 @@ def worker(pipeline, recipe, config):
                         if doSpec == True:
                             gridMask = postGridMask if doProj == True else preGridMask
                             caracal.log.info('Reprojecting mask {} to match the spectral axis of the cube.'.format(gridMask))
-                            hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
+                            if doProj == True:
+                                hdul = fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update')
+                            else:
+                                hdul = fits.open('{}/{}'.format(pipeline.masking,preGridMask))
+
+                                if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                                   os.remove('{}/{}'.format(pipeline.masking,postGridMask))
+
                             if 'FREQ' in hdul[0].header['CTYPE3']:
                                 crval = firstchanfreq[0]+chanwidth[0]*firstchan
                                 cdelt = chanwidth[0]*binchans
                                 cdeltm = hdul[0].header['CDELT3']
+                                cdelte = crval+nchans*chanwidth[0]
                             else:
                                 crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
-                                cdelt = -C*chanwidth[0]*binchans/femit
-                                cdeltm = -C*hdul[0].header['CDELT3']/femit
+                                cdelt = chanwidth[0]
+                                cdeltm = hdul[0].header['CDELT3']*femit/(-C)
+                                crvale = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan+nchans*chanwidth[0]))/femit
 
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
                             idx = np.argmin(abs(ax3-crval))
-
+                            ide = np.argmin(abs(ax3-crvale))
                             if cdelt > cdeltm:
                                 hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - round(idx/binchans,1)
                                 hdul[0].header['NAXIS3'] = nchans
                                 hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
                                 if binchans > 1:
@@ -997,28 +1007,36 @@ def worker(pipeline, recipe, config):
                                 else: pass
 
                             else:
-                                rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
-                                rr = int(cdeltm/cdelt)
-                                for nn in range(rr):
-                                    rdata[i::rr] = hdul[0].data
 
+                                rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
+                                print(rdata.shape, hdul[0].data[idx:ide].shape, int(cdeltm/cdelt))
+                                rr = int(cdeltm/cdelt)
+                                for nn in range(nchans):
+                                    rdata[nn] = hdul[0].data[idx+nn//rr]
+
+                                hdul[0].header['NAXIS3'] = nchans
+                                hdul[0].header['CRPIX3'] = 0
+                                hdul[0].header['CRVAL3'] = crval
+                                hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']/rr
                                 hdul[0].data = rdata
 
 
                             hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                            hdul.flush()
+                            if doProj == True:
+                                hdul.flush()
+                            else:
+                                hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask))
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
 
-                        else: 
+                        else:
                             if doProj == False:
                                 line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                    get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                             else: pass
 
 ###########################
-
 
 
 

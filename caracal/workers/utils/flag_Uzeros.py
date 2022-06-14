@@ -101,6 +101,7 @@ def setDirs(output,config):
 def splitScans(config,inVis,scanNums):
 
     scanVisList=[]
+    scanVisNames=[]
     for scan in scanNums:
         baseVis=os.path.basename(inVis)
         outVis=config['flagUzeros']['stripeMSDir']+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
@@ -111,12 +112,13 @@ def splitScans(config,inVis,scanNums):
         mstrans(vis=inVis,outputvis=outVis,datacolumn='DATA',scan=str(scan))
 
         scanVisList.append(outVis)
+        scanVisNames.append(baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms')
 
 
     caracal.log.info("All Scans splitted")
 
 
-    return scanVisList
+    return scanVisList, scanVisNames
 
 
 def gaussian(x, cent, amp, sigma):
@@ -788,7 +790,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
             caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
-            scanVisList = splitScans(config,inVis,scanNums)
+            scanVisList,scanVisNames = splitScans(config,inVis,scanNums)
 
             arr = np.empty((0,7))
             NS = len(scanNums)
@@ -813,7 +815,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 scan=scanNums[kk]
                 caracal.log.info("----------------------------------------------------")
                 caracal.log.info("\tWorking on scan {}".format(str(scan)))
-                visName=scanVisList[kk]
+                visName=scanVisNames[kk]
+                visAddress=scanVisList[kk]
                 caracal.log.info("----------------------------------------------------")
 
                 # Save flag version before start iterating over all thresholds
@@ -850,7 +853,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     if len(thresholds) > 1:
                         caracal.log.info('New iter')
                     # Rewind flags of this scan to their initial state
-                    fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
+                    fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
                     flg(vis=visName, mode='restore', versionname='scan_flags_start')
 
                     while fvers[-1] != 'scan_flags_start':

@@ -674,8 +674,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
-    print(galaxies)
-    sys.exit(0)
+
     for jj in range(0,len(galaxies)):
         galaxy = galaxies[jj]
 

@@ -864,7 +864,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     # scanFlags below are the stripe flags for this scan
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     caracal.log.info("Making post-flagging image")
                     

@@ -626,7 +626,7 @@ def run_flagUzeros(pipeline,msname,config):
 
     # caracal.log.addHandler(consoleHandler)
     caracal.log.warn(
-            'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(filename))
+            'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
     caracal.log.info("====================================================")
     # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 

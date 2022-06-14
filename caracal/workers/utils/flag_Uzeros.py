@@ -575,6 +575,8 @@ def run_flagUzeros(pipeline,msname,config):
     mfsOb = msname
 
     lws = config['flagUzeros']['transferto'] 
+    print(lws)
+    sys.exit(0)
 
     setDirs(pipeline.output,config)
 

@@ -757,6 +757,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
             print(outCubePrefix)
+            print('CIULO')
             sys.exit(0)
             makeCube(pipeline,inVisName,outCubePrefix,config)
 

@@ -833,6 +833,7 @@ def worker(pipeline, recipe, config):
                         MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                         '''
                         doProj = False
+                        doSpec = False
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
@@ -849,13 +850,12 @@ def worker(pipeline, recipe, config):
                             doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
                             doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
-                            doProj = True if hdul[0].header['NAXIS3'] > nchans ## this should work in both a request for a subset, and if the cube is to be binned.
+                            doSpec = True if hdul[0].header['NAXIS3'] > nchans else None ## this should work in both a request for a subset, and if the cube is to be binned.
 
-                            ### since we will do "3D" gridding, this likely is not necessary
-                            # if doProj:
-                            #     ax3param = []
-                            #     for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
-                            #         ax3param.append(hdul[0].header[key])
+                            if doProj:
+                                ax3param = []
+                                for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
+                                    ax3param.append (hdul[0].header[key])
 
                         if doProj:
                             '''
@@ -864,7 +864,7 @@ def worker(pipeline, recipe, config):
                             with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                                  file.write('SIMPLE  =   T\n')
                                  file.write('BITPIX  =   -64\n')
-                                 file.write('NAXIS   =   3\n')
+                                 file.write('NAXIS   =   2\n')
                                  file.write('NAXIS1  =   {}\n'.format(cubeWidth))
                                  file.write('CTYPE1  =   \'RA---SIN\'\n')
                                  file.write('CRVAL1  =   {}\n'.format(raTarget))
@@ -875,10 +875,11 @@ def worker(pipeline, recipe, config):
                                  file.write('CRVAL2  =   {}\n'.format(decTarget))
                                  file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
                                  file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
-                                 file.write('NAXIS3  =   {}\n'.format(nchans))
-                                 file.write('CTYPE3  =   {}\n'.format(hdu['CTYPE3']))
-                                 file.write('CRVAL3  =   {}\n'.format())
-                                 file.write('CRPIX3  =   {}\n'.format())
+                                 #file.write('NAXIS3  =   {}\n'.format(nchans))
+                                 #file.write('CTYPE3  =   \'{}\'\n'.format(ax3param['CTYPE3']))
+                                 #file.write('CRVAL3  =   {}\n'.format(ax3param['CRVAL3']))
+                                 #file.write('CUNIT3  =   {}\n'.format(ax3param['CUNIT3']))
+                                 #file.write('CRPIX3  =   {}\n'.format(ax3param['CRPIX3']-firstchan))
                                  file.write('EXTEND  =   T\n')
                                  file.write('EQUINOX =   2000.0\n')
                                  file.write('END\n')
@@ -951,7 +952,34 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+
+                            if doSpec == True:
+				gridMask = postGridMask if doProj == True else preGridMask
+                                hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
+				if 'FREQ' in hdul['CTYPE3']:
+                                    crval = firstchanfreq+chanwidth*firstchan
+                                    cdelt = chanwidth*binchans
+                                else:
+                                    crval = C*(restfreq - (firstchan+chanwidth*firstchan))/restfreq
+                                    cdelt = -C*chanwidth*binchans/restfreq
+				hdr = hdul[0].header
+				ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3']
+				idx = np.argmin(abs(ax3-crval))
+
+				hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+  			        hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+				hdul[0].header['NAXIS3'] = nchans
+                                if binchans > 1:
+                                    rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                    rdata = np.nansum(rdata, axis=1)
+				    hdul[0].data = rdata
+				else: pass
+				hdul.flush()
+
+			   else: pass
+
+
+                           line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
 
                         else:

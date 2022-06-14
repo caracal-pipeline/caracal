@@ -647,7 +647,6 @@ def worker(pipeline, recipe, config):
 
             uZeros.run_flagUzeros(pipeline,all_targets,msname,config)
             caracal.log.info("++++++++++++++++++++++++++++++++++++++++++")
-            sys.exit(0)
 
 
         if pipeline.enable_task(config, 'sunblocker'):

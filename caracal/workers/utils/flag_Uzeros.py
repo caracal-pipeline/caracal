@@ -55,9 +55,9 @@ dm = measures.measures()
 timeInit = time.time()
 
 
-def setDirs(config):
+def setDirs(output,config):
 
-    config['flagUzeros']['stripeDir']=pipeline.output+'stripeAnalysis/'
+    config['flagUzeros']['stripeDir']=output+'stripeAnalysis/'
     if not os.path.exists(config['flagUzeros']['stripeDir']):
         os.mkdir(config['flagUzeros']['stripeDir'])
 
@@ -576,7 +576,7 @@ def run_flagUzeros(pipeline,msname,config):
 
     lws = config['flagUzeros']['transferto'] 
 
-    setDirs(config)
+    setDirs(pipeline.output,config)
 
 
     if makePlots ==True or makeSunblockPlots==True:

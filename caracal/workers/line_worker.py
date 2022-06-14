@@ -639,13 +639,15 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config,'flagUzeros'):
-            
+            caracal.log.info("-=======================================-")
             if config['flagUzeros']['use_mstransform']:
                 msnameFl = msname_mst
             else:
                 msnameFl = msname
 
             uZeros.flagUZeros(msname,config)
+            caracal.log.info("++++++++++++++++++++++++++++++++++++++++++")
+            sys.exit(0)
 
 
         if pipeline.enable_task(config, 'sunblocker'):

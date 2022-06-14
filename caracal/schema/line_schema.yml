@@ -212,6 +212,22 @@ mapping:
             type: bool
             required: false
             example: 'False'
+          use_mstransform:
+            desc: Run sunblocker on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            type: bool
+            required: false
+            example: 'True'
+          transferFlags:
+            desc: Run transfer flags to other datasets (typically different spws)
+            type: bool
+            required: false
+            example: 'False'
+          tranferto:
+            desc: labels of different datasets
+            seq:
+              - type: str
+            required: false
+            example: ['1','2','3']
           method:
             desc: Define flagging method. Either q99 or sunblock (median+threshold*mad)
             type: str

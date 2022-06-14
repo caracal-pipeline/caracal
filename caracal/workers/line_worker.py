@@ -835,6 +835,8 @@ def worker(pipeline, recipe, config):
                         doProj = False
                         doSpec = False
                         C = 2.99792458e+8 # m/s
+                        femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
+                        femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value ## Hz
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
@@ -852,6 +854,13 @@ def worker(pipeline, recipe, config):
                             doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
                             doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
                             doSpec = True if hdul[0].header['NAXIS3'] > nchans else None ## this should work in both a request for a subset, and if the cube is to be binned.
+
+                            if 'FREQ' in hdul[0].header['CTYPE3']: 
+                                cdelt = hdul[0].header['CDELT3']
+                            else:
+                                cdelt = hdul[0].header['CDELT3']*femit/(-C)
+
+                            doSpec = True if cdelt > chanwidth[0] else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
                                 ax3param = []
@@ -959,30 +968,43 @@ def worker(pipeline, recipe, config):
 
 ##################
                         if doSpec == True:
-                            femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
-                            femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value
                             gridMask = postGridMask if doProj == True else preGridMask
+                            caracal.log.info('Reprojecting mask {} to match the spectral axis of the cube.'.format(gridMask))
                             hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
                             if 'FREQ' in hdul[0].header['CTYPE3']:
                                 crval = firstchanfreq[0]+chanwidth[0]*firstchan
                                 cdelt = chanwidth[0]*binchans
+                                cdeltm = hdul[0].header['CDELT3']
                             else:
                                 crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
                                 cdelt = -C*chanwidth[0]*binchans/femit
+                                cdeltm = -C*hdul[0].header['CDELT3']/femit
+
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
                             idx = np.argmin(abs(ax3-crval))
 
-                            hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-                            hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
-                            hdul[0].header['NAXIS3'] = nchans
-                            hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
-                            if binchans > 1:
-                                rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
-                                rdata = np.nansum(rdata, axis=1)
-                                rdata[rdata > 0] = 1
+                            if cdelt > cdeltm:
+                                hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+                                hdul[0].header['NAXIS3'] = nchans
+                                hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
+                                if binchans > 1:
+                                    rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                    rdata = np.nansum(rdata, axis=1)
+                                    rdata[rdata > 0] = 1
+                                    hdul[0].data = rdata
+                                else: pass
+
+                            else:
+                                rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
+                                rr = int(cdeltm/cdelt)
+                                for nn in range(rr):
+                                    rdata[i::rr] = hdul[0].data
+
                                 hdul[0].data = rdata
-                            else: pass
+
+
                             hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                             hdul.flush()
 

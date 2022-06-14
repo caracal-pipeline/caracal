@@ -136,7 +136,7 @@ def convToStokesI(data,flags):
     return data, flags
 
 
-def makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
+def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
 
     # print(inVis,outCubePrefix)
 
@@ -147,19 +147,52 @@ def makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='
         chMin=chanMin
         chMax=chanMax
     #imsize=400,scale=20.asec
-    if taper is not None:
 
-        cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(
-                  outCubePrefix=outCubePrefix,robust=robust,
-                  taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
-#        os.system("singularity exec /idia/software/containers/wsclean-v3.0-idg.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}".format(outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis))
-        caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
-        os.system(cmd)
-    else:    #cell =2.asec imsize=3600
-        cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(
-                 outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
-        caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
-        os.system(cmd)
+    line_image_opts = {
+        "npix": imsize,
+        "scale": cell,
+        "briggs": robust,
+        "channelsout": 1,
+        "channelrange": [chanMin,chanMax],
+        "niter": 0,
+        "gain": 0.2,
+        "mgain": 0.85,
+        "auto-threshold": 10.0,
+        "multiscale":False,
+        "multiscale-scale-bias": 0.6,
+        "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
+        "no-update-model-required": True,
+        "auto-threshold": 0.5,
+        "auto-mask": 10.0 ,
+        "gain": 0.2,
+            }
+
+    if taper is not None:
+        line_image_opts.update({"taper-gaussian": taper})
+
+
+
+
+
+    recipe.add('cab/wsclean',
+               step, line_image_opts,
+               input=pinput,
+               output=poutput,
+               label='{0:s}:: Image Line'.format(step))
+    recipe.run()
+
+
+#         cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(
+#                   outCubePrefix=outCubePrefix,robust=robust,
+#                   taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
+# #        os.system("singularity exec /idia/software/containers/wsclean-v3.0-idg.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}".format(outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis))
+#         caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
+#         os.system(cmd)
+#     else:    #cell =2.asec imsize=3600
+#         cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(
+#                  outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chMin,chanmax=chMax,inVis=inVis)
+#         caracal.log.info("\t-weight briggs {}  -taper-gaussian {} -size {} {} -scale {}asec -channels-out 1 -channel-range {} {}".format(robust,taper,imsize,imsize,cell,chMin,chMax))
+#         os.system(cmd)
 #        os.system("singularity exec /idia/software/containers/wsclean-v3.0-idg.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}".format(outCubePrefix=outCubePrefix,robust=robust,taper=taper,imsize=imsize,cell=cell,chanmin=chanMin,chanmax=chanMax,inVis=inVis))
 
     caracal.log.info("Image Done")
@@ -703,7 +736,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+            makeCube(pipeline.input,pipeline.output,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
             caracal.log.info("Making FFT of image")
             outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
@@ -772,7 +805,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 outCubeName_0 = outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
-                makeCube(visName,outCubePrefix_0,chanMin,chanMax,taper,robust,imsize,cell)
+                makeCube(pipeline.input,pipeline.output,visName,outCubePrefix_0,chanMin,chanMax,taper,robust,imsize,cell)
 
                 caracal.log.info("Making FFT of image")
                 outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
@@ -813,7 +846,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                    makeCube(pipeline.input,pipeline.output,visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -839,7 +872,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                    makeCube(pipeline.input,pipeline.output,visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
                 # Save stats for the selected threshold
                 arr = np.vstack((arr, statsArray))
@@ -892,7 +925,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                makeCube(pipeline.input,pipeline.output,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
                 caracal.log.info("Making FFT of post-flagging image")
 

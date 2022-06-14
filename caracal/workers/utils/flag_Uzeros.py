@@ -98,7 +98,7 @@ def setDirs(output,config):
 
     return 
 
-def splitScans(inVis,scanNums):
+def splitScans(config,inVis,scanNums):
 
     scanVisList=[]
     for scan in scanNums:
@@ -788,7 +788,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
             caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
-            scanVisList = splitScans(inVis,scanNums)
+            scanVisList = splitScans(config,inVis,scanNums)
 
             arr = np.empty((0,7))
             NS = len(scanNums)

@@ -6,7 +6,7 @@ import yaml
 import matplotlib
 matplotlib.use("Agg")
 
-import stimela.recipe
+import stimela.recipe as recipe
 
 
 import casacore.tables as tables
@@ -172,10 +172,7 @@ def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,ims
     if taper is not None:
         line_image_opts.update({"taper-gaussian": taper})
 
-
-
-
-
+    step='makeCube'
     recipe.add('cab/wsclean',
                step, line_image_opts,
                input=pinput,

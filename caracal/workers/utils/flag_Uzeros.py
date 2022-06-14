@@ -672,7 +672,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
-    galaxy = galaxies[jj]
+    galaxy = str.split(mfsOb,config['label_in'])[0]
 
     comvmax_tot, comvmax_scan = 0, 0
     runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
@@ -711,12 +711,12 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
 
     for ii in range (0,len(obsIDs)):
-        galNameVis=galaxy.replace('-','_')
+        # galNameVis=galaxy.replace('-','_')
         track = lws[ii-1]
         inVis=pipeline.msdir+'/'+obsIDs[ii]
         inVisName=obsIDs[ii]
         caracal.log.info("====================================================")
-        caracal.log.info("\tWorking on {} target: {}".format(inVisName, galaxy))
+        caracal.log.info("\tWorking on {} target: {}".format(inVisName))
         caracal.log.info("====================================================")
 
         if os.path.exists(inVis+'.flagversions'):

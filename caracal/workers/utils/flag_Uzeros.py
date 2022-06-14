@@ -674,6 +674,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
+    print(galaxies)
+    sys.exit(0)
     for jj in range(0,len(galaxies)):
         galaxy = galaxies[jj]
 
@@ -986,6 +988,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
     if doCleanUp is True:
         cleanUp(galaxy)
 
+
+    return timeFlag
 # timeEnd = (time.time()-timeInit)/60.
 # #caracal.log.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
 # caracal.log.info("Done")

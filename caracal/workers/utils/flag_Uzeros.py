@@ -194,7 +194,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
             }
 
     if taper is not None:
-        line_image_opts.update({"taper-gaussian": taper})
+        line_image_opts.update({"taper-gaussian": str(taper)})
 
     step='makeCube'
     recipe.add('cab/wsclean',

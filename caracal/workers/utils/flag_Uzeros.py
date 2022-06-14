@@ -527,11 +527,9 @@ def sunBlockStats(inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold
         ave = popt[0]
 
 
-    try makeSunblockPlots :
-        if makeSunblockPlots== True:
-            plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
-    except:
-        continue
+    if makeSunblockPlots in locals() and makeSunblockPlots==True : :
+        plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
+
     caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
 
     return ave+float(threshold)*std

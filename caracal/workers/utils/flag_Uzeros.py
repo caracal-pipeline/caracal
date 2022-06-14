@@ -6,6 +6,9 @@ import yaml
 import matplotlib
 matplotlib.use("Agg")
 
+import stimela.recipe
+
+
 import casacore.tables as tables
 
 import casacore.images as images

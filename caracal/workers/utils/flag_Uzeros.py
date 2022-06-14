@@ -146,7 +146,16 @@ def convToStokesI(data,flags):
     return data, flags
 
 
-def makeCube(pipeline,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
+def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
+
+    robust = config['flagUzeros']['robust']
+    imsize = int(config['flagUzeros']['imsize'])
+    cell = config['flagUzeros']['cell']
+    chanMin = int(config['flagUzeros']['chanRange'][0])
+    chanMax = int(config['flagUzeros']['chanRange'][1])
+    taper = config['flagUzeros']['taper']
+    thresholds = config['flagUzeros']['thresholds']
+
 
     recipe = stimela.Recipe('flagUzeros',
                                     ms_dir=pipeline.msdir,
@@ -609,13 +618,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
     makeSunblockPlots=config['flagUzeros']['makeSunblockPlots']
     
     doCleanUp =config['flagUzeros']['method']
-    robust = config['flagUzeros']['robust']
-    imsize = int(config['flagUzeros']['imsize'])
-    cell = config['flagUzeros']['cell']
-    chanMin = int(config['flagUzeros']['chanRange'][0])
-    chanMax = int(config['flagUzeros']['chanRange'][1])
-    taper = config['flagUzeros']['taper']
-    thresholds = config['flagUzeros']['thresholds']
+
 
 
     galaxies = targets
@@ -750,7 +753,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(pipeline,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+            makeCube(pipeline,inVis,outCubePrefix,config)
 
             caracal.log.info("Making FFT of image")
             outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
@@ -819,7 +822,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 outCubeName_0 = outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
-                makeCube(pipeline,visName,outCubePrefix_0,chanMin,chanMax,taper,robust,imsize,cell)
+                makeCube(pipeline,visName,outCubePrefix_0,config)
 
                 caracal.log.info("Making FFT of image")
                 outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
@@ -860,7 +863,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(pipeline,visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                    makeCube(pipeline,visName,outCubePrefix,config)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -886,7 +889,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(pipeline,visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                    makeCube(pipeline,visName,outCubePrefix,config)
 
                 # Save stats for the selected threshold
                 arr = np.vstack((arr, statsArray))
@@ -939,7 +942,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(pipeline,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
+                makeCube(pipeline,inVis,outCubePrefix,config)
 
                 caracal.log.info("Making FFT of post-flagging image")
 

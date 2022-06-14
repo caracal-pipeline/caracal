@@ -156,7 +156,7 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
     taper = config['flagUzeros']['taper']
     thresholds = config['flagUzeros']['thresholds']
 
-
+    print(inVis)
     recipe = stimela.Recipe('flagUzeros',
                                     ms_dir=msdir,
                                     singularity_image_dir=pipeline.singularity_image_dir,

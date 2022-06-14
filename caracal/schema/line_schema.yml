@@ -222,7 +222,7 @@ mapping:
             type: bool
             required: false
             example: 'False'
-          tranferto:
+          transferto:
             desc: labels of different datasets
             seq:
               - type: str

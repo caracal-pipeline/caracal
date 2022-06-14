@@ -173,8 +173,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
         chMin=chanMin
         chMax=chanMax
     #imsize=400,scale=20.asec
-    print(outCubePrefix)
-    sys.exit(0)
+
     line_image_opts = {
         "msname": inVis,
         "prefix": outCubePrefix,
@@ -752,13 +751,10 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
             caracal.log.info("----------------------------------------------------")
             caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
-            outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_tot'
+            outCubePrefix = galaxy+'_1'+track+'_tot'
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            print(outCubePrefix)
-            print('CIULO')
-            sys.exit(0)
             makeCube(pipeline,inVisName,outCubePrefix,config)
 
             caracal.log.info("Making FFT of image")

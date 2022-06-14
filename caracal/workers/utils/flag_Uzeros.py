@@ -93,7 +93,7 @@ def splitScans(inVis,scanNums):
     scanVisList=[]
     for scan in scanNums:
         baseVis=os.path.basename(inVis)
-        outVis=msDir+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
+        outVis=config['flagUzeros']['stripeMSDir']+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
         if os.path.exists(outVis):
             shutil.rmtree(outVis)
         if os.path.exists(outVis+'.flagversions'):
@@ -285,19 +285,19 @@ def cleanUp(galaxy):
 
     caracal.log.info("Deleting images")
 
-    if os.path.exists(cubeDir):
-        shutil.rmtree(cubeDir)
+    if os.path.exists(config['flagUzeros']['stripeCubeDir']):
+        shutil.rmtree(config['flagUzeros']['stripeCubeDir'])
 
     caracal.log.info("Deleting FFTs")
 
 
-    if os.path.exists(fftDir):
-        shutil.rmtree(fftDir)
+    if os.path.exists(config['flagUzeros']['stripeFFTDir']):
+        shutil.rmtree(config['flagUzeros']['stripeFFTDir'])
 
     caracal.log.info("Deleting .ms scans")
 
-    if os.path.exists(msDir):
-        shutil.rmtree(msDir)
+    if os.path.exists(config['flagUzeros']['stripeMSDir']):
+        shutil.rmtree(config['flagUzeros']['stripeMSDir'])
 
     caracal.log.info("Cleanup done")
 
@@ -699,14 +699,14 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
             caracal.log.info("----------------------------------------------------")
             caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
-            outCubePrefix = cubeDir+galaxy+'_1'+track+'_tot'
+            outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_tot'
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
             makeCube(inVis,outCubePrefix)
 
             caracal.log.info("Making FFT of image")
-            outFFT=fftDir+galaxy+'_'+track+'_tot.im'
+            outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
             inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
@@ -768,14 +768,14 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 flg(vis=visName, mode='save', versionname='scan_flags_start')
 
                 caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
-                outCubePrefix_0 = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)
+                outCubePrefix_0 = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_scan'+str(scan)
                 outCubeName_0 = outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
                 makeCube(visName,outCubePrefix_0)
 
                 caracal.log.info("Making FFT of image")
-                outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'.im'
+                outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
                 inFFTData,inFFTHeader = makeFFT(outCubeName_0,outFFT)
@@ -786,7 +786,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 el = 0
                 az = 0
 
-                outCubePrefix = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
+                outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
                 outCubeName = outCubePrefix+'-dirty.fits'
 
                 rms_thresh = []
@@ -852,7 +852,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
 
                 caracal.log.info("Making FFT of post-flagging image")
-                outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
+                outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
                 inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
@@ -887,7 +887,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 putFlags(inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
-                outCubePrefix = cubeDir+galaxy+'_'+track+'_tot_stripeFlag'
+                outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_'+track+'_tot_stripeFlag'
                 outCubeName=outCubePrefix+'-dirty.fits'
 
                 if os.path.exists(outCubeName):
@@ -896,7 +896,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                 caracal.log.info("Making FFT of post-flagging image")
 
-                outFFT=fftDir+galaxy+'_'+track+'_tot_stripeFlag.im'
+                outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
                 inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)

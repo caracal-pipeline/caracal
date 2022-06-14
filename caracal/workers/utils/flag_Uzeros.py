@@ -697,7 +697,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
         # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
         obsIDs=[]
-        obsIDs.append(mfsOb)
+        obsIDs.append('{}{}.ms'.format(rootMS,lw))
         rootMS = str.split(mfsOb,config['label_in'])[0]
 
         if config['flagUzeros']['transferFlags'] == True:
@@ -715,7 +715,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
         for ii in range (0,len(obsIDs)):
             galNameVis=galaxy.replace('-','_')
-            track = lws[ii]
+            track = lws[ii-1]
             inVis=pipeline.msdir+'/'+obsIDs[ii]
             inVisName=obsIDs[ii]
             caracal.log.info("====================================================")

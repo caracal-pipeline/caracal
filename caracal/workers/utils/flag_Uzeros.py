@@ -820,7 +820,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 caracal.log.info("----------------------------------------------------")
 
                 # Save flag version before start iterating over all thresholds
-                flg(vis=visName, mode='save', versionname='scan_flags_start')
+                flg(vis=visAddress, mode='save', versionname='scan_flags_start')
 
                 caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
                 outCubePrefix_0 = galaxy+'_1'+track+'_scan'+str(scan)
@@ -881,7 +881,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     caracal.log.info('\tThe threshold that minimises the image noise is {}'.format(threshold))
                     caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
                     # Rewind flags of this scan to their initial state
-                    fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
+                    fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
                     flg(vis=visName, mode='restore', versionname='scan_flags_start')
                     while fvers[-1] != 'scan_flags_start':
                         flg(vis=visName, mode='delete', versionname=fvers[-1])

@@ -645,7 +645,7 @@ def worker(pipeline, recipe, config):
             else:
                 msnameFl = msname
 
-            uZeros.flagUZeros(msname,config)
+            uZeros.run_flagUzeros(msname,config)
             caracal.log.info("++++++++++++++++++++++++++++++++++++++++++")
             sys.exit(0)
 

@@ -574,8 +574,6 @@ def run_flagUzeros(pipeline,msname,config):
     datapath=pipeline.output
     mfsOb = msname
 
-    if config['flagUzeros']['transferFlags'] == True:
-        lws = config['flagUzeros']['transferto'] 
 
 
     setDirs(pipeline.output,config)
@@ -635,11 +633,17 @@ def run_flagUzeros(pipeline,msname,config):
     obsIDs=[]
     rootMS = str.split(mfsOb,'.ms')[0]
 
-    for lw in lws:
-        obsIDs.append('{}{}.ms'.format(rootMS,lw))
+    if config['flagUzeros']['transferFlags'] == True:
+        lws = config['flagUzeros']['transferto'] 
 
-    for obb in obsIDs:
-        caracal.log.info("\t{}".format(obb))
+        for lw in lws:
+            obsIDs.append('{}{}.ms'.format(rootMS,lw))
+
+        for obb in obsIDs:
+            caracal.log.info("\t{}".format(obb))
+    else:
+        obsIDs.append(mfsOb)
+
 
     for ii in range (0,len(obsIDs)):
         galNameVis=galaxy.replace('-','_')

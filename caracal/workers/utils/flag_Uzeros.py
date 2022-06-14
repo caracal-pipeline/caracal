@@ -175,6 +175,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
     #imsize=400,scale=20.asec
 
     line_image_opts = {
+        "msname": inVis,
         "npix": imsize,
         "scale": cell,
         "briggs": robust,
@@ -753,7 +754,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(pipeline,inVis,outCubePrefix,config)
+            makeCube(pipeline,inVisName,outCubePrefix,config)
 
             caracal.log.info("Making FFT of image")
             outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
@@ -942,7 +943,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(pipeline,inVis,outCubePrefix,config)
+                makeCube(pipeline,inVisName,outCubePrefix,config)
 
                 caracal.log.info("Making FFT of post-flagging image")
 

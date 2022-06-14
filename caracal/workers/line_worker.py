@@ -1009,7 +1009,7 @@ def worker(pipeline, recipe, config):
                             hdul.flush()
 
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                               get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
+                               get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
 
                         else: 
                             if doProj == False:

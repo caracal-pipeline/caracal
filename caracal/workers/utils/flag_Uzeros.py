@@ -654,7 +654,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
         for ii in range (0,len(obsIDs)):
             galNameVis=galaxy.replace('-','_')
             track = lws[ii]
-            inVis=pipeline.msdir+obsIDs[ii]
+            inVis=pipeline.msdir+'/'+obsIDs[ii]
             inVisName=obsIDs[ii]
             caracal.log.info("====================================================")
             caracal.log.info("\tWorking on {}".format(inVisName))

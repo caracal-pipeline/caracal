@@ -632,6 +632,7 @@ def run_flagUzeros(pipeline,msname,config):
 
     obsIDs=[]
     rootMS = str.split(mfsOb,'.ms')
+    print(rootMS)
     for lw in lws:
         obsIDs.append('{}{}.ms'.format(rootMS,lw))
         print(obsIDs)

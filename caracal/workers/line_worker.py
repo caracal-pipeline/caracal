@@ -979,7 +979,7 @@ def worker(pipeline, recipe, config):
                             else: pass
 
 
-                           line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
 
                         else:

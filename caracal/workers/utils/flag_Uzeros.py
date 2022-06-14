@@ -615,6 +615,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
     for jj in range(0,len(galaxies)):
+        galaxy = galaxies[jj]
 
         comvmax_tot, comvmax_scan = 0, 0
         runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")

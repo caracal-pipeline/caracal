@@ -752,7 +752,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             caracal.log.info("----------------------------------------------------")
             caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
             outCubePrefix = galaxy+'_1'+track+'_tot'
-            outCubeName=outCubePrefix+'-dirty.fits'
+            outCubeName=config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
             makeCube(pipeline,inVisName,outCubePrefix,config)
@@ -820,8 +820,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 flg(vis=visName, mode='save', versionname='scan_flags_start')
 
                 caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
-                outCubePrefix_0 = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_scan'+str(scan)
-                outCubeName_0 = outCubePrefix_0+'-dirty.fits'
+                outCubePrefix_0 = galaxy+'_1'+track+'_scan'+str(scan)
+                outCubeName_0 = config['flagUzeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
                 makeCube(pipeline,visName,outCubePrefix_0,config)
@@ -838,8 +838,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 el = 0
                 az = 0
 
-                outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
-                outCubeName = outCubePrefix+'-dirty.fits'
+                outCubePrefix = galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
+                outCubeName = config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
                 rms_thresh = []
 
@@ -939,8 +939,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 putFlags(inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
-                outCubePrefix = config['flagUzeros']['stripeCubeDir']+galaxy+'_'+track+'_tot_stripeFlag'
-                outCubeName=outCubePrefix+'-dirty.fits'
+                outCubePrefix = galaxy+'_'+track+'_tot_stripeFlag'
+                outCubeName=config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)

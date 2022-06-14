@@ -43,6 +43,7 @@ from collections import OrderedDict
 import time
 import argparse
 import shutil
+import caracal
 
 from caracal import log
 

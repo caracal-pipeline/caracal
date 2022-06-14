@@ -635,9 +635,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     datapath=pipeline.output
     mfsOb = msname
-    print(msname)
 
-    sys.exit(0)
     setDirs(pipeline.output,config)
 
 

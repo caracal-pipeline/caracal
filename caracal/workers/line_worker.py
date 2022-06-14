@@ -639,7 +639,6 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config,'flagUzeros'):
-            print(all_msfiles)
             for i, msname in enumerate(all_msfiles):
 
                 caracal.log.info("-=======================================-")

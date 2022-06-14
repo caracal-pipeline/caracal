@@ -160,7 +160,6 @@ def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,ims
         "auto-threshold": 10.0,
         "multiscale":False,
         "multiscale-scale-bias": 0.6,
-        "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
         "no-update-model-required": True,
         "auto-threshold": 0.5,
         "auto-mask": 10.0 ,

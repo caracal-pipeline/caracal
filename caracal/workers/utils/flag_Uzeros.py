@@ -70,8 +70,8 @@ def setDirs(output,config):
         os.mkdir(config['flagUzeros']['stripeCubeDir'])
 
     config['flagUzeros']['stripeFFTDir']=config['flagUzeros']['stripeDir']+'fft/'
-    if not os.path.exists(config['flagUzeros']['fftDir']):
-        os.mkdir(config['flagUzeros']['fftDir'])
+    if not os.path.exists(config['flagUzeros']['stripeFFTDir']):
+        os.mkdir(config['flagUzeros']['stripeFFTDir'])
 
     config['flagUzeros']['stripePlotDir']=config['flagUzeros']['stripeDir']+'plots/'
     if not os.path.exists(config['flagUzeros']['stripePlotDir']):

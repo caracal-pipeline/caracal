@@ -156,7 +156,6 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
     chanMin = int(config['flagUzeros']['chanRange'][0])
     chanMax = int(config['flagUzeros']['chanRange'][1])
     taper = config['flagUzeros']['taper']
-    thresholds = config['flagUzeros']['thresholds']
 
     print(inVis)
     recipe = stimela.Recipe('flagUzeros',
@@ -622,6 +621,9 @@ def run_flagUzeros(pipeline,targets,msname,config):
     makeSunblockPlots=config['flagUzeros']['makeSunblockPlots']
     
     doCleanUp =config['flagUzeros']['method']
+
+    thresholds = config['flagUzeros']['thresholds']
+
 
     flagCmd = True
 

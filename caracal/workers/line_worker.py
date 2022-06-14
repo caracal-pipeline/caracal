@@ -862,27 +862,27 @@ def worker(pipeline, recipe, config):
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
                             '''
                             with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                                 file.write('SIMPLE  =   T\n')
-                                 file.write('BITPIX  =   -64\n')
-                                 file.write('NAXIS   =   2\n')
-                                 file.write('NAXIS1  =   {}\n'.format(cubeWidth))
-                                 file.write('CTYPE1  =   \'RA---SIN\'\n')
-                                 file.write('CRVAL1  =   {}\n'.format(raTarget))
-                                 file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
-                                 file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
-                                 file.write('NAXIS2  =   {}\n'.format(cubeHeight))
-                                 file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                                 file.write('CRVAL2  =   {}\n'.format(decTarget))
-                                 file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
-                                 file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
-                                 #file.write('NAXIS3  =   {}\n'.format(nchans))
-                                 #file.write('CTYPE3  =   \'{}\'\n'.format(ax3param['CTYPE3']))
-                                 #file.write('CRVAL3  =   {}\n'.format(ax3param['CRVAL3']))
-                                 #file.write('CUNIT3  =   {}\n'.format(ax3param['CUNIT3']))
-                                 #file.write('CRPIX3  =   {}\n'.format(ax3param['CRPIX3']-firstchan))
-                                 file.write('EXTEND  =   T\n')
-                                 file.write('EQUINOX =   2000.0\n')
-                                 file.write('END\n')
+                                file.write('SIMPLE  =   T\n')
+                                file.write('BITPIX  =   -64\n')
+                                file.write('NAXIS   =   2\n')
+                                file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                                file.write('CTYPE1  =   \'RA---SIN\'\n')
+                                file.write('CRVAL1  =   {}\n'.format(raTarget))
+                                file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                                file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
+                                file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                                file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                                file.write('CRVAL2  =   {}\n'.format(decTarget))
+                                file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                                file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                #file.write('NAXIS3  =   {}\n'.format(nchans))
+                                #file.write('CTYPE3  =   \'{}\'\n'.format(ax3param['CTYPE3']))
+                                #file.write('CRVAL3  =   {}\n'.format(ax3param['CRVAL3']))
+                                #file.write('CUNIT3  =   {}\n'.format(ax3param['CUNIT3']))
+                                #file.write('CRPIX3  =   {}\n'.format(ax3param['CRPIX3']-firstchan))
+                                file.write('EXTEND  =   T\n')
+                                file.write('EQUINOX =   2000.0\n')
+                                file.write('END\n')
 
                             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
@@ -954,29 +954,29 @@ def worker(pipeline, recipe, config):
 
 
                             if doSpec == True:
-				gridMask = postGridMask if doProj == True else preGridMask
+                                gridMask = postGridMask if doProj == True else preGridMask
                                 hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
-				if 'FREQ' in hdul['CTYPE3']:
+                                if 'FREQ' in hdul['CTYPE3']:
                                     crval = firstchanfreq+chanwidth*firstchan
                                     cdelt = chanwidth*binchans
                                 else:
                                     crval = C*(restfreq - (firstchan+chanwidth*firstchan))/restfreq
                                     cdelt = -C*chanwidth*binchans/restfreq
-				hdr = hdul[0].header
-				ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3']
-				idx = np.argmin(abs(ax3-crval))
+                                hdr = hdul[0].header
+                                ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
+                                idx = np.argmin(abs(ax3-crval))
 
-				hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-  			        hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
-				hdul[0].header['NAXIS3'] = nchans
+                                hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+                                      hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+                                hdul[0].header['NAXIS3'] = nchans
                                 if binchans > 1:
                                     rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
                                     rdata = np.nansum(rdata, axis=1)
-				    hdul[0].data = rdata
-				else: pass
-				hdul.flush()
+                                    hdul[0].data = rdata
+                                else: pass
+                                hdul.flush()
 
-			   else: pass
+                            else: pass
 
 
                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(

@@ -967,7 +967,7 @@ def worker(pipeline, recipe, config):
                                 idx = np.argmin(abs(ax3-crval))
 
                                 hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-                                      hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
                                 hdul[0].header['NAXIS3'] = nchans
                                 if binchans > 1:
                                     rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))

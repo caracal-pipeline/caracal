@@ -173,7 +173,8 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
         chMin=chanMin
         chMax=chanMax
     #imsize=400,scale=20.asec
-
+    print(outCubePrefix)
+    sys.exit(0)
     line_image_opts = {
         "msname": inVis,
         "prefix": outCubePrefix,

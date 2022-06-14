@@ -199,7 +199,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
     recipe.add('cab/wsclean',
                step, line_image_opts,
                input=pipeline.input,
-               output=pipeline.poutput,
+               output=pipeline.output,
                label='{0:s}:: Image Line'.format(step))
     recipe.run()
 

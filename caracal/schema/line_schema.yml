@@ -227,7 +227,7 @@ mapping:
             seq:
               - type: str
             required: false
-            example: ['1','2','3']
+            example: '1','2','3'
           method:
             desc: Define flagging method. Either q99 or sunblock (median+threshold*mad)
             type: str

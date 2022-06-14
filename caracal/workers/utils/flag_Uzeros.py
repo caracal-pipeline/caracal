@@ -176,6 +176,7 @@ def makeCube(pipeline,inVis,outCubePrefix,config,kind='scan'):
 
     line_image_opts = {
         "msname": inVis,
+        "prefix": outCubePrefix,
         "npix": imsize,
         "scale": cell,
         "weight": 'briggs {0:.3f}'.format(robust),

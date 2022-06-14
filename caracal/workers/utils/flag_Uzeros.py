@@ -62,7 +62,7 @@ timeInit = time.time()
 
 def setDirs(output,config):
 
-    config['flagUzeros']['stripeDir']=output+'stripeAnalysis/'
+    config['flagUzeros']['stripeDir']=output+'/stripeAnalysis/'
     if not os.path.exists(config['flagUzeros']['stripeDir']):
         os.mkdir(config['flagUzeros']['stripeDir'])
 

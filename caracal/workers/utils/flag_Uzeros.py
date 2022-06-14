@@ -703,7 +703,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             outCubeName=outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust)
+            makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
             caracal.log.info("Making FFT of image")
             outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
@@ -772,7 +772,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 outCubeName_0 = outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
-                makeCube(visName,outCubePrefix_0)
+                makeCube(visName,outCubePrefix_0,chanMin,chanMax,taper,robust,imsize,cell)
 
                 caracal.log.info("Making FFT of image")
                 outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
@@ -813,7 +813,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(visName,outCubePrefix)
+                    makeCube(visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -839,7 +839,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(visName,outCubePrefix)
+                    makeCube(visName,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
                 # Save stats for the selected threshold
                 arr = np.vstack((arr, statsArray))
@@ -892,7 +892,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(inVis,outCubePrefix)
+                makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell)
 
                 caracal.log.info("Making FFT of post-flagging image")
 

@@ -967,6 +967,7 @@ def worker(pipeline, recipe, config):
                                 if binchans > 1:
                                     rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
                                     rdata = np.nansum(rdata, axis=1)
+                                    rdata[rdata > 0] = 1
                                     hdul[0].data = rdata
                                 else: pass
                                 hdul.flush()

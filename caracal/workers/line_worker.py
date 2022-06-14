@@ -834,6 +834,7 @@ def worker(pipeline, recipe, config):
                         '''
                         doProj = False
                         doSpec = False
+                        C = 2.99792458e+8 # m/s
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)

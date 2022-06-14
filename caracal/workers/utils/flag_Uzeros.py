@@ -623,8 +623,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
     doCleanUp =config['flagUzeros']['method']
 
     thresholds = config['flagUzeros']['thresholds']
-
-
+    dilateU = config['flagUzeros']['dilateU']
+    dilateV = config['flagUzeros']['dilateV']
     flagCmd = True
 
     galaxies = targets
@@ -890,7 +890,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     # Re-image
                     caracal.log.info("Making post-flagging image")

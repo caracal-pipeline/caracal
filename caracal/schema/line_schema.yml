@@ -281,6 +281,16 @@ mapping:
               - type: float
             required: false
             example: '300'
+          dilateU:
+            desc: extend flag selection to N nearby cells along the U axis in both directions
+            type: int
+            required: false
+            example: '0'
+          dilateV:
+            desc: extend flag selection to N nearby cells along the V axis in both directions
+            type: int
+            required: false
+            example: '0'
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map

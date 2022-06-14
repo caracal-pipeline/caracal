@@ -571,10 +571,9 @@ def run_flagUzeros(pipeline,msname,config):
     thresholds = config['flagUzeros']['thresholds']
 
     datapath=pipeline.output
-    datapath += "/"
     mfsOb = msname
 
-    lws = config['flagUzeros']['tranferto'] 
+    lws = config['flagUzeros']['transferto'] 
 
     setDirs(config)
 

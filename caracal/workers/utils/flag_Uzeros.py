@@ -58,6 +58,9 @@ dm = measures.measures()
 timeInit = time.time()
 
 
+recipe = stimela.Recipe('flagUzeros')
+
+
 def setDirs(output,config):
 
     config['flagUzeros']['stripeDir']=output+'stripeAnalysis/'
@@ -141,6 +144,8 @@ def convToStokesI(data,flags):
 
 def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
 
+
+
     # print(inVis,outCubePrefix)
 
     if kind=='scan':
@@ -173,12 +178,12 @@ def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,ims
         line_image_opts.update({"taper-gaussian": taper})
 
     step='makeCube'
-    stimela.recipe.add('cab/wsclean',
+    recipe.add('cab/wsclean',
                step, line_image_opts,
                input=pinput,
                output=poutput,
                label='{0:s}:: Image Line'.format(step))
-    stimela.recipe.run()
+    recipe.run()
 
 
 #         cmd = """singularity exec /idia/software/containers/wsclean-v3.0.simg wsclean -name {outCubePrefix} -j 64 -mem 100 -no-update-model-required -weight briggs {robust} -taper-gaussian {taper} -size {imsize} {imsize} -scale {cell}asec -channels-out 1 -pol I -channel-range {chanmin} {chanmax} -niter 0 -auto-threshold 0.5 -auto-mask 10.0 -gain 0.2 -mgain 0.85 -multiscale-scale-bias 0.6 -padding 1.2 -quiet {inVis}""".format(

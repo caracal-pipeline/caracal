@@ -632,7 +632,9 @@ def run_flagUzeros(pipeline,msname,config):
 
     obsIDs=[]
     for lw in lws:
-        obsIDs.append('{}_sdp_l0-{}-lw1{}'.format(mfsOb,galaxy,lw))
+        obsIDs.append('{}{}'.format(mfsOb,lw))
+        print(obsIDS)
+        sys.exit(0)
 
     for obb in obsIDs:
         caracal.log.info("\t{}".format(obb))

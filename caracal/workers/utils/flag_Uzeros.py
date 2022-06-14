@@ -362,7 +362,7 @@ def cleanUp(galaxy):
     return 0
 
 
-def saveFFTTable(inFFT,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV):
+def saveFFTTable(inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV):
 
     xCol = np.zeros([len(U)*len(V)])
     yCol = np.zeros([len(U)*len(V)])
@@ -868,7 +868,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     # scanFlags below are the stripe flags for this scan
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData,visName, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     caracal.log.info("Making post-flagging image")
                     
@@ -894,7 +894,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData,inFFTHeader, visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     # Re-image
                     caracal.log.info("Making post-flagging image")

@@ -947,40 +947,54 @@ def worker(pipeline, recipe, config):
                                     pass
                                 hdul.flush()
 
-##################
-                            if doSpec == True:
-                                gridMask = postGridMask if doProj == True else preGridMask
-                                hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
-                                if 'FREQ' in hdul['CTYPE3']:
-                                    crval = firstchanfreq+chanwidth*firstchan
-                                    cdelt = chanwidth*binchans
-                                else:
-                                    crval = C*(restfreq - (firstchan+chanwidth*firstchan))/restfreq
-                                    cdelt = -C*chanwidth*binchans/restfreq
-                                hdr = hdul[0].header
-                                ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
-                                idx = np.argmin(abs(ax3-crval))
-
-                                hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
-                                hdul[0].header['NAXIS3'] = nchans
-                                if binchans > 1:
-                                    rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
-                                    rdata = np.nansum(rdata, axis=1)
-                                    rdata[rdata > 0] = 1
-                                    hdul[0].data = rdata
-                                else: pass
-                                hdul.flush()
-
-                            else: pass
-###########################
-
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
 
                         else:
+                            if doSpec == False:
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                            else: pass
+
+##################
+                        if doSpec == True:
+                            gridMask = postGridMask if doProj == True else preGridMask
+                            hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
+                            if 'FREQ' in hdul['CTYPE3']:
+                                crval = firstchanfreq+chanwidth*firstchan
+                                cdelt = chanwidth*binchans
+                            else:
+                                crval = C*(restfreq - (firstchan+chanwidth*firstchan))/restfreq
+                                cdelt = -C*chanwidth*binchans/restfreq
+                            hdr = hdul[0].header
+                            ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
+                            idx = np.argmin(abs(ax3-crval))
+
+                            hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+                            hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - firstchan/binchans
+                            hdul[0].header['NAXIS3'] = nchans
+                            if binchans > 1:
+                                rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                rdata = np.nansum(rdata, axis=1)
+                                rdata[rdata > 0] = 1
+                                hdul[0].data = rdata
+                            else: pass
+                            hdul.flush()
+
                             line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                               get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                               get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
+
+                        else: 
+                            if doProj == False:
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                            else: pass
+
+###########################
+
+
+
+
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})

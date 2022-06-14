@@ -937,7 +937,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             superArr = np.vstack((superArr, arr))
             caracal.log.info("Saving stats table")
             newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
-            outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=tableDir,galaxy=galaxy,track=track)
+            outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=config['flagUzeros']['stripeTableDir'],galaxy=galaxy,track=track)
             ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
 
             if flagCmd==True:

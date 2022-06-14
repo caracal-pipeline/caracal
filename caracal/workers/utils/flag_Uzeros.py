@@ -716,7 +716,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
         inVis=pipeline.msdir+'/'+obsIDs[ii]
         inVisName=obsIDs[ii]
         caracal.log.info("====================================================")
-        caracal.log.info("\tWorking on {} target: {}".format(inVisName))
+        caracal.log.info("\tWorking on {} ".format(inVisName))
         caracal.log.info("====================================================")
 
         if os.path.exists(inVis+'.flagversions'):

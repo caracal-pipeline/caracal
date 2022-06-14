@@ -555,7 +555,7 @@ def putFlags(pf_inVis, pf_inVisName, pf_stripeFlags):
     return 0
 
 
-def run_flagUzeros(pipeline,msname,config):
+def run_flagUzeros(pipeline,targets,msname,config):
 
     method = config['flagUzeros']['method']
     makePlots=config['flagUzeros']['makePlots']
@@ -570,6 +570,9 @@ def run_flagUzeros(pipeline,msname,config):
     chanMax = int(config['flagUzeros']['chanRange'][1])
     taper = config['flagUzeros']['taper']
     thresholds = config['flagUzeros']['thresholds']
+
+
+    galaxies = targets
 
     datapath=pipeline.output
     mfsOb = msname
@@ -611,314 +614,315 @@ def run_flagUzeros(pipeline,msname,config):
 
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
+    for jj in range(0,len(galaxies)):
 
-    comvmax_tot, comvmax_scan = 0, 0
-    runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
-    # logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
-    # logging.captureWarnings(True)
+        comvmax_tot, comvmax_scan = 0, 0
+        runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
+        # logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
+        # logging.captureWarnings(True)
 
-    # logging.disable(logging.DEBUG)
-    # caracal.log = logging.getcaracal.log(__name__)
+        # logging.disable(logging.DEBUG)
+        # caracal.log = logging.getcaracal.log(__name__)
 
-    # consoleHandler = logging.StreamHandler(sys.stdout)
-    # logFormatter = logging.Formatter("%(asctime)s [%(name)-17s] %(levelname)-5.5s:  %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
-    # consoleHandler.setFormatter(logFormatter)
+        # consoleHandler = logging.StreamHandler(sys.stdout)
+        # logFormatter = logging.Formatter("%(asctime)s [%(name)-17s] %(levelname)-5.5s:  %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
+        # consoleHandler.setFormatter(logFormatter)
 
-    # caracal.log.addHandler(consoleHandler)
-    caracal.log.warn(
-            'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
-    caracal.log.info("====================================================")
-    # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
-
-    obsIDs=[]
-    rootMS = str.split(mfsOb,'.ms')[0]
-
-    if config['flagUzeros']['transferFlags'] == True:
-        lws = config['flagUzeros']['transferto'] 
-
-        for lw in lws:
-            obsIDs.append('{}{}.ms'.format(rootMS,lw))
-
-        for obb in obsIDs:
-            caracal.log.info("\t{}".format(obb))
-    else:
-        obsIDs.append(mfsOb)
-
-
-    for ii in range (0,len(obsIDs)):
-        galNameVis=galaxy.replace('-','_')
-        track = lws[ii]
-        inVis=msDirOr+obsIDs[ii]+'_mst.ms'
-        inVisName=obsIDs[ii]+'_mst.ms'
+        # caracal.log.addHandler(consoleHandler)
+        caracal.log.warn(
+                'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
         caracal.log.info("====================================================")
-        caracal.log.info("\tWorking on {}".format(inVisName))
-        caracal.log.info("====================================================")
+        # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
-        if os.path.exists(inVis+'.flagversions'):
-            fvers = [ii.split(' :')[0] for ii in open(inVis+'.flagversions/FLAG_VERSION_LIST').readlines()]
-            if 'stripe_flag_before' in fvers:
-                caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
-                flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
-                while fvers[-1] != 'stripe_flag_before':
-                    flg(vis=inVis, mode='delete', versionname=fvers[-1])
-                    fvers = fvers[:-1]
-            else:
-                caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
-                flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+        obsIDs=[]
+        rootMS = str.split(mfsOb,'.ms')[0]
+
+        if config['flagUzeros']['transferFlags'] == True:
+            lws = config['flagUzeros']['transferto'] 
+
+            for lw in lws:
+                obsIDs.append('{}{}.ms'.format(rootMS,lw))
+
+            for obb in obsIDs:
+                caracal.log.info("\t{}".format(obb))
         else:
-            caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
-            flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+            obsIDs.append(mfsOb)
 
-        # For lw's other than the first one, just copy the flags and skip the rest of the for loop
-        if ii != 0:
-            putFlags(inVis, inVisName, stripeFlags)
-            continue
 
-        # For the first lw, do all that follows
-        caracal.log.info("Opening full MS file".format(inVisName))
-        t=tables.table(inVis,readonly=True,ack=False)
-        scans=t.getcol('SCAN_NUMBER')
-        FlagTot=t.getcol('FLAG')
-        scanNums=np.unique(scans)
-        timestamps = t.getcol("TIME")
-        field_id = t.getcol("FIELD_ID")
-        t.close()
-
-        percTot=np.nansum(FlagTot)/float(FlagTot.shape[0]*FlagTot.shape[1]*FlagTot.shape[2])*100.
-        caracal.log.info("Flagged visibilites so far: {percTot:.3f} %".format(percTot=percTot))
-
-        anttab = tables.table(inVis+"::ANTENNA", ack=False)
-        ant_xyz = anttab.getcol("POSITION", 0 , 1)[0]
-        anttab.close()
-
-        caracal.log.info("----------------------------------------------------")
-        caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
-        outCubePrefix = cubeDir+galaxy+'_1'+track+'_tot'
-        outCubeName=outCubePrefix+'-dirty.fits'
-        if os.path.exists(outCubeName):
-            os.remove(outCubeName)
-        makeCube(inVis,outCubePrefix)
-
-        caracal.log.info("Making FFT of image")
-        outFFT=fftDir+galaxy+'_'+track+'_tot.im'
-        if os.path.exists(outFFT):
-            shutil.rmtree(outFFT)
-        inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
-
-        ###U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1']) ############ Add this back?
-        ###V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2']) ############ Add this back?
-
-        scan=track
-
-        if makePlots== True:
-            if flagCmd ==True:
-                fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
-                fig0.set_tight_layout(False)
-                gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
-                fig0, comvmax_tot = plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
-            else:
-                outPlot="{0}{1}_{2}_tot.png".format(plotDir,galaxy,mfsOb)
-                fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
-                fig0.set_tight_layout(False)
-                gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
-                fig0, comvmax_tot = plotAll(fig0,gs0,1,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
-                fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-                plt.close(fig0)
-
-        caracal.log.info("----------------------------------------------------")
-
-        caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
-
-        scanVisList = splitScans(inVis,scanNums)
-
-        arr = np.empty((0,7))
-        NS = len(scanNums)
-        if makePlots == True:
-            fig1 = plt.figure(figsize=(8,21.73227), constrained_layout=False)
-            fig1.set_tight_layout(False)
-            fig2 = plt.figure(figsize=(8,21.73227), constrained_layout=False)
-            fig2.set_tight_layout(False)
-
-            gs1 = gridspec.GridSpec(nrows=NS,ncols=2,figure=fig1,hspace=0,wspace=0.0)
-            gs2 = gridspec.GridSpec(nrows=NS,ncols=2,figure=fig2,hspace=0,wspace=0.0)
-
-        # Initialising the stripeFlags array, to which scans will be added one by one
-        stripeFlags=np.empty(((0),FlagTot.shape[1],FlagTot.shape[2]))
-        percTotAv=[]
-
-        del FlagTot
-        gc.collect()
-
-        for kk in range(len(scanNums)):
-
-            scan=scanNums[kk]
-            caracal.log.info("----------------------------------------------------")
-            caracal.log.info("\tWorking on scan {}".format(str(scan)))
-            visName=scanVisList[kk]
-            caracal.log.info("----------------------------------------------------")
-
-            # Save flag version before start iterating over all thresholds
-            flg(vis=visName, mode='save', versionname='scan_flags_start')
-
-            caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
-            outCubePrefix_0 = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)
-            outCubeName_0 = outCubePrefix_0+'-dirty.fits'
-            if os.path.exists(outCubeName_0):
-                os.remove(outCubeName_0)
-            makeCube(visName,outCubePrefix_0)
-
-            caracal.log.info("Making FFT of image")
-            outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'.im'
-            if os.path.exists(outFFT):
-                shutil.rmtree(outFFT)
-            inFFTData,inFFTHeader = makeFFT(outCubeName_0,outFFT)
-
-            U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
-            V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
-
-            el = 0
-            az = 0
-
-            outCubePrefix = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
-            outCubeName = outCubePrefix+'-dirty.fits'
-
-            rms_thresh = []
-
-            if len(thresholds) > 1:
-                caracal.log.info('Start iterating over all requested thresholds {} to find the optimal one'.format(thresholds))
-            # iterate over all thresholds
-            for threshold in thresholds:
-                if len(thresholds) > 1:
-                    caracal.log.info('New iter')
-                # Rewind flags of this scan to their initial state
-                fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                flg(vis=visName, mode='restore', versionname='scan_flags_start')
-
-                while fvers[-1] != 'scan_flags_start':
-                    flg(vis=visName, mode='delete', versionname=fvers[-1])
-                    fvers = fvers[:-1]
-
-                caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                # scanFlags below are the stripe flags for this scan
-                statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
-                caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
-                caracal.log.info("Making post-flagging image")
-                
-                if os.path.exists(outCubeName):
-                    os.remove(outCubeName)
-                makeCube(visName,outCubePrefix)
-                fitsdata = fits.open(outCubeName)
-                rms_thresh.append(np.std(fitsdata[0].data[0,0]))
-                caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
-                fitsdata.close()
-
-            # Select best threshold (minimum noise), re-flag and re-image
-            if len(thresholds) > 1:
-                caracal.log.info('Done iterating over all requested thresholds')
-                threshold = thresholds[rms_thresh.index(min(rms_thresh))]
-                caracal.log.info('\tThe threshold that minimises the image noise is {}'.format(threshold))
-                caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
-                # Rewind flags of this scan to their initial state
-                fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                flg(vis=visName, mode='restore', versionname='scan_flags_start')
-                while fvers[-1] != 'scan_flags_start':
-                    flg(vis=visName, mode='delete', versionname=fvers[-1])
-                    fvers = fvers[:-1]
-                # Re-flag with selected threshold
-                caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
-                caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
-                # Re-image
-                caracal.log.info("Making post-flagging image")
-                if os.path.exists(outCubeName):
-                    os.remove(outCubeName)
-                makeCube(visName,outCubePrefix)
-
-            # Save stats for the selected threshold
-            arr = np.vstack((arr, statsArray))
-            percTotAv.append(percent)
-
-            # Add the stripe flags of this scan to the stripe flags of all the scans done previously
-            stripeFlags=np.concatenate([stripeFlags,scanFlags])
-
-            if makePlots == True:
-                fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
-
-            caracal.log.info("Making FFT of post-flagging image")
-            outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
-            if os.path.exists(outFFT):
-                shutil.rmtree(outFFT)
-            inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
-
-            if makePlots == True:
-                fig2, comvmax_scan = plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
-
-        if makePlots == True:
-            caracal.log.info("----------------------------------------------------")
-            caracal.log.info("Saving scans diagnostic plots")
-            outPlot="{0}{1}_{2}_perscan_preFlag.png".format(plotDir,galaxy,mfsOb)
-            outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(plotDir,galaxy,mfsOb)
-
-            fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-            fig1.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-            plt.close(fig1)
-            fig2.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-            fig2.savefig(outPlotFlag,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-            plt.close(fig2)
-
-        superArr = np.vstack((superArr, arr))
-        caracal.log.info("Saving stats table")
-        newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
-        outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=tableDir,galaxy=galaxy,track=track)
-        ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
-
-        if flagCmd==True:
+        for ii in range (0,len(obsIDs)):
+            galNameVis=galaxy.replace('-','_')
+            track = lws[ii]
+            inVis=msDirOr+obsIDs[ii]+'_mst.ms'
+            inVisName=obsIDs[ii]+'_mst.ms'
             caracal.log.info("====================================================")
             caracal.log.info("\tWorking on {}".format(inVisName))
             caracal.log.info("====================================================")
 
-            putFlags(inVis, inVisName, stripeFlags)
-            caracal.log.info("Making post-flagging image")
+            if os.path.exists(inVis+'.flagversions'):
+                fvers = [ii.split(' :')[0] for ii in open(inVis+'.flagversions/FLAG_VERSION_LIST').readlines()]
+                if 'stripe_flag_before' in fvers:
+                    caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
+                    flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
+                    while fvers[-1] != 'stripe_flag_before':
+                        flg(vis=inVis, mode='delete', versionname=fvers[-1])
+                        fvers = fvers[:-1]
+                else:
+                    caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
+                    flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+            else:
+                caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
+                flg(vis=inVis, mode='save', versionname='stripe_flag_before')
 
-            outCubePrefix = cubeDir+galaxy+'_'+track+'_tot_stripeFlag'
+            # For lw's other than the first one, just copy the flags and skip the rest of the for loop
+            if ii != 0:
+                putFlags(inVis, inVisName, stripeFlags)
+                continue
+
+            # For the first lw, do all that follows
+            caracal.log.info("Opening full MS file".format(inVisName))
+            t=tables.table(inVis,readonly=True,ack=False)
+            scans=t.getcol('SCAN_NUMBER')
+            FlagTot=t.getcol('FLAG')
+            scanNums=np.unique(scans)
+            timestamps = t.getcol("TIME")
+            field_id = t.getcol("FIELD_ID")
+            t.close()
+
+            percTot=np.nansum(FlagTot)/float(FlagTot.shape[0]*FlagTot.shape[1]*FlagTot.shape[2])*100.
+            caracal.log.info("Flagged visibilites so far: {percTot:.3f} %".format(percTot=percTot))
+
+            anttab = tables.table(inVis+"::ANTENNA", ack=False)
+            ant_xyz = anttab.getcol("POSITION", 0 , 1)[0]
+            anttab.close()
+
+            caracal.log.info("----------------------------------------------------")
+            caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
+            outCubePrefix = cubeDir+galaxy+'_1'+track+'_tot'
             outCubeName=outCubePrefix+'-dirty.fits'
-
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
             makeCube(inVis,outCubePrefix)
 
-            caracal.log.info("Making FFT of post-flagging image")
-
-            outFFT=fftDir+galaxy+'_'+track+'_tot_stripeFlag.im'
+            caracal.log.info("Making FFT of image")
+            outFFT=fftDir+galaxy+'_'+track+'_tot.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
             inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
 
-            U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
-            V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
+            ###U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1']) ############ Add this back?
+            ###V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2']) ############ Add this back?
 
-            caracal.log.info("Saving total stripe flagging diagnostic plots".format(galaxy=galaxy, track=track))
+            scan=track
 
-            percTotAfter=np.nansum(stripeFlags)/float(stripeFlags.shape[0]*stripeFlags.shape[1]*stripeFlags.shape[2])*100.
-            caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
-            percRel = percTotAfter-percTot
-            caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
+            if makePlots== True:
+                if flagCmd ==True:
+                    fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
+                    fig0.set_tight_layout(False)
+                    gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
+                    fig0, comvmax_tot = plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
+                else:
+                    outPlot="{0}{1}_{2}_tot.png".format(plotDir,galaxy,mfsOb)
+                    fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
+                    fig0.set_tight_layout(False)
+                    gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
+                    fig0, comvmax_tot = plotAll(fig0,gs0,1,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
+                    fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
+                    fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                    plt.close(fig0)
 
-            if makePlots==True:
-                outPlot="{0}{1}_{2}_fullMS.png".format(plotDir,galaxy,mfsOb)
-                fig0, comvmax_tot = plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
-                fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-                plt.close(fig0)
+            caracal.log.info("----------------------------------------------------")
 
-            timeFlag = (time.time()-timeInit)/60.
-            #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
+            caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
+
+            scanVisList = splitScans(inVis,scanNums)
+
+            arr = np.empty((0,7))
+            NS = len(scanNums)
+            if makePlots == True:
+                fig1 = plt.figure(figsize=(8,21.73227), constrained_layout=False)
+                fig1.set_tight_layout(False)
+                fig2 = plt.figure(figsize=(8,21.73227), constrained_layout=False)
+                fig2.set_tight_layout(False)
+
+                gs1 = gridspec.GridSpec(nrows=NS,ncols=2,figure=fig1,hspace=0,wspace=0.0)
+                gs2 = gridspec.GridSpec(nrows=NS,ncols=2,figure=fig2,hspace=0,wspace=0.0)
+
+            # Initialising the stripeFlags array, to which scans will be added one by one
+            stripeFlags=np.empty(((0),FlagTot.shape[1],FlagTot.shape[2]))
+            percTotAv=[]
+
+            del FlagTot
+            gc.collect()
+
+            for kk in range(len(scanNums)):
+
+                scan=scanNums[kk]
+                caracal.log.info("----------------------------------------------------")
+                caracal.log.info("\tWorking on scan {}".format(str(scan)))
+                visName=scanVisList[kk]
+                caracal.log.info("----------------------------------------------------")
+
+                # Save flag version before start iterating over all thresholds
+                flg(vis=visName, mode='save', versionname='scan_flags_start')
+
+                caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
+                outCubePrefix_0 = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)
+                outCubeName_0 = outCubePrefix_0+'-dirty.fits'
+                if os.path.exists(outCubeName_0):
+                    os.remove(outCubeName_0)
+                makeCube(visName,outCubePrefix_0)
+
+                caracal.log.info("Making FFT of image")
+                outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'.im'
+                if os.path.exists(outFFT):
+                    shutil.rmtree(outFFT)
+                inFFTData,inFFTHeader = makeFFT(outCubeName_0,outFFT)
+
+                U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
+                V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
+
+                el = 0
+                az = 0
+
+                outCubePrefix = cubeDir+galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
+                outCubeName = outCubePrefix+'-dirty.fits'
+
+                rms_thresh = []
+
+                if len(thresholds) > 1:
+                    caracal.log.info('Start iterating over all requested thresholds {} to find the optimal one'.format(thresholds))
+                # iterate over all thresholds
+                for threshold in thresholds:
+                    if len(thresholds) > 1:
+                        caracal.log.info('New iter')
+                    # Rewind flags of this scan to their initial state
+                    fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
+                    flg(vis=visName, mode='restore', versionname='scan_flags_start')
+
+                    while fvers[-1] != 'scan_flags_start':
+                        flg(vis=visName, mode='delete', versionname=fvers[-1])
+                        fvers = fvers[:-1]
+
+                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                    # scanFlags below are the stripe flags for this scan
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
+                    caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                    caracal.log.info("Making post-flagging image")
+                    
+                    if os.path.exists(outCubeName):
+                        os.remove(outCubeName)
+                    makeCube(visName,outCubePrefix)
+                    fitsdata = fits.open(outCubeName)
+                    rms_thresh.append(np.std(fitsdata[0].data[0,0]))
+                    caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
+                    fitsdata.close()
+
+                # Select best threshold (minimum noise), re-flag and re-image
+                if len(thresholds) > 1:
+                    caracal.log.info('Done iterating over all requested thresholds')
+                    threshold = thresholds[rms_thresh.index(min(rms_thresh))]
+                    caracal.log.info('\tThe threshold that minimises the image noise is {}'.format(threshold))
+                    caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
+                    # Rewind flags of this scan to their initial state
+                    fvers = [ii.split(' :')[0] for ii in open(visName+'.flagversions/FLAG_VERSION_LIST').readlines()]
+                    flg(vis=visName, mode='restore', versionname='scan_flags_start')
+                    while fvers[-1] != 'scan_flags_start':
+                        flg(vis=visName, mode='delete', versionname=fvers[-1])
+                        fvers = fvers[:-1]
+                    # Re-flag with selected threshold
+                    caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
+                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, args.dilateU, args.dilateV)
+                    caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
+                    # Re-image
+                    caracal.log.info("Making post-flagging image")
+                    if os.path.exists(outCubeName):
+                        os.remove(outCubeName)
+                    makeCube(visName,outCubePrefix)
+
+                # Save stats for the selected threshold
+                arr = np.vstack((arr, statsArray))
+                percTotAv.append(percent)
+
+                # Add the stripe flags of this scan to the stripe flags of all the scans done previously
+                stripeFlags=np.concatenate([stripeFlags,scanFlags])
+
+                if makePlots == True:
+                    fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
+
+                caracal.log.info("Making FFT of post-flagging image")
+                outFFT=fftDir+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
+                if os.path.exists(outFFT):
+                    shutil.rmtree(outFFT)
+                inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
+
+                if makePlots == True:
+                    fig2, comvmax_scan = plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
+
+            if makePlots == True:
+                caracal.log.info("----------------------------------------------------")
+                caracal.log.info("Saving scans diagnostic plots")
+                outPlot="{0}{1}_{2}_perscan_preFlag.png".format(plotDir,galaxy,mfsOb)
+                outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(plotDir,galaxy,mfsOb)
+
+                fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
+                fig1.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                plt.close(fig1)
+                fig2.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
+                fig2.savefig(outPlotFlag,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                plt.close(fig2)
+
+            superArr = np.vstack((superArr, arr))
+            caracal.log.info("Saving stats table")
+            newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
+            outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=tableDir,galaxy=galaxy,track=track)
+            ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
+
+            if flagCmd==True:
+                caracal.log.info("====================================================")
+                caracal.log.info("\tWorking on {}".format(inVisName))
+                caracal.log.info("====================================================")
+
+                putFlags(inVis, inVisName, stripeFlags)
+                caracal.log.info("Making post-flagging image")
+
+                outCubePrefix = cubeDir+galaxy+'_'+track+'_tot_stripeFlag'
+                outCubeName=outCubePrefix+'-dirty.fits'
+
+                if os.path.exists(outCubeName):
+                    os.remove(outCubeName)
+                makeCube(inVis,outCubePrefix)
+
+                caracal.log.info("Making FFT of post-flagging image")
+
+                outFFT=fftDir+galaxy+'_'+track+'_tot_stripeFlag.im'
+                if os.path.exists(outFFT):
+                    shutil.rmtree(outFFT)
+                inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
+
+                U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
+                V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
+
+                caracal.log.info("Saving total stripe flagging diagnostic plots".format(galaxy=galaxy, track=track))
+
+                percTotAfter=np.nansum(stripeFlags)/float(stripeFlags.shape[0]*stripeFlags.shape[1]*stripeFlags.shape[2])*100.
+                caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
+                percRel = percTotAfter-percTot
+                caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
+
+                if makePlots==True:
+                    outPlot="{0}{1}_{2}_fullMS.png".format(plotDir,galaxy,mfsOb)
+                    fig0, comvmax_tot = plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
+                    fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
+                    fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                    plt.close(fig0)
+
+                timeFlag = (time.time()-timeInit)/60.
+                #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
 
     if doCleanUp is True:
         cleanUp(galaxy)
 
-    timeEnd = (time.time()-timeInit)/60.
-    #caracal.log.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
-    caracal.log.info("Done")
+# timeEnd = (time.time()-timeInit)/60.
+# #caracal.log.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
+# caracal.log.info("Done")

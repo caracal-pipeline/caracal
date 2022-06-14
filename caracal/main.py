@@ -50,7 +50,6 @@ def print_worker_help(worker):
     with open(schema, "r") as f:
         worker_dict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
 
-    helper = worker_help.worker_options(worker, worker_dict["mapping"][worker])
     helper.print_worker()
     return True
 

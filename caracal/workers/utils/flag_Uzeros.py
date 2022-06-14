@@ -58,7 +58,6 @@ dm = measures.measures()
 timeInit = time.time()
 
 
-recipe = stimela.Recipe('flagUzeros')
 
 
 def setDirs(output,config):
@@ -66,6 +65,11 @@ def setDirs(output,config):
     config['flagUzeros']['stripeDir']=output+'stripeAnalysis/'
     if not os.path.exists(config['flagUzeros']['stripeDir']):
         os.mkdir(config['flagUzeros']['stripeDir'])
+
+    config['flagUzeros']['stripeLogDir']=config['flagUzeros']['stripeDir']+'logs/'
+    if not os.path.exists(config['flagUzeros']['stripeLogDir']):
+        os.mkdir(config['flagUzeros']['stripeLogDir'])
+
 
     config['flagUzeros']['stripeMSDir']=config['flagUzeros']['stripeDir']+'msdir/'
     if not os.path.exists(config['flagUzeros']['stripeMSDir']):
@@ -143,7 +147,6 @@ def convToStokesI(data,flags):
 
 
 def makeCube(pinput,poutput,inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
-
 
 
     # print(inVis,outCubePrefix)
@@ -618,6 +621,13 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     setDirs(pipeline.output,config)
 
+    recipe = stimela.Recipe('flagUzeros',
+                                    ms_dir=pipeline.msdir,
+                                    singularity_image_dir=pipeline.singularity_image_dir,
+                                    log_dir=config['flagUzeros']['stripeLogDir'],
+                                    logfile=False, # no logfiles for recipes
+                                    )
+    recipe.JOB_TYPE = pipeline.container_tech
 
     if makePlots ==True or makeSunblockPlots==True:
         font=16

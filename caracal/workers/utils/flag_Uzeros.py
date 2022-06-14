@@ -136,7 +136,7 @@ def convToStokesI(data,flags):
     return data, flags
 
 
-def makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,kind='scan'):
+def makeCube(inVis,outCubePrefix,chanMin,chanMax,taper,robust,imsize,cell,kind='scan'):
 
     # print(inVis,outCubePrefix)
 

@@ -960,7 +960,7 @@ def worker(pipeline, recipe, config):
                         if doSpec == True:
                             gridMask = postGridMask if doProj == True else preGridMask
                             hdul = fits.open('{}/{}'.format(pipeline.masking,gridMask), mode='update')
-                            if 'FREQ' in hdul['CTYPE3']:
+                            if 'FREQ' in hdul[0].header['CTYPE3']:
                                 crval = firstchanfreq+chanwidth*firstchan
                                 cdelt = chanwidth*binchans
                             else:

@@ -570,7 +570,7 @@ def run_flagUzeros(msname,config):
     taper = config['flagUzeros']['taper']
     thresholds = config['flagUzeros']['thresholds']
 
-    datapath=workdir
+    datapath=pipeline.output
     datapath += "/"
     mfsOb = msname
 

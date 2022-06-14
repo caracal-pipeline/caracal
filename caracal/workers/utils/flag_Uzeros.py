@@ -699,7 +699,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
         obsIDs=[]
 
         rootMS = str.split(mfsOb,config['label_in'])[0]
-        obsIDs.append('{}{}.ms'.format(rootMS,lw))
+        obsIDs.append(mfsOb)
 
         if config['flagUzeros']['transferFlags'] == True:
             lws = config['flagUzeros']['transferto'] 

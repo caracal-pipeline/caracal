@@ -559,7 +559,7 @@ def run_flagUzeros(msname,config):
     method = config['flagUzeros']['method']
     makePlots=config['flagUzeros']['makePlots']
 
-    makeSunblockPlots=config['flagUzeros']['subblockPlots']
+    makeSunblockPlots=config['flagUzeros']['makeSunblockPlots']
     
     doCleanUp =config['flagUzeros']['method']
     robust = config['flagUzeros']['robust']

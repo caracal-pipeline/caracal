@@ -648,6 +648,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 caracal.log.info("\t{}".format(obb))
         else:
             obsIDs.append(mfsOb)
+            lws=['trk']
 
 
         for ii in range (0,len(obsIDs)):

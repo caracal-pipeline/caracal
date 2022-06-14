@@ -621,7 +621,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
     
     doCleanUp =config['flagUzeros']['method']
 
-
+    flagCmd = True
 
     galaxies = targets
 

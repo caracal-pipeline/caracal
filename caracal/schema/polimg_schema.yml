@@ -56,12 +56,12 @@ mapping:
         example: '1800'
       img_padding:
         type: float
-        desc: Padding in WSClean.
+        desc: Padding in WSClean. Set to -1 if you do not want to disable.
         required: false
         example: '1.3'
       img_gain:
         type: float
-        desc: Fraction of the peak that is cleaned in each minor iteration.
+        desc: Fraction of the peak that is cleaned in each minor iteration. Set to -1 if you do not want to disable.
         required: false
         example: '0.10'
       img_mgain:
@@ -171,11 +171,11 @@ mapping:
         type: int
         required: false
         example: '0'
-      #img_nwlayers_factor:
-      #  type: int
-      #  desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
-      #  required: false
-      #  example: '3'
+      img_nwlayers_factor:
+        type: int
+        desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available. Set to -1 if you do not want to disable.
+        required: false
+        example: '3'
       col:
         type: str
         desc: Column(s) to image.
@@ -193,9 +193,9 @@ mapping:
         example: 'wsclean'
       cleanmask_thr:
         type: float
-        desc: Threshold used to create the clean mask when WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
+        desc: Threshold used to create the clean mask when WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level. Set to -1 if you do not want to disable.
         required: false
-        example: '10.0'
+        example: '5.0'
       cleanmask_localrms:
         type: bool
         desc: Use a local-rms measurement when creating a clean mask with WSClean. This local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).

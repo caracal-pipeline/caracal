@@ -857,11 +857,10 @@ def worker(pipeline, recipe, config):
                             doSpec = True if hdul[0].header['NAXIS3'] > nchans else None ## this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
-                                cdelt = hdul[0].header['CDELT3']
+                                cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
-                                cdelt = hdul[0].header['CDELT3']*femit/(-C)
+                                cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
 
-                            print(cdelt, chanwidth[0])
                             doSpec = True if cdelt > chanwidth[0] else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
@@ -994,6 +993,7 @@ def worker(pipeline, recipe, config):
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
 
+                            print(crval, ax3[0], ax3[-1])
                             # if crval < ax3[0]:
 
 

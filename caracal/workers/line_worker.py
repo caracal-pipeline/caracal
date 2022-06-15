@@ -993,6 +993,7 @@ def worker(pipeline, recipe, config):
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
 
+                            print(crval, ax3[0], crvale,ax3[-1])
                             if (np.max([crval, crvale]) > np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) > np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 

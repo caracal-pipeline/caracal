@@ -223,7 +223,7 @@ mapping:
             required: false
             example: 'False'
           transferto:
-            desc: labels of different datasets
+            desc: labels of the datasets where to transfer the u=0 flags of the line-label_in dataset
             seq:
               - type: str
             required: false

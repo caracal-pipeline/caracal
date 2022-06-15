@@ -171,11 +171,11 @@ mapping:
         type: int
         required: false
         example: '0'
-      #img_nwlayers_factor:
-      #  type: int
-      #  desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
-      #  required: false
-      #  example: '3'
+      img_nwlayers_factor:
+        type: int
+        desc: Use automatic calculation of the number of w-layers, but multiple that number by the given factor. This can e.g. be useful for increasing w-accuracy. In practice, if there are more cores available than the number of w-layers asked for then the number of w-layers used will equal the number of cores available.
+        required: false
+        example: '3'
       col:
         type: str
         desc: Column(s) to image.
@@ -195,7 +195,7 @@ mapping:
         type: float
         desc: Threshold used to create the clean mask when WSClean. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
         required: false
-        example: '10.0'
+        example: '5.'
       cleanmask_localrms:
         type: bool
         desc: Use a local-rms measurement when creating a clean mask with WSClean. This local-rms setting is also used for the clean_threshold above. Otherwise it is only used to define the clean mask, and clean_threshold is in terms of the global noise (rather than the local noise).
@@ -206,35 +206,35 @@ mapping:
         type: int
         required: false
         example: '31'
-#      convolve:
-#        type: map
-#        desc: convolve the product to a common resolution with equolver
-#        mapping:
-#          enable:
-#            type: bool
-#            desc: Convolution parameters
-#            required: false
-#            example: 'False'
-#        convl_images:
-#          type: bool
-#          desc: Convolve output images to a common resolution
-#          required: false
-#          example: 'False'
-#        convl_cubes:
-#          type: bool
-#          desc: Convolve output cubes to a common resolution
-#          required: false
-#          example: 'False'
-#        convl_beam:
-#          type: str
-#          desc: Target beam for images. If 'auto' it will automatically set the target beam otherwise use input beam written as [bmin, bmaj, bpa] with bmin and bmaj in arcsec and bpa in deg.
-#          required: false
-#          example: ''
-#        remove_originals:
-#          type: bool
-#          desc: Remove images/cubes not convolved
-#          required: false
-#          example: 'False'
+      extra_images:
+        type: map
+        desc: make convolved images and/or PB images.
+        mapping:
+          enable:
+            type: bool
+            desc: List of options
+            required: false
+            example: 'False'
+          convl_images:
+            type: bool
+            desc: Convolve output images to a common resolution with equolver
+            required: false
+            example: 'False'
+          convl_beam:
+            type: str
+            desc: Target beam for images. If 'auto' it will automatically set the target beam otherwise use input beam written as [bmin, bmaj, bpa] with bmin and bmaj in arcsec and bpa in deg.
+            required: false
+            example: ''
+          make_pb_images:
+            type: bool
+            desc: Make PB images
+            required: false
+            example: 'False'
+          remove_originals:
+            type: bool
+            desc: Remove original images. This segment will be executed only if the images have been convolved.
+            required: false
+            example: 'False'
 #      make_cubes:
 #        type: map
 #        desc: make spectral cubes
@@ -244,9 +244,24 @@ mapping:
 #            desc: Make spectral cubes parameters
 #            required: false
 #            example: 'False'
+#        convl_cubes:
+#          type: bool
+#          desc: Convolve output cubes to a common resolution with equolver
+#          required: false
+#          example: 'False'
+#        convl_beam:
+#          type: str
+#          desc: Target beam for images. If 'auto' it will automatically set the target beam otherwise use input beam written as [bmin, bmaj, bpa] with bmin and bmaj in arcsec and bpa in deg.
+#          required: false
+#          example: ''
+#        make_pb_cubes:
+#          type: bool
+#          desc: Make PB cubes
+#          required: false
+#          example: 'False'
 #        remove_images:
 #          type: bool
-#          desc: remove images to save disc space
+#          desc: Remove original images to save disc space
 #          required: false
 #          example: 'True'
       absmem:

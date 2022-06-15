@@ -15,7 +15,7 @@ from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
 import psutil
-#import equolver.beach as beach
+import equolver.beach as beach
 
 NAME = 'Polarization Imaging'
 LABEL = 'polimg'
@@ -30,8 +30,8 @@ def worker(pipeline, recipe, config):
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
-    taper = str(config['img_taper'])
-    beam = float(config['img_beam'])
+    taper = config['img_taper']
+    beam = config['img_beam']
     maxuvl = config['img_maxuv_l']
     transuvl = maxuvl * config['img_transuv_l'] / 100.
     multiscale = config['img_multiscale']
@@ -249,6 +249,23 @@ def worker(pipeline, recipe, config):
         if stokes in alone:
             rename_single_stokes(get_dir_path(image_path, pipeline), field, stokes)
 
+    def make_mauchian_pb(filename, freq):
+        with fits.open(filename) as image:
+            headimage = image[0].header
+            ang_offset = np.indices(
+                (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
+            ang_offset[0] -= (headimage['crpix2'] - 1)
+            ang_offset[1] -= (headimage['crpix1'] - 1)
+            ang_offset = np.sqrt( (ang_offset**2).sum(axis=0) )  # Using offset in x and y direction to calculate the total offset from the pointing centre
+            ang_offset = ang_offset * np.abs(headimage['cdelt1'])  # Now offset is in units of deg
+            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
+            pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
+                           1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
+            fits.writeto(filename.replace('image.fits','pb.fits'),
+                pb_image, header=headimage, overwrite=True)
+            caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
+                filename.replace('image.fits', 'pb.fits')))
+
     for target in all_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
@@ -259,20 +276,34 @@ def worker(pipeline, recipe, config):
         img_dir = get_dir_path(image_path, pipeline)
         image(img_dir, mslist, field)
 
-        # if config['convolve']:
-        #     tar_beam = config['convl_beam']
-        #     equolver_args = {
-        #         "threads": ncpu,
-        #     }
-        #     if config['convolve']['convolve_images']:
-        #         for stokes in config['pol']:
-        #             #step = 'convl-images'.format(stokes)
-        #             for ch in config['img_nchans']:
-        #                 im_name = '{0:s}/{1:s}-{2:s}-{3:d}-{4:d}-image.fits:output'.format(
-        #                     img_dir, prefix, field, ch, stokes)
-        #                 equolver_args["inc_cubes"] = im_name
-        #                 beach.Beach(equolver_args)
-        #
+        if config['extra_images']:
+            for stokes in config['pol']:
+                for ch in config['img_nchans']:
+                    im_name = '{0:s}/{1:s}-{2:s}-{3:d}-{4:d}-image.fits:output'.format(
+                        img_dir, prefix, field, ch, stokes)
+                    if config['extra_images']['convl_images']:
+                        caracal.log.info('I am pretending to convolve images')
+                        # tar_beam = config['convl_beam']
+                        # equolver_args = {
+                        #     "threads": ncpu,
+                        #     "beam": tar_beam
+                        # }
+                        # equolver_args["inc_cubes"] = im_name
+                        # step = 'convl-images'.format(stokes)
+                        # beach.Beach(equolver_args)
+                        if config['extra_images']['make_pb_images']:
+                            head = fits.open(im_name)[0].header #replace with equolver output
+                            freq = head['crval3']
+                            make_mauchian_pb(im_name, freq) #replace with equolver output
+                        elif config['extra_images']['remove_originals']:
+                            #os.remove(im_name)
+                            caracal.log.info('I am pretending to remove the original not convolved images')
+                    elif config['extra_images']['make_pb_images']:
+                        head = fits.open(im_name)[0].header
+                        freq = head['crval3']
+                        make_mauchian_pb(im_name, freq)
+
+
         # if config['make_cubes']:
         #     for stokes in config['pol']:
         #         inp_images = '{0:s}/{1:s}-{2:s}-*-{3:d}-image.fits:output'.format(
@@ -309,6 +340,7 @@ def worker(pipeline, recipe, config):
         #                     img_dir, prefix, field, stokes)
         #             equolver_args["inc_cubes"] = im_name
         #             beach.Beach(equolver_args)
+
 
 
         for i, msname in enumerate(mslist):

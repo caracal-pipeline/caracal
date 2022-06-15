@@ -642,7 +642,7 @@ def worker(pipeline, recipe, config):
 
             print(all_msfiles)
             print(len(all_msfiles))
-            for i in range(0,len(msfiles)):
+            for i in range(0,len(all_msfiles)):
                 msname = all_msfiles[i]
                 print(msname)
 

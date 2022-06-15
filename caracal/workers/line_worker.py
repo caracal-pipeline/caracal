@@ -642,15 +642,15 @@ def worker(pipeline, recipe, config):
             print(len(all_msfiles))
             print(all_msfiles)
 
-            for i in range (0,len(all_msfiles)):
-
+            for i, msname in enumerate(all_msfiles):
+                print(msname)
                 caracal.log.info("-=======================================-")
                 if config['flagUzeros']['use_mstransform']:
-                    msnameFl = msname_mst
+                    msname_Flag = add_ms_label(msname, "mst")
                 else:
-                    msnameFl = msname
+                    msname_Flag = msname
 
-                uZeros.run_flagUzeros(pipeline,all_targets,msname,config)
+                uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag,config)
                 caracal.log.info("++++++++++++++++++++++++++++++++++++++++++")
 
 

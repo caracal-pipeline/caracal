@@ -1005,9 +1005,9 @@ def worker(pipeline, recipe, config):
                                     hdul[0].header['NAXIS3'] = nchans
                                     hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
                                     if binchans > 1:
-                                        rdata = (hdul[0].data[:-(nchans%binchans+binchans)]).reshape((nchans-1, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                        rdata = (hdul[0].data[:-(nchans%binchans)]).reshape((nchans-1, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
                                         rdata = np.nansum(rdata, axis=1)
-                                        rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans%binchans+binchans):])), axis=0)
+                                        rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans%binchans):])), axis=0)
                                         rdata[rdata > 0] = 1
                                         hdul[0].data = rdata
                                     else: pass

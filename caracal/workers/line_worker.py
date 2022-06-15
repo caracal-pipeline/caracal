@@ -94,6 +94,7 @@ def remove_stokes_axis(filename):
         with fits.open(filename, mode='update') as cube:
             headcube = cube[0].header
             if headcube['naxis'] == 4 and headcube['ctype4'] == 'STOKES':
+                caracal.log.info('Working on {}'.format(filename))
                 cube[0].data = cube[0].data[0]
                 del headcube['cdelt4']
                 del headcube['crpix4']
@@ -176,6 +177,8 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
                            1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
 
             datacube[datacube < cutoff] = np.nan
+            if headcube['naxis'] == 4:
+                datacube = np.expand_dims(datacube, 0)
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 datacube, header=headcube, overwrite=True)
             if apply_corr:
@@ -1273,18 +1276,8 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
 
-        if pipeline.enable_task(config, 'remove_stokes_axis'):
-            caracal.log.info('Removing Stokes axis of all cubes/images of target {0:d}'.format(tt))
-            for uu in range(len(cube_list)):
-                recipe.add(remove_stokes_axis,
-                           'remove_cube_stokes_axis-{0:d}'.format(uu),
-                           {'filename': cube_list[uu],},
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
-
         if pipeline.enable_task(config, 'pb_cube'):
-            caracal.log.info('Creating primary beam cubes for target {0:d}'.format(tt))
+            caracal.log.info('Will create primary beam cube for target {0:d}'.format(tt))
             for uu in range(len(image_cube_list)):
                 recipe.add(make_pb_cube,
                            'make pb_cube-{0:d}'.format(uu),
@@ -1297,14 +1290,25 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
+                cube_list.append(image_cube_list[uu].replace('image.fits','pb.fits'))
+
+        if pipeline.enable_task(config, 'remove_stokes_axis'):
+            caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))
+            for uu in range(len(cube_list)):
+                recipe.add(remove_stokes_axis,
+                           'remove_cube_stokes_axis-{0:d}'.format(uu),
+                           {'filename': cube_list[uu],},
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
 
         if pipeline.enable_task(config, 'freq_to_vel'):
             if not config['freq_to_vel']['reverse']:
                 caracal.log.info(
-                    'Converting spectral axis of all cubes from frequency to radio velocity for target {0:d}'.format(tt))
+                    'Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}'.format(tt))
             else:
                 caracal.log.info(
-                    'Converting spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
+                    'Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(freq_to_vel,
                            'convert-spectral_header-cube{0:d}'.format(uu),

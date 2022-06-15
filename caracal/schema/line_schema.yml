@@ -505,6 +505,46 @@ mapping:
             required: false
             example: 'False'
       
+      imcontsub:
+        desc: Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied. With the parameter fitted the user can optionally supply the name of the output fitted data cube.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'imcontsub' segment.
+            type: bool
+            required: false
+            example: 'False'
+	  fitmode:
+	    desc: Type of fit ('poly' or 'savgol')
+	    type: str
+	    required: false
+	    example: 'poly'
+          length:
+	    desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default: 25)
+	    type: int
+	    required: false
+	    example: '25'
+           polyorder:
+	     desc: Polynomial order (default: 0)
+	     type: int
+	     required: False
+	     example: '0'
+           mask:
+	     desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
+	     type: str
+	     required: False
+	     example: ''
+           sgiters:
+	     desc: Number of Savitzky-Golay filter iterations (default: 0)
+	     type: int
+	     required: False
+	     example: 0
+	   outfit:
+	     desc: Produce fitted data cubes (True: yes, default: False)
+             type: bool
+	     required: false
+	     example: 'False'
+	    
       sofia:
         desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.
         type: map

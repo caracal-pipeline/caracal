@@ -25,6 +25,7 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from caracal.workers.utils import image_contsub
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -1272,6 +1273,9 @@ def worker(pipeline, recipe, config):
             pipeline.output,cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
+        dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
+        image_mask_list = [cc for cc in cube_list if 'image_mask.fits' in cc]
+        image_clean_mask_list = [cc for cc in cube_list if 'image_clean_mask.fits' in cc]
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             caracal.log.info('Removing Stokes axis of all cubes/images of target {0:d}'.format(tt))
@@ -1316,6 +1320,48 @@ def worker(pipeline, recipe, config):
 
         recipe.run()
         recipe.jobs = []
+
+        if pipeline.enable_task(config, 'imcontsub'):
+            caracal.log.info(
+                'Subtracting continuum in the image domaind for target {0:d}'.format(tt))
+            if len(image_cube_list):
+                contsincubelist = image_cube_list
+            else:
+                contsincubelist = dirty_cube_list
+                
+            if config['imcontsub']['mask'] == '':
+                maskimc = []
+            elif config['imcontsub']['mask'] == 'clean':
+                maskimc = image_clean_mask_list
+            elif config['imcontsub']['mask'] == 'sofia':
+                maskimc = image_mask_list
+            else:
+                maskimc = []
+                
+            if len(maskimc) == 0:
+                maskimc = [None for i in constincubelist]
+                caracal.log.info(
+                    'Not using mask for image subtraction of target {0:d}'.format(tt))
+
+            outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+            if config['imcontsub']['outfit'] == True:
+                outfitlist = [i.replace('dirty.fits', 'contsfit.fits') for i in dirty_cube_list]
+            else:
+                outfitlist = [None for i in constincubelist]
+                
+            outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+                            
+            for uu in range(len(contsincubelist)):
+                image_contsub.imcontsub(
+                    incubus=contsingcubelist[uu], outcubus=outputlist[uu],
+                    fitmode=config['imcontsub']['fitmode'],
+                    length=config['imcontsub']['length'],
+                    mask=maskimc[uu],
+                    sgiters=config['imcontsub']['sgiters'],
+                    fitted=outfitlist[uu],
+                    clobber=True
+                    )
+
 
         if pipeline.enable_task(config, 'sofia'):
             for uu in range(len(image_cube_list)):

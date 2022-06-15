@@ -709,7 +709,6 @@ def run_flagUzeros(pipeline,targets,msname,config):
         lws=['trk']
 
     print(len(obsIDs))
-    sys.exit(0)
     for ii in range (0,len(obsIDs)):
         # galNameVis=galaxy.replace('-','_')
         track = lws[ii-1]
@@ -981,7 +980,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
             timeFlag = (time.time()-timeInit)/60.
             #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
-
+    print('CAZZZZZZZOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
+    print('=====================================================')
     if doCleanUp is True:
         cleanUp(galaxy)
 

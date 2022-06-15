@@ -639,11 +639,13 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config,'flagUzeros'):
-            print(len(all_msfiles))
-            print(all_msfiles)
 
-            for i, msname in enumerate(all_msfiles):
-                print(msname)
+            print(all_msfiles)
+            print(len(all_msfiles))
+            sys.exit(0)
+            for i in range(0,len(msfiles)):
+                msname = all_msfiles[i]
+
                 caracal.log.info("-=======================================-")
                 if config['flagUzeros']['use_mstransform']:
                     msname_Flag = add_ms_label(msname, "mst")

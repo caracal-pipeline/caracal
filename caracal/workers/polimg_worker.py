@@ -40,6 +40,7 @@ def worker(pipeline, recipe, config):
         taper = None
     if beam == '':
         beam = None
+    
     label = config['label_in']
     min_uvw = config['minuvw_m']
     ncpu = config['ncpu']
@@ -163,11 +164,11 @@ def worker(pipeline, recipe, config):
                 config['img_robust']),
             "nmiter": sdm.dismissable(config['img_nmiter']),
             "npix": config['img_npix'],
-            "padding": config['img_padding'],
+            #"padding": config['img_padding'],
             "scale": config['img_cell'],
             "prefix": '{0:s}/{1:s}_{2:s}'.format(img_dir, prefix, field),
             "niter": config['img_niter'],
-            "gain": config["img_gain"],
+            #"gain": config["img_gain"],
             "mgain": config['img_mgain'],
             "pol": config['img_stokes'],
             "channelsout": config['img_nchans'],
@@ -179,6 +180,14 @@ def worker(pipeline, recipe, config):
             "threads": ncpu,
             "absmem": config['absmem'],
         }
+        if config['img_nwlayers_factor'] != -1:
+            image_opts.update({"nwlayers-factor": config['img_nwlayers_factor']})
+
+        if config['img_padding'] != -1:
+            image_opts.update({"padding": config['img_padding']})
+
+        if config["img_gain"] != -1:
+            image_opts.update({"gain": config["img_gain"]})
 
         if config['img_chan_range']:
             image_opts.update({"channel-range": list(map(int,config['img_chan_range'].split(',')))})
@@ -218,9 +227,11 @@ def worker(pipeline, recipe, config):
         mask_key = config['cleanmask_method']
         if mask_key == 'wsclean':
             image_opts.update({
-                "auto-mask": config['cleanmask_thr'],
+                #"auto-mask": config['cleanmask_thr'],
                 "local-rms": config['cleanmask_localrms'],
             })
+            if config['cleanmask_thr'] != -1:
+                image_opts.update({"auto-mask": config['cleanmask_thr']})
             if config['cleanmask_localrms']:
                 image_opts.update({
                     "local-rms-window": config['cleanmask_localrms_window'],

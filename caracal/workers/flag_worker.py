@@ -17,22 +17,6 @@ NAME = 'Flag'
 LABEL = 'flag'
 
 
-# def flagUzeros(filename,cutoff):
-
-#         t=tables.table(filename,readonly=False)
-#         flag=t.getcol('FLAG')
-#         uvw=t.getcol('UVW')
-
-#         index=np.where(np.abs(uvw[:,0]) < float(cutoff))[0]
-
-#         visTot=uvw.shape[0]
-#         percent=float(len(index))/float(visTot)*100.
-#         flag[index,:,:] = True
-#         t.putcol('FLAG',flag)
-#         t.close()
-#         caracal.log.info('Visibilities flagged between -{0:f} < U < {0:f} = {1:d} ({2:.2f}%)'.format(float(cutoff),visTot,percent))
-#         return 0
-
 
 def worker(pipeline, recipe, config):
     label = config['label_in']

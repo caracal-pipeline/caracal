@@ -861,6 +861,7 @@ def worker(pipeline, recipe, config):
                             else:
                                 cdelt = hdul[0].header['CDELT3']*femit/(-C)
 
+                            print(cdelt, chanwidth[0])
                             doSpec = True if cdelt > chanwidth[0] else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
@@ -890,7 +891,6 @@ def worker(pipeline, recipe, config):
                                 file.write('EQUINOX =   2000.0\n')
                                 file.write('END\n')
 
-                            #postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                             if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                                 os.remove('{}/{}'.format(pipeline.masking,postGridMask))
@@ -980,18 +980,23 @@ def worker(pipeline, recipe, config):
                                    os.remove('{}/{}'.format(pipeline.masking,postGridMask))
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
+                                ## all in Hz
                                 crval = firstchanfreq[0]+chanwidth[0]*firstchan
-                                cdelt = chanwidth[0]*binchans
                                 cdeltm = hdul[0].header['CDELT3']
                                 cdelte = crval+nchans*chanwidth[0]
                             else:
+                                ## all in m/s
                                 crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
-                                cdelt = chanwidth[0]
                                 cdeltm = hdul[0].header['CDELT3']*femit/(-C)
                                 crvale = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan+nchans*chanwidth[0]))/femit
 
+                            cdelt = chanwidth[0]*binchans ## in Hz
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
+
+                            # if crval < ax3[0]:
+
+
                             idx = np.argmin(abs(ax3-crval))
                             ide = np.argmin(abs(ax3-crvale))
                             if cdelt > cdeltm:

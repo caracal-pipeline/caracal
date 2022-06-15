@@ -708,7 +708,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
         obsIDs.append(mfsOb)
         lws=['trk']
 
-
+    print(obsIDs)
+    sys.exit(0)
     for ii in range (0,len(obsIDs)):
         # galNameVis=galaxy.replace('-','_')
         track = lws[ii-1]

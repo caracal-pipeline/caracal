@@ -15,7 +15,7 @@ from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
 import psutil
-import equolver.beach as beach
+#import equolver.beach as beach
 
 NAME = 'Polarization Imaging'
 LABEL = 'polimg'
@@ -285,13 +285,14 @@ def worker(pipeline, recipe, config):
             os.mkdir(image_path)
 
         img_dir = get_dir_path(image_path, pipeline)
-        image(img_dir, mslist, field)
+        #image(img_dir, mslist, field)
 
         if config['extra_images']:
-            for stokes in config['pol']:
-                for ch in config['img_nchans']:
-                    im_name = '{0:s}/{1:s}-{2:s}-{3:d}-{4:d}-image.fits:output'.format(
-                        img_dir, prefix, field, ch, stokes)
+            for stokes in config['img_stokes']:
+                for ch in range(0,config['img_nchans']):
+                    image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
+                    im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
+                        image_path, prefix, field, ch, stokes)
                     if config['extra_images']['convl_images']:
                         caracal.log.info('I am pretending to convolve images')
                         # tar_beam = config['convl_beam']

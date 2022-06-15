@@ -994,7 +994,7 @@ def worker(pipeline, recipe, config):
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
 
                             if (np.max([crval, crvale]) > np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) > np.min([ax3[0], ax3[-1]])):
-                                logger.info("Requested channels are contained in mask {}.".format(gridMask))
+                                caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 
 
                                 idx = np.argmin(abs(ax3-crval))
@@ -1014,7 +1014,6 @@ def worker(pipeline, recipe, config):
                                 else:
 
                                     rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
-                                    print(rdata.shape, hdul[0].data[idx:ide].shape, int(cdeltm/cdelt))
                                     rr = int(cdeltm/cdelt)
                                     for nn in range(nchans):
                                         rdata[nn] = hdul[0].data[idx+nn//rr]
@@ -1035,8 +1034,7 @@ def worker(pipeline, recipe, config):
                                 line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                    get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
                             else:
-                                logger.error("Requested channels are not contained in mask {}.".format(gridMask))
-                                break
+                                raise IOError("Requested channels are not contained in mask {}.".format(gridMask))
 
                         else:
                             if doProj == False:

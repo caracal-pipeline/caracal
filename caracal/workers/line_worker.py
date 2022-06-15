@@ -993,47 +993,50 @@ def worker(pipeline, recipe, config):
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
 
-                            print(crval, ax3[0], ax3[-1])
-                            # if crval < ax3[0]:
+                            if (np.max([crval, crvale]) > np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) > np.min([ax3[0], ax3[-1]])):
+                                logger.info("Requested channels are contained in mask {}.".format(gridMask))
 
 
-                            idx = np.argmin(abs(ax3-crval))
-                            ide = np.argmin(abs(ax3-crvale))
-                            if cdelt > cdeltm:
-                                hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
-                                hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - round(idx/binchans,1)
-                                hdul[0].header['NAXIS3'] = nchans
-                                hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
-                                if binchans > 1:
-                                    rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
-                                    rdata = np.nansum(rdata, axis=1)
-                                    rdata[rdata > 0] = 1
+                                idx = np.argmin(abs(ax3-crval))
+                                ide = np.argmin(abs(ax3-crvale))
+                                if cdelt > cdeltm:
+                                    hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+                                    hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - round(idx/binchans,1)
+                                    hdul[0].header['NAXIS3'] = nchans
+                                    hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
+                                    if binchans > 1:
+                                        rdata = (hdul[0].data).reshape((nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                        rdata = np.nansum(rdata, axis=1)
+                                        rdata[rdata > 0] = 1
+                                        hdul[0].data = rdata
+                                    else: pass
+
+                                else:
+
+                                    rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
+                                    print(rdata.shape, hdul[0].data[idx:ide].shape, int(cdeltm/cdelt))
+                                    rr = int(cdeltm/cdelt)
+                                    for nn in range(nchans):
+                                        rdata[nn] = hdul[0].data[idx+nn//rr]
+
+                                    hdul[0].header['NAXIS3'] = nchans
+                                    hdul[0].header['CRPIX3'] = 0
+                                    hdul[0].header['CRVAL3'] = crval
+                                    hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']/rr
                                     hdul[0].data = rdata
-                                else: pass
 
+
+                                hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                                if doProj == True:
+                                    hdul.flush()
+                                else:
+                                    hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask))
+
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
                             else:
-
-                                rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
-                                print(rdata.shape, hdul[0].data[idx:ide].shape, int(cdeltm/cdelt))
-                                rr = int(cdeltm/cdelt)
-                                for nn in range(nchans):
-                                    rdata[nn] = hdul[0].data[idx+nn//rr]
-
-                                hdul[0].header['NAXIS3'] = nchans
-                                hdul[0].header['CRPIX3'] = 0
-                                hdul[0].header['CRVAL3'] = crval
-                                hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']/rr
-                                hdul[0].data = rdata
-
-
-                            hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                            if doProj == True:
-                                hdul.flush()
-                            else:
-                                hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask))
-
-                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                               get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
+                                logger.error("Requested channels are not contained in mask {}.".format(gridMask))
+                                break
 
                         else:
                             if doProj == False:

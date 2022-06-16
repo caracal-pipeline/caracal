@@ -982,12 +982,12 @@ def worker(pipeline, recipe, config):
                                 ## all in Hz
                                 crval = firstchanfreq[0]+chanwidth[0]*firstchan
                                 cdeltm = hdul[0].header['CDELT3']
-                                cdelte = crval+nchans*chanwidth[0]
+                                cdelte = crval+nchans*binchans*chanwidth[0]
                             else:
                                 ## all in m/s
                                 crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
                                 cdeltm = hdul[0].header['CDELT3']*femit/(-C)
-                                crvale = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan+nchans*chanwidth[0]))/femit
+                                crvale = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan+nchans*binchans*chanwidth[0]))/femit
 
                             cdelt = chanwidth[0]*binchans ## in Hz
                             hdr = hdul[0].header
@@ -996,19 +996,22 @@ def worker(pipeline, recipe, config):
                             if (np.max([crval, crvale]) < np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) > np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 
-
                                 idx = np.argmin(abs(ax3-crval))
                                 ide = np.argmin(abs(ax3-crvale))
+
                                 if cdelt > cdeltm:
-                                    hdul[0].data = hdul[0].data[idx:idx+nchans*binchans]
+                                    hdul[0].data = hdul[0].data[idx:ide]
                                     hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - round(idx/binchans,1)
                                     hdul[0].header['NAXIS3'] = nchans
                                     hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
                                     if binchans > 1:
-                                        print((nchans%binchans))
-                                        rdata = (hdul[0].data[:-(nchans%binchans)]).reshape((nchans-1, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
-                                        rdata = np.nansum(rdata, axis=1)
-                                        rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans%binchans):])), axis=0)
+                                        if (nchans%binchans) > 0:
+                                            rdata = (hdul[0].data[:-(nchans%binchans)]).reshape((nchans-1*(nchans%binchans), binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                            rdata = np.nansum(rdata, axis=1)
+                                            rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans%binchans):])), axis=0)
+                                        else:
+                                            rdata = (hdul[0].data).reshape(nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2'])
+                                            rdata = np.nansum(rdata, axis=1)
                                         rdata[rdata > 0] = 1
                                         hdul[0].data = rdata
                                     else: pass

@@ -98,10 +98,9 @@ class UzeroFlagger:
         if not os.path.exists(self.config['flagUzeros']['stripeSofiaDir']):
             os.mkdir(self.config['flagUzeros']['stripeSofiaDir'])
 
+        return
 
-        return 
-
-    def splitScans(self,inVis,scanNums):
+    def splitScans(self,pipeline,msdir,inVis,scanNums):
 
         scanVisList=[]
         scanVisNames=[]
@@ -123,12 +122,21 @@ class UzeroFlagger:
             #                            )
             #recipe.JOB_TYPE = pipeline.container_tech
 
+            #step='splitScans'
+            #recipe.add('cab/casa_mstransform',
+            #       step,
+            #       {"msname": inVis,
+            #        "outputvis": outVis,
+            #        },
+            #       input=pipeline.input,
+            #       output=self.config['flagUzeros']['stripeCubeDir'],
+            #       label='{0:s}:: Image Line'.format(step))
+            #recipe.run()
+
             scanVisList.append(outVis)
             scanVisNames.append(baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms')
 
-
         caracal.log.info("All Scans splitted")
-
 
         return scanVisList, scanVisNames
 
@@ -705,6 +713,8 @@ class UzeroFlagger:
         obsIDs.append(mfsOb)
 
         lws = self.config['flagUzeros']['transferFlags']
+        if lws == ['']:
+            lws = []
         if len(lws):
             for lw in lws:
                 obsIDs.append('{}{}.ms'.format(rootMS,lw))
@@ -801,7 +811,7 @@ class UzeroFlagger:
 
             caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
-            scanVisList,scanVisNames = self.splitScans(inVis,scanNums)
+            scanVisList,scanVisNames = self.splitScans(pipeline,pipeline.msdir,inVis,scanNums)
 
             arr = np.empty((0,7))
             NS = len(scanNums)

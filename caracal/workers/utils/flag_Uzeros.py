@@ -6,15 +6,13 @@ import yaml
 import matplotlib
 matplotlib.use("Agg")
 
-import stimela.recipe 
-
+import stimela.recipe
 
 import casacore.tables as tables
 
 import casacore.images as images
 import casacore.measures as measures
 from casacore.measures import dq
-
 
 from casatools import image
 
@@ -114,7 +112,16 @@ class UzeroFlagger:
                 shutil.rmtree(outVis)
             if os.path.exists(outVis+'.flagversions'):
                 shutil.rmtree(outVis+'.flagversions')
+
             mstrans(vis=inVis,outputvis=outVis,datacolumn='DATA',scan=str(scan))
+
+            #recipe = stimela.Recipe('flagUzerosMST',
+            #                            ms_dir=msdir,
+            #                            singularity_image_dir=pipeline.singularity_image_dir,
+            #                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+            #                            logfile=False, # no logfiles for recipes
+            #                            )
+            #recipe.JOB_TYPE = pipeline.container_tech
 
             scanVisList.append(outVis)
             scanVisNames.append(baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms')
@@ -625,7 +632,7 @@ class UzeroFlagger:
         makePlots=self.config['flagUzeros']['makePlots']
 
         makeSunblockPlots=self.config['flagUzeros']['makeSunblockPlots']
-        
+
         doCleanUp =self.config['flagUzeros']['method']
 
         thresholds = self.config['flagUzeros']['thresholds']
@@ -639,8 +646,6 @@ class UzeroFlagger:
         mfsOb = msname
 
         self.setDirs(pipeline.output)
-
-
 
         if makePlots ==True or makeSunblockPlots==True:
             font=16
@@ -873,7 +878,7 @@ class UzeroFlagger:
                     statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     caracal.log.info("Making post-flagging image")
-                    
+
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
                     self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)

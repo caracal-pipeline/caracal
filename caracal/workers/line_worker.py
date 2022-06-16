@@ -639,6 +639,9 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
+        recipe.run()
+        recipe.jobs = []
+
         if pipeline.enable_task(config,'flagUzeros'):
             uZeros = flag_Uzeros.UzeroFlagger(config)
 

@@ -770,7 +770,7 @@ class UzeroFlagger:
             outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
-            inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
+            inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
 
             ###U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1']) ############ Add this back?
             ###V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2']) ############ Add this back?
@@ -782,13 +782,13 @@ class UzeroFlagger:
                     fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
                     fig0.set_tight_layout(False)
                     gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
-                    fig0, comvmax_tot = plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
+                    fig0, comvmax_tot = self.plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
                 else:
                     outPlot="{0}{1}_{2}_tot.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
                     fig0.set_tight_layout(False)
                     gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
-                    fig0, comvmax_tot = plotAll(fig0,gs0,1,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
+                    fig0, comvmax_tot = self.plotAll(fig0,gs0,1,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                     fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
                     plt.close(fig0)
@@ -911,7 +911,7 @@ class UzeroFlagger:
                 stripeFlags=np.concatenate([stripeFlags,scanFlags])
 
                 if makePlots == True:
-                    fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
+                    fig1, comvmax_scan = self.plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
 
                 caracal.log.info("Making FFT of post-flagging image")
                 outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
@@ -920,7 +920,7 @@ class UzeroFlagger:
                 inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
 
                 if makePlots == True:
-                    fig2, comvmax_scan = plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
+                    fig2, comvmax_scan = self.plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
 
             if makePlots == True:
                 caracal.log.info("----------------------------------------------------")

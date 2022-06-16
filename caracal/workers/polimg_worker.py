@@ -199,14 +199,14 @@ def worker(pipeline, recipe, config):
         joinpol = False
         if len(config['make_images']['img_stokes']) > 1:
             joinpol = config['make_images']['img_join_polarizations']
-            image_opts['make_images']['join-polarizations'] = joinpol
+            image_opts['join-polarizations'] = joinpol
 
         if joinpol is False and config['make_images']['img_specfit_nrcoeff'] > 0:
-            image_opts['make_images']["fit-spectral-pol"] = config['make_images']['img_specfit_nrcoeff']
+            image_opts["fit-spectral-pol"] = config['make_images']['img_specfit_nrcoeff']
             if config['make_images']['img_niter'] > 0 and config['make_images']['img_stokes'] == 'I':
-                image_opts['make_images']["savesourcelist"] = True
+                image_opts["savesourcelist"] = True
         if not config['make_images']['img_mfs_weighting']:
-            image_opts['make_images']["nomfsweighting"] = True
+            image_opts["nomfsweighting"] = True
         if maxuvl > 0.:
             image_opts.update({
                 "maxuv-l": maxuvl,

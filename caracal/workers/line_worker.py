@@ -25,7 +25,9 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
-from caracal.workers.utils import flag_Uzeros as uZeros
+from caracal.workers.utils import flag_Uzeros 
+
+uZeros = flag_Uzeros.UzeroFlagger()
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'

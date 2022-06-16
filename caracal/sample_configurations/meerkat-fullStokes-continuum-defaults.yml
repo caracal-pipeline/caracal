@@ -271,8 +271,9 @@ mask:
 
 selfcal:
   enable: true
-  img_npix: 4096
-  img_cell: 1.3
+  label_in: corr
+  img_npix: 2048
+  img_cell: 2
   cal_timeslots_chunk: 15
   image:
     enable: true
@@ -280,4 +281,19 @@ selfcal:
     enable: true
     gsols_timeslots: [15]
   transfer_model:
+    enable: false
+
+polimg:
+  enable: true
+  label_in: corr
+  img_npix: 2048
+  img_cell: 2
+  img_mgain: 0.99
+  img_nchans: 5
+  img_chan_range: 0, 100
+  img_stokes: QU
+  col: CORRECTED_DATA
+  extra_image:
+    enable: false
+  make_cubes:
     enable: false

@@ -95,11 +95,11 @@ mapping:
         desc: Gaussian taper for imaging (in units of arcsec).
         required: false
         example: '0.'
-      img_beam:
-        type: float
-        desc: Restoring beam for imaging (in units of arcsec).
-        required: false
-        example: '0.'
+#      img_beam:
+#        type: float
+#        desc: Restoring beam for imaging (in units of arcsec).
+#        required: false
+#        example: '0.'
       img_maxuv_l:
         type: float
         desc: Taper for imaging (in units of lambda).
@@ -139,12 +139,12 @@ mapping:
         type: bool
         desc: Search peaks in the sum of Q^2 and/or U^2 image to clean. If 'join-polarisations' will set to True peaks will be search in the sum of Q^2+U^2.
         required: false
-        example: 'False'
+        example: 'True'
       img_join_polarizations:
         type: bool
         desc: In combination with 'img_squared_chansjoin' will clean the image searching the peaks in the sum of Q^2+U^2.
         required: false
-        example: 'False'
+        example: 'True'
       img_specfit_nrcoeff:
         type: int
         desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball. 

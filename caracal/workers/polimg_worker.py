@@ -31,15 +31,15 @@ def worker(pipeline, recipe, config):
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     taper = config['img_taper']
-    beam = config['img_beam']
+    #beam = config['img_beam']
     maxuvl = config['img_maxuv_l']
     transuvl = maxuvl * config['img_transuv_l'] / 100.
     multiscale = config['img_multiscale']
     multiscale_scales = config['img_multiscale_scales']
     if taper == '':
         taper = None
-    if beam == '':
-        beam = None
+    #if beam == '':
+    #    beam = None
     
     label = config['label_in']
     min_uvw = config['minuvw_m']
@@ -213,10 +213,10 @@ def worker(pipeline, recipe, config):
             image_opts.update({
                 "taper-gaussian": taper,
             })
-        if float(beam) > 0. :
-            image_opts.update({
-                "beam-size": beam,
-            })
+        # if float(beam) > 0. :
+        #     image_opts.update({
+        #         "beam-size": beam,
+        #     })
         if min_uvw > 0:
             image_opts.update({"minuvw-m": min_uvw})
         if multiscale:

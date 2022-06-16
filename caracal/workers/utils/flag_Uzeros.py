@@ -712,6 +712,8 @@ class UzeroFlagger:
             obsIDs.append(mfsOb)
             lws=['trk']
 
+
+        stripeFlags=None
         for ii in range (0,len(obsIDs)):
             # galNameVis=galaxy.replace('-','_')
             track = lws[ii-1]
@@ -737,10 +739,8 @@ class UzeroFlagger:
                 flg(vis=inVis, mode='save', versionname='stripe_flag_before')
 
             # For lw's other than the first one, just copy the flags and skip the rest of the for loop
-            print(ii)
-            if ii != 0:
+            if ii != 0 and stripeFlags is not None: 
                 self.putFlags(inVis, inVisName, stripeFlags)
-                sys.exit(0)
                 continue
 
             # For the first lw, do all that follows

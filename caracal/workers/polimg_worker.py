@@ -162,51 +162,51 @@ def worker(pipeline, recipe, config):
         step = 'image-pol'
         image_opts = {
             "msname": mslist,
-            "column": config['col'],
-            "weight": config['img_weight'] if not config['img_weight'] == 'briggs' else 'briggs {}'.format(
-                config['img_robust']),
-            "nmiter": sdm.dismissable(config['img_nmiter']),
-            "npix": config['img_npix'],
+            "column": config['make_images']['col'],
+            "weight": config['make_images']['img_weight'] if not config['make_images']['img_weight'] == 'briggs' else 'briggs {}'.format(
+                config['make_images']['img_robust']),
+            "nmiter": sdm.dismissable(config['make_images']['img_nmiter']),
+            "npix": config['make_images']['img_npix'],
             # "padding": config['img_padding'],
-            "scale": config['img_cell'],
+            "scale": config['make_images']['img_cell'],
             "prefix": '{0:s}/{1:s}_{2:s}'.format(img_dir, prefix, field),
-            "niter": config['img_niter'],
+            "niter": config['make_images']['img_niter'],
             # "gain": config["img_gain"],
-            "mgain": config['img_mgain'],
-            "pol": config['img_stokes'],
-            "channelsout": config['img_nchans'],
-            "joinchannels": config['img_joinchans'],
-            "squared-channel-joining": config['img_squared_chansjoin'],
-            "auto-threshold": config['clean_cutoff'],
+            "mgain": config['make_images']['img_mgain'],
+            "pol": config['make_images']['img_stokes'],
+            "channelsout": config['make_images']['img_nchans'],
+            "joinchannels": config['make_images']['img_joinchans'],
+            "squared-channel-joining": config['make_images']['img_squared_chansjoin'],
+            "auto-threshold": config['make_images']['clean_cutoff'],
             "parallel-deconvolution": sdm.dismissable(wscl_parallel_deconv),
             # "nwlayers-factor": nwlayers_factor,
             "threads": ncpu,
-            "absmem": config['absmem'],
+            "absmem": config['make_images']['absmem'],
         }
-        if config['img_nwlayers_factor'] != -1:
-            image_opts.update({"nwlayers-factor": config['img_nwlayers_factor']})
+        if config['make_images']['img_nwlayers_factor'] != -1:
+            image_opts.update({"nwlayers-factor": config['make_images']['img_nwlayers_factor']})
 
-        if config['img_padding'] != -1:
-            image_opts.update({"padding": config['img_padding']})
+        if config['make_images']['img_padding'] != -1:
+            image_opts.update({"padding": config['make_images']['img_padding']})
 
-        if config["img_gain"] != -1:
-            image_opts.update({"gain": config["img_gain"]})
+        if config['make_images']["img_gain"] != -1:
+            image_opts.update({"gain": config['make_images']["img_gain"]})
 
-        if config['img_chan_range']:
-            image_opts.update({"channel-range": list(map(int, config['img_chan_range'].split(',')))})
+        if config['make_images']['img_chan_range']:
+            image_opts.update({"channel-range": list(map(int, config['make_images']['img_chan_range'].split(',')))})
 
         # join polarization only if they will be imaged together
         joinpol = False
-        if len(config['img_stokes']) > 1:
-            joinpol = config['img_join_polarizations']
-            image_opts['join-polarizations'] = joinpol
+        if len(config['make_images']['img_stokes']) > 1:
+            joinpol = config['make_images']['img_join_polarizations']
+            image_opts['make_images']['join-polarizations'] = joinpol
 
-        if joinpol is False and config['img_specfit_nrcoeff'] > 0:
-            image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
-            if config['img_niter'] > 0 and config['img_stokes'] == 'I':
-                image_opts["savesourcelist"] = True
-        if not config['img_mfs_weighting']:
-            image_opts["nomfsweighting"] = True
+        if joinpol is False and config['make_images']['img_specfit_nrcoeff'] > 0:
+            image_opts['make_images']["fit-spectral-pol"] = config['make_images']['img_specfit_nrcoeff']
+            if config['make_images']['img_niter'] > 0 and config['make_images']['img_stokes'] == 'I':
+                image_opts['make_images']["savesourcelist"] = True
+        if not config['make_images']['img_mfs_weighting']:
+            image_opts['make_images']["nomfsweighting"] = True
         if maxuvl > 0.:
             image_opts.update({
                 "maxuv-l": maxuvl,
@@ -227,17 +227,17 @@ def worker(pipeline, recipe, config):
             if multiscale_scales:
                 image_opts.update({"multiscale-scales": list(map(int, multiscale_scales.split(',')))})
 
-        mask_key = config['cleanmask_method']
+        mask_key = config['make_images']['cleanmask_method']
         if mask_key == 'wsclean':
             image_opts.update({
                 # "auto-mask": config['cleanmask_thr'],
-                "local-rms": config['cleanmask_localrms'],
+                "local-rms": config['make_images']['cleanmask_localrms'],
             })
-            if config['cleanmask_thr'] != -1:
-                image_opts.update({"auto-mask": config['cleanmask_thr']})
-            if config['cleanmask_localrms']:
+            if config['make_images']['cleanmask_thr'] != -1:
+                image_opts.update({"auto-mask": config['make_images']['cleanmask_thr']})
+            if config['make_images']['cleanmask_localrms']:
                 image_opts.update({
-                    "local-rms-window": config['cleanmask_localrms_window'],
+                    "local-rms-window": config['make_images']['cleanmask_localrms_window'],
                 })
         else:
             fits_mask = 'masking/{0:s}.fits'.format(mask_key)
@@ -259,7 +259,7 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         alone = ["I", "Q", "U", "V"]
-        stokes = config['img_stokes']
+        stokes = config['make_images']['img_stokes']
         if stokes in alone:
             rename_single_stokes(get_dir_path(image_path, pipeline), field, stokes)
 

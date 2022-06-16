@@ -126,7 +126,7 @@ class UzeroFlagger:
         return scanVisList, scanVisNames
 
 
-    def gaussian(x, cent, amp, sigma):
+    def gaussian(self, x, cent, amp, sigma):
         """
         Gaussian function
         Input:
@@ -139,7 +139,7 @@ class UzeroFlagger:
         return amp*np.exp(-0.5*np.power((x-cent)/sigma,2))
 
 
-    def convToStokesI(data,flags):
+    def convToStokesI(self, data,flags):
 
         stflags = np.logical_not(flags).astype(float)
 
@@ -229,7 +229,7 @@ class UzeroFlagger:
         return 0
 
 
-    def makeFFT(inCube,outFFT):
+    def makeFFT(self, inCube,outFFT):
         ia.open(inCube)
         ia.fft(complex=outFFT)
         ia.close()
@@ -258,7 +258,7 @@ class UzeroFlagger:
     #
 
 
-    def plotAll(fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,common_vmax,ctff,type=None):
+    def plotAll(self,fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,common_vmax,ctff,type=None):
 
         fitsdata = fits.open(outCubeName)
         fitsim = fitsdata[0].data[0,0]
@@ -472,7 +472,7 @@ class UzeroFlagger:
 
         return 0
 
-    def sunBlockStats(inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold=300., ax = None, title = '', verb = True):
+    def sunBlockStats(self,inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold=300., ax = None, title = '', verb = True):
 
         av = np.copy(inFFTData)
         # Average data, then look for shape
@@ -542,7 +542,7 @@ class UzeroFlagger:
         return ave+float(threshold)*std
 
 
-    def flagQuartile(inVis,tableFlags,inFFTHeader,method,dilateU,dilateV,qrtdebug=False):
+    def flagQuartile(self,inVis,tableFlags,inFFTHeader,method,dilateU,dilateV,qrtdebug=False):
 
         U=tableFlags['u']
         V=tableFlags['v']
@@ -600,7 +600,7 @@ class UzeroFlagger:
         return flags, percent
 
 
-    def putFlags(pf_inVis, pf_inVisName, pf_stripeFlags):
+    def putFlags(self,pf_inVis, pf_inVisName, pf_stripeFlags):
         caracal.log.info("Opening full MS file to add stripe flags".format(pf_inVisName))
         t=tables.table(pf_inVis,readonly=False,ack=False)
         flagOld = t.getcol('FLAG')
@@ -620,7 +620,7 @@ class UzeroFlagger:
         return 0
 
 
-    def run_flagUzeros(pipeline,targets,msname):
+    def run_flagUzeros(self,pipeline,targets,msname):
 
         method = self.config['flagUzeros']['method']
         makePlots=self.config['flagUzeros']['makePlots']

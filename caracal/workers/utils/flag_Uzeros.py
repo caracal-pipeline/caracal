@@ -738,7 +738,7 @@ class UzeroFlagger:
 
             # For lw's other than the first one, just copy the flags and skip the rest of the for loop
             if ii != 0:
-                putFlags(inVis, inVisName, stripeFlags)
+                self.putFlags(inVis, inVisName, stripeFlags)
                 continue
 
             # For the first lw, do all that follows

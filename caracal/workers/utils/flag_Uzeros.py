@@ -34,6 +34,7 @@ from astropy import units as u
 import datetime
 from scipy import stats
 import scipy.constants as scconstants
+import scipy.optimize as opt
 
 from matplotlib import pyplot as plt
 from matplotlib import rc

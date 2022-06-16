@@ -165,15 +165,6 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Quack flagging ms={1:s}'.format(step, msname))
             
-            if pipeline.enable_task(config, 'flag_Urange'):
-                step = '{0:s}-flag-Urange{1:d}'.format(wname,msiter)
-                recipe.add(flagUzeros,step,
-                           {'filename': os.path.join(pipeline.msdir, msname),
-                            'cutoff': config['flag_Urange']['cutoff'],},
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Flag visibilities with {0:f}<U<{0:f} msfile {1:s}'.format(config['flag_Urange']['cutoff'],msname))
-
             if pipeline.enable_task(config, 'flag_elevation'):
                 step = '{0:s}-elevation-ms{1:d}'.format(wname, msiter)
                 recipe.add('cab/casa_flagdata', step,

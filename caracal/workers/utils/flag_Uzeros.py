@@ -617,7 +617,7 @@ def putFlags(pf_inVis, pf_inVisName, pf_stripeFlags):
     return 0
 
 
-def run_flagUzeros(pipeline,targets,msname):
+def run_flagUzeros(pipeline,targets,msname,config):
 
     method = self.config['flagUzeros']['method']
     makePlots=self.config['flagUzeros']['makePlots']

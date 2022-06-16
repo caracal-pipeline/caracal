@@ -16,12 +16,11 @@ import casacore.measures as measures
 from casacore.measures import dq
 
 
+from casatools import image
+
 from casatasks import mstransform as mstrans
 from casatasks import flagmanager as flg
 from casatasks import flagdata as flagger
-
-from casatools import image
-
 
 import astropy.io.ascii as astasc
 from astropy.io import fits, ascii

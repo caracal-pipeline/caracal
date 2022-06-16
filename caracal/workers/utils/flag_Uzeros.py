@@ -155,7 +155,6 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
     cell = config['flagUzeros']['cell']
     chanMin = int(config['flagUzeros']['chanRange'][0])
     chanMax = int(config['flagUzeros']['chanRange'][1])
-    taper = config['flagUzeros']['taper']
 
     recipe = stimela.Recipe('flagUzeros',
                                     ms_dir=msdir,
@@ -194,8 +193,8 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
         "gain": 0.2,
             }
 
-    if taper is not None:
-        line_image_opts.update({"taper-gaussian": str(taper)})
+    if config['flagUzeros']['taper']:
+        line_image_opts.update({"taper-gaussian": str(config['flagUzeros']['taper'])})
 
     step='makeCube'
     recipe.add('cab/wsclean',

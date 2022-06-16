@@ -509,7 +509,7 @@ class UzeroFlagger:
 
         # Fit a Gaussian
         try:
-            gauss=gaussian()
+            gauss=self.gaussian()
             popt, pcov = opt.curve_fit(gauss, bin_centers, hist, p0 = [maxhiposval, maxhi, stdev/2.])
         except:
             popt = np.array([average, widthes[0]*npoints/(np.sqrt(2*np.pi)*stdev), stdev])

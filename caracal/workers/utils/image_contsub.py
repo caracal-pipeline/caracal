@@ -170,12 +170,12 @@ def imcontsub(
         else:
             printime('Savitzky-Golay-filtering cube')
 
-            if sgiters > 0:
-                sgmask = np.ma.getmask(incubus_data_masked)
-                sgincubus = incubus_data.copy()
-                sgincubus[np.isnan(sgincubus)] = 0.
+            sgmask = np.ma.getmask(incubus_data_masked)
+            sgincubus = incubus_data.copy()
+            sgincubus[np.isnan(sgincubus)] = 0.
 
-                # First stitch holes in the data
+            # First stitch holes in the data
+            if sgiters > 0:
                 fit = scipy.ndimage.median_filter(
                     incubus_data, (length, 1, 1))
 
@@ -236,7 +236,7 @@ def imcontsub(
             hdul_incubus[0].data = convolved.astype('float32')
         hdul_incubus[0].header['DATAMAX'] = np.nanmax(hdul_incubus[0].data)
         hdul_incubus[0].header['DATAMIN'] = np.nanmax(hdul_incubus[0].data)
-        hdul_incubus.writeto(confit, overwrite=True)
+        hdul_incubus.writeto(confit, overwrite=clobber)
 
     printime('Subtracting continuum.')
     subtracted = incubus_data-convolved
@@ -249,7 +249,7 @@ def imcontsub(
     printime('Writing subtracted cube.')
     hdul_incubus[0].header['DATAMAX'] = np.nanmax(hdul_incubus[0].data)
     hdul_incubus[0].header['DATAMIN'] = np.nanmax(hdul_incubus[0].data)
-    hdul_incubus.writeto(outcubus, overwrite=True)
+    hdul_incubus.writeto(outcubus, overwrite=clobber)
     hdul_incubus.close()
     now = datetime.now()
     printime(

@@ -506,7 +506,7 @@ mapping:
             example: 'False'
       
       imcontsub:
-        desc: Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied. With the parameter fitted the user can optionally supply the name of the output fitted data cube.
+        desc: Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied (no initial median filtering, does not work for ). With the parameter fitted the user can optionally supply the name of the output fitted data cube.
         type: map
         mapping:
           enable:
@@ -539,8 +539,23 @@ mapping:
 	     type: int
 	     required: False
 	     example: 0
+	  kertyp:
+	    desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
+	    type: str
+	    required: false
+	    example: 'tophat'
+          kersiz:
+	    desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
+	    type: int
+	    required: false
+	    example: '0'
 	   outfit:
 	     desc: Produce fitted data cubes (True: yes, default: False)
+             type: bool
+	     required: false
+	     example: 'False'
+	   outfitcon:
+	     desc: Produce fitted and convolved data cubes (True: yes, default: False)
              type: bool
 	     required: false
 	     example: 'False'

@@ -1344,12 +1344,18 @@ def worker(pipeline, recipe, config):
                     'Not using mask for image subtraction of target {0:d}'.format(tt))
 
             outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+            
             if config['imcontsub']['outfit'] == True:
                 outfitlist = [i.replace('dirty.fits', 'contsfit.fits') for i in dirty_cube_list]
             else:
                 outfitlist = [None for i in constincubelist]
                 
-            outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+            if config['imcontsub']['outfitcon'] == True:
+                outconlist = [i.replace('dirty.fits', 'contsfitcon.fits') for i in dirty_cube_list]
+            else:
+                outconlist = [None for i in constincubelist]
+                
+            outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
                             
             for uu in range(len(contsincubelist)):
                 image_contsub.imcontsub(
@@ -1358,7 +1364,10 @@ def worker(pipeline, recipe, config):
                     length=config['imcontsub']['length'],
                     mask=maskimc[uu],
                     sgiters=config['imcontsub']['sgiters'],
+                    kertyp=config['imcontsub']['kertyp'],
+                    kersiz=config['imcontsub']['kersiz'],
                     fitted=outfitlist[uu],
+                    confit=outconlist[uu]
                     clobber=True
                     )
 

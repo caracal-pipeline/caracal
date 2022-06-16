@@ -650,7 +650,7 @@ def worker(pipeline, recipe, config):
                 else:
                     msname_Flag = msname
 
-                uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag,config)
+                uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

@@ -620,7 +620,7 @@ class UzeroFlagger:
         return 0
 
 
-    def run_flagUzeros(pipeline,targets,msname,config):
+    def run_flagUzeros(pipeline,targets,msname):
 
         method = self.config['flagUzeros']['method']
         makePlots=self.config['flagUzeros']['makePlots']

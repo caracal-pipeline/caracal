@@ -958,7 +958,7 @@ class UzeroFlagger:
 
                 caracal.log.info("Making FFT of post-flagging image")
 
-                outFFT=self.self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
+                outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
                 inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)

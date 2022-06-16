@@ -335,7 +335,7 @@ def plotAll(fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,per
 
     return fig, common_vmax
 
-def cleanUp(galaxy):
+def cleanUp(galaxy,config):
 
     caracal.log.info("====================================================")
     caracal.log.info("Cleanup")
@@ -980,10 +980,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
             timeFlag = (time.time()-timeInit)/60.
             #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
-    print('CAZZZZZZZOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-    print('=====================================================')
     if doCleanUp is True:
-        cleanUp(galaxy)
+        cleanUp(galaxy,config)
 
 
     return timeFlag

@@ -443,13 +443,13 @@ class UzeroFlagger:
 
 
         showgouse = np.linspace(1.5*bin_centers[0]-0.5*bin_centers[1], 1.5*bin_centers[-1]-0.5*bin_centers[-2], 200)
-        calculated = gaussian(showgouse, average, widthes[0]*npoints/(np.sqrt(2*np.pi)*stdev), stdev)
+        calculated = self.gaussian(showgouse, average, widthes[0]*npoints/(np.sqrt(2*np.pi)*stdev), stdev)
 
         # mad
-        madded = gaussian(showgouse, med, widthes[0]*npoints/(np.sqrt(2*np.pi)*mad), mad)
+        madded = self.gaussian(showgouse, med, widthes[0]*npoints/(np.sqrt(2*np.pi)*mad), mad)
 
         # In case of using only stats, this is right on top
-        fitted = gaussian(showgouse, popt[0], popt[1], popt[2])
+        fitted = self.gaussian(showgouse, popt[0], popt[1], popt[2])
 
         ax = figS.add_subplot(gsS[0,0])
         ax.bar(bin_centers, hist, width=widthes, color = 'y', edgecolor = 'y')

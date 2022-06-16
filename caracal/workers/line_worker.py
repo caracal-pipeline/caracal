@@ -992,8 +992,7 @@ def worker(pipeline, recipe, config):
                             cdelt = chanwidth[0]*binchans ## in Hz
                             hdr = hdul[0].header
                             ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
-
-                            if (np.max([crval, crvale]) < np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) > np.min([ax3[0], ax3[-1]])):
+                            if (np.max([crval, crvale]) <= np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) >= np.min([ax3[0], ax3[-1]])):
                                 caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
 
                                 idx = np.argmin(abs(ax3-crval))
@@ -1001,7 +1000,8 @@ def worker(pipeline, recipe, config):
 
                                 if cdelt > cdeltm:
                                     hdul[0].data = hdul[0].data[idx:ide]
-                                    hdul[0].header['CRPIX3'] = hdul[0].header['CRPIX3'] - round(idx/binchans,1)
+                                    hdul[0].header['CRPIX3'] = 1
+                                    hdul[0].header['CRVAL3'] = crval
                                     hdul[0].header['NAXIS3'] = nchans
                                     hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
                                     if binchans > 1:
@@ -1024,7 +1024,7 @@ def worker(pipeline, recipe, config):
                                         rdata[nn] = hdul[0].data[idx+nn//rr]
 
                                     hdul[0].header['NAXIS3'] = nchans
-                                    hdul[0].header['CRPIX3'] = 0
+                                    hdul[0].header['CRPIX3'] = 1
                                     hdul[0].header['CRVAL3'] = crval
                                     hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']/rr
                                     hdul[0].data = rdata

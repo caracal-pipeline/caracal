@@ -875,7 +875,7 @@ class UzeroFlagger:
                     
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    self.makeCube(pipeline,self.self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
+                    self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))

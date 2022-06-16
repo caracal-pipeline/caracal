@@ -642,15 +642,12 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config,'flagUzeros'):
             uZeros = flag_Uzeros.UzeroFlagger(config)
 
-            for i in range(0,len(all_msfiles)):
-                msname = all_msfiles[i]
+            if config['flagUzeros']['use_mstransform']:
+                msname_Flag = msname_mst
+            else:
+                msname_Flag = msname
 
-                if config['flagUzeros']['use_mstransform']:
-                    msname_Flag = add_ms_label(msname, "mst")
-                else:
-                    msname_Flag = msname
-
-                uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
+            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

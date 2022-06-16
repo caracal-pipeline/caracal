@@ -464,7 +464,7 @@ class UzeroFlagger:
 
         outPlot="{0}{1}_{2}_{3}_sblck.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,msid,scan)
 
-        figS.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+        figS.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
         plt.close(figS)
 
 
@@ -689,8 +689,8 @@ class UzeroFlagger:
         # consoleHandler.setFormatter(logFormatter)
 
         # caracal.log.addHandler(consoleHandler)
-        caracal.log.warn(
-                'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
+        #caracal.log.warn(
+        #        'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
         caracal.log.info("====================================================")
         # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
@@ -791,7 +791,7 @@ class UzeroFlagger:
                     gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
                     fig0, comvmax_tot = self.plotAll(fig0,gs0,1,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                    fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                    fig0.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
                     plt.close(fig0)
 
             caracal.log.info("----------------------------------------------------")
@@ -930,10 +930,10 @@ class UzeroFlagger:
                 outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
 
                 fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                fig1.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                fig1.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
                 plt.close(fig1)
                 fig2.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                fig2.savefig(outPlotFlag,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                fig2.savefig(outPlotFlag,bbox_inches='tight',dpi=200)   # save the figure to file
                 plt.close(fig2)
 
             superArr = np.vstack((superArr, arr))
@@ -978,7 +978,7 @@ class UzeroFlagger:
                     outPlot="{0}{1}_{2}_fullMS.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0, comvmax_tot = self.plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
-                    fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+                    fig0.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
                     plt.close(fig0)
 
                 timeFlag = (time.time()-timeInit)/60.

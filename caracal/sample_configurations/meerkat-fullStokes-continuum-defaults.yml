@@ -286,14 +286,16 @@ selfcal:
 polimg:
   enable: true
   label_in: corr
-  img_npix: 2048
-  img_cell: 2
-  img_mgain: 0.99
-  img_nchans: 5
-  img_chan_range: 0, 100
-  img_stokes: QU
-  col: CORRECTED_DATA
-  extra_image:
+  make_images:
+    enable: true
+    img_npix: 2048
+    img_cell: 2
+    img_mgain: 0.99
+    img_nchans: 5
+    img_chan_range: 0, 100
+    img_stokes: QU
+    col: CORRECTED_DATA
+  make_extra_image:
     enable: false
   make_cubes:
     enable: false

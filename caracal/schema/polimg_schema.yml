@@ -235,35 +235,35 @@ mapping:
             desc: Remove original images. This segment will be executed only if the images have been convolved.
             required: false
             example: 'False'
-#      make_cubes:
-#        type: map
-#        desc: make spectral cubes
-#        mapping:
-#          enable:
-#            type: bool
-#            desc: Make spectral cubes parameters
-#            required: false
-#            example: 'False'
-#        convl_cubes:
-#          type: bool
-#          desc: Convolve output cubes to a common resolution with equolver
-#          required: false
-#          example: 'False'
-#        convl_beam:
-#          type: str
-#          desc: Target beam for images. If 'auto' it will automatically set the target beam otherwise use input beam written as [bmin, bmaj, bpa] with bmin and bmaj in arcsec and bpa in deg.
-#          required: false
-#          example: ''
-#        make_pb_cubes:
-#          type: bool
-#          desc: Make PB cubes
-#          required: false
-#          example: 'False'
-#        remove_images:
-#          type: bool
-#          desc: Remove original images to save disc space
-#          required: false
-#          example: 'True'
+      make_cubes:
+        type: map
+        desc: make spectral cubes
+        mapping:
+          enable:
+            type: bool
+            desc: Make spectral cubes parameters
+            required: false
+            example: 'False'
+          convl_cubes:
+            type: bool
+            desc: Convolve output cubes to a common resolution with equolver
+            required: false
+            example: 'False'
+          convl_beam:
+            type: str
+            desc: Target beam for images. If 'auto' it will automatically set the target beam otherwise use input beam written as [bmin, bmaj, bpa] with bmin and bmaj in arcsec and bpa in deg.
+            required: false
+            example: ''
+          make_pb_cubes:
+            type: bool
+            desc: Make PB cubes
+            required: false
+            example: 'False'
+          remove_images:
+            type: bool
+            desc: Remove original images to save disc space
+            required: false
+            example: 'False'
       absmem:
         type: float
         example: '100.0'

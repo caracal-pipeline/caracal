@@ -272,6 +272,7 @@ def worker(pipeline, recipe, config):
             FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
                            1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
+            pb_image = np.expand_dims(pb_image, axis=0)
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 pb_image, header=headimage, overwrite=True)
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
@@ -285,74 +286,88 @@ def worker(pipeline, recipe, config):
             os.mkdir(image_path)
 
         img_dir = get_dir_path(image_path, pipeline)
-        #image(img_dir, mslist, field)
+        image(img_dir, mslist, field)
 
-        if config['extra_images']:
+        #if you want a pb cube then make pb images
+        if config['make_cubes']['enable'] and config['make_cubes']['make_pb_cubes']:
+            do_extra = True
+            do_pb = True
+        else:
+            do_extra = config['extra_images']['enable']
+            do_pb = config['extra_images']['make_pb_images']
+
+        if do_extra:
             for stokes in config['img_stokes']:
                 for ch in range(0,config['img_nchans']):
                     image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
                     im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
                         image_path, prefix, field, ch, stokes)
-                    if config['extra_images']['convl_images']:
+                    if config['extra_images']['enable'] and config['extra_images']['convl_images']:
                         caracal.log.info('I am pretending to convolve images')
-                        # tar_beam = config['convl_beam']
-                        # equolver_args = {
-                        #     "threads": ncpu,
-                        #     "beam": tar_beam
-                        # }
-                        # equolver_args["inc_cubes"] = im_name
-                        # step = 'convl-images'.format(stokes)
-                        # beach.Beach(equolver_args)
+                        #do something!
                         if config['extra_images']['make_pb_images']:
-                            head = fits.open(im_name)[0].header #replace with equolver output
+                            head = fits.open(im_name)[0].header #replace with convl images
                             freq = head['crval3']
-                            make_mauchian_pb(im_name, freq) #replace with equolver output
-                        elif config['extra_images']['remove_originals']:
-                            #os.remove(im_name)
+                            make_mauchian_pb(im_name, freq) #replace with convl images
+                        if config['extra_images']['remove_originals']:
+                            #os.remove(im_name) replace with convl images
                             caracal.log.info('I am pretending to remove the original not convolved images')
-                    elif config['extra_images']['make_pb_images']:
+                    elif do_pb:
                         head = fits.open(im_name)[0].header
                         freq = head['crval3']
                         make_mauchian_pb(im_name, freq)
 
+        # CHECK FROM HERE
+        if config['make_cubes']['enable']:
+            for stokes in config['img_stokes']:
+                #make image cubes
+                inp_images = '{0:s}/{1:s}_{2:s}-*-{3:s}-image.fits:output'.format(img_dir, prefix, field, stokes)
+                out_images = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits:output'.format(
+                         img_dir, prefix, field, stokes)
+                step = 'make-cube-{0:s}'.format(stokes)
+                recipe.add(
+                    'cab/fitstool',
+                    step,
+                    {
+                        "file_pattern": inp_images,
+                        "output": out_images,
+                        "stack": True,
+                        "delete-files": True if config['make_cubes']['remove_images'] else False,
+                        "fits-axis": 'FREQ',
+                        "force": True,
+                    },
+                    input=pipeline.output,
+                    output=pipeline.output,
+                    label='{0:s}:: Make {1:s} cube from wsclean channels'.format(step,stokes))
 
-        # if config['make_cubes']:
-        #     for stokes in config['pol']:
-        #         inp_images = '{0:s}/{1:s}-{2:s}-*-{3:d}-image.fits:output'.format(
-        #             img_dir, prefix, field, stokes)
-        #         if config['convolve'] and config['convolve']['convolve_cubes']:
-        #             output_images = '{0:s}/tmp_{1:s}-{2:s}-{3:d}-image.fits:output'.format(
-        #                 img_dir, prefix, field, stokes)
-        #         else:
-        #             output_images = '{0:s}/{1:s}-{2:s}-{3:d}-image.fits:output'.format(
-        #                 img_dir, prefix, field, stokes)
-        #         step = 'make-cube-'.format(stokes)
-        #         recipe.add(
-        #             'cab/fitstool',
-        #             step,
-        #             {
-        #                 "file_pattern": inp_images,
-        #                 "output": output_images,
-        #                 "stack": True,
-        #                 "delete-files": False,
-        #                 "fits-axis": 'FREQ',
-        #             },
-        #             input=pipeline.input,
-        #             output=pipeline.output,
-        #             label='{0:s}:: Make {1:s} cube from wsclean {1:s} channels'.format(
-        #                 step,stokes))
-        #         recipe.run()
-        #         recipe.jobs = []
-        #         if config['convolve'] and config['convolve']['convolve_cubes']:
-        #             tar_beam = config['convl_beam']
-        #             equolver_args = {
-        #                 "threads": ncpu,
-        #             }
-        #             im_name = '{0:s}/{1:s}-{2:s}-{3:d}-image.fits:output'.format(
-        #                     img_dir, prefix, field, stokes)
-        #             equolver_args["inc_cubes"] = im_name
-        #             beach.Beach(equolver_args)
+                if config['make_cubes']['make_pb_cubes']:
+                    inp_images = '{0:s}/{1:s}_{2:s}-*-{3:s}-pb.fits:output'.format(img_dir, prefix, field, stokes)
+                    out_images = '{0:s}/{1:s}_{2:s}-{3:s}-pb.fits:output'.format(
+                             img_dir, prefix, field, stokes)
+                    step = 'make-pb-cube-{0:s}'.format(stokes)
+                    recipe.add(
+                        'cab/fitstool',
+                        step,
+                        {
+                            "file_pattern": inp_images,
+                            "output": out_images,
+                            "stack": True,
+                            "delete-files": True if not config['extra_images']['make_pb_images'] else False,
+                            "fits-axis": 'FREQ',
+                        },
+                        input=pipeline.output,
+                        output=pipeline.output,
+                        label='{0:s}:: Make {1:s} PB cube from wsclean channels'.format(step,stokes))
+                    recipe.run()
+                    recipe.jobs = []
 
+                if config['make_cubes']['convl_cubes']:
+                    image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
+                    inp_images = '{0:s}/{1:s}_{2:s}-*-{3:s}-image.fits'.format(
+                        image_path, prefix, field, stokes)
+                    out_images = '{0:s}/tmp_{1:s}-{2:s}-{3:d}-image.fits:output'.format(
+                        img_dir, prefix, field, stokes)
+                    caracal.log.info('I am pretending to convolve cubes')
 
 
         for i, msname in enumerate(mslist):

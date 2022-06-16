@@ -1007,12 +1007,16 @@ class UzeroFlagger:
                 caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
                 percRel = percTotAfter-percTot
                 
+                caracal.log.info("----------------------------------------------------")
 
                 self.baselineStats(galaxy,stripeFlags,uvw,avspecchan)
 
                 caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
 
                 if makePlots==True:
+                    caracal.log.info("----------------------------------------------------")
+                    caracal.log.info("----------------------Plotting----------------------")
+
                     outPlot="{0}{1}_{2}_fullMS.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0, comvmax_tot = self.plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)

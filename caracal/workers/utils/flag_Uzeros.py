@@ -535,7 +535,7 @@ class UzeroFlagger:
             makeSunblockPlots = None 
         
         if makeSunblockPlots==True :
-            plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
+            self.plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
 
         caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
 

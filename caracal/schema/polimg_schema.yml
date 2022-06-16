@@ -273,7 +273,6 @@ mapping:
             desc: Remove original images and/or not convolved cubes to save disc space
             required: false
             example: 'False'
-
       flagging_summary:
         type: map
         desc: Output the flagging summary.

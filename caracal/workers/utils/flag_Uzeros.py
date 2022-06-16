@@ -34,7 +34,7 @@ from astropy import units as u
 import datetime
 from scipy import stats
 import scipy.constants as scconstants
-import scipy.optimize as opt
+import scipy.optimize
 
 from matplotlib import pyplot as plt
 from matplotlib import rc
@@ -510,8 +510,7 @@ class UzeroFlagger:
 
         # Fit a Gaussian
         try:
-            gauss=self.gaussian()
-            popt, pcov = opt.curve_fit(gauss, bin_centers, hist, p0 = [maxhiposval, maxhi, stdev/2.])
+            popt, pcov = scipy.optimize.curve_fit(self.gaussian, bin_centers, hist, p0 = [maxhiposval, maxhi, stdev/2.])
         except:
             popt = np.array([average, widthes[0]*npoints/(np.sqrt(2*np.pi)*stdev), stdev])
 

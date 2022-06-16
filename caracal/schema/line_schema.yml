@@ -218,16 +218,11 @@ mapping:
             required: false
             example: 'True'
           transferFlags:
-            desc: Run transfer flags to other datasets (typically different spws)
-            type: bool
-            required: false
-            example: 'False'
-          transferto:
-            desc: labels of the datasets where to transfer the u=0 flags of the line-label_in dataset
+            desc: List of datasets to which to transfer the u=0 flags. The list should only include the labels which identify those datasets, following the usual CARACal label convention. The flags are calculated using the dataset identified by 'label_in' above.
             seq:
               - type: str
             required: false
-            example: '1,2,3'
+            example: ''
           method:
             desc: Define flagging method. Either q99 or sunblock (median+threshold*mad)
             type: str

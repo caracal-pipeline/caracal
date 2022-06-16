@@ -704,9 +704,8 @@ class UzeroFlagger:
         rootMS = str.split(mfsOb,self.config['label_in'])[0]
         obsIDs.append(mfsOb)
 
-        if self.config['flagUzeros']['transferFlags'] == True:
-            lws = self.config['flagUzeros']['transferto'] 
-
+        lws = self.config['flagUzeros']['transferFlags']
+        if len(lws):
             for lw in lws:
                 obsIDs.append('{}{}.ms'.format(rootMS,lw))
 
@@ -715,7 +714,6 @@ class UzeroFlagger:
         else:
             obsIDs.append(mfsOb)
             lws=['trk']
-
 
         stripeFlags=None
         for ii in range (0,len(obsIDs)):

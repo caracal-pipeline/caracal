@@ -58,53 +58,55 @@ dm = measures.measures()
 timeInit = time.time()
 
 
+def __init__(self, config):
+
+    self.config=config
+
+def setDirs(self,output):
+
+    self.config['flagUzeros']['stripeDir']=output+'/stripeAnalysis/'
+    if not os.path.exists(self.config['flagUzeros']['stripeDir']):
+        os.mkdir(self.config['flagUzeros']['stripeDir'])
+
+    self.config['flagUzeros']['stripeLogDir']=self.config['flagUzeros']['stripeDir']+'logs/'
+    if not os.path.exists(self.config['flagUzeros']['stripeLogDir']):
+        os.mkdir(self.config['flagUzeros']['stripeLogDir'])
 
 
-def setDirs(output,config):
+    self.config['flagUzeros']['stripeMSDir']=self.config['flagUzeros']['stripeDir']+'msdir/'
+    if not os.path.exists(self.config['flagUzeros']['stripeMSDir']):
+        os.mkdir(self.config['flagUzeros']['stripeMSDir'])
 
-    config['flagUzeros']['stripeDir']=output+'/stripeAnalysis/'
-    if not os.path.exists(config['flagUzeros']['stripeDir']):
-        os.mkdir(config['flagUzeros']['stripeDir'])
+    self.config['flagUzeros']['stripeCubeDir']=self.config['flagUzeros']['stripeDir']+'cubes/'
+    if not os.path.exists(self.config['flagUzeros']['stripeCubeDir']):
+        os.mkdir(self.config['flagUzeros']['stripeCubeDir'])
 
-    config['flagUzeros']['stripeLogDir']=config['flagUzeros']['stripeDir']+'logs/'
-    if not os.path.exists(config['flagUzeros']['stripeLogDir']):
-        os.mkdir(config['flagUzeros']['stripeLogDir'])
+    self.config['flagUzeros']['stripeFFTDir']=self.config['flagUzeros']['stripeDir']+'fft/'
+    if not os.path.exists(self.config['flagUzeros']['stripeFFTDir']):
+        os.mkdir(self.config['flagUzeros']['stripeFFTDir'])
 
+    self.config['flagUzeros']['stripePlotDir']=self.config['flagUzeros']['stripeDir']+'plots/'
+    if not os.path.exists(self.config['flagUzeros']['stripePlotDir']):
+        os.mkdir(self.config['flagUzeros']['stripePlotDir'])
 
-    config['flagUzeros']['stripeMSDir']=config['flagUzeros']['stripeDir']+'msdir/'
-    if not os.path.exists(config['flagUzeros']['stripeMSDir']):
-        os.mkdir(config['flagUzeros']['stripeMSDir'])
+    self.config['flagUzeros']['stripeTableDir']=self.config['flagUzeros']['stripeDir']+'tables/'
+    if not os.path.exists(self.config['flagUzeros']['stripeTableDir']):
+        os.mkdir(self.config['flagUzeros']['stripeTableDir'])
 
-    config['flagUzeros']['stripeCubeDir']=config['flagUzeros']['stripeDir']+'cubes/'
-    if not os.path.exists(config['flagUzeros']['stripeCubeDir']):
-        os.mkdir(config['flagUzeros']['stripeCubeDir'])
-
-    config['flagUzeros']['stripeFFTDir']=config['flagUzeros']['stripeDir']+'fft/'
-    if not os.path.exists(config['flagUzeros']['stripeFFTDir']):
-        os.mkdir(config['flagUzeros']['stripeFFTDir'])
-
-    config['flagUzeros']['stripePlotDir']=config['flagUzeros']['stripeDir']+'plots/'
-    if not os.path.exists(config['flagUzeros']['stripePlotDir']):
-        os.mkdir(config['flagUzeros']['stripePlotDir'])
-
-    config['flagUzeros']['stripeTableDir']=config['flagUzeros']['stripeDir']+'tables/'
-    if not os.path.exists(config['flagUzeros']['stripeTableDir']):
-        os.mkdir(config['flagUzeros']['stripeTableDir'])
-
-    config['flagUzeros']['stripeSofiaDir']=config['flagUzeros']['stripeDir']+'sofiaOut/'
-    if not os.path.exists(config['flagUzeros']['stripeSofiaDir']):
-        os.mkdir(config['flagUzeros']['stripeSofiaDir'])
+    self.config['flagUzeros']['stripeSofiaDir']=self.config['flagUzeros']['stripeDir']+'sofiaOut/'
+    if not os.path.exists(self.config['flagUzeros']['stripeSofiaDir']):
+        os.mkdir(self.config['flagUzeros']['stripeSofiaDir'])
 
 
     return 
 
-def splitScans(config,inVis,scanNums):
+def splitScans(self,inVis,scanNums):
 
     scanVisList=[]
     scanVisNames=[]
     for scan in scanNums:
         baseVis=os.path.basename(inVis)
-        outVis=config['flagUzeros']['stripeMSDir']+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
+        outVis=self.config['flagUzeros']['stripeMSDir']+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
         if os.path.exists(outVis):
             shutil.rmtree(outVis)
         if os.path.exists(outVis+'.flagversions'):
@@ -148,18 +150,18 @@ def convToStokesI(data,flags):
     return data, flags
 
 
-def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
+def makeCube(self,pipeline,msdir,inVis,outCubePrefix,kind='scan'):
 
-    robust = config['flagUzeros']['robust']
-    imsize = int(config['flagUzeros']['imsize'])
-    cell = config['flagUzeros']['cell']
-    chanMin = int(config['flagUzeros']['chanRange'][0])
-    chanMax = int(config['flagUzeros']['chanRange'][1])
+    robust = self.config['flagUzeros']['robust']
+    imsize = int(self.config['flagUzeros']['imsize'])
+    cell = self.config['flagUzeros']['cell']
+    chanMin = int(self.config['flagUzeros']['chanRange'][0])
+    chanMax = int(self.config['flagUzeros']['chanRange'][1])
 
     recipe = stimela.Recipe('flagUzeros',
                                     ms_dir=msdir,
                                     singularity_image_dir=pipeline.singularity_image_dir,
-                                    log_dir=config['flagUzeros']['stripeLogDir'],
+                                    log_dir=self.config['flagUzeros']['stripeLogDir'],
                                     logfile=False, # no logfiles for recipes
                                     )
     recipe.JOB_TYPE = pipeline.container_tech
@@ -193,14 +195,14 @@ def makeCube(pipeline,msdir,inVis,outCubePrefix,config,kind='scan'):
         "gain": 0.2,
             }
 
-    if config['flagUzeros']['taper']:
-        line_image_opts.update({"taper-gaussian": str(config['flagUzeros']['taper'])})
+    if self.config['flagUzeros']['taper']:
+        line_image_opts.update({"taper-gaussian": str(self.config['flagUzeros']['taper'])})
 
     step='makeCube'
     recipe.add('cab/wsclean',
                step, line_image_opts,
                input=pipeline.input,
-               output=config['flagUzeros']['stripeCubeDir'],
+               output=self.config['flagUzeros']['stripeCubeDir'],
                label='{0:s}:: Image Line'.format(step))
     recipe.run()
 
@@ -334,33 +336,33 @@ def plotAll(fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,per
 
     return fig, common_vmax
 
-def cleanUp(galaxy,config):
+def cleanUp(self,galaxy):
 
     caracal.log.info("====================================================")
     caracal.log.info("Cleanup")
 
     caracal.log.info("Deleting images")
 
-    if os.path.exists(config['flagUzeros']['stripeCubeDir']):
-        shutil.rmtree(config['flagUzeros']['stripeCubeDir'])
+    if os.path.exists(self.config['flagUzeros']['stripeCubeDir']):
+        shutil.rmtree(self.config['flagUzeros']['stripeCubeDir'])
 
     caracal.log.info("Deleting FFTs")
 
 
-    if os.path.exists(config['flagUzeros']['stripeFFTDir']):
-        shutil.rmtree(config['flagUzeros']['stripeFFTDir'])
+    if os.path.exists(self.config['flagUzeros']['stripeFFTDir']):
+        shutil.rmtree(self.config['flagUzeros']['stripeFFTDir'])
 
     caracal.log.info("Deleting .ms scans")
 
-    if os.path.exists(config['flagUzeros']['stripeMSDir']):
-        shutil.rmtree(config['flagUzeros']['stripeMSDir'])
+    if os.path.exists(self.config['flagUzeros']['stripeMSDir']):
+        shutil.rmtree(self.config['flagUzeros']['stripeMSDir'])
 
     caracal.log.info("Cleanup done")
 
     return 0
 
 
-def saveFFTTable(inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV):
+def saveFFTTable(self,inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV):
 
     xCol = np.zeros([len(U)*len(V)])
     yCol = np.zeros([len(U)*len(V)])
@@ -391,7 +393,7 @@ def saveFFTTable(inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el,
     if method=='sunblock':
         cutoff = sunBlockStats(inFFT,galaxy,msid,track,scan,'mad', threshold, ax = None, title = '', verb = True)
     else:
-        if taper is not None:
+        if self.config['flagUzeros']['taper']:
             cutoff = np.nanpercentile(tabArr['Amp'], 99.99)
         else:
             cutoff = np.nanpercentile(tabArr['Amp'], 99.9999)
@@ -427,7 +429,7 @@ def saveFFTTable(inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el,
     return statsArray, scanFlags, percent, cutoff
 
 
-def plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,cut):
+def plotSunblocker(self,bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,cut):
 
     caracal.log.info("\tPlotting Sunblocker stats")
 
@@ -457,7 +459,7 @@ def plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,p
     ax.set_ylim(0.5,)
     plt.yscale('log')
 
-    outPlot="{0}{1}_{2}_{3}_sblck.png".format(config['flagUzeros']['stripePlotDir'],galaxy,msid,scan)
+    outPlot="{0}{1}_{2}_{3}_sblck.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,msid,scan)
 
     figS.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
     plt.close(figS)
@@ -615,18 +617,18 @@ def putFlags(pf_inVis, pf_inVisName, pf_stripeFlags):
     return 0
 
 
-def run_flagUzeros(pipeline,targets,msname,config):
+def run_flagUzeros(self,pipeline,targets,msname):
 
-    method = config['flagUzeros']['method']
-    makePlots=config['flagUzeros']['makePlots']
+    method = self.config['flagUzeros']['method']
+    makePlots=self.config['flagUzeros']['makePlots']
 
-    makeSunblockPlots=config['flagUzeros']['makeSunblockPlots']
+    makeSunblockPlots=self.config['flagUzeros']['makeSunblockPlots']
     
-    doCleanUp =config['flagUzeros']['method']
+    doCleanUp =self.config['flagUzeros']['method']
 
-    thresholds = config['flagUzeros']['thresholds']
-    dilateU = config['flagUzeros']['dilateU']
-    dilateV = config['flagUzeros']['dilateV']
+    thresholds = self.config['flagUzeros']['thresholds']
+    dilateU = self.config['flagUzeros']['dilateU']
+    dilateV = self.config['flagUzeros']['dilateV']
     flagCmd = True
 
     galaxies = targets
@@ -634,7 +636,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
     datapath=pipeline.output
     mfsOb = msname
 
-    setDirs(pipeline.output,config)
+    setDirs(pipeline.output)
 
 
 
@@ -670,7 +672,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     ##### MAIN MAIN MAIN
     superArr = np.empty((0,7))
-    galaxy = str.split(mfsOb,config['label_in'])[0]
+    galaxy = str.split(mfsOb,self.config['label_in'])[0]
 
     comvmax_tot, comvmax_scan = 0, 0
     runtime = time.strftime("%d-%m-%Y")+'_'+time.strftime("%H-%M")
@@ -692,11 +694,11 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
     obsIDs=[]
 
-    rootMS = str.split(mfsOb,config['label_in'])[0]
+    rootMS = str.split(mfsOb,self.config['label_in'])[0]
     obsIDs.append(mfsOb)
 
-    if config['flagUzeros']['transferFlags'] == True:
-        lws = config['flagUzeros']['transferto'] 
+    if self.config['flagUzeros']['transferFlags'] == True:
+        lws = self.config['flagUzeros']['transferto'] 
 
         for lw in lws:
             obsIDs.append('{}{}.ms'.format(rootMS,lw))
@@ -757,13 +759,13 @@ def run_flagUzeros(pipeline,targets,msname,config):
         caracal.log.info("----------------------------------------------------")
         caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
         outCubePrefix = galaxy+'_1'+track+'_tot'
-        outCubeName=config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+        outCubeName=self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
         if os.path.exists(outCubeName):
             os.remove(outCubeName)
-        makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix,config)
+        makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
 
         caracal.log.info("Making FFT of image")
-        outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
+        outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
         if os.path.exists(outFFT):
             shutil.rmtree(outFFT)
         inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
@@ -780,7 +782,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
                 fig0, comvmax_tot = plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
             else:
-                outPlot="{0}{1}_{2}_tot.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                outPlot="{0}{1}_{2}_tot.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                 fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
                 fig0.set_tight_layout(False)
                 gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
@@ -793,7 +795,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
         caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
-        scanVisList,scanVisNames = splitScans(config,inVis,scanNums)
+        scanVisList,scanVisNames = splitScans(inVis,scanNums)
 
         arr = np.empty((0,7))
         NS = len(scanNums)
@@ -827,13 +829,13 @@ def run_flagUzeros(pipeline,targets,msname,config):
 
             caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
             outCubePrefix_0 = galaxy+'_1'+track+'_scan'+str(scan)
-            outCubeName_0 = config['flagUzeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
+            outCubeName_0 = self.config['flagUzeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
             if os.path.exists(outCubeName_0):
                 os.remove(outCubeName_0)
-            makeCube(pipeline,config['flagUzeros']['stripeMSDir'],visName,outCubePrefix_0,config)
+            makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix_0)
 
             caracal.log.info("Making FFT of image")
-            outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
+            outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
             inFFTData,inFFTHeader = makeFFT(outCubeName_0,outFFT)
@@ -845,7 +847,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             az = 0
 
             outCubePrefix = galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
-            outCubeName = config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+            outCubeName = self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
             rms_thresh = []
 
@@ -871,7 +873,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(pipeline,config['flagUzeros']['stripeMSDir'],visName,outCubePrefix,config)
+                makeCube(pipeline,self.self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
                 fitsdata = fits.open(outCubeName)
                 rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                 caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -897,7 +899,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 caracal.log.info("Making post-flagging image")
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(pipeline,config['flagUzeros']['stripeMSDir'],visName,outCubePrefix,config)
+                makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
 
             # Save stats for the selected threshold
             arr = np.vstack((arr, statsArray))
@@ -910,7 +912,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
                 fig1, comvmax_scan = plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
 
             caracal.log.info("Making FFT of post-flagging image")
-            outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
+            outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
             inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
@@ -921,8 +923,8 @@ def run_flagUzeros(pipeline,targets,msname,config):
         if makePlots == True:
             caracal.log.info("----------------------------------------------------")
             caracal.log.info("Saving scans diagnostic plots")
-            outPlot="{0}{1}_{2}_perscan_preFlag.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
-            outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+            outPlot="{0}{1}_{2}_perscan_preFlag.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+            outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
 
             fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
             fig1.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
@@ -934,7 +936,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
         superArr = np.vstack((superArr, arr))
         caracal.log.info("Saving stats table")
         newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
-        outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=config['flagUzeros']['stripeTableDir'],galaxy=galaxy,track=track)
+        outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=self.config['flagUzeros']['stripeTableDir'],galaxy=galaxy,track=track)
         ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
 
         if flagCmd==True:
@@ -946,15 +948,15 @@ def run_flagUzeros(pipeline,targets,msname,config):
             caracal.log.info("Making post-flagging image")
 
             outCubePrefix = galaxy+'_'+track+'_tot_stripeFlag'
-            outCubeName=config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+            outCubeName=self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix,config)
+            makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
 
             caracal.log.info("Making FFT of post-flagging image")
 
-            outFFT=config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
+            outFFT=self.self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
             if os.path.exists(outFFT):
                 shutil.rmtree(outFFT)
             inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
@@ -970,7 +972,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
 
             if makePlots==True:
-                outPlot="{0}{1}_{2}_fullMS.png".format(config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                outPlot="{0}{1}_{2}_fullMS.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
                 fig0, comvmax_tot = plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                 fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                 fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
@@ -980,7 +982,7 @@ def run_flagUzeros(pipeline,targets,msname,config):
             #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
     if doCleanUp is True:
-        cleanUp(galaxy,config)
+        cleanUp(galaxy)
 
 
     return timeFlag

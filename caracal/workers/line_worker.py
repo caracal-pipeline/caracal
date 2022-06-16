@@ -640,28 +640,15 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config,'flagUzeros'):
 
-            print(all_msfiles)
-            print(len(all_msfiles))
             for i in range(0,len(all_msfiles)):
                 msname = all_msfiles[i]
-                print(msname)
 
-                caracal.log.info("-=======================================-")
                 if config['flagUzeros']['use_mstransform']:
                     msname_Flag = add_ms_label(msname, "mst")
                 else:
                     msname_Flag = msname
 
                 uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag,config)
-                caracal.log.info("++++++++++++++++++++++++++++++++++++++++++")
-                if i==1:
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
-                    print('CULOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

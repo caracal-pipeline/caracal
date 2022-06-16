@@ -394,7 +394,7 @@ class UzeroFlagger:
         hdr['COMMENT'] = "Ext 1 = FFT table"
 
         if method=='sunblock':
-            cutoff = sunBlockStats(inFFT,galaxy,msid,track,scan,'mad', threshold, ax = None, title = '', verb = True)
+            cutoff = self.sunBlockStats(inFFT,galaxy,msid,track,scan,'mad', threshold, ax = None, title = '', verb = True)
         else:
             if self.config['flagUzeros']['taper']:
                 cutoff = np.nanpercentile(tabArr['Amp'], 99.99)
@@ -427,7 +427,7 @@ class UzeroFlagger:
         caracal.log.info("Flagging scan".format(scanNumber=str(scan), galaxy=galaxy, track=track))
 
         # the following scanFlags are the stripe flags for this scan
-        scanFlags, percent = flagQuartile(visName,newtab,inFFTHeader,method,dilateU,dilateV,qrtdebug=False)
+        scanFlags, percent = self.flagQuartile(visName,newtab,inFFTHeader,method,dilateU,dilateV,qrtdebug=False)
 
         return statsArray, scanFlags, percent, cutoff
 
@@ -639,7 +639,7 @@ class UzeroFlagger:
         datapath=pipeline.output
         mfsOb = msname
 
-        setDirs(pipeline.output)
+        self.setDirs(pipeline.output)
 
 
 
@@ -712,7 +712,6 @@ class UzeroFlagger:
             obsIDs.append(mfsOb)
             lws=['trk']
 
-        print(len(obsIDs))
         for ii in range (0,len(obsIDs)):
             # galNameVis=galaxy.replace('-','_')
             track = lws[ii-1]
@@ -765,7 +764,7 @@ class UzeroFlagger:
             outCubeName=self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
-            makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
+            self.makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
 
             caracal.log.info("Making FFT of image")
             outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
@@ -798,7 +797,7 @@ class UzeroFlagger:
 
             caracal.log.info("Splitting scans".format(galaxy=galaxy, track=track))
 
-            scanVisList,scanVisNames = splitScans(inVis,scanNums)
+            scanVisList,scanVisNames = self.splitScans(inVis,scanNums)
 
             arr = np.empty((0,7))
             NS = len(scanNums)
@@ -835,13 +834,13 @@ class UzeroFlagger:
                 outCubeName_0 = self.config['flagUzeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
-                makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix_0)
+                self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix_0)
 
                 caracal.log.info("Making FFT of image")
                 outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = makeFFT(outCubeName_0,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName_0,outFFT)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
                 V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
@@ -870,13 +869,13 @@ class UzeroFlagger:
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     # scanFlags below are the stripe flags for this scan
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     caracal.log.info("Making post-flagging image")
                     
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(pipeline,self.self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
+                    self.makeCube(pipeline,self.self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -896,13 +895,13 @@ class UzeroFlagger:
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                    statsArray, scanFlags, percent, cutoff_scan = saveFFTTable(inFFTData,inFFTHeader, visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader, visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     # Re-image
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
+                    self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
 
                 # Save stats for the selected threshold
                 arr = np.vstack((arr, statsArray))
@@ -918,7 +917,7 @@ class UzeroFlagger:
                 outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
 
                 if makePlots == True:
                     fig2, comvmax_scan = plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
@@ -947,7 +946,7 @@ class UzeroFlagger:
                 caracal.log.info("\tWorking on {}".format(inVisName))
                 caracal.log.info("====================================================")
 
-                putFlags(inVis, inVisName, stripeFlags)
+                self.putFlags(inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
                 outCubePrefix = galaxy+'_'+track+'_tot_stripeFlag'
@@ -955,14 +954,14 @@ class UzeroFlagger:
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
-                makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
+                self.makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
 
                 caracal.log.info("Making FFT of post-flagging image")
 
                 outFFT=self.self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
                 if os.path.exists(outFFT):
                     shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = makeFFT(outCubeName,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
                 V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
@@ -976,7 +975,7 @@ class UzeroFlagger:
 
                 if makePlots==True:
                     outPlot="{0}{1}_{2}_fullMS.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
-                    fig0, comvmax_tot = plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
+                    fig0, comvmax_tot = self.plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                     fig0.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
                     plt.close(fig0)
@@ -985,7 +984,7 @@ class UzeroFlagger:
                 #caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
         if doCleanUp is True:
-            cleanUp(galaxy)
+            self.cleanUp(galaxy)
 
 
         return timeFlag

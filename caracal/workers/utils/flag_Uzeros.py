@@ -59,7 +59,8 @@ timeInit = time.time()
 
 
 
-class UzeroFlagger(object):
+class UzeroFlagger:
+    
     def __init__(self, config):
 
         self.config=config

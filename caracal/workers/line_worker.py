@@ -27,7 +27,6 @@ from caracal import log
 from caracal.workers.utils import remove_output_products
 from caracal.workers.utils import flag_Uzeros 
 
-uZeros = flag_Uzeros.UzeroFlagger()
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -641,6 +640,7 @@ def worker(pipeline, recipe, config):
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
         if pipeline.enable_task(config,'flagUzeros'):
+            uZeros = flag_Uzeros.UzeroFlagger(config)
 
             for i in range(0,len(all_msfiles)):
                 msname = all_msfiles[i]

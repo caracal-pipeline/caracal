@@ -16,7 +16,6 @@ from casacore.measures import dq
 
 from casatools import image
 
-from casatasks import mstransform as mstrans
 from casatasks import flagmanager as flg
 from casatasks import flagdata as flagger
 
@@ -106,35 +105,35 @@ class UzeroFlagger:
         scanVisNames=[]
         for scan in scanNums:
             baseVis=os.path.basename(inVis)
-            outVis=self.config['flagUzeros']['stripeMSDir']+baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
+            outVis=baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
             if os.path.exists(outVis):
                 shutil.rmtree(outVis)
             if os.path.exists(outVis+'.flagversions'):
                 shutil.rmtree(outVis+'.flagversions')
 
-            mstrans(vis=inVis,outputvis=outVis,datacolumn='DATA',scan=str(scan))
+            recipe = stimela.Recipe('flagUzerosMST',
+                                        ms_dir=msdir,
+                                        singularity_image_dir=pipeline.singularity_image_dir,
+                                        log_dir=self.config['flagUzeros']['stripeLogDir'],
+                                        logfile=False, # no logfiles for recipes
+                                        )
+            recipe.JOB_TYPE = pipeline.container_tech
 
-            #recipe = stimela.Recipe('flagUzerosMST',
-            #                            ms_dir=msdir,
-            #                            singularity_image_dir=pipeline.singularity_image_dir,
-            #                            log_dir=self.config['flagUzeros']['stripeLogDir'],
-            #                            logfile=False, # no logfiles for recipes
-            #                            )
-            #recipe.JOB_TYPE = pipeline.container_tech
+            step='splitScans'
+            recipe.add('cab/casa_mstransform',
+                   step,
+                   {"msname": baseVis,
+                    "outputvis": outVis+":output",
+                    "datacolumn": 'data',
+                    "scan": str(scan),
+                    },
+                   input=msdir,
+                   output=self.config['flagUzeros']['stripeMSDir'],
+                   label='{0:s}:: Image Line'.format(step))
+            recipe.run()
 
-            #step='splitScans'
-            #recipe.add('cab/casa_mstransform',
-            #       step,
-            #       {"msname": inVis,
-            #        "outputvis": outVis,
-            #        },
-            #       input=pipeline.input,
-            #       output=self.config['flagUzeros']['stripeCubeDir'],
-            #       label='{0:s}:: Image Line'.format(step))
-            #recipe.run()
-
-            scanVisList.append(outVis)
-            scanVisNames.append(baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms')
+            scanVisList.append(self.config['flagUzeros']['stripeMSDir']+outVis)
+            scanVisNames.append(outVis)
 
         caracal.log.info("All Scans splitted")
 

@@ -15,12 +15,12 @@ import casacore.images as images
 import casacore.measures as measures
 from casacore.measures import dq
 
+from casatools import image
 
 from casatasks import mstransform as mstrans
 from casatasks import flagmanager as flg
 from casatasks import flagdata as flagger
 
-from casatools import image
 
 
 import astropy.io.ascii as astasc
@@ -339,6 +339,36 @@ class UzeroFlagger:
         fig.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
 
         return fig, common_vmax
+
+    def baselineStats(self,galaxy,flags,uvw,avspecchan):
+
+        lambdal=scconstants.c/avspecchan
+        index= flags[:,0,0]==True
+        flagCoords= uvw[index,:]
+        base=np.sqrt(np.power(flagCoords[:,0],2)+np.power(flagCoords[:,1],2)+np.power(flagCoords[:,2],2))*lambdal
+
+        figBase=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
+        gsBase = gridspec.GridSpec(nrows=1,ncols=1,figure=figBase,hspace=0,wspace=0.0)
+        axBase = fig.add_subplot(gsBase[0,0])
+
+        axBase.yaxis.set_label_position("left")
+        axBase.yaxis.tick_right()
+        axBase.yaxis.set_ticks_position('left')
+
+        axBase.set_xlabel(r'Baseline Lenght [m]')
+
+        bins=np.arange(0,8050,50)
+        axBase.hist(base,bins, histtype='bar', align='mid', orientation='vertical',  color='black')
+
+
+        axBase.set_xlim(0,8002)
+        axBase.set_ylim(0,1)
+        axBase.set_yticks([0,25,50,100])
+        axBase.set_autoscale_on(False)
+        outPlot  = "{0}baselines_hist_{}.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy)
+        figBase.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
+        plt.close(figS) 
+
 
     def cleanUp(self,galaxy):
 
@@ -751,6 +781,10 @@ class UzeroFlagger:
             scanNums=np.unique(scans)
             timestamps = t.getcol("TIME")
             field_id = t.getcol("FIELD_ID")
+            spw=tables.table(inVis+'/SPECTRAL_WINDOW',ack=False)
+            avspecchan = np.average(spw.getcol('CHAN_FREQ'))
+            uvw = t.getcol("UVW")
+            spw.close()
             t.close()
 
             percTot=np.nansum(FlagTot)/float(FlagTot.shape[0]*FlagTot.shape[1]*FlagTot.shape[2])*100.
@@ -947,7 +981,6 @@ class UzeroFlagger:
                 caracal.log.info("====================================================")
                 caracal.log.info("\tWorking on {}".format(inVisName))
                 caracal.log.info("====================================================")
-
                 self.putFlags(inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
@@ -973,6 +1006,10 @@ class UzeroFlagger:
                 percTotAfter=np.nansum(stripeFlags)/float(stripeFlags.shape[0]*stripeFlags.shape[1]*stripeFlags.shape[2])*100.
                 caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
                 percRel = percTotAfter-percTot
+                
+
+                self.baselineStats(galaxy,stripeFlags,uvw,avspecchan)
+
                 caracal.log.info("Mean stripe flagging per scan: {percent:.3f}%".format(percent=np.nanmean(percTotAv)))
 
                 if makePlots==True:

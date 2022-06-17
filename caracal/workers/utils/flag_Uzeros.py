@@ -318,8 +318,6 @@ class UzeroFlagger:
     def makeFFT(self, inCube,outFFT):
         dataCube = fits.getdata(inCube)
         dFFT = np.fft.fft2(dataCube)
-        print(dFFT.shape)
-        sys.exit(0)
         # imFFT=images.image(outFFT)
         # dFFT=imFFT.getdata()
         dFFT=np.abs(np.squeeze(dFFT))

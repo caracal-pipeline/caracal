@@ -345,29 +345,38 @@ class UzeroFlagger:
         lambdal=scconstants.c/avspecchan
         index= flags[:,0,0]==True
         flagCoords= uvw[index,:]
-        base=np.sqrt(np.power(flagCoords[:,0],2)+np.power(flagCoords[:,1],2)+np.power(flagCoords[:,2],2))*lambdal
+        baseFlags=np.sqrt(np.power(flagCoords[:,0],2)+np.power(flagCoords[:,1],2)+np.power(flagCoords[:,2],2))*lambdal
+        baseAll=np.sqrt(np.power(uvw[:,0],2)+np.power(uvw[:,1],2)+np.power(uvw[:,2],2))*lambdal
 
         figBase=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
         gsBase = gridspec.GridSpec(nrows=1,ncols=1,figure=figBase,hspace=0,wspace=0.0)
-        axBase = fig.add_subplot(gsBase[0,0])
+        axBase = figBase.add_subplot(gsBase[0,0])
 
         axBase.yaxis.set_label_position("left")
         axBase.yaxis.tick_right()
         axBase.yaxis.set_ticks_position('left')
 
         axBase.set_xlabel(r'Baseline Lenght [m]')
+        axBase.set_ylabel(r'Percentage of u=0 flags')
 
-        bins=np.arange(0,8050,50)
-        axBase.hist(base,bins, histtype='bar', align='mid', orientation='vertical',  color='black')
+        bins=np.logspace(20,np.log10(8000),10)
+        bins.insert(0,0)
+        nFlags, binEdgesFlags = np.histogram(baseFlags,bins)
+        nAll, binEdgesAll = np.histogram(baseAll,bins)
+        print(nFlags,bins,binEdgesFlags)
+        nPerc = nFlags/nAll*100.
+        # axBase.set_xlim(0,8002)
+        axBase.set_ylim(0,100)
+        
 
+        axBase.plot(bins[:-1],nPerc,'k-',drawstyle='steps-pre')
 
-        axBase.set_xlim(0,8002)
-        axBase.set_ylim(0,1)
-        axBase.set_yticks([0,25,50,100])
+        #axBase.set_ylim(0,1)
+        #axBase.set_yticks([0,25,50,100])
         axBase.set_autoscale_on(False)
-        outPlot  = "{0}baselines_hist_{}.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy)
+        outPlot  = "{0}baselines_plot_{1}.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy)
         figBase.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-        plt.close(figS) 
+        plt.close(figBase) 
         sys.exit(0)
 
 

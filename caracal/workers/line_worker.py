@@ -639,18 +639,18 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
 
+        recipe.run()
+        recipe.jobs = []
+
         if pipeline.enable_task(config,'flagUzeros'):
             uZeros = flag_Uzeros.UzeroFlagger(config)
 
-            for i in range(0,len(all_msfiles)):
-                msname = all_msfiles[i]
+            if config['flagUzeros']['use_mstransform']:
+                msname_Flag = msname_mst
+            else:
+                msname_Flag = msname
 
-                if config['flagUzeros']['use_mstransform']:
-                    msname_Flag = add_ms_label(msname, "mst")
-                else:
-                    msname_Flag = msname
-
-                uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
+            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:
@@ -939,7 +939,7 @@ def worker(pipeline, recipe, config):
                                             toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
                                         else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
                                         hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
-                                        hdul[0].header['CRPIX'+i] = int(cent + delt)
+                                        hdul[0].header['CRPIX'+i] = cent + delt
                                     if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
                                         delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
                                         if i == '1':

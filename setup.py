@@ -27,6 +27,7 @@ requirements = [
     'gc-python-utils',
     'casatasks',
     'casatools',
+    'casadata',
 ]
 
 PACKAGE_NAME = 'caracal'
@@ -41,7 +42,6 @@ setup(name=PACKAGE_NAME,
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',
       install_requires=[requirements],
-      dependency_list=['https://go.nrao.edu/pypi'],
       extras_require=dict(astroquery=["astroquery"]),
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in

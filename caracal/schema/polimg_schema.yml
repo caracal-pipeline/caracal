@@ -44,6 +44,12 @@ mapping:
         desc: Number of CPUs used by WSClean. If set to 0 all available CPUs are used.
         required: false
         example: '0'
+      stokes:
+        type: str
+        enum: [ "QU","QUV","IQU","IQUV","I","Q","U","V" ]
+        desc: Stokes image to create. For this worker the options are "QU","QUV","IQU","IQUV","I","Q","U","V". Before this step, we recomand to perform the I imaging with the selfcal worker and to do the polarization imaging on the self-calibrated MS.
+        required: false
+        example: 'QUV'
       make_images:
         type: map
         desc: make images
@@ -154,12 +160,6 @@ mapping:
             desc: Number of spectral polynomial terms to fit to each clean component. This is equal to the order of the polynomial plus 1. Use 0 to disable spectral fitting. Note that spectral fitting is required if you want to do subsequent continumm subtraction using crystalball.
             required: false
             example: '2'
-          img_stokes:
-            type: str
-            enum: [ "QU","QUV","IQU","IQUV","I","Q","U","V" ]
-            desc: Stokes image to create. For this worker the options are "QU","QUV","IQU","IQUV","I","Q","U","V". Before this step, we recomand to perform the I imaging with the selfcal worker and to do the polarization imaging on the self-calibrated MS.
-            required: false
-            example: 'QUV'
           img_multiscale:
             type: bool
             desc: Switch on multiscale cleaning.
@@ -226,14 +226,19 @@ mapping:
             example: 'False'
           convl_images:
             type: bool
-            desc: Convolve output images to a common resolution with equolver
+            desc: Convolve output images to a common resolution
             required: false
             example: 'False'
           convl_beam:
             type: str
-            desc: Target beam for images. 'bmin, bmaj, bpa' in deg units.
+            desc: Target beam for images. If empty the target beam is the channel zero beam. Otherwise set as 'bmin, bmaj, bpa' in deg units.
             required: false
             example: ''
+          circular_beam:
+            type: bool
+            desc: Force the target beam to be circular
+            required: false
+            example: 'False'
           make_pb_images:
             type: bool
             desc: Make PB images
@@ -260,9 +265,14 @@ mapping:
             example: 'False'
           convl_beam:
             type: str
-            desc: Target beam for cubes. 'bmin, bmaj, bpa' in deg units.
+            desc: Target beam for cubes. If empty the target beam is the channel zero beam. Otherwise set as 'bmin, bmaj, bpa' in deg units.
             required: false
             example: ''
+          circular_beam:
+            type: bool
+            desc: Force the target beam to be circular
+            required: false
+            example: 'False'
           make_pb_cubes:
             type: bool
             desc: Make PB cubes

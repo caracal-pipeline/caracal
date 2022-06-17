@@ -286,6 +286,7 @@ selfcal:
 polimg:
   enable: true
   label_in: corr
+  stokes: QU
   make_images:
     enable: true
     img_npix: 2048
@@ -293,9 +294,8 @@ polimg:
     img_mgain: 0.99
     img_nchans: 5
     img_chan_range: 0, 100
-    img_stokes: QU
     col: CORRECTED_DATA
-  make_extra_image:
+  make_extra_images:
     enable: false
   make_cubes:
     enable: false

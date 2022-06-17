@@ -373,9 +373,9 @@ class UzeroFlagger:
 
         axBase.set_xlabel(r'Baseline Lenght [m]')
         axBase.set_ylabel(r'Percentage of u=0 flags')
-
-        bins=np.logspace(20,np.log10(8000),10)
-        bins.insert(0,0)
+        bins = [0,5,25,50,100,250,500,1000,8000]
+        #bins=np.logspace(20,np.log10(8000),10)
+        #bins.insert(0,0)
         nFlags, binEdgesFlags = np.histogram(baseFlags,bins)
         nAll, binEdgesAll = np.histogram(baseAll,bins)
         print(nFlags,bins,binEdgesFlags)
@@ -383,6 +383,8 @@ class UzeroFlagger:
         # axBase.set_xlim(0,8002)
         axBase.set_ylim(0,100)
         
+        np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseFlags)
+        np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseAll)
 
         axBase.plot(bins[:-1],nPerc,'k-',drawstyle='steps-pre')
 
@@ -449,7 +451,7 @@ class UzeroFlagger:
         hdr['COMMENT'] = "This is the table of the FFT"
         hdr['COMMENT'] = "Ext 1 = FFT table"
 
-        if method=='sunblock':
+        if method=='madThreshold':
             cutoff = self.sunBlockStats(inFFT,galaxy,msid,track,scan,'mad', threshold, ax = None, title = '', verb = True)
         else:
             if self.config['flagUzeros']['taper']:

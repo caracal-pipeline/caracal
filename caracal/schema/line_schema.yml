@@ -224,11 +224,11 @@ mapping:
             required: false
             example: ''
           method:
-            desc: Define flagging method. Either q99 or sunblock (median+threshold*mad)
+            desc: Define flagging method. Either q99 or madThreshold (median+threshold*mad)
             type: str
-            enum: ['sunblock', 'q99']
+            enum: ['madThreshold', 'q99']
             required: false
-            example: 'sunblock'
+            example: 'madThreshold'
           makePlots:
             desc: Make Plots or not
             type: bool

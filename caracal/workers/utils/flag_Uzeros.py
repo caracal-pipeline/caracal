@@ -16,8 +16,8 @@ from casacore.measures import dq
 
 from casatools import image
 
-from casatasks import flagmanager as flg
-from casatasks import flagdata as flagger
+# from casatasks import flagmanager as flg
+# from casatasks import flagdata as flagger
 
 
 

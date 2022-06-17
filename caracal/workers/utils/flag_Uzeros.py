@@ -49,7 +49,6 @@ import caracal
 
 from caracal import log
 from caracal.workers.utils import remove_output_products
-from caracal.workers.utils import manage_flagsets as manflags
 
 import gc
 
@@ -317,11 +316,12 @@ class UzeroFlagger:
 
 
     def makeFFT(self, inCube,outFFT):
-        ia.open(inCube)
-        ia.fft(complex=outFFT)
-        ia.close()
-        imFFT=images.image(outFFT)
-        dFFT=imFFT.getdata()
+        fits.getdata(inCube)
+        dFFT = np.fft2(complex=outFFT)
+        print(dFFT.shape)
+        sys.exit(0)
+        # imFFT=images.image(outFFT)
+        # dFFT=imFFT.getdata()
         dFFT=np.abs(np.squeeze(dFFT))
         headFFT=imFFT.info()
 

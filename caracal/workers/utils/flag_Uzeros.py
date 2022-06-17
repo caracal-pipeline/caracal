@@ -316,42 +316,66 @@ class UzeroFlagger:
 
 
     def makeFFT(self, inCube,outFFT):
-        dataCube = fits.getdata(inCube)
-        dFFT = np.fft.fft2(dataCube)
-        # imFFT=images.image(outFFT)
-        # dFFT=imFFT.getdata()
+        # dataCube = fits.getdata(inCube)
+        # dFFT = np.fft.fft2(dataCube)
+        # # imFFT=images.image(outFFT)
+        # # dFFT=imFFT.getdata()
+        
+        # dFFT=np.abs(np.squeeze(dFFT))
+        # # headFFT=imFFT.info()
+
+        # hdr = fits.Header()
+        # hdr["NAXIS"]  = 2
+        # hdr["NAXIS1"] = dFFT.shape[1]
+        # hdr["NAXIS2"] = dFFT.shape[0]
+        # hdr["CTYPE1"] = 'UU---SIN'
+        # # hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
+        # hdr["CDELT1"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
+        # # hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
+        # hdr["CRVAL1"] = 0
+
+        # # hdr["CRPIX1"] = headFFT['coordinates']['linear0']["crpix"][0]
+        # hdr["CRPIX1"] = int(hdr["NAXIS1"]/2)
+        # hdr["CRPIX2"] = int(hdr["NAXIS2"]/2)
+
+        # # hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
+        # hdr["CTYPE2"] = 'VV---SIN'
+        # # hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
+        # hdr["CRVAL2"] = 0
+        # hdr["CDELT2"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
+
+        # # hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
+        # # hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
+        # # hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
+        # caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
+        # caracal.log.info("FFT Done")
+        # gc.collect()
+
+        # return dFFT,hdr
+        ia.open(inCube)
+        ia.fft(complex=outFFT)
+        ia.close()
+        imFFT=images.image(outFFT)
+        dFFT=imFFT.getdata()
         dFFT=np.abs(np.squeeze(dFFT))
-        # headFFT=imFFT.info()
+        headFFT=imFFT.info()
 
         hdr = fits.Header()
-        hdr["NAXIS"]  = 2
-        hdr["NAXIS1"] = dFFT.shape[1]
-        hdr["NAXIS2"] = dFFT.shape[0]
         hdr["CTYPE1"] = 'UU---SIN'
-        # hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
-        hdr["CDELT1"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
-        # hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
-        hdr["CRVAL1"] = 0
-
-        # hdr["CRPIX1"] = headFFT['coordinates']['linear0']["crpix"][0]
-        hdr["CRPIX1"] = int(hdr["NAXIS1"]/2)
-        hdr["CRPIX2"] = int(hdr["NAXIS2"]/2)
-
-        # hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
+        hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
+        hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
+        hdr["CRPIX1"] = headFFT['coordinates']['linear0']["crpix"][0]
+        hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
         hdr["CTYPE2"] = 'VV---SIN'
-        # hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
-        hdr["CRVAL2"] = 0
-        hdr["CDELT2"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
-
-        # hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
-        # hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
-        # hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
-        caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
-        caracal.log.info("FFT Done")
+        hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
+        hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
+        hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
+        hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
+        logger.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
+        logger.info("FFT Done")
         gc.collect()
 
         return dFFT,hdr
-
     #
 
 

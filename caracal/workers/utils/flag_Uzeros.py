@@ -111,13 +111,11 @@ class UzeroFlagger:
         for scan in scanNums:
             baseVis=os.path.basename(inVis)
             outVis=baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
-            print(outVis)
-            if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis):
-                shutil.rmtree(outVis)
-                sys.exit(0)
-            if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions'):
-                shutil.rmtree(outVis+'.flagversions')
-            # remove_output_products((inVis), directory=msdir)
+            # if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis):
+            #     shutil.rmtree(self.config['flagUzeros']['stripeMSDir']+outVis)
+            # if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions'):
+            #     shutil.rmtree(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions')
+            remove_output_products((outVis,outVis+'.flagversions'),directory=self.config['flagUzeros']['stripeMSDir'])
 
             recipe = stimela.Recipe('flagUzerosMST',
                                         ms_dir=msdir,

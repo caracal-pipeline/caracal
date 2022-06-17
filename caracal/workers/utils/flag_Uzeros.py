@@ -378,9 +378,7 @@ class UzeroFlagger:
         #bins.insert(0,0)
         nFlags, binEdgesFlags = np.histogram(baseFlags,bins)
         nAll, binEdgesAll = np.histogram(baseAll,bins)
-        print(nFlags,bins,binEdgesFlags)
         nPerc = nFlags/nAll*100.
-        # axBase.set_xlim(0,8002)
         axBase.set_ylim(0,100)
         
         np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseFlags)
@@ -394,7 +392,6 @@ class UzeroFlagger:
         outPlot  = "{0}baselines_plot_{1}.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy)
         figBase.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
         plt.close(figBase) 
-        sys.exit(0)
 
 
     def cleanUp(self,galaxy):

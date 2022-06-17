@@ -127,7 +127,7 @@ class UzeroFlagger:
 
         recipe.run()
 
-    def delFlags(self,pipeline,inVis,msdir,flagname):
+    def deleteFlags(self,pipeline,inVis,msdir,flagname):
 
         recipe = stimela.Recipe('saveFlagZeros',
                             ms_dir=msdir,

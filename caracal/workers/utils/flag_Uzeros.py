@@ -384,7 +384,7 @@ class UzeroFlagger:
         axBase.set_ylim(0,100)
         
         np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseFlags)
-        np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseAll)
+        np.save(self.config['flagUzeros']['stripePlotDir']+'baseAll.npy',baseAll)
 
         axBase.plot(bins[:-1],nPerc,'k-',drawstyle='steps-pre')
 

@@ -49,6 +49,7 @@ import caracal
 
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from caracal.workers.utils import manage_flagsets as manflags
 
 import gc
 
@@ -101,6 +102,72 @@ class UzeroFlagger:
             os.mkdir(self.config['flagUzeros']['stripeSofiaDir'])
 
         return
+
+
+    def saveFlags(self,pipeline,inVis,msdir,flagname):
+
+        recipe = stimela.Recipe('saveFlagZeros',
+                            ms_dir=msdir,
+                            singularity_image_dir=pipeline.singularity_image_dir,
+                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            logfile=False, # no logfiles for recipes
+                            )
+        recipe.JOB_TYPE = pipeline.container_tech
+
+        step='saveFlag'
+
+        recipe.add("cab/casa_flagmanager", step, {
+            "vis": ms,
+            "mode": "save",
+            "versionname": flagname,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="{0:s}:: Save flag version")
+
+        recipe.run()
+
+    def delFlags(self,pipeline,inVis,msdir,flagname):
+
+        recipe = stimela.Recipe('saveFlagZeros',
+                            ms_dir=msdir,
+                            singularity_image_dir=pipeline.singularity_image_dir,
+                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            logfile=False, # no logfiles for recipes
+                            )
+        recipe.JOB_TYPE = pipeline.container_tech
+
+        step='deleteFlag'
+
+        recipe.add("cab/casa_flagmanager", step, {
+            "vis": inVis,
+            "mode": "delete",
+            "versionname": flagname,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="Delete flag version")
+
+    def restoreFlags(self,pipeline,inVis,msdir,flagname):
+
+        recipe = stimela.Recipe('saveFlagZeros',
+                            ms_dir=msdir,
+                            singularity_image_dir=pipeline.singularity_image_dir,
+                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            logfile=False, # no logfiles for recipes
+                            )
+        recipe.JOB_TYPE = pipeline.container_tech
+
+        step='deleteFlag'
+
+        recipe.add("cab/casa_flagmanager", step, {
+            "vis": inVis,
+            "mode": "restore",
+            "versionname": flagname,
+            },
+            input=pipeline.input,
+            output=pipeline.output,
+            label="Delete flag version")
 
     def splitScans(self,pipeline,msdir,inVis,scanNums):
 
@@ -588,11 +655,11 @@ class UzeroFlagger:
             ave = popt[0]
 
         try:
-            makeSunblockPlots
+            makePlots
         except NameError:
-            makeSunblockPlots = None 
+            makePlots = None 
         
-        if makeSunblockPlots==True :
+        if makePlots == True :
             self.plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
 
         caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
@@ -674,7 +741,11 @@ class UzeroFlagger:
         t.close()
         caracal.log.info("MS flagged")
         caracal.log.info("Before we close, save flag version 'stripe_flag_after'")
-        flg(vis=pf_inVis, mode='save', versionname='stripe_flag_after')
+        
+        #flg(vis=pf_inVis, mode='save', versionname='stripe_flag_after')
+        
+        self.saveFlags(pipeline,pf_inVisName,msdir=pipeline.msdir,flagname='stripe_flag_after')
+
         return 0
 
 
@@ -683,7 +754,7 @@ class UzeroFlagger:
         method = self.config['flagUzeros']['method']
         makePlots=self.config['flagUzeros']['makePlots']
 
-        makeSunblockPlots=self.config['flagUzeros']['makeSunblockPlots']
+        # makeSunblockPlots=self.config['flagUzeros']['makeSunblockPlots']
 
         doCleanUp =self.config['flagUzeros']['method']
 
@@ -699,7 +770,7 @@ class UzeroFlagger:
 
         self.setDirs(pipeline.output)
 
-        if makePlots ==True or makeSunblockPlots==True:
+        if makePlots ==True:
             font=16
             params = {'figure.autolayout' : True,
                 'font.family'         :'serif',
@@ -783,16 +854,23 @@ class UzeroFlagger:
                 fvers = [ii.split(' :')[0] for ii in open(inVis+'.flagversions/FLAG_VERSION_LIST').readlines()]
                 if 'stripe_flag_before' in fvers:
                     caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
-                    flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
+                    self.restoreFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
+                    #flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
                     while fvers[-1] != 'stripe_flag_before':
-                        flg(vis=inVis, mode='delete', versionname=fvers[-1])
+                        self.deleteFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname=fvers[-1])
+                        #flg(vis=inVis, mode='delete', versionname=fvers[-1])
                         fvers = fvers[:-1]
                 else:
                     caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
-                    flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+                    self.saveFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
+
+                    #flg(vis=inVis, mode='save', versionname='stripe_flag_before')
             else:
                 caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
-                flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+                # flg(vis=inVis, mode='save', versionname='stripe_flag_before')
+                self.saveFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
+
+
 
             # For lw's other than the first one, just copy the flags and skip the rest of the for loop
             if ii != 0 and stripeFlags is not None: 
@@ -889,7 +967,10 @@ class UzeroFlagger:
                 caracal.log.info("----------------------------------------------------")
 
                 # Save flag version before start iterating over all thresholds
-                flg(vis=visAddress, mode='save', versionname='scan_flags_start')
+                
+                self.saveFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
+
+                # flg(vis=visAddress, mode='save', versionname='scan_flags_start')
 
                 caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
                 outCubePrefix_0 = galaxy+'_1'+track+'_scan'+str(scan)
@@ -923,10 +1004,13 @@ class UzeroFlagger:
                         caracal.log.info('New iter')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
+                    # flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
+                    self.restoreFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
 
                     while fvers[-1] != 'scan_flags_start':
-                        flg(vis=visAddress, mode='delete', versionname=fvers[-1])
+                        # flg(vis=visAddress, mode='delete', versionname=fvers[-1])
+                        self.deleteFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname=fvers[-1])
+
                         fvers = fvers[:-1]
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
@@ -951,9 +1035,13 @@ class UzeroFlagger:
                     caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
+                    self.restoreFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
+
+                    # flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
                     while fvers[-1] != 'scan_flags_start':
-                        flg(vis=visAddress, mode='delete', versionname=fvers[-1])
+                        # flg(vis=visAddress, mode='delete', versionname=fvers[-1])
+                        self.deleteFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname=fvers[-1])
+
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))

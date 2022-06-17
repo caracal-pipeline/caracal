@@ -850,18 +850,17 @@ def worker(pipeline, recipe, config):
                         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-                            doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
-                            doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
-                            doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
-                            doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
+                            doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
+                            if doProj == True: pass
+                            else:
+                                doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
+                            
                             doSpec = True if hdul[0].header['NAXIS3'] > nchans else None ## this should work in both a request for a subset, and if the cube is to be binned.
-
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
-
-                            doSpec = True if cdelt > chanwidth[0] else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
+                            doSpec = True if cdelt > chanwidth[0] elif doProj == True pass else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
                                 ax3param = []

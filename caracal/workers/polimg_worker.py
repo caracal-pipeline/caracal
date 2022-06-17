@@ -305,7 +305,7 @@ def worker(pipeline, recipe, config):
 
         if do_extra:
             for stokes in config['make_images']['img_stokes']:
-                for ch in range(0, config['img_nchans']):
+                for ch in range(0, config['make_images']['img_nchans']):
                     image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
                     im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
                         image_path, prefix, field, ch, stokes)

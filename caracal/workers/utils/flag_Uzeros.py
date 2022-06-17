@@ -725,7 +725,7 @@ class UzeroFlagger:
         return flags, percent
 
 
-    def putFlags(self,pf_inVis, pf_inVisName, pf_stripeFlags):
+    def putFlags(self,pipeline,pf_inVis, pf_inVisName, pf_stripeFlags):
         caracal.log.info("Opening full MS file to add stripe flags".format(pf_inVisName))
         t=tables.table(pf_inVis,readonly=False,ack=False)
         flagOld = t.getcol('FLAG')
@@ -874,7 +874,7 @@ class UzeroFlagger:
 
             # For lw's other than the first one, just copy the flags and skip the rest of the for loop
             if ii != 0 and stripeFlags is not None: 
-                self.putFlags(inVis, inVisName, stripeFlags)
+                self.putFlags(pipeline,inVis, inVisName, stripeFlags)
                 continue
 
             # For the first lw, do all that follows
@@ -1095,7 +1095,7 @@ class UzeroFlagger:
                 caracal.log.info("====================================================")
                 caracal.log.info("\tWorking on {}".format(inVisName))
                 caracal.log.info("====================================================")
-                self.putFlags(inVis, inVisName, stripeFlags)
+                self.putFlags(pipeline,inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
                 outCubePrefix = galaxy+'_'+track+'_tot_stripeFlag'

@@ -321,7 +321,7 @@ class UzeroFlagger:
         # imFFT=images.image(outFFT)
         # dFFT=imFFT.getdata()
         dFFT=np.abs(np.squeeze(dFFT))
-        headFFT=imFFT.info()
+        # headFFT=imFFT.info()
 
         hdr = fits.Header()
         hdr["NAXIS"]  = 2

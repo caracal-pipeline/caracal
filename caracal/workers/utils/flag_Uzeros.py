@@ -316,8 +316,8 @@ class UzeroFlagger:
 
 
     def makeFFT(self, inCube,outFFT):
-        fits.getdata(inCube)
-        dFFT = np.fft.rfft2(complex=outFFT)
+        dataCube = fits.getdata(inCube)
+        dFFT = np.fft.fft2(dataCube)
         print(dFFT.shape)
         sys.exit(0)
         # imFFT=images.image(outFFT)

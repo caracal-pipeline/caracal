@@ -371,8 +371,8 @@ class UzeroFlagger:
         hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
         hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
         hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
-        logger.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
-        logger.info("FFT Done")
+        caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
+        caracal.log.info("FFT Done")
         gc.collect()
 
         return dFFT,hdr

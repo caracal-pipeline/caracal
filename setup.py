@@ -25,7 +25,6 @@ requirements = [
     'jinja2',
     'psutil',
     'gc-python-utils',
-    'casatasks',
     'casatools',
     'casadata',
 ]

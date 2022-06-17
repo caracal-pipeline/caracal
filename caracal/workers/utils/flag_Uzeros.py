@@ -117,7 +117,7 @@ class UzeroFlagger:
         step='saveFlag'
 
         recipe.add("cab/casa_flagmanager", step, {
-            "vis": ms,
+            "vis": inVis,
             "mode": "save",
             "versionname": flagname,
             },

@@ -337,7 +337,7 @@ class UzeroFlagger:
         hdr["CRPIX1"] = int(hdr["NAXIS1"]/2)
         hdr["CRPIX2"] = int(hdr["NAXIS2"]/2)
 
-        hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
+        # hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
         hdr["CTYPE2"] = 'VV---SIN'
         # hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
         hdr["CRVAL2"] = 0

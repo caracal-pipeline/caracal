@@ -68,7 +68,7 @@ mapping:
             desc: Enable the 'subtractmodelcol' segment.
             type: bool
             required: false
-            example: 'True'  
+            example: 'False'  
 
       addmodelcol:
         desc: Replace the CORRECTED_DATA column of the .MS file(s) with the sum CORRECTED_DATA + MODEL_DATA. This is useful to undo the operation performed by subtractmodelcol in this worker. WARNING! The CORRECTED_DATA column is overwritten.
@@ -88,7 +88,7 @@ mapping:
             desc: Enable the 'mstransform' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           col:
             desc: Which column of the .MS file(s) to process.
             type: str
@@ -286,6 +286,7 @@ mapping:
             type: int
             required: false
             example: '0'
+
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map
@@ -364,7 +365,7 @@ mapping:
             desc: Enable the 'make_cube' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'false'
           image_with:
             desc: Choose whether to image with WSClean + SoFiA ('wsclean') or with CASA Clean ('casa').
             type: str
@@ -596,7 +597,7 @@ mapping:
             desc: Enable the 'sofia' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           flag:
             desc: Use flag regions?
             type: bool
@@ -704,6 +705,7 @@ mapping:
             type: str
             required: false
             example: ''
+
       report:
         type: bool
         required: false

@@ -48,6 +48,7 @@ import shutil
 import caracal
 
 from caracal import log
+from caracal.workers.utils import remove_output_products
 
 import gc
 
@@ -105,6 +106,9 @@ class UzeroFlagger:
 
         scanVisList=[]
         scanVisNames=[]
+        remove_output_products((baseVis), directory=msdir)
+
+
         for scan in scanNums:
             baseVis=os.path.basename(inVis)
             outVis=baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'

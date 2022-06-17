@@ -111,11 +111,11 @@ class UzeroFlagger:
         for scan in scanNums:
             baseVis=os.path.basename(inVis)
             outVis=baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
-            if os.path.exists(outVis):
-                print('CULO')
+            print(outVis)
+            if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis):
                 shutil.rmtree(outVis)
                 sys.exit(0)
-            if os.path.exists(outVis+'.flagversions'):
+            if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions'):
                 shutil.rmtree(outVis+'.flagversions')
             # remove_output_products((inVis), directory=msdir)
 

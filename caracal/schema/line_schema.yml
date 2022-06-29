@@ -520,12 +520,12 @@ mapping:
             required: false
             example: 'poly'
           length:
-            desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default: 25)
+            desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default is 25)
             type: int
             required: false
             example: '25'
            polyorder:
-             desc: Polynomial order (default: 0)
+             desc: Polynomial order (default is 0)
              type: int
              required: False
              example: '0'
@@ -535,7 +535,7 @@ mapping:
              required: False
              example: ''
            sgiters:
-             desc: Number of Savitzky-Golay filter iterations (default: 0)
+             desc: Number of Savitzky-Golay filter iterations (default is 0)
              type: int
              required: False
              example: 0
@@ -550,12 +550,12 @@ mapping:
             required: false
             example: '0'
            outfit:
-             desc: Produce fitted data cubes (True: yes, default: False)
+             desc: Produce fitted data cubes (True: yes, default is False)
              type: bool
              required: false
              example: 'False'
            outfitcon:
-             desc: Produce fitted and convolved data cubes (True: yes, default: False)
+             desc: Produce fitted and convolved data cubes (True: yes, default is False)
              type: bool
              required: false
              example: 'False'

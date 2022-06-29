@@ -524,21 +524,21 @@ mapping:
             type: int
             required: false
             example: '25'
-           polyorder:
-             desc: Polynomial order (default is 0)
-             type: int
-             required: False
-             example: '0'
-           mask:
-             desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
-             type: str
-             required: False
-             example: ''
-           sgiters:
-             desc: Number of Savitzky-Golay filter iterations (default is 0)
-             type: int
-             required: False
-             example: 0
+          polyorder:
+            desc: Polynomial order (default is 0)
+            type: int
+            required: False
+            example: '0'
+          mask:
+            desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
+            type: str
+            required: False
+            example: ''
+          sgiters:
+            desc: Number of Savitzky-Golay filter iterations (default is 0)
+            type: int
+            required: False
+            example: 0
           kertyp:
             desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
             type: str
@@ -549,16 +549,16 @@ mapping:
             type: int
             required: false
             example: '0'
-           outfit:
-             desc: Produce fitted data cubes (True: yes, default is False)
-             type: bool
-             required: false
-             example: 'False'
-           outfitcon:
-             desc: Produce fitted and convolved data cubes (True: yes, default is False)
-             type: bool
-             required: false
-             example: 'False'
+          outfit:
+            desc: Produce fitted data cubes (True: yes, default is False)
+            type: bool
+            required: false
+            example: 'False'
+          outfitcon:
+            desc: Produce fitted and convolved data cubes (True: yes, default is False)
+            type: bool
+            required: false
+            example: 'False'
     
       sofia:
         desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.

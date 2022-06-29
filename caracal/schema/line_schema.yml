@@ -514,52 +514,52 @@ mapping:
             type: bool
             required: false
             example: 'False'
-	  fitmode:
-	    desc: Type of fit ('poly' or 'savgol')
-	    type: str
-	    required: false
-	    example: 'poly'
+          fitmode:
+            desc: Type of fit ('poly' or 'savgol')
+            type: str
+            required: false
+            example: 'poly'
           length:
-	    desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default: 25)
-	    type: int
-	    required: false
-	    example: '25'
+            desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default: 25)
+            type: int
+            required: false
+            example: '25'
            polyorder:
-	     desc: Polynomial order (default: 0)
-	     type: int
-	     required: False
-	     example: '0'
+             desc: Polynomial order (default: 0)
+             type: int
+             required: False
+             example: '0'
            mask:
-	     desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
-	     type: str
-	     required: False
-	     example: ''
+             desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
+             type: str
+             required: False
+             example: ''
            sgiters:
-	     desc: Number of Savitzky-Golay filter iterations (default: 0)
-	     type: int
-	     required: False
-	     example: 0
-	  kertyp:
-	    desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
-	    type: str
-	    required: false
-	    example: 'tophat'
+             desc: Number of Savitzky-Golay filter iterations (default: 0)
+             type: int
+             required: False
+             example: 0
+          kertyp:
+            desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
+            type: str
+            required: false
+            example: 'tophat'
           kersiz:
-	    desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
-	    type: int
-	    required: false
-	    example: '0'
-	   outfit:
-	     desc: Produce fitted data cubes (True: yes, default: False)
+            desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
+            type: int
+            required: false
+            example: '0'
+           outfit:
+             desc: Produce fitted data cubes (True: yes, default: False)
              type: bool
-	     required: false
-	     example: 'False'
-	   outfitcon:
-	     desc: Produce fitted and convolved data cubes (True: yes, default: False)
+             required: false
+             example: 'False'
+           outfitcon:
+             desc: Produce fitted and convolved data cubes (True: yes, default: False)
              type: bool
-	     required: false
-	     example: 'False'
-	    
+             required: false
+             example: 'False'
+    
       sofia:
         desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.
         type: map

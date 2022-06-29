@@ -530,7 +530,7 @@ mapping:
             required: False
             example: '0'
           mask:
-            desc: Mask cubes to use. '': do not use mask cubes. 'clean': use clean masks if available. 'sofia': use sofia masks if available.
+            desc: Mask cubes to use. '' means do not use mask cubes. 'clean' means use clean masks if available. 'sofia' means use sofia masks if available.
             type: str
             required: False
             example: ''

@@ -550,12 +550,12 @@ mapping:
             required: false
             example: '0'
           outfit:
-            desc: Produce fitted data cubes (True: yes, default is False)
+            desc: Produce fitted data cubes (True means yes, default is False)
             type: bool
             required: false
             example: 'False'
           outfitcon:
-            desc: Produce fitted and convolved data cubes (True: yes, default is False)
+            desc: Produce fitted and convolved data cubes (True means yes, default is False)
             type: bool
             required: false
             example: 'False'

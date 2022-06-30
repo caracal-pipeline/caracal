@@ -1324,13 +1324,22 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'imcontsub'):
             caracal.log.info(
                 'Subtracting continuum in the image domaind for target {0:d}'.format(tt))
-            if len(image_cube_list):
-                contsincubelist = image_cube_list
+
+            if len(image_cube_list['incubus']) == 0:
+                if len(image_cube_list):
+                    contsincubelist = image_cube_list
+                else:
+                    contsincubelist = dirty_cube_list
+                outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
             else:
-                contsincubelist = dirty_cube_list
+                contsincubelist = image_cube_list['incubus']
+                outputlist = [i.replace('.fits', '_imcontsub.fits') for i in contsincubelist]
                 
             if config['imcontsub']['mask'] == '':
-                maskimc = []
+                if len(config['imcontsub']['masculin']) == 0:
+                    maskimc = []
+                else:
+                    maskimc = config['imcontsub']['maskculin']
             elif config['imcontsub']['mask'] == 'clean':
                 maskimc = image_clean_mask_list
             elif config['imcontsub']['mask'] == 'sofia':
@@ -1343,7 +1352,6 @@ def worker(pipeline, recipe, config):
                 caracal.log.info(
                     'Not using mask for image subtraction of target {0:d}'.format(tt))
 
-            outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
             
             if config['imcontsub']['outfit'] == True:
                 outfitlist = [i.replace('dirty.fits', 'contsfit.fits') for i in dirty_cube_list]
@@ -1367,8 +1375,8 @@ def worker(pipeline, recipe, config):
                     kertyp=config['imcontsub']['kertyp'],
                     kersiz=config['imcontsub']['kersiz'],
                     fitted=outfitlist[uu],
-                    confit=outconlist[uu]
-                    clobber=True
+                    confit=outconlist[uu],
+                    clobber=True,
                     )
 
 

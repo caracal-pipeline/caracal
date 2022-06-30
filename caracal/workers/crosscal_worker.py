@@ -191,10 +191,12 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             params["uvrange"] = config["uvrange"]
             params["scan"] = config[ftype]["scanselection"]
         elif term == "P":
-            # gain plots break for new table format, need to be set to FALSE
-            if config[ftype]["plotgains"]:
-                raise RuntimeError("Ragavi gain plots not yet supported for BPOLY cal, ",
-                                   "set plotgains to false")
+            # adding a symlink to caltables for bpoly reference and applycal
+            src_ = os.path.abspath(os.path.join(pipeline.msdir, msname))
+            dst_ = os.path.join(pipeline.caltables, msname)
+            if not os.path.exists(dst_):
+                os.symlink(src_, dst_)
+            # parameters
             params["bandtype"] = 'BPOLY'
             params["solnorm"] = config[ftype]["b_solnorm"]
             params["fillgaps"] = config[ftype]["b_fillgaps"]
@@ -267,7 +269,9 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
-            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
+            # BPOLY gain plots break because of new table format, no gains plots for the moment
+            if term != "P":
+                plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
 
         fields.append(",".join(field))
         interps.append(interp)

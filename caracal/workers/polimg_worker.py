@@ -330,7 +330,7 @@ def worker(pipeline, recipe, config):
                         #     step,
                         #     {
                         #         "image": inp_name,
-                        #         "o": inp_name.replace('.fits',''),
+                        #         "o": inp_name.replace('.fits','')
                         #         "pp": tar_beam,
                         #         "cp": config['make_exta_images']['circular_beam'],
                         #         "nthreads": ncpu,
@@ -357,7 +357,7 @@ def worker(pipeline, recipe, config):
                         "file_pattern": inp_images,
                         "output": out_images,
                         "stack": True,
-                        "delete-files": True if config['make_cubes']['remove_images'] else False,
+                        "delete-files": True if config['make_cubes']['remove_originals'] else False,
                         "fits-axis": 'FREQ',
                         "force": True,
                     },

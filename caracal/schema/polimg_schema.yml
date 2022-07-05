@@ -243,7 +243,7 @@ mapping:
             type: bool
             desc: Make PB images
             required: false
-            example: 'False'
+            example: 'True'
           remove_originals:
             type: bool
             desc: Remove original images. This segment will be executed only if the images have been convolved.
@@ -277,7 +277,7 @@ mapping:
             type: bool
             desc: Make PB cubes
             required: false
-            example: 'False'
+            example: 'True'
           remove_originals:
             type: bool
             desc: Remove original images and/or not convolved cubes to save disc space

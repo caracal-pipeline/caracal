@@ -653,8 +653,6 @@ def worker(pipeline, recipe, config):
                output=pipeline.output,
                label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
-
-
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
         calmode = config["apply_cal"]["calmode"]
@@ -677,8 +675,10 @@ def worker(pipeline, recipe, config):
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
+#                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
+#                          "nearest", "target", pipeline, i, calmode=calmode, label=label)
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         gainfields, "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
                             prefix_msbase, label=label, ftype="primary")
@@ -705,8 +705,10 @@ def worker(pipeline, recipe, config):
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
+#                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
+#                          "nearest", "target", pipeline, i, calmode=calmode, label=label)
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         gainfields, "target", pipeline, i, calmode=calmode, label=label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)

@@ -675,8 +675,6 @@ def worker(pipeline, recipe, config):
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
-#                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-#                          "nearest", "target", pipeline, i, calmode=calmode, label=label)
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
                          gainfields, "target", pipeline, i, calmode=calmode, label=label)
         else:
@@ -705,8 +703,6 @@ def worker(pipeline, recipe, config):
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
-#                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-#                          "nearest", "target", pipeline, i, calmode=calmode, label=label)
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
                          gainfields, "target", pipeline, i, calmode=calmode, label=label)
 

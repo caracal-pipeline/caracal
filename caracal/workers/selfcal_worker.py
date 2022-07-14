@@ -585,6 +585,16 @@ def worker(pipeline, recipe, config):
                 "fitsmask": '{0:s}:output'.format(fits_mask),
                 "local-rms": False,
               })
+        elif mask_key == 'breizorro':
+            fits_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+                prefix,field, num)
+            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,fits_mask)):
+                raise caracal.ConfigurationError("Breizorro clean mask {0:s}/{1:s} not found. Something must have gone wrong with the Breizorro run"\
+                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,fits_mask))
+            image_opts.update({
+                "fitsmask": '{0:s}:output'.format(fits_mask),
+                "local-rms": False,
+              })
         else:
             fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
                 mask_key, field)
@@ -845,6 +855,37 @@ def worker(pipeline, recipe, config):
                    input=pipeline.output,
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))
+
+
+    def breizorro_mask(trg, num, img_dir, field):
+        step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)
+        key = 'img_breizorro_settings'
+
+        if config['img_joinchans'] == True:
+            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
+                img_dir, prefix, field, num)
+        else:
+            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
+                img_dir, prefix, field, num)
+
+        outmask = pipeline.prefix + '_' + field + '_' + str(num+1) + '_clean'
+        outmaskName = outmask + '_mask.fits'
+
+        breizorro_opts = {
+            "restored-image": imagename,
+            "outfile": outmask,
+            "threshold": config['image']['cleanmask_thr'][num if len(config['image']['cleanmask_thr']) >= num+1 else -1],
+            "boxsize": config[key]['boxsize'],
+            "dilate": config[key]['dilate'],
+            "fill-holes": config[key]['fill-holes']
+        }
+
+        recipe.add('cab/breizorro', step,
+                   breizorro_opts,
+                   input=pipeline.output,
+                   output=pipeline.output+'/masking/',
+                   label='{0:s}:: Make Breizorro'.format(step))
+
 
     def make_cube(num, img_dir, field, imtype='model'):
         im = '{0:s}/{1:s}_{2:s}_{3}-cube.fits:output'.format(

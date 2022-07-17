@@ -611,6 +611,9 @@ def worker(pipeline, recipe, config):
                    input=pipeline.input,
                    output=pipeline.output,
                    label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+        recipe.run()
+        # Empty job que after execution
+        recipe.jobs = []
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)
@@ -873,11 +876,11 @@ def worker(pipeline, recipe, config):
 
         breizorro_opts = {
             "restored-image": imagename,
-            "outfile": outmask,
+            "outfile": outmaskName,
             "threshold": config['image']['cleanmask_thr'][num if len(config['image']['cleanmask_thr']) >= num+1 else -1],
             "boxsize": config[key]['boxsize'],
             "dilate": config[key]['dilate'],
-            "fill-holes": config[key]['fill-holes']
+            "fill-holes": config[key]['fill_holes']
         }
 
         recipe.add('cab/breizorro', step,
@@ -2160,7 +2163,7 @@ def worker(pipeline, recipe, config):
         if not os.path.exists(image_path):
             os.mkdir(image_path)
 
-        mask_key = config['image']['cleanmask_method'][0]
+        mask_key = config['image']['cleanmask_method'][self_cal_iter_counter-1 if len(config['image']['cleanmask_method']) >= self_cal_iter_counter else -1]
         if pipeline.enable_task(config, 'image'):
             if mask_key == 'sofia':
                 image_path = "{0:s}/image_0".format(
@@ -2176,6 +2179,15 @@ def worker(pipeline, recipe, config):
                 config['image']['cleanmask_method'].insert(1,config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)
+                image(target_iter, self_cal_iter_counter, get_dir_path(
+                    image_path, pipeline), mslist, field)
+            elif mask_key == 'breizorro':
+                image_path = "{0:s}/image_{1:d}".format(
+                    pipeline.continuum, self_cal_iter_counter)
+                breizorro_mask(target_iter, self_cal_iter_counter, get_dir_path(
+                    image_path, pipeline), field)
+                recipe.run()
+                recipe.jobs = []
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), mslist, field)
             else:
@@ -2198,6 +2210,11 @@ def worker(pipeline, recipe, config):
             if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
+                recipe.run()
+                recipe.jobs = []
+            elif mask_key=='breizorro' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
+                breizorro_mask(target_iter, self_cal_iter_counter,
+                               get_dir_path(image_path, pipeline), field)
                 recipe.run()
                 recipe.jobs = []
             self_cal_iter_counter += 1

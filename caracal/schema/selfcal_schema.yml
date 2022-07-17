@@ -238,7 +238,7 @@ mapping:
             desc: Apply dilation with a radius of R pixels
             required: false
             example: '0'
-          fill-holes:
+          fill_holes:
             type: bool
             desc: Fill holes (i.e. entirely closed regions) in mask
             required: false

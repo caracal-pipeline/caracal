@@ -25,6 +25,7 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from casacore.tables import table
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -414,6 +415,24 @@ def worker(pipeline, recipe, config):
                         msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
+
+            # Check if a model subtraction has already been done
+            t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly = False)
+            try:
+                nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+            except RuntimeError:
+                nModelSub = 0
+
+            if (nModelSub <= -1) & (config['subtractmodelcol']['force'] == False):          
+                caracal.log.error(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                caracal.log.error('Exiting CARACal.')
+                raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
+            
+            if (nModelSub <= -1 ) & (config['subtractmodelcol']['force']) == True:
+                caracal.log.warn(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                caracal.log.warn('You have chosen to force another model subtraction.')          
+                caracal.log.warn('God speed!')
+
             step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
@@ -428,7 +447,28 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Subtract model column'.format(step))
 
+            t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub - 1)
+            t.close()
+
         if pipeline.enable_task(config, 'addmodelcol'):
+
+            # Check if a model addition has already been done
+            t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly = False)
+            try:
+                nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+            except RuntimeError:
+                nModelSub = 0
+
+            if (nModelSub >= 0) & (config['addmodelcol']['force'] == False):          
+                caracal.log.error(f'The model has been added {np.abs(nModelSub)} times.')
+                caracal.log.error('Exiting CARACal.')
+                raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
+            
+            if (nModelSub >= 0) & (config['addmodelcol']['force'] == True):
+                caracal.log.warn(f'The model has been added  {np.abs(nModelSub)} times.')
+                caracal.log.warn('You have chosen to force another model addition.')          
+                caracal.log.warn('God speed!')
+
             step = 'modeladd-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
@@ -441,6 +481,9 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Add model column'.format(step))
+
+            t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub + 1)
+            t.close()
 
         msname_mst = add_ms_label(msname, "mst")
         msname_mst_base = os.path.splitext(msname_mst)[0]
@@ -924,7 +967,7 @@ def worker(pipeline, recipe, config):
                                             toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
                                         else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
                                         hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
-                                        hdul[0].header['CRPIX'+i] = int(cent + delt)
+                                        hdul[0].header['CRPIX'+i] = cent + delt
                                     if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
                                         delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
                                         if i == '1':

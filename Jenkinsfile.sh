@@ -7,6 +7,9 @@ PULLFOLDER=projects/caracal
 mkdir $TEST_OUTPUT_DIR
 
 #Custom home for this run's temporary stuff
+mkdir $WKS_ROOT/tmp
+TMPDIR="$WKS_ROOT/tmp"
+export TMPDIR
 HOME=$WKS_ROOT
 export HOME
 cd $TEST_OUTPUT_DIR

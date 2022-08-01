@@ -8,7 +8,7 @@ from caracal.dispatch_crew import utils
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from astropy.wcs import WCS
-from regions import PixCoord, write_ds9, PolygonPixelRegion
+from regions import PixCoord, Regions, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
 NAME = 'Direction-dependent Calibration'
@@ -273,7 +273,7 @@ def worker(pipeline, recipe, config):
                reg.append(region_dd)
            regfile = "de-{0:s}.reg".format(field)
            ds9_file = os.path.join(OUTPUT,outdir,regfile)
-           write_ds9(reg,ds9_file,coordsys='physical')
+           Regions(reg).write(ds9_file, format='ds9', coordsys='physical')
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'

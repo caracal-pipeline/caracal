@@ -19,7 +19,7 @@ requirements = [
     'pykwalify',
     'astropy',
     'matplotlib',
-    'regions>=0.5',
+    'regions',
     'nbconvert',
     'radiopadre-client>=1.1',
     'jinja2',

@@ -1,0 +1,16 @@
+ruamel.yaml
+decorator<5
+numpy>=1.14
+stimela>=1.6.5
+python-casacore
+scipy
+pysolr
+progressbar2
+pykwalify
+astropy
+matplotlib
+regions
+nbconvert
+radiopadre-client>=1.1
+jinja2
+psutil

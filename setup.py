@@ -31,7 +31,7 @@ setup(name=PACKAGE_NAME,
       author_email="caracal-info@googlegroups.com",
       description="A pipeline for radio interferometry data reduction",
       long_description=readme(),
-      long_description_content_type='text/markdown'
+      long_description_content_type='text/markdown',
       url="https://github.com/caracal-pipeline/caracal",
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',

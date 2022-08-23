@@ -7,33 +7,30 @@ try:
 except ImportError as e:
     from distutils.core import setup
 
-requirements = [
-    'ruamel.yaml',
-    'decorator<5',
-    'numpy>=1.14',
-    'stimela>=1.6.5',
-    'python-casacore',
-    'scipy',
-    'pysolr',
-    'progressbar2',
-    'pykwalify',
-    'astropy',
-    'matplotlib',
-    'regions>=0.5',
-    'nbconvert',
-    'radiopadre-client>=1.1',
-    'jinja2',
-    'psutil',
-]
+    
+def readme():
+    """Get readme content for package long description"""
+    with open(os.path.join(build_root, 'README.md')) as f:
+        return f.read()
+
+
+def requirements():
+    """Get package requirements"""
+    with open(os.path.join(build_root, 'requirements.txt')) as f:
+        return [pname.strip() for pname in f.readlines()]
+    
+requirements = requirements()
 
 PACKAGE_NAME = 'caracal'
-__version__ = '1.0.6'
+__version__ = '1.1.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
-      description="Development Status :: 5 - Production/Stable",
       author="The Caracal Team",
       author_email="caracal-info@googlegroups.com",
+      description="A pipeline for radio interferometry data reduction",
+      long_description=readme(),
+      long_description_content_type='text/markdown'
       url="https://github.com/caracal-pipeline/caracal",
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',

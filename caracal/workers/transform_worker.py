@@ -193,6 +193,7 @@ def worker(pipeline, recipe, config):
                         "chanaverage": config['split_field']['chan_avg'] > 1,
                         "chanbin": config['split_field']['chan_avg'],
                         "spw": config['split_field']['spw'],
+                        "antenna": config['split_field']['antennas'],
                         "datacolumn": dcol,
                         "correlation": config['split_field']['correlation'],
                         "scan": config['split_field']['scan'],
@@ -227,6 +228,7 @@ def worker(pipeline, recipe, config):
                         "datacolumn": sdm.dismissable('corrected' if crosscal_lib is not None else 'data'),
                         "correlation": config['split_field']['correlation'],
                         "scan": config['split_field']['scan'],
+                        "antenna": config['split_field']['antennas'],
                         "usewtspectrum": config['split_field']['create_specweights'],
                         "field": target,
                         "keepflags": True,
@@ -306,7 +308,7 @@ def worker(pipeline, recipe, config):
                         if output_pcal_ms == 'final':
                             remove_output_products((tmp_ms, tmpflagv), directory=pipeline.msdir, log=log)
 
-                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                     cab_name=substep, overwrite=False)
 
@@ -364,7 +366,7 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='{0:s}:: Single SPW {1:}'.format(step, concat_ms))
 
-                substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, target_iter)
+                substep = 'save-{0:s}-ms{1:d}'.format('caracal_legacy', target_iter)
                 manflags.add_cflags(pipeline, recipe, 'caracal_legacy', to_ms,
                                     cab_name=substep, overwrite=False)
 

@@ -7,7 +7,12 @@ try:
 except ImportError as e:
     from distutils.core import setup
 
-    
+
+PACKAGE_NAME = 'caracal'
+__version__ = '1.1.0'
+build_root = os.path.dirname(__file__)
+
+
 def readme():
     """Get readme content for package long description"""
     with open(os.path.join(build_root, 'README.md')) as f:
@@ -18,11 +23,7 @@ def requirements():
     """Get package requirements"""
     with open(os.path.join(build_root, 'requirements.txt')) as f:
         return [pname.strip() for pname in f.readlines()]
-    
-requirements = requirements()
 
-PACKAGE_NAME = 'caracal'
-__version__ = '1.1.0'
 
 setup(name=PACKAGE_NAME,
       version=__version__,
@@ -34,7 +35,7 @@ setup(name=PACKAGE_NAME,
       url="https://github.com/caracal-pipeline/caracal",
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',
-      install_requires=requirements,
+      install_requires=requirements(),
       extras_require=dict(astroquery=["astroquery"]),
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in

@@ -172,23 +172,26 @@ def imcontsub(
 
             sgmask = np.ma.getmask(incubus_data_masked)
             sgincubus = incubus_data.copy()
-            sgincubus[np.isnan(sgincubus)] = 0.
+            sgincubus[sgmask==True] = 0.0
 
             # First stitch holes in the data
             if sgiters > 0:
                 fit = scipy.ndimage.median_filter(
-                    incubus_data, (length, 1, 1))
+                    sgincubus, (length, 1, 1))
 
                 # Then iterate n times with better guesses for the
                 # stitched data
                 for i in range(sgiters):
                     print('Iteration {}'.format(i))
-                    sgincubus[sgmask] = fit[sgmask]
+
+                    sgincubus = fit
+
                     fit = scipy_signal.savgol_filter(
                         sgincubus, length, polyorder, axis=0, mode='interp')
             else:
                 fit = scipy_signal.savgol_filter(
-                    incubus_data, length, polyorder, axis=0, mode='interp')
+                    sgincubus, length, polyorder, axis=0, mode='interp')
+                
     else:
         printime('No valid filter chosen, not filtering.')
         fit = incubus_data_masked*0.

@@ -402,16 +402,6 @@ mapping:
                 desc: Online catalog type to compare local models
                 required: false
                 example: 'nvss'
-              catalog_centre:
-                type: str
-                desc: Centre of online catalog to compare local model in 'RA hh:mm:ss, Dec deg:min:sec' format.
-                required: false
-                example: '0:0:0, -30:0:0'
-              width:
-                type: str
-                desc: Field of view width to querry online catalog in degrees.
-                required: false
-                example: 2.0d
       image:
         type: map
         desc: Imaging parameters.

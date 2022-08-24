@@ -2050,8 +2050,6 @@ def worker(pipeline, recipe, config):
                        {
                        "compare-online": online_compare,
                        "online-catalog": config['aimfast']['online_catalog']['catalog_type'],
-                       "centre_coord": config['aimfast']['online_catalog']['catalog_type'],
-                       "width": config['aimfast']['online_catalog']['width'],
                        },
                        input=pipeline.input,
                        output=pipeline.output,

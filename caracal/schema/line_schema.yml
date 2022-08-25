@@ -545,7 +545,7 @@ mapping:
           masculin:
             desc: List of input mask cubes. Only used if mask = ''. Must be empty or the same number of cubes as the input cubes.
             seq:
-              - type: int
+              - type: str
             required: false
             example: ''
           sgiters:

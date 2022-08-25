@@ -1348,7 +1348,7 @@ def worker(pipeline, recipe, config):
                 maskimc = []
                 
             if len(maskimc) == 0:
-                maskimc = [None for i in constincubelist]
+                maskimc = [None for i in contsincubelist]
                 caracal.log.info(
                     'Not using mask for image subtraction of target {0:d}'.format(tt))
 
@@ -1356,12 +1356,12 @@ def worker(pipeline, recipe, config):
             if config['imcontsub']['outfit'] == True:
                 outfitlist = [i.replace('dirty.fits', 'contsfit.fits') for i in dirty_cube_list]
             else:
-                outfitlist = [None for i in constincubelist]
+                outfitlist = [None for i in contsincubelist]
                 
             if config['imcontsub']['outfitcon'] == True:
                 outconlist = [i.replace('dirty.fits', 'contsfitcon.fits') for i in dirty_cube_list]
             else:
-                outconlist = [None for i in constincubelist]
+                outconlist = [None for i in contsincubelist]
                 
             outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
                             

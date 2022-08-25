@@ -1325,7 +1325,7 @@ def worker(pipeline, recipe, config):
             caracal.log.info(
                 'Subtracting continuum in the image domaind for target {0:d}'.format(tt))
 
-            if len(image_cube_list['incubus']) == 0:
+            if len(config['imcontsub']['incubus']) == 0:
                 if len(image_cube_list):
                     contsincubelist = image_cube_list
                 else:

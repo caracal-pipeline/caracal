@@ -552,7 +552,7 @@ mapping:
             desc: Number of Savitzky-Golay filter iterations (default is 0)
             type: int
             required: False
-            example: 0
+            example: '0'
           kertyp:
             desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
             type: str

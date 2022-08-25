@@ -1332,7 +1332,7 @@ def worker(pipeline, recipe, config):
                     contsincubelist = dirty_cube_list
                 outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
             else:
-                contsincubelist = image_cube_list['incubus']
+                contsincubelist = config['imcontsub']['incubus']
                 outputlist = [i.replace('.fits', '_imcontsub.fits') for i in contsincubelist]
                 
             if config['imcontsub']['mask'] == '':

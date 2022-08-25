@@ -532,7 +532,7 @@ mapping:
             required: false
             example: '25'
           polyorder:
-            desc: Polynomial order (default: 0)
+            desc: Polynomial order (default is 0)
             type: int
             required: False
             example: '0'

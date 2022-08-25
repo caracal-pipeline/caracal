@@ -1367,7 +1367,7 @@ def worker(pipeline, recipe, config):
                             
             for uu in range(len(contsincubelist)):
                 image_contsub.imcontsub(
-                    incubus=contsingcubelist[uu], outcubus=outputlist[uu],
+                    incubus=contsincubelist[uu], outcubus=outputlist[uu],
                     fitmode=config['imcontsub']['fitmode'],
                     length=config['imcontsub']['length'],
                     mask=maskimc[uu],

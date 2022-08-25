@@ -1339,7 +1339,7 @@ def worker(pipeline, recipe, config):
                 if len(config['imcontsub']['masculin']) == 0:
                     maskimc = []
                 else:
-                    maskimc = config['imcontsub']['maskculin']
+                    maskimc = config['imcontsub']['masculin']
             elif config['imcontsub']['mask'] == 'clean':
                 maskimc = image_clean_mask_list
             elif config['imcontsub']['mask'] == 'sofia':

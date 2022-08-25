@@ -537,7 +537,7 @@ mapping:
             required: False
             example: '0'
           mask:
-            desc: Mask cubes to use. '' means do not use mask cubes or those specified with parameter masculin. 'clean': use clean masks if available. 'sofia' means use sofia masks if available.
+            desc: Mask cubes to use. '' means do not use mask cubes or those specified with parameter masculin. 'clean' means use clean masks if available. 'sofia' means use sofia masks if available.
             type: str
             enum: ['', ]
             required: False

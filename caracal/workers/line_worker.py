@@ -1335,6 +1335,12 @@ def worker(pipeline, recipe, config):
             #GJin
             caracal.log.info(config['imcontsub']['incubus'])
             #GJout
+            poopoo = [int(gi) for gi in glob.glob('{0:s}/{1:s}/cube_*')]
+            caracal.log.info(poopoo)
+            
+            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{:d}/{2:s}_{3:s}_{4:s}*.fits'.format(
+                pipeline.output,cube_dir, poopoo,
+                pipeline.prefix, field, line_name))
             wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
             wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
             wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]

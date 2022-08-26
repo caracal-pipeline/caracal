@@ -1364,17 +1364,16 @@ def worker(pipeline, recipe, config):
             else:
                 maskimc = []
                 
-            if len(maskimc) == 0:
-                maskimc = [None for i in contsincubelist]
-                caracal.log.info(
-                    'Not using mask for image subtraction of target {0:d}'.format(tt))
-                
             #GJin
             caracal.log.info('Here')
             caracal.log.info('|{:s}|'.format(config['imcontsub']['mask']))
             caracal.log.info(maskimc)
             #GJout
 
+            if len(maskimc) == 0:
+                maskimc = [None for i in contsincubelist]
+                caracal.log.info(
+                    'Not using mask for image subtraction of target {0:d}'.format(tt))
             
             if config['imcontsub']['outfit'] == True:
                 outfitlist = [i.replace(rsuffix, '.contsfit.fits') for i in contsincubelist]

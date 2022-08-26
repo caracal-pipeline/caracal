@@ -1343,7 +1343,7 @@ def worker(pipeline, recipe, config):
             poopoo = max([int(gi[-1]) for gi in dirlist])
             caracal.log.info(poopoo)
             
-            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{:d}/{2:s}_{3:s}_{4:s}*.fits'.format(
+            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
                 pipeline.output,cube_dir, poopoo,
                 pipeline.prefix, field, line_name))
             wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]

@@ -1362,7 +1362,7 @@ def worker(pipeline, recipe, config):
             else:
                 outconlist = [None for i in contsincubelist]
                 
-            outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+            #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
                             
             for uu in range(len(contsincubelist)):
                 image_contsub.imcontsub(

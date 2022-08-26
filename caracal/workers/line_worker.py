@@ -1340,7 +1340,7 @@ def worker(pipeline, recipe, config):
             dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
             caracal.log.info(dirlist)
             caracal.log.info('got here 2')
-            poopoo = [int(gi[-1]) for gi in dirlist]
+            poopoo = max([int(gi[-1]) for gi in dirlist])
             caracal.log.info(poopoo)
             
             wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{:d}/{2:s}_{3:s}_{4:s}*.fits'.format(

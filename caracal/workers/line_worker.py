@@ -1276,6 +1276,7 @@ def worker(pipeline, recipe, config):
         dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
         
         caracal.log.info('List')
+        caracal.log.info(cube_list)
         caracal.log.info(image_cube_list)
         caracal.log.info(dirty_cube_list)
         

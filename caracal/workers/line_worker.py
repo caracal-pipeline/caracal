@@ -1337,6 +1337,8 @@ def worker(pipeline, recipe, config):
             #GJout
             wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
             wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
+            wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]
+            wimage_clean_mask_list = [cc for cc in wscl_cube_list if 'image_clean_mask.fits' in cc]
 
             if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
                 if len(wimage_cube_list):
@@ -1356,9 +1358,9 @@ def worker(pipeline, recipe, config):
                 else:
                     maskimc = config['imcontsub']['masculin']
             elif config['imcontsub']['mask'] == 'clean':
-                maskimc = image_clean_mask_list
+                maskimc = wimage_clean_mask_list
             elif config['imcontsub']['mask'] == 'sofia':
-                maskimc = image_mask_list
+                maskimc = wimage_mask_list
             else:
                 maskimc = []
                 
@@ -1366,6 +1368,12 @@ def worker(pipeline, recipe, config):
                 maskimc = [None for i in contsincubelist]
                 caracal.log.info(
                     'Not using mask for image subtraction of target {0:d}'.format(tt))
+                
+            #GJin
+            caracal.log.info('Here')
+            caracal.log.info(config['imcontsub']['mask'])
+            caracal.log.info(maskimc)
+            #GJout
 
             
             if config['imcontsub']['outfit'] == True:

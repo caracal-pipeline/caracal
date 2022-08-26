@@ -14,8 +14,6 @@ import casacore.images as images
 import casacore.measures as measures
 from casacore.measures import dq
 
-from casatools import image
-
 # from casatasks import flagmanager as flg
 # from casatasks import flagdata as flagger
 
@@ -33,6 +31,7 @@ import datetime
 from scipy import stats
 import scipy.constants as scconstants
 import scipy.optimize
+import scipy.fft
 
 from matplotlib import pyplot as plt
 from matplotlib import rc
@@ -52,7 +51,6 @@ from caracal.workers.utils import remove_output_products
 
 import gc
 
-ia = image()
 dm = measures.measures()
 
 timeInit = time.time()
@@ -352,31 +350,27 @@ class UzeroFlagger:
         # gc.collect()
 
         # return dFFT,hdr
-        ia.open(inCube)
-        ia.fft(complex=outFFT)
-        ia.close()
-        imFFT=images.image(outFFT)
-        dFFT=imFFT.getdata()
-        dFFT=np.abs(np.squeeze(dFFT))
-        headFFT=imFFT.info()
 
-        hdr = fits.Header()
-        hdr["CTYPE1"] = 'UU---SIN'
-        hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
-        hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
-        hdr["CRPIX1"] = headFFT['coordinates']['linear0']["crpix"][0]
-        hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
-        hdr["CTYPE2"] = 'VV---SIN'
-        hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
-        hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
-        hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
-        hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
-        caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
+        with fits.open(inCube) as hdul:
+            hdu =  hdul[0]
+            dFFT = np.abs(np.fft.fftshift(np.fft.fft2(np.squeeze(hdu.data))))
+            hdr = fits.Header()
+            hdr["CTYPE1"] = 'UU---SIN'
+            hdr["CDELT1"] = 1/(np.deg2rad(hdu.header["NAXIS1"]*hdu.header["CDELT1"]))
+            hdr["CRVAL1"] = 0
+            hdr["CRPIX1"] = hdu.header["NAXIS1"]/2
+            hdr["CUNIT1"] = 'lambda'
+            hdr["CTYPE2"] = 'VV---SIN'
+            hdr["CDELT2"] = 1/(np.deg2rad(hdu.header["NAXIS2"]*hdu.header["CDELT2"]))
+            hdr["CRVAL2"] = 0
+            hdr["CRPIX2"] = hdu.header["NAXIS2"]/2
+            hdr["CUNIT2"] = 'lambda'
+
+        caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['CDELT2']))
         caracal.log.info("FFT Done")
         gc.collect()
 
         return dFFT,hdr
-    #
 
 
     def plotAll(self,fig,gs,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,common_vmax,ctff,type=None):

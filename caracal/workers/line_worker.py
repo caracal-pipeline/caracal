@@ -1289,6 +1289,7 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'pb_cube'):
             caracal.log.info('Creating primary beam cubes for target {0:d}'.format(tt))
+            caracal.log.info(image_cube_list)
             for uu in range(len(image_cube_list)):
                 recipe.add(make_pb_cube,
                            'make pb_cube-{0:d}'.format(uu),

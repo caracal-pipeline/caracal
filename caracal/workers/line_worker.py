@@ -1329,92 +1329,6 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-        if pipeline.enable_task(config, 'imcontsub'):
-            caracal.log.info(
-                'Subtracting continuum in the image domain for target {0:d}'.format(tt))
-            #GJin
-            caracal.log.info(config['imcontsub']['incubus'])
-            #GJout
-            caracal.log.info('got here 1')
-            
-            dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
-            caracal.log.info(dirlist)
-            caracal.log.info('got here 2')
-            poopoo = max([int(gi[-1]) for gi in dirlist])
-            caracal.log.info(poopoo)
-            
-            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
-                pipeline.output,cube_dir, poopoo,
-                pipeline.prefix, field, line_name))
-            wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
-            wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
-            wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]
-            wimage_clean_mask_list = [cc for cc in wscl_cube_list if 'image_clean_mask.fits' in cc]
-
-            if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
-                if len(wimage_cube_list):
-                    contsincubelist = wimage_cube_list
-                    rsuffix = '.image.fits'
-                else:
-                    contsincubelist = wdirty_cube_list
-                    rsuffix = '.dirty.fits'
-            else:
-                contsincubelist = config['imcontsub']['incubus']
-                rsuffix = '.fits'
-            outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]
-                
-            if config['imcontsub']['mask'] == '':
-                if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['masculin'][0]) == 0:
-                    maskimc = []
-                else:
-                    maskimc = config['imcontsub']['masculin']
-            elif config['imcontsub']['mask'] == 'clean':
-                maskimc = wimage_clean_mask_list
-            elif config['imcontsub']['mask'] == 'sofia':
-                maskimc = wimage_mask_list
-            else:
-                maskimc = []
-                
-            #GJin
-            caracal.log.info('Here')
-            caracal.log.info('|{:s}|'.format(config['imcontsub']['mask']))
-            caracal.log.info(maskimc)
-            #GJout
-
-            if len(maskimc) == 0:
-                maskimc = [None for i in contsincubelist]
-                caracal.log.info(
-                    'Not using mask for image subtraction of target {0:d}'.format(tt))
-            
-            if config['imcontsub']['outfit'] == True:
-                outfitlist = [i.replace(rsuffix, '.contsfit.fits') for i in contsincubelist]
-            else:
-                outfitlist = [None for i in contsincubelist]
-                
-            if config['imcontsub']['outfitcon'] == True:
-                outconlist = [i.replace(rsuffix, '.contsfitcon.fits') for i in contsincubelist]
-            else:
-                outconlist = [None for i in contsincubelist]
-                
-            #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
-            caracal.log.info(
-                'lenconts {:d} lenoutput {:d} lenoutfit {:d} lenoutcon {:d}'.format(len(contsincubelist), len(outputlist), len(outfitlist), len(outconlist)))
-
-            for uu in range(len(contsincubelist)):
-                image_contsub.imcontsub(
-                    incubus=contsincubelist[uu], outcubus=outputlist[uu],
-                    fitmode=config['imcontsub']['fitmode'],
-                    length=config['imcontsub']['length'],
-                    mask=maskimc[uu],
-                    sgiters=config['imcontsub']['sgiters'],
-                    kertyp=config['imcontsub']['kertyp'],
-                    kersiz=config['imcontsub']['kersiz'],
-                    fitted=outfitlist[uu],
-                    confit=outconlist[uu],
-                    clobber=True,
-                    )
-
-
         if pipeline.enable_task(config, 'sofia'):
             for uu in range(len(image_cube_list)):
                 step = 'sofia-source_finding-{0:d}'.format(uu)
@@ -1448,6 +1362,78 @@ def worker(pipeline, recipe, config):
                     input='/'.join(image_cube_list[uu].split('/')[:-1]),
                     output='/'.join(image_cube_list[uu].split('/')[:-1]),
                     label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,image_cube_list[uu]))
+
+        if pipeline.enable_task(config, 'imcontsub'):
+            caracal.log.info(
+                'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+
+            # Using highest cube directory
+            dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
+            poopoo = max([int(gi[-1]) for gi in dirlist])
+            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
+                pipeline.output,cube_dir, poopoo,
+                pipeline.prefix, field, line_name))
+            
+            # Hoping that the order is the same for all suffixes
+            wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
+            wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
+            wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]
+            wimage_clean_mask_list = [cc for cc in wscl_cube_list if 'image_clean_mask.fits' in cc]
+
+            if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
+                if len(wimage_cube_list):
+                    contsincubelist = wimage_cube_list
+                    rsuffix = '.image.fits'
+                else:
+                    contsincubelist = wdirty_cube_list
+                    rsuffix = '.dirty.fits'
+            else:
+                contsincubelist = config['imcontsub']['incubus']
+                rsuffix = '.fits'
+            outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]
+                
+            if config['imcontsub']['mask'] == '':
+                if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['masculin'][0]) == 0:
+                    maskimc = []
+                else:
+                    maskimc = config['imcontsub']['masculin']
+            elif config['imcontsub']['mask'] == 'clean':
+                maskimc = wimage_clean_mask_list
+            elif config['imcontsub']['mask'] == 'sofia':
+                maskimc = wimage_mask_list
+            else:
+                maskimc = []
+                
+            if len(maskimc) == 0:
+                maskimc = [None for i in contsincubelist]
+                caracal.log.info(
+                    'Not using mask for image subtraction of target {0:d}'.format(tt))
+            
+            if config['imcontsub']['outfit'] == True:
+                outfitlist = [i.replace(rsuffix, '.contsfit.fits') for i in contsincubelist]
+            else:
+                outfitlist = [None for i in contsincubelist]
+                
+            if config['imcontsub']['outfitcon'] == True:
+                outconlist = [i.replace(rsuffix, '.contsfitcon.fits') for i in contsincubelist]
+            else:
+                outconlist = [None for i in contsincubelist]
+                
+            #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+
+            for uu in range(len(contsincubelist)):
+                image_contsub.imcontsub(
+                    incubus=contsincubelist[uu], outcubus=outputlist[uu],
+                    fitmode=config['imcontsub']['fitmode'],
+                    length=config['imcontsub']['length'],
+                    mask=maskimc[uu],
+                    sgiters=config['imcontsub']['sgiters'],
+                    kertyp=config['imcontsub']['kertyp'],
+                    kersiz=config['imcontsub']['kersiz'],
+                    fitted=outfitlist[uu],
+                    confit=outconlist[uu],
+                    clobber=True,
+                    )
 
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):

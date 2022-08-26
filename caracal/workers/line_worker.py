@@ -1335,7 +1335,12 @@ def worker(pipeline, recipe, config):
             #GJin
             caracal.log.info(config['imcontsub']['incubus'])
             #GJout
-            poopoo = [int(gi) for gi in glob.glob('{0:s}/{1:s}/cube_*')]
+            caracal.log.info('got here 1')
+            
+            dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
+            caracal.log.info(dirlist)
+            caracal.log.info('got here 2')
+            poopoo = [int(gi[-1]) for gi in dirlist]
             caracal.log.info(poopoo)
             
             wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{:d}/{2:s}_{3:s}_{4:s}*.fits'.format(

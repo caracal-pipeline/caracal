@@ -1353,7 +1353,7 @@ def worker(pipeline, recipe, config):
             outputlist = [i.replace(rsuffix, 'imcontsub.fits') for i in contsincubelist]
                 
             if config['imcontsub']['mask'] == '':
-                if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
+                if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['masculin'][0]) == 0:
                     maskimc = []
                 else:
                     maskimc = config['imcontsub']['masculin']
@@ -1371,7 +1371,7 @@ def worker(pipeline, recipe, config):
                 
             #GJin
             caracal.log.info('Here')
-            caracal.log.info(config['imcontsub']['mask'])
+            caracal.log.info('|{:s}|'.format(config['imcontsub']['mask']))
             caracal.log.info(maskimc)
             #GJout
 

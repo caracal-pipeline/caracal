@@ -1364,7 +1364,7 @@ def worker(pipeline, recipe, config):
                 
             #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
             caracal.log.info(
-                'lenconts {:d} lenoutput {:d} lenoutfit {:d} lenoutcon {:d}'.format(len(contsincubelist), len(outputlist, len(outfitlist, len(outconlist)))
+                'lenconts {:d} lenoutput {:d} lenoutfit {:d} lenoutcon {:d}'.format(len(contsincubelist), len(outputlist), len(outfitlist), len(outconlist)))
 
             for uu in range(len(contsincubelist)):
                 image_contsub.imcontsub(

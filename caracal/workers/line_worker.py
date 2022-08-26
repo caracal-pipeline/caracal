@@ -1274,6 +1274,11 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
         dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
+        
+        caracal.log.info('List')
+        caracal.log.info(image_cube_list)
+        caracal.log.info(dirty_cube_list)
+        
         image_mask_list = [cc for cc in cube_list if 'image_mask.fits' in cc]
         image_clean_mask_list = [cc for cc in cube_list if 'image_clean_mask.fits' in cc]
 
@@ -1289,7 +1294,6 @@ def worker(pipeline, recipe, config):
 
         if pipeline.enable_task(config, 'pb_cube'):
             caracal.log.info('Creating primary beam cubes for target {0:d}'.format(tt))
-            caracal.log.info(image_cube_list)
             for uu in range(len(image_cube_list)):
                 recipe.add(make_pb_cube,
                            'make pb_cube-{0:d}'.format(uu),

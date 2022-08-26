@@ -1332,7 +1332,9 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'imcontsub'):
             caracal.log.info(
                 'Subtracting continuum in the image domain for target {0:d}'.format(tt))
-            
+            #GJin
+            caracal.log.info(config['imcontsub']['incubus'])
+            #GJout
             wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
             wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
 

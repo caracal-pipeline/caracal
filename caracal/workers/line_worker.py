@@ -1274,11 +1274,13 @@ def worker(pipeline, recipe, config):
         cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
         dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
-        
+
+        ##### GJstart
         caracal.log.info('List')
         caracal.log.info(cube_list)
         caracal.log.info(image_cube_list)
         caracal.log.info(dirty_cube_list)
+        ##### GJend
         
         image_mask_list = [cc for cc in cube_list if 'image_mask.fits' in cc]
         image_clean_mask_list = [cc for cc in cube_list if 'image_clean_mask.fits' in cc]
@@ -1330,18 +1332,21 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'imcontsub'):
             caracal.log.info(
                 'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+            
+            wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
+            wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
+
             if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
-                if len(image_cube_list):
-                    caracal.log.info(
-                        'len(image_cube_list {:d})'.format(len(image_cube_list)))
-                    caracal.log.info(image_cube_list)
-                    contsincubelist = image_cube_list
+                if len(wimage_cube_list):
+                    contsincubelist = wimage_cube_list
+                    rsuffix = 'image.fits'
                 else:
-                    contsincubelist = dirty_cube_list
-                outputlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+                    contsincubelist = wdirty_cube_list
+                    rsuffix = 'dirty.fits'
             else:
                 contsincubelist = config['imcontsub']['incubus']
-                outputlist = [i.replace('.fits', '_imcontsub.fits') for i in contsincubelist]
+                rsuffix = '.fits'
+            outputlist = [i.replace(rsuffix, 'imcontsub.fits') for i in contsincubelist]
                 
             if config['imcontsub']['mask'] == '':
                 if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
@@ -1362,12 +1367,12 @@ def worker(pipeline, recipe, config):
 
             
             if config['imcontsub']['outfit'] == True:
-                outfitlist = [i.replace('dirty.fits', 'contsfit.fits') for i in dirty_cube_list]
+                outfitlist = [i.replace(rsuffix, 'contsfit.fits') for i in contsincubelist]
             else:
                 outfitlist = [None for i in contsincubelist]
                 
             if config['imcontsub']['outfitcon'] == True:
-                outconlist = [i.replace('dirty.fits', 'contsfitcon.fits') for i in dirty_cube_list]
+                outconlist = [i.replace(rsuffix, 'contsfitcon.fits') for i in contsincubelist]
             else:
                 outconlist = [None for i in contsincubelist]
                 

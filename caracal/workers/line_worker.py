@@ -1343,14 +1343,14 @@ def worker(pipeline, recipe, config):
             if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
                 if len(wimage_cube_list):
                     contsincubelist = wimage_cube_list
-                    rsuffix = '_image.fits'
+                    rsuffix = '.image.fits'
                 else:
                     contsincubelist = wdirty_cube_list
-                    rsuffix = '_dirty.fits'
+                    rsuffix = '.dirty.fits'
             else:
                 contsincubelist = config['imcontsub']['incubus']
                 rsuffix = '.fits'
-            outputlist = [i.replace(rsuffix, '_imcontsub.fits') for i in contsincubelist]
+            outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]
                 
             if config['imcontsub']['mask'] == '':
                 if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['masculin'][0]) == 0:
@@ -1377,12 +1377,12 @@ def worker(pipeline, recipe, config):
 
             
             if config['imcontsub']['outfit'] == True:
-                outfitlist = [i.replace(rsuffix, '_contsfit.fits') for i in contsincubelist]
+                outfitlist = [i.replace(rsuffix, '.contsfit.fits') for i in contsincubelist]
             else:
                 outfitlist = [None for i in contsincubelist]
                 
             if config['imcontsub']['outfitcon'] == True:
-                outconlist = [i.replace(rsuffix, '_contsfitcon.fits') for i in contsincubelist]
+                outconlist = [i.replace(rsuffix, '.contsfitcon.fits') for i in contsincubelist]
             else:
                 outconlist = [None for i in contsincubelist]
                 

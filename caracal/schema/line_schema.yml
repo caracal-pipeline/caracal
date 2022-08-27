@@ -590,9 +590,9 @@ mapping:
             example: 'True'
           imcontsub:
             desc: Use results of imcontsub instead of image cubes if available
-	    type: bool
-	    required: false
-	    example: false
+            type: bool
+            required: false
+            example: false
           flag:
             desc: Use flag regions?
             type: bool

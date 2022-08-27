@@ -1330,6 +1330,21 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         if pipeline.enable_task(config, 'sofia'):
+            if config['sofia']['imcontsub']:
+                simage_cube_list = []
+                for uu in range(len(image_cube_list)):
+                    icsname = uu.replace('.image.fits', '.imcontsub.fits')
+                    if len(glob.glob(icsname)) > 0:
+                        simage_cube_list += icsname
+                    else:
+                        simage_cube_list += uu
+                caracal.log.info(
+                    'yo')
+                caracal.log.info(
+                    simage_cube_list)
+                caracal.log.info(
+                    'yu')
+                    
             for uu in range(len(image_cube_list)):
                 step = 'sofia-source_finding-{0:d}'.format(uu)
                 recipe.add(
@@ -1363,78 +1378,6 @@ def worker(pipeline, recipe, config):
                     output='/'.join(image_cube_list[uu].split('/')[:-1]),
                     label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,image_cube_list[uu]))
 
-        if pipeline.enable_task(config, 'sharpener'):
-            for uu in range(len(image_cube_list)):
-                step = 'continuum-spectral_extraction-{0:d}'.format(uu)
-
-                params = {"enable_spec_ex": True,
-                          "enable_source_catalog": True,
-                          "enable_abs_plot": True,
-                          "enable_source_finder": False,
-                          "cubename": image_cube_list[uu]+':output',
-                          "channels_per_plot": config['sharpener']['chans_per_plot'],
-                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
-                          "label": config['sharpener']['label'],
-                          }
-
-                runsharp = False
-                if config['sharpener']['catalog'] == 'PYBDSF':
-                    catalogs = []
-                    nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
-
-                    for ii in range(0, len(nimages)):
-                        catalog = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(
-                                pipeline.continuum, ii + 1, pipeline.prefix, field))
-                        catalogs.append(catalog)
-
-                    catalogs = sorted(catalogs)
-                    catalogs = [cat for catalogs in catalogs for cat in catalogs]
-                    # Right now, this is the last catalog made
-                    if len(catalogs):
-                        catalog_file = catalogs[-1].split('output/')[-1]
-                        params["catalog_file"] = '{0:s}:output'.format(catalog_file)
-                    else: catalog_file = []
-
-                    if len(catalog_file) > 0:
-                        runsharp = True
-                        params["catalog"] = "PYBDSF"
-                        recipe.add('cab/sharpener',
-                            step,
-                            params,
-                            input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
-                            output=pipeline.output,
-                            label='{0:s}:: Continuum Spectral Extraction'.format(step))
-                    else:
-                        caracal.log.warn(
-                            'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
-
-                elif config['sharpener']['catalog'] == 'NVSS':
-                    runsharp = True
-                    params["thr"] = config['sharpener']['thr']
-                    params["width"] = config['sharpener']['width']
-                    params["catalog"] = "NVSS"
-                    recipe.add('cab/sharpener',
-                        step,
-                        params,
-                        input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
-                        output=pipeline.output,
-                        label='{0:s}:: Continuum Spectral Extraction'.format(step))
-
-                recipe.run()
-                recipe.jobs = []
-
-                # Move the sharpener output to diagnostic_plots
-                if runsharp:
-                    sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
-                    finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
-                        pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
-                    if os.path.exists(finalsharpOut):
-                        shutil.rmtree(finalsharpOut)
-                    shutil.move(sharpOut, finalsharpOut)
-
-    # Continue here
-    for tt, target in enumerate(all_targets):
-        field = utils.filter_name(target)
         if pipeline.enable_task(config, 'imcontsub'):
             caracal.log.info(
                 'Subtracting continuum in the image domain for target {0:d}'.format(tt))
@@ -1520,3 +1463,72 @@ def worker(pipeline, recipe, config):
                     )
                 if runonce:
                     break
+                
+        if pipeline.enable_task(config, 'sharpener'):
+            for uu in range(len(image_cube_list)):
+                step = 'continuum-spectral_extraction-{0:d}'.format(uu)
+
+                params = {"enable_spec_ex": True,
+                          "enable_source_catalog": True,
+                          "enable_abs_plot": True,
+                          "enable_source_finder": False,
+                          "cubename": image_cube_list[uu]+':output',
+                          "channels_per_plot": config['sharpener']['chans_per_plot'],
+                          "workdir": '{0:s}/'.format(stimela.recipe.CONT_IO["output"]),
+                          "label": config['sharpener']['label'],
+                          }
+
+                runsharp = False
+                if config['sharpener']['catalog'] == 'PYBDSF':
+                    catalogs = []
+                    nimages = glob.glob("{0:s}/image_*".format(pipeline.continuum))
+
+                    for ii in range(0, len(nimages)):
+                        catalog = glob.glob("{0:s}/image_{1:d}/{2:s}_{3:s}_*.lsm.html".format(
+                                pipeline.continuum, ii + 1, pipeline.prefix, field))
+                        catalogs.append(catalog)
+
+                    catalogs = sorted(catalogs)
+                    catalogs = [cat for catalogs in catalogs for cat in catalogs]
+                    # Right now, this is the last catalog made
+                    if len(catalogs):
+                        catalog_file = catalogs[-1].split('output/')[-1]
+                        params["catalog_file"] = '{0:s}:output'.format(catalog_file)
+                    else: catalog_file = []
+
+                    if len(catalog_file) > 0:
+                        runsharp = True
+                        params["catalog"] = "PYBDSF"
+                        recipe.add('cab/sharpener',
+                            step,
+                            params,
+                            input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
+                            output=pipeline.output,
+                            label='{0:s}:: Continuum Spectral Extraction'.format(step))
+                    else:
+                        caracal.log.warn(
+                            'No PyBDSM catalogs found. Skipping continuum spectral extraction.')
+
+                elif config['sharpener']['catalog'] == 'NVSS':
+                    runsharp = True
+                    params["thr"] = config['sharpener']['thr']
+                    params["width"] = config['sharpener']['width']
+                    params["catalog"] = "NVSS"
+                    recipe.add('cab/sharpener',
+                        step,
+                        params,
+                        input='/'.join('{0:s}/{1:s}'.format(pipeline.output,image_cube_list[uu]).split('/')[:-1]),
+                        output=pipeline.output,
+                        label='{0:s}:: Continuum Spectral Extraction'.format(step))
+
+                recipe.run()
+                recipe.jobs = []
+
+                # Move the sharpener output to diagnostic_plots
+                if runsharp:
+                    sharpOut = '{0:s}/{1:s}'.format(pipeline.output, 'sharpOut')
+                    finalsharpOut = '{0:s}/{1:s}_{2:s}_{3:s}'.format(
+                        pipeline.diagnostic_plots, pipeline.prefix, field, 'sharpOut')
+                    if os.path.exists(finalsharpOut):
+                        shutil.rmtree(finalsharpOut)
+                    shutil.move(sharpOut, finalsharpOut)

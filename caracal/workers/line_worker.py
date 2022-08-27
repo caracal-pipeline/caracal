@@ -1333,11 +1333,12 @@ def worker(pipeline, recipe, config):
             if config['sofia']['imcontsub']:
                 simage_cube_list = []
                 for uu in range(len(image_cube_list)):
-                    icsname = uu.replace('.image.fits', '.imcontsub.fits')
+                    icsname = image_cube_list[uu].replace(
+                        '.image.fits', '.imcontsub.fits')
                     if len(glob.glob(icsname)) > 0:
                         simage_cube_list += icsname
                     else:
-                        simage_cube_list += uu
+                        simage_cube_list += image_cube_list[uu]
                 caracal.log.info(
                     'yo')
                 caracal.log.info(

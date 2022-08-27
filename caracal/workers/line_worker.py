@@ -1379,6 +1379,9 @@ def worker(pipeline, recipe, config):
                         simage_cube_list.append(icsname)
                     else:
                         simage_cube_list.append(image_cube_list[uu])
+            else:
+                simage_cube_list = image_cube_list
+                    
             for uu in range(len(image_cube_list)):
                 step = 'sofia-source_finding-{0:d}'.format(uu)
                 recipe.add(

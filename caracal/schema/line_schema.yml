@@ -520,11 +520,11 @@ mapping:
               - type: str
             required: false
             example: ''
-	  lastiter:
-	    desc: If incubus is empty, select only the last iteration for continuum subtraction (true) or all (false)
-	    type: bool
-	    required: false
-	    example: 'True'
+          lastiter:
+            desc: If incubus is empty, select only the last iteration for continuum subtraction (true) or all (false)
+            type: bool
+            required: false
+            example: 'True'
           fitmode:
             desc: Type of fit ('poly' or 'savgol')
             type: str

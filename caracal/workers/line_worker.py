@@ -1442,9 +1442,16 @@ def worker(pipeline, recipe, config):
             # Using highest cube directory
             dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
             poopoo = max([int(gi[-1]) for gi in dirlist])
-            wscl_cube_list = glob.glob('{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
-                pipeline.output,cube_dir, poopoo,
-                pipeline.prefix, field, line_name))
+            if config['imcontsub']['lastiter']:
+                wscl_cube_list = glob.glob(
+                    '{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
+                    pipeline.output,cube_dir, poopoo,
+                    pipeline.prefix, field, line_name))
+            else:
+                wscl_cube_list = glob.glob(
+                    '{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
+                    pipeline.output,cube_dir,
+                    pipeline.prefix, field, line_name))                
 
             # Hoping that the order is the same for all suffixes
             wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
@@ -1452,6 +1459,8 @@ def worker(pipeline, recipe, config):
             wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]
             wimage_clean_mask_list = [cc for cc in wscl_cube_list if 'image_clean_mask.fits' in cc]
 
+            # See comment below
+            runonce = False
             if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
                 if len(wimage_cube_list):
                     contsincubelist = wimage_cube_list
@@ -1460,6 +1469,9 @@ def worker(pipeline, recipe, config):
                     contsincubelist = wdirty_cube_list
                     rsuffix = '.dirty.fits'
             else:
+                # Run only once if the cubes are specified explicitly
+                # Otherwise we'd do the same thing number of targers times
+                runonce = True
                 contsincubelist = config['imcontsub']['incubus']
                 rsuffix = '.fits'
             outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]
@@ -1506,3 +1518,5 @@ def worker(pipeline, recipe, config):
                     confit=outconlist[uu],
                     clobber=True,
                     )
+                if runonce:
+                    break

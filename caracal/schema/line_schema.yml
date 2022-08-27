@@ -68,7 +68,12 @@ mapping:
             desc: Enable the 'subtractmodelcol' segment.
             type: bool
             required: false
-            example: 'True'  
+            example: 'True'
+          force:
+            desc: Force the model subtraction regardless of the number of previous subtractions.
+            type: bool
+            required: false
+            example: 'False'
 
       addmodelcol:
         desc: Replace the CORRECTED_DATA column of the .MS file(s) with the sum CORRECTED_DATA + MODEL_DATA. This is useful to undo the operation performed by subtractmodelcol in this worker. WARNING! The CORRECTED_DATA column is overwritten.
@@ -76,6 +81,11 @@ mapping:
         mapping:
           enable:
             desc: Enable the 'addmodelcol' segment.
+            type: bool
+            required: false
+            example: 'False'
+          force:
+            desc: Force the model addition regardless of the number of previous additions.
             type: bool
             required: false
             example: 'False'

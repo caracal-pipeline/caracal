@@ -1275,13 +1275,6 @@ def worker(pipeline, recipe, config):
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
         dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
 
-        ##### GJstart
-        caracal.log.info('List')
-        caracal.log.info(cube_list)
-        caracal.log.info(image_cube_list)
-        caracal.log.info(dirty_cube_list)
-        ##### GJend
-        
         image_mask_list = [cc for cc in cube_list if 'image_mask.fits' in cc]
         image_clean_mask_list = [cc for cc in cube_list if 'image_clean_mask.fits' in cc]
 
@@ -1336,9 +1329,9 @@ def worker(pipeline, recipe, config):
                     icsname = image_cube_list[uu].replace(
                         '.image.fits', '.imcontsub.fits')
                     if len(glob.glob(icsname)) > 0:
-                        simage_cube_list += icsname
+                        simage_cube_list.append(icsname)
                     else:
-                        simage_cube_list += image_cube_list[uu]
+                        simage_cube_list.append(image_cube_list[uu])
                 caracal.log.info(
                     'yo')
                 caracal.log.info(
@@ -1416,6 +1409,8 @@ def worker(pipeline, recipe, config):
                 # Run only once if the cubes are specified explicitly
                 # Otherwise we'd do the same thing number of targers times
                 runonce = True
+                caracal.log.info(
+                    'runonce')
                 contsincubelist = config['imcontsub']['incubus']
                 rsuffix = '.fits'
             outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]

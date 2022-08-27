@@ -592,7 +592,7 @@ mapping:
             desc: Use results of imcontsub instead of image cubes if available
             type: bool
             required: false
-            example: false
+            example: 'False'
           flag:
             desc: Use flag regions?
             type: bool

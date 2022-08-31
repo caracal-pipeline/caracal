@@ -519,6 +519,21 @@ mapping:
             desc: Constrain the PyBDSM source-finding to only find sources included in the clean model.
             required: false
             example: 'False'
+          breizorro_image:
+            type: map
+            desc: Use breizorro image.
+            mapping:
+              enable:
+                type: bool
+                desc: Use a breizorro product image to perform source finding in order to do source comparison.
+                required: false
+                example: 'False'
+              sum_to_peak:
+                type: float
+                desc: Sum to peak ratio of flux islands to mask in original image. Default = 100, will mask everything with a ratio above 100.
+                required: false
+                example: '100'
+
 
       calibrate:
         type: map

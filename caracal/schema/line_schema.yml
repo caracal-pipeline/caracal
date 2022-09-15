@@ -213,22 +213,22 @@ mapping:
             required: False
             example: 'auto'
 
-      flagUzeros:
+      flag_u_zeros:
         desc: flag RFI at u=0
         type: map
         mapping:
           enable: 
-            desc: Enable the flagUZeros segment
+            desc: Enable the flag_u_zeros segment
             type: bool
             required: false
             example: 'False'
           use_mstransform:
-            desc: Run sunblocker on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            desc: Run flagging algorithm on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
             type: bool
             required: false
             example: 'True'
-          transferFlags:
-            desc: List of datasets to which to transfer the u=0 flags. The list should only include the labels which identify those datasets, following the usual CARACal label convention. The flags are calculated using the dataset identified by 'label_in' above.
+          transfer_flags:
+            desc: List of datasets to which to transfer the u=0 flags. The list should only include the labels which identify those datasets, following the usual CARACal label convention and the 'use_mstransform' setting of this flag_u_zeros segment. The flags are calculated using the dataset identified by 'label_in' above. Flags can only be transferred to MS files with the same number of channels as the 'label_in' dataset. In case of different number of channels CARACal will crash.
             seq:
               - type: str
             required: false
@@ -239,17 +239,12 @@ mapping:
             enum: ['madThreshold', 'q99']
             required: false
             example: 'madThreshold'
-          makePlots:
+          make_plots:
             desc: Make Plots or not
             type: bool
             required: false
             example: 'True'
-          makeSunblockPlots:
-            desc: Make sunblocker Plots or not
-            type: bool
-            required: false
-            example: 'False'
-          doCleanup:
+          cleanup:
             desc: Remove intermediate ms files, images and FFTs
             type: bool
             required: false
@@ -274,7 +269,7 @@ mapping:
             type: float
             required: false
             example: '20.'
-          chanRange:
+          chans:
             desc: lowest and highest channel of the spw to consider for imaging
             seq:
               - type: int

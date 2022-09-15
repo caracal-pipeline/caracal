@@ -58,45 +58,45 @@ timeInit = time.time()
 
 
 class UzeroFlagger:
-    
+
     def __init__(self, config):
 
         self.config=config
 
     def setDirs(self,output):
 
-        self.config['flagUzeros']['stripeDir']=output+'/stripeAnalysis/'
-        if not os.path.exists(self.config['flagUzeros']['stripeDir']):
-            os.mkdir(self.config['flagUzeros']['stripeDir'])
+        self.config['flag_u_zeros']['stripeDir']=output+'/stripeAnalysis/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeDir'])
 
-        self.config['flagUzeros']['stripeLogDir']=self.config['flagUzeros']['stripeDir']+'logs/'
-        if not os.path.exists(self.config['flagUzeros']['stripeLogDir']):
-            os.mkdir(self.config['flagUzeros']['stripeLogDir'])
+        self.config['flag_u_zeros']['stripeLogDir']=self.config['flag_u_zeros']['stripeDir']+'logs/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeLogDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeLogDir'])
 
 
-        self.config['flagUzeros']['stripeMSDir']=self.config['flagUzeros']['stripeDir']+'msdir/'
-        if not os.path.exists(self.config['flagUzeros']['stripeMSDir']):
-            os.mkdir(self.config['flagUzeros']['stripeMSDir'])
+        self.config['flag_u_zeros']['stripeMSDir']=self.config['flag_u_zeros']['stripeDir']+'msdir/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeMSDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeMSDir'])
 
-        self.config['flagUzeros']['stripeCubeDir']=self.config['flagUzeros']['stripeDir']+'cubes/'
-        if not os.path.exists(self.config['flagUzeros']['stripeCubeDir']):
-            os.mkdir(self.config['flagUzeros']['stripeCubeDir'])
+        self.config['flag_u_zeros']['stripeCubeDir']=self.config['flag_u_zeros']['stripeDir']+'cubes/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeCubeDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeCubeDir'])
 
-        self.config['flagUzeros']['stripeFFTDir']=self.config['flagUzeros']['stripeDir']+'fft/'
-        if not os.path.exists(self.config['flagUzeros']['stripeFFTDir']):
-            os.mkdir(self.config['flagUzeros']['stripeFFTDir'])
+        self.config['flag_u_zeros']['stripeFFTDir']=self.config['flag_u_zeros']['stripeDir']+'fft/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeFFTDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeFFTDir'])
 
-        self.config['flagUzeros']['stripePlotDir']=self.config['flagUzeros']['stripeDir']+'plots/'
-        if not os.path.exists(self.config['flagUzeros']['stripePlotDir']):
-            os.mkdir(self.config['flagUzeros']['stripePlotDir'])
+        self.config['flag_u_zeros']['stripePlotDir']=self.config['flag_u_zeros']['stripeDir']+'plots/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripePlotDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripePlotDir'])
 
-        self.config['flagUzeros']['stripeTableDir']=self.config['flagUzeros']['stripeDir']+'tables/'
-        if not os.path.exists(self.config['flagUzeros']['stripeTableDir']):
-            os.mkdir(self.config['flagUzeros']['stripeTableDir'])
+        self.config['flag_u_zeros']['stripeTableDir']=self.config['flag_u_zeros']['stripeDir']+'tables/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeTableDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeTableDir'])
 
-        self.config['flagUzeros']['stripeSofiaDir']=self.config['flagUzeros']['stripeDir']+'sofiaOut/'
-        if not os.path.exists(self.config['flagUzeros']['stripeSofiaDir']):
-            os.mkdir(self.config['flagUzeros']['stripeSofiaDir'])
+        self.config['flag_u_zeros']['stripeSofiaDir']=self.config['flag_u_zeros']['stripeDir']+'sofiaOut/'
+        if not os.path.exists(self.config['flag_u_zeros']['stripeSofiaDir']):
+            os.mkdir(self.config['flag_u_zeros']['stripeSofiaDir'])
 
         return
 
@@ -106,7 +106,7 @@ class UzeroFlagger:
         recipe = stimela.Recipe('saveFlagZeros',
                             ms_dir=msdir,
                             singularity_image_dir=pipeline.singularity_image_dir,
-                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            log_dir=self.config['flag_u_zeros']['stripeLogDir'],
                             logfile=False, # no logfiles for recipes
                             )
         recipe.JOB_TYPE = pipeline.container_tech
@@ -129,7 +129,7 @@ class UzeroFlagger:
         recipe = stimela.Recipe('saveFlagZeros',
                             ms_dir=msdir,
                             singularity_image_dir=pipeline.singularity_image_dir,
-                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            log_dir=self.config['flag_u_zeros']['stripeLogDir'],
                             logfile=False, # no logfiles for recipes
                             )
         recipe.JOB_TYPE = pipeline.container_tech
@@ -150,7 +150,7 @@ class UzeroFlagger:
         recipe = stimela.Recipe('saveFlagZeros',
                             ms_dir=msdir,
                             singularity_image_dir=pipeline.singularity_image_dir,
-                            log_dir=self.config['flagUzeros']['stripeLogDir'],
+                            log_dir=self.config['flag_u_zeros']['stripeLogDir'],
                             logfile=False, # no logfiles for recipes
                             )
         recipe.JOB_TYPE = pipeline.container_tech
@@ -175,16 +175,16 @@ class UzeroFlagger:
         for scan in scanNums:
             baseVis=os.path.basename(inVis)
             outVis=baseVis.split('.ms')[0]+'_scn'+str(scan)+'.ms'
-            # if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis):
-            #     shutil.rmtree(self.config['flagUzeros']['stripeMSDir']+outVis)
-            # if os.path.exists(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions'):
-            #     shutil.rmtree(self.config['flagUzeros']['stripeMSDir']+outVis+'.flagversions')
-            remove_output_products((outVis,outVis+'.flagversions'),directory=self.config['flagUzeros']['stripeMSDir'])
+            # if os.path.exists(self.config['flag_u_zeros']['stripeMSDir']+outVis):
+            #     shutil.rmtree(self.config['flag_u_zeros']['stripeMSDir']+outVis)
+            # if os.path.exists(self.config['flag_u_zeros']['stripeMSDir']+outVis+'.flagversions'):
+            #     shutil.rmtree(self.config['flag_u_zeros']['stripeMSDir']+outVis+'.flagversions')
+            remove_output_products((outVis,outVis+'.flagversions'),directory=self.config['flag_u_zeros']['stripeMSDir'])
 
             recipe = stimela.Recipe('flagUzerosMST',
                                         ms_dir=msdir,
                                         singularity_image_dir=pipeline.singularity_image_dir,
-                                        log_dir=self.config['flagUzeros']['stripeLogDir'],
+                                        log_dir=self.config['flag_u_zeros']['stripeLogDir'],
                                         logfile=False, # no logfiles for recipes
                                         )
             recipe.JOB_TYPE = pipeline.container_tech
@@ -198,11 +198,11 @@ class UzeroFlagger:
                     "scan": str(scan),
                     },
                    input=msdir,
-                   output=self.config['flagUzeros']['stripeMSDir'],
+                   output=self.config['flag_u_zeros']['stripeMSDir'],
                    label='{0:s}:: Image Line'.format(step))
             recipe.run()
 
-            scanVisList.append(self.config['flagUzeros']['stripeMSDir']+outVis)
+            scanVisList.append(self.config['flag_u_zeros']['stripeMSDir']+outVis)
             scanVisNames.append(outVis)
 
         caracal.log.info("All Scans splitted")
@@ -239,16 +239,16 @@ class UzeroFlagger:
 
     def makeCube(self,pipeline,msdir,inVis,outCubePrefix,kind='scan'):
 
-        robust = self.config['flagUzeros']['robust']
-        imsize = int(self.config['flagUzeros']['imsize'])
-        cell = self.config['flagUzeros']['cell']
-        chanMin = int(self.config['flagUzeros']['chanRange'][0])
-        chanMax = int(self.config['flagUzeros']['chanRange'][1])
+        robust = self.config['flag_u_zeros']['robust']
+        imsize = int(self.config['flag_u_zeros']['imsize'])
+        cell = self.config['flag_u_zeros']['cell']
+        chanMin = int(self.config['flag_u_zeros']['chans'][0])
+        chanMax = int(self.config['flag_u_zeros']['chans'][1])
 
         recipe = stimela.Recipe('flagUzeros',
                                         ms_dir=msdir,
                                         singularity_image_dir=pipeline.singularity_image_dir,
-                                        log_dir=self.config['flagUzeros']['stripeLogDir'],
+                                        log_dir=self.config['flag_u_zeros']['stripeLogDir'],
                                         logfile=False, # no logfiles for recipes
                                         )
         recipe.JOB_TYPE = pipeline.container_tech
@@ -282,14 +282,14 @@ class UzeroFlagger:
             "gain": 0.2,
                 }
 
-        if self.config['flagUzeros']['taper']:
-            line_image_opts.update({"taper-gaussian": str(self.config['flagUzeros']['taper'])})
+        if self.config['flag_u_zeros']['taper']:
+            line_image_opts.update({"taper-gaussian": str(self.config['flag_u_zeros']['taper'])})
 
         step='makeCube'
         recipe.add('cab/wsclean',
                    step, line_image_opts,
                    input=pipeline.input,
-                   output=self.config['flagUzeros']['stripeCubeDir'],
+                   output=self.config['flag_u_zeros']['stripeCubeDir'],
                    label='{0:s}:: Image Line'.format(step))
         recipe.run()
 
@@ -313,12 +313,13 @@ class UzeroFlagger:
         return 0
 
 
-    def makeFFT(self, inCube,outFFT):
+    #def makeFFT(self, inCube,outFFT):
+    def makeFFT(self, inCube):
         # dataCube = fits.getdata(inCube)
         # dFFT = np.fft.fft2(dataCube)
         # # imFFT=images.image(outFFT)
         # # dFFT=imFFT.getdata()
-        
+
         # dFFT=np.abs(np.squeeze(dFFT))
         # # headFFT=imFFT.info()
 
@@ -328,7 +329,7 @@ class UzeroFlagger:
         # hdr["NAXIS2"] = dFFT.shape[0]
         # hdr["CTYPE1"] = 'UU---SIN'
         # # hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
-        # hdr["CDELT1"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
+        # hdr["CDELT1"] = 1./(self.config['flag_u_zeros']['imsize']*self.config['flag_u_zeros']['cell']*np.pi/(3600.*180.))
         # # hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
         # hdr["CRVAL1"] = 0
 
@@ -340,7 +341,7 @@ class UzeroFlagger:
         # hdr["CTYPE2"] = 'VV---SIN'
         # # hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
         # hdr["CRVAL2"] = 0
-        # hdr["CDELT2"] = 1./(self.config['flagUzeros']['imsize']*self.config['flagUzeros']['cell']*np.pi/(3600.*180.))
+        # hdr["CDELT2"] = 1./(self.config['flag_u_zeros']['imsize']*self.config['flag_u_zeros']['cell']*np.pi/(3600.*180.))
 
         # # hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
         # # hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
@@ -479,18 +480,18 @@ class UzeroFlagger:
         nAll, binEdgesAll = np.histogram(baseAll,bins)
         nPerc = nFlags/nAll*100.
         axBase.set_ylim(0,100)
-        
-        np.save(self.config['flagUzeros']['stripePlotDir']+'baseflags.npy',baseFlags)
-        np.save(self.config['flagUzeros']['stripePlotDir']+'baseAll.npy',baseAll)
+
+        np.save(self.config['flag_u_zeros']['stripePlotDir']+'baseflags.npy',baseFlags)
+        np.save(self.config['flag_u_zeros']['stripePlotDir']+'baseAll.npy',baseAll)
 
         axBase.plot(bins[:-1],nPerc,'k-',drawstyle='steps-pre')
 
         #axBase.set_ylim(0,1)
         #axBase.set_yticks([0,25,50,100])
         axBase.set_autoscale_on(False)
-        outPlot  = "{0}baselines_plot_{1}.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy)
+        outPlot  = "{0}baselines_plot_{1}.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy)
         figBase.savefig(outPlot,bbox_inches='tight',overwrite=True,dpi=200)   # save the figure to file
-        plt.close(figBase) 
+        plt.close(figBase)
 
 
     def cleanUp(self,galaxy):
@@ -500,26 +501,26 @@ class UzeroFlagger:
 
         caracal.log.info("Deleting images")
 
-        if os.path.exists(self.config['flagUzeros']['stripeCubeDir']):
-            shutil.rmtree(self.config['flagUzeros']['stripeCubeDir'])
+        if os.path.exists(self.config['flag_u_zeros']['stripeCubeDir']):
+            shutil.rmtree(self.config['flag_u_zeros']['stripeCubeDir'])
 
         caracal.log.info("Deleting FFTs")
 
 
-        if os.path.exists(self.config['flagUzeros']['stripeFFTDir']):
-            shutil.rmtree(self.config['flagUzeros']['stripeFFTDir'])
+        if os.path.exists(self.config['flag_u_zeros']['stripeFFTDir']):
+            shutil.rmtree(self.config['flag_u_zeros']['stripeFFTDir'])
 
         caracal.log.info("Deleting .ms scans")
 
-        if os.path.exists(self.config['flagUzeros']['stripeMSDir']):
-            shutil.rmtree(self.config['flagUzeros']['stripeMSDir'])
+        if os.path.exists(self.config['flag_u_zeros']['stripeMSDir']):
+            shutil.rmtree(self.config['flag_u_zeros']['stripeMSDir'])
 
         caracal.log.info("Cleanup done")
 
         return 0
 
 
-    def saveFFTTable(self,inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV):
+    def saveFFTTable(self,inFFT,inFFTHeader,visName, U, V, galaxy, msid, track, scan, el, az, method, threshold, dilateU, dilateV, makePlots):
 
         xCol = np.zeros([len(U)*len(V)])
         yCol = np.zeros([len(U)*len(V)])
@@ -548,9 +549,9 @@ class UzeroFlagger:
         hdr['COMMENT'] = "Ext 1 = FFT table"
 
         if method=='madThreshold':
-            cutoff = self.sunBlockStats(inFFT,galaxy,msid,track,scan,'mad', threshold, ax = None, title = '', verb = True)
+            cutoff = self.sunBlockStats(inFFT, galaxy, msid, track, scan, makePlots, 'mad', threshold, ax = None, title = '', verb = True)
         else:
-            if self.config['flagUzeros']['taper']:
+            if self.config['flag_u_zeros']['taper']:
                 cutoff = np.nanpercentile(tabArr['Amp'], 99.99)
             else:
                 cutoff = np.nanpercentile(tabArr['Amp'], 99.9999)
@@ -588,7 +589,7 @@ class UzeroFlagger:
 
     def plotSunblocker(self,bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,cut):
 
-        caracal.log.info("\tPlotting Sunblocker stats")
+        caracal.log.info("\tPlotting stats")
 
         figS=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
         figS.set_tight_layout(False)
@@ -616,7 +617,7 @@ class UzeroFlagger:
         ax.set_ylim(0.5,)
         plt.yscale('log')
 
-        outPlot="{0}{1}_{2}_{3}_sblck.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,msid,scan)
+        outPlot="{0}{2}_{3}_fftstats.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy,msid,scan)
 
         figS.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
         plt.close(figS)
@@ -626,16 +627,16 @@ class UzeroFlagger:
 
         return 0
 
-    def sunBlockStats(self,inFFTData,galaxy,msid,track,scan,threshmode = 'mad', threshold=300., ax = None, title = '', verb = True):
+    def sunBlockStats(self, inFFTData, galaxy, msid, track, scan, makePlots, threshmode='mad', threshold=300., ax=None, title='', verb=True):
 
         av = np.copy(inFFTData)
         # Average data, then look for shape
         # av = np.nanmean(ampar,axis=1)
         npoints = inFFTData[np.isfinite(inFFTData)].size
         if verb:
-            caracal.log.info('\tSunblocker: grid has {:d} nonzero points.'.format(npoints))
+            caracal.log.info('\tFFT grid has {:d} nonzero points.'.format(npoints))
         if npoints < 3:
-            caracal.log.info('\t Sunblocker: This is not sufficient for any statistics, returning no flags.')
+            caracal.log.info('\tThis is not sufficient for any statistics, returning no flags.')
             return np.zeros(av.shape, dtype = bool)
 
       # Find average and standard deviation
@@ -643,11 +644,11 @@ class UzeroFlagger:
         stdev  = np.nanstd(inFFTData)
 
         if average == np.nan:
-            caracal.log.info('Sunblocker: cannot calculate average, returing no flags')
+            caracal.log.info('\tCannot calculate average, returing no flags.')
             return np.zeros(av.shape, dtype = bool)
 
         if stdev == np.nan:
-            caracal.log.info('Sunblocker: cannot calculate standard deviation, returing no flags')
+            caracal.log.info('\tCannot calculate standard deviation, returing no flags.')
             return np.zeros(av.shape, dtype = bool)
 
         med = np.nanmedian(inFFTData)
@@ -685,10 +686,12 @@ class UzeroFlagger:
         try:
             makePlots
         except NameError:
-            makePlots = None 
-        
+            makePlots = None
+
         if makePlots == True :
             self.plotSunblocker(bin_centers,bin_edges,npoints,widthes,average,stdev,med,mad,popt,hist,threshold,galaxy,msid,track,scan,ave+float(threshold)*std)
+        else:
+            caracal.log.warn('For some reasons I am not making the fftstats plots!')
 
         caracal.log.info("FFT image flagging cutoff = median + {threshold} * mad = {cutoff:.5f}".format(threshold=float(threshold),cutoff=ave+float(threshold)*std))
 
@@ -769,9 +772,6 @@ class UzeroFlagger:
         t.close()
         caracal.log.info("MS flagged")
         caracal.log.info("Before we close, save flag version 'stripe_flag_after'")
-        
-        #flg(vis=pf_inVis, mode='save', versionname='stripe_flag_after')
-        
         self.saveFlags(pipeline,pf_inVisName,msdir=pipeline.msdir,flagname='stripe_flag_after')
 
         return 0
@@ -779,16 +779,14 @@ class UzeroFlagger:
 
     def run_flagUzeros(self,pipeline,targets,msname):
 
-        method = self.config['flagUzeros']['method']
-        makePlots=self.config['flagUzeros']['makePlots']
+        method = self.config['flag_u_zeros']['method']
+        makePlots = self.config['flag_u_zeros']['make_plots']
 
-        # makeSunblockPlots=self.config['flagUzeros']['makeSunblockPlots']
+        doCleanUp = self.config['flag_u_zeros']['cleanup']
 
-        doCleanUp =self.config['flagUzeros']['method']
-
-        thresholds = self.config['flagUzeros']['thresholds']
-        dilateU = self.config['flagUzeros']['dilateU']
-        dilateV = self.config['flagUzeros']['dilateV']
+        thresholds = self.config['flag_u_zeros']['thresholds']
+        dilateU = self.config['flag_u_zeros']['dilateU']
+        dilateV = self.config['flag_u_zeros']['dilateV']
         flagCmd = True
 
         galaxies = targets
@@ -798,7 +796,7 @@ class UzeroFlagger:
 
         self.setDirs(pipeline.output)
 
-        if makePlots ==True:
+        if makePlots == True:
             font=16
             params = {'figure.autolayout' : True,
                 'font.family'         :'serif',
@@ -848,6 +846,7 @@ class UzeroFlagger:
         #caracal.log.warn(
         #        'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
         caracal.log.info("====================================================")
+        caracal.log.info('Starting the flag_u_zeros segment')
         # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
         obsIDs=[]
@@ -855,23 +854,26 @@ class UzeroFlagger:
         rootMS = str.split(mfsOb,self.config['label_in'])[0]
         obsIDs.append(mfsOb)
 
-        lws = self.config['flagUzeros']['transferFlags']
+        lws = self.config['flag_u_zeros']['transfer_flags']
         if lws == ['']:
             lws = []
         if len(lws):
             for lw in lws:
-                obsIDs.append('{}{}.ms'.format(rootMS,lw))
+#                obsIDs.append('{}{}.ms'.format(rootMS,lw))
+                obsIDs.append(mfsOb.replace(self.config['label_in'], lw))
 
-            for obb in obsIDs:
-                caracal.log.info("\t{}".format(obb))
-        else:
-            obsIDs.append(mfsOb)
-            lws=['trk']
+#            for obb in obsIDs:
+#                caracal.log.info("\t{}".format(obb))
+#        else:
+#            obsIDs.append(mfsOb)
+#            lws=['trk']
+
+        lws=[self.config['label_in']]+lws
 
         stripeFlags=None
         for ii in range (0,len(obsIDs)):
             # galNameVis=galaxy.replace('-','_')
-            track = lws[ii-1]
+            track = lws[ii]
             inVis=pipeline.msdir+'/'+obsIDs[ii]
             inVisName=obsIDs[ii]
             caracal.log.info("====================================================")
@@ -883,25 +885,20 @@ class UzeroFlagger:
                 if 'stripe_flag_before' in fvers:
                     caracal.log.info("Before we start, restore existing flag version 'stripe_flag_before'")
                     self.restoreFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
-                    #flg(vis=inVis, mode='restore', versionname='stripe_flag_before')
                     while fvers[-1] != 'stripe_flag_before':
                         self.deleteFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname=fvers[-1])
-                        #flg(vis=inVis, mode='delete', versionname=fvers[-1])
                         fvers = fvers[:-1]
                 else:
                     caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
                     self.saveFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
-
-                    #flg(vis=inVis, mode='save', versionname='stripe_flag_before')
             else:
                 caracal.log.info("Before we start, save flag version 'stripe_flag_before'")
-                # flg(vis=inVis, mode='save', versionname='stripe_flag_before')
                 self.saveFlags(pipeline,inVisName,msdir=pipeline.msdir,flagname='stripe_flag_before')
 
 
 
             # For lw's other than the first one, just copy the flags and skip the rest of the for loop
-            if ii != 0 and stripeFlags is not None: 
+            if ii != 0 and stripeFlags is not None:
                 self.putFlags(pipeline,inVis, inVisName, stripeFlags)
                 continue
 
@@ -927,23 +924,24 @@ class UzeroFlagger:
             anttab.close()
 
             caracal.log.info("----------------------------------------------------")
-            caracal.log.info("Imaging full MS for stripe analysis".format(track=track))
-            outCubePrefix = galaxy+'_1'+track+'_tot'
-            outCubeName=self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+            caracal.log.info("Imaging full MS for stripe analysis")
+            outCubePrefix = galaxy+track+'_tot'
+            outCubeName=self.config['flag_u_zeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
             if os.path.exists(outCubeName):
                 os.remove(outCubeName)
             self.makeCube(pipeline,pipeline.msdir,inVisName,outCubePrefix)
 
             caracal.log.info("Making FFT of image")
-            outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
-            if os.path.exists(outFFT):
-                shutil.rmtree(outFFT)
-            inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+            #outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
+            #if os.path.exists(outFFT):
+            #    shutil.rmtree(outFFT)
+            #inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+            inFFTData,inFFTHeader = self.makeFFT(outCubeName)
 
             ###U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1']) ############ Add this back?
             ###V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2']) ############ Add this back?
 
-            scan=track
+            #scan=track
 
             if makePlots== True:
                 if flagCmd ==True:
@@ -952,7 +950,7 @@ class UzeroFlagger:
                     gs0 = gridspec.GridSpec(nrows=2,ncols=2,figure=fig0,hspace=0,wspace=0.0)
                     fig0, comvmax_tot = self.plotAll(fig0,gs0,2,0,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,0,comvmax_tot,0,type=None)
                 else:
-                    outPlot="{0}{1}_{2}_tot.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                    outPlot="{0}{2}_tot.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0=plt.figure(figsize=(7.24409,7.24409), constrained_layout=False)
                     fig0.set_tight_layout(False)
                     gs0 = gridspec.GridSpec(nrows=1,ncols=2,figure=fig0,hspace=0,wspace=0.0)
@@ -995,23 +993,21 @@ class UzeroFlagger:
                 caracal.log.info("----------------------------------------------------")
 
                 # Save flag version before start iterating over all thresholds
-                
-                self.saveFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
-
-                # flg(vis=visAddress, mode='save', versionname='scan_flags_start')
+                self.saveFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname='scan_flags_start')
 
                 caracal.log.info("Imaging scan for stripe analysis".format(scanNumber=str(scan), galaxy=galaxy, track=track))
-                outCubePrefix_0 = galaxy+'_1'+track+'_scan'+str(scan)
-                outCubeName_0 = self.config['flagUzeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
+                outCubePrefix_0 = galaxy+track+'_scan'+str(scan)
+                outCubeName_0 = self.config['flag_u_zeros']['stripeCubeDir']+outCubePrefix_0+'-dirty.fits'
                 if os.path.exists(outCubeName_0):
                     os.remove(outCubeName_0)
-                self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix_0)
+                self.makeCube(pipeline,self.config['flag_u_zeros']['stripeMSDir'],visName,outCubePrefix_0)
 
                 caracal.log.info("Making FFT of image")
-                outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
-                if os.path.exists(outFFT):
-                    shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = self.makeFFT(outCubeName_0,outFFT)
+                #outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
+                #if os.path.exists(outFFT):
+                #    shutil.rmtree(outFFT)
+                #inFFTData,inFFTHeader = self.makeFFT(outCubeName_0,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName_0)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
                 V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
@@ -1019,8 +1015,8 @@ class UzeroFlagger:
                 el = 0
                 az = 0
 
-                outCubePrefix = galaxy+'_1'+track+'_scan'+str(scan)+'_stripeFlag'
-                outCubeName = self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+                outCubePrefix = galaxy+track+'_scan'+str(scan)+'_stripeFlag'
+                outCubeName = self.config['flag_u_zeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
                 rms_thresh = []
 
@@ -1032,24 +1028,22 @@ class UzeroFlagger:
                         caracal.log.info('New iter')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    # flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
-                    self.restoreFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
+                    self.restoreFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname='scan_flags_start')
 
                     while fvers[-1] != 'scan_flags_start':
-                        # flg(vis=visAddress, mode='delete', versionname=fvers[-1])
-                        self.deleteFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname=fvers[-1])
+                        self.deleteFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname=fvers[-1])
 
                         fvers = fvers[:-1]
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
                     # scanFlags below are the stripe flags for this scan
-                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader,visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV, makePlots)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     caracal.log.info("Making post-flagging image")
 
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
+                    self.makeCube(pipeline,self.config['flag_u_zeros']['stripeMSDir'],visName,outCubePrefix)
                     fitsdata = fits.open(outCubeName)
                     rms_thresh.append(np.std(fitsdata[0].data[0,0]))
                     caracal.log.info("Image noise = {0:.3e} Jy/beam".format(rms_thresh[-1]))
@@ -1063,23 +1057,21 @@ class UzeroFlagger:
                     caracal.log.info('Repeating flagging and imaging steps with the selected threshold (yes, the must be a better way...)')
                     # Rewind flags of this scan to their initial state
                     fvers = [ii.split(' :')[0] for ii in open(visAddress+'.flagversions/FLAG_VERSION_LIST').readlines()]
-                    self.restoreFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname='scan_flags_start')
+                    self.restoreFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname='scan_flags_start')
 
-                    # flg(vis=visAddress, mode='restore', versionname='scan_flags_start')
                     while fvers[-1] != 'scan_flags_start':
-                        # flg(vis=visAddress, mode='delete', versionname=fvers[-1])
-                        self.deleteFlags(pipeline,visName,msdir=self.config['flagUzeros']['stripeMSDir'],flagname=fvers[-1])
+                        self.deleteFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname=fvers[-1])
 
                         fvers = fvers[:-1]
                     # Re-flag with selected threshold
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))
-                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader, visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV)
+                    statsArray, scanFlags, percent, cutoff_scan = self.saveFFTTable(inFFTData,inFFTHeader, visAddress, np.flip(U), V, galaxy, mfsOb, track, scan, el, az, method, threshold, dilateU, dilateV, makePlots)
                     caracal.log.info("Scan flags from stripe-flagging: {percent:.3f}%".format(percent=percent))
                     # Re-image
                     caracal.log.info("Making post-flagging image")
                     if os.path.exists(outCubeName):
                         os.remove(outCubeName)
-                    self.makeCube(pipeline,self.config['flagUzeros']['stripeMSDir'],visName,outCubePrefix)
+                    self.makeCube(pipeline,self.config['flag_u_zeros']['stripeMSDir'],visName,outCubePrefix)
 
                 # Save stats for the selected threshold
                 arr = np.vstack((arr, statsArray))
@@ -1092,10 +1084,11 @@ class UzeroFlagger:
                     fig1, comvmax_scan = self.plotAll(fig1,gs1,NS,kk,outCubeName_0,inFFTData,inFFTHeader,galaxy,track,scan,None,comvmax_scan,cutoff_scan,type=None)
 
                 caracal.log.info("Making FFT of post-flagging image")
-                outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
-                if os.path.exists(outFFT):
-                    shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+                #outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
+                #if os.path.exists(outFFT):
+                #    shutil.rmtree(outFFT)
+                #inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName)
 
                 if makePlots == True:
                     fig2, comvmax_scan = self.plotAll(fig2,gs2,NS,kk,outCubeName,inFFTData,inFFTHeader,galaxy,track,scan,percent,comvmax_scan,0,type='postFlag')
@@ -1103,8 +1096,8 @@ class UzeroFlagger:
             if makePlots == True:
                 caracal.log.info("----------------------------------------------------")
                 caracal.log.info("Saving scans diagnostic plots")
-                outPlot="{0}{1}_{2}_perscan_preFlag.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
-                outPlotFlag="{0}{1}_{2}_perscan_postFlag.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                outPlot="{0}{2}_perscan_preFlag.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy,mfsOb)
+                outPlotFlag="{0}{2}_perscan_postFlag.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy,mfsOb)
 
                 fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                 fig1.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file
@@ -1116,7 +1109,7 @@ class UzeroFlagger:
             superArr = np.vstack((superArr, arr))
             caracal.log.info("Saving stats table")
             newtab = Table(names=['galaxy','track','scan','perc', 'cutoff','el','az'], data=(superArr))
-            outTablePercent="{tableDir}stats_{galaxy}_{track}.ecsv".format(tableDir=self.config['flagUzeros']['stripeTableDir'],galaxy=galaxy,track=track)
+            outTablePercent="{tableDir}stats_{galaxy}{track}.ecsv".format(tableDir=self.config['flag_u_zeros']['stripeTableDir'],galaxy=galaxy,track=track)
             ascii.write(newtab,outTablePercent, overwrite=True,format='ecsv')
 
             if flagCmd==True:
@@ -1126,8 +1119,8 @@ class UzeroFlagger:
                 self.putFlags(pipeline,inVis, inVisName, stripeFlags)
                 caracal.log.info("Making post-flagging image")
 
-                outCubePrefix = galaxy+'_'+track+'_tot_stripeFlag'
-                outCubeName=self.config['flagUzeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
+                outCubePrefix = galaxy+track+'_tot_stripeFlag'
+                outCubeName=self.config['flag_u_zeros']['stripeCubeDir']+outCubePrefix+'-dirty.fits'
 
                 if os.path.exists(outCubeName):
                     os.remove(outCubeName)
@@ -1135,10 +1128,11 @@ class UzeroFlagger:
 
                 caracal.log.info("Making FFT of post-flagging image")
 
-                outFFT=self.config['flagUzeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
-                if os.path.exists(outFFT):
-                    shutil.rmtree(outFFT)
-                inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+                #outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
+                #if os.path.exists(outFFT):
+                #    shutil.rmtree(outFFT)
+                #inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+                inFFTData,inFFTHeader = self.makeFFT(outCubeName)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
                 V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2'])
@@ -1148,7 +1142,7 @@ class UzeroFlagger:
                 percTotAfter=np.nansum(stripeFlags)/float(stripeFlags.shape[0]*stripeFlags.shape[1]*stripeFlags.shape[2])*100.
                 caracal.log.info("Total stripe flags: {percent:.3f} %".format(percent=percTotAfter))
                 percRel = percTotAfter-percTot
-                
+
                 caracal.log.info("----------------------------------------------------")
 
 
@@ -1157,9 +1151,9 @@ class UzeroFlagger:
                 if makePlots==True:
                     caracal.log.info("----------------------------------------------------")
                     caracal.log.info("----------------------Plotting----------------------")
-                    self.baselineStats(galaxy,stripeFlags,uvw,avspecchan)
+                    #self.baselineStats(galaxy,stripeFlags,uvw,avspecchan) # what are these plots?
 
-                    outPlot="{0}{1}_{2}_fullMS.png".format(self.config['flagUzeros']['stripePlotDir'],galaxy,mfsOb)
+                    outPlot="{0}{2}_fullMS_prepostFlag.png".format(self.config['flag_u_zeros']['stripePlotDir'],galaxy,mfsOb)
                     fig0, comvmax_tot = self.plotAll(fig0,gs0,2,1,outCubeName,inFFTData,inFFTHeader,galaxy,track,0,np.nanmean(percTotAv),comvmax_tot,0,type='postFlag')
                     fig0.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.97, wspace=0, hspace=0)
                     fig0.savefig(outPlot,bbox_inches='tight',dpi=200)   # save the figure to file

@@ -82,6 +82,11 @@ mapping:
             type: str
             required: false
             example: ''
+          antennas:
+            desc: Select antennas, following the same syntax as for the 'mstransform' task in CASA. Setting this to '' means that all antennas are selected.
+            type: str
+            required: false
+            example: ''
           nthreads:
             desc: Number of OMP threads to use (currently maximum limited by number of polarizations)
             type: int
@@ -131,20 +136,20 @@ mapping:
                 desc: Overrides interpolations settings for OTF calibration
                 type: map
                 mapping:
-                  delay_cal: 
+                  delay_cal:
                     desc: Interpolation type (in time) for K-Jones (delay) solutions. 'nearest' is recommended for CASA, as 'linear' can produce unexpected results.
                     type: str
                     enum: [default, nearest, linear, nearestPD, linearPD]
                     required: False
                     example: 'nearest'
-                  gain_cal: 
-                    desc: Interpolation type (in time) for G-Jones (gain) solutions. 
+                  gain_cal:
+                    desc: Interpolation type (in time) for G-Jones (gain) solutions.
                     type: str
                     enum: [default, nearest, linear, nearestPD, linearPD]
                     required: False
                     example: 'linear'
-                  bp_cal: 
-                    desc: Interpolation type (in time) for B-Jones (bandpass) solutions. 
+                  bp_cal:
+                    desc: Interpolation type (in time) for B-Jones (bandpass) solutions.
                     type: str
                     enum: [default, nearest, linear, nearestPD, linearPD]
                     required: False

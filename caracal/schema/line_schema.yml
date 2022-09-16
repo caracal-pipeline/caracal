@@ -98,7 +98,7 @@ mapping:
             desc: Enable the 'mstransform' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           col:
             desc: Which column of the .MS file(s) to process.
             type: str
@@ -213,6 +213,85 @@ mapping:
             required: False
             example: 'auto'
 
+      flag_u_zeros:
+        desc: flag RFI at u=0
+        type: map
+        mapping:
+          enable: 
+            desc: Enable the flag_u_zeros segment
+            type: bool
+            required: false
+            example: 'False'
+          use_mstransform:
+            desc: Run flagging algorithm on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            type: bool
+            required: false
+            example: 'True'
+          transfer_flags:
+            desc: List of datasets to which to transfer the u=0 flags. The list should only include the labels which identify those datasets, following the usual CARACal label convention and the 'use_mstransform' setting of this flag_u_zeros segment. The flags are calculated using the dataset identified by 'label_in' above. Flags can only be transferred to MS files with the same number of channels as the 'label_in' dataset. In case of different number of channels CARACal will crash.
+            seq:
+              - type: str
+            required: false
+            example: ''
+          method:
+            desc: Define flagging method. Either q99 or madThreshold (median+threshold*mad)
+            type: str
+            enum: ['madThreshold', 'q99']
+            required: false
+            example: 'madThreshold'
+          make_plots:
+            desc: Make Plots or not
+            type: bool
+            required: false
+            example: 'True'
+          cleanup:
+            desc: Remove intermediate ms files, images and FFTs
+            type: bool
+            required: false
+            example: 'True'
+          robust:
+            desc: robust weighting for the images
+            type: float
+            required: false
+            example: '1.5'
+          taper:
+            desc: size of gaussian tapering in arcseconds
+            type: float
+            required: false
+            example: '60'
+          imsize:
+            desc: size of the images in pixel,
+            type: int
+            required: false
+            example: '400'
+          cell:
+            desc: size of pixel in arcseconds. In the FFT the pixel size in lambda is given by:duv = 1./(imsize*cell*pi/(3600.*180.)), uv cell is in lambda
+            type: float
+            required: false
+            example: '20.'
+          chans:
+            desc: lowest and highest channel of the spw to consider for imaging
+            seq:
+              - type: int
+            required: false
+            example: '0,100'
+          thresholds:
+            desc: threshold for cutoff of amplitudes in the FFT, default=300
+            seq:
+              - type: float
+            required: false
+            example: '300'
+          dilateU:
+            desc: extend flag selection to N nearby cells along the U axis in both directions
+            type: int
+            required: false
+            example: '0'
+          dilateV:
+            desc: extend flag selection to N nearby cells along the V axis in both directions
+            type: int
+            required: false
+            example: '0'
+
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map
@@ -291,7 +370,7 @@ mapping:
             desc: Enable the 'make_cube' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'false'
           image_with:
             desc: Choose whether to image with WSClean + SoFiA ('wsclean') or with CASA Clean ('casa').
             type: str
@@ -597,7 +676,7 @@ mapping:
             desc: Enable the 'sofia' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           imcontsub:
             desc: Use results of imcontsub instead of image cubes if available
             type: bool
@@ -710,6 +789,7 @@ mapping:
             type: str
             required: false
             example: ''
+
       report:
         type: bool
         required: false

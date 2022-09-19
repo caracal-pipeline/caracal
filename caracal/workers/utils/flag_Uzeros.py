@@ -145,6 +145,8 @@ class UzeroFlagger:
             output=pipeline.output,
             label="Delete flag version")
 
+        recipe.run()
+
     def restoreFlags(self,pipeline,inVis,msdir,flagname):
 
         recipe = stimela.Recipe('saveFlagZeros',
@@ -155,7 +157,7 @@ class UzeroFlagger:
                             )
         recipe.JOB_TYPE = pipeline.container_tech
 
-        step='deleteFlag'
+        step='restoreFlag'
 
         recipe.add("cab/casa_flagmanager", step, {
             "vis": inVis,
@@ -164,7 +166,9 @@ class UzeroFlagger:
             },
             input=pipeline.input,
             output=pipeline.output,
-            label="Delete flag version")
+            label="Restore flag version")
+
+        recipe.run()
 
     def splitScans(self,pipeline,msdir,inVis,scanNums):
 
@@ -1032,7 +1036,6 @@ class UzeroFlagger:
 
                     while fvers[-1] != 'scan_flags_start':
                         self.deleteFlags(pipeline,visName,msdir=self.config['flag_u_zeros']['stripeMSDir'],flagname=fvers[-1])
-
                         fvers = fvers[:-1]
 
                     caracal.log.info("Computing statistics on FFT and flagging scan for threshold {0}".format(threshold))

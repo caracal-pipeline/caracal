@@ -414,7 +414,7 @@ mapping:
             type: bool
             desc: Enable the 'image' segment.
             required: false
-            example: 'True'
+            example: 'False'
           col:
             seq:
               - type: str
@@ -513,7 +513,7 @@ mapping:
             type: bool
             desc: Enable the 'calibrate' segment.
             required: false
-            example: 'True'
+            example: 'False'
           model:
             seq:
               - type: str
@@ -651,7 +651,7 @@ mapping:
             type: bool
             desc: Enable the 'transfer_model' segment.
             required: false
-            example: 'True'
+            example: 'False'
           transfer_to_label:
             type: str
             desc: Label of the .MS file to which to transfer the model.

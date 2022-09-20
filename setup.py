@@ -37,7 +37,7 @@ setup(name=PACKAGE_NAME,
       url="https://github.com/caracal-pipeline/caracal",
       packages=[PACKAGE_NAME],
       python_requires='>=3.6',
-      install_requires=requirements,
+      install_requires=[requirements],
       extras_require=dict(astroquery=["astroquery"]),
       include_package_data=True,
       # package_data - any binary or meta data files should go into MANIFEST.in

@@ -1,4 +1,0 @@
-pip
-pip-tools
-setuptools
-wheel

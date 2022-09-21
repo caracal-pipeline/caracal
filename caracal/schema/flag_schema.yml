@@ -117,20 +117,6 @@ mapping:
             enum: ["beg", "endb", "tail", "end"]
             required: False
             example: 'beg'
-      flag_Urange:
-        desc: Flag visibilities within a given range of U values and all V values in all fields of the selected MS file(s).
-        type: map
-        mapping:
-          enable:
-            desc: Enable the 'flag_URange' segment.
-            type: bool
-            required: False
-            example: 'False'
-          cutoff:
-            desc: Visibilities with abs(U) within cutoff (in units of lambda) are flagged.
-            type: float
-            required: False
-            example: '1.'
       flag_elevation:
         desc: Use CASA FLAGDATA to flag antennas with pointing elevation outside the selected range.
         type: map

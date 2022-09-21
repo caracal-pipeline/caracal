@@ -25,6 +25,8 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+
+from caracal.workers.utils import flag_Uzeros
 from casacore.tables import table
 
 NAME = 'Process and Image Line Data'
@@ -213,8 +215,8 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    flag_main_ms = pipeline.enable_task(config, 'sunblocker') and not config['sunblocker']['use_mstransform']
-    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
+    flag_main_ms = (pipeline.enable_task(config, 'flag_u_zeros') or pipeline.enable_task(config, 'sunblocker')) and not config['sunblocker']['use_mstransform']
+    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or (pipeline.enable_task(config, 'flag_u_zeros') and config['flag_u_zeros']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     rewind_mst_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["mstransform_version"] != 'null')
     label = config['label_in']
@@ -679,6 +681,19 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+
+        recipe.run()
+        recipe.jobs = []
+
+        if pipeline.enable_task(config,'flag_u_zeros'):
+            uZeros = flag_Uzeros.UzeroFlagger(config)
+
+            if config['flag_u_zeros']['use_mstransform']:
+                msname_Flag = msname_mst
+            else:
+                msname_Flag = msname
+
+            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

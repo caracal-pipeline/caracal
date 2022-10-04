@@ -224,6 +224,25 @@ mapping:
             desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
             required: false
             example: 'False'
+      img_breizorro_settings:
+        desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
+        type: map
+        mapping:
+          boxsize:
+            type: int
+            desc: Box size over which to compute stats (default = 50)
+            required: false
+            example: '50'
+          dilate:
+            type: int
+            desc: Apply dilation with a radius of R pixels
+            required: false
+            example: '0'
+          fill_holes:
+            type: bool
+            desc: Fill holes (i.e. entirely closed regions) in mask
+            required: false
+            example: 'false'
       cal_niter:
         type: int
         desc: Number of self-calibration iterations to perform.
@@ -411,13 +430,13 @@ mapping:
           cleanmask_method:
             seq:
               - type: str
-            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) 'breizorro'  to create a clean mask using Breizorro (threshold set by clean_mask_threshold below, and additional settings in breizorro_settings; 4) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
             required: false
             example: 'wsclean, wsclean'
           cleanmask_thr:
             seq:
               - type: float
-            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean' or 'sofia'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
+            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean', 'sofia' or 'breizorro'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
             required: false
             example: '10.0, 6.0'
           cleanmask_localrms:

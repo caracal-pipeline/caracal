@@ -91,6 +91,7 @@ selfcal:
       enable: false
   image:
     enable: true
+    cleanmask_method: [wsclean,breizorro]
   calibrate:
     enable: true
     gsols_timeslots: [120]

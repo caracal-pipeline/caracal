@@ -1,3 +1,4 @@
+include requirements.txt
 include caracal/bin/caracal
 recursive-include caracal/ *.py
 recursive-include caracal/ *.yml

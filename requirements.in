@@ -1,7 +1,7 @@
 ruamel.yaml
 decorator<5
-numpy>=1.14
-stimela>=1.6.5
+numpy
+stimela
 python-casacore
 scipy
 pysolr
@@ -11,6 +11,6 @@ astropy
 matplotlib
 regions
 nbconvert
-radiopadre-client>=1.1
+radiopadre-client
 jinja2
 psutil

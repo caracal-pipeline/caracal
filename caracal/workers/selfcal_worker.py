@@ -1853,10 +1853,11 @@ def worker(pipeline, recipe, config):
                 return False
             key = 'aimfast'
             tol = config[key]['tol']
-            fidelity_data = get_aimfast_data()
+            conv_crit = config[key]['convergence_criteria']
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if n >= 2 and not config['cal_meqtrees']['two_step']:
-                conv_crit = config[key]['convergence_criteria']
+            # And atleast one convergence criteria is specified
+            if n >= 2 and not config['cal_meqtrees']['two_step'] and conv_crit:
+                fidelity_data = get_aimfast_data()
                 conv_crit = [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0 = fidelity_data['{0}_{1}_{2}-residual'.format(

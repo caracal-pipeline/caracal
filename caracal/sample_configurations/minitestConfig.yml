@@ -100,7 +100,7 @@ selfcal:
   aimfast:
     enable: true
     plot: true
-    convergence_criteria: '' # specify convergence criteria to stop based on stats quantity e.g [DR]
+    convergence_criteria: [] # specify convergence criteria to stop based on stats quantity e.g [DR]
     online_catalog:
       enable: true
       catalog_type: nvss

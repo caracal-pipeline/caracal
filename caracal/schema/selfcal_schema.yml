@@ -530,9 +530,9 @@ mapping:
                 example: 'False'
               sum_to_peak:
                 type: float
-                desc: Sum to peak ratio of flux islands to mask in original image. Default = 100, will mask everything with a ratio above 100.
+                desc: Sum to peak ratio of flux islands to mask in original image. Default = 500, will mask everything with a ratio above 500.
                 required: false
-                example: '100'
+                example: '500'
 
 
       calibrate:

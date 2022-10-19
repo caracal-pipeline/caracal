@@ -96,7 +96,7 @@ selfcal:
     enable: true
     breizorro_image:
       enable: true
-      sum_to_peak: 150
+      sum_to_peak: 500
   aimfast:
     enable: true
     plot: true

@@ -383,7 +383,7 @@ mapping:
             seq:
               - type: str
             required: false
-            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option. Default: '', means no convergence is checked.
+            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option. Default is '', which means no convergence is checked.
             example: ''
           area_factor:
             type: int

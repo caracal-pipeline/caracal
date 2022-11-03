@@ -224,6 +224,11 @@ mapping:
             desc: List of options
             required: false
             example: 'False'
+          schema:
+            type: str
+            desc: specify if you want single channel images (single), cubes (cube), or both (both).
+            required: false
+            example: 'both'
           convl_images:
             type: bool
             desc: Convolve output images to a common resolution
@@ -234,55 +239,17 @@ mapping:
             desc: Target beam for images. If empty the target beam is the channel zero beam. Otherwise set as 'bmin, bmaj, bpa' in deg units.
             required: false
             example: ''
-          circular_beam:
-            type: bool
-            desc: Force the target beam to be circular
-            required: false
-            example: 'False'
+          # bug in stimela
+          #circular_beam:
+          #  type: bool
+          #  desc: Force the target beam to be circular
+          #  required: false
+          #  example: 'False'
           make_pb_images:
             type: bool
             desc: Make PB images
             required: false
             example: 'True'
-          remove_originals:
-            type: bool
-            desc: Remove original images. This segment will be executed only if the images have been convolved.
-            required: false
-            example: 'False'
-      make_cubes:
-        type: map
-        desc: make spectral cubes
-        mapping:
-          enable:
-            type: bool
-            desc: Make spectral cubes parameters
-            required: false
-            example: 'False'
-          convl_cubes:
-            type: bool
-            desc: Convolve output cubes to a common resolution with equolver
-            required: false
-            example: 'False'
-          convl_beam:
-            type: str
-            desc: Target beam for cubes. If empty the target beam is the channel zero beam. Otherwise set as 'bmin, bmaj, bpa' in deg units.
-            required: false
-            example: ''
-          circular_beam:
-            type: bool
-            desc: Force the target beam to be circular
-            required: false
-            example: 'False'
-          make_pb_cubes:
-            type: bool
-            desc: Make PB cubes
-            required: false
-            example: 'True'
-          remove_originals:
-            type: bool
-            desc: Remove original images and/or not convolved cubes to save disc space
-            required: false
-            example: 'False'
       flagging_summary:
         type: map
         desc: Output the flagging summary.

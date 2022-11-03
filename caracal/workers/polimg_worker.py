@@ -291,140 +291,112 @@ def worker(pipeline, recipe, config):
             image(img_dir, mslist, field)
 
         # if you want a pb cube then enable the make_extra_images segment and make pb images
-        if config['make_cubes']['enable'] and config['make_cubes']['make_pb_cubes']:
-            do_extra = True
-            do_pb = True
-        else:
-            do_extra = config['make_extra_images']['enable']
-            do_pb = config['make_extra_images']['make_pb_images']
+        do_convl = config['make_extra_images']['convl_images']
+        do_pb = config['make_extra_images']['make_pb_images']
 
-        if do_extra:
+        if config['make_extra_images']['enable']:
             for stokes in pol:
                 # derive target beam from first image
-                if config['make_extra_images']['enable'] and config['make_extra_images']['convl_images'] and config['make_extra_images']['convl_beam'] == '':
-                    image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
-                    im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
-                        image_path, prefix, field, 0, stokes)
+                img_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
+                im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(img_path, prefix, field, 0, stokes)
+                if do_convl and config['make_extra_images']['convl_beam'] == '':
                     header = fits.open(im_name)[0].header
-                    tar_beam = (header['bmaj'], header['bmin'], header['bpa'])
+                    tar_beam = str(header['bmaj'])+','+str(header['bmin'])+','+str(header['bpa'])
                 # set target beam from schema
-                elif config['make_extra_images']['enable'] and config['make_extra_images']['convl_images']:
+                elif do_convl:
                     tar_beam = config['make_extra_images']['convl_beam']
+                # for every channel
                 for ch in range(0, config['make_images']['img_nchans']):
-                    image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
                     im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
-                        image_path, prefix, field, ch, stokes)
+                        img_path, prefix, field, ch, stokes)
                     # make pb images
                     if do_pb:
                         head = fits.open(im_name)[0].header
                         freq = head['crval3']
                         make_mauchian_pb(im_name, freq)
                     # make convolved images
-                    if config['make_extra_images']['enable'] and config['make_extra_images']['convl_images']:
-                        caracal.log.info('Convolving images')
+                    if do_convl and config['make_extra_images']['schema'] != 'cube':
                         step = 'make-convolved-{0:s}-images'.format(stokes)
-                        inp_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output'.format(img_dir, prefix, field,
-                                                                                              ch, stokes)
-                        # recipe.add(
-                        #     'cab/spimple',
-                        #     step,
-                        #     {
-                        #         "image": inp_name,
-                        #         "o": inp_name.replace('.fits','')
-                        #         "pp": tar_beam,
-                        #         "cp": config['make_exta_images']['circular_beam'],
-                        #         "nthreads": ncpu,
-                        #     },
-                        #     input=pipeline.output,
-                        #     output=pipeline.output,
-                        #     label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
-                        # remove not convolved images
-                        if config['make_extra_images']['remove_originals']:
-                            caracal.log.info('Removing the original not convolved images')
-                            os.remove(im_name)
-
-        if config['make_cubes']['enable']:
-            for stokes in pol:
-                # make image cubes
-                inp_images = '{0:s}/{1:s}_{2:s}-*-{3:s}-image.fits:output'.format(img_dir, prefix, field, stokes)
-                out_images = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits:output'.format(
-                    img_dir, prefix, field, stokes)
-                step = 'make-cube-{0:s}'.format(stokes)
-                recipe.add(
-                    'cab/fitstool',
-                    step,
-                    {
-                        "file_pattern": inp_images,
-                        "output": out_images,
-                        "stack": True,
-                        "delete-files": True if config['make_cubes']['remove_originals'] else False,
-                        "fits-axis": 'FREQ',
-                        "force": True,
-                    },
-                    input=pipeline.output,
-                    output=pipeline.output,
-                    label='{0:s}:: Make {1:s} cube from wsclean channels'.format(step, stokes))
-                # make pb cubes
-                if config['make_cubes']['make_pb_cubes']:
-                    inp_images = '{0:s}/{1:s}_{2:s}-*-{3:s}-pb.fits:output'.format(img_dir, prefix, field, stokes)
-                    out_images = '{0:s}/{1:s}_{2:s}-{3:s}-pb.fits:output'.format(
-                        img_dir, prefix, field, stokes)
-                    step = 'make-pb-cube-{0:s}'.format(stokes)
+                        inp_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output'.format(img_dir, prefix, field, ch, stokes)
+                        convl_opt = {
+                            "image": inp_name,
+                            "output-filename": inp_name.replace('.fits','_'+str(tar_beam.replace(',','_'))),
+                            "psf-pars": [float(x) for x in tar_beam.split(',')],
+                            "nthreads": ncpu,
+                            #"circ-psf": config['make_extra_images']['circular_beam'],
+                            "band": 'l',
+                        }
+                        recipe.add(
+                            'cab/spimple_imconv',
+                            step,
+                            convl_opt,
+                            input=pipeline.output,
+                            output=pipeline.output,
+                            label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
+                recipe.run()
+                recipe.jobs = []
+                if config['make_extra_images']['schema'] == 'both' or config['make_extra_images']['schema'] == 'cube':
+                    # make PB cubes
+                    if do_pb:
+                        pb_im_name = '{0:s}/{1:s}_{2:s}-*-{3:s}-pb.fits:output'.format(img_dir, prefix, field, stokes)
+                        pb_out_cube = '{0:s}/{1:s}_{2:s}-{3:s}-pb.fits:output'.format(img_dir, prefix, field, stokes)
+                        step = 'make-pb-cube-{0:s}'.format(stokes)
+                        recipe.add(
+                            'cab/fitstool',
+                            step,
+                            {
+                                "file_pattern": pb_im_name,
+                                "output": pb_out_cube,
+                                "stack": True,
+                                "delete-files": True if config['make_extra_images']['schema'] == 'cube' else False,
+                                "fits-axis": 'FREQ',
+                            },
+                            input=pipeline.output,
+                            output=pipeline.output,
+                            label='{0:s}:: Make {1:s} PB cube from wsclean channels'.format(step, stokes))
+                    # make image cubes from images
+                    im_names = '{0:s}/{1:s}_{2:s}-*-{3:s}-image.fits:output'.format(img_dir, prefix, field, stokes)
+                    cube_name = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits:output'.format(img_dir, prefix, field, stokes)
+                    step = 'make-cube-{0:s}'.format(stokes)
                     recipe.add(
                         'cab/fitstool',
                         step,
                         {
-                            "file_pattern": inp_images,
-                            "output": out_images,
+                            "file_pattern": im_names,
+                            "output": cube_name,
                             "stack": True,
-                            "delete-files": True if not config['make_extra_images']['make_pb_images'] else False,
+                            "delete-files": False,
                             "fits-axis": 'FREQ',
+                            "force": True,
                         },
                         input=pipeline.output,
                         output=pipeline.output,
-                        label='{0:s}:: Make {1:s} PB cube from wsclean channels'.format(step, stokes))
+                        label='{0:s}:: Make {1:s} cube from wsclean channels'.format(step, stokes))
                     recipe.run()
                     recipe.jobs = []
-                    if not config['make_extra_images']['make_pb_images']:
-                        image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
-                        im_name = '{0:s}/{1:s}_{2:s}-*-{3:s}-pb.fits'.format(image_path, prefix, field, stokes)
-                        os.remove(im_name)
-                if config['make_cubes']['convl_cubes']:
-                    #  derive target beam from first channel
-                    if config['make_cubes']['convl_beam'] == '':
-                        image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
-                        im_name = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits'.format(
-                            image_path, prefix, field, stokes)
-                        header = fits.open(im_name)[0].header
-                        tar_beam = (header['bmaj1'], header['bmin1'], header['bpa1'])
-                    # set target beam from schema
-                    else:
-                        tar_beam = config['make_cubes']['convl_beam']
-                    # make convolved cubes
-                    inp_name = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits:output'.format(
-                        img_dir, prefix, field, stokes)
-                    caracal.log.info('Convolving cubes')
-                    step = 'make-convolved-{0:s}-cubes'.format(stokes)
-                    # recipe.add(
-                    #     'cab/spimple',
-                    #     step,
-                    #     {
-                    #         "image": inp_name,
-                    #         "o": inp_name.replace('.fits',''),
-                    #         "pp": config['make_cubes']['convl_beam'],
-                    #         "cp": tar_beam,
-                    #         "nthreads": ncpu,
-                    #     },
-                    #     input=pipeline.output,
-                    #     output=pipeline.output,
-                    #     label='{0:s}:: Make convolved {1:s} cubes'.format(step,stokes))
-                    # remove original cube and images
-                    if config['make_cubes']['remove_originals']:
-                        image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
-                        im_name = '{0:s}/{1:s}_{2:s}-*{3:s}-image.fits'.format(image_path, prefix, field, stokes)
-                        caracal.log.info('Removing the original not convolved images and cube')
-                        os.remove(im_name)
-
+                    # make convl
+                    if do_convl:
+                        step = 'make-convolved-{0:s}-cubes'.format(stokes)
+                        recipe.add(
+                             'cab/spimple_imconv',
+                             step,
+                             {
+                                 "image": cube_name,
+                                 "output-filename": cube_name.replace('.fits','_'+str(tar_beam.replace(',','-'))),
+                                 "nthreads": ncpu,
+                                 "psf-pars": [float(x) for x in tar_beam.split(',')],
+                                 #"circ-psf": config['make_extra_images']['circular_beam'],
+                                 "band": 'l',
+                             },
+                             input=pipeline.output,
+                             output=pipeline.output,
+                             label='{0:s}:: Make convolved {1:s} cubes'.format(step,stokes))
+                # remove original cube and images
+                #if config['make_extra_images']['schema'] == 'cube':
+                #    image_path = '{0:s}/{1:s}'.format(pipeline.output, img_dir)
+                #    im_name = '{0:s}/{1:s}_{2:s}-*-{3:s}-convl_image_'+str(tar_beam.replace(',','_'))+'.fits'.format(image_path, prefix, field, stokes)
+                #    #caracal.log.info('Removing the convolved images')
+                #    os.remove(im_name)
         for i, msname in enumerate(mslist):
             if pipeline.enable_task(config, 'flagging_summary'):
                 step = 'flagging_summary-selfcal-ms{0:d}'.format(i)

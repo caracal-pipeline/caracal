@@ -299,3 +299,9 @@ polimg:
     enable: false
   make_cubes:
     enable: false
+    schema: both
+    make_pb_images: true
+    convl_images: true
+    convl_beam: '0.006,0.006,0'
+    #circular_beam: false
+

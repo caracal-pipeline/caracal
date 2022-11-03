@@ -26,6 +26,9 @@ from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
 
+from caracal.workers.utils import flag_Uzeros
+from casacore.tables import table
+
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
 
@@ -212,8 +215,8 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    flag_main_ms = pipeline.enable_task(config, 'sunblocker') and not config['sunblocker']['use_mstransform']
-    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
+    flag_main_ms = (pipeline.enable_task(config, 'flag_u_zeros') or pipeline.enable_task(config, 'sunblocker')) and not config['sunblocker']['use_mstransform']
+    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or (pipeline.enable_task(config, 'flag_u_zeros') and config['flag_u_zeros']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     rewind_mst_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["mstransform_version"] != 'null')
     label = config['label_in']
@@ -414,6 +417,24 @@ def worker(pipeline, recipe, config):
                         msname, cab_name=substep, overwrite=config['overwrite_flagvers'])
 
         if pipeline.enable_task(config, 'subtractmodelcol'):
+
+            # Check if a model subtraction has already been done
+            t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly = False)
+            try:
+                nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+            except RuntimeError:
+                nModelSub = 0
+
+            if (nModelSub <= -1) & (config['subtractmodelcol']['force'] == False):          
+                caracal.log.error(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                caracal.log.error('Exiting CARACal.')
+                raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
+            
+            if (nModelSub <= -1 ) & (config['subtractmodelcol']['force']) == True:
+                caracal.log.warn(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                caracal.log.warn('You have chosen to force another model subtraction.')          
+                caracal.log.warn('God speed!')
+
             step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
@@ -428,7 +449,28 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label='{0:s}:: Subtract model column'.format(step))
 
+            t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub - 1)
+            t.close()
+
         if pipeline.enable_task(config, 'addmodelcol'):
+
+            # Check if a model addition has already been done
+            t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly = False)
+            try:
+                nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+            except RuntimeError:
+                nModelSub = 0
+
+            if (nModelSub >= 0) & (config['addmodelcol']['force'] == False):          
+                caracal.log.error(f'The model has been added {np.abs(nModelSub)} times.')
+                caracal.log.error('Exiting CARACal.')
+                raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
+            
+            if (nModelSub >= 0) & (config['addmodelcol']['force'] == True):
+                caracal.log.warn(f'The model has been added  {np.abs(nModelSub)} times.')
+                caracal.log.warn('You have chosen to force another model addition.')          
+                caracal.log.warn('God speed!')
+
             step = 'modeladd-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,
                        {
@@ -441,6 +483,9 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: Add model column'.format(step))
+
+            t.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub + 1)
+            t.close()
 
         msname_mst = add_ms_label(msname, "mst")
         msname_mst_base = os.path.splitext(msname_mst)[0]
@@ -636,6 +681,19 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+
+        recipe.run()
+        recipe.jobs = []
+
+        if pipeline.enable_task(config,'flag_u_zeros'):
+            uZeros = flag_Uzeros.UzeroFlagger(config)
+
+            if config['flag_u_zeros']['use_mstransform']:
+                msname_Flag = msname_mst
+            else:
+                msname_Flag = msname
+
+            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:
@@ -924,7 +982,7 @@ def worker(pipeline, recipe, config):
                                             toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
                                         else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
                                         hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
-                                        hdul[0].header['CRPIX'+i] = int(cent + delt)
+                                        hdul[0].header['CRPIX'+i] = cent + delt
                                     if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
                                         delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
                                         if i == '1':

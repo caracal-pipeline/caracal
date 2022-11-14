@@ -130,7 +130,7 @@ def worker(pipeline, recipe, config):
                 resolve_calibration_library(pipeline, prefix_msbase,
                                             config['split_field']['otfcal']['callib'],
                                             config['split_field']['otfcal']['label_cal'],
-                                            output_fields=output_fields,
+                                            output_fields=[''],
                                             default_interpolation_types=config['split_field']['otfcal'][
                                                 'interpolation'])
             if crosscal_lib:

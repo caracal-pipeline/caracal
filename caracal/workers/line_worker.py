@@ -1399,7 +1399,7 @@ def worker(pipeline, recipe, config):
                         simage_cube_list.append(image_cube_list[uu])
             else:
                 simage_cube_list = image_cube_list
-                    
+
             for uu in range(len(image_cube_list)):
                 step = 'sofia-source_finding-{0:d}'.format(uu)
                 recipe.add(
@@ -1453,7 +1453,7 @@ def worker(pipeline, recipe, config):
                     wscl_cube_list = glob.glob(
                         '{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
                         pipeline.output,cube_dir,
-                        pipeline.prefix, field, line_name))                
+                        pipeline.prefix, field, line_name))
 
                 # Hoping that the order is the same for all suffixes
                 wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
@@ -1511,6 +1511,7 @@ def worker(pipeline, recipe, config):
                     image_contsub.imcontsub(
                         incubus=contsincubelist[uu], outcubus=outputlist[uu],
                         fitmode=config['imcontsub']['fitmode'],
+                        polyorder=config['imcontsub']['polyorder'],
                         length=config['imcontsub']['length'],
                         mask=maskimc[uu],
                         sgiters=config['imcontsub']['sgiters'],
@@ -1523,7 +1524,7 @@ def worker(pipeline, recipe, config):
                     if runonce:
                         rancsonce = True
                         break
-                
+
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):
                 step = 'continuum-spectral_extraction-{0:d}'.format(uu)

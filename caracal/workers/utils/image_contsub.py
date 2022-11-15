@@ -128,7 +128,7 @@ def imcontsub(
                 * incubus_data.shape[2]))
         x = np.ma.masked_array(np.arange(incubus_data.shape[0]), False)
 
-        printime('Fitting polynomial')
+        printime('Fitting polynomial of order {}'.format(polyorder))
         fitpars = np.array(
             np.flip(np.ma.polyfit(x, incubus_data_flat, polyorder)))
 
@@ -191,7 +191,7 @@ def imcontsub(
             else:
                 fit = scipy_signal.savgol_filter(
                     sgincubus, length, polyorder, axis=0, mode='interp')
-                
+
     else:
         printime('No valid filter chosen, not filtering.')
         fit = incubus_data_masked*0.

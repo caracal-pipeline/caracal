@@ -161,14 +161,14 @@ def imcontsub(
 
             fit = scipy.ndimage.median_filter(
                 incubus_data, (length, 1, 1))
-    elif fitmode == 'sagvol':
+    elif fitmode == 'savgol':
         if isinstance(polyorder, type(None)):
             polyorder = 0
 
         if length == 0:
             printime('Length is 0, no Savitzky-Golay-filtering.')
         else:
-            printime('Savitzky-Golay-filtering cube')
+            printime('Savitzky-Golay-filtering cube (order {})'.format(polyorder))
 
             sgmask = np.ma.getmask(incubus_data_masked)
             sgincubus = incubus_data.copy()

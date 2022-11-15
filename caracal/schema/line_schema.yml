@@ -617,7 +617,7 @@ mapping:
           fitmode:
             desc: Type of fit ('poly' or 'savgol')
             type: str
-            enum: ['poly', 'sagvol']
+            enum: ['poly', 'savgol']
             required: false
             example: 'poly'
           length:

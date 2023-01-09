@@ -345,7 +345,7 @@ def worker(pipeline, recipe, config):
                                 input=pipeline.output,
                                 output=pipeline.output,
                                 label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
-                if do_convl and config['make_extra_images']['schema'] != 'cube'::
+                if do_convl and config['make_extra_images']['schema'] != 'cube':
                     caracal.log.info("%d channel images out of %d are now nan because target beam is larger than bmaj"%(skipped_ch,int(config['make_images']['img_nchans'])))
                 recipe.run()
                 recipe.jobs = []

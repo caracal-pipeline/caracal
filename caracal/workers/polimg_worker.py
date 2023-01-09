@@ -240,7 +240,7 @@ def worker(pipeline, recipe, config):
 
         alone = ["I", "Q", "U", "V"]
         if pol in alone:
-            rename_single_stokes(get_dir_path(image_path, pipeline), field, stokes)
+            rename_single_stokes(get_dir_path(image_path, pipeline), field, pol)
 
     def make_mauchian_pb(filename, freq):
         with fits.open(filename) as image:
@@ -305,6 +305,7 @@ def worker(pipeline, recipe, config):
                 # set target beam from schema
                 elif do_convl:
                     tar_beam = config['make_extra_images']['convl_beam']
+                skipped_ch=0
                 # for every channel
                 for ch in range(0, config['make_images']['img_nchans']):
                     im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(
@@ -316,23 +317,36 @@ def worker(pipeline, recipe, config):
                         make_mauchian_pb(im_name, freq)
                     # make convolved images
                     if do_convl and config['make_extra_images']['schema'] != 'cube':
-                        step = 'make-convolved-{0:s}-images'.format(stokes)
-                        inp_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output'.format(img_dir, prefix, field, ch, stokes)
-                        convl_opt = {
-                            "image": inp_name,
-                            "output-filename": inp_name.replace('.fits','_'+str(tar_beam.replace(',','_'))),
-                            "psf-pars": [float(x) for x in tar_beam.split(',')],
-                            "nthreads": ncpu,
-                            #"circ-psf": config['make_extra_images']['circular_beam'],
-                            "band": 'l',
-                        }
-                        recipe.add(
-                            'cab/spimple_imconv',
-                            step,
-                            convl_opt,
-                            input=pipeline.output,
-                            output=pipeline.output,
-                            label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
+                        im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(img_path, prefix, field, ch, stokes)
+                        bmaj=max(tar_beam.split(',')[0],tar_beam.split(',')[1])
+                        # skip and make a nan image if beam is larger
+                        if float(fits.open(im_name)[0].header['bmaj']) > float(bmaj):
+                            out_name = im_name.replace('.fits','_'+str(tar_beam.replace(',','_')))
+                            header = fits.open(im_name)[0].header
+                            header['bmaj'],header['bmin'],header['bpa']=tar_beam.split(',')[0],tar_beam.split(',')[1],tar_beam.split(',')[2]
+                            fits.writeto(out_name, fits.open(im_name)[0].data*np.nan, header=header)
+                            skipped_ch=skipped_ch+1
+                        # do convl if tar beam is larger than image beam
+                        else:
+                            step = 'make-convolved-{0:s}-images'.format(stokes)
+                            inp_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits:output'.format(img_dir, prefix, field, ch, stokes)
+                            convl_opt = {
+                                "image": inp_name,
+                                "output-filename": inp_name.replace('.fits','_'+str(tar_beam.replace(',','_'))),
+                                "psf-pars": [float(x) for x in tar_beam.split(',')],
+                                "nthreads": ncpu,
+                                #"circ-psf": config['make_extra_images']['circular_beam'],
+                                "band": 'l',
+                            }
+                            recipe.add(
+                                'cab/spimple_imconv',
+                                step,
+                                convl_opt,
+                                input=pipeline.output,
+                                output=pipeline.output,
+                                label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
+                if do_convl and config['make_extra_images']['schema'] != 'cube'::
+                    caracal.log.info("%d channel images out of %d are now nan because target beam is larger than bmaj"%(skipped_ch,int(config['make_images']['img_nchans'])))
                 recipe.run()
                 recipe.jobs = []
                 if config['make_extra_images']['schema'] == 'both' or config['make_extra_images']['schema'] == 'cube':
@@ -376,6 +390,19 @@ def worker(pipeline, recipe, config):
                     recipe.jobs = []
                     # make convl
                     if do_convl:
+                        # make a nan image if beam is larger
+                        inp_cube_name = '{0:s}/{1:s}_{2:s}-{3:s}-image.fits'.format(img_path, prefix, field, stokes)
+                        head = fits.open(inp_cube_name)[0].header
+                        data = fits.open(inp_cube_name)[0].data
+                        bvec = head['bmaj*']
+                        bvect=[float(bvec[x])<float(max(tar_beam.split(',')[0],tar_beam.split(',')[1])) for x in range(0,len(bvec))]
+                        caracal.log.info("%d channels out of %d in the cube are now nan because target beam is larger than bmaj"%(len(bvect)-sum(bvect),int(len(bvect)-1)))
+                        for x in range(1,len(bvect)):
+                            head['bmaj'+str(x)] = head['bmaj'+str(x)]*bvect[x]
+                            data[0,x-1,:,:] = data[0,x-1,:,:]*bvect[x]
+                            if ~np.any(data[0,x-1,:,:]):
+                                data[0,x-1,:,:]=data[0,x-1,:,:]*np.nan
+                        fits.writeto(inp_cube_name, data, header=head, overwrite=True)
                         step = 'make-convolved-{0:s}-cubes'.format(stokes)
                         recipe.add(
                              'cab/spimple_imconv',

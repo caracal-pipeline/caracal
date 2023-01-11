@@ -103,39 +103,39 @@ def worker(pipeline, recipe, config):
     # rename single stokes fits files
     def rename_single_stokes(img_dir, field, stokes):
         posname = '{0:s}/{1:s}/{2:s}_{3:s}'.format(pipeline.output, img_dir, prefix, field)
-        llist = list(set(glob.glob('{0:s}_{1:s}'.format(posname, '*psf.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*I-psf.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*Q-psf.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*U-psf.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*V-psf.fits'))))
+        llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*psf.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-psf.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-psf.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-psf.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-psf.fits'))))
         for fname in llist:
             os.rename(fname, fname[:-8] + stokes + "-psf.fits")
-        llist = list(set(glob.glob('{0:s}_{1:s}'.format(posname, '*dirty.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*I-dirty.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*Q-dirty.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*U-dirty.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*V-dirty.fits'))))
+        llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*dirty.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-dirty.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-dirty.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-dirty.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-dirty.fits'))))
         for fname in llist:
             os.rename(fname, fname[:-10] + stokes + "-dirty.fits")
-        llist = list(set(glob.glob('{0:s}_{1:s}'.format(posname, '*image.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*I-image.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*Q-image.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*U-image.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*V-image.fits'))))
+        llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*image.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-image.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-image.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-image.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-image.fits'))))
         for fname in llist:
             os.rename(fname, fname[:-10] + stokes + "-image.fits")
-        llist = list(set(glob.glob('{0:s}_{1:s}'.format(posname, '*model.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*I-model.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*Q-model.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*U-model.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*V-model.fits'))))
+        llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*model.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-model.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-model.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-model.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-model.fits'))))
         for fname in llist:
             os.rename(fname, fname[:-10] + stokes + "-model.fits")
-        llist = list(set(glob.glob('{0:s}_{1:s}'.format(posname, '*residual.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*I-residual.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*Q-residual.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*U-residual.fits'))) -
-                     set(glob.glob('{0:s}_{1:s}'.format(posname, '*V-residual.fits'))))
+        llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*residual.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-residual.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-residual.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-residual.fits'))) -
+                     set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-residual.fits'))))
         for fname in llist:
             os.rename(fname, fname[:-13] + stokes + "-residual.fits")
 
@@ -237,7 +237,6 @@ def worker(pipeline, recipe, config):
 
         recipe.run()
         recipe.jobs = []
-
         alone = ["I", "Q", "U", "V"]
         if pol in alone:
             rename_single_stokes(get_dir_path(image_path, pipeline), field, pol)
@@ -345,10 +344,11 @@ def worker(pipeline, recipe, config):
                                 input=pipeline.output,
                                 output=pipeline.output,
                                 label='{0:s}:: Make convolved {1:s} images'.format(step,stokes))
-                if do_convl and config['make_extra_images']['schema'] != 'cube':
-                    caracal.log.info("%d channel images out of %d are now nan because target beam is larger than bmaj"%(skipped_ch,int(config['make_images']['img_nchans'])))
                 recipe.run()
                 recipe.jobs = []
+                if do_convl and config['make_extra_images']['schema'] != 'cube':
+                    caracal.log.info("%d %s channel images out of %d are now nan because target beam is larger than bmaj"%(skipped_ch,stokes,int(config['make_images']['img_nchans'])))
+                
                 if config['make_extra_images']['schema'] == 'both' or config['make_extra_images']['schema'] == 'cube':
                     # make PB cubes
                     if do_pb:
@@ -396,7 +396,7 @@ def worker(pipeline, recipe, config):
                         data = fits.open(inp_cube_name)[0].data
                         bvec = head['bmaj*']
                         bvect=[float(bvec[x])<float(max(tar_beam.split(',')[0],tar_beam.split(',')[1])) for x in range(0,len(bvec))]
-                        caracal.log.info("%d channels out of %d in the cube are now nan because target beam is larger than bmaj"%(len(bvect)-sum(bvect),int(len(bvect)-1)))
+                        caracal.log.info("%d channels out of %d in the %s cube are now nan because target beam is larger than bmaj"%(len(bvect)-sum(bvect),int(len(bvect)-1),stokes))
                         for x in range(1,len(bvect)):
                             head['bmaj'+str(x)] = head['bmaj'+str(x)]*bvect[x]
                             data[0,x-1,:,:] = data[0,x-1,:,:]*bvect[x]

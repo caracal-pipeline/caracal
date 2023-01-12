@@ -318,10 +318,10 @@ def worker(pipeline, recipe, config):
                     if do_convl and config['make_extra_images']['schema'] != 'cube':
                         im_name = '{0:s}/{1:s}_{2:s}-{3:04d}-{4:s}-image.fits'.format(img_path, prefix, field, ch, stokes)
                         bmaj=max(tar_beam.split(',')[0],tar_beam.split(',')[1])
+                        header = fits.open(im_name)[0].header
                         # skip and make a nan image if beam is larger
-                        if float(fits.open(im_name)[0].header['bmaj']) > float(bmaj):
+                        if float(header['bmaj']) > float(bmaj):
                             out_name = im_name.replace('.fits','_'+str(tar_beam.replace(',','_')))
-                            header = fits.open(im_name)[0].header
                             header['bmaj'],header['bmin'],header['bpa']=tar_beam.split(',')[0],tar_beam.split(',')[1],tar_beam.split(',')[2]
                             fits.writeto(out_name, fits.open(im_name)[0].data*np.nan, header=header)
                             skipped_ch=skipped_ch+1
@@ -348,7 +348,7 @@ def worker(pipeline, recipe, config):
                 recipe.jobs = []
                 if do_convl and config['make_extra_images']['schema'] != 'cube':
                     caracal.log.info("%d %s channel images out of %d are now nan because target beam is larger than bmaj"%(skipped_ch,stokes,int(config['make_images']['img_nchans'])))
-                
+
                 if config['make_extra_images']['schema'] == 'both' or config['make_extra_images']['schema'] == 'cube':
                     # make PB cubes
                     if do_pb:
@@ -399,6 +399,8 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("%d channels out of %d in the %s cube are now nan because target beam is larger than bmaj"%(len(bvect)-sum(bvect),int(len(bvect)-1),stokes))
                         for x in range(1,len(bvect)):
                             head['bmaj'+str(x)] = head['bmaj'+str(x)]*bvect[x]
+                            head['bmin'+str(x)] = head['bmin'+str(x)]*bvect[x]
+                            head['bpa'+str(x)] = head['bpa'+str(x)]*bvect[x]
                             data[0,x-1,:,:] = data[0,x-1,:,:]*bvect[x]
                             if ~np.any(data[0,x-1,:,:]):
                                 data[0,x-1,:,:]=data[0,x-1,:,:]*np.nan

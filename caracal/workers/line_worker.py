@@ -908,8 +908,23 @@ def worker(pipeline, recipe, config):
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
+                        
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+                        caracal.log.info('Checking Mask dimensions')
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('RA = {}'.format(raTarget))
+                        caracal.log.info('Dec = {}'.format(decTarget))
+                        caracal.log.info('CubeHeight (px) = {}'.format(raTarget))
+                        caracal.log.info('CubeWidht (px) = {}'.format(decTarget))
+
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                            caracal.log.info('MaskRA = {}'.format(hdul[0].header["CRVAL1"]))
+                            caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
+
+                            caracal.log.info('MaskWidth = {}'.format(hdul[0].header["NAXIS1"]))
+                            caracal.log.info('DeMaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
+
                             if hdul[0].header["NAXIS1"] != cubeWidth: 
                               doProj = True 
                             if hdul[0].header["NAXIS2"] != cubeHeight: 
@@ -923,6 +938,9 @@ def worker(pipeline, recipe, config):
                                 ax3param = []
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
                                     ax3param.append(hdul[0].header[key])
+
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('+++++++++++++++++++++++++++++')
 
                         if doProj:
                             '''

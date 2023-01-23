@@ -914,7 +914,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info('doProj = {}'.format(doProj))
                         caracal.log.info('RA = {}'.format(raTarget))
                         caracal.log.info('Dec = {}'.format(decTarget))
-                        caracal.log.info('CubeHeight (px) = {}'.format(raTarget))
+                        caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
                         caracal.log.info('CubeWidht (px) = {}'.format(decTarget))
 
 

@@ -56,7 +56,7 @@ def freq_to_vel(filename, reverse):
                 headcube['restfreq'] = restfreq
 
             # convert from frequency to radio velocity
-            if headcube['naxis'] > 2 and 'FREQ' in headcube['ctype3'] and not reverse: 
+            if (headcube['naxis'] > 2) and ('FREQ' in headcube['ctype3']) and not reverse: 
                 headcube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq
                 headcube['crval3'] = C * \
                     (1 - float(headcube['crval3']) / restfreq)
@@ -69,7 +69,7 @@ def freq_to_vel(filename, reverse):
                     del headcube['cunit3']
 
             # convert from radio velocity to frequency
-            elif headcube['naxis'] > 2 and 'VRAD' in headcube['ctype3'] and headcube['naxis'] > 2 and reverse:
+            elif (headcube['naxis'] > 2) and ('VRAD' in headcube['ctype3']) and (headcube['naxis'] > 2) and reverse:
                 headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
                 headcube['crval3'] = restfreq * \
                     (1 - float(headcube['crval3']) / C)
@@ -93,7 +93,7 @@ def remove_stokes_axis(filename):
     else:
         with fits.open(filename, mode='update') as cube:
             headcube = cube[0].header
-            if headcube['naxis'] == 4 and headcube['ctype4'] == 'STOKES':
+            if (headcube['naxis'] == 4 )and (headcube['ctype4'] == 'STOKES'):
                 cube[0].data = cube[0].data[0]
                 del headcube['cdelt4']
                 del headcube['crpix4']
@@ -855,12 +855,22 @@ def worker(pipeline, recipe, config):
                             else:
                                 doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
                             
-                            doSpec = True if hdul[0].header['NAXIS3'] > nchans else None ## this should work in both a request for a subset, and if the cube is to be binned.
+                            if hdul[0].header['NAXIS3'] > nchans:
+                                doSpec = True 
+                            else:
+                                dpSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
+                            
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
-                            doSpec = True if cdelt > chanwidth[0] elif doProj == True pass else None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
+                            
+                            if cdelt > chanwidth[0]:
+                                doSpec = True 
+                            elif doProj == True:
+                                pass 
+                            else:
+                                doSpec =  None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
                                 ax3param = []

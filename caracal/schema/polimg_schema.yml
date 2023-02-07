@@ -210,6 +210,11 @@ mapping:
             type: int
             required: false
             example: '31'
+          weighting_rank_filter:
+            desc: Filter the weights and set high weights to the local mean. The level parameter specifies the filter level; any value larger than level*localmean will be set to level*localmean.
+            type: float
+            required: false
+            example: '3.'
           absmem:
             type: float
             example: '100.0'

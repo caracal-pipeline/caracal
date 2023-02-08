@@ -248,7 +248,7 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{:s}:: Make wsclean image'.format(step))
 
-        #recipe.run()
+        recipe.run()
         recipe.jobs = []
         alone = ["I", "Q", "U", "V"]
         if pol in alone:

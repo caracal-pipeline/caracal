@@ -109,32 +109,31 @@ def worker(pipeline, recipe, config):
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-dirty.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-dirty.fits'))))
         for fname in llist:
-            fname.replace("-dirty.fits", stokes + "-dirty.fits")
+            os.rename(fname, fname[:-10] + stokes + "-dirty.fits")
         llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*image.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-image.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-image.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-image.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-image.fits'))))
         for fname in llist:
-            fname.replace("-image.fits", stokes + "-image.fits")
+            os.rename(fname, fname[:-10] + stokes + "-image.fits")
         llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*model.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-model.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-model.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-model.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-model.fits'))))
         for fname in llist:
-            fname.replace("-model.fits", stokes + "-model.fits")
+            os.rename(fname, fname[:-10] + stokes + "-model.fits")
         llist = list(set(glob.glob('{0:s}{1:s}'.format(posname, '*residual.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-I-residual.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-Q-residual.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-U-residual.fits'))) -
                      set(glob.glob('{0:s}{1:s}'.format(posname, '*-V-residual.fits'))))
         for fname in llist:
-            fname.replace("-residual.fits", stokes + "-residual.fits")
+            os.rename(fname, fname[:-13] + stokes + "-residual.fits")
 
     def fix_freq(nch):
         summary = f'{mslist[0][:-3]}-summary.json'
-        print(summary)
         summary_file = json.load(open(os.path.join(pipeline.msdir, summary)))
         freq0 = float(summary_file["SPW"]["REF_FREQUENCY"][0])
         bw = float(summary_file["SPW"]["TOTAL_BANDWIDTH"][0])
@@ -145,13 +144,11 @@ def worker(pipeline, recipe, config):
             chrange = config['make_images']['img_chan_range']
             ch = list(map(int, chrange.split(',')))
             ch1,ch2 = ch[0],ch[1]
-            print(ch1,ch2)
         else:
             ch1,ch2 = 0,nchan
-        print(ch1,ch2)
         subbw = (ch2-ch1)*res/chout
         return(freq0+(subbw/2.)+(nch*subbw),subbw)
-    
+
     def image(img_dir, mslist, field):
         caracal.log.info("Number of threads used by WSClean for gridding:")
         caracal.log.info(ncpu)
@@ -251,7 +248,7 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output,
                    label='{:s}:: Make wsclean image'.format(step))
 
-        recipe.run()
+        #recipe.run()
         recipe.jobs = []
         alone = ["I", "Q", "U", "V"]
         if pol in alone:

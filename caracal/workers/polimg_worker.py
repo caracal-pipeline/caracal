@@ -325,7 +325,6 @@ def worker(pipeline, recipe, config):
                     if do_pb:
                         #fix header mess
                         freq,bw = fix_freq(ch)
-                        print(ch,freq,bw)
                         head = fits.open(im_name)[0].header
                         head['crval3'] = freq
                         head['cdelt3'] = bw

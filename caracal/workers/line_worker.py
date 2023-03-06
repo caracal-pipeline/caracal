@@ -25,6 +25,8 @@ from caracal.dispatch_crew import utils,noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
+from caracal.workers.utils import image_contsub
+from caracal.workers.utils import flag_Uzeros
 from casacore.tables import table
 
 NAME = 'Process and Image Line Data'
@@ -95,6 +97,7 @@ def remove_stokes_axis(filename):
         with fits.open(filename, mode='update') as cube:
             headcube = cube[0].header
             if headcube['naxis'] == 4 and headcube['ctype4'] == 'STOKES':
+                caracal.log.info('Working on {}'.format(filename))
                 cube[0].data = cube[0].data[0]
                 del headcube['cdelt4']
                 del headcube['crpix4']
@@ -177,6 +180,8 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
                            1 - 4 * (1.189 * datacube / FWHM_pb)**2))**2
 
             datacube[datacube < cutoff] = np.nan
+            if headcube['naxis'] == 4:
+                datacube = np.expand_dims(datacube, 0)
             fits.writeto(filename.replace('image.fits','pb.fits'),
                 datacube, header=headcube, overwrite=True)
             if apply_corr:
@@ -213,8 +218,8 @@ def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
-    flag_main_ms = pipeline.enable_task(config, 'sunblocker') and not config['sunblocker']['use_mstransform']
-    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
+    flag_main_ms = (pipeline.enable_task(config, 'flag_u_zeros') or pipeline.enable_task(config, 'sunblocker')) and not config['sunblocker']['use_mstransform']
+    flag_mst_ms = (pipeline.enable_task(config, 'sunblocker') and config['sunblocker']['use_mstransform']) or (pipeline.enable_task(config, 'flag_u_zeros') and config['flag_u_zeros']['use_mstransform']) or pipeline.enable_task(config, 'flag_mst_errors')
     rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
     rewind_mst_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["mstransform_version"] != 'null')
     label = config['label_in']
@@ -679,6 +684,19 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input,
                        output=pipeline.output,
                        label='{0:s}:: file ms={1:s}'.format(step, msname_mst))
+
+        recipe.run()
+        recipe.jobs = []
+
+        if pipeline.enable_task(config,'flag_u_zeros'):
+            uZeros = flag_Uzeros.UzeroFlagger(config)
+
+            if config['flag_u_zeros']['use_mstransform']:
+                msname_Flag = msname_mst
+            else:
+                msname_Flag = msname
+
+            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:
@@ -1303,6 +1321,10 @@ def worker(pipeline, recipe, config):
     recipe.run()
     recipe.jobs = []
 
+    # This prevents multiple running of imcontsub if the
+    # targets are specified explicitly
+    rancsonce = False
+
     # Once all cubes have been made fix the headers etc.
     # Search cubes and cubes/cubes_*/ for cubes whose header should be fixed
     cube_dir = get_relative_path(pipeline.cubes, pipeline)
@@ -1315,19 +1337,13 @@ def worker(pipeline, recipe, config):
             pipeline.output,cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list+wscl_cube_list
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
+        dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
 
-        if pipeline.enable_task(config, 'remove_stokes_axis'):
-            caracal.log.info('Removing Stokes axis of all cubes/images of target {0:d}'.format(tt))
-            for uu in range(len(cube_list)):
-                recipe.add(remove_stokes_axis,
-                           'remove_cube_stokes_axis-{0:d}'.format(uu),
-                           {'filename': cube_list[uu],},
-                           input=pipeline.input,
-                           output=pipeline.output,
-                           label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
+        image_mask_list = [cc for cc in cube_list if 'image_mask.fits' in cc]
+        image_clean_mask_list = [cc for cc in cube_list if 'image_clean_mask.fits' in cc]
 
         if pipeline.enable_task(config, 'pb_cube'):
-            caracal.log.info('Creating primary beam cubes for target {0:d}'.format(tt))
+            caracal.log.info('Will create primary beam cube for target {0:d}'.format(tt))
             for uu in range(len(image_cube_list)):
                 recipe.add(make_pb_cube,
                            'make pb_cube-{0:d}'.format(uu),
@@ -1340,14 +1356,25 @@ def worker(pipeline, recipe, config):
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
+                cube_list.append(image_cube_list[uu].replace('image.fits','pb.fits'))
+
+        if pipeline.enable_task(config, 'remove_stokes_axis'):
+            caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))
+            for uu in range(len(cube_list)):
+                recipe.add(remove_stokes_axis,
+                           'remove_cube_stokes_axis-{0:d}'.format(uu),
+                           {'filename': cube_list[uu],},
+                           input=pipeline.input,
+                           output=pipeline.output,
+                           label='Remove Stokes axis for cube {0:s}'.format(cube_list[uu]))
 
         if pipeline.enable_task(config, 'freq_to_vel'):
             if not config['freq_to_vel']['reverse']:
                 caracal.log.info(
-                    'Converting spectral axis of all cubes from frequency to radio velocity for target {0:d}'.format(tt))
+                    'Will convert spectral axis of all cubes from frequency to radio velocity for target {0:d}'.format(tt))
             else:
                 caracal.log.info(
-                    'Converting spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
+                    'Will convert spectral axis of all cubes from radio velocity to frequency for target {0:d}'.format(tt))
             for uu in range(len(cube_list)):
                 recipe.add(freq_to_vel,
                            'convert-spectral_header-cube{0:d}'.format(uu),
@@ -1361,13 +1388,25 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         if pipeline.enable_task(config, 'sofia'):
+            if config['sofia']['imcontsub']:
+                simage_cube_list = []
+                for uu in range(len(image_cube_list)):
+                    icsname = image_cube_list[uu].replace(
+                        '.image.fits', '.imcontsub.fits')
+                    if len(glob.glob(icsname)) > 0:
+                        simage_cube_list.append(icsname)
+                    else:
+                        simage_cube_list.append(image_cube_list[uu])
+            else:
+                simage_cube_list = image_cube_list
+
             for uu in range(len(image_cube_list)):
                 step = 'sofia-source_finding-{0:d}'.format(uu)
                 recipe.add(
                     'cab/sofia',
                     step,
                     {
-                        "import.inFile": image_cube_list[uu].split('/')[-1]+':input',
+                        "import.inFile": simage_cube_list[uu].split('/')[-1]+':input',
                         "steps.doFlag": config['sofia']['flag'],
                         "steps.doScaleNoise": True,
                         "steps.doSCfind": True,
@@ -1390,9 +1429,101 @@ def worker(pipeline, recipe, config):
                         "merge.minSizeY": config['sofia']['minSizeY'],
                         "merge.minSizeZ": config['sofia']['minSizeZ'],
                     },
-                    input='/'.join(image_cube_list[uu].split('/')[:-1]),
-                    output='/'.join(image_cube_list[uu].split('/')[:-1]),
-                    label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,image_cube_list[uu]))
+                    input='/'.join(simage_cube_list[uu].split('/')[:-1]),
+                    output='/'.join(simage_cube_list[uu].split('/')[:-1]),
+                    label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step,simage_cube_list[uu]))
+        # Again, in some cases this should run once
+        if rancsonce:
+            pass
+        else:
+            if pipeline.enable_task(config, 'imcontsub'):
+
+                caracal.log.info(
+                    'Subtracting continuum in the image domain for target {0:d}'.format(tt))
+
+                # Using highest cube directory
+                dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
+                poopoo = max([int(gi[-1]) for gi in dirlist])
+                if config['imcontsub']['lastiter']:
+                    wscl_cube_list = glob.glob(
+                        '{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
+                        pipeline.output,cube_dir, poopoo,
+                        pipeline.prefix, field, line_name))
+                else:
+                    wscl_cube_list = glob.glob(
+                        '{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
+                        pipeline.output,cube_dir,
+                        pipeline.prefix, field, line_name))
+
+                # Hoping that the order is the same for all suffixes
+                wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]
+                wdirty_cube_list = [cc for cc in wscl_cube_list if 'dirty.fits' in cc]
+                wimage_mask_list = [cc for cc in wscl_cube_list if 'image_mask.fits' in cc]
+                wimage_clean_mask_list = [cc for cc in wscl_cube_list if 'image_clean_mask.fits' in cc]
+
+                # See comment below
+                runonce = False
+                if len(config['imcontsub']['incubus']) == 0 or len(config['imcontsub']['incubus'][0]) == 0:
+                    if len(wimage_cube_list):
+                        contsincubelist = wimage_cube_list
+                        rsuffix = '.image.fits'
+                    else:
+                        contsincubelist = wdirty_cube_list
+                        rsuffix = '.dirty.fits'
+                else:
+                    # Run only once if the cubes are specified explicitly
+                    # Otherwise we'd do the same thing number of targers times
+                    runonce = True
+                    contsincubelist = config['imcontsub']['incubus']
+                    rsuffix = '.fits'
+                outputlist = [i.replace(rsuffix, '.imcontsub.fits') for i in contsincubelist]
+
+                if config['imcontsub']['mask'] == '':
+                    if len(config['imcontsub']['masculin']) == 0 or len(config['imcontsub']['masculin'][0]) == 0:
+                        maskimc = []
+                    else:
+                        maskimc = config['imcontsub']['masculin']
+                elif config['imcontsub']['mask'] == 'clean':
+                    maskimc = wimage_clean_mask_list
+                elif config['imcontsub']['mask'] == 'sofia':
+                    maskimc = wimage_mask_list
+                else:
+                    maskimc = []
+
+                if len(maskimc) == 0:
+                    maskimc = [None for i in contsincubelist]
+                    caracal.log.info(
+                        'Not using mask for image subtraction of target {0:d}'.format(tt))
+
+                if config['imcontsub']['outfit'] == True:
+                    outfitlist = [i.replace(rsuffix, '.contsfit.fits') for i in contsincubelist]
+                else:
+                    outfitlist = [None for i in contsincubelist]
+
+                if config['imcontsub']['outfitcon'] == True:
+                    outconlist = [i.replace(rsuffix, '.contsfitcon.fits') for i in contsincubelist]
+                else:
+                    outconlist = [None for i in contsincubelist]
+
+                #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
+
+                for uu in range(len(contsincubelist)):
+                    image_contsub.imcontsub(
+                        incubus=contsincubelist[uu], outcubus=outputlist[uu],
+                        fitmode=config['imcontsub']['fitmode'],
+                        polyorder=config['imcontsub']['polyorder'],
+                        length=config['imcontsub']['length'],
+                        mask=maskimc[uu],
+                        sgiters=config['imcontsub']['sgiters'],
+                        kertyp=config['imcontsub']['kertyp'],
+                        kersiz=config['imcontsub']['kersiz'],
+                        fitted=outfitlist[uu],
+                        confit=outconlist[uu],
+                        clobber=True,
+                        )
+                    if runonce:
+                        rancsonce = True
+                        break
 
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):

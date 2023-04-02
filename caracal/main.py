@@ -16,7 +16,7 @@ import stimela
 from caracal.schema import SCHEMA_VERSION
 
 __version__ = caracal.__version__
-pckgdir = caracal.pckgdir
+pckgdir = caracal.PCKGDIR
 DEFAULT_CONFIG = caracal.DEFAULT_CONFIG
 SAMPLE_CONFIGS = caracal.SAMPLE_CONFIGS = {
         "minimal" : "minimalConfig.yml",

@@ -64,17 +64,26 @@ def report_version():
             return __version__
 
 
-__version__ = report_version()
+__version__ = VERSION = report_version()
 
 # global settings
-pckgdir = os.path.dirname(os.path.abspath(__file__))
+PCKGDIR = os.path.dirname(os.path.abspath(__file__))
 # this gets renamed once the config is read in
 CARACAL_LOG = "log-caracal.txt"
 
 DEFAULT_CONFIG = os.path.join(
-    pckgdir, "sample_configurations", "minimalConfig.yml")
+   PCKGDIR, "sample_configurations", "minimalConfig.yml")
 SCHEMA = os.path.join(
-    pckgdir, "schema", "schema-{0:s}.yml".format(__version__))
+    PCKGDIR, "schema", "schema-{0:s}.yml".format(__version__))
+
+
+SAMPLE_CONFIGS = {
+        "minimal" : "minimalConfig.yml",
+        "meerkat" : "meerkat-defaults.yml",
+        "carate" : "carateConfig.yml",
+        "meerkat_continuum" : "meerkat-continuum-defaults.yml",
+        "mosaic_basic" : "mosaic_basic_config.yml",
+        }
 
 ################################################################################
 # Logging

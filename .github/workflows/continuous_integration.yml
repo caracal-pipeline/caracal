@@ -41,7 +41,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Install shadems
+      - name: Install caracal
         run: poetry install --extras "testing"
 
       - name: Lint with flake8

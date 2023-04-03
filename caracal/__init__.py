@@ -67,7 +67,7 @@ def report_version():
 __version__ = VERSION = report_version()
 
 # global settings
-PCKGDIR = os.path.dirname(os.path.abspath(__file__))
+PCKGDIR = pckgdir = os.path.dirname(os.path.abspath(__file__))
 # this gets renamed once the config is read in
 CARACAL_LOG = "log-caracal.txt"
 

@@ -1,8 +1,0 @@
-FROM stimela/base:1.4.6
-ADD . /code
-WORKDIR /code
-RUN pip install /code
-RUN caracal -gd carate test.yml
-RUN caracal -gd meerkat test.yml
-RUN caracal -gd meerkat_continuum test.yml
-RUN caracal -gd mosaic_basic test.yml

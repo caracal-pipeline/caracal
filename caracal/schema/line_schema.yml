@@ -796,7 +796,7 @@ mapping:
         desc: (Re)generate a full HTML report at the end of this worker.
         example: 'False'
       cabs:
-        desc: 'Specifies non-default image versions and/or tags for Stimela cabs.  Running with scissors: use with extreme caution. Inline format is: Format is [{'name': 'cabname', 'tag': 'stimela_cab_version'}].'
+        desc: 'Specifies non-default image versions and/or tags for Stimela cabs.  Running with scissors: use with extreme caution. Inline format is: Format is [{name: cabname, tag: stimela_cab_version}].'
         required: false
         seq:
           - type: map

@@ -901,8 +901,8 @@ def worker(pipeline, recipe, config):
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,8)
-                        decTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,8)
+                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
@@ -915,7 +915,7 @@ def worker(pipeline, recipe, config):
                         caracal.log.info('RA = {}'.format(raTarget))
                         caracal.log.info('Dec = {}'.format(decTarget))
                         caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
-                        caracal.log.info('CubeWidht (px) = {}'.format(decTarget))
+                        caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
 
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
@@ -923,15 +923,15 @@ def worker(pipeline, recipe, config):
                             caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
 
                             caracal.log.info('MaskWidth = {}'.format(hdul[0].header["NAXIS1"]))
-                            caracal.log.info('DeMaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
+                            caracal.log.info('MaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
 
                             if hdul[0].header["NAXIS1"] != cubeWidth: 
                               doProj = True 
                             if hdul[0].header["NAXIS2"] != cubeHeight: 
                               doProj = True 
-                            if hdul[0].header["CRVAL1"] != raTarget: 
+                            if np.round(hdul[0].header["CRVAL1"],5) != np.round(raTarget): 
                               doProj = True 
-                            if hdul[0].header["CRVAL2"] != decTarget: 
+                            if np.round(hdul[0].header["CRVAL2"],5) != np.round(decTarget): 
                               doProj = True   
 
                             if doProj:

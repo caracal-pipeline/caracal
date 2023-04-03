@@ -68,7 +68,12 @@ mapping:
             desc: Enable the 'subtractmodelcol' segment.
             type: bool
             required: false
-            example: 'True'  
+            example: 'True'
+          force:
+            desc: Force the model subtraction regardless of the number of previous subtractions.
+            type: bool
+            required: false
+            example: 'False'
 
       addmodelcol:
         desc: Replace the CORRECTED_DATA column of the .MS file(s) with the sum CORRECTED_DATA + MODEL_DATA. This is useful to undo the operation performed by subtractmodelcol in this worker. WARNING! The CORRECTED_DATA column is overwritten.
@@ -76,6 +81,11 @@ mapping:
         mapping:
           enable:
             desc: Enable the 'addmodelcol' segment.
+            type: bool
+            required: false
+            example: 'False'
+          force:
+            desc: Force the model addition regardless of the number of previous additions.
             type: bool
             required: false
             example: 'False'
@@ -88,7 +98,7 @@ mapping:
             desc: Enable the 'mstransform' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           col:
             desc: Which column of the .MS file(s) to process.
             type: str
@@ -203,6 +213,85 @@ mapping:
             required: False
             example: 'auto'
 
+      flag_u_zeros:
+        desc: flag RFI at u=0
+        type: map
+        mapping:
+          enable: 
+            desc: Enable the flag_u_zeros segment
+            type: bool
+            required: false
+            example: 'False'
+          use_mstransform:
+            desc: Run flagging algorithm on the .MS file(s) produced by the mstransform section of this worker instead of the input .MS file(s).
+            type: bool
+            required: false
+            example: 'True'
+          transfer_flags:
+            desc: List of datasets to which to transfer the u=0 flags. The list should only include the labels which identify those datasets, following the usual CARACal label convention and the 'use_mstransform' setting of this flag_u_zeros segment. The flags are calculated using the dataset identified by 'label_in' above. Flags can only be transferred to MS files with the same number of channels as the 'label_in' dataset. In case of different number of channels CARACal will crash.
+            seq:
+              - type: str
+            required: false
+            example: ''
+          method:
+            desc: Define flagging method. Either q99 or madThreshold (median+threshold*mad)
+            type: str
+            enum: ['madThreshold', 'q99']
+            required: false
+            example: 'madThreshold'
+          make_plots:
+            desc: Make Plots or not
+            type: bool
+            required: false
+            example: 'True'
+          cleanup:
+            desc: Remove intermediate ms files, images and FFTs
+            type: bool
+            required: false
+            example: 'True'
+          robust:
+            desc: robust weighting for the images
+            type: float
+            required: false
+            example: '1.5'
+          taper:
+            desc: size of gaussian tapering in arcseconds
+            type: float
+            required: false
+            example: '60'
+          imsize:
+            desc: size of the images in pixel,
+            type: int
+            required: false
+            example: '400'
+          cell:
+            desc: size of pixel in arcseconds. In the FFT the pixel size in lambda is given by:duv = 1./(imsize*cell*pi/(3600.*180.)), uv cell is in lambda
+            type: float
+            required: false
+            example: '20.'
+          chans:
+            desc: lowest and highest channel of the spw to consider for imaging
+            seq:
+              - type: int
+            required: false
+            example: '0,100'
+          thresholds:
+            desc: threshold for cutoff of amplitudes in the FFT, default=300
+            seq:
+              - type: float
+            required: false
+            example: '300'
+          dilateU:
+            desc: extend flag selection to N nearby cells along the U axis in both directions
+            type: int
+            required: false
+            example: '0'
+          dilateV:
+            desc: extend flag selection to N nearby cells along the V axis in both directions
+            type: int
+            required: false
+            example: '0'
+
       sunblocker:
         desc: Use sunblocker to grid the visibilities and flag UV cells affected by solar RFI. See description of sunblocker on github repository gigjozsa/sunblocker in method phazer of module sunblocker.py.
         type: map
@@ -281,7 +370,7 @@ mapping:
             desc: Enable the 'make_cube' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'false'
           image_with:
             desc: Choose whether to image with WSClean + SoFiA ('wsclean') or with CASA Clean ('casa').
             type: str
@@ -505,6 +594,80 @@ mapping:
             required: false
             example: 'False'
       
+      imcontsub:
+        desc: Use the final output image cube (lastiter true) or all (lastiter false) when using wsclean or a specified set of cubes. Fit a function or filter along the third axis, subtract it from the original, and return the result. Possible is a polynomial fit (fitmode = poly) or a Savitzky-Golay filter. In case of the Savitzky-Golay filter the window length is given by the parameter with the name length. The polynomial order of either polynomial or the filter is specified with the parameter polyorder. A Savitzky-Golay filter with polynomial order 0 is a median filter. Optionally a mask data cube with the same dimensions of the input data cube can be provided.  Voxels for which the mask data cube is not equal to zero are ignored. For the polynomial fit the voxels are simply ignored. In case of the Savitzky Golay filter, an iterative process is started.  All masked voxels are set to zero and a median filter is run along the frequency axis. After that the Savitzky-Golay filter is run sgiters times. If the parameter sgiters is set to 0, only one Savitzky-Golay filter is applied (no initial median filtering, does not work for ). With the parameter fitted the user can optionally supply the name of the output fitted data cube.
+        type: map
+        mapping:
+          enable:
+            desc: Enable the 'imcontsub' segment.
+            type: bool
+            required: false
+            example: 'False'
+          incubus:
+            desc: List of input cubes; will select either image or dirty cubes if empty or not specified
+            seq:
+              - type: str
+            required: false
+            example: ''
+          lastiter:
+            desc: If incubus is empty, select only the last iteration for continuum subtraction (true) or all (false)
+            type: bool
+            required: false
+            example: 'True'
+          fitmode:
+            desc: Type of fit ('poly' or 'savgol')
+            type: str
+            enum: ['poly', 'savgol']
+            required: false
+            example: 'poly'
+          length:
+            desc: Length of the sliding window in channels (only used for fitmode = savgol must be odd, default is 25)
+            type: int
+            required: false
+            example: '25'
+          polyorder:
+            desc: Order of the polynomial or of the Savitzky-Golay filter (default is 0)
+            type: int
+            required: False
+            example: '0'
+          mask:
+            desc: Mask cubes to use. '' means do not use mask cubes or those specified with parameter masculin. 'clean' means use clean masks if available. 'sofia' means use sofia masks if available.
+            type: str
+            required: False
+            example: ''
+          masculin:
+            desc: List of input mask cubes. Only used if mask = ''. Must be empty or the same number of cubes as the input cubes.
+            seq:
+              - type: str
+            required: false
+            example: ''
+          sgiters:
+            desc: Number of Savitzky-Golay filter iterations (default is 0)
+            type: int
+            required: False
+            example: '0'
+          kertyp:
+            desc: Kernel type to convolve the polynomial fit with ('gauss', 'tophat')
+            type: str
+            enum: ['gauss', 'tophat']
+            required: false
+            example: 'tophat'
+          kersiz:
+            desc: Kernel size to convolve the polynomial fit with (pixel, 0 means no convolution)
+            type: int
+            required: false
+            example: '0'
+          outfit:
+            desc: Produce fitted data cubes (True means yes, default is False)
+            type: bool
+            required: false
+            example: 'False'
+          outfitcon:
+            desc: Produce fitted and convolved data cubes (True means yes, default is False)
+            type: bool
+            required: false
+            example: 'False'
+            
       sofia:
         desc: Run SoFiA source-finder on the final HI cubes to produce a detection mask, moment images and catalogues. Note that these settings are not used to make clean masks.
         type: map
@@ -513,7 +676,12 @@ mapping:
             desc: Enable the 'sofia' segment.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
+          imcontsub:
+            desc: Use results of imcontsub instead of image cubes if available
+            type: bool
+            required: false
+            example: 'False'
           flag:
             desc: Use flag regions?
             type: bool
@@ -621,6 +789,7 @@ mapping:
             type: str
             required: false
             example: ''
+
       report:
         type: bool
         required: false

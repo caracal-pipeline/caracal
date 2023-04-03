@@ -134,7 +134,7 @@ def worker(pipeline, recipe, config):
         # else splitting target -- we'll split a list of targets to a list of output MSs
         else:
             target_ls = pipeline.target[i]
-            output_fields = [x.strip() for x in str(target_ls[0]).split(',')]
+            output_fields = [x.strip() for x in target_ls]
             # repeat the from-ms once per target, if not splitting from the target MS
             if not from_target:
                 from_mslist = from_mslist * len(target_ls)
@@ -217,6 +217,7 @@ def worker(pipeline, recipe, config):
                         "chanaverage": config['split_field']['chan_avg'] > 1,
                         "chanbin": config['split_field']['chan_avg'],
                         "spw": config['split_field']['spw'],
+                        "antenna": config['split_field']['antennas'],
                         "datacolumn": dcol,
                         "correlation": config['split_field']['correlation'],
                         "scan": config['split_field']['scan'],
@@ -251,6 +252,7 @@ def worker(pipeline, recipe, config):
                         "datacolumn": sdm.dismissable('corrected' if crosscal_lib is not None else 'data'),
                         "correlation": config['split_field']['correlation'],
                         "scan": config['split_field']['scan'],
+                        "antenna": config['split_field']['antennas'],
                         "usewtspectrum": config['split_field']['create_specweights'],
                         "field": target,
                         "keepflags": True,

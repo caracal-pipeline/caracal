@@ -16,6 +16,11 @@ class CaracalException(RuntimeError):
     """Base class for pipeline logic errors"""
     pass
 
+class PlayingWithFire(RuntimeError):
+    """Silly settings chosen."""
+    pass
+
+
 class UserInputError(CaracalException):
     """Something wrong with user input"""
     pass

@@ -91,6 +91,19 @@ selfcal:
       enable: false
   image:
     enable: true
+    cleanmask_method: [wsclean,breizorro]
+  extract_sources:
+    enable: true
+    breizorro_image:
+      enable: true
+      sum_to_peak: 500
+  aimfast:
+    enable: true
+    plot: true
+    convergence_criteria: [] # specify convergence criteria to stop based on stats quantity e.g [DR]
+    online_catalog:
+      enable: true
+      catalog_type: nvss
   calibrate:
     enable: true
     gsols_timeslots: [120]

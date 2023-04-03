@@ -51,9 +51,18 @@ mapping:
         
       clearcal:
         desc: Clear out calibrated data and reset the previous predicted model.
-        type: bool
-        required: false
-        example: 'False'            
+        type: map
+        mapping:
+          enable: 
+            desc: Enable the 'clearcal' segment
+            type: bool
+            required: false
+            example: 'False'
+          usescratch: 
+            desc: Enable 'usescratch' which will add the scratch columns if they don't exist. Switch this on when using crystalball models for primary.
+            type: bool
+            required: false
+            example: "True" 
       manage_flags:
         desc: Manage flags.
         type: map

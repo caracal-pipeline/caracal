@@ -901,8 +901,8 @@ def worker(pipeline, recipe, config):
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                        raTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,5)
+                        decTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,5)
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
@@ -919,6 +919,9 @@ def worker(pipeline, recipe, config):
 
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+
+                            if hdul[0].header["CRVAL1"] <0:
+                                hdul[0].header["CRVAL1"] +=360.
                             caracal.log.info('MaskRA = {}'.format(hdul[0].header["CRVAL1"]))
                             caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
 

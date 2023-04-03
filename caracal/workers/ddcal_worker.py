@@ -8,9 +8,10 @@ from caracal.dispatch_crew import utils
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from astropy.wcs import WCS
-# Removed write_ds9 here
-# from regions import PixCoord, write_ds9, PolygonPixelRegion
-from regions import PixCoord, PolygonPixelRegion
+from regions import PixCoord, write_ds9, PolygonPixelRegion
+# previously removed write_ds9 due to being depricated
+# now enabled it again above and fixed version to regions==0.5
+#from regions import PixCoord, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
 
 NAME = 'Direction-dependent Calibration'
@@ -276,7 +277,7 @@ def worker(pipeline, recipe, config):
            regfile = "de-{0:s}.reg".format(field)
            ds9_file = os.path.join(OUTPUT,outdir,regfile)
            # This needs to be rewritten. write_ds9 does not exist any more
-           # write_ds9(reg,ds9_file,coordsys='physical')
+           write_ds9(reg,ds9_file,coordsys='physical')
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'

@@ -939,6 +939,22 @@ def worker(pipeline, recipe, config):
                 im = '{0:s}_{1:s}_{2:d}{3:s}-image.fits:output'.format(
                     prefix, field, num, mfsprefix)
 
+            if config[key]['breizorro_image']['enable']:
+                step = "Breizorro_masked_image"
+                outmask_image = im.replace('image.fits:output', 'breiz-image.fits')
+                recipe.add('cab/breizorro', step,
+                           {
+                               "restored-image": im,
+                               "outfile": outmask_image,
+                               "threshold": config[key]['thr_pix'][num-1 if len(config[key]['thr_pix']) >= num else -1],
+                               "sum-peak": config[key]['breizorro_image']['sum_to_peak'],
+                               "fill-holes": True
+                           },
+                           input=pipeline.input,
+                           output=pipeline.output + '/' + img_dir,
+                           label='{0:s}:: Make Breizorro'.format(step))
+                im = '{}:{}'.format(outmask_image, 'output')
+
             step = 'extract-field{0:d}-iter{1:d}'.format(trg, num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
 
@@ -1837,10 +1853,11 @@ def worker(pipeline, recipe, config):
                 return False
             key = 'aimfast'
             tol = config[key]['tol']
-            fidelity_data = get_aimfast_data()
+            conv_crit = config[key]['convergence_criteria']
             # Ensure atleast one iteration is ran to compare previous and subsequent images
-            if n >= 2 and not config['cal_meqtrees']['two_step']:
-                conv_crit = config[key]['convergence_criteria']
+            # And atleast one convergence criteria is specified
+            if n >= 2 and not config['cal_meqtrees']['two_step'] and conv_crit:
+                fidelity_data = get_aimfast_data()
                 conv_crit = [cc.upper() for cc in conv_crit]
                 # Ensure atleast one iteration is ran to compare previous and subsequent images
                 residual0 = fidelity_data['{0}_{1}_{2}-residual'.format(
@@ -2073,6 +2090,32 @@ def worker(pipeline, recipe, config):
                        output=pipeline.output,
                        label="Plotting source residuals comparisons")
 
+
+    def aimfast_compare_online_catalog(field):
+        """Compare local models to online catalog"""
+        model_files = []
+        # Get models to compare
+        for ii in range(1, cal_niter + 2):
+            model_file = glob.glob(
+                "{0:s}/image_{1:d}/{2:s}_{3:s}_?-pybdsm.lsm.html".format(
+                    pipeline.continuum, ii, prefix, field))
+            if model_file:
+                model_files.append(model_file[0].split(pipeline.output)[-1]+':output')
+        online_compare = sorted(model_files)
+
+        if online_compare:
+            step = "aimfast-compare-online_catalog"
+            recipe.add('cab/aimfast', step,
+                       {
+                       "compare-online": online_compare,
+                       "online-catalog": config['aimfast']['online_catalog']['catalog_type'],
+                       },
+                       input=pipeline.continuum,
+                       output=pipeline.output,
+                       label="Plotting online source catalog comparisons")
+            recipe.run()
+            recipe.jobs = []
+
     def ragavi_plotting_cubical_tables():
         """Plot self-cal gain tables"""
 
@@ -2262,16 +2305,23 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []
 
-                # Move the aimfast html plots
-                plot_path = "{0:s}/{1:s}".format(
-                    pipeline.diagnostic_plots, 'selfcal')
-                if not os.path.exists(plot_path):
-                    os.mkdir(plot_path)
-                aimfast_plots = glob.glob(
-                    "{0:s}/{1:s}".format(pipeline.output, '*.html'))
-                for plot in aimfast_plots:
-                    shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
-                    os.remove(plot)
+            if config['aimfast']['online_catalog']:
+                aimfast_compare_online_catalog(field)
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []
+
+            # Move the aimfast html plots
+            plot_path = "{0:s}/{1:s}".format(
+                pipeline.diagnostic_plots, 'selfcal')
+            if not os.path.exists(plot_path):
+                os.mkdir(plot_path)
+            aimfast_plots = glob.glob(
+                "{0:s}/{1:s}".format(pipeline.output, '*.html'))
+            for plot in aimfast_plots:
+                shutil.copyfile(plot, '{0:s}/{1:s}'.format(plot_path, os.path.basename(plot)))
+                os.remove(plot)
+
 
         if pipeline.enable_task(config, 'calibrate'):
             if config['cal_cubical']['ragavi_plot']['enable']:

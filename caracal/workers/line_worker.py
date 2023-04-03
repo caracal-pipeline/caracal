@@ -931,10 +931,10 @@ def worker(pipeline, recipe, config):
                             if hdul[0].header["NAXIS2"] != cubeHeight: 
                               caracal.log.info('NAXIS2')
                               doProj = True 
-                            if np.round(hdul[0].header["CRVAL1"],5) != np.round(raTarget): 
+                            if np.round(hdul[0].header["CRVAL1"],5) != np.round(raTarget,5): 
                               caracal.log.info('CRVAL1')
                               doProj = True 
-                            if np.round(hdul[0].header["CRVAL2"],5) != np.round(decTarget): 
+                            if np.round(hdul[0].header["CRVAL2"],5) != np.round(decTarget,5): 
                               doProj = True   
                               caracal.log.info('CRVAL2')
 

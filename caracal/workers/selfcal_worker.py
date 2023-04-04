@@ -34,6 +34,7 @@ CUBICAL_OUT = {
     "CORRECTED_DATA": 'sc',
     "CORR_DATA": 'sc',
     "CORR_RES": 'sr',
+    "PA_DATA": 'ac',
 }
 
 CUBICAL_MT = {

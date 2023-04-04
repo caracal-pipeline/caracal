@@ -93,7 +93,9 @@ class WorkerAdministrator(object):
                 end_idx = len(workers)
             workers.append((name, worker, i))
         
-        if end_worker in list(self.config.keys())[:last_mandatory]:
+        if end_worker in list(self.config.keys())[:last_mandatory+1]:
+            # no need for +1 this time since 'general' was removed from
+            # this list
             self.workers = workers[:last_mandatory]
         else:
             start_idx = max(start_idx, last_mandatory)

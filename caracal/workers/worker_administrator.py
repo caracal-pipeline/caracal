@@ -1,5 +1,4 @@
 # -*- coding: future_fstrings -*-
-import yaml
 import caracal
 from caracal import log, pckgdir, notebooks
 import sys
@@ -10,10 +9,6 @@ import glob
 import shutil
 import traceback
 import itertools
-try:
-   from urllib.parse import urlencode
-except ImportError:
-   from urllib import urlencode
  
 import ruamel.yaml
 assert ruamel.yaml.version_info >= (0, 12, 14)
@@ -23,7 +18,7 @@ from caracal.dispatch_crew import utils
 
 REPORTS = True
 
-class worker_administrator(object):
+class WorkerAdministrator(object):
     def __init__(self, config, workers_directory,
                  prefix=None, configFileName=None,
                  add_all_first=False, singularity_image_dir=None,
@@ -82,7 +77,6 @@ class worker_administrator(object):
             raise RuntimeError("Requested --start-worker '{0:s}' is unknown. Please check your options".format(start_worker))
         if end_worker and end_worker not in self.config.keys():
             raise RuntimeError("Requested --end-worker '{0:s}' is unknown. Please check your options".format(end_worker))
-
         for i, (name, opts) in enumerate(self.config.items()):
             if name.find('general') >= 0 or name == "schema_version":
                 continue
@@ -137,7 +131,6 @@ class worker_administrator(object):
         ## OMS skipping this here, leave it to the getdata
         # self.init_names([], allow_empty=True)
         self.init_pipeline(prep_input=config["general"]["prep_workspace"])
-
         # save configuration files
             
         config_base = os.path.splitext( os.path.basename(configFileName) )[0]
@@ -180,6 +173,7 @@ class worker_administrator(object):
             self.msbasenames += msbases
             self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
         self.nobs = len(self.msnames)
+
         if not self.nobs:
             raise caracal.ConfigurationError(f"No matching input data found in {self.rawdatadir} for {','.join(patterns)}. Check your "
                 " 'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings.")
@@ -385,7 +379,6 @@ class worker_administrator(object):
             cabspecs_general = self.parse_cabspec_dict(self.config["general"]["cabs"])
         else:
             cabspecs_general = {}
-
         active_workers = []
         # first, check that workers import, and check their configs
         for _name, _worker, i in self.workers:

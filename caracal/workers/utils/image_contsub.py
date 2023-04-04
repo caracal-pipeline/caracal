@@ -242,7 +242,7 @@ def imcontsub(
         hdul_incubus.writeto(confit, overwrite=clobber)
 
     printime('Subtracting continuum.')
-    subtracted = incubus_data-convolved
+    subtracted = np.subtract(incubus_data-convolved)
 
     if stokes:
         hdul_incubus[0].data = subtracted.astype('float32').reshape(

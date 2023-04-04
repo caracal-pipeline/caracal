@@ -167,6 +167,7 @@ def worker(pipeline, recipe, config):
                            {
                                "vis": msname,
                                "field" : ",".join(fields),
+                               "addmodel" : config['clearcal']['addmodel']
                            },
                            input=pipeline.input,
                            output=pipeline.output,

@@ -26,6 +26,7 @@ class WorkerAdministrator(object):
                  container_tech='docker', generate_reports=True):
 
         self.config = config
+        self.path = configFileName
         self.singularity_image_dir = singularity_image_dir
         self.container_tech = container_tech
         for key in "msdir input output".split():

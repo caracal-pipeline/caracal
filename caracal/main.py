@@ -217,6 +217,9 @@ def execute_pipeline(options, config, block):
 # Driver entrypoint
 ############################################################################
 
+def driver():
+    main(sys.argv[1:])
+
 
 def main(argv):
     # parse initial arguments to init basic switches and modes

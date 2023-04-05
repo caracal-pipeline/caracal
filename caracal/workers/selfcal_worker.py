@@ -1409,9 +1409,8 @@ def worker(pipeline, recipe, config):
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
-                "model-list": modellist,
+                "model-list": modellist if config[key]['output_data'][0] in ['PA_DATA'] else '',
                 "model-pa-rotate": config['cal_cubical']['model_pa_rotate'],
-                "model-feed-rotate": config['cal_cubical']['model_feed_rotate'],
                 "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,
                 "log-memory": True,
@@ -1429,7 +1428,7 @@ def worker(pipeline, recipe, config):
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msbase),
-                "g-solvable": True,
+                "g-solvable": True if config[key]['output_data'][0] in ['PA_DATA'] else False,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
@@ -1448,6 +1447,8 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
+            if config['cal_cubical']['model_feed_rotate']:
+                cubical_opts.update({"model-feed-rotate": config['cal_cubical']['model_feed_rotate']}),
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":

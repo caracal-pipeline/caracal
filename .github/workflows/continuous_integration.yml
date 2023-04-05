@@ -56,6 +56,6 @@ jobs:
 
       - name: Test caracal command
         run: |
-          poetry run python bin/caracal --help
-          poetry run python bin/caracal -gd test.yml
-          poetry run python bin/caracal -gdt meerkat -gd config.yml
+          poetry run caracal --help
+          poetry run caracal -gd test.yml
+          poetry run caracal -gdt meerkat -gd config.yml

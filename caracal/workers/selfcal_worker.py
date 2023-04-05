@@ -452,7 +452,7 @@ def worker(pipeline, recipe, config):
             "column": 'DATA',
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(robust),
             "nmiter": sdm.dismissable(config['img_nmiter']),
-            "nomfsweighting": config['img_mfs_weighting'],
+            # "nomfsweighting": config['img_mfs_weighting'],
             "npix": config['img_npix'],
             "padding": config['img_padding'],
             "scale": config['img_cell'],

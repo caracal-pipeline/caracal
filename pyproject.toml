@@ -21,7 +21,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-shadems = {reference = "bin/caracal", type = "file"}
+caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
 python = "^3.8"

@@ -14,6 +14,7 @@ Main website: `caracal.rtfd.io <https://caracal.readthedocs.io/>`_
 
 It includes the Install & Run instructions described below, and much more.
 
+==================
 Installation & Run
 ==================
 

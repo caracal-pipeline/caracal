@@ -176,7 +176,7 @@ Then, if using `Docker <https://www.docker.com>`_:
 
     stimela pull
 
-If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder `${singularity_pull_folder}`, where the `Singularity <https://github.com/sylabs/singularity> images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
+If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder `${singularity_pull_folder}`, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
 
 ..  code-block:: bash
 

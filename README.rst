@@ -113,7 +113,7 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
     pip install -U -e caracal
     deactivate
 
-where `/path/to/working/area` is the actual path to the directory where you wish to install CARACal.
+where ``/path/to/working/area`` is the actual path to the directory where you wish to install CARACal.
 In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
 Install the latest release with:
 
@@ -122,8 +122,8 @@ Install the latest release with:
     pip install -U caracal
 
 
-NB: The stimela singularity images needed for CARACal are stored in this location: `/software/astro/caracal/`
-where you can access the latest version of the images, for example, `/software/astro/caracal/STIMELA_IMAGES_1.7.0 `. 
+NB: The stimela singularity images needed for CARACal are stored in this location: ``/software/astro/caracal/``
+where you can access the latest version of the images, for example, ``/software/astro/caracal/STIMELA_IMAGES_1.7.0 ``. 
 
 Running
 =======
@@ -134,13 +134,13 @@ If you installed CARACal manually, activate the virtual environment with:
 
     source ${caracal-venv}/bin/activate
 
-If you installed CARACal with the caratekit.sh script, activate the virtual environment with:
+If you installed CARACal with the ``caratekit.sh`` script, activate the virtual environment with:
 
 ..  code-block:: bash
 
     source ${workspace}/${caracal_dir}/caracal_venv/bin/activate
 
-If using [Docker](https://www.docker.com) run CARACal with:
+If using `Docker <https://www.docker.com>`_ run CARACal with:
 
 ..  code-block:: bash
 

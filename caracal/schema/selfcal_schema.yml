@@ -339,7 +339,7 @@ mapping:
             desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
             type: bool
             required: false
-            example: 'True'
+            example: 'False'
           model_pa_rotate:
             desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
             type: bool

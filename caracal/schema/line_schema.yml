@@ -615,9 +615,9 @@ mapping:
             required: false
             example: 'True'
           fitmode:
-            desc: Type of fit ('poly' or 'savgol')
+            desc: Type of fit ('poly' or 'savgol' or 'spline')
             type: str
-            enum: ['poly', 'savgol']
+            enum: ['poly', 'savgol','spline']
             required: false
             example: 'poly'
           length:

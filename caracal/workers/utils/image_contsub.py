@@ -253,7 +253,7 @@ def imcontsub(
     begin = datetime.now()
     print('')
     print('Welcome to image_contsub.py')
-
+    print(mask)
     if isinstance(incubus, type('')):
         printime('Reading input cube {}'.format(incubus))
         hdul_incubus = astropy_io_fits.open(incubus)

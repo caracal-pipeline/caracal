@@ -1441,15 +1441,9 @@ def worker(pipeline, recipe, config):
                 caracal.log.info(
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
 
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-
-
                 # Using highest cube directory
                 dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
-                print(dirlist)
                 poopoo = max([int(gi[-1]) for gi in dirlist])
-
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
                 if config['imcontsub']['lastiter']:
                     wscl_cube_list = glob.glob(
@@ -1513,7 +1507,6 @@ def worker(pipeline, recipe, config):
                     outconlist = [None for i in contsincubelist]
 
                 #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                 for uu in range(len(contsincubelist)):
                     image_contsub.imcontsub(
                         incubus=contsincubelist[uu], outcubus=outputlist[uu],
@@ -1531,7 +1524,7 @@ def worker(pipeline, recipe, config):
                     if runonce:
                         rancsonce = True
                         break
-                print('RECIPEEEEEEEE')
+
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):
                 step = 'continuum-spectral_extraction-{0:d}'.format(uu)

@@ -1441,9 +1441,15 @@ def worker(pipeline, recipe, config):
                 caracal.log.info(
                     'Subtracting continuum in the image domain for target {0:d}'.format(tt))
 
+                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
+
                 # Using highest cube directory
                 dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
                 poopoo = max([int(gi[-1]) for gi in dirlist])
+
+                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
                 if config['imcontsub']['lastiter']:
                     wscl_cube_list = glob.glob(
                         '{0:s}/{1:s}/cube_{2:d}/{3:s}_{4:s}_{5:s}*.fits'.format(
@@ -1454,7 +1460,6 @@ def worker(pipeline, recipe, config):
                         '{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
                         pipeline.output,cube_dir,
                         pipeline.prefix, field, line_name))
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
                 # Hoping that the order is the same for all suffixes
                 wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]

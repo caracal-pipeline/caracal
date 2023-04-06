@@ -449,7 +449,7 @@ def worker(pipeline, recipe, config):
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
         fake_image_opts = {
             "msname": mslist,
-            "column": 'DATA',
+            "column": config[key]['col'][0],
             "weight": imgweight if not imgweight == 'briggs' else 'briggs {}'.format(robust),
             "nmiter": sdm.dismissable(config['img_nmiter']),
             "npix": config['img_npix'],
@@ -486,6 +486,11 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             fake_image_opts.update({"minuvw-m": min_uvw})
+        if multiscale:
+            fake_image_opts.update({"multiscale": multiscale})
+            if multiscale_scales:
+                fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
+
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,

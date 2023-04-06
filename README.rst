@@ -71,7 +71,7 @@ And CARACal developer version which is not recommended for users:
 2. caratekit.sh script
 ----------------------
 
-Download the installation script `caratekit.sh <https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh>`_ . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
+Download the installation script `caratekit.sh <https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh>`_ . Choose the parent directory ``${workspace}`` and the name of the CARACal directory ``${caracal_dir}``. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
 
 If using `Docker <https://www.docker.com>`_:
 
@@ -112,7 +112,7 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
     git clone https://github.com/caracal-pipeline/caracal.git
     pip install -U -e caracal
     deactivate
-```
+
 where `/path/to/working/area` is the actual path to the directory where you wish to install CARACal.
 In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
 Install the latest release with:
@@ -123,7 +123,7 @@ Install the latest release with:
 
 
 NB: The stimela singularity images needed for CARACal are stored in this location: `/software/astro/caracal/`
-where you can access the latest version of the images, for example, ` /software/astro/caracal/STIMELA_IMAGES_1.7.0 `. 
+where you can access the latest version of the images, for example, `/software/astro/caracal/STIMELA_IMAGES_1.7.0 `. 
 
 Running
 =======
@@ -157,6 +157,7 @@ For more detailed installation instructions, trouble-shooting tips and a full us
 ==========
 New issues
 ==========
+
 We encourage users who experience problems installing or running CARACal to check for known issues or open a new issue at
 our `GitHub issues page <https://github.com/caracal-pipeline/caracal/issues>`_.
 
@@ -179,7 +180,7 @@ Then, if using `Docker <https://www.docker.com>`_:
 
     stimela pull
 
-If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder `${singularity_pull_folder}`, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
+If using `Singularity <https://github.com/sylabs/singularity>`_, choose a pull folder ``${singularity_pull_folder}``, where the `Singularity <https://github.com/sylabs/singularity>`_ images are stored and define an environment variable by adding this in the rc file of your shell (e.g. .bashrc):
 
 ..  code-block:: bash
 

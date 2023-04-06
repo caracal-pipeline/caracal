@@ -11,6 +11,7 @@ import textwrap
 from astropy.wcs import WCS
 import astropy.units as u
 from abc import ABC, abstractmethod
+from scipy.interpolate import splev, splrep
 
 
 version = '1.0.2'

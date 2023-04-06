@@ -1337,8 +1337,6 @@ def worker(pipeline, recipe, config):
             pipeline.output,cube_dir, pipeline.prefix, field, line_name))
         cube_list = casa_cube_list+wscl_cube_list
         
-        print(wscl_cube_list)
-
         image_cube_list = [cc for cc in cube_list if 'image.fits' in cc]
         dirty_cube_list = [cc for cc in cube_list if 'dirty.fits' in cc]
 
@@ -1488,18 +1486,11 @@ def worker(pipeline, recipe, config):
                     else:
                         maskimc = config['imcontsub']['masculin']
                 elif config['imcontsub']['mask'] == 'clean':
-                    print('CLEEEEEEEEEAAAAN')
                     maskimc = wimage_clean_mask_list
                 elif config['imcontsub']['mask'] == 'sofia':
-                    print('sofia')
-                    print(wimage_mask_list)
-
                     maskimc = wimage_mask_list
                 else:
                     maskimc = []
-                print('MAAAAAAASSSKSKKSKSKKSKSKSKKSKSK')
-                print(config['imcontsub']['mask'])
-
 
                 if len(maskimc) == 0:
                     maskimc = [None for i in contsincubelist]

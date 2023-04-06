@@ -1506,7 +1506,7 @@ def worker(pipeline, recipe, config):
                     outconlist = [None for i in contsincubelist]
 
                 #outconlist = [i.replace('dirty.fits', 'imcontsub.fits') for i in dirty_cube_list]
-
+                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                 for uu in range(len(contsincubelist)):
                     image_contsub.imcontsub(
                         incubus=contsincubelist[uu], outcubus=outputlist[uu],
@@ -1524,7 +1524,7 @@ def worker(pipeline, recipe, config):
                     if runonce:
                         rancsonce = True
                         break
-
+                print('RECIPEEEEEEEE')
         if pipeline.enable_task(config, 'sharpener'):
             for uu in range(len(image_cube_list)):
                 step = 'continuum-spectral_extraction-{0:d}'.format(uu)

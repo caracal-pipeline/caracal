@@ -59,7 +59,7 @@ def freq_to_vel(filename, reverse):
                 headcube['restfreq'] = restfreq
 
             # convert from frequency to radio velocity
-            if headcube['naxis'] > 2 and 'FREQ' in headcube['ctype3'] and not reverse: 
+            if (headcube['naxis'] > 2) and ('FREQ' in headcube['ctype3']) and not reverse: 
                 headcube['cdelt3'] = -C * float(headcube['cdelt3']) / restfreq
                 headcube['crval3'] = C * \
                     (1 - float(headcube['crval3']) / restfreq)
@@ -72,7 +72,7 @@ def freq_to_vel(filename, reverse):
                     del headcube['cunit3']
 
             # convert from radio velocity to frequency
-            elif headcube['naxis'] > 2 and 'VRAD' in headcube['ctype3'] and headcube['naxis'] > 2 and reverse:
+            elif (headcube['naxis'] > 2) and ('VRAD' in headcube['ctype3']) and (headcube['naxis'] > 2) and reverse:
                 headcube['cdelt3'] = -restfreq * float(headcube['cdelt3']) / C
                 headcube['crval3'] = restfreq * \
                     (1 - float(headcube['crval3']) / C)
@@ -96,7 +96,7 @@ def remove_stokes_axis(filename):
     else:
         with fits.open(filename, mode='update') as cube:
             headcube = cube[0].header
-            if headcube['naxis'] == 4 and headcube['ctype4'] == 'STOKES':
+            if (headcube['naxis'] == 4 )and (headcube['ctype4'] == 'STOKES'):
                 caracal.log.info('Working on {}'.format(filename))
                 cube[0].data = cube[0].data[0]
                 del headcube['cdelt4']
@@ -110,7 +110,7 @@ def remove_stokes_axis(filename):
                     'Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
 
-def fix_specsys(filename, specframe):
+def fix_specsys_ra(filename, specframe):
     # Reference frame codes below from from http://www.eso.org/~jagonzal/telcal/Juan-Ramon/SDMTables.pdf, Sec. 2.50 and
     # FITS header notation from
     # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
@@ -132,6 +132,10 @@ def fix_specsys(filename, specframe):
             if 'specsys' in headcube:
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
+            if headcube['CRVAL1'] <0:
+                headcube['CRVAL1'] +=360.
+
+
 
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     C = 2.99792458e+8       # m/s
@@ -894,50 +898,101 @@ def worker(pipeline, recipe, config):
                         MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                         '''
                         doProj = False
+                        doSpec = False
+                        C = 2.99792458e+8 # m/s
+                        femit = [r.strip() for r in re.split('([-+]?\d+\.\d+)|([-+]?\d+)', restfreq.strip()) if r is not None and r.strip() != '']
+                        femit = (eval(femit[0]) * units.Unit(femit[1])).to(units.Hz).value ## Hz
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                        raTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,5)
+                        decTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,5)
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
+                        
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+                        caracal.log.info('Checking Mask dimensions')
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('RA = {}'.format(raTarget))
+                        caracal.log.info('Dec = {}'.format(decTarget))
+                        caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
+                        caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
+
+                        postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-                            doProj = True if hdul[0].header['NAXIS1'] != cubeWidth else None
-                            doProj = True if hdul[0].header['NAXIS2'] != cubeHeight else None
-                            doProj = True if hdul[0].header['CRVAL1'] != raTarget else None
-                            doProj = True if hdul[0].header['CRVAL2'] != decTarget else None
+
+                            if hdul[0].header["CRVAL1"] <0:
+                                hdul[0].header["CRVAL1"] +=360.
+                            caracal.log.info('MaskRA = {}'.format(hdul[0].header["CRVAL1"]))
+                            caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
+
+                            caracal.log.info('MaskWidth = {}'.format(hdul[0].header["NAXIS1"]))
+                            caracal.log.info('MaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
+
+                            if hdul[0].header["NAXIS1"] != cubeWidth: 
+                                caracal.log.info('NAXIS1')
+                                doProj = True 
+                            if hdul[0].header["NAXIS2"] != cubeHeight: 
+                                caracal.log.info('NAXIS2')
+                                doProj = True 
+                            if np.round(hdul[0].header["CRVAL1"],5) != np.round(raTarget,5): 
+                                caracal.log.info('CRVAL1')
+                                doProj = True 
+                            if np.round(hdul[0].header["CRVAL2"],5) != np.round(decTarget,5): 
+                                doProj = True   
+                                caracal.log.info('CRVAL2')
+                            
+                            if hdul[0].header['NAXIS3'] > nchans:
+                                doSpec = True 
+                            else:
+                                dpSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
+                            
+                            if 'FREQ' in hdul[0].header['CTYPE3']: 
+                                cdelt = round(hdul[0].header['CDELT3'], 2)
+                            else:
+                                cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
+                            
+                            if cdelt > chanwidth[0]:
+                                doSpec = True 
+                            elif doProj == True:
+                                pass 
+                            else:
+                                doSpec =  None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
+
                             if doProj:
                                 ax3param = []
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
-                                    ax3param.append(hdul[0].header[key])
+                                    ax3param.append (hdul[0].header[key])
+
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('+++++++++++++++++++++++++++++')
 
                         if doProj:
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT
                             '''
                             with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                                 file.write('SIMPLE  =   T\n')
-                                 file.write('BITPIX  =   -64\n')
-                                 file.write('NAXIS   =   2\n')
-                                 file.write('NAXIS1  =   {}\n'.format(cubeWidth))
-                                 file.write('CTYPE1  =   \'RA---SIN\'\n')
-                                 file.write('CRVAL1  =   {}\n'.format(raTarget))
-                                 file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
-                                 file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
-                                 file.write('NAXIS2  =   {}\n'.format(cubeHeight))
-                                 file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                                 file.write('CRVAL2  =   {}\n'.format(decTarget))
-                                 file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
-                                 file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
-                                 file.write('EXTEND  =   T\n')
-                                 file.write('EQUINOX =   2000.0\n')
-                                 file.write('END\n')
+                                file.write('SIMPLE  =   T\n')
+                                file.write('BITPIX  =   -64\n')
+                                file.write('NAXIS   =   2\n')
+                                file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                                file.write('CTYPE1  =   \'RA---SIN\'\n')
+                                file.write('CRVAL1  =   {}\n'.format(raTarget))
+                                file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                                file.write('CDELT1  =   {}\n'.format(-1*config['make_cube']['cell']/3600.))
+                                file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                                file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                                file.write('CRVAL2  =   {}\n'.format(decTarget))
+                                file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                                file.write('CDELT2  =   {}\n'.format(config['make_cube']['cell']/3600.))
+                                file.write('EXTEND  =   T\n')
+                                file.write('EQUINOX =   2000.0\n')
+                                file.write('END\n')
 
-                            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                             if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                                 os.remove('{}/{}'.format(pipeline.masking,postGridMask))
@@ -1009,8 +1064,92 @@ def worker(pipeline, recipe, config):
                                get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1])})
 
                         else:
-                            line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
-                               get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                            if doSpec == False:
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                            else: pass
+
+                        if doSpec == True:
+                            gridMask = postGridMask if doProj == True else preGridMask
+                            caracal.log.info('Reprojecting mask {} to match the spectral axis of the cube.'.format(gridMask))
+                            if doProj == True:
+                                hdul = fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update')
+                            else:
+                                hdul = fits.open('{}/{}'.format(pipeline.masking,preGridMask))
+
+                                if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                                   os.remove('{}/{}'.format(pipeline.masking,postGridMask))
+
+                            if 'FREQ' in hdul[0].header['CTYPE3']:
+                                ## all in Hz
+                                crval = firstchanfreq[0]+chanwidth[0]*firstchan
+                                cdeltm = hdul[0].header['CDELT3']
+                                cdelte = crval+nchans*binchans*chanwidth[0]
+                            else:
+                                ## all in m/s
+                                crval = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan))/femit
+                                cdeltm = hdul[0].header['CDELT3']*femit/(-C)
+                                crvale = C*(femit - (firstchanfreq[0]+chanwidth[0]*firstchan+nchans*binchans*chanwidth[0]))/femit
+
+                            cdelt = chanwidth[0]*binchans ## in Hz
+                            hdr = hdul[0].header
+                            ax3 = np.arange(hdr['CRVAL3']-hdr['CDELT3']*(hdr['CRPIX3']-1), hdr['CRVAL3']+hdr['CDELT3']*(hdr['NAXIS3']-hdr['CRPIX3']+1), hdr['CDELT3'])
+                            if (np.max([crval, crvale]) <= np.max([ax3[0], ax3[-1]])) & (np.min([crval, crvale]) >= np.min([ax3[0], ax3[-1]])):
+                                caracal.log.info("Requested channels are contained in mask {}.".format(gridMask))
+
+                                idx = np.argmin(abs(ax3-crval))
+                                ide = np.argmin(abs(ax3-crvale))
+
+                                if cdelt > cdeltm:
+                                    hdul[0].data = hdul[0].data[idx:ide]
+                                    hdul[0].header['CRPIX3'] = 1
+                                    hdul[0].header['CRVAL3'] = crval
+                                    hdul[0].header['NAXIS3'] = nchans
+                                    hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']*binchans
+                                    if binchans > 1:
+                                        if (nchans%binchans) > 0:
+                                            rdata = (hdul[0].data[:-(nchans%binchans)]).reshape((nchans-1*(nchans%binchans), binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2']))
+                                            rdata = np.nansum(rdata, axis=1)
+                                            rdata = np.concatenate((rdata, np.nansum(hdul[0].data[-(nchans%binchans):])), axis=0)
+                                        else:
+                                            rdata = (hdul[0].data).reshape(nchans, binchans, hdul[0].header['NAXIS1'], hdul[0].header['NAXIS2'])
+                                            rdata = np.nansum(rdata, axis=1)
+                                        rdata[rdata > 0] = 1
+                                        hdul[0].data = rdata
+                                    else: pass
+
+                                else:
+
+                                    rdata = np.zeros((nchans, hdr['NAXIS1'], hdr['NAXIS2']))
+                                    rr = int(cdeltm/cdelt)
+                                    for nn in range(nchans):
+                                        rdata[nn] = hdul[0].data[idx+nn//rr]
+
+                                    hdul[0].header['NAXIS3'] = nchans
+                                    hdul[0].header['CRPIX3'] = 1
+                                    hdul[0].header['CRVAL3'] = crval
+                                    hdul[0].header['CDELT3'] = hdul[0].header['CDELT3']/rr
+                                    hdul[0].data = rdata
+
+
+                                hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                                if doProj == True:
+                                    hdul.flush()
+                                else:
+                                    hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask))
+
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), gridMask.split('/')[-1])})
+                            else:
+                                raise IOError("Requested channels are not contained in mask {}.".format(gridMask))
+
+                        else:
+                            if doProj == False:
+                                line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
+                                   get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
+                            else: pass
+
+
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
                     else:
                         line_image_opts.update({"auto-mask": config['make_cube']['wscl_auto_mask']})
@@ -1139,8 +1278,8 @@ def worker(pipeline, recipe, config):
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
-                        recipe.add(fix_specsys,
-                                   'fixspecsys-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
+                        recipe.add(fix_specsys_ra,
+                                   'fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
                                    {'filename': cubename,
                                     'specframe': specframe_all,},
                                    input=pipeline.input,

@@ -11,12 +11,12 @@ import shutil
 from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import worker_administrator
+from caracal.workers.worker_administrator import WorkerAdministrator
 import stimela
 from caracal.schema import SCHEMA_VERSION
 
 __version__ = caracal.__version__
-pckgdir = caracal.pckgdir
+pckgdir = caracal.PCKGDIR
 DEFAULT_CONFIG = caracal.DEFAULT_CONFIG
 SAMPLE_CONFIGS = caracal.SAMPLE_CONFIGS = {
         "minimal" : "minimalConfig.yml",
@@ -173,7 +173,7 @@ def execute_pipeline(options, config, block):
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            pipeline = worker_administrator(config,
+            pipeline = WorkerAdministrator(config,
                            workers_directory,
                            add_all_first=False, prefix=options.general_prefix,
                            configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
@@ -216,6 +216,9 @@ def execute_pipeline(options, config, block):
 ############################################################################
 # Driver entrypoint
 ############################################################################
+
+def driver():
+    main(sys.argv[1:])
 
 
 def main(argv):

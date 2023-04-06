@@ -1454,6 +1454,7 @@ def worker(pipeline, recipe, config):
                         '{0:s}/{1:s}/cube_*/{2:s}_{3:s}_{4:s}*.fits'.format(
                         pipeline.output,cube_dir,
                         pipeline.prefix, field, line_name))
+                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
                 # Hoping that the order is the same for all suffixes
                 wimage_cube_list = [cc for cc in wscl_cube_list if 'image.fits' in cc]

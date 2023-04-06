@@ -11,6 +11,7 @@ CARACal
 CARACal stands for Containerized Automated Radio Astronomy Calibration and is a pipeline for radio interferometry data reduction
 
 Main website: `caracal.rtfd.io <https://caracal.readthedocs.io/>`_
+
 It includes the Install & Run instructions described below, and much more.
 
 Installation & Run
@@ -68,7 +69,7 @@ And CARACal developer version which is not recommended for users:
 2. caratekit.sh script
 ----------------------
 
-Download the installation script [caratekit.sh](https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh) . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
+Download the installation script `caratekit.sh <https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh>`_ . Choose the parent directory `${workspace}` and the name of the CARACal directory `${caracal_dir}`. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
 
 If using `Docker <https://www.docker.com>`_:
 

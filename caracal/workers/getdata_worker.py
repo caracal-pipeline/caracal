@@ -4,7 +4,6 @@ import sys
 import subprocess
 import itertools
 import caracal
-import caracal.dispatch_crew.meerkat_archive_interface as mai
 import stimela.dismissable as sdm
 import warnings
 

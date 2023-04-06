@@ -24,7 +24,7 @@ packages = [
 caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 stimela = "^1.7.6"
 python-casacore = "^3.5.2"
 psutil = "^5.9.4"
@@ -37,7 +37,6 @@ regions = "^0.5"
 astropy = "^5.2.1"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
-pysolr = "^3.9.0"
 decorator = "^4.2.2"
 "ruamel.yaml" = "^0.17.21"
 scipy = "^1.9.3"

@@ -1489,6 +1489,7 @@ def worker(pipeline, recipe, config):
                     maskimc = wimage_clean_mask_list
                 elif config['imcontsub']['mask'] == 'sofia':
                     print('sofia')
+                    print(wimage_mask_list)
 
                     maskimc = wimage_mask_list
                 else:

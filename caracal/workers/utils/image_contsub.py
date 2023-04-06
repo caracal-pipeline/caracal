@@ -10,6 +10,8 @@ import argparse
 import textwrap
 from astropy.wcs import WCS
 import astropy.units as u
+from abc import ABC, abstractmethod
+
 
 version = '1.0.2'
 

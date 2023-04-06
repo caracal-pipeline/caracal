@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import numpy as np
 
@@ -21,17 +22,20 @@ def collect_polzn_cubes(imdir, label_in):
     Collect the polarisation cubes
     """
     log.info("Collecting polarisation cubes")   
-
     cubes = dict()
     for stokes in "iqu":
         # expecting images of the format
         # [PREFIX]_[TARGET]-I-0.0035-0.0035-0.0_image.convolved.fits
-        search_str = f"{imdir}/{label_in}*-{stokes}-[0-9]*_image.*fits"
+        search_str = f"{imdir}/{label_in}*-{stokes.upper()}-[0-9]*_image.*fits"
 
         if len(glob(search_str))> 0:
             cubes[f"{stokes}"], = glob(search_str)
+            cubes[f"{stokes}"] = os.path.join(*cubes[f"{stokes}"].split("/")[1:])
         else:
             log.info(f"Stokes {stokes.capitalize()} cube was not found")
+
+    if len(cubes)==0:
+        sys.exit(1)
     return cubes
 
 
@@ -81,7 +85,7 @@ def do_rm_synthesis(pipeline, recipe, cubes, freqfile, max_phi, prefix):
         label=f'{step}:: Perform RM synthesis')
     return recipe
 
-def do_rm_clean(pipeline, recipe, prefix):
+def do_rm_clean(pipeline, recipe, prefix, ncpu=8):
     """
     Do RM clean
     """
@@ -98,7 +102,7 @@ def do_rm_clean(pipeline, recipe, prefix):
             "prefixout": prefix + "-",
             "v": True,
             "gain": 0.1,
-            # "ncores": 10,
+            # "ncores": ncpu, # deactivate because no mpi
             "maxiter": "1000"
         },
         input=pipeline.input,
@@ -119,13 +123,13 @@ def worker(pipeline, recipe, config):
                     for _ in "iqu"}
     else:
         cubes = collect_polzn_cubes(pipeline.polarization, pipeline.prefix)
-   
+           
     if config["freq_file"] and file_exists(config['freq_file']) :
         freq_file = config['freq_file']
     else:
         log.info(f"Frequency file was not found.")
         log.info(" Autogenerating one.")
-
+        
         freq_file = make_freq_file(cubes["q"], 
                         os.path.join(pipeline.polarization, "freqs.dat")
                         )
@@ -138,8 +142,8 @@ def worker(pipeline, recipe, config):
     recipe = do_rm_synthesis(pipeline, recipe, cubes,
                             freq_file, max_phi, rm_prefix)
 
-    recipe = do_rm_clean(pipeline, recipe, rm_prefix)
+    recipe = do_rm_clean(pipeline, recipe, rm_prefix, config["ncpus"])
 
     recipe.run()
-    
+    recipe.jobs = []
     return

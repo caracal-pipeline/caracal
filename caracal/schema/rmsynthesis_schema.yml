@@ -8,8 +8,13 @@ mapping:
         type: bool
         desc: Perform RM-synthesis and RM-CLEAN on QU-cubes
         required: false
-        example: 'False'
+        example: 'false'
         default: false
+      ncpus:
+        type: int
+        required: false
+        example: '8'
+        default: 8
       label_in:
         type: str
         desc: Label of the input dataset
@@ -49,7 +54,7 @@ mapping:
         type: str
         desc: Prefix for the output files
         required: false
-        example: 'tsws'
+        example: 'test'
         default: ''
       cabs:
         desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'

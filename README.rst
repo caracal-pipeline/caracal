@@ -33,7 +33,9 @@ Requirements
 Installation
 ============
 
-We strongly recommend and describe an installation using a `Python3` virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have **write** acccess. There are three (3) available methods to install the `caracal` pipeline: 
+We strongly recommend and describe an installation using a `Python3` virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have **write** acccess.
+
+There are three (3) available methods to install the `caracal` pipeline: 
 
 1. Manual
 ---------

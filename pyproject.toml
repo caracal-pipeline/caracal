@@ -24,7 +24,7 @@ packages = [
 caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 stimela = "^1.7.6"
 python-casacore = "^3.5.2"
 psutil = "^5.9.4"
@@ -32,7 +32,7 @@ jinja2 = "^3.1.2"
 radiopadre-client = "^1.2.0"
 nbconvert = "^7.2.10"
 numpy = "^1.24.2"
-matplotlib = "^3.5.3"
+matplotlib = "^3.6.0"
 regions = "^0.5"
 astropy = "^5.2.1"
 pykwalify = "^1.8.0"

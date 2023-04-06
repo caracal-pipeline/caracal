@@ -110,7 +110,7 @@ def remove_stokes_axis(filename):
                     'Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
 
-def fix_specsys(filename, specframe):
+def fix_specsys_ra(filename, specframe):
     # Reference frame codes below from from http://www.eso.org/~jagonzal/telcal/Juan-Ramon/SDMTables.pdf, Sec. 2.50 and
     # FITS header notation from
     # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
@@ -132,6 +132,10 @@ def fix_specsys(filename, specframe):
             if 'specsys' in headcube:
                 del headcube['specsys']
             headcube['specsys3'] = specsys3
+            if headcube['CRVAL1'] <0:
+                headcube['CRVAL1'] +=360.
+
+
 
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
     C = 2.99792458e+8       # m/s
@@ -901,20 +905,46 @@ def worker(pipeline, recipe, config):
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                        raTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,5)
+                        decTarget=np.round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,5)
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
+                        
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+                        caracal.log.info('Checking Mask dimensions')
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('RA = {}'.format(raTarget))
+                        caracal.log.info('Dec = {}'.format(decTarget))
+                        caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
+                        caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
+
                         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-                            doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
-                            if doProj == True: pass
-                            else:
-                                doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
+
+                            if hdul[0].header["CRVAL1"] <0:
+                                hdul[0].header["CRVAL1"] +=360.
+                            caracal.log.info('MaskRA = {}'.format(hdul[0].header["CRVAL1"]))
+                            caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
+
+                            caracal.log.info('MaskWidth = {}'.format(hdul[0].header["NAXIS1"]))
+                            caracal.log.info('MaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
+
+                            if hdul[0].header["NAXIS1"] != cubeWidth: 
+                                caracal.log.info('NAXIS1')
+                                doProj = True 
+                            if hdul[0].header["NAXIS2"] != cubeHeight: 
+                                caracal.log.info('NAXIS2')
+                                doProj = True 
+                            if np.round(hdul[0].header["CRVAL1"],5) != np.round(raTarget,5): 
+                                caracal.log.info('CRVAL1')
+                                doProj = True 
+                            if np.round(hdul[0].header["CRVAL2"],5) != np.round(decTarget,5): 
+                                doProj = True   
+                                caracal.log.info('CRVAL2')
                             
                             if hdul[0].header['NAXIS3'] > nchans:
                                 doSpec = True 
@@ -937,6 +967,9 @@ def worker(pipeline, recipe, config):
                                 ax3param = []
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
                                     ax3param.append (hdul[0].header[key])
+
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('+++++++++++++++++++++++++++++')
 
                         if doProj:
                             '''
@@ -1036,7 +1069,6 @@ def worker(pipeline, recipe, config):
                                    get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                             else: pass
 
-##################
                         if doSpec == True:
                             gridMask = postGridMask if doProj == True else preGridMask
                             caracal.log.info('Reprojecting mask {} to match the spectral axis of the cube.'.format(gridMask))
@@ -1116,9 +1148,6 @@ def worker(pipeline, recipe, config):
                                 line_image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(
                                    get_relative_path(pipeline.masking, pipeline), preGridMask.split('/')[-1])})
                             else: pass
-
-###########################
-
 
 
                         step = 'make_cube-{0:s}-field{1:d}-iter{2:d}-with_user_mask'.format(line_name, tt, j)
@@ -1249,8 +1278,8 @@ def worker(pipeline, recipe, config):
                     for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                         cubename = '{6:s}/{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.{5:s}.fits'.format(
                             cube_dir, pipeline.prefix, field, line_name, j, ss, pipeline.output)
-                        recipe.add(fix_specsys,
-                                   'fixspecsys-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
+                        recipe.add(fix_specsys_ra,
+                                   'fixspecsysra-{0:s}-cube-field{1:d}-iter{2:d}'.format(ss.replace("_", "-"), tt, j),
                                    {'filename': cubename,
                                     'specframe': specframe_all,},
                                    input=pipeline.input,

@@ -1446,6 +1446,7 @@ def worker(pipeline, recipe, config):
 
                 # Using highest cube directory
                 dirlist = glob.glob('{0:s}/{1:s}/cube_*'.format(pipeline.output,cube_dir))
+                print(dirlist)
                 poopoo = max([int(gi[-1]) for gi in dirlist])
 
                 print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')

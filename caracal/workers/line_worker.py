@@ -1491,7 +1491,7 @@ def worker(pipeline, recipe, config):
                 else:
                     maskimc = []
                 print('MAAAAAAASSSKSKKSKSKKSKSKSKKSKSK')
-                print(maskimc)
+                print(config['imcontsub']['mask'])
 
 
                 if len(maskimc) == 0:

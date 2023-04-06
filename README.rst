@@ -31,6 +31,7 @@ Requirements
     * `Podman <https://podman.io/>`_
     * `Singularity <https://github.com/sylabs/singularity>`_ > 3.5 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information)
 
+============
 Installation
 ============
 
@@ -126,6 +127,7 @@ Install the latest release with:
 NB: The stimela singularity images needed for CARACal are stored in this location: ``/software/astro/caracal/``
 where you can access the latest version of the images, for example, ``/software/astro/caracal/STIMELA_IMAGES_1.7.0``. 
 
+=======
 Running
 =======
 

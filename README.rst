@@ -129,6 +129,7 @@ Running
 =======
 
 If you installed CARACal manually, activate the virtual environment with:
+
 ..  code-block:: bash
 
     source ${caracal-venv}/bin/activate

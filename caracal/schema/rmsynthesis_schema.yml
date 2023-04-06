@@ -9,6 +9,7 @@ mapping:
         desc: Perform RM-synthesis and RM-CLEAN on QU-cubes
         required: false
         example: 'False'
+        default: false
       label_in:
         type: str
         desc: Label of the input dataset
@@ -38,16 +39,19 @@ mapping:
         desc: Text file containing channel frequencies
         required: false
         example: 'freqs.dat'
+        default: 'freqs.dat'
       max_phi:
         type: int
         desc: Maximum Faraday depth
         required: true
         example: "100"
+        default: ''
       prefix:
         type: str
         desc: Prefix for the output files
         required: false
-        example: 'testing'
+        example: 'tsws'
+        default: ''
       cabs:
         desc: 'Specifies non-default image versions and/or tags for Stimela cabs. Running with scissors: use with extreme caution.'
         required: false

@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 
 from caracal import log
-from ipdb import set_trace
 
 NAME = 'Rotation Measure Synthesis'
 LABEL = 'rmsynthesis'
@@ -130,7 +129,6 @@ def worker(pipeline, recipe, config):
         freq_file = make_freq_file(cubes["q"], 
                         os.path.join(pipeline.polarization, config["freq_file"])
                         )
-
     if config["prefix"]:
         rm_prefix = config["prefix"]
     else:

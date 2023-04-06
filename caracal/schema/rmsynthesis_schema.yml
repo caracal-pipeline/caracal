@@ -45,7 +45,6 @@ mapping:
         desc: Maximum Faraday depth
         required: true
         example: "100"
-        default: ''
       prefix:
         type: str
         desc: Prefix for the output files

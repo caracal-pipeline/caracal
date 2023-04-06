@@ -123,16 +123,17 @@ def worker(pipeline, recipe, config):
     if config["freq_file"] and file_exists(config['freq_file']) :
         freq_file = config['freq_file']
     else:
-        log.info(f"Frequency file: {config['freq_file']} was not found.")
+        log.info(f"Frequency file was not found.")
         log.info(" Autogenerating one.")
 
         freq_file = make_freq_file(cubes["q"], 
-                        os.path.join(pipeline.polarization, config["freq_file"])
+                        os.path.join(pipeline.polarization, "freqs.dat")
                         )
     if config["prefix"]:
         rm_prefix = config["prefix"]
     else:
-        rm_prefix = os.path.join(pipeline.polarization, f"{pipeline.prefix}")
+        # rm_prefix = os.path.join(pipeline.polarization, f"{pipeline.prefix}")
+        rm_prefix = pipeline.prefix
     
     recipe = do_rm_synthesis(pipeline, recipe, cubes,
                             freq_file, max_phi, rm_prefix)

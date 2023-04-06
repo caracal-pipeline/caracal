@@ -14,6 +14,22 @@ import astropy.units as u
 version = '1.0.2'
 
 
+class FitFunc(ABC):
+    """
+    abstract class for writing fitting functions
+    """
+    def __init__(self):
+        pass
+    
+    @abstractmethod
+    def prepare(self, x, data, mask, weight):
+        pass
+    
+    @abstractmethod
+    def fit(self, x, data, mask, weight):
+        pass
+    
+
 class FitBSpline(FitFunc):
     """
     BSpline fitting function based on `splev`, `splrep` in `scipy.interpolate` 

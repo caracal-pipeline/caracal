@@ -99,6 +99,7 @@ In the working directory where source is checked out run:
 
     poetry install
 
+=========================================
 Installation on (ILIFU) slurm environment
 =========================================
 

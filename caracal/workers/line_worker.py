@@ -1490,6 +1490,9 @@ def worker(pipeline, recipe, config):
                     maskimc = wimage_mask_list
                 else:
                     maskimc = []
+                print('MAAAAAAASSSKSKKSKSKKSKSKSKKSKSK')
+                print(maskimc)
+
 
                 if len(maskimc) == 0:
                     maskimc = [None for i in contsincubelist]

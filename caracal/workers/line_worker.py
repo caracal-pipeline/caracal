@@ -689,14 +689,39 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         if pipeline.enable_task(config,'flag_u_zeros'):
-            uZeros = flag_Uzeros.UzeroFlagger(config)
 
             if config['flag_u_zeros']['use_mstransform']:
                 msname_Flag = msname_mst
             else:
                 msname_Flag = msname
 
-            uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
+           recipe.add('cab/rfinder', step,
+                       {
+                           "msname": msname_Flag,
+                           "uflag_enable": config['flag_u_zeros']['enable'],
+                           "transfer_flags": config['flag_u_zeros']['transfer_flags'],
+                           "method": config['flag_u_zeros']['method'],
+                           "make_plots": config['flag_u_zeros']['make_plots'],
+                           "cleanup": config['flag_u_zeros']['cleanup'],
+                           "robust": config['flag_u_zeros']['robust'],
+                           "taper": config['flag_u_zeros']['taper'],
+                           "imsize": config['flag_u_zeros']['imsize'],
+                           "cell": config['flag_u_zeros']['cell'],
+                           "chans": config['flag_u_zeros']['chans'],
+                           "thresholds": config['flag_u_zeros']['thresholds'],
+                           "dilateU": config['flag_u_zeros']['dilateU'],
+                           "dilateV": config['flag_u_zeros']['dilateV'],                           
+                       },
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Flag the u=0 problem in ms={1:s}'.format(step, msname_Flag))
+
+
+            # uZeros = flag_Uzeros.UzeroFlagger(config)
+
+
+
+            # uZeros.run_flagUzeros(pipeline,all_targets,msname_Flag)
 
         if pipeline.enable_task(config, 'sunblocker'):
             if config['sunblocker']['use_mstransform']:

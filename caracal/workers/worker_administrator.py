@@ -164,9 +164,11 @@ class WorkerAdministrator(object):
 
         for pattern in patterns:
             msnames = [os.path.basename(ms) for ms in glob.glob(os.path.join(self.rawdatadir, pattern))]
+            
             if not msnames:
                 if self.ignore_missing:
                     log.warning(f"'{pattern}' did not match any files, but getdata: ignore_missing is set, proceeding anyway")
+                    msnames=[pattern]
                 else:
                     raise caracal.ConfigurationError(f"'{pattern}' did not match any files under {self.rawdatadir}. Check your "
                             "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
@@ -193,7 +195,12 @@ class WorkerAdministrator(object):
         msinfo_path = os.path.join(self.msdir, msinfo_file)
         msdict, mtime_cache = self._msinfo_cache.get(msname, (None, 0))
         if not os.path.exists(msinfo_path):
-            raise RuntimeError(f"MS summary file {msinfo_file} not found at expected location. This is a bug or "
+            if self.ignore_missing:
+                log.warning(f"'{msinfo_file}' did not match any files, but getdata: ignore_missing is set,"
+                        "this dataset will be skipped,proceeding anyway")
+                return None
+            else:
+                raise RuntimeError(f"MS summary file {msinfo_file} not found at expected location. This is a bug or "
                                 "a misconfiguration. Was the MS transformed properly?")
         # reload cached dict if file on disk is newer
         mtime = os.path.getmtime(msinfo_path)

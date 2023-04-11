@@ -7,7 +7,6 @@ import glob
 import yaml
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.utils.requirements import requires
 from astropy import units as u
 import astropy.coordinates as coord
 from astropy import wcs
@@ -29,7 +28,6 @@ else:
 NAME = 'Make Masks'
 LABEL = 'mask'
 
-@requires(require_msg, opt_import_error)
 def worker(pipeline, recipe, config):
 
     ################################################################################

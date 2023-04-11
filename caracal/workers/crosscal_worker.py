@@ -591,7 +591,7 @@ def worker(pipeline, recipe, config):
                         "field": fluxscale_field,
                         "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
-                        "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"])
+                        "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
                    }    
                 elif modelpoint:  # spectral model if specified in our standard

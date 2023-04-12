@@ -2,32 +2,24 @@
 import sys
 import os
 import glob
-import warnings
 import stimela.dismissable as sdm
 import stimela.recipe
-import astropy
 import shutil
 import itertools
 import json
-from astropy.io import fits
-# Modules useful to calculate common barycentric frequency grid
-from astropy.time import Time
-from astropy.coordinates import SkyCoord
-from astropy.coordinates import EarthLocation
-from astropy import constants
 import psutil
-import astropy.units as units
 import re
 import datetime
 import numpy as np
 import caracal
-from caracal.dispatch_crew import utils,noisy
+from caracal.dispatch_crew import utils, noisy
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal import log
 from caracal.workers.utils import remove_output_products
 from caracal.workers.utils import image_contsub
 from caracal.workers.utils import flag_Uzeros
 from casacore.tables import table
+from caracal.utils.requires import extras
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'
@@ -217,8 +209,17 @@ def calc_rms(filename, linemaskname):
             y2 = newcube[newmask == 0]
         return np.sqrt(np.nansum(y2 * y2, dtype=np.float64) / y2.size)
 
-
+@extras(packages="astropy")
 def worker(pipeline, recipe, config):
+    import astropy
+    from astropy.io import fits
+    # Modules useful to calculate common barycentric frequency grid
+    from astropy.time import Time
+    from astropy.coordinates import SkyCoord
+    from astropy.coordinates import EarthLocation
+    from astropy import constants
+    import astropy.units as units
+
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
     flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)

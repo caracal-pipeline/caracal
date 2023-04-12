@@ -1,0 +1,25 @@
+import importlib
+from caracal import ExtraDependencyError
+
+def checkimport(package):
+    """
+    Check if a package is installed.
+    """
+    exists = importlib.util.find_spec(package)
+    if exists:
+        return True
+    else:
+        return False
+
+def extras(packages):
+    def mydecorator(func):
+        if isinstance(packages, str):
+            packages = [packages]
+        for package in packages:
+            if not checkimport(package):
+                raise ExtraDependencyError
+        def inner_func(*args, **kw):
+            return func(*args,**kw)
+        return inner_func
+    return mydecorator
+        

@@ -7,7 +7,7 @@ import caracal.dispatch_crew.caltables as mkct
 import numpy as np
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.dispatch_crew import utils
-from caracal.utils.has_package import checkimport
+from caracal.utils.requires import extras
 
 NAME = "Prepare Data for Processing"
 LABEL = 'prep'
@@ -82,15 +82,16 @@ def worker(pipeline, recipe, config):
                         caracal.log.info("The coordinates of calibrator {0:s} in the MS are offset. This is a known problem for some vintage MeerKAT MSs.".format(f))
 
                         if pipeline.enable_task(config, 'fixcalcoords'): 
-                            if checkimport("astropy.coordinates")
-                                from astropy.coordinates import SkyCoord
-                            else:
-                                raise caracal.ExtraDependencyError
 
                             caracal.log.info("We will now attempt to fix this by rephasing the visibilities using the CASA fixvis task.")
                             ra_corr = float(ra_corr*180.0/np.pi)
                             dec_corr = float(dec_corr*180.0/np.pi)
-                            c = SkyCoord(ra_corr, dec_corr, unit='deg')
+
+                            @extras(packages="astropy")
+                            def needs_astropy()
+                                from astropy.coordinates import SkyCoord
+                                return SkyCoord(ra_corr, dec_corr, unit='deg')
+                            c = needs_astropy()
                             rahms = c.ra.hms
                             decdms = c.dec.dms
                             coordstring = 'J2000 '+c.to_string('hmsdms')

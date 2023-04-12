@@ -1,38 +1,29 @@
 # -*- coding: future_fstrings -*-
 import os
 import sys
-import math
 import shutil
 import glob
 import yaml
 import numpy as np
 from caracal.dispatch_crew import utils
-from astropy import units as u
-import astropy.coordinates as coord
-from astropy import wcs
-from astropy.io import fits, ascii
-from astropy.table import Table, Column, MaskedColumn
-
-
-# Import Optional dependencies
-require_msg = "pip install astroquery"
-
-try:
-    from astroquery.vizier import Vizier
-except ImportError as e:
-    opt_import_error = e
-else:
-    opt_import_error = None
+from caracal.utils.requires import extras
 
 
 NAME = 'Make Masks'
 LABEL = 'mask'
 
+@extras(packages="astropy")
 def worker(pipeline, recipe, config):
 
     ################################################################################
     # Worker's MODULES
     ################################################################################
+
+    from astropy import units as u
+    import astropy.coordinates as coord
+    from astropy import wcs
+    from astropy.io import fits, ascii
+    from astropy.table import Table, Column, MaskedColumn
 
     def ra2deg(ra_hms):
         '''
@@ -109,7 +100,9 @@ def worker(pipeline, recipe, config):
 
         return new_flux, px, py
 
+    @extras(packages="astroquery.vizier")
     def query_catalog_sumss(catalog_table, centre, width_im, cat_name):
+        from astroquery.vizier import Vizier
 
         Vizier.ROW_LIMIT = -1
 
@@ -119,8 +112,9 @@ def worker(pipeline, recipe, config):
 
         ascii.write(tab, catalog_table, overwrite=True)
 
+    @extras(packages="astroquery.vizier")
     def query_catalog_nvss(catalog_table, centre, width_im, cell, imsize, obs_freq, cat_name, thresh):
-
+        from astroquery.vizier import Vizier
         Vizier.ROW_LIMIT = -1
         p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'),
                                 width=width_im, catalog=cat_name)

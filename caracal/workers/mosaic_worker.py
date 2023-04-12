@@ -4,17 +4,19 @@ import glob
 import sys
 import caracal
 import numpy as np
-from astropy import units as u
-import astropy.coordinates as coord
-from astropy.io import fits
-from astropy import wcs
 from caracal.dispatch_crew import utils
+from caracal.utils.requires import extras
 
 NAME = "Mosaic 2D-images or cubes"
 LABEL = 'mosaic'
 
-
+@extras(packages="astropy")
 def worker(pipeline, recipe, config):
+
+    from astropy import units as u
+    import astropy.coordinates as coord
+    from astropy.io import fits
+    from astropy import wcs
 
     wname = pipeline.CURRENT_WORKER
 

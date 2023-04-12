@@ -7,20 +7,17 @@ import caracal
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from stimela.pathformatter import pathformatter as spf
-from caracal.utils.has_package import checkimport
+from caracal.utils.requires import extras
 
 NAME = 'Direction-dependent Calibration'
 LABEL = "ddcal"
 
-if checkimport("astropy") and checkimport("regions"):
+@extras(packages=["astropy", "regions"])
+def worker(pipeline, recipe, config):
     from astropy.coordinates import SkyCoord
     from astropy import units as u
     from astropy.wcs import WCS
     from regions import PixCoord, write_ds9, PolygonPixelRegion
-else:
-    raise caracal.ExtraDependencyError
-
-def worker(pipeline, recipe, config):
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
     use_mask = config['image_dd']['use_mask']

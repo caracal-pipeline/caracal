@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-22.04 ]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     steps:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -42,7 +42,7 @@ jobs:
           fetch-depth: 1
 
       - name: Install caracal
-        run: poetry install --extras "testing"
+        run: poetry install --with tests --no-interaction
 
       - name: Lint with flake8
         run: |

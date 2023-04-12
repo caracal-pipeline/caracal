@@ -5,7 +5,6 @@ import yaml
 import caracal
 import caracal.dispatch_crew.caltables as mkct
 import re
-import astropy.io.fits as fitsio
 import codecs
 import os
 
@@ -316,6 +315,12 @@ def meerkat_refant(obsinfo):
 
 
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
+    
+    if checkimport("astropy.io.fits"):
+        import astropy.io.fits as fitsio
+    else:
+        raise caracal.ExtraDependencyError
+
     if isinstance(skymodel, str):
         skymodel = [skymodel]
     flux = 0

@@ -33,6 +33,14 @@ class BadDataError(CaracalException):
     """Something wrong with the data"""
     pass
 
+
+class ExtraDependencyError(Exception):
+    """Optional depencies are missing"""
+    def __init__(self, message="Pipeline run requires optional dependencies, please re-install caracal as 'pip install caracal[extras]'"):
+        self.message = message
+        super().__init__(self.message)
+
+
 def report_version():
     # Distutils standard  way to do version numbering
     try:

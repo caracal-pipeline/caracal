@@ -11,7 +11,7 @@ import caracal
 import numpy as np
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
-from astropy.io import fits as fits
+from caracal.utils.has_package import checkimport
 from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
@@ -421,6 +421,11 @@ def worker(pipeline, recipe, config):
             shutil.rmtree(casafiles[i])
 
     def change_header_and_type(filename, headfile, copy_head):
+        if checkimport("astropy.io.fits"):
+            import astropy.io.fits as fits
+        else:
+            raise caracal.ExtraDependencyError
+
         pblist = fits.open(filename)
         dat = pblist[0].data
         pblist.close()

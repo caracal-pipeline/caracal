@@ -1,7 +1,7 @@
 import re
-from scipy.optimize import curve_fit
 import numpy as np
 import copy
+from caracal.utils.has_package import checkimport
 
 
 class catalog_parser:
@@ -225,6 +225,11 @@ class catalog_parser:
         if a == 0 and b == 0 and c == 0 and d==0:
             popt = [0., 0., 0., 0.]
         else:
+            if checkimport("scipy.optimize"):
+                from scipy.optimize import curve_fit
+            else:
+                raise  caracal.ExtraDependencyError()
+
             v = np.linspace(vlower, vupper, 10000)
             popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
             v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))

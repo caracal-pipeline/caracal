@@ -13,10 +13,10 @@ import copy
 import re
 import json
 import glob
-from scipy import ndimage
 import shutil
 import numpy as np
 from casacore.tables import table
+from caracal.utils.has_package import checkimport
 
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
@@ -481,6 +481,12 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
 
 
 def smooth_bandpass(bptable, window, filter_type = 'mean'):
+    
+    if checkimport("scipy.ndimage")
+        from scipy as ndimage
+    else:
+        raise caracal.ExtraDependencyError()
+
     caracal.log.info('Smoothing {0:s} with {2:s} window of width {1:d} channels'.format(bptable,window,filter_type))
     bp = table(bptable, ack=False).getcol('CPARAM')
     bp = [np.real(bp), np.imag(bp)]

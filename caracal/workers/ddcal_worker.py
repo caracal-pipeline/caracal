@@ -1,51 +1,49 @@
 # -*- coding: future_fstrings -*-
-import os, shutil, glob, copy
+import os
+import copy
 import numpy as np
 import sys
 import caracal
 import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
-from astropy.coordinates import Angle, SkyCoord
-from astropy import units as u
-from astropy.wcs import WCS
-from regions import PixCoord, write_ds9, PolygonPixelRegion
-# previously removed write_ds9 due to being depricated
-# now enabled it again above and fixed version to regions==0.5
-#from regions import PixCoord, PolygonPixelRegion
 from stimela.pathformatter import pathformatter as spf
+from caracal.utils.has_package import checkimport
 
 NAME = 'Direction-dependent Calibration'
 LABEL = "ddcal"
 
+if checkimport("astropy") and checkimport("regions"):
+    from astropy.coordinates import SkyCoord
+    from astropy import units as u
+    from astropy.wcs import WCS
+    from regions import PixCoord, write_ds9, PolygonPixelRegion
+else:
+    raise caracal.ExtraDependencyError
 
 def worker(pipeline, recipe, config):
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
-    #colname = config['image_dd']['col']
     use_mask = config['image_dd']['use_mask']
-    #fit_spectral_pol = config['image_dd']['fit_spectral_pol']
     ddsols_t = config['calibrate_dd']['dd_dd_timeslots_int']
     ddsols_f = config['calibrate_dd']['dd_dd_chan_int']
     dist_ncpu = config['calibrate_dd']['dist_ncpu']
     label = config['label_in']
     USEPB = config['use_pb']
-    #pipeline.set_cal_msnames(label)
-    #mslist = pipeline.cal_msnames
-    #hires_mslist = pipeline.hires_msnames
+
     prefix = pipeline.prefix
     INPUT=pipeline.input
     DD_DIR = "3GC"
-    #OUTPUT=pipeline.output+"/"+DD_DIR
     OUTPUT = os.path.join(pipeline.output, DD_DIR)
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem'])+'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    print("All_targets", all_targets)
-    print("All_msfiles", all_msfile)
-    #print("ms_dict",ms_dict)
+    carcal.log.info("All_targets", all_targets)
+    caracal.log.info("All_msfiles", all_msfile)
+
     if not os.path.exists(OUTPUT):
        os.mkdir(OUTPUT)
     de_sources_mode = config['calibrate_dd']['de_sources_mode']
+
     if de_sources_mode == 'manual' :
         de_targets =  config['calibrate_dd']['de_target_manual']
         de_sources =  config['calibrate_dd']['de_sources_manual']
@@ -55,7 +53,6 @@ def worker(pipeline, recipe, config):
         de_dict = dict(zip(de_targets, de_sources))
     else:
         de_targets = all_targets
-    print(de_targets)
 
     dd_image_opts = {
         "Data-MS"        : all_msfile,
@@ -281,14 +278,11 @@ def worker(pipeline, recipe, config):
 
     def dd_calibrate(field,mslist):
         key = 'calibrate_dd'
-        print("pipeline.output", pipeline.output)
         outdir = field+"_ddcal"
         dicomod = prefix+"_"+field+"-DD-precal.DicoModel"
         dereg = "de-{0:s}.reg".format(field)
         output_cubical = OUTPUT+"/"+outdir
         test_path = spf("MODEL_DATA")
-        print("test_path",test_path)
-        print("output_cubical",output_cubical)
         for ms in mslist:
            mspref =os.path.splitext(ms)[0].replace('-','_')
            step = 'dd_calibrate-{0:s}-{1:s}'.format(mspref,field)
@@ -432,12 +426,12 @@ def worker(pipeline, recipe, config):
     for target in de_targets:
        mslist = ms_dict[target]
        field = utils.filter_name(target)
-       print("Processing field",field,"for de calibration:")
+       caracal.log.info("Processing field",field,"for de calibration:")
        if USEPB:
           make_primary_beam()
        if pipeline.enable_task(config,'image_dd'):
           dd_precal_image(field,mslist)
-    #sfind_intrinsic()
+
        dagga(field)
        if pipeline.enable_task(config,'calibrate_dd'):
           dd_calibrate(field,mslist)

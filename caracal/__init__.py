@@ -1,5 +1,6 @@
 # -*- coding: future_fstrings -*-
 
+import logging.handlers
 import pkg_resources
 import os
 import subprocess
@@ -12,9 +13,11 @@ import stimela.utils
 # Globals
 ##############################################################################
 
+
 class CaracalException(RuntimeError):
     """Base class for pipeline logic errors"""
     pass
+
 
 class PlayingWithFire(RuntimeError):
     """Silly settings chosen."""
@@ -25,9 +28,11 @@ class UserInputError(CaracalException):
     """Something wrong with user input"""
     pass
 
+
 class ConfigurationError(CaracalException):
     """Something wrong with the configuration"""
     pass
+
 
 class BadDataError(CaracalException):
     """Something wrong with the data"""
@@ -36,6 +41,7 @@ class BadDataError(CaracalException):
 
 class ExtraDependencyError(Exception):
     """Optional depencies are missing"""
+
     def __init__(self, message="Pipeline run requires optional dependencies, please re-install caracal as 'pip install caracal[extras]'"):
         self.message = message
         super().__init__(self.message)
@@ -55,7 +61,7 @@ def report_version():
             'cd %s; git describe --tags' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
     except subprocess.CalledProcessError:
         result = None
-    if result != None and 'fatal' not in result:
+    if result is not None and 'fatal' not in result:
         # will succeed if tags exist
         return result
     else:
@@ -65,8 +71,8 @@ def report_version():
                 'cd %s; git rev-parse --short HEAD' % path, shell=True, stderr=subprocess.STDOUT).rstrip().decode()
         except subprocess.CalledProcessError:
             result = None
-        if result != None and 'fatal' not in result:
-            return __version__+'-'+result
+        if result is not None and 'fatal' not in result:
+            return __version__ + '-' + result
         else:
             # we are probably in an installed version
             return __version__
@@ -80,29 +86,29 @@ PCKGDIR = pckgdir = os.path.dirname(os.path.abspath(__file__))
 CARACAL_LOG = "log-caracal.txt"
 
 DEFAULT_CONFIG = os.path.join(
-   PCKGDIR, "sample_configurations", "minimalConfig.yml")
+    PCKGDIR, "sample_configurations", "minimalConfig.yml")
 SCHEMA = os.path.join(
     PCKGDIR, "schema", "schema-{0:s}.yml".format(__version__))
 
 
 SAMPLE_CONFIGS = {
-        "minimal" : "minimalConfig.yml",
-        "meerkat" : "meerkat-defaults.yml",
-        "carate" : "carateConfig.yml",
-        "meerkat_continuum" : "meerkat-continuum-defaults.yml",
-        "mosaic_basic" : "mosaic_basic_config.yml",
-        }
+    "minimal": "minimalConfig.yml",
+    "meerkat": "meerkat-defaults.yml",
+    "carate": "carateConfig.yml",
+    "meerkat_continuum": "meerkat-continuum-defaults.yml",
+    "mosaic_basic": "mosaic_basic_config.yml",
+}
 
 ################################################################################
 # Logging
 ################################################################################
 
-import logging.handlers
 
 class DelayedFileHandler(logging.handlers.MemoryHandler):
     """A DelayedFileHandler is a variation on the MemoryHandler. It will buffer up log
     entries until told to stop delaying, then dumps everything into the target file
     and from then on logs continuously. This allows the log file to be switched at startup."""
+
     def __init__(self, filename=None, delay=True):
         logging.handlers.MemoryHandler.__init__(self, 100000, target=filename and logging.FileHandler(filename, delay=True))
         self._delay = delay
@@ -130,6 +136,7 @@ log = logging.getLogger(LOGGER_NAME)
 
 # these will be set up by init_logger
 log_filehandler = log_console_handler = log_console_formatter = None
+
 
 def create_logger():
     """ Creates logger and associated objects. Called upon import"""
@@ -188,9 +195,9 @@ def init_console_logging(boring=False, debug=False):
 def remove_log_handler(hndl):
     log.removeHandler(hndl)
 
+
 def add_log_handler(hndl):
     log.addHandler(hndl)
 
+
 create_logger()
-
-

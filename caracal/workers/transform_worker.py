@@ -25,7 +25,8 @@ applycal_interp_rules = {
 }
 
 
-def get_dir_path(string, pipeline): return string.split(pipeline.output)[1][1:]
+def get_dir_path(string, pipeline):
+    return string.split(pipeline.output)[1][1:]
 
 
 table_suffix = {
@@ -73,8 +74,8 @@ def worker(pipeline, recipe, config):
     field_to_split = get_fields_to_split(config, wname)
     # are we splitting calibrators
     splitting_cals = field_to_split.intersection(_cal_fields)
-    if (pipeline.enable_task(config, 'split_field') or \
-        pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
+    if (pipeline.enable_task(config, 'split_field') or
+            pipeline.enable_task(config, 'changecentre')) and pipeline.enable_task(config, 'concat'):
         raise ValueError(
             "split_field/changecentre and concat cannot be enabled in the same run of the transform worker. "
             "The former need a single-valued label_in, the latter multiple comma-separated values.")
@@ -204,9 +205,9 @@ def worker(pipeline, recipe, config):
                         "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
                         "nthreads": config['split_field']['nthreads'],
                     },
-                               input=pipeline.input if label_in else pipeline.rawdatadir,
-                               output=pipeline.output,
-                               label=f'{step}:: Split and average data ms={"".join(from_ms)}')
+                        input=pipeline.input if label_in else pipeline.rawdatadir,
+                        output=pipeline.output,
+                        label=f'{step}:: Split and average data ms={"".join(from_ms)}')
                 # workaround because mstransform does not accept the polcal gaintypes such as Xfparang
                 else:
                     output_pcal_ms = config['split_field']['otfcal']['output_pcal_ms']
@@ -236,9 +237,9 @@ def worker(pipeline, recipe, config):
                         "callib": sdm.dismissable(crosscal_lib and crosscal_lib + ':output'),
                         "nthreads": config['split_field']['nthreads'],
                     },
-                               input=pipeline.input if label_in else pipeline.rawdatadir,
-                               output=pipeline.output,
-                               label=f'{step}:: Split and average data ms={"".join(from_ms)}')
+                        input=pipeline.input if label_in else pipeline.rawdatadir,
+                        output=pipeline.output,
+                        label=f'{step}:: Split and average data ms={"".join(from_ms)}')
 
                     if any(papplyfield):
                         recipe.add('cab/casa_applycal', step + '_apply_polcal', {
@@ -251,9 +252,9 @@ def worker(pipeline, recipe, config):
                             "interp": pinterplist,
                             "parang": config['split_field']['otfcal']['derotate_pa'],
                         },
-                                   input=pipeline.input,
-                                   output=pipeline.caltables,
-                                   label=f'{step}:: Apply pol callib ms={"".join(to_ms)}')
+                            input=pipeline.input,
+                            output=pipeline.caltables,
+                            label=f'{step}:: Apply pol callib ms={"".join(to_ms)}')
                     else:
                         trgt = [x.strip() for x in target.split(',')]
                         for ii, fld in enumerate(trgt):
@@ -278,9 +279,9 @@ def worker(pipeline, recipe, config):
                                 "interp": pinter,
                                 "parang": config['split_field']['otfcal']['derotate_pa'],
                             },
-                                       input=pipeline.input,
-                                       output=pipeline.caltables,
-                                       label=f'{step}:: Apply pol callib ms={"".join(to_ms)}, field={ii}')
+                                input=pipeline.input,
+                                output=pipeline.caltables,
+                                label=f'{step}:: Apply pol callib ms={"".join(to_ms)}, field={ii}')
                     recipe.run()
                     recipe.jobs = []
                     # generate final MS, unless we're only asked to produce the intermediate one
@@ -298,9 +299,9 @@ def worker(pipeline, recipe, config):
                             "keepflags": True,
                             "docallib": False,
                         },
-                                   input=pipeline.input if label_in else pipeline.rawdatadir,
-                                   output=pipeline.output,
-                                   label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
+                            input=pipeline.input if label_in else pipeline.rawdatadir,
+                            output=pipeline.output,
+                            label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
                         recipe.run()
                         recipe.jobs = []
 

@@ -66,3 +66,9 @@ Sphinx = "^5.3.0"
 sphinx-copybutton = "^0.5.0"
 furo = "^2022.9.15"
 
+[tool.autopep8]
+max_line_length = 120
+ignore = "E501,W6"  # or ["E501", "W6"]
+in-place = true
+recursive = true
+aggressive = 3

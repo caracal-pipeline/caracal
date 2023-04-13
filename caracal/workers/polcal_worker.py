@@ -58,7 +58,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
 
     if freqsel != '':
         gaintables = [prefix + '.Gpol1', prefix + '.Kcrs', prefix + '.Xref', prefix + '.Xf', prefix + '.Dref',
-                  prefix + '.Df']
+                      prefix + '.Df']
         interps = ['linear', 'nearest', 'nearest', 'nearest', 'nearest', 'nearest']
         fields = [field, '', '', '', '', '']
         calwts = [True, False, False, False, False, False]
@@ -347,7 +347,7 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                                                     config['otfcal']['label_cal'], [fld],
                                                     default_interpolation_types=config['otfcal']['interpolation'])
 
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist)= \
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     '',
                                                     config['label_cal'], [fld])
@@ -364,9 +364,9 @@ def xcal_model_fcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                            "gainfield": pgain,
                            "interp": pinter,
                            "parang": True,
-                       },
-                       input=pipeline.input, output=pipeline.caltables,
-                       label="Apply_caltables_" + str(ff))
+            },
+                input=pipeline.input, output=pipeline.caltables,
+                label="Apply_caltables_" + str(ff))
 
 
 def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, polarized_calibrators, caltablelist,
@@ -588,7 +588,7 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                    {
                        "vis": prefix + '.Df0gen:msfile',
                        "mode": 'clip',
-                       "clipminmax": [-0.9,0.9],
+                       "clipminmax": [-0.9, 0.9],
                        "datacolumn": 'CPARAM',
                        "flagbackup": False,
                    },
@@ -634,9 +634,9 @@ def xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline
                            "gainfield": pgain,
                            "interp": pinter,
                            "parang": True,
-                       },
-                       input=pipeline.input, output=pipeline.caltables,
-                       label="Apply_caltables_" + str(ff))
+            },
+                input=pipeline.input, output=pipeline.caltables,
+                label="Apply_caltables_" + str(ff))
 
 
 def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i, prefix, ref, caltablelist, gainfieldlist, interplist,
@@ -931,7 +931,6 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
         callibs.add_callib_recipe(applycal_recipes, _gt, _interp, _fldmap, calwt=_calwt, field=_field)
     pipeline.save_callib(applycal_recipes, prefix)
 
-
     if config['plotgains']:
         plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
         if not os.path.exists(plotdir):
@@ -964,13 +963,13 @@ def xcal_from_pa_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeli
                            "gainfield": pgain,
                            "interp": pinter,
                            "parang": True,
-                       },
-                       input=pipeline.input, output=pipeline.caltables,
-                       label="Apply_caltables_" + str(ff))
+            },
+                input=pipeline.input, output=pipeline.caltables,
+                label="Apply_caltables_" + str(ff))
 
 
 def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                         prefix, ref, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
+                       prefix, ref, leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist):
     leak_field = ",".join(getattr(pipeline, config["leakage_calib"])[i])
 
     time_solint = config.get("time_solint")
@@ -1045,21 +1044,21 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                        label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
         recipe.add("cab/casa_polcal", "leakage_freq",
-               {
-                   "vis": msname,
-                   "caltable": prefix + '.Df:output',
-                   "field": leak_field,
-                   "uvrange": config["uvrange"],
-                   "solint": time_solint,
-                   "combine": "scan",
-                   "poltype": "Df",
-                   "refant": ref,
-                   "gaintable": ["%s:output" % ct for ct in leak_caltablelist],
-                   "gainfield": leak_gainfieldlist,
-                   "interp": leak_interplist,
-               },
-               input=pipeline.input, output=pipeline.caltables,
-               label="leakage_freq")
+                   {
+                       "vis": msname,
+                       "caltable": prefix + '.Df:output',
+                       "field": leak_field,
+                       "uvrange": config["uvrange"],
+                       "solint": time_solint,
+                       "combine": "scan",
+                       "poltype": "Df",
+                       "refant": ref,
+                       "gaintable": ["%s:output" % ct for ct in leak_caltablelist],
+                       "gainfield": leak_gainfieldlist,
+                       "interp": leak_interplist,
+                   },
+                   input=pipeline.input, output=pipeline.caltables,
+                   label="leakage_freq")
 
         if config['plotgains']:
             plotdir = os.path.join(pipeline.diagnostic_plots, "polcal")
@@ -1077,15 +1076,15 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
 
         # Clip solutions
         recipe.add("cab/casa_flagdata", "flag_leakage",
-               {
-                   "vis": prefix + '.Df:msfile',
-                   "mode": 'clip',
-                   "clipminmax": [-0.6, 0.6],
-                   "datacolumn": 'CPARAM',
-                   "flagbackup": False,
-               },
-               input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
-               label="flag_leakage")
+                   {
+                       "vis": prefix + '.Df:msfile',
+                       "mode": 'clip',
+                       "clipminmax": [-0.6, 0.6],
+                       "datacolumn": 'CPARAM',
+                       "flagbackup": False,
+                   },
+                   input=pipeline.input, output=pipeline.caltables, msdir=pipeline.caltables,
+                   label="flag_leakage")
 
         recipe.run()
         recipe.jobs = []
@@ -1111,7 +1110,7 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
                                                     config['otfcal']['label_cal'], [fld])
-            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist)= \
+            _, (pcaltablelist, pgainfieldlist, pinterplist, pcalwtlist, papplylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     '',
                                                     config['label_cal'], [fld])
@@ -1128,10 +1127,9 @@ def calib_only_leakage(msname, msinfo, prefix_msbase, recipe, config, pipeline, 
                            "gainfield": pgain,
                            "interp": pinter,
                            "parang": True,
-                       },
-                       input=pipeline.input, output=pipeline.caltables,
-                       label="Apply_caltables_" + str(ff))
-
+            },
+                input=pipeline.input, output=pipeline.caltables,
+                label="Apply_caltables_" + str(ff))
 
 
 def plotgains(recipe, pipeline, plotdir, field_id, gtab, i, term):
@@ -1178,12 +1176,12 @@ def worker(pipeline, recipe, config):
                                        "polangle": [0.575959],
                                        "rotmeas": 0.0},
                              "J1130-1449": {"standard": "manual",
-                                       "fluxdensity": [4.940],
-                                       "spix": 0,
-                                       "reffreq": "1.35GHz",
-                                       "polindex": [0.03],
-                                       "polangle": [-0.202893],
-                                       "rotmeas": 33},
+                                            "fluxdensity": [4.940],
+                                            "spix": 0,
+                                            "reffreq": "1.35GHz",
+                                            "polindex": [0.03],
+                                            "polangle": [-0.202893],
+                                            "rotmeas": 33},
                              }
     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]
@@ -1199,9 +1197,9 @@ def worker(pipeline, recipe, config):
         fields = []
         if pipeline.refant[i] in ['auto']:
             refant = manants.get_refant(pipeline, recipe,
-                                                  prefix, msname, fields,
-                                                  pipeline.minbase[i],
-                                                  pipeline.maxdist[i], i)
+                                        prefix, msname, fields,
+                                        pipeline.minbase[i],
+                                        pipeline.maxdist[i], i)
             if refant:
                 caracal.log.info(f"Auto selected ref antenna(s): refant")
             else:
@@ -1210,14 +1208,12 @@ def worker(pipeline, recipe, config):
         else:
             refant = pipeline.refant[i]
 
-
         # Check if feeds are linear
         if set(list(msinfo['CORR']['CORR_TYPE'])) & {'XX', 'XY', 'YX', 'YY'} == 0:
             raise RuntimeError(
                 "Cannot calibrate polarization! Allowed strategies are for linear feed data but correlation is: " + str(
                     [
                         'XX', 'XY', 'YX', 'YY']))
-
 
         if config["pol_calib"] != 'none':
             pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
@@ -1231,10 +1227,10 @@ def worker(pipeline, recipe, config):
         if config['otfcal']:
             if pol_calib != 'none':
                 _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
-                                                    callibs.resolve_calibration_library(pipeline, prefix_msbase,
-                                                    config['otfcal']['callib'],
-                                                    config['otfcal']['label_cal'],[pol_calib],
-                                                    default_interpolation_types=config['otfcal']['interpolation'])
+                    callibs.resolve_calibration_library(pipeline, prefix_msbase,
+                                                        config['otfcal']['callib'],
+                                                        config['otfcal']['label_cal'], [pol_calib],
+                                                        default_interpolation_types=config['otfcal']['interpolation'])
             _, (leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist) = \
                 callibs.resolve_calibration_library(pipeline, prefix_msbase,
                                                     config['otfcal']['callib'],
@@ -1242,9 +1238,9 @@ def worker(pipeline, recipe, config):
                                                     default_interpolation_types=config['otfcal']['interpolation'])
         else:
             _, (caltablelist, gainfieldlist, interplist, calwtlist, applylist) = \
-                None, ([],)*5
+                None, ([],) * 5
             _, (leak_caltablelist, leak_gainfieldlist, leak_interplist, leak_calwtlist, leak_applylist) = \
-                None, ([],)*5
+                None, ([],) * 5
 
         # Set -90 deg receptor angle rotation [if we are using MeerKAT data]
         if float(config['feed_angle_rotation']) != '':
@@ -1270,8 +1266,8 @@ def worker(pipeline, recipe, config):
                     stop_if_missing = True
                 if version in available_flagversions:
                     if flags_before_worker in available_flagversions and available_flagversions.index(
-                            flags_before_worker) < available_flagversions.index(version) and not config[
-                        'overwrite_flagvers']:
+                        flags_before_worker) < available_flagversions.index(version) and not config[
+                            'overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
                                           flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
@@ -1321,23 +1317,23 @@ def worker(pipeline, recipe, config):
                        input=pipeline.input, output=pipeline.output,
                        label="extend_flags_polcal")
             if pol_calib != leakage_calib:
-                       recipe.add("cab/casa_flagdata",
-                                  "extend_flags_polcal",
-                                  {
-                                      "vis": msname,
-                                      "mode": 'extend',
-                                      "field": leakage_calib,
-                                      "ntime": '60s',
-                                      "combinescans": True,
-                                      "growtime": 80.0,
-                                      "growfreq": 80.0,
-                                      "growaround": True,
-                                      "flagnearfreq": True,
-                                      "flagneartime": True,
-                                      "flagbackup": False,
-                                  },
-                                  input=pipeline.input, output=pipeline.output,
-                                  label="extend_flags_polcal")
+                recipe.add("cab/casa_flagdata",
+                           "extend_flags_polcal",
+                           {
+                               "vis": msname,
+                               "mode": 'extend',
+                               "field": leakage_calib,
+                               "ntime": '60s',
+                               "combinescans": True,
+                               "growtime": 80.0,
+                               "growfreq": 80.0,
+                               "growaround": True,
+                               "flagnearfreq": True,
+                               "flagneartime": True,
+                               "flagbackup": False,
+                           },
+                           input=pipeline.input, output=pipeline.output,
+                           label="extend_flags_polcal")
 
         # choose the strategy according to config parameters
         if leakage_calib in unpolarized_calibrators:
@@ -1365,8 +1361,8 @@ def worker(pipeline, recipe, config):
             if config['set_model_pol']:
                 caracal.log.info("Using a known model for the polarized calibrator.")
                 xcal_model_xcal_leak(msname, msinfo, prefix_msbase, recipe, config, pipeline, i,
-                                         prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
-                                         calwtlist, applylist)
+                                     prefix, refant, polarized_calibrators, caltablelist, gainfieldlist, interplist,
+                                     calwtlist, applylist)
             else:
                 if len(msinfo['SCAN'][str(idx)]) >= 3:
                     caracal.log.info("The model for the polarized calibrator will be derived from data.")
@@ -1376,15 +1372,15 @@ def worker(pipeline, recipe, config):
                     raise RuntimeError(
                         "Cannot calibrate polarization! Insufficient number of scans for the pol calibrator.")
         else:
-            raise RuntimeError(f"""Unable to determine a polarization calibration strategy. Supported strategies are: 
-                    1. Calibrate leakage using an unpolarized source ({', '.join(unpolarized_calibrators)}), and 
+            raise RuntimeError(f"""Unable to determine a polarization calibration strategy. Supported strategies are:
+                    1. Calibrate leakage using an unpolarized source ({', '.join(unpolarized_calibrators)}), and
                        polarization angle using a known polarized source ({', '.join(polarized_calibrators.keys())}).
                        This is usually achieved by setting leakage_cal=bpcal, pol_cal=xcal.
-                    2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at 
-                       different parallactic angles. This is usually achieved by setting leakage_cal=xcal, pol_cal=xcal. 
+                    2. Calibrate both leakage and polarized angle with a (known or unknown) polarized source observed at
+                       different parallactic angles. This is usually achieved by setting leakage_cal=xcal, pol_cal=xcal.
                        If the polarized source is unknown at least three scans are required.""")
 
-        if pipeline.enable_task(config, 'summary') and pol_calib !='none':
+        if pipeline.enable_task(config, 'summary') and pol_calib != 'none':
             step = 'summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/casa_flagdata', step,
                        {

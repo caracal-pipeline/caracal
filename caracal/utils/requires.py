@@ -18,11 +18,10 @@ def extras(packages):
         packages = [packages]
 
     def mydecorator(func):
-        for package in packages:
-            if not checkimport(package):
-                raise ExtraDependencyError
-
         def inner_func(*args, **kw):
+            for package in packages:
+                if not checkimport(package):
+                    raise ExtraDependencyError
             return func(*args, **kw)
         return inner_func
     return mydecorator

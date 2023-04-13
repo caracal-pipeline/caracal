@@ -33,8 +33,9 @@ def add_ms_label(msname, label="mst"):
     msbase, ext = os.path.splitext(msname)
     return f"{msbase}_{label}{ext}"
 
-
+@extras("astropy")
 def freq_to_vel(filename, reverse):
+    from astropy.io import fits
     C = 2.99792458e+8       # m/s
     HI = 1.4204057517667e+9  # Hz
     if not os.path.exists(filename):
@@ -80,8 +81,9 @@ def freq_to_vel(filename, reverse):
                     caracal.log.warn(
                         'Skipping conversion for {0:s}. Input is not a cube or not in velocity.'.format(filename))
 
-
+@extras("astropy")
 def remove_stokes_axis(filename):
+    from astropy.io import fits
     if not os.path.exists(filename):
         caracal.log.warn(
             'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(filename))
@@ -101,8 +103,9 @@ def remove_stokes_axis(filename):
                 caracal.log.warn(
                     'Skipping Stokes axis removal for {0:s}. Input cube has less than 4 axis or the 4th axis type is not "STOKES".'.format(filename))
 
-
+@extras("astropy")
 def fix_specsys_ra(filename, specframe):
+    from astropy.io import fits
     # Reference frame codes below from from http://www.eso.org/~jagonzal/telcal/Juan-Ramon/SDMTables.pdf, Sec. 2.50 and
     # FITS header notation from
     # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
@@ -128,8 +131,9 @@ def fix_specsys_ra(filename, specframe):
                 headcube['CRVAL1'] +=360.
 
 
-
+@extras("astropy")
 def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
+    from astropy.io import fits
     C = 2.99792458e+8       # m/s
     HI = 1.4204057517667e+9  # Hz
 
@@ -186,8 +190,9 @@ def make_pb_cube(filename, apply_corr, typ, dish_size, cutoff):
             caracal.log.info('Created primary beam cube FITS {0:s}'.format(
                     filename.replace('image.fits', 'pb.fits')))
 
-
+@extras("astropy")
 def calc_rms(filename, linemaskname):
+    from astropy.io import fits
     if linemaskname is None:
         if not os.path.exists(filename):
             caracal.log.info(

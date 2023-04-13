@@ -12,9 +12,9 @@ def checkimport(package):
         return False
 
 def extras(packages):
+    if isinstance(packages, str):
+        packages = [packages]
     def mydecorator(func):
-        if isinstance(packages, str):
-            packages = [packages]
         for package in packages:
             if not checkimport(package):
                 raise ExtraDependencyError

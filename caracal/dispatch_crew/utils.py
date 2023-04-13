@@ -1,12 +1,12 @@
 import ruamel.yaml
-import math
 import numpy
 import yaml
 import caracal
 import caracal.dispatch_crew.caltables as mkct
 import re
 import codecs
-import os
+from caracal.utils.requires import extras
+
 
 def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -314,12 +314,10 @@ def meerkat_refant(obsinfo):
     return info['RefAntenna']
 
 
+@extras("astropy")
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
     
-    if checkimport("astropy.io.fits"):
-        import astropy.io.fits as fitsio
-    else:
-        raise caracal.ExtraDependencyError
+    import astropy.io.fits as fitsio
 
     if isinstance(skymodel, str):
         skymodel = [skymodel]

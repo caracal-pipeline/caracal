@@ -235,7 +235,7 @@ class catalog_parser:
                 v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
                 return popt, pcov
 
-            popt, pcov = needs_curvefit()
+            popt, pcov = needs_curve_fit()
             perr = np.sqrt(np.diag(pcov))
             assert np.all(perr < 1.0e-6)
 

@@ -34,7 +34,7 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem'])+'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    carcal.log.info("All_targets", all_targets)
+    caracal.log.info("All_targets", all_targets)
     caracal.log.info("All_msfiles", all_msfile)
 
     if not os.path.exists(OUTPUT):

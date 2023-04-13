@@ -88,7 +88,7 @@ def worker(pipeline, recipe, config):
                             dec_corr = float(dec_corr*180.0/np.pi)
 
                             @extras(packages="astropy")
-                            def needs_astropy()
+                            def needs_astropy():
                                 from astropy.coordinates import SkyCoord
                                 return SkyCoord(ra_corr, dec_corr, unit='deg')
                             c = needs_astropy()

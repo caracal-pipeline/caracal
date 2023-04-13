@@ -2581,7 +2581,7 @@ then
  echo "pip install -U --force-reinstall \${workspace_root}/caracal" >> ${SS}
         if [[ -z ${FS} ]]
  then
-     pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal && break || {
+     pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal[extras] && break || {
       echo "pip install -U --force-reinstall \${workspace_root}/caracal failed"
       (( ii++ ))
   }

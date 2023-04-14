@@ -2577,12 +2577,12 @@ then
     ii=1
     until (( ${ii} > ${IA} ))
     do
- echo "Running pip install -U --force-reinstall \${workspace_root}/caracal[extras]"
- echo "pip install -U --force-reinstall \${workspace_root}/caracal[extras]" >> ${SS}
+ echo "Running pip install -U --force-reinstall \${workspace_root}/caracal[all]"
+ echo "pip install -U --force-reinstall \${workspace_root}/caracal[all]" >> ${SS}
         if [[ -z ${FS} ]]
  then
-     pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal[extras] && break || {
-      echo "pip install -U --force-reinstall \${workspace_root}/caracal[extras] failed"
+     pip install -U --force-reinstall ${WORKSPACE_ROOT}/caracal[all] && break || {
+      echo "pip install -U --force-reinstall \${workspace_root}/caracal[all] failed"
       (( ii++ ))
   }
  else

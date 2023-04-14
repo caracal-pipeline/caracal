@@ -12,18 +12,7 @@ import matplotlib.dates as mdat
 from matplotlib import gridspec
 from matplotlib import rc
 from matplotlib import pyplot as plt
-import scipy.fft
-import scipy.optimize
-import scipy.constants as scconstants
-from scipy import stats
 import datetime
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-import astropy.visualization as astviz
-from astropy.wcs import WCS
-from astropy.table import Table, Column
-from astropy.io import fits, ascii
-import astropy.io.ascii as astasc
 from casacore.measures import dq
 import casacore.measures as measures
 import casacore.images as images
@@ -33,25 +22,30 @@ import sys
 import os
 import numpy as np
 import yaml
-import matplotlib
-matplotlib.use("Agg")
-
-
-# from casatasks import flagmanager as flg
-# from casatasks import flagdata as flagger
-
-
-# import bisect
+from caracal.utils.requires import extras
 
 
 dm = measures.measures()
 
 timeInit = time.time()
 
-
 class UzeroFlagger:
+    global u, SkyCoord, astviz, WCS, Table, Column, fits, astasc
+    global optimize, scconstants, stats
 
+    
+    @extras(packages=["astropy", "scipy"])
     def __init__(self, config):
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
+        import astropy.visualization as astviz
+        from astropy.wcs import WCS
+        from astropy.table import Table, Column
+        from astropy.io import fits
+        import astropy.io.ascii as astasc
+        import scipy.optimize as optimize
+        import scipy.constants as scconstants
+        from scipy import stats
 
         self.config = config
 
@@ -304,42 +298,6 @@ class UzeroFlagger:
     # def makeFFT(self, inCube,outFFT):
 
     def makeFFT(self, inCube):
-        # dataCube = fits.getdata(inCube)
-        # dFFT = np.fft.fft2(dataCube)
-        # # imFFT=images.image(outFFT)
-        # # dFFT=imFFT.getdata()
-
-        # dFFT=np.abs(np.squeeze(dFFT))
-        # # headFFT=imFFT.info()
-
-        # hdr = fits.Header()
-        # hdr["NAXIS"]  = 2
-        # hdr["NAXIS1"] = dFFT.shape[1]
-        # hdr["NAXIS2"] = dFFT.shape[0]
-        # hdr["CTYPE1"] = 'UU---SIN'
-        # # hdr["CDELT1"] = headFFT['coordinates']['linear0']["cdelt"][0]
-        # hdr["CDELT1"] = 1./(self.config['flag_u_zeros']['imsize']*self.config['flag_u_zeros']['cell']*np.pi/(3600.*180.))
-        # # hdr["CRVAL1"] = headFFT['coordinates']['linear0']["crval"][0]
-        # hdr["CRVAL1"] = 0
-
-        # # hdr["CRPIX1"] = headFFT['coordinates']['linear0']["crpix"][0]
-        # hdr["CRPIX1"] = int(hdr["NAXIS1"]/2)
-        # hdr["CRPIX2"] = int(hdr["NAXIS2"]/2)
-
-        # # hdr["CUNIT1"] = headFFT['coordinates']['linear0']["units"][0]
-        # hdr["CTYPE2"] = 'VV---SIN'
-        # # hdr["CDELT2"] = headFFT['coordinates']['linear0']["cdelt"][1]
-        # hdr["CRVAL2"] = 0
-        # hdr["CDELT2"] = 1./(self.config['flag_u_zeros']['imsize']*self.config['flag_u_zeros']['cell']*np.pi/(3600.*180.))
-
-        # # hdr["CRVAL2"] = headFFT['coordinates']['linear0']["crval"][1]
-        # # hdr["CRPIX2"] = headFFT['coordinates']['linear0']["crpix"][1]
-        # # hdr["CUNIT2"] = headFFT['coordinates']['linear0']["units"][1]
-        # caracal.log.info('\tFFT cell size = {0:.2f}'.format(hdr['cdelt2']))
-        # caracal.log.info("FFT Done")
-        # gc.collect()
-
-        # return dFFT,hdr
 
         with fits.open(inCube) as hdul:
             hdu = hdul[0]
@@ -371,8 +329,6 @@ class UzeroFlagger:
         rms1 = np.std(fitsim)
 
         ax = fig.add_subplot(gs[kk, 0], projection=fitswcs)
-        # ax.tick_params(bottom='on', top='on',left='on', right='on', which='major', direction='in')
-        # ax.tick_params(bottom='on', top='on',left='on', right='on', which='minor', direction='in')
         ax.imshow(fitsim, cmap='Greys', vmin=-rms1, vmax=2 * rms1)
         if scan != 0:
             ax.annotate("Scan: " + str(scan) + r" rms = " + str(np.round(rms1 * 1e6, 3)) + r" $\mu$Jyb$^{-1}$", xy=(0.05, 0.95), xycoords='axes fraction', horizontalalignment='left', verticalalignment='top', backgroundcolor='w', fontsize=12)
@@ -380,8 +336,6 @@ class UzeroFlagger:
             ax.annotate("rms = " + str(np.round(rms1 * 1e6, 3)) + r" $\mu$Jyb$^{-1}$", xy=(0.05, 0.95), xycoords='axes fraction', horizontalalignment='left', verticalalignment='top', backgroundcolor='w', fontsize=12)
         if type == 'postFlag':
             ax.annotate(r"Flags {percent} $\%$".format(percent=str(np.round(percent, 2))), xy=(0.95, 0.05), xycoords='axes fraction', horizontalalignment='right', verticalalignment='bottom', backgroundcolor='w', fontsize=12)
-
-        # ax.annotate(r"rms = "+str(np.round(rms1*1e6,1))+r"$\mu$ Jyb$^{-1}$", xy=(0.1,0.1), xycoords='axes fraction', horizontalalignment='left', verticalalignment='bottom', backgroundcolor='w', fontsize=6)
 
         lon = ax.coords[0]
         lat = ax.coords[1]
@@ -418,7 +372,6 @@ class UzeroFlagger:
         fftim = ax2.imshow(inFFTData[cx - w:cx + w + 1, cy - w:cy + w + 1], vmin=0, vmax=common_vmax, extent=extent, origin='upper')
         if ctff:
             ax2.contour(inFFTData[cx - w:cx + w + 1, cy - w:cy + w + 1], levels=[ctff,], colors=['r'], linewidths=[1,], extent=extent, origin='upper')
-        # fits.writeto('bla-{}-{}.fits'.format(kk,type),inFFTData[cx-w:cx+w+1, cy-w:cy+w+1], overwrite=True)
 
         ax2.yaxis.set_label_position("right")
         ax2.yaxis.tick_right()
@@ -460,8 +413,7 @@ class UzeroFlagger:
         axBase.set_xlabel(r'Baseline Lenght [m]')
         axBase.set_ylabel(r'Percentage of u=0 flags')
         bins = [0, 5, 25, 50, 100, 250, 500, 1000, 8000]
-        # bins=np.logspace(20,np.log10(8000),10)
-        # bins.insert(0,0)
+
         nFlags, binEdgesFlags = np.histogram(baseFlags, bins)
         nAll, binEdgesAll = np.histogram(baseAll, bins)
         nPerc = nFlags / nAll * 100.
@@ -472,8 +424,6 @@ class UzeroFlagger:
 
         axBase.plot(bins[:-1], nPerc, 'k-', drawstyle='steps-pre')
 
-        # axBase.set_ylim(0,1)
-        # axBase.set_yticks([0,25,50,100])
         axBase.set_autoscale_on(False)
         outPlot = "{0}baselines_plot_{1}.png".format(self.config['flag_u_zeros']['stripePlotDir'], galaxy)
         figBase.savefig(outPlot, bbox_inches='tight', overwrite=True, dpi=200)   # save the figure to file
@@ -633,7 +583,6 @@ class UzeroFlagger:
 
         med = np.nanmedian(inFFTData)
         mad = stats.median_abs_deviation(inFFTData, scale='normal', nan_policy='omit', axis=None)
-     #   if threshmode == 'fit' or ax != None:
         # Build a histogram
         hist, bin_edges = np.histogram(inFFTData[np.isfinite(inFFTData)], bins=int(np.sqrt(npoints)) + 1)
         bin_centers = bin_edges[:-1] + 0.5 * (bin_edges[1:] - bin_edges[:-1])
@@ -644,7 +593,7 @@ class UzeroFlagger:
 
         # Fit a Gaussian
         try:
-            popt, pcov = scipy.optimize.curve_fit(self.gaussian, bin_centers, hist, p0=[maxhiposval, maxhi, stdev / 2.])
+            popt, pcov = optimize.curve_fit(self.gaussian, bin_centers, hist, p0=[maxhiposval, maxhi, stdev / 2.])
         except BaseException:
             popt = np.array([average, widthes[0] * npoints / (np.sqrt(2 * np.pi) * stdev), stdev])
 
@@ -808,22 +757,8 @@ class UzeroFlagger:
 
         comvmax_tot, comvmax_scan = 0, 0
         runtime = time.strftime("%d-%m-%Y") + '_' + time.strftime("%H-%M")
-        # logging.basicConfig(format='(%(asctime)s) [%(name)-17s] %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", filename='{datapath}/stripeAnalysis_{time}.log'.format(datapath=stripeDir, galaxy=galaxy, time=runtime),level=logging.DEBUG)
-        # logging.captureWarnings(True)
-
-        # logging.disable(logging.DEBUG)
-        # caracal.log = logging.getcaracal.log(__name__)
-
-        # consoleHandler = logging.StreamHandler(sys.stdout)
-        # logFormatter = logging.Formatter("%(asctime)s [%(name)-17s] %(levelname)-5.5s:  %(message)s",datefmt="%Y-%m-%d %H:%M:%S")
-        # consoleHandler.setFormatter(logFormatter)
-
-        # caracal.log.addHandler(consoleHandler)
-        # caracal.log.warn(
-        #        'Skipping Stokes axis removal for {0:s}. File does not exist.'.format(mfsOb))
         caracal.log.info("====================================================")
         caracal.log.info('Starting the flag_u_zeros segment')
-        # caracal.log.info("{galaxy}, lw(s): 'lw1'+ {track}".format(galaxy=galaxy, track=lws))
 
         obsIDs = []
 
@@ -838,17 +773,11 @@ class UzeroFlagger:
                 #                obsIDs.append('{}{}.ms'.format(rootMS,lw))
                 obsIDs.append(mfsOb.replace(self.config['label_in'], lw))
 
-#            for obb in obsIDs:
-#                caracal.log.info("\t{}".format(obb))
-#        else:
-#            obsIDs.append(mfsOb)
-#            lws=['trk']
 
         lws = [self.config['label_in']] + lws
 
         stripeFlags = None
         for ii in range(0, len(obsIDs)):
-            # galNameVis=galaxy.replace('-','_')
             track = lws[ii]
             inVis = pipeline.msdir + '/' + obsIDs[ii]
             inVisName = obsIDs[ii]
@@ -906,16 +835,7 @@ class UzeroFlagger:
             self.makeCube(pipeline, pipeline.msdir, inVisName, outCubePrefix)
 
             caracal.log.info("Making FFT of image")
-            # outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_tot.im'
-            # if os.path.exists(outFFT):
-            #    shutil.rmtree(outFFT)
-            # inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
             inFFTData, inFFTHeader = self.makeFFT(outCubeName)
-
-            # U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1']) ############ Add this back?
-            # V = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX2']-1) * inFFTHeader['CDELT2'] + inFFTHeader['CRVAL2']) ############ Add this back?
-
-            # scan=track
 
             if makePlots:
                 if flagCmd:
@@ -977,10 +897,7 @@ class UzeroFlagger:
                 self.makeCube(pipeline, self.config['flag_u_zeros']['stripeMSDir'], visName, outCubePrefix_0)
 
                 caracal.log.info("Making FFT of image")
-                # outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'.im'
-                # if os.path.exists(outFFT):
-                #    shutil.rmtree(outFFT)
-                # inFFTData,inFFTHeader = self.makeFFT(outCubeName_0,outFFT)
+
                 inFFTData, inFFTHeader = self.makeFFT(outCubeName_0)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
@@ -1057,10 +974,7 @@ class UzeroFlagger:
                     fig1, comvmax_scan = self.plotAll(fig1, gs1, NS, kk, outCubeName_0, inFFTData, inFFTHeader, galaxy, track, scan, None, comvmax_scan, cutoff_scan, type=None)
 
                 caracal.log.info("Making FFT of post-flagging image")
-                # outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_scan'+str(scan)+'_stripeFlag.im'
-                # if os.path.exists(outFFT):
-                #    shutil.rmtree(outFFT)
-                # inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
+
                 inFFTData, inFFTHeader = self.makeFFT(outCubeName)
 
                 if makePlots:
@@ -1083,7 +997,7 @@ class UzeroFlagger:
             caracal.log.info("Saving stats table")
             newtab = Table(names=['galaxy', 'track', 'scan', 'perc', 'cutoff', 'el', 'az'], data=(superArr))
             outTablePercent = "{tableDir}stats_{galaxy}{track}.ecsv".format(tableDir=self.config['flag_u_zeros']['stripeTableDir'], galaxy=galaxy, track=track)
-            ascii.write(newtab, outTablePercent, overwrite=True, format='ecsv')
+            astasc.write(newtab, outTablePercent, overwrite=True, format='ecsv')
 
             if flagCmd:
                 caracal.log.info("====================================================")
@@ -1101,10 +1015,6 @@ class UzeroFlagger:
 
                 caracal.log.info("Making FFT of post-flagging image")
 
-                # outFFT=self.config['flag_u_zeros']['stripeFFTDir']+galaxy+'_'+track+'_tot_stripeFlag.im'
-                # if os.path.exists(outFFT):
-                #    shutil.rmtree(outFFT)
-                # inFFTData,inFFTHeader = self.makeFFT(outCubeName,outFFT)
                 inFFTData, inFFTHeader = self.makeFFT(outCubeName)
 
                 U = ((np.linspace(1, inFFTData.shape[1], inFFTData.shape[1]) - inFFTHeader['CRPIX1']) * inFFTHeader['CDELT1'] + inFFTHeader['CRVAL1'])
@@ -1123,7 +1033,6 @@ class UzeroFlagger:
                 if makePlots:
                     caracal.log.info("----------------------------------------------------")
                     caracal.log.info("----------------------Plotting----------------------")
-                    # self.baselineStats(galaxy,stripeFlags,uvw,avspecchan) # what are these plots?
 
                     outPlot = "{0}{2}_fullMS_prepostFlag.png".format(self.config['flag_u_zeros']['stripePlotDir'], galaxy, mfsOb)
                     fig0, comvmax_tot = self.plotAll(fig0, gs0, 2, 1, outCubeName, inFFTData, inFFTHeader, galaxy, track, 0, np.nanmean(percTotAv), comvmax_tot, 0, type='postFlag')
@@ -1132,12 +1041,8 @@ class UzeroFlagger:
                     plt.close(fig0)
 
                 timeFlag = (time.time() - timeInit) / 60.
-                # caracal.log.info("\tTotal flagging time: {timeend:.1f} minutes".format(timeend=timeFlag))
 
         if doCleanUp is True:
             self.cleanUp(galaxy)
 
         return timeFlag
-    # timeEnd = (time.time()-timeInit)/60.
-    # #caracal.log.info("\tTotal processing time: {timeend} minutes".format(timeend=timeEnd))
-    # caracal.log.info("Done")

@@ -3,11 +3,9 @@
 import sys
 from datetime import datetime
 import numpy as np
-import astropy.io.fits as astropy_io_fits
-import scipy
-import scipy.signal as scipy_signal
 import argparse
 import textwrap
+from caracal.utils.requires import extras
 
 version = '1.0.2'
 
@@ -16,7 +14,7 @@ def printime(string):
     now = datetime.now().strftime("%H:%M:%S")
     print('{} {}'.format(now, string))
 
-
+@extras(packages=["scipy", "astropy"])
 def imcontsub(
     incubus, outcubus=None, fitmode='median', length=0,
     polyorder=None, mask=None, sgiters=0, kertyp='gauss', kersiz=0,
@@ -73,6 +71,10 @@ def imcontsub(
     convolved output data cube. The parameter clobber determines
     whether the output will be overwritten (if True).
     """
+
+    import astropy.io.fits as astropy_io_fits
+    import scipy
+    import scipy.signal as scipy_signal
     # Read cube
     begin = datetime.now()
     print('')

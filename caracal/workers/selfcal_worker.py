@@ -417,7 +417,7 @@ def worker(pipeline, recipe, config):
         for i in range(0, len(casafiles)):
             shutil.rmtree(casafiles[i])
 
-    @extras(packages="astropy")
+    @extras("astropy")
     def change_header_and_type(filename, headfile, copy_head):
         import astropy.io.fits as fits
 

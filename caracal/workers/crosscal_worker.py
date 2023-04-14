@@ -478,7 +478,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
         label="%s::Apply gain tables" % step)
 
 
-@extras(packages="scipy.ndimage")
+@extras("scipy")
 def smooth_bandpass(bptable, window, filter_type='mean'):
     from scipy import ndimage
 

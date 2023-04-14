@@ -41,6 +41,11 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Test optional deps
+        run: |
+            poetry install caracal --extras all
+            poetry remove caracal
+
       - name: Install caracal
         run: poetry install --with tests --no-interaction
 

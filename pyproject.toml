@@ -29,28 +29,36 @@ stimela = "^1.7.6"
 psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
-decorator = "^4.2.2"
 "ruamel.yaml" = "^0.17.21"
-nbconvert = "*"
 numpy = "*"
+
+# These are not essentail for the pipeline to run, so better to not pin the versions.
+# TODO(sphe) these packages have to be moved to extras eventually
+nbconvert = "*"
 radiopadre-client = "*"
 python-casacore = "*"
 matplotlib = "*"
 jinja2 = "*"
 
+# Optional dependencies start here
+astropy = [
+    { version = "^5.2.2", python = "^3.8", optional = true},
+    {version = "4.3.1", python = "3.7", optional = true },
+    ]
+scipy = { version = "*", optional = true}
+regions = { version = "*", optional = true}
+astroquery = { version = "*", optional = true}
+
 [build-system]
 requires = ["setuptools", "poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.group.extras]
-optional = true
-[tool.poetry.group.extras.dependencies]
-scipy = "*"
-astropy = [
-    {version="^5.2.2", python="^3.8"},
-    {version="4.3.1", python="3.7"},
-    ]
-regions = "*"
+[tool.poetry.extras]
+scipy = ["scipy"]
+astropy = ["astropy"]
+regions = ["regions"]
+astroquery = ["astroquery"]
+all = ["scipy", "astropy", "regions", "astroquery"]
 
 
 [tool.poetry.group.tests]
@@ -66,9 +74,3 @@ Sphinx = "^5.3.0"
 sphinx-copybutton = "^0.5.0"
 furo = "^2022.9.15"
 
-[tool.autopep8]
-max_line_length = 120
-ignore = "E501,W6"  # or ["E501", "W6"]
-in-place = true
-recursive = true
-aggressive = 3

@@ -42,8 +42,19 @@ class BadDataError(CaracalException):
 class ExtraDependencyError(Exception):
     """Optional depencies are missing"""
 
-    def __init__(self, message="Pipeline run requires optional dependencies, please re-install caracal as 'pip install caracal[extras]'"):
-        self.message = message
+    def __init__(self, message=None, extra=None):
+        
+        default_message = "Pipeline run requires optional dependencies, please re-install caracal as: \n 'pip install caracal[all]'"
+        if extra:
+            extra = f"or, install the missing package as: \n 'pip install caracal[{extra}]'" 
+        else:
+            extra = ""
+
+        if message:
+            self.message = message
+        else:
+            self.message = default_message + extra
+
         super().__init__(self.message)
 
 

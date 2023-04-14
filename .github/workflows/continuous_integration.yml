@@ -43,7 +43,7 @@ jobs:
 
       - name: Test optional deps
         run: |
-            poetry install caracal --extras all
+            poetry install --extras all
 
       - name: Install caracal
         run: poetry install --with tests --no-interaction

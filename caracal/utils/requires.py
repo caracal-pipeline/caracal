@@ -21,7 +21,7 @@ def extras(packages):
         def inner_func(*args, **kw):
             for package in packages:
                 if not checkimport(package):
-                    raise ExtraDependencyError
+                    raise ExtraDependencyError(extra=package)
             return func(*args, **kw)
         return inner_func
     return mydecorator

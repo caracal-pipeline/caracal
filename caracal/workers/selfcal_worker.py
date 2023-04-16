@@ -869,10 +869,10 @@ def worker(pipeline, recipe, config):
         key = 'img_breizorro_settings'
 
         if config['img_joinchans'] == True:
-            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits'.format(
+            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-MFS-image.fits:output'.format(
                 img_dir, prefix, field, num)
         else:
-            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits'.format(
+            imagename = '{0:s}/{1:s}_{2:s}_{3:d}-image.fits:output'.format(
                 img_dir, prefix, field, num)
 
         outmask = pipeline.prefix + '_' + field + '_' + str(num+1) + '_clean'

@@ -254,7 +254,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
     def do_IA(i):
         if i == 0:
-            raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed."
+            raise RuntimeError("Have encountered an imaging/flagging request before any gains have been computed."
                                "an I only makes sense after a G or K (usually both)."
                                "Please review your 'order' option in the self_cal:secondary section")
 

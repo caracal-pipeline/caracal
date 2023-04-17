@@ -301,7 +301,7 @@ def worker(pipeline, recipe, config):
                         },
                             input=pipeline.input if label_in else pipeline.rawdatadir,
                             output=pipeline.output,
-                            label='{0:s}:: Split polcal corrected ms={1:s}'.format(step, "".join(to_ms)))
+                            label=f'{step}:: Split polcal corrected ms={"".join(to_ms)}')
                         recipe.run()
                         recipe.jobs = []
 

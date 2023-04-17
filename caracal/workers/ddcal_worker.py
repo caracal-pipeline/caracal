@@ -224,7 +224,7 @@ def worker(pipeline, recipe, config):
         #    model_cube = prefix+"-DD-precal.cube.app.model.fits"
         outdir = field + "_ddcal"
         if de_sources_mode == 'auto':
-            print("Carrying out automatic source taggig for direction dependent calibration")
+            caracal.log.info("Carrying out automatic source taggig for direction dependent calibration")
             caracal.log.info('Carrying out automatic dE tagging')
 
             catdagger_opts = {

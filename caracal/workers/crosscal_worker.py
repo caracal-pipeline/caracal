@@ -554,7 +554,7 @@ def worker(pipeline, recipe, config):
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
             caracal.log.info("Found more than one flux calibrator."
-                             "Will use the one observed the logest (%s)." % fluxscale_field)
+                             f"Will use the one observed the longest {fluxscale_field}.")
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]

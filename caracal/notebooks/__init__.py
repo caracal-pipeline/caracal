@@ -14,13 +14,14 @@ _j2env = None
 
 SOURCE_NOTEBOOK_DIR = os.path.dirname(__file__)
 
+
 def setup_default_notebooks(notebooks, output_dir, prefix, config):
     # setup logos
     logodir = os.path.join(output_dir, "reports")
     if not os.path.exists(logodir):
         os.mkdir(logodir)
     for png in glob.glob(os.path.join(SOURCE_NOTEBOOK_DIR, "*.png")):
-        shutil.copyfile(png, os.path.join(logodir,os.path.basename(png)))
+        shutil.copyfile(png, os.path.join(logodir, os.path.basename(png)))
 
     for notebook in notebooks:
         nbfile = notebook + ".ipynb"
@@ -30,7 +31,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
         dest_mtime = os.path.getmtime(nbdest) if os.path.exists(nbdest) else 0
 
         # if source is a template, invoke jinja
-        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile+".j2")
+        nbsrc = os.path.join(SOURCE_NOTEBOOK_DIR, nbfile + ".j2")
         if os.path.exists(nbsrc):
             if os.path.getmtime(nbsrc) > dest_mtime:
                 global _j2env
@@ -38,7 +39,7 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
                     _j2env = jinja2.Environment(loader=jinja2.PackageLoader('caracal', 'notebooks'),
                                                 autoescape=jinja2.select_autoescape(['html', 'xml']))
 
-                template = _j2env.get_template(nbfile+".j2")
+                template = _j2env.get_template(nbfile + ".j2")
                 log.info("Creating standard notebook {} from template".format(nbdest))
 
                 with open(nbdest, "wt") as file:
@@ -64,10 +65,11 @@ def setup_default_notebooks(notebooks, output_dir, prefix, config):
                 log.info("Standard notebook {} already exists, won't overwrite".format(nbdest))
             continue
 
-
         log.error("Standard notebook {} does not exist".format(nbsrc))
 
+
 _radiopadre_updated = False
+
 
 def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
     opts = ["--non-interactive", "--auto-init"]
@@ -83,7 +85,7 @@ def generate_report_notebooks(notebooks, output_dir, prefix, container_tech):
     if caracal.DEBUG:
         opts += ['-v', '2', '--container-debug']
 
-    ## disabling as per https://github.com/caracal-pipeline/caracal/issues/1161
+    # disabling as per https://github.com/caracal-pipeline/caracal/issues/1161
     # # first time run with -u
     # global _radiopadre_updated
     # if not _radiopadre_updated:

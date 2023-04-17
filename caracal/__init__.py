@@ -40,7 +40,7 @@ class BadDataError(CaracalException):
 
 
 class ExtraDependencyError(Exception):
-    """Optional depencies are missing"""
+    """Optional dependencies are missing"""
 
     def __init__(self, message=None, extra=None):
         

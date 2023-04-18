@@ -946,7 +946,7 @@ def worker(pipeline, recipe, config):
                                 doProj = True   
                                 caracal.log.info('CRVAL2')
                             
-                            if hdul[0].header['NAXIS3'] > nchans:
+                            if int(hdul[0].header['NAXIS3']) > int(nchans):
                                 doSpec = True 
                             else:
                                 dpSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
@@ -961,7 +961,7 @@ def worker(pipeline, recipe, config):
                             else:
                                 cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
                             
-                            if cdelt > chanwidth[0]:
+                            if np.round(cdelt,1) > np.round(chanwidth[0],1):
                                 doSpec = True 
                             elif doProj == True:
                                 pass 

@@ -66,7 +66,7 @@ And CARACal developer version which is not recommended for users:
 
 ..  code-block:: bash
 
-    pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
+    pip install -U 'caracal[all] @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
 CARACal has a few optional dependencies (scipy, astropy, regions, astroquery) which are not installed by default. But to get full functionality, you can install them by running:

@@ -950,6 +950,11 @@ def worker(pipeline, recipe, config):
                                 doSpec = True 
                             else:
                                 dpSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
+
+                            caracal.log.info('+++++++++++++++++++++++++++++')
+                            print(hdul[0].header['NAXIS3'],nchans)
+                            caracal.log.info('+++++++++++++++++++++++++++++')
+
                             
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
@@ -962,6 +967,11 @@ def worker(pipeline, recipe, config):
                                 pass 
                             else:
                                 doSpec =  None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
+
+                            caracal.log.info('+++++++++++++++++++++++++++++')
+                            print(cdelt , chanwidth[0])
+                            caracal.log.info('+++++++++++++++++++++++++++++')
+
 
                             if doProj:
                                 ax3param = []

@@ -1,7 +1,7 @@
 import re
-from scipy.optimize import curve_fit
 import numpy as np
 import copy
+from caracal.utils.requires import extras
 
 
 class catalog_parser:
@@ -95,17 +95,17 @@ class catalog_parser:
                                           command)
                         if not valset:
                             valset = re.match(r"^crystal name=(?P<src>[0-9A-Za-z\-+_ ]+)[ ]+"
-                                     r"epoch=(?P<epoch>[0-9]+)[ ]+"
-                                     r"(?P<lsmname>[0-9a-zA-Z\-.]+)$",
-                                     command)
+                                              r"epoch=(?P<epoch>[0-9]+)[ ]+"
+                                              r"(?P<lsmname>[0-9a-zA-Z\-.]+)$",
+                                              command)
 
                             if not valset:
-                                 raise RuntimeError("Illegal line encountered while parsing"
-                                               "southern standard at line %d:'%s'" %
-                                               (ln_no, line))
+                                raise RuntimeError("Illegal line encountered while parsing"
+                                                   "southern standard at line %d:'%s'" %
+                                                   (ln_no, line))
                             else:
-                                 cmd = "crystal"
-                        else: 
+                                cmd = "crystal"
+                        else:
                             cmd = "lsm"
                     else:
                         cmd = "alias"
@@ -132,10 +132,10 @@ class catalog_parser:
 
                     signum = 1.
                     if decl[0] == '-':
-                        signum=-1.
+                        signum = -1.
                     decl = np.deg2rad(float(valset_decl.group("d")) +
-                                      signum*float(valset_decl.group("m"))/60. +
-                                      signum*float(valset_decl.group("s"))/3600.)
+                                      signum * float(valset_decl.group("m")) / 60. +
+                                      signum * float(valset_decl.group("s")) / 3600.)
 
                     a = float(valset.group("a"))
                     b = float(valset.group("b"))
@@ -162,7 +162,7 @@ class catalog_parser:
                 elif cmd == "alias":
                     src = valset.group("src")
                     dest = valset.group("dest")
-                    if not src in calibrator_db:
+                    if src not in calibrator_db:
                         raise RuntimeError("%s has not been defined. Cannot alias "
                                            "%s to %s in line %d" %
                                            (src, dest, src, ln_no))
@@ -171,7 +171,7 @@ class catalog_parser:
                     src = valset.group("src")
                     epoch = valset.group("epoch")
                     lsm = valset.group("lsmname")
-                    if not src in calibrator_db:
+                    if src not in calibrator_db:
                         raise RuntimeError("%s has not been defined. Cannot link lsm "
                                            "%s to %s in line %d" %
                                            (src, lsm, ln_no))
@@ -181,8 +181,8 @@ class catalog_parser:
                     src = valset.group("src")
                     epoch = valset.group("epoch")
                     crystal = valset.group("lsmname")
-                    if not src in calibrator_db:
-                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model" 
+                    if src not in calibrator_db:
+                        raise RuntimeError("%s has not been defined. Cannot link to crystalball model"
                                            "%s to %s in line %d" %
                                            (src, crystal, ln_no))
                     calibrator_db[name]["crystal"] = crystal
@@ -218,16 +218,24 @@ class catalog_parser:
             return 10 ** (a + b * np.log10(v) + c * np.log10(v) ** 2 + d * np.log10(v) ** 3)
 
         def casaspi(v, v0, I, a, b, c, d):
-            return I * (v/v0) ** (a + b * np.log10(v/v0) + c * np.log10(v/v0) ** 2 + d * np.log10(v/v0) ** 3)
+            return I * (v / v0) ** (a + b * np.log10(v / v0) + c * np.log10(v / v0) ** 2 + d * np.log10(v / v0) ** 3)
 
         I = pbspi(v0, a, b, c, d)
 
-        if a == 0 and b == 0 and c == 0 and d==0:
+        if a == 0 and b == 0 and c == 0 and d == 0:
             popt = [0., 0., 0., 0.]
         else:
-            v = np.linspace(vlower, vupper, 10000)
-            popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
-            v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
+            # Wrap in useless function to hide scipy
+            # Importing midway is non-kosher, but what you gonna do ¯\_('_')_/¯
+            @extras("scipy.optimize")
+            def needs_curve_fit():
+                from scipy.optimize import curve_fit
+                v = np.linspace(vlower, vupper, 10000)
+                popt, pcov = curve_fit(lambda v, a, b, c, d: casaspi(
+                    v, v0, I, a, b, c, d), v, pbspi(v, a, b, c, d))
+                return popt, pcov
+
+            popt, pcov = needs_curve_fit()
             perr = np.sqrt(np.diag(pcov))
             assert np.all(perr < 1.0e-6)
 

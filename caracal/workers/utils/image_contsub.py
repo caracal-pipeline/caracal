@@ -3,11 +3,9 @@
 import sys
 from datetime import datetime
 import numpy as np
-import astropy.io.fits as astropy_io_fits
-import scipy
-import scipy.signal as scipy_signal
 import argparse
 import textwrap
+from caracal.utils.requires import extras
 
 version = '1.0.2'
 
@@ -16,7 +14,7 @@ def printime(string):
     now = datetime.now().strftime("%H:%M:%S")
     print('{} {}'.format(now, string))
 
-
+@extras(packages=["scipy", "astropy"])
 def imcontsub(
     incubus, outcubus=None, fitmode='median', length=0,
     polyorder=None, mask=None, sgiters=0, kertyp='gauss', kersiz=0,
@@ -73,6 +71,10 @@ def imcontsub(
     convolved output data cube. The parameter clobber determines
     whether the output will be overwritten (if True).
     """
+
+    import astropy.io.fits as astropy_io_fits
+    import scipy
+    import scipy.signal as scipy_signal
     # Read cube
     begin = datetime.now()
     print('')
@@ -110,7 +112,7 @@ def imcontsub(
         # Create a masked cube
         # incubus_data_masked = np.ma.masked_array(incubus_data, mask_data > 0)
         incubus_data_masked = np.ma.masked_array(
-            incubus_data, (mask_data > 0)+np.isnan(incubus_data))
+            incubus_data, (mask_data > 0) + np.isnan(incubus_data))
         hdul_mask.close()
     else:
         incubus_data_masked = np.ma.masked_array(
@@ -139,11 +141,11 @@ def imcontsub(
                     incubus_data.shape[2]))
         # Make sure that the fit cube can be convolved
         if np.nanmax(incubus_data) > 0.:
-            maxincube = np.nanmax(incubus_data)*10.
+            maxincube = np.nanmax(incubus_data) * 10.
         else:
             maxincube = 0
         if np.nanmin(incubus_data) < 0.:
-            minincube = np.nanmin(incubus_data)*10.
+            minincube = np.nanmin(incubus_data) * 10.
         else:
             minincube = 0.
 
@@ -172,7 +174,7 @@ def imcontsub(
 
             sgmask = np.ma.getmask(incubus_data_masked)
             sgincubus = incubus_data.copy()
-            sgincubus[sgmask==True] = 0.0
+            sgincubus[sgmask] = 0.0
 
             # First stitch holes in the data
             if sgiters > 0:
@@ -194,7 +196,7 @@ def imcontsub(
 
     else:
         printime('No valid filter chosen, not filtering.')
-        fit = incubus_data_masked*0.
+        fit = incubus_data_masked * 0.
 
     if not isinstance(fitted, type(None)):
         printime('Writing continuum cube')
@@ -211,12 +213,12 @@ def imcontsub(
         printime('Spatially convolving continuum cube')
         if kertyp == 'gauss':
             kernel = scipy_signal.gaussian(
-                int(10.*kersiz/np.sqrt(np.log(256.)))//2*2+1,
-                kersiz/np.sqrt(np.log(256.)))
+                int(10. * kersiz / np.sqrt(np.log(256.))) // 2 * 2 + 1,
+                kersiz / np.sqrt(np.log(256.)))
         else:
-            klength = int(10.*kersiz)//2*2+1
-            coordinates = np.arange(klength, dtype=int)-int(klength)//2
-            kernel = (np.fabs(coordinates) < (kersiz//2+1))
+            klength = int(10. * kersiz) // 2 * 2 + 1
+            coordinates = np.arange(klength, dtype=int) - int(klength) // 2
+            kernel = (np.fabs(coordinates) < (kersiz // 2 + 1))
 
         kernel = np.outer(
             kernel, kernel).reshape((1, kernel.size, kernel.size))
@@ -224,7 +226,7 @@ def imcontsub(
         fitmask = np.isnan(fit)
         fit[fitmask] = 0.
         convolved = scipy_signal.fftconvolve(
-            fit, kernel, mode='same', axes=(1, 2))/kernel[0].sum()
+            fit, kernel, mode='same', axes=(1, 2)) / kernel[0].sum()
         convolved[fitmask] = np.nan
     else:
         convolved = fit
@@ -242,7 +244,7 @@ def imcontsub(
         hdul_incubus.writeto(confit, overwrite=clobber)
 
     printime('Subtracting continuum.')
-    subtracted = incubus_data-convolved
+    subtracted = incubus_data - convolved
 
     if stokes:
         hdul_incubus[0].data = subtracted.astype('float32').reshape(
@@ -256,7 +258,7 @@ def imcontsub(
     hdul_incubus.close()
     now = datetime.now()
     printime(
-        'Time elapsed: {:.1f} minutes'.format((now-begin).total_seconds()/60.))
+        'Time elapsed: {:.1f} minutes'.format((now - begin).total_seconds() / 60.))
     print('')
 
 

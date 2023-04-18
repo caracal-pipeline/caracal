@@ -4,17 +4,20 @@ import glob
 import sys
 import caracal
 import numpy as np
-from astropy import units as u
-import astropy.coordinates as coord
-from astropy.io import fits
-from astropy import wcs
 from caracal.dispatch_crew import utils
+from caracal.utils.requires import extras
 
 NAME = "Mosaic 2D-images or cubes"
 LABEL = 'mosaic'
 
 
+@extras(packages="astropy")
 def worker(pipeline, recipe, config):
+
+    from astropy import units as u
+    import astropy.coordinates as coord
+    from astropy.io import fits
+    from astropy import wcs
 
     wname = pipeline.CURRENT_WORKER
 
@@ -26,7 +29,7 @@ def worker(pipeline, recipe, config):
     def identify_last_selfcal_image(directory_to_check, prefix, field, mfsprefix):
 
         # Doing this because convergence may have been reached before the user-specified number of iterations
-        matching_files = glob.glob(directory_to_check+'/{0:s}_{1:s}_*{2:s}-image.fits'.format(
+        matching_files = glob.glob(directory_to_check + '/{0:s}_{1:s}_*{2:s}-image.fits'.format(
             prefix, field, mfsprefix))  # '*' to pick up the number
         max_num = 0  # Initialisation
 
@@ -38,7 +41,7 @@ def worker(pipeline, recipe, config):
                 max_num = num
 
         filename_of_last_selfcal_image = '{0:s}_{1:s}_{2:s}{3:s}-image.fits'.format(
-            prefix, field, str(max_num),  mfsprefix)
+            prefix, field, str(max_num), mfsprefix)
         return filename_of_last_selfcal_image
 
     def identify_last_subdirectory(mosaictype):
@@ -54,7 +57,7 @@ def worker(pipeline, recipe, config):
             subdirectory_prefix = 'cube_'
 
         matching_subdirectories = glob.glob(
-            directory_to_check+'/'+subdirectory_prefix+'*')  # '*' to pick up the number
+            directory_to_check + '/' + subdirectory_prefix + '*')  # '*' to pick up the number
 
         for subdirectory in matching_subdirectories:
             split_subdirectory = subdirectory.split('_')
@@ -84,7 +87,7 @@ def worker(pipeline, recipe, config):
         # Commenting the above out as 'CDELT2' from the corresponding image will be passed to the function, and this is already in deg.
 
         # The '+ 1's are needed to avoid a shape mismatch later on
-        w.wcs.crpix = [(imsize/2) + 1, (imsize/2) + 1]
+        w.wcs.crpix = [(imsize / 2) + 1, (imsize / 2) + 1]
         w.wcs.cdelt = np.array([-cell, cell])
         w.wcs.crval = [centre.ra.deg, centre.dec.deg]
         w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
@@ -93,8 +96,8 @@ def worker(pipeline, recipe, config):
         hdr['SIMPLE'] = 'T'
         hdr['BITPIX'] = -32
         hdr['NAXIS'] = 2
-        hdr.set('NAXIS1',  imsize, after='NAXIS')
-        hdr.set('NAXIS2',  imsize, after='NAXIS1')
+        hdr.set('NAXIS1', imsize, after='NAXIS')
+        hdr.set('NAXIS2', imsize, after='NAXIS1')
 
         if 'CUNIT1' in hdr:
             del hdr['CUNIT1']
@@ -103,41 +106,40 @@ def worker(pipeline, recipe, config):
 
         # Units of m. The default assumes that MeerKAT data is being processed
         dish_diameter = config['dish_diameter']
-        pb_fwhm_radians = 1.02*(2.99792458E8/obs_freq)/dish_diameter
-        pb_fwhm = 180.0*pb_fwhm_radians/np.pi   # Now in units of deg
-        pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
-        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2.0, hdr['NAXIS2']/2.0, hdr['NAXIS2']),
-                           np.linspace(-hdr['NAXIS1']/2.0, hdr['NAXIS1']/2.0, hdr['NAXIS1']))
-        d = np.sqrt(x*x+y*y)
-        sigma, mu = pb_fwhm_pix/2.35482, 0.0  # sigma = FWHM/sqrt(8ln2)
-        gaussian = np.exp(-((d-mu)**2 / (2.0 * sigma**2)))
+        pb_fwhm_radians = 1.02 * (2.99792458E8 / obs_freq) / dish_diameter
+        pb_fwhm = 180.0 * pb_fwhm_radians / np.pi   # Now in units of deg
+        pb_fwhm_pix = pb_fwhm / hdr['CDELT2']
+        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2'] / 2.0, hdr['NAXIS2'] / 2.0, hdr['NAXIS2']),
+                           np.linspace(-hdr['NAXIS1'] / 2.0, hdr['NAXIS1'] / 2.0, hdr['NAXIS1']))
+        d = np.sqrt(x * x + y * y)
+        sigma, mu = pb_fwhm_pix / 2.35482, 0.0  # sigma = FWHM/sqrt(8ln2)
+        gaussian = np.exp(-((d - mu)**2 / (2.0 * sigma**2)))
 
         fits.writeto(out_beam, gaussian, hdr, overwrite=True)
 
     # Copied from line_worker.py and edited. This is to get a Mauchian beam.
     # The original version makes the build_beam function above redundant but I do not want to change too many things at once.
-    def make_mauchian_pb(filename, freq): # pbtype):
+    def make_mauchian_pb(filename, freq):  # pbtype):
         with fits.open(filename) as image:
             headimage = image[0].header
             ang_offset = np.indices(
                 (headimage['naxis2'], headimage['naxis1']), dtype=np.float32)
             ang_offset[0] -= (headimage['crpix2'] - 1)
             ang_offset[1] -= (headimage['crpix1'] - 1)
-            ang_offset = np.sqrt( (ang_offset**2).sum(axis=0) )  # Using offset in x and y direction to calculate the total offset from the pointing centre
+            ang_offset = np.sqrt((ang_offset**2).sum(axis=0))  # Using offset in x and y direction to calculate the total offset from the pointing centre
             ang_offset = ang_offset * np.abs(headimage['cdelt1'])  # Now offset is in units of deg
-            #if pbtype == 'gaussian':
+            # if pbtype == 'gaussian':
             #    sigma_pb = 17.52 / (freq / 1e+9) / dish_size / 2.355
             #    sigma_pb.resize((sigma_pb.shape[0], 1, 1))
             #    datacube = np.exp(-datacube**2 / 2 / sigma_pb**2)
-            #elif pbtype == 'mauchian':
-            FWHM_pb = (57.5/60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
+            # elif pbtype == 'mauchian':
+            FWHM_pb = (57.5 / 60) * (freq / 1.5e9)**-1  # Eqn 4 of Mauch et al. (2020), but in deg   # freq is just a float for the 2D case
             pb_image = (np.cos(1.189 * np.pi * (ang_offset / FWHM_pb)) / (
-                           1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
-            fits.writeto(filename.replace('image.fits','pb.fits'),
-                pb_image, header=headimage, overwrite=True)
+                1 - 4 * (1.189 * ang_offset / FWHM_pb)**2))**2  # Eqn 3 of Mauch et al. (2020)
+            fits.writeto(filename.replace('image.fits', 'pb.fits'),
+                         pb_image, header=headimage, overwrite=True)
             caracal.log.info('Created Mauchian primary-beam  FITS {0:s}'.format(
                 filename.replace('image.fits', 'pb.fits')))
-
 
     def consistent_cdelt3(image_filenames, input_directory, nrdecimals):
         cdelt3s = []
@@ -145,31 +147,30 @@ def worker(pipeline, recipe, config):
             cc = fits.getval(ff, 'cdelt3')
             if cc not in cdelt3s:
                 cdelt3s.append(cc)
-        if len(cdelt3s)>1:
+        if len(cdelt3s) > 1:
             if nrdecimals:
                 caracal.log.warn('Not all input cubes have the same CDELT3. Values found:')
                 caracal.log.warn('    {0:}'.format(cdelt3s))
                 caracal.log.warn('Rounding up the CDELT3 values to {0:d} decimals:'.format(nrdecimals))
                 cdelt3s_r = []
                 for cc in cdelt3s:
-                    if round(cc,nrdecimals) not in cdelt3s_r:
-                        cdelt3s_r.append(round(cc,nrdecimals))
+                    if round(cc, nrdecimals) not in cdelt3s_r:
+                        cdelt3s_r.append(round(cc, nrdecimals))
                 caracal.log.warn('    {0:}'.format(cdelt3s_r))
-                if len(cdelt3s_r)>1:
+                if len(cdelt3s_r) > 1:
                     caracal.log.error('Rounding was insufficient, cannot proceed.')
                     raise caracal.BadDataError('Inconsistent CDELT3 values in input cubes.')
                 else:
                     caracal.log.warn('Changing CDELT3 of all input image.fits and pb.fits cubes to {0:}'.format(cdelt3s_r[0]))
                     for ff in image_filenames:
                         fits.setval(ff, 'cdelt3', value=cdelt3s_r[0])
-                        fits.setval(ff.replace('image.fits','pb.fits'), 'cdelt3', value=cdelt3s_r[0])
+                        fits.setval(ff.replace('image.fits', 'pb.fits'), 'cdelt3', value=cdelt3s_r[0])
             else:
                 caracal.log.error('Not all input cubes have the same CDELT3. Values found:')
                 caracal.log.error('    {0:}'.format(cdelt3s))
                 caracal.log.error('To proceed Please set mosaic:round_cdelt3 to round the CDELT3 values to an adequate number of decimals.')
                 caracal.log.error('This will overwrite CDELT3 in the input cubes.')
                 raise caracal.BadDataError('Inconsistent CDELT3 values in input cubes.')
-
 
     ##########################################
     # Main part of the worker
@@ -191,13 +192,13 @@ def worker(pipeline, recipe, config):
         pb_origin = 'that are already in place (generated by the selfcal_worker, or during a previous run of the mosaic_worker)'
 
     # To ease finding the appropriate files, and to keep this worker self-contained
-    if use_mfs_images == True:
+    if use_mfs_images:
         mfsprefix = '-MFS'
     else:
         mfsprefix = ''
 
-    ## please forget pipeline.dataid: it is now pipeline.msbasenames
-    #pipeline.prefixes = ['{0:s}-{1:s}-{2:s}'.format(pipeline.prefix,did,config['label_in']) for did in pipeline.dataid]
+    # please forget pipeline.dataid: it is now pipeline.msbasenames
+    # pipeline.prefixes = ['{0:s}-{1:s}-{2:s}'.format(pipeline.prefix,did,config['label_in']) for did in pipeline.dataid]
     # In case there are different pipeline prefixes
     # for i in range(len(pipeline.prefixes)): ### I may need to put this loop back in later
 
@@ -205,7 +206,7 @@ def worker(pipeline, recipe, config):
 
     # Delete empty strings from list of specified images (as in default list = [''])
     while '' in specified_images:
-        del(specified_images[specified_images.index('')])
+        del (specified_images[specified_images.index('')])
 
     # If nothing is passed via the config file, then specified_images[0] adopts this via the schema
     if not len(specified_images):
@@ -309,27 +310,24 @@ def worker(pipeline, recipe, config):
                     caracal.log.info('Observing frequency = {0:f} Hz, dish diameter = {1:f} m'.format(
                         config['ref_frequency'], config['dish_diameter']))
                     caracal.log.info('If these are not the values that you were expecting to be used for primary-beam creation, then '
-                            'please delete the newly-created beams and re-run the mosaic worker with ref_frequency and dish_diameter '
-                            'set in the config file.')
-
+                                     'please delete the newly-created beams and re-run the mosaic worker with ref_frequency and dish_diameter '
+                                     'set in the config file.')
 
                 else:  # i.e. pb_type == 'mauchian'
 
                     filename = image_name
-                    freq = config['ref_frequency'] # Units of Hz. The default assumes that MeerKAT data is being processed
+                    freq = config['ref_frequency']  # Units of Hz. The default assumes that MeerKAT data is being processed
                     make_mauchian_pb(filename, freq)
 
                     # Confirming freq value being used for the primary beam
                     caracal.log.info('Observing frequency = {0:f} Hz'.format(freq))
-                    if freq == 1383685546.875:  # i.e. if the default value was used 
+                    if freq == 1383685546.875:  # i.e. if the default value was used
                         caracal.log.info('If you did not want this value (i.e. the default) to be used for primary-beam creation, then '
-                            'please delete the newly-created beams and re-run the mosaic worker with ref_frequency set in the config file.')
+                                         'please delete the newly-created beams and re-run the mosaic worker with ref_frequency set in the config file.')
                     else:
                         caracal.log.info('as set via ref_frequency in the config file, and used for primary-beam creation.')
 
-
                 pb_origin = 'generated by the mosaic_worker'
-
 
     caracal.log.info('Checking for *pb.fits files now complete.')
 
@@ -353,18 +351,18 @@ def worker(pipeline, recipe, config):
         image_filenames.append(image_filename)
 
         if not specified_image.split(input_directory)[0]:
-            specified_image = specified_image.replace(input_directory,'')
+            specified_image = specified_image.replace(input_directory, '')
         else:
-            specified_image = '{0:s}/{1:s}'.format('/'.join(['..' for ss in input_directory.split('/')]),specified_image)
+            specified_image = '{0:s}/{1:s}'.format('/'.join(['..' for ss in input_directory.split('/')]), specified_image)
         if specified_image[0] == '/':
             specified_image = specified_image[1:]
 
-        symlink_for_image_command = 'ln -sf {0:s} {1:s}'.format(specified_image,image_filename)
+        symlink_for_image_command = 'ln -sf {0:s} {1:s}'.format(specified_image, image_filename)
         os.system(symlink_for_image_command)
         specified_beam = specified_image.replace('image.fits', 'pb.fits')
         beam_filename = image_filename.replace('image.fits', 'pb.fits')
 
-        symlink_for_beam_command = 'ln -sf {0:s} {1:s}'.format(specified_beam,beam_filename)
+        symlink_for_beam_command = 'ln -sf {0:s} {1:s}'.format(specified_beam, beam_filename)
         os.system(symlink_for_beam_command)
 
     # To get back to where we were before symlink creation
@@ -378,7 +376,7 @@ def worker(pipeline, recipe, config):
     # List of images in place, and have ensured that there are corresponding pb.fits files,
     # so now ready to add montage_mosaic to the caracal recipe
 
-    image_filenames = ['{0:s}/{1:s}'.format(input_directory,ff) for ff in image_filenames]
+    image_filenames = ['{0:s}/{1:s}'.format(input_directory, ff) for ff in image_filenames]
     input_directory = '.'
 
     if specified_mosaictype == 'spectral':
@@ -386,7 +384,7 @@ def worker(pipeline, recipe, config):
                    {
                        "image_filenames": image_filenames,
                        "input_directory": input_directory,
-                       "nrdecimals":        config['round_cdelt3'],
+                       "nrdecimals": config['round_cdelt3'],
                    },
                    input=input_directory,
                    output=pipeline.mosaics,
@@ -424,12 +422,12 @@ def worker(pipeline, recipe, config):
     recipe.jobs = []
 
     # Set mosaic bunit, bmaj, bmin, bpa
-    bunits,bmajs,bmins,bpas = [],[],[],[]
+    bunits, bmajs, bmins, bpas = [], [], [], []
     for ff in image_filenames:
-        bunits.append(fits.getval(ff,'bunit'))
-        bmajs.append(fits.getval(ff,'bmaj'))
-        bmins.append(fits.getval(ff,'bmin'))
-        bpas.append(fits.getval(ff,'bpa'))
+        bunits.append(fits.getval(ff, 'bunit'))
+        bmajs.append(fits.getval(ff, 'bmaj'))
+        bmins.append(fits.getval(ff, 'bmin'))
+        bpas.append(fits.getval(ff, 'bpa'))
     if np.unique(np.array(bunits)).shape[0] == 1:
         mosbunit = bunits[0]
     else:
@@ -437,18 +435,18 @@ def worker(pipeline, recipe, config):
     mosbmaj = np.median(np.array(bmajs))
     mosbmin = np.median(np.array(bmins))
     mosbpa = np.median(np.array(bpas))
-    caracal.log.info('Setting BUNIT = {0:}, BMAJ = {1:}, BMIN = {2:}, BPA = {3:} in mosaic FITS headers'.format(mosbunit,mosbmaj,mosbmin,mosbpa))
+    caracal.log.info('Setting BUNIT = {0:}, BMAJ = {1:}, BMIN = {2:}, BPA = {3:} in mosaic FITS headers'.format(mosbunit, mosbmaj, mosbmin, mosbpa))
 
     # Add missing keys and convert some keys from string to float in the mosaic FITS headers
-    for ff in ['.fits','_noise.fits','_weights.fits']:
-        fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics,mosaic_prefix,ff)
-        fits.setval(fitsfile,'bunit',value=mosbunit)
-        fits.setval(fitsfile,'bmaj',value=mosbmaj)
-        fits.setval(fitsfile,'bmin',value=mosbmin)
-        fits.setval(fitsfile,'bpa',value=mosbpa)
+    for ff in ['.fits', '_noise.fits', '_weights.fits']:
+        fitsfile = '{0:s}/{1:s}{2:s}'.format(pipeline.mosaics, mosaic_prefix, ff)
+        fits.setval(fitsfile, 'bunit', value=mosbunit)
+        fits.setval(fitsfile, 'bmaj', value=mosbmaj)
+        fits.setval(fitsfile, 'bmin', value=mosbmin)
+        fits.setval(fitsfile, 'bpa', value=mosbpa)
         for hh in 'crval3,crval4,crpix3,crpix4,cdelt3,cdelt4,crota2'.split(','):
             try:
-                fits.setval(fitsfile,hh,value=float(fits.getval(fitsfile,hh)))
-                caracal.log.info('Header key {0:s} found and converted to float in file {1:s}'.format(hh,fitsfile))
-            except:
-                caracal.log.info('Header key {0:s} not found in file {1:s}'.format(hh,fitsfile))
+                fits.setval(fitsfile, hh, value=float(fits.getval(fitsfile, hh)))
+                caracal.log.info('Header key {0:s} found and converted to float in file {1:s}'.format(hh, fitsfile))
+            except BaseException:
+                caracal.log.info('Header key {0:s} not found in file {1:s}'.format(hh, fitsfile))

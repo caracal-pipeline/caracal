@@ -5,11 +5,12 @@ import json
 import math
 from caracal import log
 
-def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, read_version = 'version'):
+
+def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, read_version='version'):
     av_flagversions = get_flags(pipeline, ms)
     req_version = config['rewind_flags'][read_version]
     if req_version == 'auto':
-      req_version = flags_bw
+        req_version = flags_bw
     if conflict_type == 'would_overwrite_bw' or conflict_type == 'rewind_too_little':
         log.error('Flag version conflicts for {0:s} . If you are running Caracal on multiple targets'.format(ms))
         log.error('and/or .MS files please read the warning at the end of this message.')
@@ -20,7 +21,7 @@ def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, rea
         log.error('Running "{0:s}" again will attempt to overwrite existing flag versions, it might get messy.'.format(wname))
         log.error('Caracal will not overwrite the "{0:s}" flag versions unless you explicitely request that.'.format(wname))
         log.error('The current flag versions of this MS are (from the oldest to the most recent):')
-        for vv in  av_flagversions:
+        for vv in av_flagversions:
             if vv == flags_bw:
                 log.error('       {0:s}        <-- (this worker)'.format(vv))
             elif vv == flags_aw:
@@ -69,7 +70,7 @@ def conflict(conflict_type, pipeline, wname, ms, config, flags_bw, flags_aw, rea
     elif conflict_type == 'rewind_to_non_existing':
         log.error('You have asked to rewind the flags of {0:s} to the version "{1:s}" but this version'.format(ms, req_version))
         log.error('does not exist. The available flag versions for this .MS file are:')
-        for vv in  av_flagversions:
+        for vv in av_flagversions:
             log.error('       {0:s}'.format(vv))
         log.error('Note that if you are running Caracal on multiple targets and/or .MS files you should rewind to a flag')
         log.error('version that exists for all of them.')
@@ -99,46 +100,48 @@ def delete_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label=""
     else:
         return
 
-    for i,flag in enumerate(remove_us):
-        recipe.add("cab/casa_flagmanager", '{0:s}_{1:d}'.format(cab_name,i), {
+    for i, flag in enumerate(remove_us):
+        recipe.add("cab/casa_flagmanager", '{0:s}_{1:d}'.format(cab_name, i), {
             "vis": ms,
             "mode": "delete",
             "versionname": flag,
-            },
+        },
             input=pipeline.input,
             output=pipeline.output,
             label="{0:s}:: Delete flags (step {1:d})".format(label or cab_name, i))
 
+
 def restore_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", merge=False):
     if flagname in get_flags(pipeline, ms):
         recipe.add("cab/casa_flagmanager", cab_name, {
-                "vis": ms,
-                "mode": "restore",
-                "versionname": flagname,
-                "merge": "replace",
-            },
+            "vis": ms,
+            "mode": "restore",
+            "versionname": flagname,
+            "merge": "replace",
+        },
             input=pipeline.input,
             output=pipeline.output,
             label="{0:s}:: Restoring flags to flag version [{1:s}]".format(label or cab_name, flagname))
     else:
         log.warn("Flag version [{0:s}] could not be found".format(flagname))
 
+
 def add_cflags(pipeline, recipe, flagname, ms, cab_name="rando_cab", label="", overwrite=False):
     if flagname in get_flags(pipeline, ms) and overwrite:
-        recipe.add("cab/casa_flagmanager", cab_name.replace('save','delete'), {
+        recipe.add("cab/casa_flagmanager", cab_name.replace('save', 'delete'), {
             "vis": ms,
             "mode": "delete",
             "versionname": flagname,
-            },
+        },
             input=pipeline.input,
             output=pipeline.output,
-            label="{0:s}:: Delete flag version".format(label or cab_name.replace('save','delete')))
+            label="{0:s}:: Delete flag version".format(label or cab_name.replace('save', 'delete')))
 
     recipe.add("cab/casa_flagmanager", cab_name, {
         "vis": ms,
         "mode": "save",
         "versionname": flagname,
-        },
+    },
         input=pipeline.input,
         output=pipeline.output,
         label="{0:s}:: Save flag version".format(label or cab_name))
@@ -179,7 +182,6 @@ else:
     },
         input=pipeline.input,
         output=pipeline.output, label=label or cab_name)
-
 
 
 def clear_flagset(pipeline, recipe, flagset, ms, clear_existing=True, cab_name="rando_cab", label=""):

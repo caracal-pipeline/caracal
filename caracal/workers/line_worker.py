@@ -976,7 +976,7 @@ def worker(pipeline, recipe, config):
                                 pass
                             else:
                                 doSpec = None  # likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
-                            caracal.log.info('+++++++++++++++++++++++++++++')=
+                            caracal.log.info('+++++++++++++++++++++++++++++')
                             print(cdelt > chanwidth[0])
 
                             if doProj:

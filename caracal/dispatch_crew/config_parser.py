@@ -1,5 +1,6 @@
 # -*- coding: future_fstrings -*-
 
+from pykwalify.core import Core
 import argparse
 import yaml
 import caracal
@@ -14,10 +15,9 @@ pykwalify_logger = logging.getLogger('pykwalify.core')
 pykwalify_logger.propagate = False
 pykwalify_logger.setLevel(logging.CRITICAL)
 
-from pykwalify.core import Core
-
 
 DEFAULT_CONFIG = caracal.DEFAULT_CONFIG
+
 
 class ConfigErrors(RuntimeError):
     def __init__(self, config_file, error_dict):
@@ -26,24 +26,23 @@ class ConfigErrors(RuntimeError):
         self.errors = error_dict
 
 
-
 def basic_parser(add_help=True):
     """Returns ArgumentParser for basic command-line options"""
 
     parser = argparse.ArgumentParser(description="""
-Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio 
+Welcome to CARACal (https://github.com/caracal-pipeline), a containerized data reduction pipeline for radio
 interferometry.""",
-        usage="%(prog)s [-options] -c config_file",
-        epilog="""
+                                     usage="%(prog)s [-options] -c config_file",
+                                     epilog="""
 You can override configuration file settings using additional "--worker-option value" arguments. Use
 "-wh worker" to get help on a particular worker.
 
-To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself an initial configuration file, 
+To get started, run e.g. "%(prog)s -gdt meerkat -gd config.yml" to make yourself an initial configuration file,
 then edit the file to suit your needs.
 
 """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        add_help=add_help)
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     add_help=add_help)
     add = parser.add_argument
     add("-v", "--version", action='version',
         version='{0:s} version {1:s}'.format(parser.prog, caracal.__version__))
@@ -61,9 +60,9 @@ then edit the file to suit your needs.
         help='directory where stimela singularity images are stored')
 
     add('-gdt', '--get-default-template',
-            choices=caracal.SAMPLE_CONFIGS.keys(),
-            default="minimal",
-            help='init a configuration file from a default template')
+        choices=caracal.SAMPLE_CONFIGS.keys(),
+        default="minimal",
+        help='init a configuration file from a default template')
 
     add('-gd', '--get-default', metavar="FILE",
         help='name of file where the template should be saved (use in conjunction with -gdt)')
@@ -89,14 +88,11 @@ then edit the file to suit your needs.
         help='(re)generates a final HTML report, if configured, then exits',
         action='store_true')
 
-
     add('-debug',
         help='enable debugging mode',
         action='store_true')
 
-
-
-    add('-nr','--no-reports',
+    add('-nr', '--no-reports',
         help='disable generation of HTML reports throughout the pipeline',
         action='store_true')
 
@@ -145,12 +141,11 @@ class config_parser(object):
             except BaseException as exc:
                 raise ConfigErrors(config_file, {'at top level': [str(exc)]})
 
-
         version = None
         # Validate each worker section against the schema and
         # parse schema to extract types and set up cmd argument parser
 
-        #self._parser = parser = cls.__primary_parser(add_help=True)
+        # self._parser = parser = cls.__primary_parser(add_help=True)
         validated_content = OrderedDict()
 
         errors = OrderedDict()
@@ -167,7 +162,7 @@ class config_parser(object):
             elif _worker in self._schemas:
                 schema_fn, _ = self._schemas[worker] = self._schemas[_worker]
             else:
-                schema_fn = os.path.join(caracal.pckgdir,"schema", "{0:s}_schema.yml".format(_worker))
+                schema_fn = os.path.join(caracal.pckgdir, "schema", "{0:s}_schema.yml".format(_worker))
 
                 if _worker == "worker" or not os.path.exists(schema_fn):
                     errors[worker] = ["this is not a recognized worker name, or its schema file is missing"]
@@ -203,7 +198,6 @@ class config_parser(object):
         populates the parser with corresponding options"""
         for worker, variables in config_content.items():
             self._process_subparser_tree(variables, self._schemas[worker][1], base_section=worker)
-
 
     def update_config_from_args(self, config_content, args):
         """ Updates argument parser with values from config file """
@@ -278,7 +272,7 @@ class config_parser(object):
                     return [typecast(x) for x in val]
                 if dtype is any:  # "any" type is uncast
                     return val
-                if dtype is bool and type(val) is str:
+                if dtype is bool and isinstance(val, str):
                     return val.lower() in {"true", "yes", "1"}
                 return dtype(val)
 
@@ -288,7 +282,7 @@ class config_parser(object):
 
             def str2list(val):
                 """Converts lists in string representation, e.g. "[a, b]" and "a,b", to lists of strings"""
-                return list(val.lstrip("[").rstrip("]").replace(", ",",").split(","))
+                return list(val.lstrip("[").rstrip("]").replace(", ", ",").split(","))
 
             # update default if set in user config
             default_value = None
@@ -306,9 +300,9 @@ class config_parser(object):
                         default_value = []
                     else:
                         default_value = subVars["example"]
-                        if type(default_value) is str:
+                        if isinstance(default_value, str):
                             default_value = str2list(default_value)
-                        if type(default_value) is not list:
+                        if not isinstance(default_value, list):
                             raise TypeError(f"{option_name} default value is not configured correctly. This is a bug, please report!")
             else:
                 # for int, float, bool, str
@@ -325,7 +319,7 @@ class config_parser(object):
                     optval = getattr(options, attr_name)
                     # optval is always a string, so...
                     # ...parse lists or dicts as yaml objects
-                    if type(optval) is str and (is_list or dtype is dict):
+                    if isinstance(optval, str) and (is_list or dtype is dict):
                         optval = yaml.safe_load(optval)
                     # ...and typecast to expected type
                     option_value = typecast(optval)
@@ -337,7 +331,7 @@ class config_parser(object):
                 # lists and dicts expressed via yaml, except the any-type lists
                 if (is_list and dtype is not any) or dtype is dict:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS, type=str,
-                                                default=yaml.safe_dump(default_value))
+                                              default=yaml.safe_dump(default_value))
                 # booleans have a choice
                 elif dtype is bool:
                     self._parser.add_argument("--" + option_name, help=argparse.SUPPRESS,
@@ -360,7 +354,7 @@ class config_parser(object):
     def log_options(self, config):
         """ Prints argument tree to the logger for posterity to behold """
 
-        #caracal.log.info(
+        # caracal.log.info(
         #   "".join(["".ljust(25, "#"), " PIPELINE CONFIGURATION ", "".ljust(25, "#")]))
         indent0 = "  "
 
@@ -386,7 +380,7 @@ class config_parser(object):
                     #     indent.ljust(60, "#"))
                     # (indent != "\t") and caracal.log.info(
                     #     indent.ljust(60, "-"))
-                    _tree_print(v, indent=indent+indent0)
+                    _tree_print(v, indent=indent + indent0)
                 else:
                     # totally ugly -- I promise I'll fix it when we have a better qualifier
                     if k == "cabs" and not v:

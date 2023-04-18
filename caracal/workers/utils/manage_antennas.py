@@ -8,8 +8,8 @@ def get_refant(pipeline, recipe, prefix, msname, fields, min_baseline, max_dist,
     step = "antenna_flag_summary"
     filename = "{0:s}-flag-{1:s}.json".format(prefix, step)
     recipe.add('cab/flagstats', step, {
-        "msname"  : msname,
-        "outfile" : filename
+        "msname": msname,
+        "outfile": filename
     },
         input=pipeline.input,
         output=pipeline.msdir,
@@ -30,6 +30,7 @@ def get_antenna_data(directory, filename):
     with open(f"{directory}/{filename}") as f:
         flag_stats = json.load(f)
     return flag_stats
+
 
 def _prioritised_antennas(sorted_ants):
     """Get top 1,2 or 3 antennas with minimum flags"""
@@ -63,6 +64,7 @@ def _get_core_antennas(flag_stats, min_baseline, max_dist):
         if all(baseline >= min_baseline for baseline in baselines):
             min_base_ants[i] = ant
     return min_base_ants
+
 
 def _baseline_calculator(flag_stats, ant_id):
     """Get list of baseline lengths for ant_id"""

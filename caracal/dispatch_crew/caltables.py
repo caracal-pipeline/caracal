@@ -10,6 +10,7 @@ __DB_CASA_FILENAME = os.path.join(
 __CALIBRATOR_DB = None
 __CASA_CALIBRATOR_DB = None
 
+
 def calibrator_database():
     """ Return the Southern standard calibrator database """
 
@@ -26,8 +27,9 @@ def calibrator_database():
     caracal.log.info("Obtaining divine knowledge from %s" % __DB_FILENAME)
 
     __CALIBRATOR_DB = cp.catalog_parser(__DB_FILENAME)
-    #caracal.log.info("\n" + str(__CALIBRATOR_DB))
+    # caracal.log.info("\n" + str(__CALIBRATOR_DB))
     return __CALIBRATOR_DB
+
 
 def casa_calibrator_database():
     """ Return the CASA standard calibrator database """

@@ -1,4 +1,6 @@
 # -*- coding: future_fstrings -*-
+from caracal.dispatch_crew import utils
+from collections import OrderedDict
 import caracal
 from caracal import log, pckgdir, notebooks
 import sys
@@ -9,14 +11,13 @@ import glob
 import shutil
 import traceback
 import itertools
- 
+
 import ruamel.yaml
 assert ruamel.yaml.version_info >= (0, 12, 14)
 
-from collections import OrderedDict
-from caracal.dispatch_crew import utils
 
 REPORTS = True
+
 
 class WorkerAdministrator(object):
     def __init__(self, config, workers_directory,
@@ -56,7 +57,6 @@ class WorkerAdministrator(object):
         self.logs_symlink = f'{self.output}/logs'
         self.logs = "{}-{}".format(self.logs_symlink, self.timeNow)
 
-
         self.rawdatadir = self.config['general']['rawdatadir']
         if not self.rawdatadir:
             self.rawdatadir = self.config['general']['rawdatadir'] = self.msdir
@@ -67,8 +67,8 @@ class WorkerAdministrator(object):
         if workers_directory:
             sys.path.append(self.workers_directory)
         self.workers = []
-        last_mandatory = 2 # index of last mendatory worker
-        # general, getdata and obsconf are all mendatory. 
+        last_mandatory = 2  # index of last mendatory worker
+        # general, getdata and obsconf are all mendatory.
         # That's why the lowest starting index is 2 (third element)
         start_idx = last_mandatory
         end_idx = len(self.config.keys())
@@ -88,20 +88,20 @@ class WorkerAdministrator(object):
             if name == start_worker and name == end_worker:
                 start_idx = len(workers)
                 end_idx = len(workers)
-            elif  name == start_worker:
+            elif name == start_worker:
                 start_idx = len(workers)
             elif name == end_worker:
                 end_idx = len(workers)
             workers.append((name, worker, i))
-        
-        if end_worker in list(self.config.keys())[:last_mandatory+1]:
+
+        if end_worker in list(self.config.keys())[:last_mandatory + 1]:
             # no need for +1 this time since 'general' was removed from
             # this list
             self.workers = workers[:last_mandatory]
         else:
             start_idx = max(start_idx, last_mandatory)
             end_idx = max(end_idx, last_mandatory)
-            self.workers = workers[:last_mandatory] + workers[start_idx:end_idx+1]
+            self.workers = workers[:last_mandatory] + workers[start_idx:end_idx + 1]
 
         self.prefix = prefix or self.config['general']['prefix']
 
@@ -131,12 +131,12 @@ class WorkerAdministrator(object):
         # filename prefixes for outputs (formed up as prefix-msbase)
         self.prefix_msbases = []
 
-        ## OMS skipping this here, leave it to the getdata
+        # OMS skipping this here, leave it to the getdata
         # self.init_names([], allow_empty=True)
         self.init_pipeline(prep_input=config["general"]["prep_workspace"])
         # save configuration files
-            
-        config_base = os.path.splitext( os.path.basename(configFileName) )[0]
+
+        config_base = os.path.splitext(os.path.basename(configFileName))[0]
         outConfigOrigName = f'{self.configFolder}/{config_base}-{self.timeNow}.orig.yml'
         outConfigName = f'{self.configFolder}/{config_base}-{self.timeNow}.yml'
 
@@ -151,7 +151,7 @@ class WorkerAdministrator(object):
         """ iniitalize names to be used throughout the pipeline and associated
             general fields that must be propagated
         """
-        ## OMS: this was a very elaborate no-op, away with it
+        # OMS: this was a very elaborate no-op, away with it
         # for item in 'rawdatadir input msdir output'.split():
         #     value = getattr(self, item, None)
         #     if value:
@@ -160,7 +160,7 @@ class WorkerAdministrator(object):
         self.dataid = list(filter(bool, dataids))
         if not self.dataid:
             raise caracal.ConfigurationError(f"Empty 'getdata: dataid' entry")
-        patterns =  [f"{dataid}.{self.ms_extension}" for dataid in self.dataid]
+        patterns = [f"{dataid}.{self.ms_extension}" for dataid in self.dataid]
 
         for pattern in patterns:
             msnames = [os.path.basename(ms) for ms in glob.glob(os.path.join(self.rawdatadir, pattern))]
@@ -169,22 +169,22 @@ class WorkerAdministrator(object):
                     log.warning(f"'{pattern}' did not match any files, but getdata: ignore_missing is set, proceeding anyway")
                 else:
                     raise caracal.ConfigurationError(f"'{pattern}' did not match any files under {self.rawdatadir}. Check your "
-                            "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
-                            "set 'getdata: ignore_missing: true'")
+                                                     "'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings, or "
+                                                     "set 'getdata: ignore_missing: true'")
             msbases = [os.path.splitext(ms)[0] for ms in msnames]
             self.msnames += msnames
             self.msbasenames += msbases
-            self.prefix_msbases += [ f"{self.prefix}-{x}" for x in msbases]
+            self.prefix_msbases += [f"{self.prefix}-{x}" for x in msbases]
         self.nobs = len(self.msnames)
 
         if not self.nobs:
             raise caracal.ConfigurationError(f"No matching input data found in {self.rawdatadir} for {','.join(patterns)}. Check your "
-                " 'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings.")
+                                             " 'general: msdir/rawdatadir' and/or 'getdata: dataid/extension' settings.")
 
         for item in 'refant fcal bpcal gcal target xcal'.split():
             value = getattr(self, item, None)
             if value and len(value) == 1:
-                value = value*self.nobs
+                value = value * self.nobs
                 setattr(self, item, value)
 
     def get_msinfo(self, msname):
@@ -194,7 +194,7 @@ class WorkerAdministrator(object):
         msdict, mtime_cache = self._msinfo_cache.get(msname, (None, 0))
         if not os.path.exists(msinfo_path):
             raise RuntimeError(f"MS summary file {msinfo_file} not found at expected location. This is a bug or "
-                                "a misconfiguration. Was the MS transformed properly?")
+                               "a misconfiguration. Was the MS transformed properly?")
         # reload cached dict if file on disk is newer
         mtime = os.path.getmtime(msinfo_path)
         if msdict is None or mtime > mtime_cache:
@@ -203,7 +203,7 @@ class WorkerAdministrator(object):
             self._msinfo_cache[msname] = msdict, mtime
         return msdict
 
-    ### The following three methods provide MS naming services for workers
+    # The following three methods provide MS naming services for workers
 
     def form_msname(self, msbase, label=None, field=None):
         """
@@ -240,7 +240,7 @@ class WorkerAdministrator(object):
         # collect into flat list of MSs
         target_ms_ls = list(itertools.chain(*target_msfiles.values()))
         return list(target_msfiles.keys()), target_ms_ls, target_msfiles
-        
+
     def get_callib_name(self, name, ext="yml", extra_label=None):
         """Makes a callib name with the given extension. Replaces extension if needed. Adds callib- if needed."""
         name, _ = os.path.splitext(name)
@@ -251,7 +251,7 @@ class WorkerAdministrator(object):
         return os.path.join(self.caltables, f"{name}.{ext}")
 
     def load_callib(self, name):
-        """Loads calibration library specified by name""" 
+        """Loads calibration library specified by name"""
         filename = self.get_callib_name(name)
         if not os.path.exists(filename):
             raise IOError(f"Calibration library {filename} doesn't exist")
@@ -262,7 +262,6 @@ class WorkerAdministrator(object):
         """Dumps caldict to calibration library specified by name"""
         with open(self.get_callib_name(name), 'w') as f:
             ruamel.yaml.dump(callib, f, ruamel.yaml.RoundTripDumper)
-
 
     def parse_cabspec_dict(self, cabspec_seq):
         """Turns sequence of cabspecs into a Stimela cabspec dict"""
@@ -405,14 +404,14 @@ class WorkerAdministrator(object):
             active_workers.append((_name, worker, config, cabspecs))
 
         # now run the actual pipeline
-        #for _name, _worker, i in self.workers:
+        # for _name, _worker, i in self.workers:
         for _name, worker, config, cabspecs in active_workers:
             # Define stimela recipe instance for worker
             # Also change logger name to avoid duplication of logging info
             label = getattr(worker, 'LABEL', None)
             if label is None:
                 # if label is not set, take filename, and split off _worker.py
-                label =  os.path.basename(worker.__file__).rsplit("_", 1)[0]
+                label = os.path.basename(worker.__file__).rsplit("_", 1)[0]
             # if worker name has a __suffix, add that to label
             if "__" in _name:
                 label += "__" + _name.split("__", 1)[1]
@@ -422,7 +421,7 @@ class WorkerAdministrator(object):
                                     singularity_image_dir=self.singularity_image_dir,
                                     log_dir=self.logs,
                                     cabspecs=cabspecs,
-                                    logfile=False, # no logfiles for recipes
+                                    logfile=False,  # no logfiles for recipes
                                     logfile_task=f'{self.logs}/log-{label}-{{task}}-{self.timeNow}.txt')
 
             recipe.JOB_TYPE = self.container_tech
@@ -432,7 +431,7 @@ class WorkerAdministrator(object):
             os.system('rm -f {}'.format(recipe.resume_file))
             # Get recipe steps
             # 1st get correct section of config file
-            log_label =  "" if _name == label or _name.startswith(label + "__") else f" ({label})"
+            log_label = "" if _name == label or _name.startswith(label + "__") else f" ({label})"
             log.info(f"{_name}{log_label}: initializing", extra=dict(color="GREEN"))
             worker.worker(self, recipe, config)
             log.info(f"{_name}{log_label}: running")

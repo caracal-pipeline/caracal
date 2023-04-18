@@ -9,7 +9,7 @@ class interruptable_process(Process):
         Interruptable process
 
         Args:
-        @target: method to execute in separate process 
+        @target: method to execute in separate process
         """
         self.__pid = 0
 

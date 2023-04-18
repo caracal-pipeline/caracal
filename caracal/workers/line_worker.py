@@ -19,7 +19,7 @@ from caracal.workers.utils import remove_output_products
 from caracal.workers.utils import image_contsub
 from caracal.workers.utils import flag_Uzeros
 from casacore.tables import table
-from caracal.utils.requires import extras
+#from caracal.utils.requires import extras
 
 NAME = 'Process and Image Line Data'
 LABEL = 'line'

@@ -1,13 +1,12 @@
 import ruamel.yaml
-import math
 import numpy
 import yaml
 import caracal
 import caracal.dispatch_crew.caltables as mkct
 import re
-import astropy.io.fits as fitsio
 import codecs
-import os
+from caracal.utils.requires import extras
+
 
 def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     """Computes the angular distance between the two points on a sphere, and
@@ -17,10 +16,10 @@ def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
     ra = ra2 - ra1
     sind0, sind, cosd0, cosd = numpy.sin(dec1), numpy.sin(
         dec2), numpy.cos(dec1), numpy.cos(dec2)
-    sina, cosa = numpy.sin(ra)*cosd, numpy.cos(ra)*cosd
-    x = cosa*sind0 - sind*cosd0
+    sina, cosa = numpy.sin(ra) * cosd, numpy.cos(ra) * cosd
+    x = cosa * sind0 - sind * cosd0
     y = sina
-    z = cosa*cosd0 + sind*sind0
+    z = cosa * cosd0 + sind * sind0
     PA = numpy.arctan2(y, -x)
     R = numpy.arccos(z)
 
@@ -28,7 +27,7 @@ def angular_dist_pos_angle(ra1, dec1, ra2, dec2):
 
 
 def categorize_fields(info):
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -63,7 +62,7 @@ def get_field_id(info, field_name):
     if not isinstance(field_name, str) and not isinstance(field_name, list):
         raise ValueError(
             "field_name argument must be comma-separated string or list")
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
     names = info['FIELD']['NAME']
@@ -71,7 +70,7 @@ def get_field_id(info, field_name):
     results = []
     for fn in field_name.split(",") if isinstance(field_name, str) else field_name:
         if fn not in names:
-            raise KeyError("Could not find field '{0:s}' in the field list {1:}".format(fn,names))
+            raise KeyError("Could not find field '{0:s}' in the field list {1:}".format(fn, names))
         else:
             results.append(names.index(fn))
     return results
@@ -81,7 +80,7 @@ def select_gcal(info, targets, calibrators, mode='nearest'):
     """
       Automatically select gain calibrator
     """
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -135,7 +134,7 @@ def observed_longest(info, bpcals):
     """
       Automatically select bandpass calibrator
     """
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -164,7 +163,7 @@ def observed_longest(info, bpcals):
 
 
 def field_observation_length(info, field):
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -183,6 +182,7 @@ def field_observation_length(info, field):
 
     return numpy.sum(list(info['SCAN'][field].values()))
 
+
 def closeby(radec_1, radec_2, tol=2.9E-3):
     """
     Rough estimate whether two points on celestial sphere are closeby
@@ -192,9 +192,9 @@ def closeby(radec_1, radec_2, tol=2.9E-3):
     radec_2 (pair of float): Right ascension and Declination of point 2 in rad
     tol: Tolerance in rad (default: 10 arcmin)
     """
-    if  numpy.power((radec_1[0]-radec_2[0])*numpy.cos(
-            (radec_1[0]-radec_2[0])/2),2)+numpy.power(radec_1[1]-radec_2[1],2
-            ) < numpy.power(tol,2):
+    if numpy.power((radec_1[0] - radec_2[0]) * numpy.cos(
+            (radec_1[0] - radec_2[0]) / 2), 2) + numpy.power(radec_1[1] - radec_2[1], 2
+                                                             ) < numpy.power(tol, 2):
         return True
     return False
 
@@ -217,22 +217,23 @@ def hetfield(info, field, db, tol=2.9E-3):
     # Get position of field in msinfo
     ind = info['FIELD']['NAME'].index(field)
     firade = info['FIELD']['DELAY_DIR'][ind][0]
-    firade[0] = numpy.mod(firade[0],2*numpy.pi)
-    
+    firade[0] = numpy.mod(firade[0], 2 * numpy.pi)
+
     dbcp = db.db
     for key in dbcp.keys():
-        carade = [dbcp[key]['ra'],dbcp[key]['decl']]
+        carade = [dbcp[key]['ra'], dbcp[key]['decl']]
         if closeby(carade, firade, tol=tol):
             return key
     return False
 
-def find_in_native_calibrators(info, field, mode = 'both'):
+
+def find_in_native_calibrators(info, field, mode='both'):
     """Check if field is in the South Calibrators database.
        Return model if it is. Return lsm if an lsm is available.
        Return a crystalball model if specified and available.
        Otherwise, return False.
     """
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -254,7 +255,7 @@ def find_in_native_calibrators(info, field, mode = 'both'):
 
     fielddb = hetfield(info, field, db)
 
-    if fielddb == False:
+    if not fielddb:
         return False
 
     ref = info['SPW']['REF_FREQUENCY'][0]  # Centre frequency of first channel
@@ -280,12 +281,13 @@ def find_in_native_calibrators(info, field, mode = 'both'):
     else:
         return False
 
+
 def find_in_casa_calibrators(info, field):
     """Check if field is in the CASA NRAO Calibrators database.
        Return model if it is. Else, return False.
     """
 
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
@@ -296,7 +298,7 @@ def find_in_casa_calibrators(info, field):
 
     # Identify field with a standard name
     field_dbc = hetfield(info, field, dbc)
-    if field_dbc == False:
+    if not field_dbc:
         return False
 
     for src in list(db['models'].values()):
@@ -315,7 +317,11 @@ def meerkat_refant(obsinfo):
     return info['RefAntenna']
 
 
+@extras("astropy")
 def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0.05, j=3, save=False):
+
+    import astropy.io.fits as fitsio
+
     if isinstance(skymodel, str):
         skymodel = [skymodel]
     flux = 0
@@ -334,7 +340,7 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
     dtime = info['EXPOSURE']
     bw = sum(info['SPW']['TOTAL_BANDWIDTH'])
     nchans = sum(info['SPW']['NUM_CHAN'])
-    dfreq = bw/nchans
+    dfreq = bw / nchans
 
     k_b = 1.38e-23  # Boltzman's constant
     Jy = 1e-26  # 1 Jansky
@@ -356,14 +362,14 @@ def estimate_solints(msinfo, skymodel, Tsys_eta, dish_diameter, npol, gain_tol=0
 
 
 def imaging_params(info, spwid=0):
-    if type(info) is str:
+    if isinstance(info, str):
         with open(info, 'r') as f:
             info = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader)
 
     maxbl = info['MAXBL']
     dish_size = numpy.mean(info['ANTENNA']['DISH_DIAMETER'])
     freq = info['SPW']["REF_FREQUENCY"][spwid]
-    wavelength = 2.998e8/freq
+    wavelength = 2.998e8 / freq
 
     FoV = numpy.rad2deg(1.22 * wavelength / dish_size)
     max_res = numpy.rad2deg(wavelength / maxbl)
@@ -374,5 +380,3 @@ def imaging_params(info, spwid=0):
 def filter_name(string):  # change field names into alphanumerical format for naming output files
     string = string.replace('+', '_p_')
     return re.sub('[^0-9a-zA-Z]', '_', string)
-
-

@@ -8,15 +8,15 @@ import stimela.dismissable as sdm
 from caracal.workers.utils import manage_flagsets as manflags
 from caracal.workers.utils import manage_caltabs as manGtabs
 from caracal.workers.utils import manage_antennas as manants
-from caracal.workers.utils import callibs 
+from caracal.workers.utils import callibs
 import copy
 import re
 import json
 import glob
-from scipy import ndimage
 import shutil
 import numpy as np
 from casacore.tables import table
+from caracal.utils.requires import extras
 
 NAME = "Cross-calibration"
 LABEL = 'crosscal'
@@ -248,21 +248,21 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
                     shutil.rmtree(caltable_path)
                 cpstep = "copy_primary_gains_%s-%s-%d-%d-%s" % (name, label, itern, iobs, ftype)
                 recipe.add(shutil.copytree, cpstep, {
-                        "src" : caltable_path_original,
-                        "dst": caltable_path,
-                        }, label="{0}:: Copy parimary gains".format(step))
+                    "src": caltable_path_original,
+                    "dst": caltable_path,
+                }, label="{0}:: Copy parimary gains".format(step))
             recipe.add(RULES[term]["cab"], step,
-                    copy.deepcopy(params),
-                    input=pipeline.input, output=pipeline.caltables,
-                    label="%s:: %s calibration" % (step, term))
+                       copy.deepcopy(params),
+                       input=pipeline.input, output=pipeline.caltables,
+                       label="%s:: %s calibration" % (step, term))
             if term == "F":
-                transfer_fluxscale(msname, recipe, primary_G+":output", caltable+":output", pipeline,
-                iobs, reference=pipeline.fluxscale_reference, label=label)
+                transfer_fluxscale(msname, recipe, primary_G + ":output", caltable + ":output", pipeline,
+                                   iobs, reference=pipeline.fluxscale_reference, label=label)
             elif term == "B" and config[ftype]["b_smoothwindow"] > 1:
                 recipe.add(smooth_bandpass, 'smooth_bandpass', {
-                    "bptable"  : '{0:s}/{1:s}'.format(pipeline.caltables,caltable),
-                    "window" : config[ftype]["b_smoothwindow"],
-                  },
+                    "bptable": '{0:s}/{1:s}'.format(pipeline.caltables, caltable),
+                    "window": config[ftype]["b_smoothwindow"],
+                },
                     input=pipeline.input,
                     output=pipeline.output,
                     label='smooth bandpass')
@@ -279,7 +279,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
     def do_IA(i):
         if i == 0:
-            raise RuntimeError("Have encountred an imaging/flagging request before any gains have been computed." \
+            raise RuntimeError("Have encountered an imaging/flagging request before any gains have been computed."
                                "an I only makes sense after a G or K (usually both)."
                                "Please review your 'order' option in the self_cal:secondary section")
 
@@ -360,8 +360,8 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     n_apply = len(groups_apply)
     n_solve = len(groups_solve)
     groups = [None] * (n_apply + n_solve)
-    groups[::2] = groups_solve # even indices
-    groups[1::2] = groups_apply # odd indices
+    groups[::2] = groups_solve  # even indices
+    groups[1::2] = groups_apply  # odd indices
 
     # no need to apply gains multiple when encountering consecutive terms that need to apply
     applied = False
@@ -409,12 +409,12 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
 def plotgains(recipe, pipeline, field_id, gtab, i, term):
     step = "plotgains-%s-%d-%s" % (term, i, "".join(map(str, field_id or [])))
-    params =  {
-        "table"         : f"{gtab}:msfile",
-        "corr"         : '',
-        "htmlname"     : gtab,
-        "plotname"     : "{}.png".format(gtab)
-        }
+    params = {
+        "table": f"{gtab}:msfile",
+        "corr": '',
+        "htmlname": gtab,
+        "plotname": "{}.png".format(gtab)
+    }
     if field_id is not None:
         params['field'] = ",".join(map(str, field_id))
     recipe.add('cab/ragavi', step, params,
@@ -436,8 +436,8 @@ def transfer_fluxscale(msname, recipe, gaintable, fluxtable, pipeline, i, refere
         "reference": reference,
         "transfer": "",
     },
-               input=pipeline.input, output=pipeline.caltables,
-               label="Transfer fluxscale")
+        input=pipeline.input, output=pipeline.caltables,
+        label="Transfer fluxscale")
 
 
 def get_caltab_final(order, gaintable, interp, gainfield, field):
@@ -499,20 +499,22 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
         "parang": False,
         "flagbackup": False,
     },
-               input=pipeline.input, output=pipeline.caltables,
-               label="%s::Apply gain tables" % step)
+        input=pipeline.input, output=pipeline.caltables,
+        label="%s::Apply gain tables" % step)
 
 
+@extras("scipy")
+def smooth_bandpass(bptable, window, filter_type='mean'):
+    from scipy import ndimage
 
-def smooth_bandpass(bptable, window, filter_type = 'mean'):
-    caracal.log.info('Smoothing {0:s} with {2:s} window of width {1:d} channels'.format(bptable,window,filter_type))
+    caracal.log.info('Smoothing {0:s} with {2:s} window of width {1:d} channels'.format(bptable, window, filter_type))
     bp = table(bptable, ack=False).getcol('CPARAM')
     bp = [np.real(bp), np.imag(bp)]
-    if  filter_type == 'median':
-        bp = [ndimage.median_filter(bb,size=(1,window,1)) for bb in bp]
+    if filter_type == 'median':
+        bp = [ndimage.median_filter(bb, size=(1, window, 1)) for bb in bp]
     elif filter_type == 'mean':
-        bp = [ndimage.uniform_filter(bb,size=(1,window,1)) for bb in bp]
-    table(bptable, ack=False, readonly=False).putcol('CPARAM', bp[0]+1j*bp[1])
+        bp = [ndimage.uniform_filter(bb, size=(1, window, 1)) for bb in bp]
+    table(bptable, ack=False, readonly=False).putcol('CPARAM', bp[0] + 1j * bp[1])
 
 
 def worker(pipeline, recipe, config):
@@ -542,8 +544,8 @@ def worker(pipeline, recipe, config):
                     stop_if_missing = True
                 if version in available_flagversions:
                     if flags_before_worker in available_flagversions and available_flagversions.index(
-                            flags_before_worker) < available_flagversions.index(version) and not config[
-                        'overwrite_flagvers']:
+                        flags_before_worker) < available_flagversions.index(version) and not config[
+                            'overwrite_flagvers']:
                         manflags.conflict('rewind_too_little', pipeline, wname, msname, config, flags_before_worker,
                                           flags_after_worker)
                     substep = 'version-{0:s}-ms{1:d}'.format(version, i)
@@ -576,8 +578,8 @@ def worker(pipeline, recipe, config):
         if len(pipeline.fcal[i]) > 1:
             fluxscale_field = utils.observed_longest(msinfo, pipeline.fcal[i])
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
-            caracal.log.info("Found more than one flux calibrator." \
-                             "Will use the one observed the logest (%s)." % fluxscale_field)
+            caracal.log.info("Found more than one flux calibrator."
+                             f"Will use the one observed the longest {fluxscale_field}.")
         else:
             fluxscale_field = pipeline.fcal[i][0]
             fluxscale_field_id = utils.get_field_id(msinfo, fluxscale_field)[0]
@@ -608,15 +610,17 @@ def worker(pipeline, recipe, config):
                         "tile-size": config["set_model"]["tile_size"],
                         "column": "MODEL_DATA",
                     }
-                elif config['set_model']['meerkat_crystalball_skymodel'] and modelcrystal: # Use Ben's crystalball models    
+                elif config['set_model']['meerkat_crystalball_skymodel'] and modelcrystal:  # Use Ben's crystalball models
                     opts = {
-                        "ms" : msname,
+                        "ms": msname,
                         "sky-model": modelcrystal,
                         "field": fluxscale_field,
                         "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
+                        "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
                    }
+
                 elif modelpoint:  # spectral model if specified in our standard
                     opts = {
                         "vis": msname,
@@ -648,10 +652,10 @@ def worker(pipeline, recipe, config):
             else:
                 cabtouse = 'cab/casa_setjy'
             recipe.add(cabtouse, step,
-               opts,
-               input=pipeline.input,
-               output=pipeline.output,
-               label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
+                       opts,
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{0:s}:: Set jansky ms={1:s}'.format(step, msname))
 
         gcal_set = set(pipeline.gcal[i])
         fcal_set = set(pipeline.fcal[i])
@@ -718,8 +722,8 @@ def worker(pipeline, recipe, config):
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
         else:
             # default recipes from secondary
-            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"], 
-                                                    "nearest", "target")):
+            for gt, itp, fd in zip(*get_caltab_final(secondary_order, secondary["gaintables"], secondary["interps"],
+                                                     "nearest", "target")):
                 # if the table is already applied with the primary in it, re-add it with an "all" (empty) field
                 # add_callib_recipe(applycal_recipes, gt, itp, fd, '' if gt in applycal_recipes else targets)
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)
@@ -729,19 +733,18 @@ def worker(pipeline, recipe, config):
 
         pipeline.save_callib(applycal_recipes, prefix_msbase)
 
-
         if pipeline.enable_task(config, 'summary'):
             step = 'summary-{0:s}-{1:d}'.format(label, i)
             recipe.add('cab/flagstats', step,
                        {
-                           "msname"  : msname,
+                           "msname": msname,
                            "plot": True,
                            "outfile": ('{0:s}-{1:s}-'
                                        'crosscal-summary-{2:d}.json').format(
-                                       prefix_msbase, wname, i),
-                           "htmlfile" : ('{0:s}-{1:s}-'
-                                         'crosscal-summary-plots-{2:d}.html').format(
-                                         prefix_msbase, wname, i)
+                               prefix_msbase, wname, i),
+                           "htmlfile": ('{0:s}-{1:s}-'
+                                        'crosscal-summary-plots-{2:d}.html').format(
+                               prefix_msbase, wname, i)
                        },
                        input=pipeline.input,
                        output=pipeline.diagnostic_plots,

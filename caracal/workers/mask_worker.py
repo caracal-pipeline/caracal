@@ -1,40 +1,30 @@
 # -*- coding: future_fstrings -*-
 import os
 import sys
-import math
 import shutil
 import glob
 import yaml
 import numpy as np
 from caracal.dispatch_crew import utils
-from caracal.utils.requirements import requires
-from astropy import units as u
-import astropy.coordinates as coord
-from astropy import wcs
-from astropy.io import fits, ascii
-from astropy.table import Table, Column, MaskedColumn
-
-
-# Import Optional dependencies
-require_msg = "pip install astroquery"
-
-try:
-    from astroquery.vizier import Vizier
-except ImportError as e:
-    opt_import_error = e
-else:
-    opt_import_error = None
+from caracal.utils.requires import extras
 
 
 NAME = 'Make Masks'
 LABEL = 'mask'
 
-@requires(require_msg, opt_import_error)
+
+@extras("astropy")
 def worker(pipeline, recipe, config):
 
     ################################################################################
     # Worker's MODULES
     ################################################################################
+
+    from astropy import units as u
+    import astropy.coordinates as coord
+    from astropy import wcs
+    from astropy.io import fits, ascii
+    from astropy.table import Table, Column, MaskedColumn
 
     def ra2deg(ra_hms):
         '''
@@ -48,11 +38,11 @@ def worker(pipeline, recipe, config):
 
         ra = ra_hms.split(':')
 
-        hh = float(ra[0])*15
-        mm = (float(ra[1])/60)*15
-        ss = (float(ra[2])/3600)*15
+        hh = float(ra[0]) * 15
+        mm = (float(ra[1]) / 60) * 15
+        ss = (float(ra[2]) / 3600) * 15
 
-        return hh+mm+ss
+        return hh + mm + ss
 
     def dec2deg(dec_dms):
         '''
@@ -67,15 +57,15 @@ def worker(pipeline, recipe, config):
         dec = dec_dms.split(':')
 
         hh = abs(float(dec[0]))
-        mm = float(dec[1])/60
-        ss = float(dec[2])/3600
+        mm = float(dec[1]) / 60
+        ss = float(dec[2]) / 3600
 
         if float(dec[0]) >= 0:
-            return hh+mm+ss
+            return hh + mm + ss
         else:
-            return -(hh+mm+ss)
+            return -(hh + mm + ss)
 
-        return hh+mm+ss
+        return hh + mm + ss
 
     def nvss_pbcorr(ra_deg, dec_deg, centre, cell, imsize, obs_freq, flux):
         '''
@@ -92,26 +82,28 @@ def worker(pipeline, recipe, config):
             u.hourangle, u.deg), frame='icrs')
         cell /= 3600.
 
-        pb_fwhm = 1.02*(2.99792458E8)/obs_freq/13.5/np.pi*180.
-        pb_fwhm_pix = pb_fwhm/cell
-        sigma, mu = pb_fwhm_pix/2.35482, 0.0
+        pb_fwhm = 1.02 * (2.99792458E8) / obs_freq / 13.5 / np.pi * 180.
+        pb_fwhm_pix = pb_fwhm / cell
+        sigma, mu = pb_fwhm_pix / 2.35482, 0.0
 
-        w.wcs.crpix = [imsize/2, imsize/2]
+        w.wcs.crpix = [imsize / 2, imsize / 2]
         w.wcs.cdelt = np.array([-cell, cell])
         w.wcs.crval = [centre.ra.deg, centre.dec.deg]
         w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
 
         px, py = w.wcs_world2pix(ra_deg, dec_deg, 0)
 
-        d = np.sqrt(px*px+py*py)
+        d = np.sqrt(px * px + py * py)
 
-        gauss = np.exp(-((d-mu)**2 / (2.0 * sigma**2)))
+        gauss = np.exp(-((d - mu)**2 / (2.0 * sigma**2)))
 
-        new_flux = flux*1e-3*gauss
+        new_flux = flux * 1e-3 * gauss
 
         return new_flux, px, py
 
+    @extras("astroquery")
     def query_catalog_sumss(catalog_table, centre, width_im, cat_name):
+        from astroquery.vizier import Vizier
 
         Vizier.ROW_LIMIT = -1
 
@@ -121,8 +113,9 @@ def worker(pipeline, recipe, config):
 
         ascii.write(tab, catalog_table, overwrite=True)
 
+    @extras("astroquery")
     def query_catalog_nvss(catalog_table, centre, width_im, cell, imsize, obs_freq, cat_name, thresh):
-
+        from astroquery.vizier import Vizier
         Vizier.ROW_LIMIT = -1
         p = Vizier.query_region(coord.SkyCoord(centre[0], centre[1], unit=(u.hourangle, u.deg), frame='icrs'),
                                 width=width_im, catalog=cat_name)
@@ -139,9 +132,9 @@ def worker(pipeline, recipe, config):
         pix_y = np.empty([len(tab['RAJ2000'])])
 
         for i in range(0, len(tab['RAJ2000'])):
-            tab['RAJ2000'][i] = tab['RAJ2000'][i].replace(' ',':')
+            tab['RAJ2000'][i] = tab['RAJ2000'][i].replace(' ', ':')
             ra_deg[i] = ra2deg(tab['RAJ2000'][i])
-            tab['DEJ2000'][i] = tab['DEJ2000'][i].replace(' ',':')
+            tab['DEJ2000'][i] = tab['DEJ2000'][i].replace(' ', ':')
             dec_deg[i] = dec2deg(tab['DEJ2000'][i])
             flux_corr[i], pix_x[i], pix_y[i] = nvss_pbcorr(
                 ra_deg[i], dec_deg[i], centre, cell, imsize, obs_freq, tab['S1.4'][i])
@@ -175,34 +168,34 @@ def worker(pipeline, recipe, config):
         tab = ascii.read(catalog_table)
         unique, counts = np.unique(tab['Mosaic'], return_counts=True)
 
-        mosaic_tmpdir = mask_dir+'/formosaic/'
-        mosaic_outdir = mask_dir+'/mosaic/'
+        mosaic_tmpdir = mask_dir + '/formosaic/'
+        mosaic_outdir = mask_dir + '/mosaic/'
 
         if os.path.exists(mosaic_tmpdir) == False:
             os.mkdir(mosaic_tmpdir)
-        if os.path.exists(mosaic_outdir) == True:
+        if os.path.exists(mosaic_outdir):
             shutil.rmtree(mosaic_outdir)
 
         for i in range(0, len(unique)):
-            summsfield = fields_dir+str(unique[i])+'.FITS'
-            outfield = mosaic_tmpdir+str(unique[i])+'.FITS'
+            summsfield = fields_dir + str(unique[i]) + '.FITS'
+            outfield = mosaic_tmpdir + str(unique[i]) + '.FITS'
             shutil.copy(summsfield, outfield)
 
     def cleanup_mosaic_files(catalog_name, mask_dir):
 
-        montage_tmpdir = pipeline.output+'/mask_mosaic'
+        montage_tmpdir = pipeline.output + '/mask_mosaic'
         if os.path.exists(montage_tmpdir):
             shutil.rmtree(montage_tmpdir)
 
-        casafiles = glob.glob(mask_dir+'/*.image')
+        casafiles = glob.glob(mask_dir + '/*.image')
         for i in range(0, len(casafiles)):
             shutil.rmtree(casafiles[i])
 
     def move_files(catalog_name, mask_dir):
-        montage_mosaic = pipeline.output+'/mosaic.fits'
-        montage_mosaic_area = pipeline.output+'/mosaic_area.fits'
-        cat_mosaic = mask_dir+catalog_name+'_mosaic.fits'
-        cat_mosaic_area = mask_dir+catalog_name+'_mosaic_area.fits'
+        montage_mosaic = pipeline.output + '/mosaic.fits'
+        montage_mosaic_area = pipeline.output + '/mosaic_area.fits'
+        cat_mosaic = mask_dir + catalog_name + '_mosaic.fits'
+        cat_mosaic_area = mask_dir + catalog_name + '_mosaic_area.fits'
         if os.path.exists(montage_mosaic):
             shutil.move(montage_mosaic, cat_mosaic)
         if os.path.exists(montage_mosaic_area):
@@ -221,7 +214,7 @@ def worker(pipeline, recipe, config):
             u.hourangle, u.deg), frame='icrs')
         cell /= 3600.
 
-        w.wcs.crpix = [imsize/2, imsize/2]
+        w.wcs.crpix = [imsize / 2, imsize / 2]
         w.wcs.cdelt = np.array([-cell, cell])
         w.wcs.crval = [centre.ra.deg, centre.dec.deg]
         w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
@@ -230,21 +223,21 @@ def worker(pipeline, recipe, config):
         hdr['SIMPLE'] = 'T'
         hdr['BITPIX'] = -32
         hdr['NAXIS'] = 2
-        hdr.set('NAXIS1',  imsize, after='NAXIS')
-        hdr.set('NAXIS2',  imsize, after='NAXIS1')
+        hdr.set('NAXIS1', imsize, after='NAXIS')
+        hdr.set('NAXIS2', imsize, after='NAXIS1')
 
         if 'CUNIT1' in hdr:
             del hdr['CUNIT1']
         if 'CUNIT2' in hdr:
             del hdr['CUNIT2']
 
-        pb_fwhm = 1.02*(2.99792458E8)/obs_freq/13.5/np.pi*180.
-        pb_fwhm_pix = pb_fwhm/hdr['CDELT2']
-        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2']/2., hdr['NAXIS2']/2., hdr['NAXIS2']),
-                           np.linspace(-hdr['NAXIS1']/2., hdr['NAXIS1']/2., hdr['NAXIS1']))
-        d = np.sqrt(x*x+y*y)
-        sigma, mu = pb_fwhm_pix/2.35482, 0.0
-        gauss = np.exp(-((d-mu)**2 / (2.0 * sigma**2)))
+        pb_fwhm = 1.02 * (2.99792458E8) / obs_freq / 13.5 / np.pi * 180.
+        pb_fwhm_pix = pb_fwhm / hdr['CDELT2']
+        x, y = np.meshgrid(np.linspace(-hdr['NAXIS2'] / 2., hdr['NAXIS2'] / 2., hdr['NAXIS2']),
+                           np.linspace(-hdr['NAXIS1'] / 2., hdr['NAXIS1'] / 2., hdr['NAXIS1']))
+        d = np.sqrt(x * x + y * y)
+        sigma, mu = pb_fwhm_pix / 2.35482, 0.0
+        gauss = np.exp(-((d - mu)**2 / (2.0 * sigma**2)))
 
         fits.writeto(out_beam, gauss, hdr, overwrite=True)
 
@@ -275,7 +268,7 @@ def worker(pipeline, recipe, config):
         pblist = fits.open(filename)
         dat = pblist[0].data
         print('CHANGE THEE HEADER')
-        if copy_head == True:
+        if copy_head:
             hdrfile = fits.open(headfile)
             head = hdrfile[0].header
 
@@ -323,7 +316,7 @@ def worker(pipeline, recipe, config):
             u.hourangle, u.deg), frame='icrs')
         cell /= 3600.
 
-        w.wcs.crpix = [imsize/2, imsize/2]
+        w.wcs.crpix = [imsize / 2, imsize / 2]
         w.wcs.cdelt = np.array([-cell, cell])
         w.wcs.crval = [centre.ra.deg, centre.dec.deg]
         w.wcs.ctype = ["RA---SIN", "DEC--SIN"]
@@ -333,8 +326,8 @@ def worker(pipeline, recipe, config):
         hdr['BITPIX'] = -32
         hdr['NAXIS'] = 2
         hdr['EQUINOX'] = 2000.
-        hdr.set('NAXIS1',  imsize, after='NAXIS')
-        hdr.set('NAXIS2',  imsize, after='NAXIS1')
+        hdr.set('NAXIS1', imsize, after='NAXIS')
+        hdr.set('NAXIS2', imsize, after='NAXIS1')
 
         if 'CUNIT1' in hdr:
             del hdr['CUNIT1']
@@ -367,11 +360,11 @@ def worker(pipeline, recipe, config):
             xc = pix_x[i]
             yc = pix_y[i]
 
-            if minor[i]/3600. >= float(hdr['CDELT2']) and major[i]/3600. >= float(hdr['CDELT2']):
-                a = major[i]/3600./float(hdr['CDELT2'])/2.
-                b = minor[i]/3600./float(hdr['CDELT2'])/2.
-                ell = np.power(x-xc, 2)/np.power(a, 2) + \
-                    np.power(y-yc, 2)/np.power(b, 2)
+            if minor[i] / 3600. >= float(hdr['CDELT2']) and major[i] / 3600. >= float(hdr['CDELT2']):
+                a = major[i] / 3600. / float(hdr['CDELT2']) / 2.
+                b = minor[i] / 3600. / float(hdr['CDELT2']) / 2.
+                ell = np.power(x - xc, 2) / np.power(a, 2) + \
+                    np.power(y - yc, 2) / np.power(b, 2)
                 index_ell = np.where(np.less_equal(ell, 1))
                 data[index_ell] = 1
             else:
@@ -414,17 +407,16 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfiles, ms_dict = pipeline.get_target_mss(flabel)
     msinfo = pipeline.get_msinfo(all_msfiles[0])
 
-
     for target in all_targets:
-        
+
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-    
+
         if centre[0] == 'HH:MM:SS' and centre[1] == 'DD:MM:SS':
             targetpos = msinfo['REFERENCE_DIR']
             while len(targetpos) == 1:
                 targetpos = targetpos[0]
-            coords = [targetpos[0]/np.pi*180., targetpos[1]/np.pi*180.]
+            coords = [targetpos[0] / np.pi * 180., targetpos[1] / np.pi * 180.]
             centreCoord = coord.SkyCoord(
                 coords[0], coords[1], frame='icrs', unit=(u.deg, u.deg))
             centre[0] = centreCoord.ra.hms
@@ -433,10 +425,10 @@ def worker(pipeline, recipe, config):
         mask_cell = config['cell_size']
         mask_imsize = config['mask_size']
 
-        final_mask = mask_dir+str(config['label_out'])+'_'+str(target)+'.fits'
+        final_mask = mask_dir + str(config['label_out']) + '_' + str(target) + '.fits'
         catalog_name = config['catalog_query']['catalog']
 
-        catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
+        catalog_tab = mask_dir + catalog_name + '_' + pipeline.prefix + '_catalog.txt'
 
         if catalog_name == 'SUMSS':
 
@@ -455,7 +447,7 @@ def worker(pipeline, recipe, config):
                            label='Catalog pulled')
 
             # read catalog table
-            fields_dir = pipeline.input+'/fields/'
+            fields_dir = pipeline.input + '/fields/'
 
             step = 'prepare'  # set directories
             recipe.add(set_mosaic_files, step,
@@ -472,7 +464,7 @@ def worker(pipeline, recipe, config):
             step = 'mosaic'
             recipe.add('cab/montage', step,
                        {
-                           'input_dir': 'masking/formosaic'+':output',
+                           'input_dir': 'masking/formosaic' + ':output',
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -493,7 +485,7 @@ def worker(pipeline, recipe, config):
             if pipeline.enable_task(config, 'catalog_query'):
                 key = 'catalog_query'
 
-                catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
+                catalog_tab = mask_dir + catalog_name + '_' + pipeline.prefix + '_catalog.txt'
 
                 recipe.add(query_catalog_nvss, 'query-nvss',
                            {
@@ -515,8 +507,8 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'merge_with_extended') == False:
                     cat_mask = final_mask
                 else:
-                    cat_mask = mask_dir+'/'+config['label_out']+'_'+str(target)+'.fits'
-                catalog_tab = mask_dir+catalog_name+'_'+pipeline.prefix+'_catalog.txt'
+                    cat_mask = mask_dir + '/' + config['label_out'] + '_' + str(target) + '.fits'
+                catalog_tab = mask_dir + catalog_name + '_' + pipeline.prefix + '_catalog.txt'
 
                 recipe.add(make_mask_nvss, 'make_mask-nvss',
                            {
@@ -539,26 +531,26 @@ def worker(pipeline, recipe, config):
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
-                               'out_beam': mask_dir+'/gauss_pbeam.fits',
+                               'out_beam': mask_dir + '/gauss_pbeam.fits',
                            },
                            input=pipeline.input,
                            output=pipeline.output)
 
-                mosaic = 'masking/'+catalog_name+'_mosaic.fits'
+                mosaic = 'masking/' + catalog_name + '_mosaic.fits'
                 mosaic_casa = 'masking/mosaic_casa.image'
 
                 beam = 'masking/gauss_pbeam.fits'
                 beam_casa = 'masking/gauss_pbeam.image'
 
                 mosaic_regrid_casa = 'masking/mosaic_regrid.image'
-                mosaic_regrid = 'masking/'+catalog_name+'_mosaic_regrid.fits'
-                mosaic_pbcorr = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+                mosaic_regrid = 'masking/' + catalog_name + '_mosaic_regrid.fits'
+                mosaic_pbcorr = 'masking/' + catalog_name + '_mosaic_pbcorr.fits'
 
                 step = 'import-mosaic'
                 recipe.add('cab/casa_importfits', step,
                            {
-                               "fitsimage": mosaic+':output',
-                               "imagename": mosaic_casa+":output",
+                               "fitsimage": mosaic + ':output',
+                               "imagename": mosaic_casa + ":output",
                                "overwrite": True,
                            },
                            input=pipeline.input,
@@ -568,7 +560,7 @@ def worker(pipeline, recipe, config):
                 step = 'import-beam'
                 recipe.add('cab/casa_importfits', step,
                            {
-                               "fitsimage": beam+':output',
+                               "fitsimage": beam + ':output',
                                "imagename": beam_casa,
                                "overwrite": True,
                            },
@@ -579,8 +571,8 @@ def worker(pipeline, recipe, config):
                 step = 'regrid'
                 recipe.add('cab/casa_imregrid', step,
                            {
-                               "template": beam_casa+':output',
-                               "imagename": mosaic_casa+':output',
+                               "template": beam_casa + ':output',
+                               "imagename": mosaic_casa + ':output',
                                "output": mosaic_regrid_casa,
                                "overwrite": True,
                            },
@@ -591,8 +583,8 @@ def worker(pipeline, recipe, config):
                 step = 'export'
                 recipe.add('cab/casa_exportfits', step,
                            {
-                               "fitsimage": mosaic_regrid+':output',
-                               "imagename": mosaic_regrid_casa+':output',
+                               "fitsimage": mosaic_regrid + ':output',
+                               "imagename": mosaic_regrid_casa + ':output',
                                "overwrite": True,
                            },
                            input=pipeline.input,
@@ -601,16 +593,16 @@ def worker(pipeline, recipe, config):
 
                 recipe.add(pbcorr, 'correct_pb',
                            {
-                               "mosaic_regrid": pipeline.output+'/'+mosaic_regrid,
-                               "mosaic_pbcorr": pipeline.output+'/'+mosaic_pbcorr,
-                               "beam": pipeline.output+'/'+beam,
+                               "mosaic_regrid": pipeline.output + '/' + mosaic_regrid,
+                               "mosaic_pbcorr": pipeline.output + '/' + mosaic_pbcorr,
+                               "beam": pipeline.output + '/' + beam,
                            },
                            input=pipeline.input,
                            output=pipeline.output,
                            label='Correcting mosaic for primary beam')
 
             if config['make_mask']['input_image'] == 'pbcorr':
-                in_image = 'masking/'+catalog_name+'_mosaic_pbcorr.fits'
+                in_image = 'masking/' + catalog_name + '_mosaic_pbcorr.fits'
             else:
                 in_image = 'masking/' + config['make_mask']['input_image']
 
@@ -619,11 +611,11 @@ def worker(pipeline, recipe, config):
                 if pipeline.enable_task(config, 'merge_with_extended') == False:
                     cat_mask = final_mask
                 else:
-                    cat_mask = mask_dir+'/'+catalog_name+'_mask.fits'
+                    cat_mask = mask_dir + '/' + catalog_name + '_mask.fits'
 
                 recipe.add(make_mask, 'make_mask-mosaic',
                            {
-                               "mosaic_pbcorr": pipeline.output+'/'+in_image,
+                               "mosaic_pbcorr": pipeline.output + '/' + in_image,
                                "mask": cat_mask,
                                "contour": config['make_mask']['thr_lev'],
                            },
@@ -655,9 +647,9 @@ def worker(pipeline, recipe, config):
                     "SCfind.fluxRange": 'all',
                     "scaleNoise.statistic": 'mad',
                     "scaleNoise.windowSpatial": config['make_mask']['scale_noise_window'],
-                    "scaleNoise.windowSpectral":   1,
+                    "scaleNoise.windowSpectral": 1,
                     "scaleNoise.method": 'local',
-                    "scaleNoise.fluxRange":   'all',
+                    "scaleNoise.fluxRange": 'all',
                     "scaleNoise.scaleX": True,
                     "scaleNoise.scaleY": True,
                     "scaleNoise.scaleZ": False,
@@ -668,12 +660,12 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/sofia', 'make_mask-sofia',
                            image_opts,
                            input=pipeline.output,
-                           output=pipeline.output+'/masking/',
+                           output=pipeline.output + '/masking/',
                            label='{0:s}:: Make SoFiA mask'.format(step))
                 recipe.add(change_header, 'extract-mosaic',
                            {
                                "filename": final_mask,
-                               "headfile": pipeline.output+'/'+imagename,
+                               "headfile": pipeline.output + '/' + imagename,
                                "copy_head": True,
                            },
                            input=pipeline.output,
@@ -685,7 +677,7 @@ def worker(pipeline, recipe, config):
             key = 'merge_with_extended'
 
             ext_name = config[key]['extended_source_map']
-            extended = 'fields/'+ext_name
+            extended = 'fields/' + ext_name
             extended_casa = 'masking/extended.image'
 
             extended_regrid_casa = 'masking/Fornaxa_vla_regrid.image'
@@ -693,24 +685,24 @@ def worker(pipeline, recipe, config):
 
             beam = 'masking/gauss_pbeam.fits'
 
-            if os.path.exists(pipeline.output+'/'+beam) == False:
+            if os.path.exists(pipeline.output + '/' + beam) == False:
                 recipe.add(build_beam, 'build_pb',
                            {
                                'obs_freq': config['pbcorr']['frequency'],
                                'centre': centre,
                                'cell': mask_cell,
                                'imsize': mask_imsize,
-                               'out_beam': mask_dir+'/gauss_pbeam.fits',
+                               'out_beam': mask_dir + '/gauss_pbeam.fits',
                            },
                            input=pipeline.input,
                            output=pipeline.output)
 
             beam_casa = 'masking/gauss_pbeam.image'
 
-            if os.path.exists(pipeline.output+'/'+beam_casa) == False:
+            if os.path.exists(pipeline.output + '/' + beam_casa) == False:
                 recipe.add('cab/casa_importfits', 'import-pb',
                            {
-                               "fitsimage": beam+':output',
+                               "fitsimage": beam + ':output',
                                "imagename": beam_casa,
                                "overwrite": True,
                            },
@@ -719,13 +711,13 @@ def worker(pipeline, recipe, config):
                            label='Importing beam for extended mask')
 
             ext_name_root = ext_name.split('.')[0]
-            extended_pbcorr = 'masking/'+ext_name_root+'_pbcorr.fits'
-            extended_mask = '/masking/'+ext_name_root+'_mask.fits'
+            extended_pbcorr = 'masking/' + ext_name_root + '_pbcorr.fits'
+            extended_mask = '/masking/' + ext_name_root + '_mask.fits'
 
             recipe.add('cab/casa_importfits', 'import-mosaic',
                        {
-                           "fitsimage": extended+":input",
-                           "imagename": extended_casa+":output",
+                           "fitsimage": extended + ":input",
+                           "imagename": extended_casa + ":output",
                            "overwrite": True,
                        },
                        input=pipeline.input,
@@ -734,8 +726,8 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/casa_imregrid', 'regrid',
                        {
-                           "imagename": extended_casa+":output",
-                           "template": beam_casa+":output",
+                           "imagename": extended_casa + ":output",
+                           "template": beam_casa + ":output",
                            "output": extended_regrid_casa,
                            "overwrite": True,
                        },
@@ -745,8 +737,8 @@ def worker(pipeline, recipe, config):
 
             recipe.add('cab/casa_exportfits', 'export',
                        {
-                           "fitsimage": extended_regrid+":output",
-                           "imagename": extended_regrid_casa+":output",
+                           "fitsimage": extended_regrid + ":output",
+                           "imagename": extended_regrid_casa + ":output",
                            "overwrite": True,
                        },
                        input=pipeline.input,
@@ -755,9 +747,9 @@ def worker(pipeline, recipe, config):
 
             recipe.add(pbcorr, 'correct_pb',
                        {
-                           "mosaic_regrid": pipeline.output+'/'+extended_regrid,
-                           "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
-                           "beam": pipeline.output+'/'+beam,
+                           "mosaic_regrid": pipeline.output + '/' + extended_regrid,
+                           "mosaic_pbcorr": pipeline.output + '/' + extended_pbcorr,
+                           "beam": pipeline.output + '/' + beam,
                        },
                        input=pipeline.input,
                        output=pipeline.output,
@@ -767,8 +759,8 @@ def worker(pipeline, recipe, config):
 
                 recipe.add(make_mask, 'make_mask-extend',
                            {
-                               "mosaic_pbcorr": pipeline.output+'/'+extended_pbcorr,
-                               "mask": pipeline.output+extended_mask,
+                               "mosaic_pbcorr": pipeline.output + '/' + extended_pbcorr,
+                               "mask": pipeline.output + extended_mask,
                                "contour": config['merge_with_extended']['thr_lev'],
                            },
                            input=pipeline.input,
@@ -776,9 +768,9 @@ def worker(pipeline, recipe, config):
                            label='Mask done')
 
             cat_mask = config['mask_prefix']['mask_method']
-            recipe.add(merge_masks, 'make_mask-merge', # 'Merging VLA Fornax into catalog mask',
+            recipe.add(merge_masks, 'make_mask-merge',  # 'Merging VLA Fornax into catalog mask',
                        {
-                           "extended_mask": pipeline.output+extended_mask,
+                           "extended_mask": pipeline.output + extended_mask,
                            "catalog_mask": cat_mask,
                            "end_mask": final_mask,
                        },

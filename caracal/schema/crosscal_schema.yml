@@ -89,6 +89,11 @@ mapping:
             type: int
             required: false
             example: '0'
+          meerkat_crystalball_model_chunks:
+            desc: Number of model components that are processed in a single chunk when using Crystalball to predict calibrator visibilities in the model column. If zero, it will be set automatically.
+            type: int
+            required: false
+            example: '0'
           no_verify:
             desc: Enables setting standard manually [???].
             type: bool

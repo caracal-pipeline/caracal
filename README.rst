@@ -133,6 +133,7 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
 
 where ``/path/to/working/area`` is the actual path to the directory where you wish to install CARACal.
 In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
+Please amend your 'pip install' command with [all] option when needed in accordance with the instructions above.
 Install the latest release with:
 
 ..  code-block:: bash

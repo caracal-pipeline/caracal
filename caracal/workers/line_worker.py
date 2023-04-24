@@ -1180,41 +1180,70 @@ def worker(pipeline, recipe, config):
                         cube_path, pipeline.prefix, field, line_name, j - 1)
                     outmask = '{0:s}_{1:s}_{2:s}_{3:d}.image_clean'.format(
                         pipeline.prefix, field, line_name, j)
-                    recipe.add('cab/sofia', step,
+                    recipe.add('cab/sofia2', step,
                                {
-                                   "import.inFile": cubename,
-                                   "steps.doFlag": False,
-                                   "steps.doScaleNoise": True,
-                                   "steps.doSCfind": True,
-                                   "steps.doMerge": True,
-                                   "steps.doReliability": False,
-                                   "steps.doParameterise": False,
-                                   "steps.doWriteMask": True,
-                                   "steps.doMom0": False,
-                                   "steps.doMom1": False,
-                                   "steps.doWriteCat": False,
-                                   "flag.regions": [],
-                                   "scaleNoise.statistic": 'mad',
-                                   "SCfind.threshold": 4,
-                                   "SCfind.rmsMode": 'mad',
-                                   "merge.radiusX": 3,
-                                   "merge.radiusY": 3,
-                                   "merge.radiusZ": 3,
-                                   "merge.minSizeX": 2,
-                                   "merge.minSizeY": 2,
-                                   "merge.minSizeZ": 2,
-                                   "writeCat.basename": outmask,
+                                   "input.data": cubename,
+                                   "pipeline.threads": ncpu, 
+	                           "input.mask": sdm.dismissable(config['sofia']['input_mask']), 
+            		           "input.noise": sdm.dismissable(config['sofia']['input_noise']),
+                    		   "input.weights": sdm.dismissable(config['sofia']['input_weights']),
+	    	                   "flag.auto": config['sofia']['flag_auto'],
+                  	 	   "flag.catalog": sdm.dismissable(config['sofia']['flag_catalog']),
+                                   "flag.radius": config['sofia']['flag_radius'],
+                                   "flag.region": config['sofia']['flag_region'],
+                                   "flag.threshold": config['sofia']['flag_threshold'],
+                                   "scaleNoise.enable": True,
+                                   "scaleNoise.fluxRange": config['sofia']['scaleNoise_fluxRange'],
+                                   "scaleNoise.interpolate": config['sofia']['scaleNoise_interpolate'],
+                                   "scaleNoise.mode": config['sofia']['scaleNoise_mode'],
+                                   "scaleNoise.scfind": config['sofia']['scaleNoise_scfind'],
+                                   "scaleNoise.statistic": config['sofia']['scaleNoise_statistic'],
+                                   "scaleNoise.windowXY": config['sofia']['scaleNoise_windowXY'],
+                                   "scaleNoise.windowZ": config['sofia']['scaleNoise_windowZ'],
+                                   "scfind.enable": True,
+                                   "scfind.fluxRange": config['sofia']['scfind_fluxRange'],
+                                   "scfind.kernelsXY": config['sofia']['scfind_kernelsXY'],
+                                   "scfind.kernelsZ": config['sofia']['scfind_kernelsZ'],
+                                   "scfind.statistic": config['sofia']['scfind_statistic'],
+                                   "scfind.threshold": config['sofia']['scfind_threshold'],
+                                   "linker.enable": config['sofia']['linker'],
+                                   "linker.maxSizeXY": config['sofia']['linker_maxSizeXY'],
+                                   "linker.maxSizeZ": config['sofia']['linker_maxSizeZ'],
+                                   "linker.minSizeXY": config['sofia']['linker_minSizeXY'],
+                                   "linker.minSizeZ": config['sofia']['linker_minSizeZ'],
+                                   "linker.radiusXY": config['sofia']['linker_radiusXY'],
+                                   "linker.radiusZ": config['sofia']['linker_radiusZ'],
+                                   "reliability.enable": config['sofia']['reliability'],
+                                   "reliability.minPixels": config['sofia']['reliability_minPixels'],
+                                   "reliability.minSNR": config['sofia']['reliability_minSNR'],
+                                   "reliability.plot": config['sofia']['reliability_plot'],
+                                   "reliability.scaleKernel": config['sofia']['reliability_scaleKernel'],
+                                   "reliability.threshold": config['sofia']['reliability_threshold'],
+                                   "dilation.enable": config['sofia']['dilation'],
+                                   "dilation.iterationsXY": config['sofia']['dilation_iterationsXY'],
+                                   "dilation.iterationsZ": config['sofia']['dilation_iterationsZ'],
+                                   "dilation.threshold": config['sofia']['dilation_threshold'],
+                                   "parameter.enable": False,
+                                   "parameter.physical": False,
+                                   "output.filename": outmask,
+                                   "output.thresholdMom12": 0,
+                                   "output.writeCatASCII": False,
+                                   "output.writeCubelets": False,
+                                   "output.writeRawMask": config['sofia']['output_writeRawMask'],
+                                   "output.writeMask": True,
+                                   "output.writeMask2d":  config['sofia']['output_writeMask2d'],
+                                   "output.writeMoments": False,
                                },
                                input=pipeline.cubes + '/cube_' + str(j - 1),
                                output=pipeline.output + '/' + cube_dir,
-                               label='{0:s}:: Make SoFiA mask'.format(step))
+                               label='{0:s}:: Make SoFiA-2 mask'.format(step))
 
                     recipe.run()
                     recipe.jobs = []
 
                     if not os.path.exists(line_clean_mask_file):
                         caracal.log.info(
-                            'Sofia mask_' + str(j - 1) + ' was not found. Exiting and saving the cube')
+                            'Sofia-2 mask_' + str(j - 1) + ' was not found. Exiting and saving the cube')
                         j -= 1
                         break
 
@@ -1314,16 +1343,16 @@ def worker(pipeline, recipe, config):
                     caracal.log.info('The cube RMS noise has decreased by a factor <= {0:.3f} compared to the previous WSclean iteration. Noise convergence achieved.'.format(wscl_tol))
                     break
 
-                # If the RMS has decreased by a factor > wscl_tol compared to the previous cube then cleaning is still improving the cube and it's worth continuing with a new SoFiA + WSclean iteration
+                # If the RMS has decreased by a factor > wscl_tol compared to the previous cube then cleaning is still improving the cube and it's worth continuing with a new SoFiA-2 + WSclean iteration
                 elif len(rms_values) > 1 and wscl_tol and rms_values[-2] / rms_values[-1] > wscl_tol:
                     # rms_old = rms_new
-                    caracal.log.info('The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. The noise has not converged yet and we should continue iterating SoFiA + WSclean.'.format(wscl_tol))
+                    caracal.log.info('The cube RMS noise has decreased by a factor > {0:.3f} compared to the previous WSclean iteration. The noise has not converged yet and we should continue iterating SoFiA-2 + WSclean.'.format(wscl_tol))
                     if j == wscl_niter:
-                        caracal.log.info('Stopping anyway. Maximum number of SoFiA + WSclean iterations reached.')
+                        caracal.log.info('Stopping anyway. Maximum number of SoFiA-2 + WSclean iterations reached.')
                     else:
-                        caracal.log.info('Starting a new SoFiA + WSclean iteration.')
+                        caracal.log.info('Starting a new SoFiA-2 + WSclean iteration.')
 
-            # Out of SoFiA + WSclean loop -- prepare final data products
+            # Out of SoFiA-2 + WSclean loop -- prepare final data products
             for ss in ['dirty', 'psf', 'first-residual', 'residual', 'model', 'image']:
                 if 'dirty' in ss:
                     caracal.log.info('Preparing final cubes.')
@@ -1541,6 +1570,12 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         if pipeline.enable_task(config, 'sofia'):
+            sofia_dir = "{0:s}/sofia".format(
+                    pipeline.cubes)
+            if not os.path.exists(sofia_dir):
+                    os.mkdir(sofia_outpath)
+            # cube_dir = get_relative_path(pipeline.cubes, pipeline)
+
             if config['sofia']['imcontsub']:
                 simage_cube_list = []
                 for uu in range(len(image_cube_list)):
@@ -1554,37 +1589,66 @@ def worker(pipeline, recipe, config):
                 simage_cube_list = image_cube_list
 
             for uu in range(len(image_cube_list)):
-                step = 'sofia-source_finding-{0:d}'.format(uu)
+                step = 'sofia2-source_finding-{0:d}'.format(uu)
                 recipe.add(
-                    'cab/sofia',
+                    'cab/sofia2',
                     step,
                     {
-                        "import.inFile": simage_cube_list[uu].split('/')[-1] + ':input',
-                        "steps.doFlag": config['sofia']['flag'],
-                        "steps.doScaleNoise": True,
-                        "steps.doSCfind": True,
-                        "steps.doMerge": config['sofia']['merge'],
-                        "steps.doReliability": False,
-                        "steps.doParameterise": False,
-                        "steps.doWriteMask": True,
-                        "steps.doMom0": config['sofia']['mom0'],
-                        "steps.doMom1": config['sofia']['mom1'],
-                        "steps.doCubelets": config['sofia']['cubelets'],
-                        "steps.doWriteCat": False,
-                        "flag.regions": config['sofia']['flagregion'],
-                        "scaleNoise.statistic": config['sofia']['rmsMode'],
-                        "SCfind.threshold": config['sofia']['thr'],
-                        "SCfind.rmsMode": config['sofia']['rmsMode'],
-                        "merge.radiusX": config['sofia']['mergeX'],
-                        "merge.radiusY": config['sofia']['mergeY'],
-                        "merge.radiusZ": config['sofia']['mergeZ'],
-                        "merge.minSizeX": config['sofia']['minSizeX'],
-                        "merge.minSizeY": config['sofia']['minSizeY'],
-                        "merge.minSizeZ": config['sofia']['minSizeZ'],
+                       "input.data": simage_cube_list[uu].split('/')[-1]+':input',
+                       "pipeline.threads": ncpu, 
+                       "input.mask": sdm.dismissable(config['sofia']['input_mask']), 
+                       "input.noise": sdm.dismissable(config['sofia']['input_noise']),
+                       "input.weights": sdm.dismissable(config['sofia']['input_weights']),
+                       "flag.auto": config['sofia']['flag_auto'],
+                       "flag.catalog": sdm.dismissable(config['sofia']['flag_catalog']),
+                       "flag.radius": config['sofia']['flag_radius'],
+                       "flag.region": config['sofia']['flag_region'],
+                       "flag.threshold": config['sofia']['flag_threshold'],
+                       "scaleNoise.enable": True,
+                       "scaleNoise.fluxRange": config['sofia']['scaleNoise_fluxRange'],
+                       "scaleNoise.interpolate": config['sofia']['scaleNoise_interpolate'],
+                       "scaleNoise.mode": config['sofia']['scaleNoise_mode'],
+                       "scaleNoise.scfind": config['sofia']['scaleNoise_scfind'],
+                       "scaleNoise.statistic": config['sofia']['scaleNoise_statistic'],
+                       "scaleNoise.windowXY": config['sofia']['scaleNoise_windowXY'],
+                       "scaleNoise.windowZ": config['sofia']['scaleNoise_windowZ'],
+                       "scfind.enable": True,
+                       "scfind.fluxRange": config['sofia']['scfind_fluxRange'],
+                       "scfind.kernelsXY": config['sofia']['scfind_kernelsXY'],
+                       "scfind.kernelsZ": config['sofia']['scfind_kernelsZ'],
+                       "scfind.statistic": config['sofia']['scfind_statistic'],
+                       "scfind.threshold": config['sofia']['scfind_threshold'],
+                       "linker.enable": config['sofia']['linker'],
+                       "linker.maxSizeXY": config['sofia']['linker_maxSizeXY'],
+                       "linker.maxSizeZ": config['sofia']['linker_maxSizeZ'],
+                       "linker.minSizeXY": config['sofia']['linker_minSizeXY'],
+                       "linker.minSizeZ": config['sofia']['linker_minSizeZ'],
+                       "linker.radiusXY": config['sofia']['linker_radiusXY'],
+                       "linker.radiusZ": config['sofia']['linker_radiusZ'],
+                       "reliability.enable": config['sofia']['reliability'],
+                       "reliability.minPixels": config['sofia']['reliability_minPixels'],
+                       "reliability.minSNR": config['sofia']['reliability_minSNR'],
+                       "reliability.plot": config['sofia']['reliability_plot'],
+                       "reliability.scaleKernel": config['sofia']['reliability_scaleKernel'],
+                       "reliability.threshold": config['sofia']['reliability_threshold'],
+                       "dilation.enable": config['sofia']['dilation'],
+                       "dilation.iterationsXY": config['sofia']['dilation_iterationsXY'],
+                       "dilation.iterationsZ": config['sofia']['dilation_iterationsZ'],
+                       "dilation.threshold": config['sofia']['dilation_threshold'],
+                       "parameter.enable": True,
+                       "parameter.physical": True,
+                       "output.filename": outmask,
+                       "output.thresholdMom12": config['sofia']['output_thresholdMom12'],
+                       "output.writeCatASCII": True,
+                       "output.writeCubelets": True,
+                       "output.writeRawMask": config['sofia']['output_writeRawMask'],
+                       "output.writeMask": True,
+                       "output.writeMask2d":  config['sofia']['output_writeMask2d'],
+                       "output.writeMoments": True,
                     },
                     input='/'.join(simage_cube_list[uu].split('/')[:-1]),
-                    output='/'.join(simage_cube_list[uu].split('/')[:-1]),
-                    label='{0:s}:: Make SoFiA mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
+                    output=pipeline.output + '/' + sofia_dir,
+                    label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
         # Again, in some cases this should run once
         if rancsonce:
             pass

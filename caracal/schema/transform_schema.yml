@@ -182,8 +182,8 @@ mapping:
             type: bool
             required: false
             example: 'False'
-        col:
-            desc: Column(s) to be contatenated, where the default is 'data'.
+          col:
+            desc: Column(s) to be contatenated, where the default is 'data'; use 'all' for all columns.
             type: str
             required: false
             example: 'data'

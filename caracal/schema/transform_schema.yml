@@ -182,6 +182,11 @@ mapping:
             type: bool
             required: false
             example: 'False'
+        col:
+            desc: Column(s) to be contatenated, where the default is 'data'.
+            type: str
+            required: false
+            example: 'data'
       obsinfo:
         desc: Get observation information.
         type: map

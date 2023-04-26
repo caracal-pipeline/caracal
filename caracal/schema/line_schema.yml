@@ -677,6 +677,12 @@ mapping:
             type: bool
             required: false
             example: 'False'
+          mode:
+            desc: Choose whether to run SoFiA-2 to make a clean mask ('clean_mask') while imaging, to do source finding ('source_finding') on the final cube, or both ('both').
+            type: str
+            enum: ['clean_mask', 'source_finding', 'both']
+            required: false
+            example: 'clean_mask'
           imcontsub:
             desc: Use results of imcontsub instead of image cubes if available
             type: bool
@@ -686,33 +692,34 @@ mapping:
             desc: Name of an input mask cube. The mask cube must have the same dimensions as the input data cube. The absolute path to the mask file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
             type: str
             required: false
-            example: ''
+            example: 'None'
           input_noise:
             desc: Name of an optional data cube containing the noise levels across the image. The noise cube must have the same dimensions as the input data cube. The absolute path to the noise file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
             type: str
             required: false
-            example: ''
+            example: 'None'
           input_weights:
             desc: Name of an optional data cube containing the weights across the image. The weights cube must have the same dimensions as the input data cube. The absolute path to the weights file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
             type: str
             required: false
-            example: ''
+            example: 'None'
           flag_auto:
             desc: Choices are "true", "false", "channels" or "pixels". If set to true, SoFiA will attempt to automatically flag spectral channels and spatial pixels affected by interference or artefacts based on their RMS noise level. If set to channels, only spectral channels will be flagged. If set to pixels, only spatial pixels will be flagged.
             type: str
+            enum: ['true', 'false', 'channels', 'pixels']
             required: false
             example: 'false'
           flag_catalog:
             desc: Path to a catalogue file containing two columns that specify the longitude and latitude coordinates of sky positions to be flagged in the native coordinate system and units of the input data cube. The two columns can be separated by spaces, tabulators or commas. Also see flag_radius.
             type: str
             required: false
-            example: ''
+            example: 'None'
           flag_radius:
             desc: Radius around the sky positions listed in the catalogue provided by flag.catalog that should be flagged. If 0, then only the nearest pixel to the position will be flagged. Otherwise, pixels within the specified radius around the nearest pixel will be flagged.
             type: int
             required: false
             example: '5'
-          flag_region:
+          flag_region: 
             desc: Region(s) to be flagged in the input data cube prior to processing. The flagging region must contain a multiple of six comma-separated integer values of the following format; x_min, x_max, y_min, y_max, z_min, z_max, ... (all in units of pixels and 0-based). Pixels within those regions will be set to blank in the input cube.
             type: seq
             seq:
@@ -727,26 +734,29 @@ mapping:
           scaleNoise_fluxRange:
             desc: Choices are "positive", "negative" or "full". Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
             type: str
+            enum: ['positive', 'negative', 'full']
             required: false
             example: 'negative'
           scaleNoise_interpolate:
             desc: If set to true, linear interpolation will be used to interpolate the measured local noise values in between grid points. If set to false, the entire grid cell will instead be filled with the measured noise value.
             type: bool
             required: false
-            example: 'false'
+            example: 'False'
           scaleNoise_mode:
             desc: Choices are "spectral" or "local". If set to spectral, the noise level will be determined for each spectral channel by measuring the noise within each image plane. This is useful for data cubes where the noise varies with frequency. If set to local, the noise level will be measured locally in window running across the entire cube in all three dimensions. This is useful for data cubes with more complex noise variations, such as interferometric images with primary-beam correction applied.
             type: str
+            enum: ['spectral', 'local']
             required: false
             example: 'spectral'
           scaleNoise_scfind:
             desc: If true and global or local noise scaling is enabled, then noise scaling will additionally be applied after each smoothing operation in the S+C finder. This might be useful in certain situations where large-scale artefacts are present in interferometric data. However, this feature should be used with great caution, as it has the potential to do more harm than good.
             type: bool
             required: false
-            example: 'true'
+            example: 'True'
           scaleNoise_statistic:
             desc: Choices are "std", "mad" or "gauss". Statistic to be used in the noise measurement process. Possible values are std, mad and gauss for standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
             type: str
+            enum: ['std', 'mad', 'gauss']
             required: false
             example: 'mad'
           scaleNoise_windowXY:
@@ -762,6 +772,7 @@ mapping:
           scfind_fluxRange:
             desc: Choices are "positive", "negative" or "full". Flux range to be used in the noise measurement. If set to negative or positive, only pixels with negative or positive flux will be used, respectively. This can be useful to prevent real emission or artefacts from affecting the noise measurement. If set to full, all pixels will be used in the noise measurement irrespective of their flux.
             type: str
+            enum: ['positive', 'negative', 'full']
             required: false
             example: 'negative'
           scfind_kernelsXY: 
@@ -770,7 +781,7 @@ mapping:
             seq:
               - type: float
             required: false
-            example: '0, 3, 6'
+            example: '0, 3, 6' # This really should be [0, 3, 6]? 
           scfind_kernelsZ: 
             desc: Comma-separated list of spectral Boxcar kernel sizes to apply. The individual kernel sizes must be odd integer values of 3 or greater and denote the full width of the Boxcar filter used to smooth the data in the spectral domain. A value of 0 means that no spectral smoothing will be applied.
             type: seq
@@ -781,6 +792,7 @@ mapping:
           scfind_statistic:
             desc: Choices are "std", "mad" or "gauss". Statistic to be used in the noise measurement process. Possible values are std, mad and gauss for standard deviation, median absolute deviation and Gaussian fitting to the flux histogram, respectively. Standard deviation is by far the fastest algorithm, but it is also the least robust one with respect to emission and artefacts in the data. Median absolute deviation and Gaussian fitting are far more robust in the presence of strong, extended emission or artefacts, but will usually take longer.
             type: str
+            enum: ['std', 'mad', 'gauss']
             required: false
             example: 'mad'
           scfind_threshold:
@@ -959,4 +971,3 @@ mapping:
                 required: false
                 example: ''
         example: ''
-

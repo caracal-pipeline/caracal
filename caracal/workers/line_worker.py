@@ -781,7 +781,8 @@ def worker(pipeline, recipe, config):
             caracal.log.info('  Target #{0:d}: {1:}, files {2:}'.format(tt, target, mslist))
             noisy.PredictNoise(['{0:s}/{1:s}'.format(pipeline.msdir, mm) for mm in mslist], str(tsyseff), diam, target, verbose=2)
 
-    if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with'] == 'wsclean':
+    if pipeline.enable_task(config, 'make_cube') and config['make_cube']['image_with'] == 'wsclean' and \
+       config['sofia']['mode'] in ['clean_mask', 'both']:
         nchans_all, specframe_all = [], []
         label = config['label_in']
         if label != '':
@@ -1569,7 +1570,7 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
 
-        if pipeline.enable_task(config, 'sofia'):
+        if pipeline.enable_task(config, 'sofia') and config['sofia']['mode'] in ['source_finding', 'both']:
             sofia_dir = "{0:s}/sofia".format(
                     pipeline.cubes)
             if not os.path.exists(sofia_dir):

@@ -66,7 +66,7 @@ And CARACal developer version which is not recommended for users:
 
 ..  code-block:: bash
 
-    pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal
+    pip install -U 'caracal[all] @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
 CARACal has a few optional dependencies (scipy, astropy, regions, astroquery) which are not installed by default. But to get full functionality, you can install them by running:
@@ -133,6 +133,7 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
 
 where ``/path/to/working/area`` is the actual path to the directory where you wish to install CARACal.
 In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
+Please amend your 'pip install' command with [all] option when needed in accordance with the instructions above.
 Install the latest release with:
 
 ..  code-block:: bash

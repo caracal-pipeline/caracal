@@ -1408,7 +1408,7 @@ def worker(pipeline, recipe, config):
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
-                "model-list": modellist if config[key]['output_data'][0] in ['PA_DATA'] else '',
+                "model-list": modellist if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else '',
                 "model-pa-rotate": config['cal_cubical']['model_pa_rotate'],
                 "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,

@@ -482,7 +482,7 @@ mapping:
             required: false
             desc: Will execute multiple gridders simultaneously. This can make things faster in certain cases, but will increase memory usage.
           use_wgridder:
-            type: float
+            type: bool
             example: false
             required: false
             desc: Use the w-gridding gridder developed by Martin Reinecke

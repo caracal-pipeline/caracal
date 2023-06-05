@@ -591,6 +591,7 @@ def worker(pipeline, recipe, config):
                         "sky-model": modelcrystal,
                         "field": fluxscale_field,
                         "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
+                        "num-workers": sdm.dismissable(config['set_model']['meerkat_crystalball_ncpu']),
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
                         "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),

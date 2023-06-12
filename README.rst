@@ -107,12 +107,18 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
 3. Poetry
 ---------
 
-Installation from source using `poetry`.
-In the working directory where source is checked out run:
+Installation from source using `poetry`. First install poetry:
 
 ..  code-block:: bash
 
-    poetry install
+    pip install poetry
+
+
+In the working directory where source is checked out run `poetry install` or to include all optional dependencies:
+
+..  code-block:: bash
+
+    poetry install --extras all
 
 =========================================
 Installation on (ILIFU) slurm environment

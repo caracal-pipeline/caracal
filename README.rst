@@ -29,7 +29,8 @@ Requirements
 * Container technology of your choice. It can be one of the following:
     * `Docker <https://www.docker.com>`_
     * `Podman <https://podman.io/>`_
-    * `Singularity <https://github.com/sylabs/singularity>`_ > 3.5 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information)
+    * `Singularity <https://github.com/sylabs/singularity>`_ 3.5 - 3.9 (nearly all functionality available for > 2.6.0-dist, see `here <https://github.com/caracal-pipeline/caracal/issues/1154>`_ for further information) 
+        * `Apptainer <https://apptainer.org>`_ does not support all CARACal functionalities (at the moment).
 
 ============
 Installation
@@ -107,12 +108,18 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
 3. Poetry
 ---------
 
-Installation from source using `poetry`.
-In the working directory where source is checked out run:
+Installation from source using `poetry`. First install poetry:
 
 ..  code-block:: bash
 
-    poetry install
+    pip install poetry
+
+
+In the working directory where source is checked out run `poetry install` or to include all optional dependencies:
+
+..  code-block:: bash
+
+    poetry install --extras all
 
 =========================================
 Installation on (ILIFU) slurm environment

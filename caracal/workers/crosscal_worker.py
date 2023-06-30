@@ -691,7 +691,9 @@ def worker(pipeline, recipe, config):
                                 overwrite=config['overwrite_flagvers'])
 
         applycal_recipes = callibs.new_callib()
-        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], "nearest", "target")
+        # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
+        # see issue #1474 
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field, "target")
         if no_secondary:
             for gt, itp, fd in zip(*primary_tables):
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)

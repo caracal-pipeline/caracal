@@ -30,7 +30,7 @@ psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"
 "ruamel.yaml" = "^0.17.21"
-numpy = "*"
+numpy = ">=1.22"
 
 # These are not essentail for the pipeline to run, so better to not pin the versions.
 # TODO(sphe) these packages have to be moved to extras eventually

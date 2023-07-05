@@ -36,7 +36,7 @@ Requirements
 Installation
 ============
 
-We strongly recommend and describe an installation using a `Python3` virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have **write** acccess.
+We strongly recommend and describe an installation using a `Python3` virtual environment. Only try outside a virtual environment if you know what you are doing. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have **write** access.
 
 There are three (3) available methods to install the `caracal` pipeline: 
 
@@ -63,6 +63,12 @@ For a CARACal stable release run:
 
     pip install -U caracal
 
+CARACal has a few optional dependencies (*scipy, astropy, regions, astroquery*) which are not installed by default. But to get full functionality, you can install them by running:
+
+..  code-block:: bash
+
+    pip install -U caracal[all]
+
 And CARACal developer version which is not recommended for users:
 
 ..  code-block:: bash
@@ -70,23 +76,10 @@ And CARACal developer version which is not recommended for users:
     pip install -U 'caracal[all] @ git+https://github.com/caracal-pipeline/caracal.git@master'
 
 
-CARACal has a few optional dependencies (scipy, astropy, regions, astroquery) which are not installed by default. But to get full functionality, you can install them by running:
 
-..  code-block:: bash
+*Ignore any error messages concerning `pyregion`.*
 
-    pip install -U caracal[all]
-
-for the stable release. And for the developer version, run:
-
-
-..  code-block:: bash
-
-    pip install -U git+https://github.com/ska-sa/caracal.git#egg=caracal[all]
-
-
-*Ignore any error messages concerning pyregion.*
-
-2. caratekit.sh script
+2. `caratekit.sh` script
 ----------------------
 
 Download the installation script `caratekit.sh <https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh>`_ . Choose the parent directory ``${workspace}`` and the name of the CARACal directory ``${caracal_dir}``. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
@@ -105,10 +98,10 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
     caratekit.sh -ws ${workspace} -cr -si -ct ${caracal_testdir} -rp install -f -kh
 
 
-3. Poetry
+3. Poetry (For developers)
 ---------
 
-Installation from source using `poetry`. First install poetry:
+Installation from source using `poetry`. First, install poetry:
 
 ..  code-block:: bash
 
@@ -125,7 +118,7 @@ In the working directory where source is checked out run `poetry install` or to 
 Installation on (ILIFU) slurm environment
 =========================================
 
-The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instuctions:
+The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.0 operating system, although, it should also work on other OS versions. On the login node, follow these instructions:
 
 ..  code-block:: bash
 
@@ -139,8 +132,8 @@ The installation of CARACal on ilifu has been tried and tested on the Ubuntu 20.
     deactivate
 
 where ``/path/to/working/area`` is the actual path to the directory where you wish to install CARACal.
-In principle, this can also be done in the Slurm environment of ILIFU by submitting an sbatch script.
-Please amend your 'pip install' command with [all] option when needed in accordance with the instructions above.
+In principle, this can also be done in the Slurm environment of ILIFU by submitting an *sbatch* script.
+Please amend your `pip install` command with `[all]` option when needed in accordance with the instructions above.
 Install the latest release with:
 
 ..  code-block:: bash
@@ -179,7 +172,7 @@ If using `Singularity <https://github.com/sylabs/singularity>`_ run CARACal with
 
     caracal -ct singularity -c ${your-configuration-file}
 
-For more detailed installation instructions, trouble-shooting tips and a full user manual please see `caracal.readthedocs.io <https://caracal.readthedocs.io>`_.
+For more detailed installation instructions, troubleshooting tips and a full user manual please see `caracal.readthedocs.io <https://caracal.readthedocs.io>`_.
 
 ==========
 New issues

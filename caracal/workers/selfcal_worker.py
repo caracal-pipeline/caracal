@@ -39,6 +39,7 @@ CUBICAL_OUT = {
 CUBICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
+    "GainDiagAmp": 'complex-2x2',
     "GainDiagPhase": 'phase-diag',
     "ComplexDiag": 'complex-diag',
     "Fslope": 'f-slope',

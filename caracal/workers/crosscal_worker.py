@@ -591,6 +591,7 @@ def worker(pipeline, recipe, config):
                         "sky-model": modelcrystal,
                         "field": fluxscale_field,
                         "memory-fraction": sdm.dismissable(config['set_model']["meerkat_crystalball_memory_fraction"]),
+                        "num-workers": sdm.dismissable(config['set_model']['meerkat_crystalball_ncpu']),
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
                         "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
@@ -690,7 +691,9 @@ def worker(pipeline, recipe, config):
                                 overwrite=config['overwrite_flagvers'])
 
         applycal_recipes = callibs.new_callib()
-        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], "nearest", "target")
+        # the fluxscale_field has already been chosen, so using "nearest" here does not make sense to FROM(Sphe)
+        # see issue #1474 
+        primary_tables = get_caltab_final(primary_order, primary["gaintables"], primary["interps"], fluxscale_field, "target")
         if no_secondary:
             for gt, itp, fd in zip(*primary_tables):
                 callibs.add_callib_recipe(applycal_recipes, gt, itp, fd)

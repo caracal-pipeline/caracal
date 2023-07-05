@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "caracal"
-version = "1.1.1"
+version = "1.1.2"
 description = "Containerized Automated Radio Astronomy Calibration"
 authors = ["The CaraCAL Team <caracal-info@googlegroups.com>"]
 readme = "README.rst"

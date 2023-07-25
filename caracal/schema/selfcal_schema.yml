@@ -141,6 +141,12 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
+      img_channelrange:
+        seq:
+          - type: int
+        desc: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default '-1' means all channels.
+        required: false
+        example: '-1'
       img_joinchans:
         type: bool
         desc: Join channels to create MFS image.

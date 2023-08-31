@@ -380,7 +380,7 @@ mapping:
             required: False
             example: 'meerkat'
           field:
-            desc: Field over which to determine flag statistics. Options are 'gcal', 'bpcal', and 'target'.
+            desc: Field over which to determine flag statistics. Options are 'gcal', 'bpcal', 'xcal' and 'target'.
             type: str
             required: False
             example: 'target'

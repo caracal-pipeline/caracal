@@ -485,7 +485,7 @@ def worker(pipeline, recipe, config):
                     field = ",".join(map(str, utils.get_field_id(msdict, manfields.get_field(
                         pipeline, i, config['inspect']['field']).split(","))))
                 for f in field.split(','):
-                    outlabel = '_{0:d}'.format(i) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(i, f)
+                    outlabel = '_{0:d}'.format(j) if len(field.split(',')) == 1 else '_{0:d}_{1:s}'.format(j, f)
                     recipe.add('cab/rfinder', step,
                                {
                                    "msname": msname,

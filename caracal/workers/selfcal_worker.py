@@ -39,6 +39,7 @@ CUBICAL_OUT = {
 CUBICAL_MT = {
     "Gain2x2": 'complex-2x2',
     "GainDiag": 'complex-2x2',  # TODO:: Change this. Ask cubical to support this mode
+    "GainDiagAmp": 'complex-2x2',
     "GainDiagPhase": 'phase-diag',
     "ComplexDiag": 'complex-diag',
     "Fslope": 'f-slope',
@@ -490,6 +491,8 @@ def worker(pipeline, recipe, config):
             fake_image_opts.update({"multiscale": multiscale})
             if multiscale_scales:
                 fake_image_opts.update({"multiscale-scales": list(map(int, multiscale_scales.split(',')))})
+        if len(config['img_channelrange']) == 2:
+            fake_image_opts.update({"channelrange": config['img_channelrange']})
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,
@@ -567,6 +570,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             if multiscale_scales:
                 image_opts.update({"multiscale-scales": list(map(int, multiscale_scales.split(',')))})
+        if len(config['img_channelrange']) == 2:
+            image_opts.update({"channelrange": config['img_channelrange']})
 
         mask_key = config[key]['cleanmask_method'][num - 1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':

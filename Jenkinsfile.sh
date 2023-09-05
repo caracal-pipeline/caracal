@@ -15,7 +15,7 @@ tar -xvf pull_request_data.tar
 cd ..
 
 ###
-# Meerkathi test environment variables
+# CARACal test environment variables
 ###
 caracal_tests=$TEST_OUTPUT_DIR
 export caracal_tests
@@ -26,6 +26,8 @@ export pull_request_data
 pull_request_name=$(cd $PULLFOLDER; git rev-parse HEAD | sed 's/\(^.\{1,7\}\).*/\1/')
 export pull_request_name
 mkdir -p ${pull_request_name}
+source /etc/profile.d/modules.sh
+module load apptainer/1.2.0-rc.1
 source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \

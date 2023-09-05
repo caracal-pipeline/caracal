@@ -32,7 +32,7 @@ source $WORKSPACE/$BUILD_NUMBER/$PULLFOLDER/caratekit.sh -ws ${caracal_tests} \
                                                          -td ${pull_request_data} \
                                                          -lc ${caracal_version} \
                                                          -ct ${pull_request_name} \
-                                                         -dm \
+                                                         -sm \
                                                          -or \
                                                          -f \
                                                          -op \

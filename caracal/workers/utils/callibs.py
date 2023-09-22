@@ -1,7 +1,8 @@
 from os import pipe
 import stimela
 import os.path
-from collections.abc import OrderedDict, Iterable
+from collections.abc import Iterable
+from collections import OrderedDict
 
 _MODES = dict(
     K="delay_cal",

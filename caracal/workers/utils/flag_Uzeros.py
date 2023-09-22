@@ -7,7 +7,7 @@ import caracal
 import shutil
 import argparse
 import time
-from collections import OrderedDict
+from collections.abc import OrderedDict
 import matplotlib.dates as mdat
 from matplotlib import gridspec
 from matplotlib import rc

@@ -7,7 +7,7 @@ import caracal
 import os
 import copy
 import ruamel.yaml
-from collections import OrderedDict
+from collections.abc import OrderedDict
 
 # shut this guy up
 import logging

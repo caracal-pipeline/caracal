@@ -1,6 +1,6 @@
 # -*- coding: future_fstrings -*-
 from caracal.dispatch_crew import utils
-from collections.abc import OrderedDict
+from collections import OrderedDict
 import caracal
 from caracal import log, pckgdir, notebooks
 import sys

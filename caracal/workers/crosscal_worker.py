@@ -1,5 +1,5 @@
 # -*- coding: future_fstrings -*-
-from collections import OrderedDict
+from collections.abc import OrderedDict
 import sys
 import os
 import caracal.dispatch_crew.utils as utils

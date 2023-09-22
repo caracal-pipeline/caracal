@@ -1,5 +1,5 @@
 # -*- coding: future_fstrings -*-
-from collections import OrderedDict
+from collections.abc import OrderedDict
 import pickle
 import sys
 import os

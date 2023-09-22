@@ -1,7 +1,7 @@
 # -*- coding: future_fstrings -*-
 import os
 import sys
-from collections.abc import Mapping, Sequence, OrderedDict, namedtuple
+from collections import Mapping, Sequence, OrderedDict, namedtuple
 import itertools
 import yaml
 from stimela.dismissable import dismissable as sdm

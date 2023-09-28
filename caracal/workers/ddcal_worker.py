@@ -35,8 +35,8 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem']) + 'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    caracal.log.info("All_targets", all_targets)
-    caracal.log.info("All_msfiles", all_msfile)
+    caracal.log.info("All_targets:"+str(all_targets))
+    caracal.log.info("All_msfiles:"+str(all_msfile))
 
     if not os.path.exists(OUTPUT):
         os.mkdir(OUTPUT)
@@ -422,7 +422,7 @@ def worker(pipeline, recipe, config):
     for target in de_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        caracal.log.info("Processing field", field, "for de calibration:")
+        caracal.log.info("Processing field" + str(field) + " for de calibration:")
         if USEPB:
             make_primary_beam()
         if pipeline.enable_task(config, 'image_dd'):

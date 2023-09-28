@@ -18,7 +18,9 @@ def worker(pipeline, recipe, config):
     from astropy.coordinates import SkyCoord
     from astropy import units as u
     from astropy.wcs import WCS
-    from regions import PixCoord, write_ds9, PolygonPixelRegion
+    import regions
+
+    # from regions import PixCoord, write, PolygonPixelRegion
     npix = config['image_dd']['npix']
     cell = config['image_dd']['cell']
     use_mask = config['image_dd']['use_mask']
@@ -143,7 +145,7 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/" + outdir + "/" + prefix + "_" + field
         dd_ms_list = {"Data-MS": ms_list}
         dd_image_opts_postcal.update(dd_ms_list)
-        caracal.log.info("Imaging", ms_list)
+        caracal.log.info("Imaging "+ str(ms_list))
         postcal_datacol = config['image_dd']['data_colname_postcal']
         dd_imagecol = {"Data-ColName": postcal_datacol}
         dd_image_opts_postcal.update(dd_imagecol)
@@ -250,7 +252,7 @@ def worker(pipeline, recipe, config):
             reg = []
             for j in range(len(sources_to_tag.split(";"))):
                 coords = sources_to_tag.split(";")[j]
-                size = coords.split(",")[2]
+                size = eval(coords.split(",")[2])
                 coords_str = coords.split(",")[0] + " " + coords.split(",")[1]
                 # print("Coordinate String", coords_str)
                 centre = SkyCoord(coords_str, unit='deg')
@@ -261,16 +263,17 @@ def worker(pipeline, recipe, config):
                 for i in range(5):
                     ang_sep = (306 / 5) * i * u.deg
                     p = centre.directional_offset_by(ang_sep, separation)
-                    pix = PixCoord.from_sky(p, w)
+                    pix = regions.PixCoord.from_sky(p, w)
                     xlist.append(pix.x)
                     ylist.append(pix.y)
-                vertices = PixCoord(x=xlist, y=ylist)
-                region_dd = PolygonPixelRegion(vertices=vertices)
+                vertices = regions.PixCoord(x=xlist, y=ylist)
+                region_dd = regions.PolygonPixelRegion(vertices=vertices)
                 reg.append(region_dd)
+                regs = regions.Regions(reg)
             regfile = "de-{0:s}.reg".format(field)
             ds9_file = os.path.join(OUTPUT, outdir, regfile)
             # This needs to be rewritten. write_ds9 does not exist any more
-            write_ds9(reg, ds9_file, coordsys='physical')
+            regs.write(ds9_file, overwrite=True)
 
     def dd_calibrate(field, mslist):
         key = 'calibrate_dd'
@@ -425,8 +428,8 @@ def worker(pipeline, recipe, config):
         caracal.log.info("Processing field" + str(field) + " for de calibration:")
         if USEPB:
             make_primary_beam()
-        if pipeline.enable_task(config, 'image_dd'):
-            dd_precal_image(field, mslist)
+        # if pipeline.enable_task(config, 'image_dd'):
+            # dd_precal_image(field, mslist)
 
         dagga(field)
         if pipeline.enable_task(config, 'calibrate_dd'):

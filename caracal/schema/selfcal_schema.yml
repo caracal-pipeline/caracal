@@ -141,6 +141,11 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
+      img_deconv_chans:
+        type: int
+        desc: Number of deconvolution channels. default '0' means the same as img_nchans.
+        required: false
+        example: '0'
       img_channelrange:
         seq:
           - type: int

@@ -214,7 +214,12 @@ def calc_rms(filename, linemaskname):
         with fits.open(linemaskname) as mask:
             datamask = mask[0].data
             # select channels
-            selchans = datamask.sum(axis=(2, 3)) > 0
+            caracal.log.info('MASK CHECK')
+            caracal.log.info(linemaskname)
+            caracal.log.info(np.shape(datacube))            
+            caracal.log.info(np.shape(datamask))         
+            selchans = datamask.sum(axis=(2,3)) > 0  
+            caracal.log.info(np.shape(selchans)) 
             newcube = datacube[selchans]
             newmask = datamask[selchans]
             y2 = newcube[newmask == 0]
@@ -1184,12 +1189,10 @@ def worker(pipeline, recipe, config):
                     recipe.add('cab/sofia2', step,
                                {
                                    "input.data": cubename,
-                                   "pipeline.threads": ncpu, 
-	                           "input.mask": sdm.dismissable(config['sofia']['input_mask']), 
-            		           "input.noise": sdm.dismissable(config['sofia']['input_noise']),
-                    		   "input.weights": sdm.dismissable(config['sofia']['input_weights']),
-	    	                   "flag.auto": config['sofia']['flag_auto'],
-                  	 	   "flag.catalog": sdm.dismissable(config['sofia']['flag_catalog']),
+                                   "pipeline.threads": ncpu,
+	                               "input.mask": config['sofia']['input_mask'], # Remove this? b/c there's user_clean_mask. How to get sofia to use new mask if n > 1? 
+	    	                       "flag.auto": config['sofia']['flag_auto'],
+                  	 	           "flag.catalog":config['sofia']['flag_catalog'], # Look in output/masking?
                                    "flag.radius": config['sofia']['flag_radius'],
                                    "flag.region": config['sofia']['flag_region'],
                                    "flag.threshold": config['sofia']['flag_threshold'],
@@ -1229,6 +1232,7 @@ def worker(pipeline, recipe, config):
                                    "output.filename": outmask,
                                    "output.thresholdMom12": 0,
                                    "output.writeCatASCII": False,
+                                   "output.writeCatXML": False,
                                    "output.writeCubelets": False,
                                    "output.writeRawMask": config['sofia']['output_writeRawMask'],
                                    "output.writeMask": True,
@@ -1252,6 +1256,30 @@ def worker(pipeline, recipe, config):
                     line_image_opts.update({"fitsmask": '{0:s}/{1:s}'.format(cube_dir, line_clean_mask)})
                     if 'auto-mask' in line_image_opts:
                         del (line_image_opts['auto-mask'])
+
+                    # Ensure the clean_mask has the same naxis of the datacube
+                    current_cube = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image.fits'.format(
+                        cube_path, pipeline.prefix, field, line_name, j)
+                    current_clean_mask = '{0:s}/{1:s}_{2:s}_{3:s}_{4:d}.image_clean_mask.fits'.format(
+                        cube_path, pipeline.prefix, field, line_name, j)
+                    # if os.path.isfile(current_cube):
+                    caracal.log.info('CUBE AND MASK NAMES HERE')
+                    caracal.log.info(current_cube)
+                    caracal.log.info(current_clean_mask)
+                    with fits.open(current_cube) as cube:
+                        datacube = cube[0].data
+                    with fits.open(current_clean_mask, mode = 'update') as mask:
+                        datamask = mask[0].data
+                        if len(datamask.shape) < len(datacube.shape):
+                            datamask = np.expand_dims(datamask, axis = 0)
+                            mask[0].header['NAXIS'] = len(datamask.shape)
+                            mask[0].header['CTYPE4'] = cube[0].header['CTYPE4']
+                            caracal.log.info(datamask.shape)
+                        fits.writeto(current_clean_mask, datamask, mask[0].header, overwrite = True)
+
+                    with fits.open(current_clean_mask) as mask:
+                        datamask = mask[0].data
+                        caracal.log.info(datamask.shape)
 
                 recipe.add('cab/wsclean',
                            step, line_image_opts,
@@ -1571,11 +1599,10 @@ def worker(pipeline, recipe, config):
         recipe.jobs = []
 
         if pipeline.enable_task(config, 'sofia') and config['sofia']['mode'] in ['source_finding', 'both']:
-            sofia_dir = "{0:s}/sofia".format(
+            sofia_dir = "{0:s}/sofia_sourcefinding".format(
                     pipeline.cubes)
             if not os.path.exists(sofia_dir):
-                    os.mkdir(sofia_outpath)
-            # cube_dir = get_relative_path(pipeline.cubes, pipeline)
+                    os.mkdir(sofia_dir)
 
             if config['sofia']['imcontsub']:
                 simage_cube_list = []
@@ -1589,67 +1616,76 @@ def worker(pipeline, recipe, config):
             else:
                 simage_cube_list = image_cube_list
 
-            for uu in range(len(image_cube_list)):
-                step = 'sofia2-source_finding-{0:d}'.format(uu)
-                recipe.add(
-                    'cab/sofia2',
-                    step,
-                    {
-                       "input.data": simage_cube_list[uu].split('/')[-1]+':input',
-                       "pipeline.threads": ncpu, 
-                       "input.mask": sdm.dismissable(config['sofia']['input_mask']), 
-                       "input.noise": sdm.dismissable(config['sofia']['input_noise']),
-                       "input.weights": sdm.dismissable(config['sofia']['input_weights']),
-                       "flag.auto": config['sofia']['flag_auto'],
-                       "flag.catalog": sdm.dismissable(config['sofia']['flag_catalog']),
-                       "flag.radius": config['sofia']['flag_radius'],
-                       "flag.region": config['sofia']['flag_region'],
-                       "flag.threshold": config['sofia']['flag_threshold'],
-                       "scaleNoise.enable": True,
-                       "scaleNoise.fluxRange": config['sofia']['scaleNoise_fluxRange'],
-                       "scaleNoise.interpolate": config['sofia']['scaleNoise_interpolate'],
-                       "scaleNoise.mode": config['sofia']['scaleNoise_mode'],
-                       "scaleNoise.scfind": config['sofia']['scaleNoise_scfind'],
-                       "scaleNoise.statistic": config['sofia']['scaleNoise_statistic'],
-                       "scaleNoise.windowXY": config['sofia']['scaleNoise_windowXY'],
-                       "scaleNoise.windowZ": config['sofia']['scaleNoise_windowZ'],
-                       "scfind.enable": True,
-                       "scfind.fluxRange": config['sofia']['scfind_fluxRange'],
-                       "scfind.kernelsXY": config['sofia']['scfind_kernelsXY'],
-                       "scfind.kernelsZ": config['sofia']['scfind_kernelsZ'],
-                       "scfind.statistic": config['sofia']['scfind_statistic'],
-                       "scfind.threshold": config['sofia']['scfind_threshold'],
-                       "linker.enable": config['sofia']['linker'],
-                       "linker.maxSizeXY": config['sofia']['linker_maxSizeXY'],
-                       "linker.maxSizeZ": config['sofia']['linker_maxSizeZ'],
-                       "linker.minSizeXY": config['sofia']['linker_minSizeXY'],
-                       "linker.minSizeZ": config['sofia']['linker_minSizeZ'],
-                       "linker.radiusXY": config['sofia']['linker_radiusXY'],
-                       "linker.radiusZ": config['sofia']['linker_radiusZ'],
-                       "reliability.enable": config['sofia']['reliability'],
-                       "reliability.minPixels": config['sofia']['reliability_minPixels'],
-                       "reliability.minSNR": config['sofia']['reliability_minSNR'],
-                       "reliability.plot": config['sofia']['reliability_plot'],
-                       "reliability.scaleKernel": config['sofia']['reliability_scaleKernel'],
-                       "reliability.threshold": config['sofia']['reliability_threshold'],
-                       "dilation.enable": config['sofia']['dilation'],
-                       "dilation.iterationsXY": config['sofia']['dilation_iterationsXY'],
-                       "dilation.iterationsZ": config['sofia']['dilation_iterationsZ'],
-                       "dilation.threshold": config['sofia']['dilation_threshold'],
-                       "parameter.enable": True,
-                       "parameter.physical": True,
-                       "output.filename": outmask,
-                       "output.thresholdMom12": config['sofia']['output_thresholdMom12'],
-                       "output.writeCatASCII": True,
-                       "output.writeCubelets": True,
-                       "output.writeRawMask": config['sofia']['output_writeRawMask'],
-                       "output.writeMask": True,
-                       "output.writeMask2d":  config['sofia']['output_writeMask2d'],
-                       "output.writeMoments": True,
-                    },
-                    input='/'.join(simage_cube_list[uu].split('/')[:-1]),
-                    output=pipeline.output + '/' + sofia_dir,
-                    label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
+            # for uu in range(len(image_cube_list)): SO NOW THE QUESTIONS IS WHY AREN'T THERE FINAL CUBE NAMES? 
+            caracal.log.info('LOOK HERE')
+            caracal.log.info(pipeline.cubes + '/cube_' + str(2))
+            caracal.log.info(simage_cube_list)
+            caracal.log.info(simage_cube_list[-1])
+            # caracal.log.info(simage_cube_list[-1].split('/')[-1]+':input')
+            # caracal.log.info(cubename)
+            #     step = 'sofia2-source_finding-{0:d}'.format(uu)
+            step = 'sofia2-source_finding'
+            recipe.add(
+                'cab/sofia2',
+                step,
+                {
+                    # "input.data": simage_cube_list[uu].split('/')[-1]+':input',
+                    "input.data": simage_cube_list[-1].split('/')[-1],
+                    # "input.data": '{0:s}_{1:s}_{2:s}_{3:d}.image.fits:input'.format(pipeline.prefix, field, line_name, 2),
+                    "pipeline.threads": ncpu, 
+                    "input.mask": config['sofia']['input_mask'], 
+                    "flag.auto": config['sofia']['flag_auto'],
+                    "flag.catalog": config['sofia']['flag_catalog'], # Look in output/masking?
+                    "flag.radius": config['sofia']['flag_radius'],
+                    "flag.region": config['sofia']['flag_region'],
+                    "flag.threshold": config['sofia']['flag_threshold'],
+                    "scaleNoise.enable": True,
+                    "scaleNoise.fluxRange": config['sofia']['scaleNoise_fluxRange'],
+                    "scaleNoise.interpolate": config['sofia']['scaleNoise_interpolate'],
+                    "scaleNoise.mode": config['sofia']['scaleNoise_mode'],
+                    "scaleNoise.scfind": config['sofia']['scaleNoise_scfind'],
+                    "scaleNoise.statistic": config['sofia']['scaleNoise_statistic'],
+                    "scaleNoise.windowXY": config['sofia']['scaleNoise_windowXY'],
+                    "scaleNoise.windowZ": config['sofia']['scaleNoise_windowZ'],
+                    "scfind.enable": True,
+                    "scfind.fluxRange": config['sofia']['scfind_fluxRange'],
+                    "scfind.kernelsXY": config['sofia']['scfind_kernelsXY'],
+                    "scfind.kernelsZ": config['sofia']['scfind_kernelsZ'],
+                    "scfind.statistic": config['sofia']['scfind_statistic'],
+                    "scfind.threshold": config['sofia']['scfind_threshold'],
+                    "linker.enable": config['sofia']['linker'],
+                    "linker.maxSizeXY": config['sofia']['linker_maxSizeXY'],
+                    "linker.maxSizeZ": config['sofia']['linker_maxSizeZ'],
+                    "linker.minSizeXY": config['sofia']['linker_minSizeXY'],
+                    "linker.minSizeZ": config['sofia']['linker_minSizeZ'],
+                    "linker.radiusXY": config['sofia']['linker_radiusXY'],
+                    "linker.radiusZ": config['sofia']['linker_radiusZ'],
+                    "reliability.enable": config['sofia']['reliability'],
+                    "reliability.minPixels": config['sofia']['reliability_minPixels'],
+                    "reliability.minSNR": config['sofia']['reliability_minSNR'],
+                    "reliability.plot": config['sofia']['reliability_plot'],
+                    "reliability.scaleKernel": config['sofia']['reliability_scaleKernel'],
+                    "reliability.threshold": config['sofia']['reliability_threshold'],
+                    "dilation.enable": config['sofia']['dilation'],
+                    "dilation.iterationsXY": config['sofia']['dilation_iterationsXY'],
+                    "dilation.iterationsZ": config['sofia']['dilation_iterationsZ'],
+                    "dilation.threshold": config['sofia']['dilation_threshold'],
+                    "parameter.enable": True,
+                    "parameter.physical": True,
+                    "output.thresholdMom12": config['sofia']['output_thresholdMom12'],
+                    "output.writeCatASCII": True,
+                    "output.writeCubelets": True,
+                    "output.writeRawMask": config['sofia']['output_writeRawMask'],
+                    "output.writeMask": True,
+                    "output.writeMask2d":  config['sofia']['output_writeMask2d'],
+                    "output.writeMoments": True,
+                #    "output.directory": '{0:s}/:output'.format(sofia_dir.split('/')[1]),
+                },
+                # input='/'.join(simage_cube_list[uu].split('/')[:-1]),
+                input=pipeline.cubes + '/cube_2/',
+                output=sofia_dir,
+                # label='{0:s}:: Make SoFiA-2 mask and images for cube {1:s}'.format(step, simage_cube_list[uu]))
+                label='{0:s}:: Make SoFiA-2 mask and images for cube'.format(step))
         # Again, in some cases this should run once
         if rancsonce:
             pass

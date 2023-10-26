@@ -676,7 +676,7 @@ mapping:
             desc: Call sofia 2 to make a clean mask when imaging or produce moment maps and catalogues on the final cube. 
             type: bool
             required: false
-            example: 'False'
+            example: 'True'
           mode:
             desc: Choose whether to run SoFiA-2 to make a clean mask ('clean_mask') while imaging, to do source finding ('source_finding') on the final cube, or both ('both').
             type: str
@@ -692,17 +692,17 @@ mapping:
             desc: Name of an input mask cube. The mask cube must have the same dimensions as the input data cube. The absolute path to the mask file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
             type: str
             required: false
-            example: 'None'
-          input_noise:
-            desc: Name of an optional data cube containing the noise levels across the image. The noise cube must have the same dimensions as the input data cube. The absolute path to the noise file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
-            type: str
-            required: false
-            example: 'None'
-          input_weights:
-            desc: Name of an optional data cube containing the weights across the image. The weights cube must have the same dimensions as the input data cube. The absolute path to the weights file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
-            type: str
-            required: false
-            example: 'None'
+            example: ''
+          # input_noise:
+          #   desc: Name of an optional data cube containing the noise levels across the image. The noise cube must have the same dimensions as the input data cube. The absolute path to the noise file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
+          #   type: str
+          #   required: false
+          #   example: ''
+          # input_weights:
+          #   desc: Name of an optional data cube containing the weights across the image. The weights cube must have the same dimensions as the input data cube. The absolute path to the weights file must be provided. If only the file name is specified, the pipeline will assume the file to be located in the current working directory.
+          #   type: str
+          #   required: false
+          #   example: ''
           flag_auto:
             desc: Choices are "true", "false", "channels" or "pixels". If set to true, SoFiA will attempt to automatically flag spectral channels and spatial pixels affected by interference or artefacts based on their RMS noise level. If set to channels, only spectral channels will be flagged. If set to pixels, only spatial pixels will be flagged.
             type: str
@@ -713,7 +713,7 @@ mapping:
             desc: Path to a catalogue file containing two columns that specify the longitude and latitude coordinates of sky positions to be flagged in the native coordinate system and units of the input data cube. The two columns can be separated by spaces, tabulators or commas. Also see flag_radius.
             type: str
             required: false
-            example: 'None'
+            example: ''
           flag_radius:
             desc: Radius around the sky positions listed in the catalogue provided by flag.catalog that should be flagged. If 0, then only the nearest pixel to the position will be flagged. Otherwise, pixels within the specified radius around the nearest pixel will be flagged.
             type: int

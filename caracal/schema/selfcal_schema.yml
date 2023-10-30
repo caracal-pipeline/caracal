@@ -341,6 +341,21 @@ mapping:
             type: int
             required: false
             example: '4'
+          out_derotate:
+            desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
+            type: bool
+            required: false
+            example: 'False'
+          model_pa_rotate:
+            desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
+            type: bool
+            required: false
+            example: 'False'
+          model_feed_rotate:
+            desc: Apply a feed angle rotation to the model visibilities. Use 'auto' to read angles from FEED subtable, or give an explicit value in degrees.
+            type: str
+            required: false
+            example: ''
           ragavi_plot:
             type: map
             desc: Use ragavi to plot diagnostic plots for self-calibration.
@@ -569,7 +584,7 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:

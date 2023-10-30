@@ -34,6 +34,7 @@ CUBICAL_OUT = {
     "CORRECTED_DATA": 'sc',
     "CORR_DATA": 'sc',
     "CORR_RES": 'sr',
+    "PA_DATA": 'ac',
 }
 
 CUBICAL_MT = {
@@ -1422,7 +1423,8 @@ def worker(pipeline, recipe, config):
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
-                "model-list": modellist,
+                "model-list": modellist if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else '',
+                "model-pa-rotate": config['cal_cubical']['model_pa_rotate'],
                 "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,
                 "log-memory": True,
@@ -1433,13 +1435,14 @@ def worker(pipeline, recipe, config):
                                                                                   pipeline), prefix, msbase, num),
                 "out-mode": CUBICAL_OUT[config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1]],
                 "out-plots": True,
+                "out-derotate": config['cal_cubical']['out_derotate'],
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
                 "out-casa-gaintables": True,
                 "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msbase),
-                "g-solvable": True,
+                "g-solvable": True if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else False,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
@@ -1458,6 +1461,8 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
+            if config['cal_cubical']['model_feed_rotate']:
+                cubical_opts.update({"model-feed-rotate": config['cal_cubical']['model_feed_rotate']}),
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":

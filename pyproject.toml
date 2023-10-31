@@ -42,7 +42,6 @@ jinja2 = "*"
 
 # Optional dependencies start here
 astropy = { version = "^5.2.2", python = "^3.8", optional = true}
-    ]
 scipy = { version = "*", optional = true}
 regions = { version = "*", optional = true}
 astroquery = { version = "*", optional = true}

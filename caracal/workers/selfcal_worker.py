@@ -369,10 +369,9 @@ def worker(pipeline, recipe, config):
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
                     nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
                     caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()     
+                    ms_table.close()
                 except RuntimeError:
                     caracal.log.info(f"No subtraction found in {m}")
-                    pass
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, m)
@@ -1269,10 +1268,9 @@ def worker(pipeline, recipe, config):
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
                     nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
                     caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()     
+                    ms_table.close()
                 except RuntimeError:
                     caracal.log.info(f"No subtraction found in {msname}")
-                    pass
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": model_cal,
@@ -1445,10 +1443,9 @@ def worker(pipeline, recipe, config):
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
                     nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
                     caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()     
+                    ms_table.close()
                 except RuntimeError:
                     caracal.log.info(f"No subtraction found in {msname}")
-                    pass
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',

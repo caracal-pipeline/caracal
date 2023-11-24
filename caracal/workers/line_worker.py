@@ -439,21 +439,24 @@ def worker(pipeline, recipe, config):
         if pipeline.enable_task(config, 'subtractmodelcol'):
 
             # Check if a model subtraction has already been done
-            t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False)
-            try:
-                nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
-            except RuntimeError:
-                nModelSub = 0
+            # t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False)
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as t:
+                caracal.log.info(f"Check the MS name: {msname}")
+                try:
+                    nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+                    caracal.log.info(f"NmodelSub here = {nModelSub}")
+                except RuntimeError:
+                    nModelSub = 0
 
-            if (nModelSub <= -1) & (config['subtractmodelcol']['force'] == False):
-                caracal.log.error(f'The model has been subtracted {np.abs(nModelSub)} times.')
-                caracal.log.error('Exiting CARACal.')
-                raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
+                if (nModelSub <= -1) & (config['subtractmodelcol']['force'] == False):
+                    caracal.log.error(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                    caracal.log.error('Exiting CARACal.')
+                    raise caracal.PlayingWithFire("I am very confident you shouldn't be doing this. If you know better, use the 'force' option.")
 
-            if (nModelSub <= -1) & (config['subtractmodelcol']['force']):
-                caracal.log.warn(f'The model has been subtracted {np.abs(nModelSub)} times.')
-                caracal.log.warn('You have chosen to force another model subtraction.')
-                caracal.log.warn('God speed!')
+                if (nModelSub <= -1) & (config['subtractmodelcol']['force']):
+                    caracal.log.warn(f'The model has been subtracted {np.abs(nModelSub)} times.')
+                    caracal.log.warn('You have chosen to force another model subtraction.')
+                    caracal.log.warn('God speed!')
 
             step = 'modelsub-ms{:d}'.format(i)
             recipe.add('cab/msutils', step,

@@ -363,15 +363,12 @@ def worker(pipeline, recipe, config):
             # Check if a model subtraction has already been done
             with table('{0:s}/{1:s}'.format(pipeline.msdir, m), readonly=False) as ms_table:
                 try:
-                    caracal.log.info(f"Checking if the model has been subtracted in {m}")
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
+                    caracal.log.info(f"Transferring the gains to {m}")
                     nModelSub = 0
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
-                    caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
                 except RuntimeError:
-                    caracal.log.info(f"No subtraction found in {m}")
+                    caracal.log.info(f"No previous model subtraction found in {m}")
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, m)
@@ -1262,13 +1259,10 @@ def worker(pipeline, recipe, config):
             # Check if a model subtraction has already been done
             with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
                 try:
-                    caracal.log.info(f"Checking if the model has been subtracted in {msname}")
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
                     nModelSub = 0
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
-                    caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
                 except RuntimeError:
                     caracal.log.info(f"No subtraction found in {msname}")
             recipe.add('cab/calibrator', step,
@@ -1437,13 +1431,10 @@ def worker(pipeline, recipe, config):
             # Check if a model subtraction has already been done
             with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
                 try:
-                    caracal.log.info(f"Checking if the model has been subtracted in {msname}")
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
                     nModelSub = 0
                     ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
-                    nModelSub = ms_table.getcolkeyword('CORRECTED_DATA', 'modelSub')
-                    caracal.log.info(f"Model has been subtracted, reseting the counter to {nModelSub}")
-                    ms_table.close()
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
                 except RuntimeError:
                     caracal.log.info(f"No subtraction found in {msname}")
             cubical_opts = {

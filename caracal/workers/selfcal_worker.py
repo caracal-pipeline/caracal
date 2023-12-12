@@ -15,6 +15,7 @@ from caracal.utils.requires import extras
 from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
+from casacore.tables import table
 import psutil
 
 NAME = 'Continuum Imaging and Self-calibration Loop'
@@ -194,7 +195,6 @@ def check_config(config, name):
             caracal.UserInputError(
                 "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
 
-
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
@@ -360,6 +360,15 @@ def worker(pipeline, recipe, config):
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, m), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Transferring the gains to {m}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No previous model subtraction found in {m}")
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, m)
@@ -1257,6 +1266,15 @@ def worker(pipeline, recipe, config):
             inp_dir = pipeline.output + "/" + img_dir + "/"
             op_dir = pipeline.continuum + "/selfcal_products/"
             msbase = os.path.splitext(msname)[0]
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No subtraction found in {msname}")
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": model_cal,
@@ -1420,6 +1438,15 @@ def worker(pipeline, recipe, config):
             else:
                 raise RuntimeError("Something has corrupted the selfcal run")
             msbase = os.path.splitext(msname)[0]
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No subtraction found in {msname}")
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',

@@ -440,8 +440,10 @@ def worker(pipeline, recipe, config):
 
             # Check if a model subtraction has already been done
             t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False)
+            caracal.log.info(f"Check the MS name: {msname}")
             try:
                 nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
+                caracal.log.info(f"NmodelSub here = {nModelSub}")
             except RuntimeError:
                 nModelSub = 0
 
@@ -476,6 +478,7 @@ def worker(pipeline, recipe, config):
 
             # Check if a model addition has already been done
             t = table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False)
+            caracal.log.info(f"Check the MS name: {msname}")
             try:
                 nModelSub = t.getcolkeyword('CORRECTED_DATA', 'modelSub')
             except RuntimeError:
@@ -849,7 +852,7 @@ def worker(pipeline, recipe, config):
                 config['make_cube']['robust'])
         else:
             weight = config['make_cube']['weight']
-        wscl_niter = config['make_cube']['wscl_sofia_niter']
+        wscl_niter = max(1,config['make_cube']['wscl_sofia_niter'])
         wscl_tol = config['make_cube']['wscl_sofia_converge']
 
         line_image_opts = {

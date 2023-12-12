@@ -15,6 +15,7 @@ from caracal.utils.requires import extras
 from stimela.pathformatter import pathformatter as spf
 from typing import Any
 from caracal.workers.utils import manage_flagsets as manflags
+from casacore.tables import table
 import psutil
 
 NAME = 'Continuum Imaging and Self-calibration Loop'
@@ -34,6 +35,7 @@ CUBICAL_OUT = {
     "CORRECTED_DATA": 'sc',
     "CORR_DATA": 'sc',
     "CORR_RES": 'sr',
+    "PA_DATA": 'ac',
 }
 
 CUBICAL_MT = {
@@ -192,7 +194,6 @@ def check_config(config, name):
         if config['img_maxuv_l'] > 0. and config['img_taper'] > 0.:
             caracal.UserInputError(
                 "You are trying to image with a Gaussian taper as well as a Tukey taper. Please remove one. ")
-
 
 def worker(pipeline, recipe, config):
     wname = pipeline.CURRENT_WORKER
@@ -359,6 +360,15 @@ def worker(pipeline, recipe, config):
             if not os.path.exists(os.path.join(pipeline.msdir, m)):
                 raise IOError(
                     "MS file {0:s}, to transfer gains to, does not exist. Please check that it is where it should be.".format(m))
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, m), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Transferring the gains to {m}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No previous model subtraction found in {m}")
 
             # Write/rewind flag versions
             available_flagversions = manflags.get_flags(pipeline, m)
@@ -1246,6 +1256,15 @@ def worker(pipeline, recipe, config):
             inp_dir = pipeline.output + "/" + img_dir + "/"
             op_dir = pipeline.continuum + "/selfcal_products/"
             msbase = os.path.splitext(msname)[0]
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No subtraction found in {msname}")
             recipe.add('cab/calibrator', step,
                        {
                            "skymodel": model_cal,
@@ -1409,10 +1428,20 @@ def worker(pipeline, recipe, config):
             else:
                 raise RuntimeError("Something has corrupted the selfcal run")
             msbase = os.path.splitext(msname)[0]
+            # Check if a model subtraction has already been done
+            with table('{0:s}/{1:s}'.format(pipeline.msdir, msname), readonly=False) as ms_table:
+                try:
+                    caracal.log.info(f"Re-doing the calibration on {msname}")
+                    nModelSub = 0
+                    ms_table.putcolkeyword('CORRECTED_DATA', 'modelSub', nModelSub)
+                    caracal.log.info(f"Reseting the counter to {nModelSub}")
+                except RuntimeError:
+                    caracal.log.info(f"No subtraction found in {msname}")
             cubical_opts = {
                 "data-ms": msname,
                 "data-column": 'DATA',
-                "model-list": modellist,
+                "model-list": modellist if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else '',
+                "model-pa-rotate": config['cal_cubical']['model_pa_rotate'],
                 "sel-ddid": sdm.dismissable(spwid),
                 "dist-ncpu": ncpu,
                 "log-memory": True,
@@ -1423,13 +1452,14 @@ def worker(pipeline, recipe, config):
                                                                                   pipeline), prefix, msbase, num),
                 "out-mode": CUBICAL_OUT[config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1]],
                 "out-plots": True,
+                "out-derotate": config['cal_cubical']['out_derotate'],
                 "dist-max-chunks": config['cal_cubical']['dist_max_chunks'],
                 "out-casa-gaintables": True,
                 "weight-column": config['cal_cubical']['weight_col'],
                 "montblanc-dtype": 'float',
                 "bbc-save-to": "{0:s}/bbc-gains-{1:d}-{2:s}.parmdb:output".format(get_dir_path(prod_path,
                                                                                                pipeline), num, msbase),
-                "g-solvable": True,
+                "g-solvable": True if config[key]['output_data'][num - 1 if len(config[key]['output_data']) >= num else -1] not in ['PA_DATA'] else False,
                 "g-type": CUBICAL_MT[matrix_type],
                 "g-update-type": gupdate,
                 "g-time-int": int(gsols_[0]),
@@ -1448,6 +1478,8 @@ def worker(pipeline, recipe, config):
                 "dd-dd-term": False,
                 "model-ddes": 'never',
             }
+            if config['cal_cubical']['model_feed_rotate']:
+                cubical_opts.update({"model-feed-rotate": config['cal_cubical']['model_feed_rotate']}),
             if min_uvw > 0:
                 cubical_opts.update({"sol-min-bl": min_uvw})
             if flags != "":

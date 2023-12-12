@@ -497,16 +497,16 @@ mapping:
             example: '100.0'
             required: false
             desc: "Specifies a fixed amount of memory in gigabytes."
-          parallel_gridding:
+          nr_parallel_grid:
             type: int
-            example: '2'
+            example: '1'
             required: false
-            desc: Will execute multiple gridders simultaneously. This can make things faster in certain cases, but will increase memory usage.
+            desc: Will execute multiple gridders simultaneously when using w-stacking. This can make things faster in certain cases, but will increase memory usage.
           use_wgridder:
             type: bool
             example: 'False'
             required: false
-            desc: Use the w-gridding gridder developed by Martin Reinecke
+            desc: Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.
 
       extract_sources:
         type: map

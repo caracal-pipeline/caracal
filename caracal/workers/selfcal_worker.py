@@ -560,7 +560,7 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem": absmem,
-            "parallel-gridding": config[key]['parallel_gridding'],
+            "parallel-gridding": config[key]['nr_parallel_grid'],
             "use-wgridder": config[key]['use_wgridder']
         }
         if config['img_specfit_nrcoeff'] > 0:

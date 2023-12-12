@@ -501,7 +501,7 @@ mapping:
             type: int
             example: '1'
             required: false
-            desc: Will execute multiple gridders simultaneously when using w-stacking. This can make things faster in certain cases, but will increase memory usage.
+            desc: Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.
           use_wgridder:
             type: bool
             example: 'False'

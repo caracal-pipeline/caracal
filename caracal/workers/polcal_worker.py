@@ -1182,6 +1182,13 @@ def worker(pipeline, recipe, config):
                                             "polindex": [0.03],
                                             "polangle": [-0.202893],
                                             "rotmeas": 33},
+                             "J1130-1449": {"standard": "manual",
+                                            "fluxdensity": [16.112],
+                                            "spix": -0.889,
+                                            "reffreq": "1.4GHz",
+                                            "polindex": [0.64],
+                                            "polangle": [-0.635299848],
+                                            "rotmeas": -55.4},
                              }
     polarized_calibrators["J1331+3030"] = polarized_calibrators["3C286"]
     polarized_calibrators["J0521+1638"] = polarized_calibrators["3C138"]

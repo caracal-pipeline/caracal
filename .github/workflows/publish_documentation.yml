@@ -6,8 +6,8 @@
 name: Upload to Read the docs
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ master ]
 
 jobs:
   deploy:

@@ -1,26 +1,29 @@
 from os import pipe
 import stimela
 import os.path
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 
 _MODES = dict(
-    K       = "delay_cal", 
-    B       = "bp_cal", 
-    F       = "gain_cal", 
-    G       = "gain_cal",   # both F and G serve the same purpose, so same mode
-    Gpol    = "gain_xcal",
-    Kcrs    = 'cross_delay',
-    Xref    = 'cross_phase_ref',
-    Xf      = 'cross_phase',
-    Dref    = 'leakage_ref',
-    Df      = 'leakage',
-    Gxyamp  = 'cross_gain',
-    Xfparang = 'cross_phase',
-    Df0gen   = 'leakage'
-    )
+    K="delay_cal",
+    B="bp_cal",
+    F="gain_cal",
+    G="gain_cal",   # both F and G serve the same purpose, so same mode
+    Gpol="gain_xcal",
+    Kcrs='cross_delay',
+    Xref='cross_phase_ref',
+    Xf='cross_phase',
+    Dref='leakage_ref',
+    Df='leakage',
+    Gxyamp='cross_gain',
+    Xfparang='cross_phase',
+    Df0gen='leakage'
+)
+
 
 def new_callib():
     return dict()
+
 
 def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     """Adds gaintable to a callib
@@ -36,7 +39,7 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
     cal_entries = callib.setdefault(mode, {})
     entry = dict(caltable=gt, fldmap=fldmap, interp=interp, calwt=bool(calwt))
     # field can be a single entry or a list -- check
-    if type(field) is str:
+    if isinstance(field, str):
         fields = [x.strip() for x in field.split(",")]
     elif field is None:
         fields = [None]
@@ -50,9 +53,10 @@ def add_callib_recipe(callib, gt, interp, fldmap, field=None, calwt=False):
             default = cal_entries.get("default")
             if default and all(val == default.get(key) for key, val in entry.items()):
                 return
-        else: 
+        else:
             field = "default"
-        cal_entries[field] = entry 
+        cal_entries[field] = entry
+
 
 def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_fields=None, default_interpolation_types={}):
     """
@@ -73,7 +77,7 @@ def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_f
         cal_label:      label given in config, if supplied.
         worker_label:   label of worker. This is used to form up the output .txt filename.
         output_fields:  set of fields that the calibration is applied to. If None, assume target fields.
-        default_interpolation_types: 
+        default_interpolation_types:
                         interpolation types for default fields, as a mapping e.g. {'delay_cal': 'nearest', 'gain_cal': 'linear'}, which
                         will override the default specified in the yml library
     """
@@ -98,7 +102,7 @@ def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_f
                 default_fields = {""}  # this will turn into '' post-join below, which CASA recognizes as default
             else:
                 specific_fields = set(output_fields).intersection(cal_fields)
-                default_fields  = set(output_fields).difference(cal_fields)
+                default_fields = set(output_fields).difference(cal_fields)
             # go through all tables, skip the ones that don't apply
             for field, entry in cal_entries.items():
                 calwt = entry.get('calwt', False)
@@ -120,8 +124,8 @@ def resolve_calibration_library(pipeline, msprefix, cal_lib, cal_label, output_f
                 cal_lists[3].append(calwt)
                 cal_lists[4].append(field)
 
-                filename = os.path.join(stimela.recipe.CONT_IO["output"], 'caltables', entry['caltable']) 
+                filename = os.path.join(stimela.recipe.CONT_IO["output"], 'caltables', entry['caltable'])
                 stdw.write(f"""caltable="{filename}" calwt={calwt} tinterp='{interp}' """
-                    f"""finterp='linear' fldmap='{entry['fldmap']}' field='{field}' spwmap=0\n""")
+                           f"""finterp='linear' fldmap='{entry['fldmap']}' field='{field}' spwmap=0\n""")
 
-    return outfile[len(pipeline.output)+1:], cal_lists
+    return outfile[len(pipeline.output) + 1:], cal_lists

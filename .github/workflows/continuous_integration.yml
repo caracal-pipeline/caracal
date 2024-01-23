@@ -1,0 +1,62 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Ubuntu CI
+
+on: [push, pull_request]
+
+env:
+  POETRY_VERSION: 1.4.0
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-22.04 ]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache Installations
+        id: cache-installs
+        uses: actions/cache@v3
+        with:
+          path: ~/.local
+          key: install-${{ env.INSTALL_CACHE_HASH }}-2
+
+      - name: Install Poetry
+        if: steps.cache-installs.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version ${{ env.POETRY_VERSION }}
+      - name: Test poetry
+        run: poetry --version
+
+      - name: Checkout source
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Test optional deps
+        run: |
+            poetry install --extras all
+
+      - name: Install caracal
+        run: poetry install --with tests --no-interaction
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings
+          poetry run flake8 . --count --exit-zero --max-complexity=10 --extend-ignore=E501 --statistics
+
+      - name: Test caracal command
+        run: |
+          poetry run caracal --help
+          poetry run caracal -gd test.yml
+          poetry run caracal -gdt meerkat -gd config.yml

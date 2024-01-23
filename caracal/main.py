@@ -1,5 +1,6 @@
 # -*- coding: future_fstrings -*-
 
+from caracal import log
 import caracal
 import os
 import sys
@@ -11,24 +12,23 @@ import shutil
 from caracal.dispatch_crew import config_parser
 from caracal.dispatch_crew import worker_help
 import caracal.dispatch_crew.caltables as mkct
-from caracal.workers.worker_administrator import worker_administrator
+from caracal.workers.worker_administrator import WorkerAdministrator
 import stimela
 from caracal.schema import SCHEMA_VERSION
 
 __version__ = caracal.__version__
-pckgdir = caracal.pckgdir
+pckgdir = caracal.PCKGDIR
 DEFAULT_CONFIG = caracal.DEFAULT_CONFIG
 SAMPLE_CONFIGS = caracal.SAMPLE_CONFIGS = {
-        "minimal" : "minimalConfig.yml",
-        "meerkat" : "meerkat-defaults.yml",
-        "carate" : "carateConfig.yml",
-        "meerkat_continuum" : "meerkat-continuum-defaults.yml",
-        "mosaic_basic" : "mosaic_basic_config.yml",
-        }
+    "minimal": "minimalConfig.yml",
+    "meerkat": "meerkat-defaults.yml",
+    "carate": "carateConfig.yml",
+    "meerkat_continuum": "meerkat-continuum-defaults.yml",
+    "mosaic_basic": "mosaic_basic_config.yml",
+}
 SCHEMA = caracal.SCHEMA
 
 # Create the log object
-from caracal import log
 
 ####################################################################
 # CARACal imports
@@ -51,6 +51,7 @@ def print_worker_help(worker):
         worker_dict = ruamel.yaml.load(f, ruamel.yaml.RoundTripLoader, version=(1, 1))
 
     helper = worker_help.worker_options(worker, worker_dict["mapping"][worker])
+
     helper.print_worker()
     return True
 
@@ -62,7 +63,7 @@ def get_default(sample, to):
     log.info(
         "Dumping default configuration to {0:s} as requested. Goodbye!".format(to))
     sample_config = os.path.join(pckgdir, "sample_configurations",
-            SAMPLE_CONFIGS[sample])
+                                 SAMPLE_CONFIGS[sample])
     os.system('cp {0:s} {1:s}'.format(sample_config, to))
 
 
@@ -159,6 +160,7 @@ def log_logo():
 
     log.info("Version {1:s} installed at {0:s}".format(pckgdir, str(__version__)))
 
+
 def execute_pipeline(options, config, block):
     # setup piping infractructure to send messages to the parent
     workers_directory = os.path.join(caracal.pckgdir, "workers")
@@ -171,17 +173,17 @@ def execute_pipeline(options, config, block):
 #        with stream_director(log) as director:  # stdout and stderr needs to go to the log as well -- nah
 
         try:
-            pipeline = worker_administrator(config,
-                           workers_directory,
-                           add_all_first=False, prefix=options.general_prefix,
-                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
-                           container_tech=backend, start_worker=options.start_worker,
-                           end_worker=options.end_worker, generate_reports=not options.no_reports)
+            pipeline = WorkerAdministrator(config,
+                                           workers_directory,
+                                           add_all_first=False, prefix=options.general_prefix,
+                                           configFileName=options.config, singularity_image_dir=options.singularity_image_dir,
+                                           container_tech=backend, start_worker=options.start_worker,
+                                           end_worker=options.end_worker, generate_reports=not options.no_reports)
 
             if options.report:
                 pipeline.regenerate_reports()
             else:
-                ## OMS: I don't think this is necessary, as it is not used here directly, and loaded on-demand
+                # OMS: I don't think this is necessary, as it is not used here directly, and loaded on-demand
                 # # Obtain some divine knowledge
                 # cdb = mkct.calibrator_database()
                 pipeline.run_workers()
@@ -214,6 +216,10 @@ def execute_pipeline(options, config, block):
 ############################################################################
 # Driver entrypoint
 ############################################################################
+
+
+def driver():
+    main(sys.argv[1:])
 
 
 def main(argv):
@@ -278,7 +284,7 @@ def main(argv):
         config, version = parser.validate_config(config_file)
         if version != SCHEMA_VERSION:
             log.warning("Config file {} schema version is {}, current CARACal version is {}".format(config_file,
-                                    version, SCHEMA_VERSION))
+                                                                                                    version, SCHEMA_VERSION))
             log.warning("Will try to proceed anyway, but please be advised that configuration options may have changed.")
         # populate parser with items from config
         parser.populate_parser(config)

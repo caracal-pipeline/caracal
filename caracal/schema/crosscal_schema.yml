@@ -79,6 +79,11 @@ mapping:
             type: float
             required: false
             example: '0.5'
+          meerkat_crystalball_ncpu:
+            desc: Explicitly set the number of worker threads. Default is 0, meaning it uses all threads.
+            type: int
+            required: false
+            example: '0'
           meerkat_crystalball_num_sources:
             desc: Select only N brightest sources when using Crystalball to predict calibrator visibilities in the model column.
             type: int
@@ -86,6 +91,11 @@ mapping:
             example: '0'
           meerkat_crystalball_row_chunks:
             desc: Number of rows of input .MS that are processed in a single chunk when using Crystalball to predict calibrator visibilities in the model column. If zero, it will be set automatically.
+            type: int
+            required: false
+            example: '0'
+          meerkat_crystalball_model_chunks:
+            desc: Number of model components that are processed in a single chunk when using Crystalball to predict calibrator visibilities in the model column. If zero, it will be set automatically.
             type: int
             required: false
             example: '0'

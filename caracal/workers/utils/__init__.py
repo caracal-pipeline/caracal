@@ -1,5 +1,6 @@
 import os
 
+
 def remove_output_products(files, directory=None, log=None):
     """
     Removes output products (given by a list of files), in a directory (if specified)

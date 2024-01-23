@@ -141,6 +141,12 @@ mapping:
         desc: Number of channels in output image.
         required: false
         example: '3'
+      img_channelrange:
+        seq:
+          - type: int
+        desc: Only image the given channel range. Indices specify channel indices, end index is exclusive. .e.g. 0, 1023. Default '-1' means all channels.
+        required: false
+        example: '-1'
       img_joinchans:
         type: bool
         desc: Join channels to create MFS image.
@@ -224,6 +230,25 @@ mapping:
             desc: Use SoFiA for the mask of Fornax A, instead of that by Fomalont.
             required: false
             example: 'False'
+      img_breizorro_settings:
+        desc: Breizorro settings used for the imaging iterations whose entry in 'image/cleanmask_method' below is 'breizorro'. The resulting clean mask is located in <output>/masking.
+        type: map
+        mapping:
+          boxsize:
+            type: int
+            desc: Box size over which to compute stats (default = 50)
+            required: false
+            example: '50'
+          dilate:
+            type: int
+            desc: Apply dilation with a radius of R pixels
+            required: false
+            example: '0'
+          fill_holes:
+            type: bool
+            desc: Fill holes (i.e. entirely closed regions) in mask
+            required: false
+            example: 'false'
       cal_niter:
         type: int
         desc: Number of self-calibration iterations to perform.
@@ -316,6 +341,21 @@ mapping:
             type: int
             required: false
             example: '4'
+          out_derotate:
+            desc: Explicitly enables or disables derotation of output visibilities. Default (None) is to use the –model-pa-rotate and –model-feed-rotate settings.
+            type: bool
+            required: false
+            example: 'False'
+          model_pa_rotate:
+            desc: Apply parallactic angle rotation to model visibilities. Enable this for alt-azmounts, unless your model visibilities are already rotated.
+            type: bool
+            required: false
+            example: 'False'
+          model_feed_rotate:
+            desc: Apply a feed angle rotation to the model visibilities. Use 'auto' to read angles from FEED subtable, or give an explicit value in degrees.
+            type: str
+            required: false
+            example: ''
           ragavi_plot:
             type: map
             desc: Use ragavi to plot diagnostic plots for self-calibration.
@@ -364,8 +404,8 @@ mapping:
             seq:
               - type: str
             required: false
-            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option.
-            example: 'DR'
+            desc: The residual statistic to check convergence against. Every metric/criterion listed will be combined into a weighted mean. Options are 'DR' (dynamic range), 'MEAN' (mean of the residual flux), 'STDDev' (standard deviation), 'SKEW' (skewness, 3rd-moment), and 'KURT' (kurtosis, 4th-moment). However, note that when cal_model_mode = 'vis_only', 'DR' is no longer an option. Default is '', which means no convergence is checked.
+            example: ''
           area_factor:
             type: int
             desc: A multiplicative factor that sets the total area over which the metrics are calculated, where total_area = psf_size*area_factor. This area is centred on the position of peak flux-density in the image.
@@ -386,7 +426,22 @@ mapping:
             type: bool
             desc: Generate html plots for comparing catalogues and residuals.
             required: false
-            example: 'True'
+            example: 'False'
+          online_catalog:
+            type: map
+            desc: Perform an online catalog comparison
+            mapping:
+              enable:
+                type: bool
+                desc: Enable online comparison
+                required: false
+                example: 'False'
+              catalog_type:
+                type: str
+                enum: ["nvss", "sumss"]
+                desc: Online catalog type to compare local models
+                required: false
+                example: 'nvss'
       image:
         type: map
         desc: Imaging parameters.
@@ -395,7 +450,7 @@ mapping:
             type: bool
             desc: Enable the 'image' segment.
             required: false
-            example: 'True'
+            example: 'False'
           col:
             seq:
               - type: str
@@ -411,13 +466,13 @@ mapping:
           cleanmask_method:
             seq:
               - type: str
-            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
+            desc: Method used to create the clean mask. The possible values are 1) 'wsclean' to use WSClean's auto-masking (threshold set by clean_mask_threshold below); 2) 'sofia' to create a clean mask using SoFiA (threshold set by clean_mask_threshold below, and additional settings in sofia_settings, do not use if output_data = CORR_RES ); 3) 'breizorro'  to create a clean mask using Breizorro (threshold set by clean_mask_threshold below, and additional settings in breizorro_settings; 4) a prefix string to use an existing .FITS mask located in output/masking and called prefix_target.fits, where the name of the target is set automatically by the pipeline. The latter .FITS mask could be the one created by the masking worker, in which case the prefix set here should correspond to label_out in the masking worker. Note that this third  maskingm ethod can be used on multiple targets in a single pipeline run as long as they all have a corresponding prefix_target.fits mask in output/masking.
             required: false
             example: 'wsclean, wsclean'
           cleanmask_thr:
             seq:
               - type: float
-            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean' or 'sofia'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
+            desc: Threshold used to create the clean mask when clean_mask_method = 'wsclean', 'sofia' or 'breizorro'. This is given as the number of sigma_rms to be cleaned down to, where sigma_rms is the (local) noise level.
             required: false
             example: '10.0, 6.0'
           cleanmask_localrms:
@@ -485,6 +540,21 @@ mapping:
             desc: Constrain the PyBDSM source-finding to only find sources included in the clean model.
             required: false
             example: 'False'
+          breizorro_image:
+            type: map
+            desc: Use breizorro image.
+            mapping:
+              enable:
+                type: bool
+                desc: Use a breizorro product image to perform source finding in order to do source comparison.
+                required: false
+                example: 'False'
+              sum_to_peak:
+                type: float
+                desc: Sum to peak ratio of flux islands to mask in original image. Default = 500, will mask everything with a ratio above 500.
+                required: false
+                example: '500'
+
 
       calibrate:
         type: map
@@ -494,7 +564,7 @@ mapping:
             type: bool
             desc: Enable the 'calibrate' segment.
             required: false
-            example: 'True'
+            example: 'False'
           model:
             seq:
               - type: str
@@ -504,7 +574,7 @@ mapping:
           output_data:
             seq:
               - type: str
-            desc: Data to output after calibration. Options are 'CORR_DATA', 'CORR_RES' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms.
+            desc: Data to output after calibration. Options are 'PA_DATA', 'CORR_RES', 'CORR_DATA' or 'CORRECTED_DATA', where CORR_DATA and CORRECTED_DATA are synonyms. Note that for 'PA_DATA' only parallactic angle corrections will be applied to the data to produce 'CORRECTED_DATA' column. 
             required: false
             example: 'CORR_DATA'
           gain_matrix_type:
@@ -632,7 +702,7 @@ mapping:
             type: bool
             desc: Enable the 'transfer_model' segment.
             required: false
-            example: 'True'
+            example: 'False'
           transfer_to_label:
             type: str
             desc: Label of the .MS file to which to transfer the model.

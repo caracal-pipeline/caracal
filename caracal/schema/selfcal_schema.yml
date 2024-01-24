@@ -497,6 +497,16 @@ mapping:
             example: '100.0'
             required: false
             desc: "Specifies a fixed amount of memory in gigabytes."
+          nr_parallel_grid:
+            type: int
+            example: '1'
+            required: false
+            desc: Will execute multiple gridders simultaneously when using w-stacking. When parallel gridding is not possible, or when image sizes are reasonably large (say 5k-10k), the w-gridder might be a better choice.
+          use_wgridder:
+            type: bool
+            example: 'False'
+            required: false
+            desc: Use the w-gridding gridder developed by Martin Reinecke. Otherwise, the default will be w-stacking.
 
       extract_sources:
         type: map

@@ -80,7 +80,7 @@ And CARACal developer version which is not recommended for users:
 *Ignore any error messages concerning `pyregion`.*
 
 2. `caratekit.sh` script
-----------------------
+------------------------
 
 Download the installation script `caratekit.sh <https://github.com/caracal-pipeline/caracal/blob/master/caratekit.sh>`_ . Choose the parent directory ``${workspace}`` and the name of the CARACal directory ``${caracal_dir}``. Any name as ``${name}`` occurring in the description below can be chosen arbitrarily. If it symbolises directories or files, those directories or files should exist and the user should have write acccess.
 
@@ -99,7 +99,7 @@ If using `Singularity <https://github.com/sylabs/singularity>`_:
 
 
 3. Poetry (For developers)
----------
+--------------------------
 
 Installation from source using `poetry`. First, install poetry:
 

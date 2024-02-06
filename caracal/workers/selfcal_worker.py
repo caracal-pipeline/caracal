@@ -614,6 +614,17 @@ def worker(pipeline, recipe, config):
 
                 cubeHeight=config['img_npix'][0]
                 cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight    
+                summary_file=
+                
+
+                msname_base = os.path.splitext(mslist[0])[0]
+
+                t = f'{msname_base}-summary.json'      
+
+
+                with open('{}/{}'.format(pipeline.msdir,t)) as f:
+                    obsDict = json.load(f)
+                
 
                 raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
                 decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
@@ -625,10 +636,7 @@ def worker(pipeline, recipe, config):
 
                 if doProj:
                 
-                    with open('{}/{}'.format(pipeline.msdir,t)) as f:
-                        obsDict = json.load(f)
-
-          
+    
                     with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                         file.write('SIMPLE  =   T\n')
                         file.write('BITPIX  =   -64\n')

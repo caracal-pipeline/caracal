@@ -611,7 +611,13 @@ def worker(pipeline, recipe, config):
             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
             doProj=False
             with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-                
+
+                cubeHeight=config['img_npix'][0]
+                cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight    
+
+                raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+                decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                      
                 doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
                 if doProj == True: pass
                 else:
@@ -621,11 +627,8 @@ def worker(pipeline, recipe, config):
                 
                     with open('{}/{}'.format(pipeline.msdir,t)) as f:
                         obsDict = json.load(f)
-                    raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-                    decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
 
-                    cubeHeight=config['img_npix'][0]
-                    cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight                    
+          
                     with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                         file.write('SIMPLE  =   T\n')
                         file.write('BITPIX  =   -64\n')

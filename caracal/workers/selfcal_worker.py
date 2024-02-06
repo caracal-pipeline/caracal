@@ -614,7 +614,7 @@ def worker(pipeline, recipe, config):
 
                 cubeHeight=config['img_npix'][0]
                 cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight    
-                summary_file=
+
                 
 
                 msname_base = os.path.splitext(mslist[0])[0]

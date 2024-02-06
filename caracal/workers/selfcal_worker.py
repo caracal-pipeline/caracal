@@ -617,7 +617,7 @@ def worker(pipeline, recipe, config):
 
                 raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
                 decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
-                      
+
                 doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
                 if doProj == True: pass
                 else:
@@ -660,7 +660,7 @@ def worker(pipeline, recipe, config):
                                 preGridMask = preGridMaskNew
                         caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
 
-                        step = 'reprojectMask-field{}'.format(tt)
+                        step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
                         recipe.add('cab/mProjectCube', step,
                                    {
                                        "in.fits": preGridMask,

@@ -605,19 +605,92 @@ def worker(pipeline, recipe, config):
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
                 raise caracal.ConfigurationError("Clean mask {0:s}/{1:s} not found. Please make sure that you have given the correct mask label"\
                     " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
+
+            preGridMask = '{0:s}_{1:s}.fits'.format(
+                    mask_key, field)
+            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+            doProj=False
+            with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                
+                doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
+                if doProj == True: pass
+                else:
+                    doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
+
+                if doProj:
+                
+                    with open('{}/{}'.format(pipeline.msdir,t)) as f:
+                        obsDict = json.load(f)
+                    raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+                    decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+
+                    cubeHeight=config['img_npix'][0]
+                    cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight                    
+                    with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                        file.write('SIMPLE  =   T\n')
+                        file.write('BITPIX  =   -64\n')
+                        file.write('NAXIS   =   2\n')
+                        file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                        file.write('CTYPE1  =   \'RA---SIN\'\n')
+                        file.write('CRVAL1  =   {}\n'.format(raTarget))
+                        file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                        file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
+                        file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                        file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                        file.write('CRVAL2  =   {}\n'.format(decTarget))
+                        file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                        file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
+                        file.write('EXTEND  =   T\n')
+                        file.write('EQUINOX =   2000.0\n')
+                        file.write('END\n')
+            
+
+                        if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                            os.remove('{}/{}'.format(pipeline.masking,postGridMask))
+
+                        with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                            if np.amax(hdul[0].data) > 1:
+                                mask = np.where(hdul[0].data > 0)
+                                hdul[0].data[mask] = 1
+                                preGridMaskNew = preGridMask.replace('.fits','_01.fits')
+                                hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
+                                preGridMask = preGridMaskNew
+                        caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
+
+                        step = 'reprojectMask-field{}'.format(tt)
+                        recipe.add('cab/mProjectCube', step,
+                                   {
+                                       "in.fits": preGridMask,
+                                       "out.fits": postGridMask,
+                                       "hdr.template" : 'tmp.hdr',
+                                    },
+                                    input=pipeline.masking,
+                                    output=pipeline.masking,
+                                    label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
+
+
+                        #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                        recipe.run()
+                        # Empty job que after execution
+                        recipe.jobs = []
+
+                        if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                            raise IOError(
+                                  "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
+
             image_opts.update({
-                "fitsmask": '{0:s}:output'.format(fits_mask),
+                "fitsmask": '{0:s}:output'.format(postGridMask),
                 "local-rms": False,
               })
 
-        recipe.add('cab/wsclean', step,
-                   image_opts,
-                   input=pipeline.input,
-                   output=pipeline.output,
-                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
-        recipe.run()
-        # Empty job que after execution
-        recipe.jobs = []
+            recipe.add('cab/wsclean', step,
+                       image_opts,
+                       input=pipeline.input,
+                       output=pipeline.output,
+                       label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+            recipe.run()
+            # Empty job que after execution
+            recipe.jobs = []
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)

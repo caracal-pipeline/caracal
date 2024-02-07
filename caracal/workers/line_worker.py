@@ -962,18 +962,21 @@ def worker(pipeline, recipe, config):
                                 doProj = True
                                 caracal.log.info('CRVAL2')
 
+
+                            #spectral axis mask > nchans - but nchans == nchans in spw ms file
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
                                 doSpec = True
                             else:
-                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
-
+                                doSpec = None  
+                                # this should work in both a request for a subset, and if the cube is to be binned.
+                            
                             if 'FREQ' in hdul[0].header['CTYPE3']:
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
-
+                            
+                            # chanwidth mask > chanwidthmsfile
                             if np.round(cdelt,1) > np.round(chanwidth[0],1):
-
                                 doSpec = True
                             elif doProj:
                                 pass

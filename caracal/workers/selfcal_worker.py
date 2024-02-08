@@ -668,6 +668,9 @@ def worker(pipeline, recipe, config):
                         preGridMaskNew = preGridMask.replace('.fits','_01.fits')
                         hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
                         preGridMask = preGridMaskNew
+
+
+                        
                 caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
 
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
@@ -719,10 +722,10 @@ def worker(pipeline, recipe, config):
                                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                    try:
-                        del hdul[0].header['EN']
-                    except KeyError:
-                        pass
+                    # try:
+                    #     del hdul[0].header['EN']
+                    # except KeyError:
+                    #     pass
                     hdul.flush()
 
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),

@@ -692,7 +692,7 @@ def worker(pipeline, recipe, config):
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
                 image_opts.update({
-                    "fitsmask": '{0:s}:output'.format(postGridMask),
+                    "fitsmask": '{0:s}:output'.format('masking/'+postGridMask),
                     "local-rms": False,
                   })
 

@@ -724,12 +724,14 @@ def worker(pipeline, recipe, config):
                             if cent > axDict[i][1]/2+1:
                                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
-
+                    print(hdul[0].header)
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
                     try:
                         del hdul[0].header['EN']
                     except KeyError:
                         pass
+                    print('_____________________________________')
+                    print(hdul[0].header)
                     hdul.flush()
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,

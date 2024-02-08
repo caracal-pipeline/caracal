@@ -627,8 +627,8 @@ def worker(pipeline, recipe, config):
             doProj=False
             with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
 
-                cubeHeight=config['img_npix'][0]
-                cubeWidth=config['img_npix'][1]  if len(config['img_npix']) == 2 else cubeHeight    
+                cubeHeight=config['img_npix']
+                cubeWidth=config['img_npix']
 
 
                 doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None

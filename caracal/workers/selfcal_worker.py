@@ -699,30 +699,30 @@ def worker(pipeline, recipe, config):
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
-                    for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
-                        hdul[0].header[key] = ax3param[i]
-                    axDict = {'1' : [2,cubeWidth],
-                              '2' : [1,cubeHeight]}
-                    for i in ['1','2']:
-                        cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
-                        if cent < axDict[i][1]/2+1:
-                            delt = int(axDict[i][1]/2+1 - cent)
-                            if i == '1':
-                                toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
-                            else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
-                            hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
-                            hdul[0].header['CRPIX'+i] = cent + delt
-                        if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
-                            delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
-                            if i == '1':
-                                toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
-                            else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
-                            hdul[0].data = np.concatenate([hdul[0].data,toAdd],axis=axDict[i][0])
-                        if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
-                            delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
-                            hdul[0].data = hdul[0].data[:,:,-delt] if i == '1' else hdul[0].data[:,-delt,:]
-                            if cent > axDict[i][1]/2+1:
-                                hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
+                #     for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
+                #         hdul[0].header[key] = ax3param[i]
+                #     axDict = {'1' : [2,cubeWidth],
+                #               '2' : [1,cubeHeight]}
+                #     for i in ['1','2']:
+                #         cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
+                #         if cent < axDict[i][1]/2+1:
+                #             delt = int(axDict[i][1]/2+1 - cent)
+                #             if i == '1':
+                #                 toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                #             else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                #             hdul[0].data = np.concatenate([toAdd,hdul[0].data],axis=axDict[i][0])
+                #             hdul[0].header['CRPIX'+i] = cent + delt
+                #         if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
+                #             delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
+                #             if i == '1':
+                #                 toAdd = np.zeros([hdul[0].header['NAXIS3'],hdul[0].data.shape[1],delt])
+                #             else: toAdd = np.zeros([hdul[0].header['NAXIS3'],delt,hdul[0].data.shape[2]])
+                #             hdul[0].data = np.concatenate([hdul[0].data,toAdd],axis=axDict[i][0])
+                #         if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
+                #             delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
+                #             hdul[0].data = hdul[0].data[:,:,-delt] if i == '1' else hdul[0].data[:,-delt,:]
+                #             if cent > axDict[i][1]/2+1:
+                #                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
                     print(hdul[0].header)
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)

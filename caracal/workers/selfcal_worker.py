@@ -28,7 +28,7 @@ LABEL = 'selfcal'
 
 def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
-    
+
 def get_relative_path(path, pipeline):
     """Returns e.g. cubes/<dir> given output/cubes/<dir>"""
     return os.path.relpath(path, pipeline.output)
@@ -724,13 +724,13 @@ def worker(pipeline, recipe, config):
                 #             if cent > axDict[i][1]/2+1:
                 #                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
-                #     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                #     # try:
-                    #     del hdul[0].header['EN']
-                    # except KeyError:
-                    #     pass
-                    hdul.flush()
-
+                
+                hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                try:
+                    del hdul[0].header['EN']
+                except KeyError:
+                    pass
+                hdul.flush()
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,
                   })

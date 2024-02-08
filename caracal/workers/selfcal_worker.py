@@ -28,7 +28,10 @@ LABEL = 'selfcal'
 
 def get_dir_path(string, pipeline):
     return string.split(pipeline.output)[1][1:]
-
+    
+def get_relative_path(path, pipeline):
+    """Returns e.g. cubes/<dir> given output/cubes/<dir>"""
+    return os.path.relpath(path, pipeline.output)
 
 CUBICAL_OUT = {
     "CORRECTED_DATA": 'sc',
@@ -670,7 +673,7 @@ def worker(pipeline, recipe, config):
                         preGridMask = preGridMaskNew
 
 
-                        
+
                 caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
 
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)

@@ -898,7 +898,7 @@ def worker(pipeline, recipe, config):
         breizorro_opts = {
             "restored-image": imagename,
             "outfile": outmaskName,
-            "threshold": config['image']['cleanmask_thr'][num if len(config['image']['cleanmask_thr']) >= num + 1 else -1],
+            "threshold": config['image']['clean_cutoff'][num if len(config['image']['clean_cutoff']) >= num + 1 else -1],
             "boxsize": config[key]['boxsize'],
             "dilate": config[key]['dilate'],
             "fill-holes": config[key]['fill_holes']

@@ -677,7 +677,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
 
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProjectCube', step,
+                recipe.add('cab/mProject', step,
                            {
                                "in.fits": preGridMask,
                                "out.fits": postGridMask,
@@ -692,8 +692,8 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-
-
+                
+                sys.exit(0)
                 if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     raise IOError(
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
@@ -734,7 +734,7 @@ def worker(pipeline, recipe, config):
                     print(hdul[0].header)
                     hdul.flush()
 
-                    
+
                 image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,
                   })

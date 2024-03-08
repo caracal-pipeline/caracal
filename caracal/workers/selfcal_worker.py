@@ -693,7 +693,7 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []
                 
-                sys.exit(0)
+
                 if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     raise IOError(
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))

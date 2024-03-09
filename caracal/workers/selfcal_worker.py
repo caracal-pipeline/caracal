@@ -630,11 +630,11 @@ def worker(pipeline, recipe, config):
             doProj=False
             with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
 
-                cubeHeight=config['img_npix']
-                cubeWidth=config['img_npix']
+                imgHeight=config['img_npix']
+                imgWidth=config['img_npix']
 
 
-                doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
+                doProj = True if (hdul[0].header['NAXIS1'] != imgWidth) | (hdul[0].header['NAXIS2'] != imgHeight) else None
                 if doProj == True: pass
                 else:
                     doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
@@ -646,15 +646,15 @@ def worker(pipeline, recipe, config):
                     file.write('SIMPLE  =   T\n')
                     file.write('BITPIX  =   -64\n')
                     file.write('NAXIS   =   2\n')
-                    file.write('NAXIS1  =   {}\n'.format(cubeWidth))
+                    file.write('NAXIS1  =   {}\n'.format(imgWidth))
                     file.write('CTYPE1  =   \'RA---SIN\'\n')
                     file.write('CRVAL1  =   {}\n'.format(raTarget))
-                    file.write('CRPIX1  =   {}\n'.format(cubeWidth/2+1))
+                    file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
                     file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
-                    file.write('NAXIS2  =   {}\n'.format(cubeHeight))
+                    file.write('NAXIS2  =   {}\n'.format(imgHeight))
                     file.write('CTYPE2  =   \'DEC--SIN\'\n')
                     file.write('CRVAL2  =   {}\n'.format(decTarget))
-                    file.write('CRPIX2  =   {}\n'.format(cubeHeight/2+1))
+                    file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
                     file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')

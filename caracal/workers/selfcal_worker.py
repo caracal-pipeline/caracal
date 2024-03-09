@@ -603,7 +603,6 @@ def worker(pipeline, recipe, config):
                 "local-rms": False,
               })
         else:
-            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
             fits_mask = 'masking/{0:s}_{1:s}.fits'.format(
                 mask_key, field)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output, fits_mask)):
@@ -613,6 +612,7 @@ def worker(pipeline, recipe, config):
             preGridMask = '{0:s}_{1:s}.fits'.format(
                     mask_key, field)
             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+            postGridMask2 = preGridMask.replace('.fits','_{}_regrid_regrid.fits'.format(pipeline.prefix))
 
 
             msname_base = os.path.splitext(mslist[0])[0]
@@ -640,8 +640,9 @@ def worker(pipeline, recipe, config):
                     doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
 
             if doProj:
-            
-                print('+_+++++++++++PROJECTMASK++++++++++++++++++++')
+ 
+                caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
+
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
                     file.write('BITPIX  =   -64\n')
@@ -658,6 +659,7 @@ def worker(pipeline, recipe, config):
                     file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')
+                    file.write('SPECSYS =   TOPOCENT\n')
                     file.write('END\n')
         
 
@@ -674,7 +676,7 @@ def worker(pipeline, recipe, config):
 
 
 
-                caracal.log.info('Reprojecting mask {} to match the grid of the cube.'.format(preGridMask))
+                caracal.log.info('Reprojecting mask {} to match the grid of the image.'.format(preGridMask))
 
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
                 recipe.add('cab/mProject', step,
@@ -685,18 +687,39 @@ def worker(pipeline, recipe, config):
                             },
                             input=pipeline.masking,
                             output=pipeline.masking,
-                            label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the cube'.format(step, preGridMask))
+                            label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMask))
 
 
                 #In order to make sure that we actually find stuff in the images we execute the rec ipe here
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
+                step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
+                recipe.add('cab/mProject', step,
+                           {
+                               "in.fits": postGridMask,
+                               "out.fits": postGridMask2,
+                               "hdr.template" : 'tmp.hdr',
+                            },
+                            input=pipeline.masking,
+                            output=pipeline.masking,
+                            label='{0:s}:: Reprojecting user postGridMask to match the grid of the image'.format(step, preGridMask2))
+
+
+                #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                recipe.run()
+
+
+
+
+
+                # Empty job que after execution
+                recipe.jobs = []
                 
 
-                if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask2)):
                     raise IOError(
-                          "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
+                          "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask2))
 
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
                 #     for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
@@ -735,7 +758,7 @@ def worker(pipeline, recipe, config):
                     hdul.flush()
 
 
-                image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
+                image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask2.split('/')[-1]),
                     "local-rms": False,
                   })
 

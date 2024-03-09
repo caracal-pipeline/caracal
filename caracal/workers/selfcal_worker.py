@@ -703,7 +703,7 @@ def worker(pipeline, recipe, config):
                             },
                             input=pipeline.masking,
                             output=pipeline.masking,
-                            label='{0:s}:: Reprojecting user postGridMask to match the grid of the image'.format(step, preGridMask2))
+                            label='{0:s}:: Reprojecting user postGridMask to match the grid of the image'.format(step, postGridMask2))
 
 
                 #In order to make sure that we actually find stuff in the images we execute the rec ipe here
@@ -721,7 +721,7 @@ def worker(pipeline, recipe, config):
                     raise IOError(
                           "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask2))
 
-                with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+                with fits.open('{}/{}'.format(pipeline.masking,postGridMask2), mode='update') as hdul:
                 #     for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                 #         hdul[0].header[key] = ax3param[i]
                 #     axDict = {'1' : [2,cubeWidth],

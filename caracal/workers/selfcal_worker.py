@@ -612,7 +612,7 @@ def worker(pipeline, recipe, config):
             preGridMask = '{0:s}_{1:s}.fits'.format(
                     mask_key, field)
             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
-            postGridMask2 = preGridMask.replace('.fits','_{}_regrid_regrid.fits'.format(pipeline.prefix))
+            # postGridMask2 = preGridMask.replace('.fits','_{}_regrid_regrid.fits'.format(pipeline.prefix))
 
 
             msname_base = os.path.splitext(mslist[0])[0]
@@ -695,34 +695,34 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []
-                step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProject', step,
-                           {
-                               "in.fits": postGridMask,
-                               "out.fits": postGridMask2,
-                               "hdr.template" : 'tmp.hdr',
-                            },
-                            input=pipeline.masking,
-                            output=pipeline.masking,
-                            label='{0:s}:: Reprojecting user postGridMask to match the grid of the image'.format(step, postGridMask2))
+                # step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
+                # recipe.add('cab/mProject', step,
+                #            {
+                #                "in.fits": postGridMask,
+                #                "out.fits": postGridMask2,
+                #                "hdr.template" : 'tmp.hdr',
+                #             },
+                #             input=pipeline.masking,
+                #             output=pipeline.masking,
+                #             label='{0:s}:: Reprojecting user postGridMask to match the grid of the image'.format(step, postGridMask2))
 
 
-                #In order to make sure that we actually find stuff in the images we execute the rec ipe here
-                recipe.run()
+                # #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                # recipe.run()
 
 
 
 
 
                 # Empty job que after execution
-                recipe.jobs = []
+                # recipe.jobs = []
                 
 
-                if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask2)):
+                if not os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     raise IOError(
-                          "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask2))
+                          "The regridded mask {0:s} does not exist. The original mask likely has no overlap with the cube.".format(postGridMask))
 
-                with fits.open('{}/{}'.format(pipeline.masking,postGridMask2), mode='update') as hdul:
+                with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
                 #     for i,key in enumerate(['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']):
                 #         hdul[0].header[key] = ax3param[i]
                 #     axDict = {'1' : [2,cubeWidth],
@@ -759,7 +759,7 @@ def worker(pipeline, recipe, config):
                     hdul.flush()
 
 
-                image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask2.split('/')[-1]),
+                image_opts.update({"fitsmask": '{0:s}/{1:s}:output'.format(get_relative_path(pipeline.masking, pipeline), postGridMask.split('/')[-1]),
                     "local-rms": False,
                   })
 

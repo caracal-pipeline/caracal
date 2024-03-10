@@ -684,6 +684,7 @@ def worker(pipeline, recipe, config):
                                "in.fits": preGridMask,
                                "out.fits": postGridMask,
                                "hdr.template" : 'tmp.hdr',
+                               "f" : True,
                             },
                             input=pipeline.masking,
                             output=pipeline.masking,

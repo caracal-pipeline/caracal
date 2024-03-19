@@ -80,6 +80,12 @@ RULES = {
         "cab": "cab/casa_bandpass",
         "field": "bpcal",
     },
+    "P": {
+        "name": "bpoly_cal",
+        "interp": "linear",
+        "cab": "cab/casa_bandpass",
+        "field": "bpcal",
+    },
     "A": {
         "name": "auto_flagging",
         "cab": "cab/casa_flagdata",
@@ -184,6 +190,23 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
             params["fillgaps"] = config[ftype]["b_fillgaps"]
             params["uvrange"] = config["uvrange"]
             params["scan"] = config[ftype]["scanselection"]
+        elif term == "P":
+            # adding a symlink to caltables for bpoly reference and applycal
+            src_ = os.path.abspath(os.path.join(pipeline.msdir, msname))
+            dst_ = os.path.join(pipeline.caltables, msname)
+            if not os.path.exists(dst_):
+                os.symlink(src_, dst_)
+            # parameters
+            params["bandtype"] = 'BPOLY'
+            params["solnorm"] = config[ftype]["b_solnorm"]
+            params["fillgaps"] = config[ftype]["b_fillgaps"]
+            params["uvrange"] = config["uvrange"]
+            params["scan"] = config[ftype]["scanselection"]
+            params["degamp"] = config[ftype]["degamp"]
+            params["degphase"] = config[ftype]["degphase"]
+            params["visnorm"] = config[ftype]["visnorm"]
+            params["maskcenter"] = config[ftype]["maskcenter"]
+            params["maskedge"] = config[ftype]["maskedge"]
         elif term == "K":
             params["gaintype"] = term
             params["scan"] = config[ftype]["scanselection"]
@@ -246,7 +269,9 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
 
         # Assume gains were plotted when they were created
         if config[ftype]["plotgains"] and not can_reuse:
-            plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
+            # BPOLY gain plots break because of new table format, no gains plots for the moment
+            if term != "P":
+                plotgains(recipe, pipeline, field_id if term != "F" else None, caltable, iobs, term=term)
 
         fields.append(",".join(field))
         interps.append(interp)
@@ -327,7 +352,7 @@ def solve(msname, msinfo, recipe, config, pipeline, iobs, prefix, label, ftype,
     # terms that need an apply
     groups_apply = list(filter(lambda g: g, re.findall("([AI]+)?", order)))
     # terms that need a solve
-    groups_solve = list(filter(lambda g: g, re.findall("([KGBF]+)?", order)))
+    groups_solve = list(filter(lambda g: g, re.findall("([KGBPF]+)?", order)))
     # Order has to start with solve group.
     # TODO(sphe) in the philosophy of giving user enough roap to hang themselves
     # Release II will allow both starting with I/A in case
@@ -460,7 +485,7 @@ def applycal(order, msname, recipe, gaintable, interp, gainfield, field, pipelin
     """
 
     gaintables, interps, fields = get_caltab_final(order, gaintable, interp,
-                                                   gainfield, field)
+            gainfield, field)
 
     step = "apply_gains-%s-%s-%d" % (field, label, i)
     recipe.add("cab/casa_applycal", step, {
@@ -595,7 +620,8 @@ def worker(pipeline, recipe, config):
                         "row-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_row_chunks"]),
                         "model-chunks": sdm.dismissable(config['set_model']["meerkat_crystalball_model_chunks"]),
                         "num-sources": sdm.dismissable(config['set_model']['meerkat_crystalball_num_sources']),
-                    }
+                   }
+
                 elif modelpoint:  # spectral model if specified in our standard
                     opts = {
                         "vis": msname,
@@ -655,7 +681,7 @@ def worker(pipeline, recipe, config):
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(primary_order, msname, recipe, copy.deepcopy(gaintables), copy.deepcopy(interps),
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         gainfields, "target", pipeline, i, calmode=calmode, label=label)
         else:
             primary = solve(msname, msinfo, recipe, config, pipeline, i,
                             prefix_msbase, label=label, ftype="primary")
@@ -683,7 +709,7 @@ def worker(pipeline, recipe, config):
                          "nearest", "xcal", pipeline, i, calmode=calmode, label=label)
             if "target" in config["apply_cal"]["applyto"]:
                 applycal(secondary_order, msname, recipe, copy.deepcopy(gaintables), interps,
-                         "nearest", "target", pipeline, i, calmode=calmode, label=label)
+                         gainfields, "target", pipeline, i, calmode=calmode, label=label)
 
         if {"gcal", "fcal", "target"}.intersection(config["apply_cal"]["applyto"]):
             substep = 'save-{0:s}-ms{1:d}'.format(flags_after_worker, i)

@@ -915,9 +915,9 @@ def worker(pipeline, recipe, config):
                 recipe.run()
                 # Empty job que after execution
                 recipe.jobs = []                
-                sofia_opts.update({"import.maskFile": '{}/{}'.format(pipeline.masking,postGridMask)})
+                sofia_opts.update({"import.maskFile": '{}'.format(postGridMask)})
             else:
-                sofia_opts.update({"import.maskFile": '{}/{}'.format(pipeline.masking,preGridMask)}) 
+                sofia_opts.update({"import.maskFile": '{}'.format(preGridMask)}) 
             # mask_fits = 'masking/'+config[key]['inputmask']
             # mask_casa = mask_fits.replace('.fits','.image')
             # mask_regrid_casa = mask_fits.replace('.fits','_regrid.image')

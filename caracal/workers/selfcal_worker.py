@@ -860,7 +860,7 @@ def worker(pipeline, recipe, config):
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
-                hduImage=fits.getheader(imagename)
+                hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')

@@ -860,11 +860,12 @@ def worker(pipeline, recipe, config):
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
-
+                hduImage=fits.getheader(imagename)
+                
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
                     file.write('BITPIX  =   -64\n')
-                    file.write('NAXIS   =   2\n')
+                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
                     file.write('NAXIS1  =   {}\n'.format(imgWidth))
                     file.write('CTYPE1  =   \'RA---SIN\'\n')
                     file.write('CRVAL1  =   {}\n'.format(raTarget))
@@ -878,6 +879,20 @@ def worker(pipeline, recipe, config):
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')
                     file.write('SPECSYS =   TOPOCENT\n')
+                    if hduImage['NAXIS'] ==3:
+                        file.write('NAXIS3  =   {}\n'.format(hduImage['NAXIS3']))
+                        file.write('CTYPE3  =   {}\n'.format(hduImage['CTYPE3']))
+                        file.write('CRVAL3  =   {}\n'.format(hduImage['CRVAL3']))
+                        file.write('CRPIX3  =   {}\n'.format(hduImage['CRPIX3']))
+                        file.write('CDELT3  =   {}\n'.format(hduImage['CDELT3']))
+                    elif hduImage['NAXIS'] ==4:
+                        file.write('NAXIS4  =   {}\n'.format(hduImage['NAXIS4']))
+                        file.write('CTYPE4  =   {}\n'.format(hduImage['CTYPE4']))
+                        file.write('CRVAL4  =   {}\n'.format(hduImage['CRVAL4']))
+                        file.write('CRPIX4  =   {}\n'.format(hduImage['CRPIX4']))
+                        file.write('CDELT4  =   {}\n'.format(hduImage['CDELT4']))                     
+
+
                     file.write('END\n')
         
 

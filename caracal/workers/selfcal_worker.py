@@ -879,18 +879,18 @@ def worker(pipeline, recipe, config):
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')
                     file.write('SPECSYS =   TOPOCENT\n')
-                    if hduImage['NAXIS'] ==3:
+                    if hduImage['NAXIS'] >2:
                         file.write('NAXIS3  =   {}\n'.format(hduImage['NAXIS3']))
                         file.write('CTYPE3  =   {}\n'.format(hduImage['CTYPE3']))
                         file.write('CRVAL3  =   {}\n'.format(hduImage['CRVAL3']))
                         file.write('CRPIX3  =   {}\n'.format(hduImage['CRPIX3']))
                         file.write('CDELT3  =   {}\n'.format(hduImage['CDELT3']))
-                    elif hduImage['NAXIS'] ==4:
-                        file.write('NAXIS4  =   {}\n'.format(hduImage['NAXIS4']))
-                        file.write('CTYPE4  =   {}\n'.format(hduImage['CTYPE4']))
-                        file.write('CRVAL4  =   {}\n'.format(hduImage['CRVAL4']))
-                        file.write('CRPIX4  =   {}\n'.format(hduImage['CRPIX4']))
-                        file.write('CDELT4  =   {}\n'.format(hduImage['CDELT4']))                     
+                        if hduImage['NAXIS'] ==4:
+                            file.write('NAXIS4  =   {}\n'.format(hduImage['NAXIS4']))
+                            file.write('CTYPE4  =   {}\n'.format(hduImage['CTYPE4']))
+                            file.write('CRVAL4  =   {}\n'.format(hduImage['CRVAL4']))
+                            file.write('CRPIX4  =   {}\n'.format(hduImage['CRPIX4']))
+                            file.write('CDELT4  =   {}\n'.format(hduImage['CDELT4']))                     
 
 
                     file.write('END\n')
@@ -903,9 +903,16 @@ def worker(pipeline, recipe, config):
                     if np.amax(hdul[0].data) > 1:
                         mask = np.where(hdul[0].data > 0)
                         hdul[0].data[mask] = 1
-                        preGridMaskNew = preGridMask.replace('.fits','_01.fits')
-                        hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
-                        preGridMask = preGridMaskNew
+
+                    if hduImage['NAXIS'] >2:
+                        hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                                                 if hduImage['NAXIS'] ==4:
+                        if hduImage['NAXIS'] >2:
+                            dul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                        
+                    preGridMaskNew = preGridMask.replace('.fits','_01.fits')
+                    hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
+                    preGridMask = preGridMaskNew
 
 
 

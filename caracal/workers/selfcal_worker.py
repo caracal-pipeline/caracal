@@ -906,8 +906,7 @@ def worker(pipeline, recipe, config):
 
                     if hduImage['NAXIS'] >2:
                         hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                                                 if hduImage['NAXIS'] ==4:
-                        if hduImage['NAXIS'] >2:
+                        if hduImage['NAXIS'] ==4:
                             dul[0].data = np.expand_dims(hdul[0].data, axis=0)
                         
                     preGridMaskNew = preGridMask.replace('.fits','_01.fits')

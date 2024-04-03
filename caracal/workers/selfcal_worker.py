@@ -863,6 +863,8 @@ def worker(pipeline, recipe, config):
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
+                    file.write('BITPIX  =   -64\n')
+
                     for keys in hduImage:
                         if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE':
                             file.write('{}  =   {}\n'.format(key, hduImage[keys]))

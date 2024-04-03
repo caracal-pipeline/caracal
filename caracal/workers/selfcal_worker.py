@@ -862,9 +862,9 @@ def worker(pipeline, recipe, config):
                 hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                    
+                    file.write('SIMPLE  =   T\n')
                     for key in hduImage:
-                        if key != 'HISTORY' and key !='COMMENT':
+                        if key != 'HISTORY' and key !='COMMENT' and key != 'SIMPLE':
                             file.write('{}  =   {}\n'.format(key, hduImage[key]))
                     # file.write('BITPIX  =   -64\n')
                     # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))

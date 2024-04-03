@@ -610,7 +610,6 @@ def worker(pipeline, recipe, config):
                     " in cleanmask_method, and that the mask exists.".format(pipeline.output, fits_mask))
 
 
-
             doProj=False
             
             preGridMask = '{0:s}_{1:s}.fits'.format(
@@ -860,12 +859,12 @@ def worker(pipeline, recipe, config):
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
-                hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
+                # hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
                     file.write('BITPIX  =   -64\n')
-                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    file.write('NAXIS   =   2\n')
                     file.write('NAXIS1  =   {}\n'.format(imgWidth))
                     file.write('CTYPE1  =   \'RA---SIN\'\n')
                     file.write('CRVAL1  =   {}\n'.format(raTarget))
@@ -879,18 +878,7 @@ def worker(pipeline, recipe, config):
                     file.write('EXTEND  =   T\n')
                     file.write('EQUINOX =   2000.0\n')
                     file.write('SPECSYS =   TOPOCENT\n')
-                    if hduImage['NAXIS'] >2:
-                        file.write('NAXIS3  =   {}\n'.format(hduImage['NAXIS3']))
-                        file.write('CTYPE3  =   {}\n'.format(hduImage['CTYPE3']))
-                        file.write('CRVAL3  =   {}\n'.format(hduImage['CRVAL3']))
-                        file.write('CRPIX3  =   {}\n'.format(hduImage['CRPIX3']))
-                        file.write('CDELT3  =   {}\n'.format(hduImage['CDELT3']))
-                        if hduImage['NAXIS'] ==4:
-                            file.write('NAXIS4  =   {}\n'.format(hduImage['NAXIS4']))
-                            file.write('CTYPE4  =   {}\n'.format(hduImage['CTYPE4']))
-                            file.write('CRVAL4  =   {}\n'.format(hduImage['CRVAL4']))
-                            file.write('CRPIX4  =   {}\n'.format(hduImage['CRPIX4']))
-                            file.write('CDELT4  =   {}\n'.format(hduImage['CDELT4']))                     
+                  
 
 
                     file.write('END\n')
@@ -903,11 +891,6 @@ def worker(pipeline, recipe, config):
                     if np.amax(hdul[0].data) > 1:
                         mask = np.where(hdul[0].data > 0)
                         hdul[0].data[mask] = 1
-
-                    if hduImage['NAXIS'] >2:
-                        hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                        if hduImage['NAXIS'] ==4:
-                            hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
                         
                     preGridMaskNew = preGridMask.replace('.fits','_01.fits')
                     hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
@@ -935,7 +918,35 @@ def worker(pipeline, recipe, config):
                 #In order to make sure that we actually find stuff in the images we execute the rec ipe here
                 recipe.run()
                 # Empty job que after execution
-                recipe.jobs = []                
+                recipe.jobs = []       
+
+                #dope header to make SoFiA happy
+
+                with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
+
+                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                    hdul[0].header['NAXIS'] =  4
+                    
+                    hdul[0].header['NAXIS3'] =  1
+                    hdul[0].header['CTYPE3'] =  'FREQ'
+                    hdul[0].header['CRVAL3'] =  0
+                    hdul[0].header['CRPIX3'] =  1
+                    hdul[0].header['CUNIT3'] =  'Hz'
+                    hdul[0].header['CDELT3'] =  1
+
+                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                    hdul[0].header['NAXIS4'] =  1
+                    hdul[0].header['CTYPE4'] =  'STOKES'
+                    hdul[0].header['CRVAL4'] =  1
+                    hdul[0].header['CRPIX4'] =  1
+                    hdul[0].header['CDELT4'] =  1
+                    hdul[0].header['CUNIT4'] =  ' '
+            
+
+                    hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
+
+
+
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMask)})
             else:
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 

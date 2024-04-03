@@ -865,7 +865,7 @@ def worker(pipeline, recipe, config):
                     
                     for key in hduImage:
 
-                        file.write('{}  =   {}\n'.format(key,value))
+                        file.write('{}  =   {}\n'.format(key, hduImage[key]))
                     # file.write('BITPIX  =   -64\n')
                     # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
                     # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
@@ -884,7 +884,7 @@ def worker(pipeline, recipe, config):
                   
 
 
-                    # file.write('END\n')
+                    file.write('END\n')
         
 
                 if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):

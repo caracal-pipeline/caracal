@@ -859,29 +859,32 @@ def worker(pipeline, recipe, config):
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
-                # hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
+                hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                    file.write('SIMPLE  =   T\n')
-                    file.write('BITPIX  =   -64\n')
-                    file.write('NAXIS   =   2\n')
-                    file.write('NAXIS1  =   {}\n'.format(imgWidth))
-                    file.write('CTYPE1  =   \'RA---SIN\'\n')
-                    file.write('CRVAL1  =   {}\n'.format(raTarget))
-                    file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
-                    file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
-                    file.write('NAXIS2  =   {}\n'.format(imgHeight))
-                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                    file.write('CRVAL2  =   {}\n'.format(decTarget))
-                    file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
-                    file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
-                    file.write('EXTEND  =   T\n')
-                    file.write('EQUINOX =   2000.0\n')
-                    file.write('SPECSYS =   TOPOCENT\n')
+                    
+                    for key in hduImage:
+
+                        file.write('{}  =   {}\n'.format(key,value))
+                    # file.write('BITPIX  =   -64\n')
+                    # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                    # file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                    # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                    # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                    # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                    # file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                    # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                    # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                    # file.write('EXTEND  =   T\n')
+                    # file.write('EQUINOX =   2000.0\n')
+                    # file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
-                    file.write('END\n')
+                    # file.write('END\n')
         
 
                 if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
@@ -922,28 +925,28 @@ def worker(pipeline, recipe, config):
 
                 #dope header to make SoFiA happy
 
-                with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
+                # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
 
-                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                    hdul[0].header['NAXIS'] =  4
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS'] =  4
                     
-                    hdul[0].header['NAXIS3'] =  1
-                    hdul[0].header['CTYPE3'] =  'FREQ'
-                    hdul[0].header['CRVAL3'] =  0
-                    hdul[0].header['CRPIX3'] =  1
-                    hdul[0].header['CUNIT3'] =  'Hz'
-                    hdul[0].header['CDELT3'] =  1
+                #     hdul[0].header['NAXIS3'] =  1
+                #     hdul[0].header['CTYPE3'] =  'FREQ'
+                #     hdul[0].header['CRVAL3'] =  0
+                #     hdul[0].header['CRPIX3'] =  1
+                #     hdul[0].header['CUNIT3'] =  'Hz'
+                #     hdul[0].header['CDELT3'] =  1
 
-                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-                    hdul[0].header['NAXIS4'] =  1
-                    hdul[0].header['CTYPE4'] =  'STOKES'
-                    hdul[0].header['CRVAL4'] =  1
-                    hdul[0].header['CRPIX4'] =  1
-                    hdul[0].header['CDELT4'] =  1
-                    hdul[0].header['CUNIT4'] =  ' '
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS4'] =  1
+                #     hdul[0].header['CTYPE4'] =  'STOKES'
+                #     hdul[0].header['CRVAL4'] =  1
+                #     hdul[0].header['CRPIX4'] =  1
+                #     hdul[0].header['CDELT4'] =  1
+                #     hdul[0].header['CUNIT4'] =  ' '
             
 
-                    hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
+                #     hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
 
 
 

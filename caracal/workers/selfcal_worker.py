@@ -867,7 +867,7 @@ def worker(pipeline, recipe, config):
 
                     for keys in hduImage:
                         if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE':
-                            file.write('{}  =   {}\n'.format(key, hduImage[keys]))
+                            file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
                     # file.write('BITPIX  =   -64\n')
                     # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
                     # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))

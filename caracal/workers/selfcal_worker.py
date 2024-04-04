@@ -1025,8 +1025,8 @@ def worker(pipeline, recipe, config):
                 prefix,field, num)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,sof_mask)):
                 raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\
-                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,fits_mask))
-            sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMask)})
+                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,sof_mask))
+            sofia_opts.update({"import.maskFile": 'masking/{}'.format(sof_mask)})
 
 
 

@@ -930,7 +930,7 @@ def worker(pipeline, recipe, config):
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-                fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datTmp,headTmp,overwrite=True) 
+                fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
 
                 print('#####$$$$$$$$$$@@!$#$#!#@!#')
                 #dope header to make SoFiA happy

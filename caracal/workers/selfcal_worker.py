@@ -823,7 +823,7 @@ def worker(pipeline, recipe, config):
             flags_sof = config[key]['flagregion']
             sofia_opts.update({"flag.regions": flags_sof})
 
-        if config[key]['inputmask']:
+        if config[key]['inputmask'] != 'sofia':
             
             doProj=False
 
@@ -854,7 +854,7 @@ def worker(pipeline, recipe, config):
                 else:
                     doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
 
-            if doProj and num == 0:
+            if doProj:
                 '''
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''
@@ -1019,6 +1019,15 @@ def worker(pipeline, recipe, config):
             #            input=pipeline.input,
             #            output=pipeline.output,
             #            label='Copy image header to mask')
+        elif config[key]['inputmask'] == 'sofia':
+            
+            sof_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+                prefix,field, num)
+            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,sof_mask)):
+                raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\
+                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,fits_mask))
+            sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMask)})
+
 
 
         if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
@@ -1099,6 +1108,8 @@ def worker(pipeline, recipe, config):
                        label='Extracted regridded mosaic')
 
             sofia_opts.update({"import.maskFile": fornax_namemask_regr})
+
+
 
         recipe.add('cab/sofia', step,
                    sofia_opts,

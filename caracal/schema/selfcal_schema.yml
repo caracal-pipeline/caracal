@@ -204,8 +204,9 @@ mapping:
             required: false
             example: ''
           inputmask:
-            type: str
-            desc: User-provided input-mask that will be supplemented by the SoFiA mask, created through SoFiA source-finding.
+            seq:
+              - type: str
+            desc: User-provided input-mask that will be supplemented by the SoFiA mask. Keyword 'sofia' sets as input the cleanmask created through SoFiA source-finding in the previous image step. This keyword should be used only for refining the mask after the first imaging loop.  
             required: false
             example: ''
           fornax_special:

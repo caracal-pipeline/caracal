@@ -927,14 +927,12 @@ def worker(pipeline, recipe, config):
 
                 print('#####################')
                 print(postGridMask)
-                with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
-                    try:
-                        del hdul[0].header['EN']
-                    except KeyError:
-                        pass
-                    hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-  
-                hdul.flush()
+                datTmp = fits.getdata(postGridMask)
+                headTmp = fits.getheader(postGridMask)
+                datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+                fits.writeto(postGridMask,datTmp,headTmp,overwrite=True) 
+
+                print('#####$$$$$$$$$$@@!$#$#!#@!#')
                 #dope header to make SoFiA happy
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:

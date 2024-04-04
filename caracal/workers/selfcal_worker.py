@@ -863,7 +863,7 @@ def worker(pipeline, recipe, config):
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
-                    file.write('BITPIX  =   -32\n')
+                    file.write('BITPIX  =   -64\n')
 
                     for keys in hduImage:
                         if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
@@ -928,7 +928,11 @@ def worker(pipeline, recipe, config):
 
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-
+                try:
+                    del hdul[0].header['EN']
+                except KeyError:
+                    pass
+                hdul.flush()
                 #dope header to make SoFiA happy
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:

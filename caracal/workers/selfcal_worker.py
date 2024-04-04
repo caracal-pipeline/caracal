@@ -823,11 +823,11 @@ def worker(pipeline, recipe, config):
             flags_sof = config[key]['flagregion']
             sofia_opts.update({"flag.regions": flags_sof})
 
-        if config[key]['inputmask'] != 'sofia':
+        if config[key]['inputmask'][num] != 'sofia':
             
             doProj=False
 
-            preGridMask = config[key]['inputmask']
+            preGridMask = config[key]['inputmask'][num]
             
 
             postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
@@ -1019,7 +1019,7 @@ def worker(pipeline, recipe, config):
             #            input=pipeline.input,
             #            output=pipeline.output,
             #            label='Copy image header to mask')
-        elif config[key]['inputmask'] == 'sofia':
+        elif config[key]['inputmask'][num] == 'sofia':
             
             sof_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
                 prefix,field, num)

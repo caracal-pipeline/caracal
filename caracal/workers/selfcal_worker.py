@@ -854,7 +854,7 @@ def worker(pipeline, recipe, config):
                 else:
                     doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
 
-            if doProj:
+            if doProj and num == 0:
                 '''
                 MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
                 '''

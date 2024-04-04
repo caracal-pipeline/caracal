@@ -925,13 +925,15 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []       
 
-
+                print('#####################')
+                print(postGridMask)
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+                    try:
+                        del hdul[0].header['EN']
+                    except KeyError:
+                        pass
                     hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-                try:
-                    del hdul[0].header['EN']
-                except KeyError:
-                    pass
+  
                 hdul.flush()
                 #dope header to make SoFiA happy
 

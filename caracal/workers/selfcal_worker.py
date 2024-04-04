@@ -716,14 +716,14 @@ def worker(pipeline, recipe, config):
                     "local-rms": False,
                   })
             
-            recipe.add('cab/wsclean', step,
-                       image_opts,
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
-            recipe.run()
-            # Empty job que after execution
-            recipe.jobs = []
+        recipe.add('cab/wsclean', step,
+                   image_opts,
+                   input=pipeline.input,
+                   output=pipeline.output,
+                   label='{:s}:: Make wsclean image (selfcal iter {})'.format(step, num))
+        recipe.run()
+        # Empty job que after execution
+        recipe.jobs = []
 
     def sofia_mask(trg, num, img_dir, field):
         step = 'make-sofia_mask-field{0:d}-iter{1:d}'.format(trg,num)

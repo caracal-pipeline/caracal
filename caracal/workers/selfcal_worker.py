@@ -925,6 +925,10 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []       
 
+
+                with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+                    hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+
                 #dope header to make SoFiA happy
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:

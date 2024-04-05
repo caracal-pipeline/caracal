@@ -823,14 +823,15 @@ def worker(pipeline, recipe, config):
             flags_sof = config[key]['flagregion']
             sofia_opts.update({"flag.regions": flags_sof})
 
-        if config[key]['inputmask'][num] != 'sofia':
+        preGridMask = config[key]['inputmask'][num]
+        
+
+        postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
+
+        if num==0:
             
             doProj=False
 
-            preGridMask = config[key]['inputmask'][num]
-            
-
-            postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
             msname_base = os.path.splitext(mslist[0])[0]
 
@@ -925,14 +926,16 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []       
 
-                print('#####################')
                 print(postGridMask)
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+                try:
+                    del headTmp['EN']
+                except KeyError:
+                    pass
                 fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
 
-                print('#####$$$$$$$$$$@@!$#$#!#@!#')
                 #dope header to make SoFiA happy
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
@@ -1019,15 +1022,6 @@ def worker(pipeline, recipe, config):
             #            input=pipeline.input,
             #            output=pipeline.output,
             #            label='Copy image header to mask')
-        elif config[key]['inputmask'][num] == 'sofia':
-            
-            sof_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
-                prefix,field, num)
-            if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,sof_mask)):
-                raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\
-                    " (maybe the detection threshold was too high?). Please check the logs.".format(pipeline.output,sof_mask))
-            sofia_opts.update({"import.maskFile": '{}'.format(sof_mask)})
-
 
 
         if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
@@ -1109,6 +1103,12 @@ def worker(pipeline, recipe, config):
 
             sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
+        elif num>0:
+            
+            if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMask)})
+            else:
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
 
 
         recipe.add('cab/sofia', step,

@@ -985,11 +985,9 @@ def worker(pipeline, recipe, config):
                         cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
                         if cent < axDict[i][1]/2+1:
                             delt = int(axDict[i][1]/2+1 - cent)
-                            if i == '1':
                            
                             hdul[0].header['CRPIX'+i] = cent + delt
-                        if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
-                            delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
+
                         if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
                             delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
                             if cent > axDict[i][1]/2+1:

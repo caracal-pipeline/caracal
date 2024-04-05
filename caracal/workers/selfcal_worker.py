@@ -960,8 +960,8 @@ def worker(pipeline, recipe, config):
 
                 with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
 
-                    axDict = {'1' : [2,cubeWidth],
-                              '2' : [1,cubeHeight]}
+                    axDict = {'1' : [2,imgWidth],
+                              '2' : [1,imgHeight]}
  
 
                     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)

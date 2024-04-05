@@ -931,7 +931,7 @@ def worker(pipeline, recipe, config):
                 REPROJECT user supplied mask
                 '''
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProject', step,
+                recipe.add('cab/mProjectCube', step,
                            {
                                "in.fits": preGridMask,
                                "out.fits": postGridMask,

@@ -1021,7 +1021,7 @@ def worker(pipeline, recipe, config):
             #            label='Copy image header to mask')
         elif config[key]['inputmask'][num] == 'sofia':
             
-            sof_mask = 'masking/{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
+            sof_mask = '{0:s}_{1:s}_{2:d}_clean_mask.fits'.format(
                 prefix,field, num)
             if not os.path.isfile('{0:s}/{1:s}'.format(pipeline.output,sof_mask)):
                 raise caracal.ConfigurationError("SoFiA clean mask {0:s}/{1:s} not found. Something must have gone wrong with the SoFiA run"\

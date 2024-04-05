@@ -823,7 +823,7 @@ def worker(pipeline, recipe, config):
             flags_sof = config[key]['flagregion']
             sofia_opts.update({"flag.regions": flags_sof})
 
-        preGridMask = config[key]['inputmask'][num]
+        preGridMask = config[key]['inputmask']
         
 
         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))

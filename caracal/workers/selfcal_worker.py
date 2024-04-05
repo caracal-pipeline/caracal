@@ -862,33 +862,55 @@ def worker(pipeline, recipe, config):
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
                 hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
-                with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-                    file.write('SIMPLE  =   T\n')
-                    file.write('BITPIX  =   -64\n')
+                # with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                #     file.write('SIMPLE  =   T\n')
+                #     file.write('BITPIX  =   -64\n')
 
-                    for keys in hduImage:
-                        if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-                            file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
-                    # file.write('BITPIX  =   -64\n')
-                    # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
-                    # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
-                    # file.write('CTYPE1  =   \'RA---SIN\'\n')
-                    # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
-                    # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
-                    # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
-                    # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
-                    # file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                    # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
-                    # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
-                    # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
-                    # file.write('EXTEND  =   T\n')
-                    # file.write('EQUINOX =   2000.0\n')
-                    # file.write('SPECSYS =   TOPOCENT\n')
+                #     for keys in hduImage:
+                #         if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
+                #             file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
+                #     # file.write('BITPIX  =   -64\n')
+                #     # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                #     # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                #     # file.write('CTYPE1  =   \'RA---SIN\'\n')
+                #     # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                #     # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                #     # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                #     # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                #     # file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                #     # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                #     # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                #     # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                #     # file.write('EXTEND  =   T\n')
+                #     # file.write('EQUINOX =   2000.0\n')
+                #     # file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
-                    file.write('END\n')
+                #     file.write('END\n')
         
+
+
+                with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                    file.write('SIMPLE  =   T\n')
+                    file.write('BITPIX  =   -64\n')
+                    file.write('NAXIS   =   2\n')
+                    file.write('NAXIS1  =   {}\n'.format(imgWidth))
+                    file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    file.write('CRVAL1  =   {}\n'.format(raTarget))
+                    file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
+                    file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
+                    file.write('NAXIS2  =   {}\n'.format(imgHeight))
+                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    file.write('CRVAL2  =   {}\n'.format(decTarget))
+                    file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
+                    file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
+                    file.write('EXTEND  =   T\n')
+                    file.write('EQUINOX =   2000.0\n')
+                    file.write('SPECSYS =   TOPOCENT\n')
+                    file.write('END\n')
+
+
 
                 if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
                     os.remove('{}/{}'.format(pipeline.masking,postGridMask))
@@ -909,7 +931,7 @@ def worker(pipeline, recipe, config):
                 REPROJECT user supplied mask
                 '''
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProjectCube', step,
+                recipe.add('cab/mProject', step,
                            {
                                "in.fits": preGridMask,
                                "out.fits": postGridMask,
@@ -926,15 +948,60 @@ def worker(pipeline, recipe, config):
                 # Empty job que after execution
                 recipe.jobs = []       
 
-                print(postGridMask)
-                datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
-                headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
-                datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-                try:
-                    del headTmp['EN']
-                except KeyError:
-                    pass
-                fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
+                # print(postGridMask)
+                # datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
+                # headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
+                # datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+                # try:
+                #     del headTmp['EN']
+                # except KeyError:
+                #     pass
+                # fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
+
+                with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+
+                    axDict = {'1' : [2,cubeWidth],
+                              '2' : [1,cubeHeight]}
+ 
+
+                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                    hdul[0].header['NAXIS'] =  4                    
+                    hdul[0].header['NAXIS3'] =  1
+                    hdul[0].header['CTYPE3'] =  'FREQ'
+                    hdul[0].header['CRVAL3'] =  0
+                    hdul[0].header['CRPIX3'] =  1
+                    hdul[0].header['CUNIT3'] =  'Hz'
+                    hdul[0].header['CDELT3'] =  1
+                    hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                    hdul[0].header['NAXIS4'] =  1
+                    hdul[0].header['CTYPE4'] =  'STOKES'
+                    hdul[0].header['CRVAL4'] =  1
+                    hdul[0].header['CRPIX4'] =  1
+                    hdul[0].header['CDELT4'] =  1
+                    hdul[0].header['CUNIT4'] =  ' '
+            
+
+                    for i in ['1','2']:
+                        cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
+                        if cent < axDict[i][1]/2+1:
+                            delt = int(axDict[i][1]/2+1 - cent)
+                            if i == '1':
+                           
+                            hdul[0].header['CRPIX'+i] = cent + delt
+                        if hdul[0].data.shape[axDict[i][0]] < axDict[i][1]:
+                            delt = int(axDict[i][1] - hdul[0].data.shape[axDict[i][0]])
+                        if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
+                            delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
+                            if cent > axDict[i][1]/2+1:
+                                hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
+
+                        hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                        try:
+                            del hdul[0].header['EN']
+                        except KeyError:
+                            pass
+                        hdul.flush()
+
 
                 #dope header to make SoFiA happy
 
@@ -2473,6 +2540,7 @@ def worker(pipeline, recipe, config):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(
                     image_path, pipeline), mslist, field)
+
                 sofia_mask(target_iter, 0, get_dir_path(
                     image_path, pipeline), field)
                 recipe.run()

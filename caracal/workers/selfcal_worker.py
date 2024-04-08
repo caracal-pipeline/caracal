@@ -959,7 +959,10 @@ def worker(pipeline, recipe, config):
                 #     del headTmp['EN']
                 # except KeyError:
                 #     pass
-                fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
+
+                postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
+
+                fits.writeto('{}/{}'.format(pipeline.masking,postGridMaskSof),datNew,headTmp,overwrite=True) 
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
 
@@ -1031,7 +1034,7 @@ def worker(pipeline, recipe, config):
 
 
 
-                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMask)})
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
             else:
                 sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
             # mask_fits = 'masking/'+config[key]['inputmask']

@@ -922,7 +922,6 @@ def worker(pipeline, recipe, config):
                         
                     preGridMaskNew = preGridMask.replace('.fits','_01.fits')
                     hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
-                    preGridMask = preGridMaskNew
 
 
 
@@ -933,14 +932,14 @@ def worker(pipeline, recipe, config):
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
                 recipe.add('cab/mProject', step,
                            {
-                               "in.fits": preGridMask,
+                               "in.fits": preGridMaskNew,
                                "out.fits": postGridMask,
                                "hdr.template" : 'tmp.hdr',
                                "f" : True,
                             },
                             input=pipeline.masking,
                             output=pipeline.masking,
-                            label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMask))
+                            label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMaskNew))
 
 
                 #In order to make sure that we actually find stuff in the images we execute the rec ipe here

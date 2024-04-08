@@ -931,7 +931,7 @@ def worker(pipeline, recipe, config):
                 REPROJECT user supplied mask
                 '''
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProjectCube', step,
+                recipe.add('cab/mProject', step,
                            {
                                "in.fits": preGridMask,
                                "out.fits": postGridMask,
@@ -952,10 +952,13 @@ def worker(pipeline, recipe, config):
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-                try:
-                    del headTmp['EN']
-                except KeyError:
-                    pass
+                datNew = np.expand_dims(datNew, axis=0)
+                datNew = np.expand_dims(datNew, axis=0)
+                headTmp['NAXIS'] = 4
+                # try:
+                #     del headTmp['EN']
+                # except KeyError:
+                #     pass
                 fits.writeto('{}/{}'.format(pipeline.masking,postGridMask),datNew,headTmp,overwrite=True) 
 
                 # with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:

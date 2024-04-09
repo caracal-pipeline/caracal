@@ -862,6 +862,9 @@ def worker(pipeline, recipe, config):
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
                 hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
+
+
+
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
                     file.write('BITPIX  =   -64\n')
@@ -951,9 +954,9 @@ def worker(pipeline, recipe, config):
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-                datNew = np.expand_dims(datNew, axis=0)
-                datNew = np.expand_dims(datNew, axis=0)
-                headTmp['NAXIS'] = 4
+                # datNew = np.expand_dims(datNew, axis=0)
+                # datNew = np.expand_dims(datNew, axis=0)
+                # headTmp['NAXIS'] = 4
                 # try:
                 #     del headTmp['EN']
                 # except KeyError:

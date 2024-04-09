@@ -862,31 +862,28 @@ def worker(pipeline, recipe, config):
                 caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
                 hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
-
-
-
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
-                    file.write('BITPIX  =   -64\n')
-
-                    for keys in hduImage:
-                        if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-                            file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
                     # file.write('BITPIX  =   -64\n')
-                    # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
-                    # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
-                    # file.write('CTYPE1  =   \'RA---SIN\'\n')
-                    # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
-                    # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
-                    # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
-                    # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
-                    # file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                    # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
-                    # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
-                    # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
-                    # file.write('EXTEND  =   T\n')
-                    # file.write('EQUINOX =   2000.0\n')
-                    # file.write('SPECSYS =   TOPOCENT\n')
+
+                    # for keys in hduImage:
+                        # if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
+                        #     file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
+                    file.write('BITPIX  =   -64\n')
+                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                    file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                    file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                    file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                    file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                    file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                    file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                    file.write('EXTEND  =   T\n')
+                    file.write('EQUINOX =   2000.0\n')
+                    file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
@@ -2547,8 +2544,8 @@ def worker(pipeline, recipe, config):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(
                     image_path, pipeline), mslist, field)
-                recipe.run()
-                recipe.jobs = []
+                # recipe.run()
+                # recipe.jobs = []
                 sofia_mask(target_iter, 0, get_dir_path(
                     image_path, pipeline), field)
                 recipe.run()

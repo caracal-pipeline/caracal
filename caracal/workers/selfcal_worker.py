@@ -1192,6 +1192,8 @@ def worker(pipeline, recipe, config):
                    output=pipeline.output+'/masking/',
                    label='{0:s}:: Make SoFiA mask'.format(step))
 
+        recipe.run()
+        recipe.jobs = []
        # print(postGridMask)
         datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
         # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
@@ -1210,7 +1212,8 @@ def worker(pipeline, recipe, config):
         print('#############')
         print(outmaskName)
         fits.writeto(outmaskName,datTot,datHead,overwrite=True)
-        sys.exit(0)
+
+
 
     def breizorro_mask(trg, num, img_dir, field):
         step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)
@@ -2567,12 +2570,12 @@ def worker(pipeline, recipe, config):
                     os.mkdir(image_path)
                 fake_image(target_iter, 0, get_dir_path(
                     image_path, pipeline), mslist, field)
-                # recipe.run()
-                # recipe.jobs = []
-                sofia_mask(target_iter, 0, get_dir_path(
-                    image_path, pipeline), field)
                 recipe.run()
                 recipe.jobs = []
+                sofia_mask(target_iter, 0, get_dir_path(
+                    image_path, pipeline), field)
+                # recipe.run()
+                # recipe.jobs = []
                 config['image']['cleanmask_method'].insert(1,config['image']['cleanmask_method'][self_cal_iter_counter if len(config['image']['cleanmask_method']) > self_cal_iter_counter else -1])
                 image_path = "{0:s}/image_{1:d}".format(
                     pipeline.continuum, self_cal_iter_counter)
@@ -2607,8 +2610,6 @@ def worker(pipeline, recipe, config):
             if mask_key=='sofia' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 sofia_mask(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), field)
-                recipe.run()
-                recipe.jobs = []
             elif mask_key=='breizorro' and self_cal_iter_counter != cal_niter+1 and pipeline.enable_task(config, 'image'):
                 breizorro_mask(target_iter, self_cal_iter_counter,
                                get_dir_path(image_path, pipeline), field)

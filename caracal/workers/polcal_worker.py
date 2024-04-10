@@ -1182,7 +1182,7 @@ def worker(pipeline, recipe, config):
                                             "polindex": [0.03],
                                             "polangle": [-0.202893],
                                             "rotmeas": 33},
-                             "J1130-1449": {"standard": "manual",
+                             "J0137+3309": {"standard": "manual",
                                             "fluxdensity": [16.112],
                                             "spix": -0.889,
                                             "reffreq": "1.4GHz",
@@ -1226,6 +1226,9 @@ def worker(pipeline, recipe, config):
             pol_calib = ",".join(getattr(pipeline, config["pol_calib"])[i])
             if pol_calib == 'J1130-1449':
                 caracal.log.info("CARACal knows only bandwidth averaged properties of J1130-1449 based on https://archive-gw-1.kat.ac.za/public/meerkat/MeerKAT-L-band-Polarimetric-Calibration.pdf")
+            elif pol_calib == 'J0137+3309':
+                caracal.log.info("The properties of J1130-1449 are based on Taylor&Legodi 2021 - Polarization of MeerKAT Calibrators.")
+
         else:
             pol_calib = 'none'
         leakage_calib = ",".join(getattr(pipeline, config["leakage_calib"])[i])

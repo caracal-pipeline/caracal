@@ -1215,16 +1215,14 @@ def worker(pipeline, recipe, config):
         datTot = np.add(datMask,datForn)
         caracal.log.info(np.nansum(datTot))
 
-        # indexMask = np.where(datTot > 0)
-        # datTot[indexMask] = 1
-        caracal.log.info(np.nansum(datTot))
+        indexMask = np.where(datTot > 0)
+        datTot[indexMask] = 1
                         
-        outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
+        # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
         fits.writeto(outmaskName,datTot,datHead,overwrite=True)
 
         caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
-        sys.exit(0)
 
     def breizorro_mask(trg, num, img_dir, field):
         step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)

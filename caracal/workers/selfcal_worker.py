@@ -1215,11 +1215,11 @@ def worker(pipeline, recipe, config):
         datTot = np.add(datMask,datForn)
         caracal.log.info(np.nansum(datTot))
 
-        indexMask = np.where(datTot > 0)
-        datTot[indexMask] = 1
+        # indexMask = np.where(datTot > 0)
+        # datTot[indexMask] = 1
         caracal.log.info(np.nansum(datTot))
                         
-        outmaskName = preGridMask.replace('mask.fits','mask_mask.fits')
+        outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
         fits.writeto(outmaskName,datTot,datHead,overwrite=True)
 

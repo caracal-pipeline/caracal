@@ -950,6 +950,10 @@ def worker(pipeline, recipe, config):
                 # print(postGridMask)
                 datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
                 headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
+
+                idxNan=np.isnan(datTmp)
+                datTmp[idxNan] = 0.0
+
                 datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
                 # datNew = np.expand_dims(datNew, axis=0)
                 # datNew = np.expand_dims(datNew, axis=0)
@@ -1189,19 +1193,19 @@ def worker(pipeline, recipe, config):
                    label='{0:s}:: Make SoFiA mask'.format(step))
 
        # print(postGridMask)
-        datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
-        datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
-        datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
+        # datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
+        # datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
+        # datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
 
 
 
-        datTot = np.sum(datMask,datForn)
+        # datTot = np.add(datMask,datForn)
 
-        indexMask = np.where(datTot > 0)
-        datTot[indexMask] = 1
+        # indexMask = np.where(datTot > 0)
+        # datTot[indexMask] = 1
                         
 
-        fits.writeto(outmaskName,datTot,datHead,overwrite=True)
+        # fits.writeto(outmaskName,datTot,datHead,overwrite=True)
 
 
     def breizorro_mask(trg, num, img_dir, field):

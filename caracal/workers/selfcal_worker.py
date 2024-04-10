@@ -1194,11 +1194,13 @@ def worker(pipeline, recipe, config):
 
        # print(postGridMask)
         datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
+        # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
+
         datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
         datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
 
         idxNan = np.isnan(datForn)
-        datForn[idxNan] = 0.0
+        datForn[idxNan] = 0
 
         datTot = np.add(datMask,datForn)
 

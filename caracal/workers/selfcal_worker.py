@@ -1198,12 +1198,15 @@ def worker(pipeline, recipe, config):
 
         caracal.log.info('++++++++++++++LOADING MASKS+++++++++++++++++')
 
-
+        caracal.log.info(outmaskName)
         datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
         # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
 
         datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
         datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
+        caracal.log.info(postGridMaskSof)
+        datForn = np.expand_dims(datForn,axis=0)
+        datForn = np.expand_dims(datForn,axis=0)
 
         idxNan = np.isnan(datForn)
         datForn[idxNan] = 0

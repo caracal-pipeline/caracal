@@ -864,30 +864,30 @@ def worker(pipeline, recipe, config):
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
-                    file.write('BITPIX  =   -64\n')
-
-                    for keys in hduImage:
-                        if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-                            file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
                     # file.write('BITPIX  =   -64\n')
-                    # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
-                    # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
-                    # file.write('CTYPE1  =   \'RA---SIN\'\n')
-                    # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
-                    # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
-                    # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
-                    # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
-                    # file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                    # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
-                    # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
-                    # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
-                    # file.write('EXTEND  =   T\n')
-                    # file.write('EQUINOX =   2000.0\n')
-                    # file.write('SPECSYS =   TOPOCENT\n')
+
+                    # for keys in hduImage:
+                    #     if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
+                    #         file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
+                    file.write('BITPIX  =   -64\n')
+                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                    file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                    file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                    file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                    file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                    file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                    file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                    file.write('EXTEND  =   T\n')
+                    file.write('EQUINOX =   2000.0\n')
+                    file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
-                    # file.write('END\n')
+                    file.write('END\n')
         
 
 
@@ -930,7 +930,7 @@ def worker(pipeline, recipe, config):
                 REPROJECT user supplied mask
                 '''
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProjectCube', step,
+                recipe.add('cab/mProject', step,
                            {
                                "in.fits": preGridMaskNew,
                                "out.fits": postGridMask,
@@ -1037,9 +1037,9 @@ def worker(pipeline, recipe, config):
 
 
 
-                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-            else:
-                sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
+            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
+            # else:
+            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
             # mask_fits = 'masking/'+config[key]['inputmask']
             # mask_casa = mask_fits.replace('.fits','.image')
             # mask_regrid_casa = mask_fits.replace('.fits','_regrid.image')
@@ -1177,13 +1177,13 @@ def worker(pipeline, recipe, config):
 
             sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
-        elif num>0:
-            postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
+        # elif num>0:
+        #     postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
-            if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
-                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-            else:
-                sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
+        #     if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
+        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
+        #     else:
+        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
 
 
         recipe.add('cab/sofia', step,
@@ -1195,6 +1195,10 @@ def worker(pipeline, recipe, config):
         recipe.run()
         recipe.jobs = []
        # print(postGridMask)
+
+        caracal.log.info('++++++++++++++LOADING MASKS+++++++++++++++++')
+
+
         datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
         # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
 
@@ -1203,16 +1207,19 @@ def worker(pipeline, recipe, config):
 
         idxNan = np.isnan(datForn)
         datForn[idxNan] = 0
+        caracal.log.info(np.nansum(datForn))
 
         datTot = np.add(datMask,datForn)
+        caracal.log.info(np.nansum(datTot))
 
         indexMask = np.where(datTot > 0)
         datTot[indexMask] = 1
+        caracal.log.info(np.nansum(datTot))
                         
-        print('#############')
-        print(outmaskName)
+
         fits.writeto(outmaskName,datTot,datHead,overwrite=True)
 
+        caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 
 
     def breizorro_mask(trg, num, img_dir, field):

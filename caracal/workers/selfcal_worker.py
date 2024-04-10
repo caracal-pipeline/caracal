@@ -864,30 +864,30 @@ def worker(pipeline, recipe, config):
                 
                 with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
                     file.write('SIMPLE  =   T\n')
-                    # file.write('BITPIX  =   -64\n')
-
-                    # for keys in hduImage:
-                        # if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-                        #     file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
                     file.write('BITPIX  =   -64\n')
-                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
-                    file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
-                    file.write('CTYPE1  =   \'RA---SIN\'\n')
-                    file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
-                    file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
-                    file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
-                    file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
-                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
-                    file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
-                    file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
-                    file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
-                    file.write('EXTEND  =   T\n')
-                    file.write('EQUINOX =   2000.0\n')
-                    file.write('SPECSYS =   TOPOCENT\n')
+
+                    for keys in hduImage:
+                        if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
+                            file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
+                    # file.write('BITPIX  =   -64\n')
+                    # file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    # file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                    # file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    # file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                    # file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                    # file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                    # file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                    # file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    # file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                    # file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                    # file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                    # file.write('EXTEND  =   T\n')
+                    # file.write('EQUINOX =   2000.0\n')
+                    # file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
-                    file.write('END\n')
+                    # file.write('END\n')
         
 
 
@@ -930,7 +930,7 @@ def worker(pipeline, recipe, config):
                 REPROJECT user supplied mask
                 '''
                 step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-                recipe.add('cab/mProject', step,
+                recipe.add('cab/mProjectCube', step,
                            {
                                "in.fits": preGridMaskNew,
                                "out.fits": postGridMask,
@@ -1207,9 +1207,10 @@ def worker(pipeline, recipe, config):
         indexMask = np.where(datTot > 0)
         datTot[indexMask] = 1
                         
-
+        print('#############')
+        print(outmaskName)
         fits.writeto(outmaskName,datTot,datHead,overwrite=True)
-
+        sys.exit(0)
 
     def breizorro_mask(trg, num, img_dir, field):
         step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)

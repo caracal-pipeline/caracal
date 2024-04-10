@@ -1193,19 +1193,20 @@ def worker(pipeline, recipe, config):
                    label='{0:s}:: Make SoFiA mask'.format(step))
 
        # print(postGridMask)
-        # datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
-        # datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
-        # datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
+        datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
+        datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
+        datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
 
+        idxNan = np.isnan(datForn)
+        datForn[idxNan] = 0.0
 
+        datTot = np.add(datMask,datForn)
 
-        # datTot = np.add(datMask,datForn)
-
-        # indexMask = np.where(datTot > 0)
-        # datTot[indexMask] = 1
+        indexMask = np.where(datTot > 0)
+        datTot[indexMask] = 1
                         
 
-        # fits.writeto(outmaskName,datTot,datHead,overwrite=True)
+        fits.writeto(outmaskName,datTot,datHead,overwrite=True)
 
 
     def breizorro_mask(trg, num, img_dir, field):

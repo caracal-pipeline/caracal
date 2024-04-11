@@ -1220,7 +1220,7 @@ def worker(pipeline, recipe, config):
                         
         # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
-        fits.writeto(outmaskName,datTot,datHead,overwrite=True)
+        fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
 
         caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 

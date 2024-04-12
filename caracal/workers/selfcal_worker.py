@@ -496,7 +496,7 @@ def worker(pipeline, recipe, config):
             if multiscale_scales:
                 fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
             if multiscale_bias:
-                fake_image_opts.update({"multiscale-bias": multiscale_bias})
+                fake_image_opts.update({"multiscale-scale-bias": multiscale_bias})
         if nonegative:
             fake_image_opts.update({"nonegative": nonegative})
 
@@ -577,7 +577,7 @@ def worker(pipeline, recipe, config):
             if multiscale_scales:
                 image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
             if  multiscale_bias:
-                image_opts.update({"multiscale_bias": multiscale_bias}) 
+                image_opts.update({"multiscale-scale-bias": multiscale_bias}) 
         if nonegative:
             image_opts.update({"nonegative": nonegative})
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]

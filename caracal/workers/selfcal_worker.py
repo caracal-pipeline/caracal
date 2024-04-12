@@ -495,7 +495,7 @@ def worker(pipeline, recipe, config):
             fake_image_opts.update({"multiscale": multiscale})
             if multiscale_scales:
                 fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
-            if muliscale_bias:
+            if multiscale_bias:
                 fake_image_opts.update({"multiscale-bias": multiscale_bias})
         if nonegative:
             fake_image_opts.update({"nonegative": nonegative})

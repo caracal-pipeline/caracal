@@ -215,6 +215,7 @@ def worker(pipeline, recipe, config):
     transuvl = maxuvl*config['img_transuv_l']/100.
     multiscale = config['img_multiscale']
     multiscale_scales = config['img_multiscale_scales']
+    multiscale_bias = config['img_multiscale_bias']
     if taper == '':
         taper = None
 
@@ -493,6 +494,8 @@ def worker(pipeline, recipe, config):
             fake_image_opts.update({"multiscale": multiscale})
             if multiscale_scales:
                 fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
+            if muliscale_bias:
+                fake_image_opts.update({"multiscale-bias": multiscale_bias})
 
 
         recipe.add('cab/wsclean', step,
@@ -571,7 +574,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({"multiscale": multiscale})
             if multiscale_scales:
                 image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
-
+            if  multiscale_bias:
+                image_opts.update({"multiscale_bias": multiscale_bias}) 
         mask_key = config[key]['cleanmask_method'][num-1 if len(config[key]['cleanmask_method']) >= num else -1]
         if mask_key == 'wsclean':
             image_opts.update({

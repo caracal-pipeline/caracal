@@ -172,6 +172,11 @@ mapping:
         desc: Parameter to prevent cleaning small scales in the large-scale iterations. A higher bias will give more focus to larger scales
         required: false
         example: ''
+      img_nonegative:
+        type: bool
+        desc: Do not allow negative components during cleaning
+        required: false
+        example: ''
       img_nrdeconvsubimg:
         desc: Speed-up deconvolution by splitting the image into a number of subimages, which are deconvolved in parallel. This parameter sets the number of subimages as follows. If set to 1 no parallel deconvolution is performed. If set to 0 the number of subimages is the same as the number of CPUs used by the selfcal worker (see "ncpu" parameter above). If set to a number > 1 , the number of subimages is greater than or equal to the one requested by the user.
         type: int

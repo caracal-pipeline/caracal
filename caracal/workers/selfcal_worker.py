@@ -452,6 +452,8 @@ def worker(pipeline, recipe, config):
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
+        fits_mask = 'masking/track1_m84_mfs84_track1_regridSof.fits'
+
         fake_image_opts = {
             "msname": mslist,
             "column": config[key]['col'][0],
@@ -475,7 +477,9 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem" : absmem,
+            "fitsmask": '{0:s}:output'.format(fits_mask),
         }
+
         if config['img_specfit_nrcoeff'] > 0:
             fake_image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
         if not config['img_mfs_weighting']:
@@ -491,14 +495,14 @@ def worker(pipeline, recipe, config):
             })
         if min_uvw > 0:
             fake_image_opts.update({"minuvw-m": min_uvw})
-        if multiscale:
-            fake_image_opts.update({"multiscale": multiscale})
-            if multiscale_scales:
-                fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
-            if multiscale_bias:
-                fake_image_opts.update({"multiscale-scale-bias": multiscale_bias})
-        if nonegative:
-            fake_image_opts.update({"nonegative": nonegative})
+        # if multiscale:
+        #     fake_image_opts.update({"multiscale": multiscale})
+        #     if multiscale_scales:
+        #         fake_image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
+        #     if multiscale_bias:
+        #         fake_image_opts.update({"multiscale-scale-bias": multiscale_bias})
+        # if nonegative:
+        #     fake_image_opts.update({"nonegative": nonegative})
 
         recipe.add('cab/wsclean', step,
                    fake_image_opts,

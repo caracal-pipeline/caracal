@@ -214,7 +214,7 @@ def worker(pipeline, recipe, config):
     maxuvl = config['img_maxuv_l']
     transuvl = maxuvl*config['img_transuv_l']/100.
     multiscale = config['img_multiscale']
-    multiscale_scales = config['img_multiscale_scales']
+    # multiscale_scales = config['img_multiscale_scales']
     # multiscale_bias = config['img_multiscale_bias']
     nonegative = config['img_nonegative']
     if taper == '':
@@ -578,8 +578,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({"minuvw-m": min_uvw})
         if multiscale:
             image_opts.update({"multiscale": multiscale})
-            if multiscale_scales:
-                image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
+            # if multiscale_scales: #this does not include the auto setting of scales.
+            #     image_opts.update({"multiscale-scales": list(map(int,multiscale_scales.split(',')))})
             # if  multiscale_bias:
             #     image_opts.update({"multiscale-scale-bias": multiscale_bias}) 
         if nonegative:

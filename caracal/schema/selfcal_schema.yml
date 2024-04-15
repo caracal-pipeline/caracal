@@ -162,6 +162,11 @@ mapping:
         desc: Switch on multiscale cleaning.
         required: false
         example: 'False'
+      img_multiscale_scales:
+        type: str
+        desc: Comma-separated integer scales for multiscale cleaning in pixels. If set to an empty string WSClean selects the scales automatically. These include the 0 scale, a scale calculated based on the beam size, and all scales obtained increasing the scale by a factor of 2 until the image size is reached.
+        required: false
+        example: ''
       img_nonegative:
         type: bool
         desc: Do not allow negative components during cleaning

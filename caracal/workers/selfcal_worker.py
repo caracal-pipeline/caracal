@@ -477,7 +477,7 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem" : absmem,
-            # "fitsmask": '{0:s}:output'.format(fits_mask),
+            "fitsmask": '{0:s}:output'.format(fits_mask),
         }
 
         if config['img_specfit_nrcoeff'] > 0:

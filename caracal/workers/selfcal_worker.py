@@ -574,8 +574,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({
                 "taper-gaussian": taper,
             })
-        if min_uvw > 0:
-            image_opts.update({"minuvw-m": min_uvw})
+        # if min_uvw > 0:
+        #     image_opts.update({"minuvw-m": min_uvw})
         if multiscale:
             image_opts.update({"multiscale": multiscale})
             if multiscale_scales: #this does not include the auto setting of scales.

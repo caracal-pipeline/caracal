@@ -452,7 +452,7 @@ def worker(pipeline, recipe, config):
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
-        fits_mask = 'masking/track1_m84_mfs84.fits'
+        fits_mask = 'masking/track1_m84_mfs84_track1_regridSof.fits'
 
         fake_image_opts = {
             "msname": mslist,
@@ -574,8 +574,8 @@ def worker(pipeline, recipe, config):
             image_opts.update({
                 "taper-gaussian": taper,
             })
-        # if min_uvw > 0:
-        #     image_opts.update({"minuvw-m": min_uvw})
+        if min_uvw > 0:
+            image_opts.update({"minuvw-m": min_uvw})
         if multiscale:
             image_opts.update({"multiscale": multiscale})
             if multiscale_scales: #this does not include the auto setting of scales.

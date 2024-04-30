@@ -452,7 +452,7 @@ def worker(pipeline, recipe, config):
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
-        fits_mask = 'masking/track1_mfs84_2_clean_mask.fits'
+        fits_mask = 'masking/track1_m84_mfs84.fits'
 
         fake_image_opts = {
             "msname": mslist,

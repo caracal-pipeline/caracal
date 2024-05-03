@@ -1523,6 +1523,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
                 cube_list.append(image_cube_list[uu].replace('image.fits', 'pb.fits'))
+                if config['pb_cube']['apply_pb']:
+                    cube_list.append(image_cube_list[uu].replace('image.fits', 'pb_corr.fits'))
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))

@@ -25,7 +25,7 @@ caracal = "caracal.main:driver"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-stimela = "^1.7.6"
+stimela = "^1.7.9"
 psutil = "^5.9.4"
 pykwalify = "^1.8.0"
 progressbar2 = "^4.2.0"

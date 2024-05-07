@@ -269,7 +269,7 @@ def worker(pipeline, recipe, config):
                 reg.append(region_dd)
             regfile = "de-{0:s}.reg".format(field)
             ds9_file = os.path.join(OUTPUT, outdir, regfile)
-            Regions(reg).write(ds9_file, format='ds9', coordsys='physical')
+            Regions(reg).write(ds9_file, format='ds9')
 
     def dd_calibrate(field, mslist):
         key = 'calibrate_dd'

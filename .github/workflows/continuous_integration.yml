@@ -6,7 +6,7 @@ name: Ubuntu CI
 on: [push, pull_request]
 
 env:
-  POETRY_VERSION: 1.4.0
+  POETRY_VERSION: 1.8.2
 
 jobs:
   test:
@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.local
-          key: install-${{ env.INSTALL_CACHE_HASH }}-2
+          key: install-${{ env.INSTALL_CACHE_HASH }}-3
 
       - name: Install Poetry
         if: steps.cache-installs.outputs.cache-hit != 'true'

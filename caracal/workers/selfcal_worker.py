@@ -1233,7 +1233,7 @@ def worker(pipeline, recipe, config):
         # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
         fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
-        caracal.log.info('pipeline.output+'/masking/'+outmaskName')
+        caracal.log.info(pipeline.output+'/masking/'+outmaskName)
         caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 
     def breizorro_mask(trg, num, img_dir, field):

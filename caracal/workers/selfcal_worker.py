@@ -452,7 +452,7 @@ def worker(pipeline, recipe, config):
         ncpu_img = config[key]['ncpu_img'] if config[key]['ncpu_img'] else ncpu
         absmem = config[key]['absmem'] 
         step = 'image-field{0:d}-iter{1:d}'.format(trg, num)
-        fits_mask = 'masking/track1_mfs84_2_clean_mask_track1_regridSof.fits'
+        # fits_mask = 'masking/track1_mfs84_2_clean_mask_track1_regridSof.fits'
 
         fake_image_opts = {
             "msname": mslist,
@@ -477,7 +477,7 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem" : absmem,
-            "fitsmask": '{0:s}:output'.format(fits_mask),
+            # "fitsmask": '{0:s}:output'.format(fits_mask),
         }
 
         if config['img_specfit_nrcoeff'] > 0:
@@ -1233,7 +1233,7 @@ def worker(pipeline, recipe, config):
         # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
         fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
-
+        caracal.log.info('pipeline.output+'/masking/'+outmaskName')
         caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 
     def breizorro_mask(trg, num, img_dir, field):

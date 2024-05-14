@@ -481,6 +481,8 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem": absmem,
+            "parallel-gridding": config[key]['nr_parallel_grid'],
+            "use-wgridder": config[key]['use_wgridder']
         }
         if config['img_specfit_nrcoeff'] > 0:
             fake_image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
@@ -558,6 +560,8 @@ def worker(pipeline, recipe, config):
             "nwlayers-factor": nwlayers_factor,
             "threads": ncpu_img,
             "absmem": absmem,
+            "parallel-gridding": config[key]['nr_parallel_grid'],
+            "use-wgridder": config[key]['use_wgridder']
         }
         if config['img_specfit_nrcoeff'] > 0:
             image_opts["fit-spectral-pol"] = config['img_specfit_nrcoeff']
@@ -961,7 +965,7 @@ def worker(pipeline, recipe, config):
                 recipe.add('cab/breizorro', step,
                            {
                                "restored-image": im,
-                               "outfile": outmask_image,
+                               "outfile": f'{outmask_image}:output',
                                "threshold": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
                                "sum-peak": config[key]['breizorro_image']['sum_to_peak'],
                                "fill-holes": True
@@ -970,6 +974,12 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output + '/' + img_dir,
                            label='{0:s}:: Make Breizorro'.format(step))
                 im = '{}:{}'.format(outmask_image, 'output')
+                # In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []
+                caracal.log.info(im)
+
 
             step = 'extract-field{0:d}-iter{1:d}'.format(trg, num)
             calmodel = '{0:s}_{1:s}_{2:d}-pybdsm'.format(prefix, field, num)
@@ -990,7 +1000,7 @@ def worker(pipeline, recipe, config):
                 caracal.log.info('No Previous lsm.html found.')
             recipe.add('cab/pybdsm', step,
                        {
-                           "image": im,
+                           "image": sdm.dismissable(im),
                            "thresh_pix": config[key]['thr_pix'][num - 1 if len(config[key]['thr_pix']) >= num else -1],
                            "thresh_isl": config[key]['thr_isl'][num - 1 if len(config[key]['thr_isl']) >= num else -1],
                            "outfile": '{:s}.gaul:output'.format(calmodel),
@@ -2257,14 +2267,24 @@ def worker(pipeline, recipe, config):
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), mslist, field)
             elif mask_key == 'breizorro':
-                image_path = "{0:s}/image_{1:d}".format(
-                    pipeline.continuum, self_cal_iter_counter)
-                breizorro_mask(target_iter, self_cal_iter_counter, get_dir_path(
-                    image_path, pipeline), field)
-                recipe.run()
-                recipe.jobs = []
-                image(target_iter, self_cal_iter_counter, get_dir_path(
-                    image_path, pipeline), mslist, field)
+                if self_cal_iter_counter == 1:
+                    image_path = "{0:s}/image_{1:d}".format(
+                        pipeline.continuum, 0)
+                    if not os.path.exists(image_path):
+                        os.mkdir(image_path)
+                    fake_image(target_iter, 0, get_dir_path(
+                        image_path, pipeline), mslist, field)
+                    breizorro_mask(target_iter, 0, get_dir_path(
+                        image_path, pipeline), field)
+                    recipe.run()
+                    recipe.jobs = []
+                    image(target_iter, self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), mslist, field)
+                else:
+                    image_path = "{0:s}/image_{1:d}".format(
+                        pipeline.continuum, self_cal_iter_counter)
+                    image(target_iter, self_cal_iter_counter, get_dir_path(
+                        image_path, pipeline), mslist, field)
             else:
                 image(target_iter, self_cal_iter_counter, get_dir_path(
                     image_path, pipeline), mslist, field)

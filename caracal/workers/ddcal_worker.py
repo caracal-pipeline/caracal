@@ -8,6 +8,7 @@ import stimela.dismissable as sdm
 from caracal.dispatch_crew import utils
 from stimela.pathformatter import pathformatter as spf
 from caracal.utils.requires import extras
+from caracal.workers.utils import manage_flagsets as manflags
 
 NAME = 'Direction-dependent Calibration'
 LABEL = "ddcal"
@@ -37,6 +38,12 @@ def worker(pipeline, recipe, config):
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
     caracal.log.info("All_targets", all_targets)
     caracal.log.info("All_msfiles", all_msfile)
+
+    wname = pipeline.CURRENT_WORKER
+    flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
+    flags_after_worker = '{0:s}_{1:s}_after'.format(pipeline.prefix, wname)
+    flag_main_ms = pipeline.enable_task(config, 'calibrate')
+    rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
 
     if not os.path.exists(OUTPUT):
         os.mkdir(OUTPUT)
@@ -84,8 +91,6 @@ def worker(pipeline, recipe, config):
     # Write/rewind flag versions only if flagging tasks are being
     # executed on these .MS files, or if the user asks to rewind flags
     for i, m in enumerate(all_msfile):
-        flag_main_ms = pipeline.enable_task(config, 'calibrate')
-        rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
         if flag_main_ms or rewind_main_ms:
             available_flagversions = manflags.get_flags(pipeline, m)
             if rewind_main_ms:

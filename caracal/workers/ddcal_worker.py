@@ -36,7 +36,7 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem']) + 'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    caracal.log.info(f"All_targets: {all_tagets}")
+    caracal.log.info(f"All_targets: {all_targets}")
     caracal.log.info(f"All_msfiles: {all_msfile}")
 
     wname = pipeline.CURRENT_WORKER

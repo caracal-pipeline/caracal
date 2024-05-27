@@ -81,6 +81,51 @@ def worker(pipeline, recipe, config):
         "Cache-Reset": config['image_dd']["cache_reset"],
         "Log-Boring": config["image_dd"]["log_boring"], }
 
+    # Write/rewind flag versions only if flagging tasks are being
+    # executed on these .MS files, or if the user asks to rewind flags
+    for i, m in enumerate(all_msfile):
+        flag_main_ms = pipeline.enable_task(config, 'calibrate')
+        rewind_main_ms = config['rewind_flags']["enable"] and (config['rewind_flags']['mode'] == 'reset_worker' or config['rewind_flags']["version"] != 'null')
+        if flag_main_ms or rewind_main_ms:
+            available_flagversions = manflags.get_flags(pipeline, m)
+            if rewind_main_ms:
+                if config['rewind_flags']['mode'] == 'reset_worker':
+                    version = flags_before_worker
+                    stop_if_missing = False
+                elif config['rewind_flags']['mode'] == 'rewind_to_version':
+                    version = config['rewind_flags']['version']
+                    if version == 'auto':
+                        version = flags_before_worker
+                    stop_if_missing = True
+                if version in available_flagversions:
+                    if flags_before_worker in available_flagversions and available_flagversions.index(flags_before_worker) < available_flagversions.index(version) and not config['overwrite_flagvers']:
+                        manflags.conflict('rewind_too_little', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                    substep = 'version-{0:s}-ms{1:d}'.format(version, i)
+                    manflags.restore_cflags(pipeline, recipe, version, m, cab_name=substep)
+                    if version != available_flagversions[-1]:
+                        substep = 'delete-flag_versions-after-{0:s}-ms{1:d}'.format(version, i)
+                        manflags.delete_cflags(pipeline, recipe,
+                                               available_flagversions[available_flagversions.index(version) + 1],
+                                               m, cab_name=substep)
+                    if version != flags_before_worker:
+                        substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                        manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                            m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+                elif stop_if_missing:
+                    manflags.conflict('rewind_to_non_existing', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                elif flag_main_ms:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+            else:
+                if flags_before_worker in available_flagversions and not config['overwrite_flagvers']:
+                    manflags.conflict('would_overwrite_bw', pipeline, wname, m, config, flags_before_worker, flags_after_worker)
+                else:
+                    substep = 'save-{0:s}-ms{1:d}'.format(flags_before_worker, i)
+                    manflags.add_cflags(pipeline, recipe, flags_before_worker,
+                                        m, cab_name=substep, overwrite=config['overwrite_flagvers'])
+
+
     def make_primary_beam():
         eidos_opts = {
             "prefix": prefix,

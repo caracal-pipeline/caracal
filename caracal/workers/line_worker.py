@@ -63,9 +63,11 @@ def freq_to_vel(filename, reverse):
                 # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
 
                 headcube['ctype3'] = 'VRAD'
-                if 'cunit3' in headcube:
-                    # delete cunit3 because we adopt the default units = m/s
-                    del headcube['cunit3']
+                headcube['cunit3'] = 'm/s'
+                # 3 lines below commented out because of issue 1209
+                #if 'cunit3' in headcube:
+                #    # delete cunit3 because we adopt the default units = m/s
+                #    del headcube['cunit3']
 
             # convert from radio velocity to frequency
             elif (headcube['naxis'] > 2) and ('VRAD' in headcube['ctype3']) and (headcube['naxis'] > 2) and reverse:
@@ -73,9 +75,11 @@ def freq_to_vel(filename, reverse):
                 headcube['crval3'] = restfreq * \
                     (1 - float(headcube['crval3']) / C)
                 headcube['ctype3'] = 'FREQ'
-                if 'cunit3' in headcube:
-                    # delete cunit3 because we adopt the default units = Hz
-                    del headcube['cunit3']
+                headcube['cunit3'] = 'Hz'
+                # 3 lines below commented out because of issue 1209
+                #if 'cunit3' in headcube:
+                #    # delete cunit3 because we adopt the default units = Hz
+                #    del headcube['cunit3']
             else:
                 if not reverse:
                     caracal.log.warn(
@@ -1519,6 +1523,8 @@ def worker(pipeline, recipe, config):
                            output=pipeline.output,
                            label='Make primary beam cube for {0:s}'.format(image_cube_list[uu]))
                 cube_list.append(image_cube_list[uu].replace('image.fits', 'pb.fits'))
+                if config['pb_cube']['apply_pb']:
+                    cube_list.append(image_cube_list[uu].replace('image.fits', 'pb_corr.fits'))
 
         if pipeline.enable_task(config, 'remove_stokes_axis'):
             caracal.log.info('Will remove Stokes axis of all cubes/images of target {0:d}'.format(tt))

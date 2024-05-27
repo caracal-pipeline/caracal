@@ -36,8 +36,8 @@ def worker(pipeline, recipe, config):
     DDF_LSM = "DDF_lsm.lsm.html"
     shared_mem = str(config['shared_mem']) + 'gb'
     all_targets, all_msfile, ms_dict = pipeline.get_target_mss(label)
-    caracal.log.info("All_targets", all_targets)
-    caracal.log.info("All_msfiles", all_msfile)
+    caracal.log.info(f"All_targets: {all_tagets}")
+    caracal.log.info(f"All_msfiles: {all_msfile}")
 
     wname = pipeline.CURRENT_WORKER
     flags_before_worker = '{0:s}_{1:s}_before'.format(pipeline.prefix, wname)
@@ -193,7 +193,7 @@ def worker(pipeline, recipe, config):
         image_prefix_postcal = "/" + outdir + "/" + prefix + "_" + field
         dd_ms_list = {"Data-MS": ms_list}
         dd_image_opts_postcal.update(dd_ms_list)
-        caracal.log.info("Imaging", ms_list)
+        caracal.log.info(f"Imaging: {ms_list}")
         postcal_datacol = config['image_dd']['data_colname_postcal']
         dd_imagecol = {"Data-ColName": postcal_datacol}
         dd_image_opts_postcal.update(dd_imagecol)
@@ -471,7 +471,7 @@ def worker(pipeline, recipe, config):
     for target in de_targets:
         mslist = ms_dict[target]
         field = utils.filter_name(target)
-        caracal.log.info("Processing field", field, "for de calibration:")
+        caracal.log.info(f"Processing field {field} for de calibration:")
         if USEPB:
             make_primary_beam()
         if pipeline.enable_task(config, 'image_dd'):

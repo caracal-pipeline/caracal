@@ -956,20 +956,25 @@ def worker(pipeline, recipe, config):
                             if hdul[0].header["NAXIS1"] != cubeWidth:
                                 caracal.log.info('NAXIS1')
                                 doProj = True
+                            else: pass
                             if hdul[0].header["NAXIS2"] != cubeHeight:
                                 caracal.log.info('NAXIS2')
                                 doProj = True
+                            else: pass
+
                             if np.round(hdul[0].header["CRVAL1"], 5) != np.round(raTarget, 5):
-                                caracal.log.info('CRVAL1')
+                                caracal.log.info('Updating mask CRVAL1')
                                 doProj = True
+                            else: pass
                             if np.round(hdul[0].header["CRVAL2"], 5) != np.round(decTarget, 5):
                                 doProj = True
-                                caracal.log.info('CRVAL2')
+                                caracal.log.info('Updating mask CRVAL2')
+                            else: pass
 
-                            if int(hdul[0].header['NAXIS3']) > int(nchans):
+                            if int(hdul[0].header['NAXIS3']) > int(nchans): 
                                 doSpec = True
                             else:
-                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
+                                doSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
@@ -977,7 +982,6 @@ def worker(pipeline, recipe, config):
                                 cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
 
                             if np.round(cdelt,1) > np.round(chanwidth[0],1):
-
                                 doSpec = True
                             elif doProj:
                                 pass
@@ -1111,7 +1115,7 @@ def worker(pipeline, recipe, config):
                                 # all in Hz
                                 crval = firstchanfreq[0] + chanwidth[0] * firstchan
                                 cdeltm = hdul[0].header['CDELT3']
-                                cdelte = crval + nchans * binchans * chanwidth[0]
+                                crvale = crval + nchans * binchans * chanwidth[0]
                             else:
                                 # all in m/s
                                 crval = C * (femit - (firstchanfreq[0] + chanwidth[0] * firstchan)) / femit

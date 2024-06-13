@@ -840,218 +840,218 @@ def worker(pipeline, recipe, config):
 
         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
 
-        # if num==0 and preGridMask is not None:
+        if num==0 and preGridMask is not None:
             
-        #     doProj=False
+            doProj=False
 
 
-        #     msname_base = os.path.splitext(mslist[0])[0]
+            msname_base = os.path.splitext(mslist[0])[0]
 
-        #     t = f'{msname_base}-summary.json'      
+            t = f'{msname_base}-summary.json'      
 
 
-        #     with open('{}/{}'.format(pipeline.msdir,t)) as f:
-        #         obsDict = json.load(f)
+            with open('{}/{}'.format(pipeline.msdir,t)) as f:
+                obsDict = json.load(f)
             
 
-        #     raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-        #     decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
-        #     with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+            raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
+            decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+            with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
 
-        #         imgHeight=config['img_npix']
-        #         imgWidth=config['img_npix']
+                imgHeight=config['img_npix']
+                imgWidth=config['img_npix']
 
 
-        #         doProj = True if (hdul[0].header['NAXIS1'] != imgWidth) | (hdul[0].header['NAXIS2'] != imgHeight) else None
-        #         if doProj == True: pass
-        #         else:
-        #             doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
+                doProj = True if (hdul[0].header['NAXIS1'] != imgWidth) | (hdul[0].header['NAXIS2'] != imgHeight) else None
+                if doProj == True: pass
+                else:
+                    doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
 
-        #     if doProj:
-        #         '''
-        #         MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
-        #         '''
-        #         caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
-        #         hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
+            if doProj:
+                '''
+                MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK
+                '''
+                caracal.log.info('Write header for new mask {} to match the grid of the image'.format(postGridMask))
+                hduImage=fits.getheader('{}/{}'.format(pipeline.output,imagename))
                 
-        #         with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-        #             file.write('SIMPLE  =   T\n')
-        #             # file.write('BITPIX  =   -64\n')
+                with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                    file.write('SIMPLE  =   T\n')
+                    # file.write('BITPIX  =   -64\n')
 
-        #             # for keys in hduImage:
-        #             #     if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
-        #             #         file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
-        #             file.write('BITPIX  =   -64\n')
-        #             file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
-        #             file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
-        #             file.write('CTYPE1  =   \'RA---SIN\'\n')
-        #             file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
-        #             file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
-        #             file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
-        #             file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
-        #             file.write('CTYPE2  =   \'DEC--SIN\'\n')
-        #             file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
-        #             file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
-        #             file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
-        #             file.write('EXTEND  =   T\n')
-        #             file.write('EQUINOX =   2000.0\n')
-        #             file.write('SPECSYS =   TOPOCENT\n')
+                    # for keys in hduImage:
+                    #     if keys != 'HISTORY' and keys !='COMMENT' and keys != 'SIMPLE' and keys != 'BITPIX':
+                    #         file.write('{}  =   {}\n'.format(keys, hduImage[keys]))
+                    file.write('BITPIX  =   -64\n')
+                    file.write('NAXIS   =   {}\n'.format(hduImage['NAXIS']))
+                    file.write('NAXIS1  =   {}\n'.format(hduImage['NAXIS1']))
+                    file.write('CTYPE1  =   \'RA---SIN\'\n')
+                    file.write('CRVAL1  =   {}\n'.format(hduImage['CRVAL1']))
+                    file.write('CRPIX1  =   {}\n'.format(hduImage['CRPIX1']))
+                    file.write('CDELT1  =   {}\n'.format(hduImage['CDELT1']))
+                    file.write('NAXIS2  =   {}\n'.format(hduImage['NAXIS2']))
+                    file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                    file.write('CRVAL2  =   {}\n'.format(hduImage['CRVAL2']))
+                    file.write('CRPIX2  =   {}\n'.format(hduImage['CRPIX2']))
+                    file.write('CDELT2  =   {}\n'.format(hduImage['CDELT2']))
+                    file.write('EXTEND  =   T\n')
+                    file.write('EQUINOX =   2000.0\n')
+                    file.write('SPECSYS =   TOPOCENT\n')
                   
 
 
-        #             file.write('END\n')
+                    file.write('END\n')
         
 
 
-        #         # with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
-        #         #     file.write('SIMPLE  =   T\n')
-        #         #     file.write('BITPIX  =   -64\n')
-        #         #     file.write('NAXIS   =   2\n')
-        #         #     file.write('NAXIS1  =   {}\n'.format(imgWidth))
-        #         #     file.write('CTYPE1  =   \'RA---SIN\'\n')
-        #         #     file.write('CRVAL1  =   {}\n'.format(raTarget))
-        #         #     file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
-        #         #     file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
-        #         #     file.write('NAXIS2  =   {}\n'.format(imgHeight))
-        #         #     file.write('CTYPE2  =   \'DEC--SIN\'\n')
-        #         #     file.write('CRVAL2  =   {}\n'.format(decTarget))
-        #         #     file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
-        #         #     file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
-        #         #     file.write('EXTEND  =   T\n')
-        #         #     file.write('EQUINOX =   2000.0\n')
-        #         #     file.write('SPECSYS =   TOPOCENT\n')
-        #         #     file.write('END\n')
+                # with open('{}/tmp.hdr'.format(pipeline.masking), 'w') as file:
+                #     file.write('SIMPLE  =   T\n')
+                #     file.write('BITPIX  =   -64\n')
+                #     file.write('NAXIS   =   2\n')
+                #     file.write('NAXIS1  =   {}\n'.format(imgWidth))
+                #     file.write('CTYPE1  =   \'RA---SIN\'\n')
+                #     file.write('CRVAL1  =   {}\n'.format(raTarget))
+                #     file.write('CRPIX1  =   {}\n'.format(imgWidth/2))
+                #     file.write('CDELT1  =   {}\n'.format(-1*config['img_cell']/3600.))
+                #     file.write('NAXIS2  =   {}\n'.format(imgHeight))
+                #     file.write('CTYPE2  =   \'DEC--SIN\'\n')
+                #     file.write('CRVAL2  =   {}\n'.format(decTarget))
+                #     file.write('CRPIX2  =   {}\n'.format(imgHeight/2))
+                #     file.write('CDELT2  =   {}\n'.format(config['img_cell']/3600.))
+                #     file.write('EXTEND  =   T\n')
+                #     file.write('EQUINOX =   2000.0\n')
+                #     file.write('SPECSYS =   TOPOCENT\n')
+                #     file.write('END\n')
 
 
 
-        #         if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
-        #             os.remove('{}/{}'.format(pipeline.masking,postGridMask))
+                if os.path.exists('{}/{}'.format(pipeline.masking,postGridMask)):
+                    os.remove('{}/{}'.format(pipeline.masking,postGridMask))
 
-        #         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-        #             if np.amax(hdul[0].data) > 1:
-        #                 mask = np.where(hdul[0].data > 0)
-        #                 hdul[0].data[mask] = 1
+                with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
+                    if np.amax(hdul[0].data) > 1:
+                        mask = np.where(hdul[0].data > 0)
+                        hdul[0].data[mask] = 1
                         
-        #             preGridMaskNew = preGridMask.replace('.fits','_01.fits')
-        #             hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
+                    preGridMaskNew = preGridMask.replace('.fits','_01.fits')
+                    hdul.writeto('{}/{}'.format(pipeline.masking,preGridMaskNew), overwrite = True)
 
 
 
-        #         caracal.log.info('Reprojecting mask {} to match the grid of the image.'.format(preGridMask))
-        #         '''
-        #         REPROJECT user supplied mask
-        #         '''
-        #         step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
-        #         recipe.add('cab/mProject', step,
-        #                    {
-        #                        "in.fits": preGridMaskNew,
-        #                        "out.fits": postGridMask,
-        #                        "hdr.template" : 'tmp.hdr',
-        #                        "f" : True,
-        #                     },
-        #                     input=pipeline.masking,
-        #                     output=pipeline.masking,
-        #                     label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMaskNew))
+                caracal.log.info('Reprojecting mask {} to match the grid of the image.'.format(preGridMask))
+                '''
+                REPROJECT user supplied mask
+                '''
+                step = 'reprojectMask-img-{}-field-{}'.format(trg,num)
+                recipe.add('cab/mProject', step,
+                           {
+                               "in.fits": preGridMaskNew,
+                               "out.fits": postGridMask,
+                               "hdr.template" : 'tmp.hdr',
+                               "f" : True,
+                            },
+                            input=pipeline.masking,
+                            output=pipeline.masking,
+                            label='{0:s}:: Reprojecting user input mask {1:s} to match the grid of the image'.format(step, preGridMaskNew))
 
 
-        #         #In order to make sure that we actually find stuff in the images we execute the rec ipe here
-        #         recipe.run()
-        #         # Empty job que after execution
-        #         recipe.jobs = []       
+                #In order to make sure that we actually find stuff in the images we execute the rec ipe here
+                recipe.run()
+                # Empty job que after execution
+                recipe.jobs = []       
 
-        #         # print(postGridMask)
-        #         datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
-        #         headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
+                # print(postGridMask)
+                datTmp = fits.getdata('{}/{}'.format(pipeline.masking,postGridMask))
+                headTmp = fits.getheader('{}/{}'.format(pipeline.masking,postGridMask))
 
-        #         idxNan=np.isnan(datTmp)
-        #         datTmp[idxNan] = 0.0
+                idxNan=np.isnan(datTmp)
+                datTmp[idxNan] = 0.0
 
-        #         datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
-        #         # datNew = np.expand_dims(datNew, axis=0)
-        #         # datNew = np.expand_dims(datNew, axis=0)
-        #         # headTmp['NAXIS'] = 4
-        #         # try:
-        #         #     del headTmp['EN']
-        #         # except KeyError:
-        #         #     pass
+                datNew = np.around(datTmp.astype(np.float32)).astype(np.int16)
+                # datNew = np.expand_dims(datNew, axis=0)
+                # datNew = np.expand_dims(datNew, axis=0)
+                # headTmp['NAXIS'] = 4
+                # try:
+                #     del headTmp['EN']
+                # except KeyError:
+                #     pass
 
-        #         postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
+                postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
-        #         fits.writeto('{}/{}'.format(pipeline.masking,postGridMaskSof),datNew,headTmp,overwrite=True) 
+                fits.writeto('{}/{}'.format(pipeline.masking,postGridMaskSof),datNew,headTmp,overwrite=True) 
 
-        #         # with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
+                # with fits.open('{}/{}'.format(pipeline.masking,postGridMask), mode='update') as hdul:
 
-        #         #     axDict = {'1' : [2,imgWidth],
-        #         #               '2' : [1,imgHeight]}
+                #     axDict = {'1' : [2,imgWidth],
+                #               '2' : [1,imgHeight]}
  
 
-        #         #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-        #         #     hdul[0].header['NAXIS'] =  4                    
-        #         #     hdul[0].header['NAXIS3'] =  1
-        #         #     hdul[0].header['CTYPE3'] =  'FREQ'
-        #         #     hdul[0].header['CRVAL3'] =  0
-        #         #     hdul[0].header['CRPIX3'] =  1
-        #         #     hdul[0].header['CUNIT3'] =  'Hz'
-        #         #     hdul[0].header['CDELT3'] =  1
-        #         #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-        #         #     hdul[0].header['NAXIS4'] =  1
-        #         #     hdul[0].header['CTYPE4'] =  'STOKES'
-        #         #     hdul[0].header['CRVAL4'] =  1
-        #         #     hdul[0].header['CRPIX4'] =  1
-        #         #     hdul[0].header['CDELT4'] =  1
-        #         #     hdul[0].header['CUNIT4'] =  ' '
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS'] =  4                    
+                #     hdul[0].header['NAXIS3'] =  1
+                #     hdul[0].header['CTYPE3'] =  'FREQ'
+                #     hdul[0].header['CRVAL3'] =  0
+                #     hdul[0].header['CRPIX3'] =  1
+                #     hdul[0].header['CUNIT3'] =  'Hz'
+                #     hdul[0].header['CDELT3'] =  1
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS4'] =  1
+                #     hdul[0].header['CTYPE4'] =  'STOKES'
+                #     hdul[0].header['CRVAL4'] =  1
+                #     hdul[0].header['CRPIX4'] =  1
+                #     hdul[0].header['CDELT4'] =  1
+                #     hdul[0].header['CUNIT4'] =  ' '
             
 
-        #         #     for i in ['1','2']:
-        #         #         cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
-        #         #         if cent < axDict[i][1]/2+1:
-        #         #             delt = int(axDict[i][1]/2+1 - cent)
+                #     for i in ['1','2']:
+                #         cent, nax = hdul[0].header['CRPIX'+i], hdul[0].header['NAXIS'+i]
+                #         if cent < axDict[i][1]/2+1:
+                #             delt = int(axDict[i][1]/2+1 - cent)
                            
-        #         #             hdul[0].header['CRPIX'+i] = cent + delt
+                #             hdul[0].header['CRPIX'+i] = cent + delt
 
-        #         #         if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
-        #         #             delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
-        #         #             if cent > axDict[i][1]/2+1:
-        #         #                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
+                #         if hdul[0].data.shape[axDict[i][0]] > axDict[i][1]:
+                #             delt = int(hdul[0].data.shape[axDict[i][0]] - axDict[i][1])
+                #             if cent > axDict[i][1]/2+1:
+                #                 hdul[0].header['CRPIX'+i] = hdul[0].data.shape[axDict[i][0]]/2+1
 
-        #         #         hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
-        #         #         try:
-        #         #             del hdul[0].header['EN']
-        #         #         except KeyError:
-        #         #             pass
-        #         #         hdul.flush()
+                #         hdul[0].data = np.around(hdul[0].data.astype(np.float32)).astype(np.int16)
+                #         try:
+                #             del hdul[0].header['EN']
+                #         except KeyError:
+                #             pass
+                #         hdul.flush()
 
 
-        #         #dope header to make SoFiA happy
+                #dope header to make SoFiA happy
 
-        #         # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
+                # with fits.open('{}/{}'.format(pipeline.masking,postGridMask)) as hdul:
 
-        #         #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-        #         #     hdul[0].header['NAXIS'] =  4
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS'] =  4
                     
-        #         #     hdul[0].header['NAXIS3'] =  1
-        #         #     hdul[0].header['CTYPE3'] =  'FREQ'
-        #         #     hdul[0].header['CRVAL3'] =  0
-        #         #     hdul[0].header['CRPIX3'] =  1
-        #         #     hdul[0].header['CUNIT3'] =  'Hz'
-        #         #     hdul[0].header['CDELT3'] =  1
+                #     hdul[0].header['NAXIS3'] =  1
+                #     hdul[0].header['CTYPE3'] =  'FREQ'
+                #     hdul[0].header['CRVAL3'] =  0
+                #     hdul[0].header['CRPIX3'] =  1
+                #     hdul[0].header['CUNIT3'] =  'Hz'
+                #     hdul[0].header['CDELT3'] =  1
 
-        #         #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
-        #         #     hdul[0].header['NAXIS4'] =  1
-        #         #     hdul[0].header['CTYPE4'] =  'STOKES'
-        #         #     hdul[0].header['CRVAL4'] =  1
-        #         #     hdul[0].header['CRPIX4'] =  1
-        #         #     hdul[0].header['CDELT4'] =  1
-        #         #     hdul[0].header['CUNIT4'] =  ' '
+                #     hdul[0].data = np.expand_dims(hdul[0].data, axis=0)
+                #     hdul[0].header['NAXIS4'] =  1
+                #     hdul[0].header['CTYPE4'] =  'STOKES'
+                #     hdul[0].header['CRVAL4'] =  1
+                #     hdul[0].header['CRPIX4'] =  1
+                #     hdul[0].header['CDELT4'] =  1
+                #     hdul[0].header['CUNIT4'] =  ' '
             
 
-        #         #     hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
+                #     hdul.writeto('{}/{}'.format(pipeline.masking,postGridMask), overwrite = True)
 
 
 
-        #     #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-        #     # else:
-        #     #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
+            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
+            # else:
+            #     sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)}) 
         #     # mask_fits = 'masking/'+config[key]['inputmask']
         #     # mask_casa = mask_fits.replace('.fits','.image')
         #     # mask_regrid_casa = mask_fits.replace('.fits','_regrid.image')
@@ -1110,92 +1110,92 @@ def worker(pipeline, recipe, config):
         #     #            label='Copy image header to mask')
 
 
-        if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
+        # if config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == True:
 
-            recipe.add('cab/sofia', step+"-fornax_special",
-                       sofia_opts_forn,
-                       input=pipeline.output,
-                       output=pipeline.output+'/masking/',
-                       label='{0:s}:: Make SoFiA mask'.format(step))
+        #     recipe.add('cab/sofia', step+"-fornax_special",
+        #                sofia_opts_forn,
+        #                input=pipeline.output,
+        #                output=pipeline.output+'/masking/',
+        #                label='{0:s}:: Make SoFiA mask'.format(step))
 
-            fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
-            sofia_opts.update({"import.maskFile": fornax_namemask})
+        #     fornax_namemask = 'masking/FornaxA_sofia_mask.fits'
+        #     sofia_opts.update({"import.maskFile": fornax_namemask})
 
-        elif config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == False:
+        # elif config[key]['fornax_special'] == True and config[key]['fornax_sofia'] == False:
 
-            # this mask should be regridded to correct f.o.v.
+        #     # this mask should be regridded to correct f.o.v.
 
-            fornax_namemask = 'masking/Fornaxa_vla_mask_doped.fits'
-            fornax_namemask_regr = 'masking/Fornaxa_vla_mask_doped_regr.fits'
+        #     fornax_namemask = 'masking/Fornaxa_vla_mask_doped.fits'
+        #     fornax_namemask_regr = 'masking/Fornaxa_vla_mask_doped_regr.fits'
 
-            mask_casa = fornax_namemask.split('.fits')[0]
-            mask_casa = fornax_namemask+'.image'
+        #     mask_casa = fornax_namemask.split('.fits')[0]
+        #     mask_casa = fornax_namemask+'.image'
 
-            mask_regrid_casa = fornax_namemask+'_regrid.image'
+        #     mask_regrid_casa = fornax_namemask+'_regrid.image'
 
-            imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(
-                prefix, num, mfsprefix)
+        #     imagename_casa = '{0:s}_{1:d}{2:s}-image.image'.format(
+        #         prefix, num, mfsprefix)
 
-            recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
-                       {
-                           "fitsimage": imagename,
-                           "imagename": imagename_casa,
-                           "overwrite": True,
-                       },
-                       input=pipeline.output,
-                       output=pipeline.output,
-                       label='Image in casa format')
+        #     recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
+        #                {
+        #                    "fitsimage": imagename,
+        #                    "imagename": imagename_casa,
+        #                    "overwrite": True,
+        #                },
+        #                input=pipeline.output,
+        #                output=pipeline.output,
+        #                label='Image in casa format')
 
-            recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
-                       {
-                           "fitsimage": fornax_namemask+':output',
-                           "imagename": mask_casa,
-                           "overwrite": True,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Mask in casa format')
+        #     recipe.add('cab/casa_importfits', step+"-fornax_special-import-image",
+        #                {
+        #                    "fitsimage": fornax_namemask+':output',
+        #                    "imagename": mask_casa,
+        #                    "overwrite": True,
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='Mask in casa format')
 
-            recipe.add('cab/casa_imregrid', step+"-fornax_special-regrid",
-                       {
-                           "template": imagename_casa+':output',
-                           "imagename": mask_casa+':output',
-                           "output": mask_regrid_casa,
-                           "overwrite": True,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Regridding mosaic to size and projection of dirty image')
+        #     recipe.add('cab/casa_imregrid', step+"-fornax_special-regrid",
+        #                {
+        #                    "template": imagename_casa+':output',
+        #                    "imagename": mask_casa+':output',
+        #                    "output": mask_regrid_casa,
+        #                    "overwrite": True,
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='Regridding mosaic to size and projection of dirty image')
 
-            recipe.add('cab/casa_exportfits',  step+"-fornax_special-export-mosaic",
-                       {
-                           "fitsimage": fornax_namemask_regr+':output',
-                           "imagename": mask_regrid_casa+':output',
-                           "overwrite": True,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Extracted regridded mosaic')
+        #     recipe.add('cab/casa_exportfits',  step+"-fornax_special-export-mosaic",
+        #                {
+        #                    "fitsimage": fornax_namemask_regr+':output',
+        #                    "imagename": mask_regrid_casa+':output',
+        #                    "overwrite": True,
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='Extracted regridded mosaic')
 
-            recipe.add(change_header_and_type,  step+"-fornax_special-change_header",
-                       {
-                           "filename": pipeline.output+'/'+fornax_namemask_regr,
-                           "headfile": pipeline.output+'/'+imagename,
-                           "copy_head": True,
-                       },
-                       input=pipeline.input,
-                       output=pipeline.output,
-                       label='Extracted regridded mosaic')
+        #     recipe.add(change_header_and_type,  step+"-fornax_special-change_header",
+        #                {
+        #                    "filename": pipeline.output+'/'+fornax_namemask_regr,
+        #                    "headfile": pipeline.output+'/'+imagename,
+        #                    "copy_head": True,
+        #                },
+        #                input=pipeline.input,
+        #                output=pipeline.output,
+        #                label='Extracted regridded mosaic')
 
-            sofia_opts.update({"import.maskFile": fornax_namemask_regr})
+        #     sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
-        # elif num>0 and preGridMask is not None:
-        #     postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
+        elif num>0 and preGridMask is not None:
+            postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
-        # #     if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
-        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-        #     else:
-        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
+        #     if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
+            else:
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
 
 
         recipe.add('cab/sofia', step,
@@ -1210,31 +1210,31 @@ def worker(pipeline, recipe, config):
 
         caracal.log.info('++++++++++++++LOADING MASKS+++++++++++++++++')
 
-        # caracal.log.info(outmaskName)
-        # datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
-        # # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
+        caracal.log.info(outmaskName)
+        datMask = fits.getdata('{}/{}'.format(pipeline.masking,outmaskName))
+        # datMask = np.around(datMask.astype(np.float32)).astype(np.int16)
 
-        # datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
-        # datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
-        # caracal.log.info(postGridMaskSof)
-        # datForn = np.expand_dims(datForn,axis=0)
-        # datForn = np.expand_dims(datForn,axis=0)
+        datHead = fits.getheader('{}/{}'.format(pipeline.masking,outmaskName))
+        datForn = fits.getdata('{}/{}'.format(pipeline.masking,postGridMaskSof))
+        caracal.log.info(postGridMaskSof)
+        datForn = np.expand_dims(datForn,axis=0)
+        datForn = np.expand_dims(datForn,axis=0)
 
-        # idxNan = np.isnan(datForn)
-        # datForn[idxNan] = 0
-        # caracal.log.info(np.nansum(datForn))
+        idxNan = np.isnan(datForn)
+        datForn[idxNan] = 0
+        caracal.log.info(np.nansum(datForn))
 
-        # datTot = np.add(datMask,datForn)
-        # caracal.log.info(np.nansum(datTot))
+        datTot = np.add(datMask,datForn)
+        caracal.log.info(np.nansum(datTot))
 
-        # indexMask = np.where(datTot > 0)
-        # datTot[indexMask] = 1
+        indexMask = np.where(datTot > 0)
+        datTot[indexMask] = 1
                         
-        # # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
+        # outmaskName = outmaskName.replace('mask.fits','mask_mask.fits')
 
-        # fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
-        # caracal.log.info(pipeline.output+'/masking/'+outmaskName)
-        # caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
+        fits.writeto(pipeline.output+'/masking/'+outmaskName,datTot,datHead,overwrite=True)
+        caracal.log.info(pipeline.output+'/masking/'+outmaskName)
+        caracal.log.info('++++++++++++++SAVING MASK MASKS+++++++++++++++++')
 
     def breizorro_mask(trg, num, img_dir, field):
         step = 'make-breizorro_mask-field{0:d}-iter{1:d}'.format(trg,num)

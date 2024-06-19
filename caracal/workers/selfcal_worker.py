@@ -1189,13 +1189,13 @@ def worker(pipeline, recipe, config):
 
         #     sofia_opts.update({"import.maskFile": fornax_namemask_regr})
 
-        # elif num>0 and preGridMask is not None:
-        #     postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
+        elif num>0 and preGridMask is not None:
+            postGridMaskSof = preGridMask.replace('.fits','_{}_regridSof.fits'.format(pipeline.prefix))
 
-        #     if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
-        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
-        #     else:
-        #         sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
+            if os.path.exists('{}/{}'.format(pipeline.masking,postGridMaskSof)):
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(postGridMaskSof)})
+            else:
+                sofia_opts.update({"import.maskFile": 'masking/{}'.format(preGridMask)})
 
 
         recipe.add('cab/sofia', step,

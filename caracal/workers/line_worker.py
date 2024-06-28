@@ -957,8 +957,7 @@ def worker(pipeline, recipe, config):
                             elif doProj:
                                 pass
                             else:
-                                doSpec = None  # likely will fail/produce incorrect result in the case that the ms file and mask were not created wit
-h the same original spectral grid.
+                                doSpec = None  # likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
 
                             if doProj:
                                 ax3param = []

@@ -901,8 +901,8 @@ def worker(pipeline, recipe, config):
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180
-                        decTarget=obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180
+                        raTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,4)
+                        decTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,4)
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
@@ -914,7 +914,7 @@ def worker(pipeline, recipe, config):
                             doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
                             if doProj == True: pass
                             else:
-                                doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
+                                doProj = True if (round(hdul[0].header['CRVAL1'],4) != raTarget) | (round(hdul[0].header['CRVAL2'],4) != decTarget) else None
                                 print(raTarget,hdul[0].header['CRVAL1'])
                                 print(decTarget,hdul[0].header['CRVAL2'])
                             if hdul[0].header['NAXIS3'] > nchans:
@@ -923,11 +923,11 @@ def worker(pipeline, recipe, config):
                                 doSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
                             
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
-                                cdelt = round(hdul[0].header['CDELT3'], 6)
+                                cdelt = round(hdul[0].header['CDELT3'], 4)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
                             
-                            if cdelt > chanwidth[0]:
+                            if cdelt > round(chanwidth[0],4):
                                 doSpec = True 
                                 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
                                 print(cdelt,chanwidth[0])

@@ -909,13 +909,14 @@ def worker(pipeline, recipe, config):
 
                         preGridMask = own_line_clean_mask
                         postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
-
+                        print('######################################################')
                         with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
                             doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
                             if doProj == True: pass
                             else:
                                 doProj = True if (hdul[0].header['CRVAL1'] != raTarget) | (hdul[0].header['CRVAL2'] != decTarget) else None
-                            
+                                print(raTarget,hdul[0].header['CRVAL1'])
+                                print(decTarget,hdul[0].header['CRVAL2'])
                             if hdul[0].header['NAXIS3'] > nchans:
                                 doSpec = True 
                             else:
@@ -928,6 +929,8 @@ def worker(pipeline, recipe, config):
                             
                             if cdelt > chanwidth[0]:
                                 doSpec = True 
+                                print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                                print(cdelt,chanwidth[0])
                             elif doProj == True:
                                 pass 
                             else:

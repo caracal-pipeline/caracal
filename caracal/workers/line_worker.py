@@ -908,39 +908,71 @@ def worker(pipeline, recipe, config):
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
 
                         preGridMask = own_line_clean_mask
-                        postGridMask = preGridMask.replace('.fits','_{}_regrid.fits'.format(pipeline.prefix))
-                        print('######################################################')
-                        with fits.open('{}/{}'.format(pipeline.masking,preGridMask)) as hdul:
-                            doProj = True if (hdul[0].header['NAXIS1'] != cubeWidth) | (hdul[0].header['NAXIS2'] != cubeHeight) else None
-                            if doProj == True: pass
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+                        caracal.log.info('Checking Mask dimensions')
+                        caracal.log.info('doProj = {}'.format(doProj))
+                        caracal.log.info('RA = {}'.format(raTarget))
+                        caracal.log.info('Dec = {}'.format(decTarget))
+                        caracal.log.info('CubeHeight (px) = {}'.format(cubeHeight))
+                        caracal.log.info('CubeWidht (px) = {}'.format(cubeWidth))
+
+                        postGridMask = preGridMask.replace('.fits', '_{}_regrid.fits'.format(pipeline.prefix))
+
+                        with fits.open('{}/{}'.format(pipeline.masking, preGridMask)) as hdul:
+
+                            if hdul[0].header["CRVAL1"] < 0:
+                                hdul[0].header["CRVAL1"] += 360.
+                            caracal.log.info('MaskRA = {}'.format(hdul[0].header["CRVAL1"]))
+                            caracal.log.info('MaskDec = {}'.format(hdul[0].header["CRVAL2"]))
+
+                            caracal.log.info('MaskWidth = {}'.format(hdul[0].header["NAXIS1"]))
+                            caracal.log.info('MaskHeight = {}'.format(hdul[0].header["NAXIS2"]))
+
+                            if hdul[0].header["NAXIS1"] != cubeWidth:
+                                caracal.log.info('NAXIS1')
+                                doProj = True
+                            if hdul[0].header["NAXIS2"] != cubeHeight:
+                                caracal.log.info('NAXIS2')
+                                doProj = True
+                            if np.round(hdul[0].header["CRVAL1"], 5) != np.round(raTarget, 5):
+                                caracal.log.info('CRVAL1')
+                                doProj = True
+                            if np.round(hdul[0].header["CRVAL2"], 5) != np.round(decTarget, 5):
+                                doProj = True
+                                caracal.log.info('CRVAL2')
+
+                            if int(hdul[0].header['NAXIS3']) > int(nchans):
+                                doSpec = True
                             else:
-                                doProj = True if (round(hdul[0].header['CRVAL1'],4) != raTarget) | (round(hdul[0].header['CRVAL2'],4) != decTarget) else None
-                                print(raTarget,hdul[0].header['CRVAL1'])
-                                print(decTarget,hdul[0].header['CRVAL2'])
-                            if hdul[0].header['NAXIS3'] > nchans:
-                                doSpec = True 
+                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
+
+                            if 'FREQ' in hdul[0].header['CTYPE3']:
+                                cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
-                                doSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
-                            
-                            if 'FREQ' in hdul[0].header['CTYPE3']: 
-                                cdelt = round(hdul[0].header['CDELT3'], 4)
+                                cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
+
+                            if np.round(cdelt,1) > np.round(chanwidth[0],1):
+
+                                doSpec = True
+                            elif doProj:
+                                pass
                             else:
-                                cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
-                            
-                            if cdelt > round(chanwidth[0],4):
-                                doSpec = True 
-                                print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-                                print(cdelt,chanwidth[0])
-                            elif doProj == True:
-                                pass 
-                            else:
-                                doSpec =  None ## likely will fail/produce incorrect result in the case that the ms file and mask were not created with the same original spectral grid.
+                                doSpec = None  # likely will fail/produce incorrect result in the case that the ms file and mask were not created wit
+h the same original spectral grid.
 
                             if doProj:
                                 ax3param = []
                                 for key in ['NAXIS3', 'CTYPE3', 'CRPIX3', 'CRVAL3', 'CDELT3']:
-                                    ax3param.append (hdul[0].header[key])
+                                    ax3param.append(hdul[0].header[key])
 
+ 
+                        caracal.log.info('doSpecProj = {}'.format(doSpec))
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+
+                        caracal.log.info('doSpaceProj = {}'.format(doProj))
+
+                        caracal.log.info('+++++++++++++++++++++++++++++')
+                        
                         if doProj:
                             '''
                             MAKE HDR FILE FOR REGRIDDING THE USER SUPPLIED MASK AND REPROJECT

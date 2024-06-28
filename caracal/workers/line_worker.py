@@ -923,7 +923,7 @@ def worker(pipeline, recipe, config):
                                 dpSpec = None ## this should work in both a request for a subset, and if the cube is to be binned.
                             
                             if 'FREQ' in hdul[0].header['CTYPE3']: 
-                                cdelt = round(hdul[0].header['CDELT3'], 2)
+                                cdelt = round(hdul[0].header['CDELT3'], 6)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3']*femit/(-C),2)
                             

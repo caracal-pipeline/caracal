@@ -941,9 +941,10 @@ def worker(pipeline, recipe, config):
                                 doProj = True
                                 caracal.log.info('CRVAL2')
 
+                            caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
+                            caracal.log.info('#CHans= {}'.format(nchans))
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
-                                caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
-                                caracal.log.info('#CHans= {}'.format(nchans))
+
 
                                 doSpec = True
                             else:
@@ -954,9 +955,12 @@ def worker(pipeline, recipe, config):
                             else:
                                 cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
 
+                            caracal.log.info('CDELT = {}'.format(cdelt))
+                            caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
+
+
                             if np.round(cdelt,3) > np.round(chanwidth[0],3):
-                                caracal.log.info('CDELT = {}'.format(cdelt))
-                                caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
+
 
                                 doSpec = True
                             elif doProj:

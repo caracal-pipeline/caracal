@@ -901,8 +901,8 @@ def worker(pipeline, recipe, config):
                         t = summary_file if config['make_cube']['use_mstransform'] else summary_file.replace('_mst','')
                         with open('{}/{}'.format(pipeline.msdir,t)) as f:
                             obsDict = json.load(f)
-                        raTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,4)
-                        decTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,4)
+                        raTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][0]/np.pi*180,5)
+                        decTarget=round(obsDict['FIELD']['REFERENCE_DIR'][0][0][1]/np.pi*180,5)
 
                         cubeHeight=config['make_cube']['npix'][0]
                         cubeWidth=config['make_cube']['npix'][1]  if len(config['make_cube']['npix']) == 2 else cubeHeight
@@ -942,16 +942,21 @@ def worker(pipeline, recipe, config):
                                 caracal.log.info('CRVAL2')
 
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
+                                caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
+                                caracal.log.info('#CHans= {}'.format(nchans))
+
                                 doSpec = True
                             else:
-                                dpSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
+                                doSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
                                 cdelt = round(hdul[0].header['CDELT3'], 2)
                             else:
                                 cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
 
-                            if np.round(cdelt,1) > np.round(chanwidth[0],1):
+                            if np.round(cdelt,3) > np.round(chanwidth[0],3):
+                                caracal.log.info('CDELT = {}'.format(cdelt))
+                                caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
 
                                 doSpec = True
                             elif doProj:

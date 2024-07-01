@@ -944,22 +944,20 @@ def worker(pipeline, recipe, config):
                             caracal.log.info('MaskLength = {}'.format(hdul[0].header['NAXIS3']))
                             caracal.log.info('#CHans= {}'.format(nchans))
                             if int(hdul[0].header['NAXIS3']) > int(nchans):
-
-
                                 doSpec = True
                             else:
                                 doSpec = None  # this should work in both a request for a subset, and if the cube is to be binned.
 
                             if 'FREQ' in hdul[0].header['CTYPE3']:
-                                cdelt = round(hdul[0].header['CDELT3'], 2)
+                                cdelt = round(hdul[0].header['CDELT3'], 5)
                             else:
-                                cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 2)
+                                cdelt = round(hdul[0].header['CDELT3'] * femit / (-C), 5)
 
                             caracal.log.info('CDELT = {}'.format(cdelt))
                             caracal.log.info('ChWidth = {}'.format(chanwidth[0]))
 
 
-                            if np.round(cdelt,3) > np.round(chanwidth[0],3):
+                            if np.round(cdelt) > np.round(chanwidth[0]*binchans,5):
 
 
                                 doSpec = True
